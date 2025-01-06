@@ -2,7 +2,7 @@ name: Deploy React App
 
 on:
   push:
-    branches: [ main ]  # or master, depending on your default branch
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -11,28 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
         with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build
-        run: yarn build
-
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo -e "Host vps\n\tHostName ${{ secrets.SSH_HOST }}\n\tUser ${{ secrets.SSH_USERNAME }}\n\tIdentityFile ~/.ssh/deploy_key\n\tStrictHostKeyChecking no" > ~/.ssh/config
-
-      - name: Deploy
-        run: |
-          rsync -avz --delete dist/ vps:~/apps/l4va-client
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/apps/l4va-client
+            git pull
+            docker-compose down
+            docker-compose up --build -d
