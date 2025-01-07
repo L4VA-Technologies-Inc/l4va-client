@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
 import axios from 'axios';
 
+const RADIX = 16;
+
+const messageHex = msg => Array.from(msg).map(char =>
+  char.charCodeAt(0).toString(RADIX).padStart(2, '0'),
+).join('');
+
 export const App = () => {
   const [signatureResponse, setSignatureResponse] = useState('');
   const [verificationStatus, setVerificationStatus] = useState('');
@@ -38,9 +44,7 @@ export const App = () => {
     try {
       setVerificationStatus('');
       const message = `account: ${wallet.stakeAddressBech32}`;
-      const messageHex = Buffer.from(message).toString('hex');
-
-      const signature = await wallet.handler.signData(messageHex);
+      const signature = await wallet.handler.signData(messageHex(message));
 
       setSignatureResponse(JSON.stringify(signature, null, 2));
       console.log('Message signed:', signature);

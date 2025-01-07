@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const env = loadEnv(
   'mock',
@@ -17,11 +16,5 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    nodePolyfills({
-      globals: {
-        process: true,
-        Buffer: true,
-      },
-    }),
   ],
 });
