@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
-
-const RADIX = 16;
-
-const stringToHex = (str) => Array.from(str)
-  .map(c => c.charCodeAt(0).toString(RADIX).padStart(2, '0'))
-  .join('');
+import axios from 'axios';
 
 export const App = () => {
   const [signatureResponse, setSignatureResponse] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState('');
   const wallet = useWallet(
     'isConnected',
     'displayName',
@@ -40,16 +36,27 @@ export const App = () => {
     }
 
     try {
-      const message = 'I accept terms';
-      const hexMessage = stringToHex(message);
+      setVerificationStatus('');
+      const message = `account: ${wallet.stakeAddressBech32}`;
+      const messageHex = Buffer.from(message).toString('hex');
 
-      const { signature } = await wallet.handler.signData(hexMessage);
+      const signature = await wallet.handler.signData(messageHex);
 
-      setSignatureResponse(signature);
+      setSignatureResponse(JSON.stringify(signature, null, 2));
       console.log('Message signed:', signature);
+
+      // Send to backend for verification
+      const response = await axios.post('/api/v1/auth/login', {
+        signature,
+        message,
+        stakeAddress: wallet.stakeAddressBech32,
+      });
+
+      setVerificationStatus(response.data.message);
     } catch (error) {
-      console.error('Failed to sign message:', error);
-      setSignatureResponse(`Error signing message: ${error.message}`);
+      console.error('Failed to sign/verify message:', error);
+      setVerificationStatus(error.response?.data?.message || 'Verification failed');
+      setSignatureResponse(`Error: ${error.message}`);
     }
   };
 
@@ -70,6 +77,7 @@ export const App = () => {
               <div>Network ID: {wallet.networkId}</div>
               <div>Balance: {Math.floor(wallet.balanceAda)} ADA</div>
               <div className="truncate">Stake Address: {wallet.stakeAddressBech32}</div>
+              <div className="truncate">Change Address: {wallet.changeAddressBech32}</div>
             </div>
 
             <button
@@ -77,7 +85,7 @@ export const App = () => {
               type="button"
               onClick={handleSignMessage}
             >
-              Sign I accept terms
+              Sign Authentication Message
             </button>
 
             <button
@@ -91,10 +99,21 @@ export const App = () => {
         ) : (
           <button
             className="w-full px-4 py-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
+            type="button"
             onClick={handleConnect}
           >
             Connect Wallet
           </button>
+        )}
+
+        {verificationStatus && (
+          <div
+            className={`mt-4 p-3 rounded ${
+              verificationStatus.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}
+          >
+            {verificationStatus}
+          </div>
         )}
 
         {signatureResponse && (
