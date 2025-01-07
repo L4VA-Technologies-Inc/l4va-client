@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 .env
+
+# Add these lines to .gitignore
+*.crt
+*.key
+*.pem
+/ssl
