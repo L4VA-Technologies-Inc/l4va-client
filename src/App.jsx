@@ -74,7 +74,7 @@ export const App = () => {
         {wallet.isConnected ? (
           <>
             <div className="text-green-600 font-medium">
-              Connected to: {wallet.displayName}
+              Connected to {wallet.displayName}
             </div>
 
             <div className="text-sm text-gray-600">
