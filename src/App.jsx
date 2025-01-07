@@ -56,6 +56,9 @@ export const App = () => {
         stakeAddress: wallet.stakeAddressBech32,
       });
 
+      // eslint-disable-next-line no-alert
+      alert(`Welcome, ${response.data.user.name}`);
+
       setVerificationStatus(response.data.message);
     } catch (error) {
       console.error('Failed to sign/verify message:', error);
