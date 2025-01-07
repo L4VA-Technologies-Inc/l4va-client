@@ -52,7 +52,6 @@ export const App = () => {
       // Send to backend for verification
       const response = await axios.post('/api/v1/auth/login', {
         signature,
-        message,
         stakeAddress: wallet.stakeAddressBech32,
       });
 
