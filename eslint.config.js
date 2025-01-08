@@ -325,6 +325,8 @@ export default [
       'wrap-regex': 'error',
       'yield-star-spacing': ['error', 'after'],
       yoda: 'error',
+      /* OTHER RULES */
+      'react/prop-types': 0,
     },
   },
 ];
