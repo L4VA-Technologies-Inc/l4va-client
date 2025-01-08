@@ -1,6 +1,6 @@
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
 
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/auth';
 
 const RADIX = 16;
 
@@ -12,6 +12,7 @@ export const Header = () => {
   const {
     isAuthenticated, login, logout,
   } = useAuth();
+
   const wallet = useWallet(
     'isConnected',
     'displayName',
@@ -19,6 +20,7 @@ export const Header = () => {
     'stakeAddressBech32',
     'changeAddressBech32',
   );
+
   const connect = useWallet('connect');
   const disconnect = useWallet('disconnect');
   const supportedWallets = useExtensions('supportedArr');
@@ -60,7 +62,7 @@ export const Header = () => {
               type="button"
               onClick={handleConnect}
             >
-              Connect Wallet
+              connect wallet
             </button>
           )}
 
@@ -70,7 +72,7 @@ export const Header = () => {
               type="button"
               onClick={handleSignAndLogin}
             >
-              Sign to Login
+              sign message
             </button>
           )}
 
@@ -84,7 +86,7 @@ export const Header = () => {
                 type="button"
                 onClick={handleDisconnect}
               >
-                Disconnect
+                disconnect
               </button>
             </div>
           )}

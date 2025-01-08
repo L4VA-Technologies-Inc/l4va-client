@@ -1,10 +1,10 @@
-import { AuthProvider } from './context/AuthContext.jsx';
-import { Header } from './components/Header';
+import { AuthProvider } from './context/AuthContext';
+import { Routes } from './routes';
 
 export const App = () => (
   <AuthProvider>
     <div className="min-h-screen bg-gray-100">
-      <Header />
+      <Routes />
     </div>
   </AuthProvider>
 );
