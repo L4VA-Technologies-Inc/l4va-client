@@ -91,7 +91,7 @@ export const Header = () => {
                   type="button"
                   onClick={handleDisconnect}
                 >
-                  disconnect
+                  Sing out
                 </button>
               </div>
             )}
