@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 import { AuthContext } from './auth';
+import { CoreApiProvider } from '../services/api/core';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,12 +12,8 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('jwt');
     if (token) {
       try {
-        const response = await axios.get('/api/v1/auth/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setUser(response.data);
+        const { data } = await CoreApiProvider.getProfile();
+        setUser(data);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -35,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (signature, stakeAddress) => {
     try {
-      const response = await axios.post('/api/v1/auth/login', {
+      const response = await CoreApiProvider.login({
         signature,
         stakeAddress,
       });
