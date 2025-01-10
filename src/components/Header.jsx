@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
+import { Link } from 'react-router-dom';
 
 import { useAuth } from '../context/auth';
 import { LoginModal } from './modals/LoginModal.jsx';
@@ -67,7 +68,9 @@ export const Header = () => {
       <header className="bg-gray-900 text-white py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="text-2xl font-bold">
-            L4VA
+            <Link className="hover:text-yellow-500 transition-colors" to="/">
+              L4VA
+            </Link>
           </div>
           <div>
             {!isAuthenticated ? (
