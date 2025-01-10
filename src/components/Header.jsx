@@ -15,10 +15,14 @@ export const Header = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
-    isAuthenticated, login, logout,
+    user,
+    isAuthenticated,
+    login,
+    logout,
   } = useAuth();
 
   const wallet = useWallet(
+    'isConnectingTo',
     'isConnected',
     'displayName',
     'handler',
@@ -65,7 +69,6 @@ export const Header = () => {
           <div className="text-2xl font-bold">
             L4VA
           </div>
-
           <div>
             {!isAuthenticated ? (
               <button
@@ -78,7 +81,7 @@ export const Header = () => {
             ) : (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-300 text-sm truncate max-w-xs">
-                  {wallet.stakeAddressBech32}
+                  {user.name}
                 </span>
                 <button
                   className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
@@ -96,6 +99,7 @@ export const Header = () => {
       <LoginModal
         isAuthenticated={isAuthenticated}
         isConnected={wallet.isConnected}
+        isConnectingTo={wallet.isConnectingTo}
         isLoading={isLoading}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

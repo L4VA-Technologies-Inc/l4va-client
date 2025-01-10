@@ -1,20 +1,13 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ProtectedRoute } from './ProtectedRoute';
-import { Header } from '../components/Header';
+import { Layout } from '../layouts/MainLayout.jsx';
+import { NotFound } from '../pages/NotFound.jsx';
 
-const Layout = ({ children }) => (
-  <div className="min-h-screen bg-gray-100">
-    <Header />
-    {children}
-  </div>
-);
-
-// Pages
 const HomePage = () => (
   <Layout>
     <div className="max-w-7xl mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold">Welcome to L4VA</h1>
+      <h1 className="text-3xl font-bold">Welcome to l4VA</h1>
     </div>
   </Layout>
 );
@@ -63,6 +56,10 @@ export const Routes = () => {
   const router = createBrowserRouter([
     ...routesForPublic,
     ...routesForAuthenticatedOnly,
+    {
+      path: '*',
+      element: <NotFound />,
+    },
   ]);
 
   return <RouterProvider router={router} />;
