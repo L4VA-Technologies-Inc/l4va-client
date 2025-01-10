@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { X, Check } from 'lucide-react';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
 
 import { useAuth } from '../context/auth';
