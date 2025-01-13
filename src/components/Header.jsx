@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useWallet, useExtensions } from '@ada-anvil/weld/react';
 import { Link } from 'react-router-dom';
+import { useWallet } from '@ada-anvil/weld/react';
 
 import { useAuth } from '../context/auth';
 import { LoginModal } from './modals/LoginModal.jsx';
@@ -33,11 +33,17 @@ export const Header = () => {
 
   const connect = useWallet('connect');
   const disconnect = useWallet('disconnect');
-  const supportedWallets = useExtensions('supportedArr');
 
-  const handleConnect = () => {
-    if (supportedWallets.length > 0) {
-      connect(supportedWallets[0].info.key);
+  const handleConnect = (walletKey) => {
+    if (walletKey) {
+      connect(walletKey, {
+        onSuccess: () => {
+          console.log('Successfully connected to wallet');
+        },
+        onError: (error) => {
+          console.error('Failed to connect to wallet:', error);
+        },
+      });
     }
   };
 
@@ -91,7 +97,7 @@ export const Header = () => {
                   type="button"
                   onClick={handleDisconnect}
                 >
-                  Sing out
+                  Sign out
                 </button>
               </div>
             )}
