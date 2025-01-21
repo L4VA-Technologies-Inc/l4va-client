@@ -7,7 +7,7 @@ import { NotFound } from '../pages/NotFound.jsx';
 const HomePage = () => (
   <Layout>
     <div className="max-w-7xl mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold">Welcome to l4VA</h1>
+      <h1 className="text-3xl font-bold text-white">Welcome to l4VA</h1>
     </div>
   </Layout>
 );

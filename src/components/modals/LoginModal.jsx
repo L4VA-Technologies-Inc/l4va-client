@@ -52,6 +52,7 @@ export const LoginModal = ({
           <div className="space-y-3">
             {SUPPORTED_WALLETS.map(wallet => (
               <button
+                type="button"
                 key={wallet.key}
                 className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-900 transition-colors disabled:opacity-50"
                 disabled={isConnectingTo === wallet.key}

@@ -3,7 +3,7 @@ import { Routes } from './routes';
 
 export const App = () => (
   <AuthProvider>
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-navy">
       <Routes />
     </div>
   </AuthProvider>
