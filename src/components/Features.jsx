@@ -26,7 +26,7 @@ const features = [
 ];
 
 export const Features = () => (
-  <section className="w-full bg-background py-20">
+  <section className="w-full bg-background">
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
         {features.map((feature) => (
