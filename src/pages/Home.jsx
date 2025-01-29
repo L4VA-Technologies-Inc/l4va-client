@@ -1,7 +1,9 @@
 import { PrimaryButton } from '../components/shared/PrimaryButton';
 import { SecondaryButton } from '../components/shared/SecondaryButton';
-import { Features } from '../components/Features.jsx';
-import { Vaults } from '../components/Vaults/Vaults.jsx';
+import { Features } from '../components/Features';
+import { Vaults } from '../components/Vaults/Vaults';
+import { InvestmentsTable } from '../components/Investments/InvestmentsTable';
+import { Stats } from '../components/Stats/Stats';
 
 export const Home = () => {
   const stats = [
@@ -59,6 +61,12 @@ export const Home = () => {
         </div>
         <div className="py-20">
           <Vaults />
+        </div>
+        <div className="py-20">
+          <InvestmentsTable />
+        </div>
+        <div className="py-20">
+          <Stats />
         </div>
       </div>
     </div>
