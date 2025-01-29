@@ -3,6 +3,8 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useAuth } from '../context/auth';
 import { LoginModal } from './modals/LoginModal.jsx';
+import { PrimaryButton } from './shared/PrimaryButton.jsx';
+import WalletIcon from '../icons/wallet.svg?react';
 
 const RADIX = 16;
 
@@ -15,7 +17,6 @@ export const ConnectButton = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
-    user,
     isAuthenticated,
     login,
     logout,
@@ -71,24 +72,20 @@ export const ConnectButton = () => {
   return (
     <>
       {!isAuthenticated ? (
-        <button
-          className="bg-yellow-400 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-500"
+        <PrimaryButton
+          className="w-[226px] h-[60px]"
+          icon={WalletIcon}
           onClick={() => setIsModalOpen(true)}
         >
           CONNECT
-        </button>
+        </PrimaryButton>
       ) : (
-        <div className="flex items-center space-x-4">
-          <span className="text-gray-300 text-sm truncate max-w-xs">
-            {user.name}
-          </span>
-          <button
-            className="bg-yellow-400 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-500"
-            onClick={handleDisconnect}
-          >
-            DISCONNECT
-          </button>
-        </div>
+        <PrimaryButton
+          className="w-[226px] h-[60px]"
+          onClick={handleDisconnect}
+        >
+          DISCONNECT
+        </PrimaryButton>
       )}
 
       <LoginModal

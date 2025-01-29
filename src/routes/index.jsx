@@ -3,12 +3,11 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { Layout } from '../layouts/MainLayout.jsx';
 import { NotFound } from '../pages/NotFound.jsx';
+import { Home } from '../pages/Home.jsx';
 
 const HomePage = () => (
   <Layout>
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold text-white">Welcome to l4VA</h1>
-    </div>
+    <Home />
   </Layout>
 );
 
