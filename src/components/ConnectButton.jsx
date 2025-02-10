@@ -1,10 +1,18 @@
 import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
-import { useAuth } from '../context/auth';
-import { LoginModal } from './modals/LoginModal.jsx';
-import { PrimaryButton } from './shared/PrimaryButton.jsx';
 import WalletIcon from '../icons/wallet.svg?react';
+
+import { useAuth } from '@/context/auth';
+import { LoginModal } from '@/components/modals/LoginModal';
+import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const RADIX = 16;
 
@@ -69,21 +77,42 @@ export const ConnectButton = () => {
     }
   };
 
+  // Get first letter of wallet display name or use fallback
+  const getAvatarLetter = () => {
+    if (wallet.displayName) {
+      return wallet.displayName.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <>
       {!isAuthenticated ? (
-        <PrimaryButton
-          icon={WalletIcon}
-          onClick={() => setIsModalOpen(true)}
-        >
+        <PrimaryButton onClick={() => setIsModalOpen(true)}>
+          <WalletIcon />
           CONNECT
         </PrimaryButton>
       ) : (
-        <PrimaryButton
-          onClick={handleDisconnect}
-        >
-          DISCONNECT
-        </PrimaryButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded-full">
+            <Avatar className="h-8 w-8 bg-zinc-700 hover:bg-zinc-600 transition-colors duration-200 cursor-pointer">
+              <AvatarFallback className="text-zinc-100 font-medium">
+                {getAvatarLetter()}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="bg-zinc-800 border border-zinc-700 text-zinc-100"
+          >
+            <DropdownMenuItem
+              onClick={handleDisconnect}
+              className="hover:bg-zinc-700 cursor-pointer px-4 py-2 text-sm font-medium focus:bg-zinc-700"
+            >
+              Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
 
       <LoginModal

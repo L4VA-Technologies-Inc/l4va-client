@@ -105,12 +105,10 @@ export default [
       'func-style': ['error', 'expression'],
       'generator-star-spacing': ['error', { before: false, after: true }],
       'guard-for-in': 'error',
-      'import/extensions': ['error', 'never'],
       'import/first': 'error',
       'import/no-duplicates': 'error',
       'import/order': ['error', {
         groups: [['builtin', 'external'], 'internal', ['parent', 'sibling', 'index']],
-        'newlines-between': 'always',
       }],
       indent: ['error', 2, {
         SwitchCase: 1,

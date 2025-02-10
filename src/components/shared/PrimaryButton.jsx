@@ -2,7 +2,6 @@ export const PrimaryButton = ({
   children,
   onClick,
   className = '',
-  icon: Icon,
   size = 'default',
 }) => {
   const sizeClasses = {
@@ -14,19 +13,21 @@ export const PrimaryButton = ({
   return (
     <button
       className={`
+        cursor-pointer
         flex items-center
-        bg-main-orange text-navy
-        rounded-lg font-semibold
+        bg-main-orange
+        rounded-lg font-bold
         transition-colors
         gap-1.5
+        font-satoshi
+        text-primary-text
         ${sizeClasses[size]}
         ${className}
       `}
       type="button"
       onClick={onClick}
     >
-      {Icon && <Icon height={20} width={20} />}
-      <span>{children}</span>
+      {children}
     </button>
   );
 };
