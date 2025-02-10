@@ -1,0 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=Russo+One&display=swap");
+@import "./fonts.css";
+@import "tailwindcss";
+
+:root {
+  --color-background-primary: #000322;
+  --color-text-primary: #FFFFFF;
+  --color-dark-600: #202233;
+  --color-dark-700: #000322;
+  --color-main-orange: #FF842C;
+  --color-main-red: #E10134;
+}
+
+.dark {}
+
+@theme {
+  --font-russo: Russo One, sans-serif;
+  --font-satoshi: Satoshi-Variable, sans-serif;
+  --color-primary-background: var(--color-background-primary);
+  --color-primary-text: var(--color-text-primary);
+  --color-dark-600: var(--color-dark-600);
+  --color-dark-700: var(--color-dark-700);
+  --color-main-orange: var(--color-main-orange);
+  --color-main-red: var(--color-main-red);
+}
+
+body {
+  @apply bg-primary-background;
+}
+
+.container {
+  max-width: 1170px;
+}
+

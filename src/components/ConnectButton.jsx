@@ -73,7 +73,6 @@ export const ConnectButton = () => {
     <>
       {!isAuthenticated ? (
         <PrimaryButton
-          className="w-[226px] h-[60px]"
           icon={WalletIcon}
           onClick={() => setIsModalOpen(true)}
         >
@@ -81,7 +80,6 @@ export const ConnectButton = () => {
         </PrimaryButton>
       ) : (
         <PrimaryButton
-          className="w-[226px] h-[60px]"
           onClick={handleDisconnect}
         >
           DISCONNECT

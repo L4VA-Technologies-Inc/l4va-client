@@ -21,17 +21,21 @@ export const Home = () => {
       <div className="relative">
         <div className="pt-32 lg:pt-40 px-4">
           <div className="container mx-auto">
-            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              <div>
-                <h1 className="font-bold font-russo">
-                  <span className="text-sunflower block text-[32px] sm:text-[40px] lg:text-[50px] leading-tight">
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              <div className="col-span-8">
+                <h1 className="font-russo">
+                  <span
+                    className="text-sunflower block text-[32px] sm:text-[40px] lg:text-[50px] leading-loose tracking-wide"
+                  >
                     L4VA ASSET
                   </span>
                   <span className="text-white block text-[32px] sm:text-[40px] lg:text-[50px] leading-tight">
                     GOVERNANCE ECOSYSTEM
                   </span>
                 </h1>
-                <p className="text-dark-100 text-base sm:text-lg lg:text-[20px] mt-2.5 max-w-2xl">
+                <p
+                  className="text-dark-100 font-bold text-xl leading-relaxed tracking-widest sm:text-lg lg:text-[20px] mt-2.5"
+                >
                   THE NEXT GENERATION FRACTIONALIZED NFT ECOSYSTEM
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">
@@ -51,6 +55,15 @@ export const Home = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+              <div className="col-span-4">
+                <div className="hidden lg:block">
+                  <img
+                    alt="Vault Illustration"
+                    className="ml-auto w-[450px] h-[450px]"
+                    src="/assets/vault.webp"
+                  />
                 </div>
               </div>
             </div>

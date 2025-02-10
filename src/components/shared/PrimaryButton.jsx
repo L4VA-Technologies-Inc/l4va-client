@@ -15,9 +15,8 @@ export const PrimaryButton = ({
     <button
       className={`
         flex items-center
-        bg-sunflower text-navy
+        bg-main-orange text-navy
         rounded-lg font-semibold
-        hover:bg-yellow-500 
         transition-colors
         gap-1.5
         ${sizeClasses[size]}

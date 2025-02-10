@@ -3,8 +3,6 @@ import { Routes } from './routes';
 
 export const App = () => (
   <AuthProvider>
-    <div className="min-h-screen bg-navy">
-      <Routes />
-    </div>
+    <Routes />
   </AuthProvider>
 );
