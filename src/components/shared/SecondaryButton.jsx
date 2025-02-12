@@ -3,32 +3,28 @@ export const SecondaryButton = ({
   onClick,
   className = '',
   icon: Icon,
-  size = 'default', // can be "small", "default", or "large"
-}) => {
-  const sizeClasses = {
-    small: 'px-6 py-4',
-    default: 'px-14 py-4 text-lg',
-    large: 'px-16 py-5 text-xl',
-  };
-
-  return (
-    <button
-      className={`
+}) => (
+  <button
+    className={`
+        h-14
+        cursor-pointer
         flex items-center
-        bg-transparent border-2 border-gray-600
+        bg-white/5 backdrop-blur-sm
+        border-2 border-white/20
         text-white
         rounded-lg font-semibold
-        hover:bg-white/5
-        transition-colors
+        hover:bg-white/10
+        hover:border-white/30
+        transition-all
+        shadow-lg
         gap-1.5
-        ${sizeClasses[size]}
+        px-10 py-4 text-[20px]
         ${className}
       `}
-      type="button"
-      onClick={onClick}
-    >
-      {Icon && <Icon height={20} width={20} />}
-      <span>{children}</span>
-    </button>
-  );
-};
+    type="button"
+    onClick={onClick}
+  >
+    {Icon && <Icon height={20} width={20} />}
+    <span>{children}</span>
+  </button>
+);

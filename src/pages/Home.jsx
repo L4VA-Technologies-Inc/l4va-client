@@ -1,9 +1,10 @@
 import { PrimaryButton } from '../components/shared/PrimaryButton';
 import { SecondaryButton } from '../components/shared/SecondaryButton';
 import { Features } from '../components/Features';
-import { Vaults } from '../components/Vaults/Vaults';
-import { InvestmentsTable } from '../components/Investments/InvestmentsTable';
-import { Stats } from '../components/Stats/Stats';
+import { Vaults } from '@/components/vaults/Vaults';
+import { InvestmentsTable } from '@/components/investments/InvestmentsTable';
+import { Stats } from '@/components/stats/Stats';
+import { HeroHeader } from '@/components/HeroHeader';
 
 export const Home = () => {
   const stats = [
@@ -15,72 +16,43 @@ export const Home = () => {
   return (
     <div className="relative">
       <div
-        className="absolute inset-0 bg-cover bg-center max-h-[600px]"
+        className="absolute inset-0 bg-no-repeat -z-10"
         style={{ backgroundImage: 'url(/assets/hero-bg.webp)' }}
       />
-      <div className="relative">
-        <div className="pt-32 lg:pt-40 px-4">
-          <div className="container mx-auto">
-            <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-              <div className="col-span-8">
-                <h1 className="font-russo">
-                  <span
-                    className="text-sunflower block text-[32px] sm:text-[40px] lg:text-[50px] leading-loose tracking-wide"
-                  >
-                    L4VA ASSET
-                  </span>
-                  <span className="text-white block text-[32px] sm:text-[40px] lg:text-[50px] leading-tight">
-                    GOVERNANCE ECOSYSTEM
-                  </span>
-                </h1>
-                <p
-                  className="text-dark-100 font-bold text-xl leading-relaxed tracking-widest sm:text-lg lg:text-[20px] mt-2.5"
-                >
-                  THE NEXT GENERATION FRACTIONALIZED NFT ECOSYSTEM
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                  <PrimaryButton>VIEW VAULTS</PrimaryButton>
-                  <SecondaryButton>CREATE VAULT</SecondaryButton>
-                </div>
-                <div className="mt-16">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 text-center">
-                    {stats.map((stat) => (
-                      <div key={stat.label} className="min-w-[210px]">
-                        <div className="text-white mt-2 text-2xl">
-                          {stat.label}
-                        </div>
-                        <div className="text-sunflower text-2xl sm:text-3xl lg:text-4xl font-bold">
-                          {stat.value}
-                        </div>
-                      </div>
-                    ))}
+      <div className="pt-32 lg:pt-40 px-4">
+        <div className="container mx-auto">
+          <HeroHeader />
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <PrimaryButton>VIEW VAULTS</PrimaryButton>
+            <SecondaryButton>CREATE VAULT</SecondaryButton>
+          </div>
+          <div className="mt-16">
+            <div className="flex gap-10 text-center">
+              {stats.map((stat) => (
+                <div key={stat.label} className="min-w-[210px]">
+                  <div className="text-primary-text mt-2 text-2xl font-bold font-satoshi">
+                    {stat.label}
+                  </div>
+                  <div className="font-russo text-main-orange text-2xl sm:text-3xl lg:text-4xl font-bold">
+                    {stat.value}
                   </div>
                 </div>
-              </div>
-              <div className="col-span-4">
-                <div className="hidden lg:block">
-                  <img
-                    alt="Vault Illustration"
-                    className="ml-auto w-[450px] h-[450px]"
-                    src="/assets/vault.webp"
-                  />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
-        <div className="py-20">
-          <Features />
-        </div>
-        <div className="py-20">
-          <Vaults />
-        </div>
-        <div className="py-20">
-          <InvestmentsTable />
-        </div>
-        <div className="py-20">
-          <Stats />
-        </div>
+      </div>
+      <div className="py-20">
+        <Features />
+      </div>
+      <div className="py-20">
+        <Vaults />
+      </div>
+      <div className="py-20">
+        <InvestmentsTable />
+      </div>
+      <div className="py-20">
+        <Stats />
       </div>
     </div>
   );
