@@ -26,7 +26,7 @@ export const Header = () => {
 
   return (
     <div className="absolute top-0 w-full z-10 px-6">
-      <nav className="container mx-auto text-white py-4 flex items-center justify-between">
+      <nav className="container mx-auto text-primary-text py-4 flex items-center justify-between">
         <Link to="/">
           <img alt="L4VA Logo" className="w-[160px] h-[60px]" src="/assets/logo.webp"/>
         </Link>
@@ -49,7 +49,7 @@ export const Header = () => {
         <div className="lg:hidden flex items-center gap-4">
           <button
             aria-label="Toggle mobile menu"
-            className="text-white"
+            className="text-primary-text"
             type="button"
             onClick={toggleMobileMenu}
           >
@@ -75,7 +75,7 @@ export const Header = () => {
             {navLinks.map(({ to, label }) => (
               <Link
                 key={to}
-                className="text-2xl font-satoshi font-bold text-white hover:text-main-red"
+                className="text-2xl font-satoshi font-bold text-primary-text hover:text-main-red"
                 to={to}
                 onClick={() => setIsMobileMenuOpen(false)}
               >

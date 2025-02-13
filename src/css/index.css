@@ -5,6 +5,7 @@
 :root {
   --color-background-primary: #000322;
   --color-text-primary: #FFFFFF;
+  --color-dark-100: #979BB0;
   --color-dark-600: #202233;
   --color-dark-700: #000322;
   --color-main-orange: #FF842C;
@@ -18,6 +19,7 @@
   --font-satoshi: Satoshi-Variable, sans-serif;
   --color-primary-background: var(--color-background-primary);
   --color-primary-text: var(--color-text-primary);
+  --color-dark-100: var(--color-dark-100);
   --color-dark-600: var(--color-dark-600);
   --color-dark-700: var(--color-dark-700);
   --color-main-orange: var(--color-main-orange);
