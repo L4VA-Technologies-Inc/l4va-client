@@ -2,6 +2,11 @@
 FROM node:18-alpine as build
 
 WORKDIR /app
+
+# Remove any existing installations and caches
+RUN rm -rf node_modules package-lock.json yarn.lock
+RUN npm cache clean --force
+
 COPY package*.json ./
 RUN npm install
 COPY . .
