@@ -163,10 +163,7 @@ export default [
       'no-labels': ['error', { allowLoop: false, allowSwitch: false }],
       'no-lone-blocks': 'error',
       'no-loop-func': 'error',
-      'no-magic-numbers': ['error', {
-        ignore: [-1, 0, 1, 2],
-        ignoreArrayIndexes: true,
-      }],
+      'no-magic-numbers': 1,
       'no-multi-spaces': ['error', {
         ignoreEOLComments: false,
       }],
