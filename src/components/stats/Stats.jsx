@@ -2,17 +2,15 @@ import React from 'react';
 
 const ProgressBar = ({ items }) => (
   <div className="relative mb-2">
-    {/* Labels above the bars - visible only on mobile */}
     <div className="md:hidden space-y-4 mb-8">
       {items.map((item, index) => (
         <div key={`label-${index}`} className="flex justify-between items-center">
-          <p className="text-gray-300 text-sm">{item.label}</p>
-          <p className="text-white text-lg font-bold">{item.value}</p>
+          <p className="text-dark-100 text-sm">{item.label}</p>
+          <p className="text-primary-text text-lg font-bold">{item.value}</p>
         </div>
       ))}
     </div>
 
-    {/* Progress bars */}
     <div className="h-12 mt-24">
       <div className="flex h-full">
         {items.map((item, index) => (
@@ -23,8 +21,8 @@ const ProgressBar = ({ items }) => (
           >
             {/* Desktop labels - hidden on mobile */}
             <div className="hidden md:block absolute left-0 -top-16">
-              <p className="text-gray-300 text-sm whitespace-nowrap">{item.label}</p>
-              <p className="text-white text-xl font-bold">{item.value}</p>
+              <p className="text-dark-100 text-sm whitespace-nowrap">{item.label}</p>
+              <p className="text-primary-text text-xl font-bold">{item.value}</p>
             </div>
           </div>
         ))}
@@ -34,9 +32,11 @@ const ProgressBar = ({ items }) => (
 );
 
 const StatCard = ({ value, label }) => (
-  <div className="bg-slate-800 p-6 rounded-lg transform transition-all duration-300 hover:scale-105 hover:bg-slate-700">
-    <p className="text-red-500 text-3xl md:text-5xl font-bold mb-2 animate-fadeIn">{value}</p>
-    <p className="text-white text-lg md:text-xl">{label}</p>
+  <div className="text-center p-6">
+    <p className="font-russo text-main-red text-[60px] font-bold mb-2">
+      {value}
+    </p>
+    <p className="font-bold font-satoshi text-primary-text text-[24px]">{label}</p>
   </div>
 );
 
@@ -57,12 +57,9 @@ export const Stats = () => {
 
   return (
     <div className="container mx-auto bg-slate-900 p-4 md:p-8 rounded-lg">
-      <h1 className="text-white text-2xl md:text-4xl font-bold mb-8 md:mb-12 animate-fadeIn">
+      <h1 className="text-primary-text text-2xl md:text-4xl font-bold mb-8 md:mb-12 animate-fadeIn">
         QUICK STATS
       </h1>
-
-
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         <StatCard value="158" label="Vaults" />
         <StatCard value="486" label="Assets" />
@@ -71,17 +68,14 @@ export const Stats = () => {
       </div>
 
       <div className="space-y-12 md:space-y-16">
-        {/* Vault Status Section */}
         <div>
-          <h2 className="text-red-500 text-2xl md:text-3xl font-bold mb-8">
+          <h2 className="text-main-red text-2xl md:text-3xl font-bold mb-8">
             Vault Status
           </h2>
           <ProgressBar items={vaultStatus} />
         </div>
-
-        {/* Vault Types Section */}
         <div>
-          <h2 className="text-red-500 text-2xl md:text-3xl font-bold mb-8">
+          <h2 className="text-main-red text-2xl md:text-3xl font-bold mb-8">
             Vault Types
           </h2>
           <ProgressBar items={vaultTypes} />

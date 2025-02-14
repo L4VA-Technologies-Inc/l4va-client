@@ -6,6 +6,7 @@ import { InvestmentsTable } from '@/components/investments/InvestmentsTable';
 import { Stats } from '@/components/stats/Stats';
 import { HeroHeader } from '@/components/HeroHeader';
 import { HeroStats } from '@/components/HeroStats';
+import { Faq } from '@/components/faq/Faq.jsx';
 
 export const Home = () => (
   <div className="relative">
@@ -26,14 +27,9 @@ export const Home = () => (
       </div>
     </div>
     <Features/>
-    <div className="relative">
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[1200px]"
-        style={{ backgroundImage: 'url(/assets/vaults-bg.webp)' }}
-      />
-      <Vaults/>
-    </div>
+    <Vaults/>
     <InvestmentsTable/>
     <Stats/>
+    <Faq />
   </div>
 );

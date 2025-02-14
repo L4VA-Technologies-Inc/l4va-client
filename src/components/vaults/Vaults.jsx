@@ -80,20 +80,26 @@ export const Vaults = () => {
   ];
 
   return (
-    <section aria-labelledby="features-heading" className="py-12 sm:py-16">
-      <div className="container mx-auto p-6">
-        <VaultsFilters />
-        <div className="flex gap-8 mb-8">
-          <SearchInput />
-          <MainFilters />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vaults.map(vault => (
-            <VaultCard
-              key={vault.id}
-              {...vault}
-            />
-          ))}
+    <section className="relative">
+      <div
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[1200px]"
+        style={{ backgroundImage: 'url(/assets/vaults-bg.webp)' }}
+      />
+      <div aria-labelledby="features-heading" className="py-12 sm:py-16">
+        <div className="container mx-auto p-6">
+          <VaultsFilters />
+          <div className="flex gap-8 mb-8">
+            <SearchInput />
+            <MainFilters />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vaults.map(vault => (
+              <VaultCard
+                key={vault.id}
+                {...vault}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
