@@ -1,4 +1,7 @@
 import { VaultCard } from './VaultCard.jsx';
+import { VaultsFilters } from '@/components/vaults/VaultsFilters.jsx';
+import { SearchInput } from '@/components/shared/SearchInput.jsx';
+import { MainFilters } from '@/components/vaults/MainFilters.jsx';
 
 export const Vaults = () => {
   const vaults = [
@@ -12,6 +15,7 @@ export const Vaults = () => {
       tvl: '278K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man.webp'
     },
     {
       id: 2,
@@ -23,6 +27,7 @@ export const Vaults = () => {
       tvl: '156K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man-1.webp'
     },
     {
       id: 3,
@@ -34,6 +39,7 @@ export const Vaults = () => {
       tvl: '192K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man-2.webp'
     },
     {
       id: 4,
@@ -45,6 +51,7 @@ export const Vaults = () => {
       tvl: '145K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man.webp'
     },
     {
       id: 5,
@@ -56,6 +63,7 @@ export const Vaults = () => {
       tvl: '230K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man-1.webp'
     },
     {
       id: 6,
@@ -67,19 +75,27 @@ export const Vaults = () => {
       tvl: '310K',
       access: 'Public',
       baseAllo: '$0',
+      image: '/assets/vaults/space-man-2.webp'
     },
   ];
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {vaults.map(vault => (
-          <VaultCard
-            key={vault.id}
-            {...vault}
-          />
-        ))}
+    <section aria-labelledby="features-heading" className="py-12 sm:py-16">
+      <div className="container mx-auto p-6">
+        <VaultsFilters />
+        <div className="flex gap-8 mb-8">
+          <SearchInput />
+          <MainFilters />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {vaults.map(vault => (
+            <VaultCard
+              key={vault.id}
+              {...vault}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };

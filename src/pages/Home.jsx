@@ -26,7 +26,13 @@ export const Home = () => (
       </div>
     </div>
     <Features/>
-    <Vaults/>
+    <div className="relative">
+      <div
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[1200px]"
+        style={{ backgroundImage: 'url(/assets/vaults-bg.webp)' }}
+      />
+      <Vaults/>
+    </div>
     <InvestmentsTable/>
     <Stats/>
   </div>

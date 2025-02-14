@@ -1,4 +1,10 @@
-import { Twitter, Share2 } from 'lucide-react';
+const socialLinks = [
+  { icon: '/assets/social/x.svg', url: 'https://twitter.com/yourusername' },
+  { icon: '/assets/social/xing.svg', url: 'https://xing.com/yourusername' },
+  { icon: '/assets/social/stumble-upon.svg', url: 'https://mix.com/yourusername' },
+  { icon: '/assets/social/vine.svg', url: '#' },
+  { icon: '/assets/social/last-fm.svg', url: 'https://last.fm/user/yourusername' }
+];
 
 export const VaultCard = ({
   title,
@@ -9,20 +15,17 @@ export const VaultCard = ({
   tvl,
   access,
   baseAllo,
+  image,
 }) => (
-  <div className="max-w-md rounded-xl bg-slate-900 overflow-hidden">
-    {/* Hero Image */}
+  <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
     <div className="h-48">
       <img
         alt={title}
         className="h-full w-full object-cover"
-        src="/assets/space-man.png"
+        src={image}
       />
     </div>
-
-    {/* Content Section */}
     <div className="p-6">
-      {/* Icon and Text */}
       <div className="flex gap-4 mb-6">
         <img
           alt={`${title} icon`}
@@ -30,16 +33,18 @@ export const VaultCard = ({
           src="/assets/vault-logo.png"
         />
         <div>
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
-          <p className="text-slate-400">{description}</p>
+          <h2 className="font-satoshi text-[20px] font-bold text-primary-text">
+            {title}
+          </h2>
+          <p className="text-sm text-dark-100">
+            {description}
+          </p>
         </div>
       </div>
-
-      {/* Progress Section */}
-      <div className="mb-6">
-        <div className="mb-2 flex justify-between text-white">
-          <span className="font-bold">Total Raised: <span className="text-yellow-500">{progress}%</span></span>
-          <span className="text-yellow-500">${raised.toLocaleString()} / ${goal.toLocaleString()}</span>
+      <div className="mb-6 text-sm font-russo">
+        <div className="mb-2 flex justify-between text-primary-text">
+          <span className="font-bold">Total Raised: <span className="text-main-yellow">{progress}%</span></span>
+          <span className="text-main-yellow">${raised.toLocaleString()} / ${goal.toLocaleString()}</span>
         </div>
         <div className="h-3 rounded-full bg-slate-800/50">
           <div
@@ -49,30 +54,36 @@ export const VaultCard = ({
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="mb-6 grid grid-cols-3 gap-4 text-center">
         <div>
-          <p className="text-slate-400">TVL</p>
-          <p className="text-xl font-bold text-white">{tvl}</p>
+          <p className="text-sm text-dark-100">TVL</p>
+          <p className="font-bold text-primary-text">{tvl}</p>
         </div>
         <div className="border-x border-slate-800">
-          <p className="text-slate-400">Access</p>
-          <p className="text-xl font-bold text-white">{access}</p>
+          <p className="text-sm text-dark-100">Access</p>
+          <p className="font-bold text-primary-text">{access}</p>
         </div>
         <div>
-          <p className="text-slate-400">Base allo</p>
-          <p className="text-xl font-bold text-white">{baseAllo}</p>
+          <p className="text-sm text-dark-100">Base allo</p>
+          <p className="font-bold text-primary-text">{baseAllo}</p>
         </div>
       </div>
-
-      {/* Social Links */}
-      <div className="flex gap-3">
-        <button className="rounded-full bg-slate-800 p-2 hover:bg-slate-700">
-          <Twitter className="h-5 w-5 text-slate-400" />
-        </button>
-        <button className="rounded-full bg-slate-800 p-2 hover:bg-slate-700">
-          <Share2 className="h-5 w-5 text-slate-400" />
-        </button>
+      <div className="flex justify-center gap-3">
+        {socialLinks.map((social, index) => (
+          <a
+            key={index}
+            href={social.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-white/10 p-2 hover:bg-slate-700 inline-flex items-center justify-center"
+          >
+            <img
+              src={social.icon}
+              alt={`Social icon ${index + 1}`}
+              className="h-5 w-5 text-dark-100"
+            />
+          </a>
+        ))}
       </div>
     </div>
   </div>

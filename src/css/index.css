@@ -14,6 +14,7 @@
   --color-dark-700: #000322;
   --color-main-orange: #FF842C;
   --color-main-red: #E10134;
+  --color-main-yellow: #FFD012;
 }
 
 .dark {}
@@ -28,6 +29,7 @@
   --color-dark-700: var(--color-dark-700);
   --color-main-orange: var(--color-main-orange);
   --color-main-red: var(--color-main-red);
+  --color-main-yellow: var(--color-main-yellow);
 }
 
 body {

@@ -94,8 +94,8 @@ export const ConnectButton = () => {
         </PrimaryButton>
       ) : (
         <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900 rounded-full">
-            <Avatar className="h-8 w-8 bg-main-orange cursor-pointer">
+          <DropdownMenuTrigger className="outline-none rounded-full">
+            <Avatar className="h-10 w-10 bg-main-orange cursor-pointer">
               <AvatarFallback className="text-primary-text font-medium">
                 {getAvatarLetter()}
               </AvatarFallback>
@@ -103,10 +103,10 @@ export const ConnectButton = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="bg-zinc-800 border border-zinc-700 text-zinc-100"
+            className="bg-primary-background border border-dark-600 text-primary-text"
           >
             <DropdownMenuItem
-              className="hover:bg-zinc-700 cursor-pointer px-4 py-2 text-sm font-medium focus:bg-zinc-700"
+              className="hover:bg-dark-600 cursor-pointer px-4 py-2 text-sm font-medium"
               onClick={handleDisconnect}
             >
               Disconnect

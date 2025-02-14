@@ -36,70 +36,69 @@ export const LoginModal = ({
   return (
     <div className="fixed inset-0 pointer-events-none">
       <div className="absolute inset-0" />
-      <div className="relative flex items-center justify-center p-4 h-full">
-        <div className="bg-white rounded-xl w-full max-w-md p-6 pointer-events-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+      <div className="relative flex items-center justify-center p-2 sm:p-4 h-full">
+        <div className="bg-primary-background rounded-xl w-full max-w-md mx-2 p-4 sm:p-6 pointer-events-auto">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-primary-text">
               {view === 'wallets' ? 'Connect your wallet' : 'Sign in'}
             </h2>
             <button
-              className="text-gray-500 hover:text-gray-700"
+              className="text-primary-text p-1"
               type="button"
               onClick={onClose}
             >
-              <X size={24} />
+              <X className="sm:w-6 sm:h-6" size={20} />
             </button>
           </div>
           {view === 'wallets' ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3 max-h-[60vh] overflow-y-auto">
               {SUPPORTED_WALLETS.map(wallet => (
                 <button
                   key={wallet.key}
-                  className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-gray-900 transition-colors disabled:opacity-50"
+                  className="flex items-center justify-between w-full p-3 sm:p-4 bg-dark-600 rounded-lg text-primary-text transition-colors disabled:opacity-50"
                   disabled={isConnectingTo === wallet.key}
                   type="button"
                   onClick={() => handleWalletConnect(wallet.key)}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{wallet.displayName}</span>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="font-medium text-sm sm:text-base">{wallet.displayName}</span>
                   </div>
                   {isConnectingTo === wallet.key && <Spinner />}
                   {!installed.has(wallet.key) && (
                     <a
-                      className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                       href={wallet.website}
                       rel="noopener noreferrer"
                       target="_blank"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Download size={16} />
+                      <Download className="sm:w-4 sm:h-4" size={14} />
                       Install
                     </a>
                   )}
                 </button>
               ))}
-              <p className="text-gray-500 text-sm">* Unverified wallets</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between w-full mb-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
-                  <Check className="w-[30px] h-[30px] text-yellow-500" />
-                  <div className="text-gray-900">
+                  <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
+                  <div className="text-primary-text text-sm sm:text-base">
                     Wallet connected
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between w-full mb-4">
+              <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
                   {isAuthenticated ? (
-                    <Check className="w-[30px] h-[30px] text-yellow-500" />
+                    <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
                   ) : (
-                    <div className="w-[30px] h-[30px] bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-500">
+                    <div className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-main-orange">
                       2
                     </div>
                   )}
-                  <div className="text-gray-900">
+                  <div className="text-primary-text text-sm sm:text-base">
                     Sign Terms of Use
                   </div>
                 </div>
