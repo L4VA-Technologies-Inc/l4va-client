@@ -123,6 +123,7 @@ export const ConnectButton = () => {
         onClose={() => setIsModalOpen(false)}
         onConnect={handleConnect}
         onSignMessage={handleSignMessage}
+        disconnect={disconnect}
       />
     </>
   );

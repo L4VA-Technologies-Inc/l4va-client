@@ -15,6 +15,7 @@ export const LoginModal = ({
   onConnect,
   onSignMessage,
   isLoading,
+  disconnect,
 }) => {
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
@@ -34,10 +35,12 @@ export const LoginModal = ({
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none">
+    <div className="fixed inset-0 pointer-events-none bg-gray-900/40">
       <div className="absolute inset-0" />
       <div className="relative flex items-center justify-center p-2 sm:p-4 h-full">
-        <div className="bg-primary-background rounded-xl w-full max-w-md mx-2 p-4 sm:p-6 pointer-events-auto">
+        <div
+          className="bg-primary-background rounded-xl w-full max-w-md mx-2 p-4 sm:p-6 pointer-events-auto"
+        >
           <div className="flex justify-between items-center mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-primary-text">
               {view === 'wallets' ? 'Connect your wallet' : 'Sign in'}
@@ -112,6 +115,16 @@ export const LoginModal = ({
                 >
                   {isLoading ? 'Signing message...' : 'Sign message'}
                 </PrimaryButton>
+              </div>
+              <div className="text-sm text-primary-text mt-4">
+                Having issues? Try{' '}
+                <span
+                  className="cursor-pointer text-main-orange hover:underline"
+                  onClick={disconnect}
+                >
+                  disconnecting
+                </span>
+                {' '}your wallet
               </div>
             </div>
           )}
