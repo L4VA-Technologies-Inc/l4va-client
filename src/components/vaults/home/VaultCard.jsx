@@ -1,3 +1,5 @@
+import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+
 const socialLinks = [
   { icon: '/assets/social/x.svg', url: 'https://twitter.com/yourusername' },
   { icon: '/assets/social/xing.svg', url: 'https://xing.com/yourusername' },
@@ -12,9 +14,9 @@ export const VaultCard = ({
   progress = 100,
   raised = 1000000,
   goal = 1000000,
-  tvl = '150K',
+  tvl = 150000,
   access = 'Public',
-  baseAllo = '100%',
+  baseAllo = 10000,
   image = '/assets/vaults/space-man.webp',
 }) => (
   <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
@@ -44,7 +46,9 @@ export const VaultCard = ({
       <div className="mb-6 text-sm font-russo">
         <div className="mb-2 flex justify-between ">
           <span className="font-bold">Total Raised: <span className="text-main-yellow">{progress}%</span></span>
-          <span className="text-main-yellow">${raised.toLocaleString()} / ${goal.toLocaleString()}</span>
+          <span className="text-main-yellow">
+            ${formatNum(raised)} / ${formatNum(goal)}
+          </span>
         </div>
         <div className="h-3 rounded-full bg-slate-800/50">
           <div
@@ -57,7 +61,7 @@ export const VaultCard = ({
       <div className="mb-6 grid grid-cols-3 gap-4 text-center">
         <div>
           <p className="text-sm text-dark-100">TVL</p>
-          <p className="font-bold ">{tvl}</p>
+          <p className="font-bold ">{formatCompactNumber(tvl)}</p>
         </div>
         <div className="border-x border-slate-800">
           <p className="text-sm text-dark-100">Access</p>
@@ -65,7 +69,7 @@ export const VaultCard = ({
         </div>
         <div>
           <p className="text-sm text-dark-100">Base allo</p>
-          <p className="font-bold ">{baseAllo}</p>
+          <p className="font-bold ">{formatCompactNumber(baseAllo)}</p>
         </div>
       </div>
       <div className="flex justify-center gap-3">
