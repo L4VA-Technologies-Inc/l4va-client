@@ -10,7 +10,7 @@ import { Faq } from '@/components/faq/Faq.jsx';
 
 export const Home = () => (
   <>
-    <div className="pt-32 lg:pt-[214px] pb-[90px] px-4">
+    <div className="pt-32 lg:pt-[120px] pb-[90px] px-4">
       <div className="container mx-auto">
         <div className="mb-[60px]">
           <HeroHeader/>

@@ -81,10 +81,6 @@ export const Vaults = () => {
 
   return (
     <section className="relative">
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[1200px]"
-        style={{ backgroundImage: 'url(/assets/vaults-bg.webp)' }}
-      />
       <div aria-labelledby="features-heading" className="py-12 sm:py-16">
         <div className="container mx-auto p-6">
           <VaultsFilters />

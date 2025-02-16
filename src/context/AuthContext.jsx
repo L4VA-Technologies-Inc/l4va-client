@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { AuthContext } from './auth';
-import { CoreApiProvider } from '../services/api/core';
+import { CoreApiProvider } from '@/services/api/core';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
