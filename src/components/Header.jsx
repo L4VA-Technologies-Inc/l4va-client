@@ -84,7 +84,7 @@ export const Header = () => {
 
   return (
     <div className="py-6">
-      <nav className="container mx-auto flex items-center justify-between">
+      <nav className="container mx-auto flex items-center justify-between px-4">
         <Link to="/">
           <img alt="L4VA Logo" className="w-[160px]" src="/assets/logo.webp"/>
         </Link>
@@ -114,7 +114,7 @@ export const Header = () => {
       </nav>
 
       <div
-        className={`lg:hidden fixed inset-0 bg-black/95 backdrop-blur-md transform transition-transform duration-300
+        className={`lg:hidden fixed z-10 inset-0 bg-black/95 backdrop-blur-md transform transition-transform duration-300
           ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="absolute top-6 right-6">
@@ -137,9 +137,9 @@ export const Header = () => {
                 onSelect={(value) => console.log(value)}
               />
             </div>
-            {navLinks.map(({ to }, index) => (
+            {navLinks.map((link, index) => (
               <div
-                key={to}
+                key={link.to}
                 className="transform transition-all duration-300 delay-100"
                 style={{
                   opacity: isMobileMenuOpen ? 1 : 0,
@@ -147,9 +147,7 @@ export const Header = () => {
                   transitionDelay: `${index * 100}ms`,
                 }}
               >
-                {navLinks.map((link, idx) => (
-                  <MobileNavLink key={link.to} {...link} index={idx} />
-                ))}
+                <MobileNavLink key={link.to} {...link} index={index} />
               </div>
             ))}
             <div
