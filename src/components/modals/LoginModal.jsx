@@ -30,12 +30,10 @@ export const LoginModal = ({
 
   if (!isOpen) return null;
 
-  const handleWalletConnect = (walletKey) => {
-    onConnect(walletKey);
-  };
+  const handleWalletConnect = (walletKey) => onConnect(walletKey);
 
   return (
-    <div className="fixed inset-0 pointer-events-none bg-gray-900/40">
+    <div className="z-10 fixed inset-0 pointer-events-none bg-gray-900/40">
       <div className="absolute inset-0" />
       <div className="relative flex items-center justify-center p-2 sm:p-4 h-full">
         <div
@@ -87,7 +85,7 @@ export const LoginModal = ({
               <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
                   <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
-                  <div className=" text-sm sm:text-base">
+                  <div className="text-sm sm:text-base">
                     Wallet connected
                   </div>
                 </div>
@@ -101,7 +99,7 @@ export const LoginModal = ({
                       2
                     </div>
                   )}
-                  <div className=" text-sm sm:text-base">
+                  <div className="text-sm sm:text-base">
                     Sign Terms of Use
                   </div>
                 </div>
@@ -116,7 +114,7 @@ export const LoginModal = ({
                   {isLoading ? 'Signing message...' : 'Sign message'}
                 </PrimaryButton>
               </div>
-              <div className="text-sm  mt-4">
+              <div className="text-sm mt-4">
                 Having issues? Try{' '}
                 <span
                   className="cursor-pointer text-main-orange hover:underline"

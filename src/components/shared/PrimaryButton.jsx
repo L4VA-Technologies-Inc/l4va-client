@@ -5,7 +5,7 @@ export const PrimaryButton = ({
 }) => (
   <button
     className={`
-      h-14
+      h-[60px]
       cursor-pointer
       flex items-center
       bg-gradient-to-r from-[#FF842C] to-[#FFD012]
@@ -13,7 +13,6 @@ export const PrimaryButton = ({
       transition-colors
       gap-1.5
       font-satoshi
-      
       hover:opacity-90
       px-12 py-4 text-[20px]
       ${className}

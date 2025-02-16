@@ -1,8 +1,12 @@
-import { AuthProvider } from './context/AuthContext';
 import { Routes } from './routes';
 
+import { AuthProvider } from '@/context/AuthContext';
+import { ModalProvider } from '@/context/ModalsContext';
+
 export const App = () => (
-  <AuthProvider>
-    <Routes />
-  </AuthProvider>
+  <ModalProvider>
+    <AuthProvider>
+      <Routes />
+    </AuthProvider>
+  </ModalProvider>
 );

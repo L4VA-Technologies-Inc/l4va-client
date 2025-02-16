@@ -4,6 +4,8 @@ import { useWallet } from '@ada-anvil/weld/react';
 import WalletIcon from '../icons/wallet.svg?react';
 
 import { useAuth } from '@/context/auth';
+import { useModal } from '@/context/modals';
+
 import { LoginModal } from '@/components/modals/LoginModal';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -14,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+import { MODAL_TYPES } from '@/constants/core.constants';
+
 const RADIX = 16;
 
 const messageHex = msg => Array.from(msg).map(char =>
@@ -21,7 +25,7 @@ const messageHex = msg => Array.from(msg).map(char =>
 ).join('');
 
 export const ConnectButton = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { activeModal, openModal, closeModal } = useModal();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -59,7 +63,7 @@ export const ConnectButton = () => {
   const handleDisconnect = () => {
     disconnect();
     logout();
-    setIsModalOpen(false);
+    closeModal();
   };
 
   const handleSignMessage = async () => {
@@ -70,7 +74,7 @@ export const ConnectButton = () => {
       const message = `account: ${wallet.stakeAddressBech32}`;
       const signature = await wallet.handler.signData(messageHex(message));
       await login(signature, wallet.stakeAddressBech32);
-      setIsModalOpen(false);
+      closeModal();
     } catch (error) {
       console.error('Authentication failed:', error);
     } finally {
@@ -88,7 +92,7 @@ export const ConnectButton = () => {
   return (
     <>
       {!isAuthenticated ? (
-        <PrimaryButton onClick={() => setIsModalOpen(true)}>
+        <PrimaryButton onClick={() => openModal(MODAL_TYPES.LOGIN)}>
           <WalletIcon />
           CONNECT
         </PrimaryButton>
@@ -115,15 +119,15 @@ export const ConnectButton = () => {
         </DropdownMenu>
       )}
       <LoginModal
+        disconnect={disconnect}
         isAuthenticated={isAuthenticated}
         isConnected={wallet.isConnected}
         isConnectingTo={wallet.isConnectingTo}
         isLoading={isLoading}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={activeModal === MODAL_TYPES.LOGIN}
+        onClose={closeModal}
         onConnect={handleConnect}
         onSignMessage={handleSignMessage}
-        disconnect={disconnect}
       />
     </>
   );

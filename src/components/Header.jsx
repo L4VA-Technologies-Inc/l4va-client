@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
 import { ConnectButton } from './ConnectButton';
 import { CurrencyDropdown } from './CurrencyDropdown.jsx';
+
+import { useModal } from '@/context/modals';
+import { useAuth } from '@/context/auth';
+
+import { MODAL_TYPES } from '@/constants/core.constants';
 
 const options = [
   { value: 'USD', icon: '/assets/icons/flag.svg', label: 'USD' },
@@ -19,6 +24,9 @@ const navLinks = [
 
 export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { openModal } = useModal();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -33,9 +41,50 @@ export const Header = () => {
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
+  const handleNavClick = (to, e) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openModal(MODAL_TYPES.LOGIN, {
+        onSuccess: () => navigate(to),
+      });
+    }
+  };
+
+  const NavLink = ({ to, label }) => (
+    <Link
+      className="min-w-[140px] text-center transition hover:text-main-red"
+      to={to}
+      onClick={(e) => handleNavClick(to, e)}
+    >
+      {label}
+    </Link>
+  );
+
+  const MobileNavLink = ({ to, label, index }) => (
+    <div
+      className="transform transition-all duration-300 delay-100"
+      style={{
+        opacity: isMobileMenuOpen ? 1 : 0,
+        transform: `translateY(${isMobileMenuOpen ? 0 : 20}px)`,
+        transitionDelay: `${index * 100}ms`,
+      }}
+    >
+      <Link
+        className="block text-4xl text-center font-satoshi font-bold hover:text-main-red transition-colors duration-200"
+        to={to}
+        onClick={(e) => {
+          setIsMobileMenuOpen(false);
+          handleNavClick(to, e);
+        }}
+      >
+        {label}
+      </Link>
+    </div>
+  );
+
   return (
     <div className="py-6">
-      <nav className="container mx-auto  flex items-center justify-between">
+      <nav className="container mx-auto flex items-center justify-between">
         <Link to="/">
           <img alt="L4VA Logo" className="w-[160px]" src="/assets/logo.webp"/>
         </Link>
@@ -45,14 +94,8 @@ export const Header = () => {
             value="ADA"
             onSelect={(value) => console.log(value)}
           />
-          {navLinks.map(({ to, label }) => (
-            <Link
-              key={to}
-              className="min-w-[140px] text-center transition hover:text-main-red"
-              to={to}
-            >
-              {label}
-            </Link>
+          {navLinks.map((link) => (
+            <NavLink key={link.to} {...link} />
           ))}
         </div>
         <div className="lg:hidden flex items-center gap-4">
@@ -94,8 +137,7 @@ export const Header = () => {
                 onSelect={(value) => console.log(value)}
               />
             </div>
-
-            {navLinks.map(({ to, label }, index) => (
+            {navLinks.map(({ to }, index) => (
               <div
                 key={to}
                 className="transform transition-all duration-300 delay-100"
@@ -105,13 +147,9 @@ export const Header = () => {
                   transitionDelay: `${index * 100}ms`,
                 }}
               >
-                <Link
-                  className="block text-4xl text-center font-satoshi font-bold  hover:text-main-red transition-colors duration-200"
-                  to={to}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {label}
-                </Link>
+                {navLinks.map((link, idx) => (
+                  <MobileNavLink key={link.to} {...link} index={idx} />
+                ))}
               </div>
             ))}
             <div

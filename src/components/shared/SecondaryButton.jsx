@@ -5,12 +5,11 @@ export const SecondaryButton = ({
 }) => (
   <button
     className={`
-      h-14
+      h-[60px]
       cursor-pointer
       flex items-center
       bg-white/5 backdrop-blur-sm
       border-2 border-white/20
-      
       rounded-lg font-semibold
       hover:bg-white/10
       hover:border-white/30
