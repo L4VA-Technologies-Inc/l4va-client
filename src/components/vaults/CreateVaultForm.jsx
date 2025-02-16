@@ -14,7 +14,7 @@ import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import {
   createSteps,
   createVaultSchema,
-} from '@/components/vaults/create/constants/vaults.constants';
+} from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
   const navigate = useNavigate();

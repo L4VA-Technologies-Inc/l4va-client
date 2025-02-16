@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 
-import { VaultCard } from '@/components/vaults/home/VaultCard';
+import { VaultCard } from '@/components/home/VaultCard';
 
 export const VaultsList = () => {
   const [vaults, setVaults] = useState([]);

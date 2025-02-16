@@ -1,4 +1,4 @@
-import { VaultsList } from '@/components/vaults/home/VaultsList';
+import { VaultsList } from '@/components/shared/VaultsList';
 
 export const Vaults = () => (
   <div className="main container mx-auto">

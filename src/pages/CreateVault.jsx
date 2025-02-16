@@ -1,4 +1,4 @@
-import { CreateVaultForm } from '@/components/vaults/create/CreateVaultForm';
+import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 
 export const CreateVault = () => (
   <>

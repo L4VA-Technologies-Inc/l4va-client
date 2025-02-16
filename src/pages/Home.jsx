@@ -6,15 +6,15 @@ import { MODAL_TYPES } from '@/constants/core.constants';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { Features } from '@/components/Features';
-import { InvestmentsTable } from '@/components/investments/InvestmentsTable';
-import { Stats } from '@/components/stats/Stats';
+import { InvestmentsTable } from '@/components/home/InvestmentsTable';
+import { Stats } from '@/components/home/Stats';
 import { HeroHeader } from '@/components/HeroHeader';
 import { HeroStats } from '@/components/HeroStats';
-import { Faq } from '@/components/faq/Faq';
-import { VaultsFilters } from '@/components/vaults/home/VaultsFilters';
+import { Faq } from '@/components/home/Faq';
+import { VaultsFilters } from '@/components/home/VaultsFilters';
 import { SearchInput } from '@/components/shared/SearchInput';
-import { MainFilters } from '@/components/vaults/home/MainFilters';
-import { VaultsList } from '@/components/vaults/home/VaultsList';
+import { MainFilters } from '@/components/home/MainFilters';
+import { VaultsList } from '@/components/shared/VaultsList';
 
 export const Home = () => {
   const navigate = useNavigate();
