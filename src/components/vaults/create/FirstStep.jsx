@@ -90,7 +90,6 @@ export const FirstStep = () => {
   return (
     <div className="mx-auto space-y-8 bg-[#0a0b1e] text-white">
       <form className="space-y-8" onSubmit={formik.handleSubmit}>
-        {/* Vault Name */}
         <div className="space-y-2">
           <Label className="text-lg font-semibold" htmlFor="vaultName">
             VAULT NAME
@@ -107,8 +106,6 @@ export const FirstStep = () => {
             <div className="text-red-500">{formik.errors.vaultName}</div>
           )}
         </div>
-
-        {/* Vault Type */}
         <div className="space-y-2">
           <Label className="text-lg font-semibold">VAULT TYPE</Label>
           <RadioGroup
@@ -130,8 +127,6 @@ export const FirstStep = () => {
             </div>
           </RadioGroup>
         </div>
-
-        {/* Vault Privacy */}
         <div className="space-y-2">
           <Label className="text-lg font-semibold">VAULT PRIVACY</Label>
           <RadioGroup
@@ -168,8 +163,6 @@ export const FirstStep = () => {
             onChange={formik.handleChange}
           />
         </div>
-
-        {/* Vault Image */}
         <Card className="bg-[#1c1d2e] border-[#2a2b3d]">
           <CardContent className="p-4">
             <div
@@ -207,8 +200,6 @@ export const FirstStep = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Background Banner */}
         <Card className="bg-[#1c1d2e] border-[#2a2b3d]">
           <CardContent className="p-4">
             <div
@@ -246,8 +237,6 @@ export const FirstStep = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Social Links */}
         <div className="space-y-4">
           <Label className="text-lg font-semibold">SOCIAL LINKS</Label>
 
