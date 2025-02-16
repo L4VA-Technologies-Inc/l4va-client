@@ -25,7 +25,12 @@ const messageHex = msg => Array.from(msg).map(char =>
 ).join('');
 
 export const ConnectButton = () => {
-  const { activeModal, openModal, closeModal } = useModal();
+  const {
+    activeModal,
+    openModal,
+    closeModal,
+    modalProps,
+  } = useModal();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -67,7 +72,7 @@ export const ConnectButton = () => {
   };
 
   const handleSignMessage = async () => {
-    if (!wallet.isConnected || !wallet.handler) return;
+    if (!wallet.isConnected || !wallet.handler) return false;
     setIsLoading(true);
 
     try {
@@ -75,8 +80,9 @@ export const ConnectButton = () => {
       const signature = await wallet.handler.signData(messageHex(message));
       await login(signature, wallet.stakeAddressBech32);
       closeModal();
+      return modalProps.onSuccess && modalProps.onSuccess();
     } catch (error) {
-      console.error('Authentication failed:', error);
+      return console.error('Authentication failed:', error);
     } finally {
       setIsLoading(false);
     }
