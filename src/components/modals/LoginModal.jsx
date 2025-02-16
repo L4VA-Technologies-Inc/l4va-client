@@ -33,7 +33,7 @@ export const LoginModal = ({
   const handleWalletConnect = (walletKey) => onConnect(walletKey);
 
   return (
-    <div className="z-10 fixed inset-0 pointer-events-none bg-gray-900/40">
+    <div className="z-10 fixed inset-0 pointer-events-none bg-gray-900/70">
       <div className="absolute inset-0" />
       <div className="relative flex items-center justify-center p-2 sm:p-4 h-full">
         <div
