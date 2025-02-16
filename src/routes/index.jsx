@@ -5,6 +5,7 @@ import { HomePageLayout, MainLayout } from '@/layouts';
 import { NotFound } from '@/pages/NotFound';
 import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
+import { Vaults } from '@/pages/Vaults';
 
 const HomePage = () => (
   <HomePageLayout>
@@ -18,11 +19,21 @@ const CreateVaultPage = () => (
   </MainLayout>
 );
 
+const VaultsPage = () => (
+  <MainLayout>
+    <Vaults />
+  </MainLayout>
+);
+
 export const Routes = () => {
   const routesForPublic = [
     {
       path: '/',
       element: <HomePage />,
+    },
+    {
+      path: '/vaults',
+      element: <VaultsPage />,
     },
   ];
 

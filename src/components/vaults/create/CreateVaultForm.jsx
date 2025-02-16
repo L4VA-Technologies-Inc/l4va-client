@@ -1,7 +1,10 @@
 import { useState } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 
+import { VaultsApiProvider } from '@/services/api/vaults';
+
+import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +17,10 @@ import {
 } from '@/components/vaults/create/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
+  const navigate = useNavigate();
+
   const [activeStep, setActiveStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -24,14 +30,30 @@ export const CreateVaultForm = () => {
       vaultBrief: '',
     },
     validationSchema: createVaultSchema,
-    onSubmit: (values) => {
-      console.log(values);
+    onSubmit: async (values) => {
+      try {
+        setIsSubmitting(true);
+
+        const vault = await VaultsApiProvider.createVault({
+          name: values.vaultName,
+          type: values.vaultType,
+          privacy: values.vaultPrivacy,
+          brief: values.vaultBrief,
+        });
+        navigate('/vaults');
+      } catch (error) {
+        console.error('Error creating vault:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
   const handleStepClick = (stepNumber) => {
     setActiveStep(stepNumber);
   };
+
+  const shouldShowError = (fieldName) => formik.touched[fieldName] && formik.errors[fieldName];
 
   return (
     <div className="flex">
@@ -75,9 +97,10 @@ export const CreateVaultForm = () => {
                 name="vaultName"
                 placeholder="Enter the name of your Vault"
                 value={formik.values.vaultName}
+                onBlur={formik.handleBlur}
                 onChange={formik.handleChange}
               />
-              {formik.errors.vaultName && (
+              {shouldShowError('vaultName') && (
                 <div className="text-red-500">{formik.errors.vaultName}</div>
               )}
             </div>
@@ -90,7 +113,20 @@ export const CreateVaultForm = () => {
                 { id: 'cnt', label: 'Any CNT' },
               ]}
               value={formik.values.vaultType}
+              onBlur={() => formik.setFieldTouched('vaultType')}
               onChange={(value) => formik.setFieldValue('vaultType', value)}
+            />
+            <LavaRadioGroup
+              label="Vault privacy"
+              name="vaultPrivacy"
+              options={[
+                { id: 'private', label: 'Private Vault' },
+                { id: 'public', label: 'Public Vault' },
+                { id: 'semi-private', label: 'Semi-Private Vault' },
+              ]}
+              value={formik.values.vaultPrivacy}
+              onBlur={() => formik.setFieldTouched('vaultPrivacy')}
+              onChange={(value) => formik.setFieldValue('vaultPrivacy', value)}
             />
             <div className="space-y-2">
               <Label className="text-lg font-semibold" htmlFor="vaultBrief">
@@ -102,8 +138,17 @@ export const CreateVaultForm = () => {
                 name="vaultBrief"
                 placeholder="Add a description for your Vault"
                 value={formik.values.vaultBrief}
+                onBlur={formik.handleBlur}
                 onChange={formik.handleChange}
               />
+            </div>
+            <div className="flex justify-end">
+              <PrimaryButton
+                disabled={isSubmitting || !formik.isValid}
+                type="submit"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Vault'}
+              </PrimaryButton>
             </div>
           </form>
         </div>

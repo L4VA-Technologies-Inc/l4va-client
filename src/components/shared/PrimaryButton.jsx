@@ -1,7 +1,9 @@
 export const PrimaryButton = ({
+  type = 'button',
   children,
-  onClick,
+  disabled = false,
   className = '',
+  onClick,
 }) => (
   <button
     className={`
@@ -17,7 +19,8 @@ export const PrimaryButton = ({
       px-12 py-4 text-[20px]
       ${className}
     `}
-    type="button"
+    disabled={disabled}
+    type={type}
     onClick={onClick}
   >
     {children}

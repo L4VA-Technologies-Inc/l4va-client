@@ -7,20 +7,20 @@ const socialLinks = [
 ];
 
 export const VaultCard = ({
-  title,
+  name,
   description,
-  progress,
-  raised,
-  goal,
-  tvl,
-  access,
-  baseAllo,
-  image,
+  progress = 100,
+  raised = 1000000,
+  goal = 1000000,
+  tvl = '150K',
+  access = 'Public',
+  baseAllo = '100%',
+  image = '/assets/vaults/space-man.webp',
 }) => (
   <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
     <div className="h-48">
       <img
-        alt={title}
+        alt={name}
         className="h-full w-full object-cover"
         src={image}
       />
@@ -28,13 +28,13 @@ export const VaultCard = ({
     <div className="p-6">
       <div className="flex gap-4 mb-6">
         <img
-          alt={`${title} icon`}
+          alt={`${name} icon`}
           className="h-16 w-16 rounded-xl"
           src="/assets/vault-logo.png"
         />
         <div>
           <h2 className="font-satoshi text-[20px] font-bold ">
-            {title}
+            {name}
           </h2>
           <p className="text-sm text-dark-100">
             {description}
