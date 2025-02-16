@@ -7,13 +7,13 @@ export class VaultsApiProvider {
     name,
     type,
     privacy,
-    brief,
+    description,
   }) {
     const response = await axiosInstance.post(VaultsConfigProvider.createVault(), {
       name,
       type,
       privacy,
-      brief,
+      description,
     });
     return response;
   }

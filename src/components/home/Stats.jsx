@@ -56,7 +56,7 @@ export const Stats = () => {
     },
   ];
 
-  const vaultTypes = [
+  const types = [
     {
       label: 'Private', value: '30.33%', percentage: '30.33%', color: 'bg-red-800',
     },
@@ -91,7 +91,7 @@ export const Stats = () => {
           <h2 className="text-main-red text-2xl md:text-3xl font-bold mb-8">
             Vault Types
           </h2>
-          <ProgressBar items={vaultTypes} />
+          <ProgressBar items={types} />
         </div>
       </div>
     </div>

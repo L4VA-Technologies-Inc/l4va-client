@@ -13,10 +13,10 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png', 'image/webp'];
 
 const validationSchema = Yup.object().shape({
-  vaultName: Yup.string().required('Vault name is required'),
-  vaultType: Yup.string().required('Vault type is required'),
-  vaultPrivacy: Yup.string().required('Vault privacy is required'),
-  vaultBrief: Yup.string(),
+  name: Yup.string().required('Vault name is required'),
+  type: Yup.string().required('Vault type is required'),
+  privacy: Yup.string().required('Vault privacy is required'),
+  description: Yup.string(),
   vaultImage: Yup.mixed()
     .test('fileSize', 'File too large', (value) => {
       if (!value) return true;
@@ -49,10 +49,10 @@ export const FirstStep = () => {
 
   const formik = useFormik({
     initialValues: {
-      vaultName: '',
-      vaultType: 'multi',
-      vaultPrivacy: 'public',
-      vaultBrief: '',
+      name: '',
+      type: 'multi',
+      privacy: 'public',
+      description: '',
       vaultImage: null,
       vaultBanner: null,
       socialLinks: {
@@ -91,27 +91,27 @@ export const FirstStep = () => {
     <div className="mx-auto space-y-8 bg-[#0a0b1e] text-white">
       <form className="space-y-8" onSubmit={formik.handleSubmit}>
         <div className="space-y-2">
-          <Label className="text-lg font-semibold" htmlFor="vaultName">
+          <Label className="text-lg font-semibold" htmlFor="name">
             VAULT NAME
           </Label>
           <Input
             className="bg-[#0a0b1e] border-[#2a2b3d] h-12"
-            id="vaultName"
-            name="vaultName"
+            id="name"
+            name="name"
             placeholder="Enter the name of your Vault"
-            value={formik.values.vaultName}
+            value={formik.values.name}
             onChange={formik.handleChange}
           />
-          {formik.errors.vaultName && (
-            <div className="text-red-500">{formik.errors.vaultName}</div>
+          {formik.errors.name && (
+            <div className="text-red-500">{formik.errors.name}</div>
           )}
         </div>
         <div className="space-y-2">
           <Label className="text-lg font-semibold">VAULT TYPE</Label>
           <RadioGroup
             className="space-y-2"
-            defaultValue={formik.values.vaultType}
-            onValueChange={(value) => formik.setFieldValue('vaultType', value)}
+            defaultValue={formik.values.type}
+            onValueChange={(value) => formik.setFieldValue('type', value)}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem id="single" value="single" />
@@ -131,8 +131,8 @@ export const FirstStep = () => {
           <Label className="text-lg font-semibold">VAULT PRIVACY</Label>
           <RadioGroup
             className="space-y-2"
-            defaultValue={formik.values.vaultPrivacy}
-            onValueChange={(value) => formik.setFieldValue('vaultPrivacy', value)}
+            defaultValue={formik.values.privacy}
+            onValueChange={(value) => formik.setFieldValue('privacy', value)}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem id="private" value="private" />
@@ -151,15 +151,15 @@ export const FirstStep = () => {
 
         {/* Vault Brief */}
         <div className="space-y-2">
-          <Label className="text-lg font-semibold" htmlFor="vaultBrief">
+          <Label className="text-lg font-semibold" htmlFor="description">
             VAULT BRIEF <span className="text-gray-400">(OPTIONAL)</span>
           </Label>
           <Textarea
             className="bg-[#0a0b1e] border-[#2a2b3d] min-h-32"
-            id="vaultBrief"
-            name="vaultBrief"
+            id="description"
+            name="description"
             placeholder="Add a description for your Vault"
-            value={formik.values.vaultBrief}
+            value={formik.values.description}
             onChange={formik.handleChange}
           />
         </div>

@@ -24,21 +24,21 @@ export const CreateVaultForm = () => {
 
   const formik = useFormik({
     initialValues: {
-      vaultName: '',
-      vaultType: 'multi',
-      vaultPrivacy: 'public',
-      vaultBrief: '',
+      name: '',
+      type: 'multi',
+      privacy: 'public',
+      description: '',
     },
     validationSchema: createVaultSchema,
     onSubmit: async (values) => {
       try {
         setIsSubmitting(true);
 
-        const vault = await VaultsApiProvider.createVault({
-          name: values.vaultName,
-          type: values.vaultType,
-          privacy: values.vaultPrivacy,
-          brief: values.vaultBrief,
+        await VaultsApiProvider.createVault({
+          name: values.name,
+          type: values.type,
+          privacy: values.privacy,
+          description: values.description,
         });
         navigate('/vaults');
       } catch (error) {
@@ -88,56 +88,56 @@ export const CreateVaultForm = () => {
         <div className="mx-auto space-y-8 bg-[#0a0b1e] text-white">
           <form className="space-y-8" onSubmit={formik.handleSubmit}>
             <div className="space-y-2">
-              <Label className="text-lg font-semibold" htmlFor="vaultName">
+              <Label className="text-lg font-semibold" htmlFor="name">
                 VAULT NAME
               </Label>
               <Input
                 className="bg-[#0a0b1e] border-[#2a2b3d] h-12"
-                id="vaultName"
-                name="vaultName"
+                id="name"
+                name="name"
                 placeholder="Enter the name of your Vault"
-                value={formik.values.vaultName}
+                value={formik.values.name}
                 onBlur={formik.handleBlur}
                 onChange={formik.handleChange}
               />
-              {shouldShowError('vaultName') && (
-                <div className="text-red-500">{formik.errors.vaultName}</div>
+              {shouldShowError('name') && (
+                <div className="text-red-500">{formik.errors.name}</div>
               )}
             </div>
             <LavaRadioGroup
               label="Vault type"
-              name="vaultType"
+              name="type"
               options={[
                 { id: 'single', label: 'Single NFT' },
                 { id: 'multi', label: 'Multi NFT' },
                 { id: 'cnt', label: 'Any CNT' },
               ]}
-              value={formik.values.vaultType}
-              onBlur={() => formik.setFieldTouched('vaultType')}
-              onChange={(value) => formik.setFieldValue('vaultType', value)}
+              value={formik.values.type}
+              onBlur={() => formik.setFieldTouched('type')}
+              onChange={(value) => formik.setFieldValue('type', value)}
             />
             <LavaRadioGroup
               label="Vault privacy"
-              name="vaultPrivacy"
+              name="privacy"
               options={[
                 { id: 'private', label: 'Private Vault' },
                 { id: 'public', label: 'Public Vault' },
                 { id: 'semi-private', label: 'Semi-Private Vault' },
               ]}
-              value={formik.values.vaultPrivacy}
-              onBlur={() => formik.setFieldTouched('vaultPrivacy')}
-              onChange={(value) => formik.setFieldValue('vaultPrivacy', value)}
+              value={formik.values.privacy}
+              onBlur={() => formik.setFieldTouched('privacy')}
+              onChange={(value) => formik.setFieldValue('privacy', value)}
             />
             <div className="space-y-2">
-              <Label className="text-lg font-semibold" htmlFor="vaultBrief">
+              <Label className="text-lg font-semibold" htmlFor="description">
                 VAULT BRIEF <span className="text-gray-400">(OPTIONAL)</span>
               </Label>
               <Textarea
                 className="bg-[#0a0b1e] border-[#2a2b3d] min-h-32"
-                id="vaultBrief"
-                name="vaultBrief"
+                id="description"
+                name="description"
                 placeholder="Add a description for your Vault"
-                value={formik.values.vaultBrief}
+                value={formik.values.description}
                 onBlur={formik.handleBlur}
                 onChange={formik.handleChange}
               />

@@ -20,8 +20,8 @@ export const createSteps = [
 ];
 
 export const createVaultSchema = Yup.object().shape({
-  vaultName: Yup.string().required('Vault name is required'),
-  vaultType: Yup.string().required('Vault type is required'),
-  vaultPrivacy: Yup.string().required('Vault privacy is required'),
-  vaultBrief: Yup.string(),
+  name: Yup.string().required('Vault name is required'),
+  type: Yup.string().required('Vault type is required'),
+  privacy: Yup.string().required('Vault privacy is required'),
+  description: Yup.string(),
 });
