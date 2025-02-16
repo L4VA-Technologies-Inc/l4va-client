@@ -45,7 +45,7 @@ export const Features = () => {
         />
       </div>
       <div className="pt-6 sm:pt-44">
-        <h3 className="text-primary-text font-satoshi text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
+        <h3 className=" font-satoshi text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
           {title}
         </h3>
         <p

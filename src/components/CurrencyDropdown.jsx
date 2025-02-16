@@ -22,7 +22,7 @@ export const CurrencyDropdown = () => {
       <DropdownMenuTrigger asChild>
         <button
           className={clsx(
-            'w-[125px] rounded-t-lg px-6 py-4 border-2 text-primary-text text-[20px]',
+            'w-[125px] rounded-t-lg px-6 py-4 border-2  text-[20px]',
             isOpen && 'border-transparent bg-dark-600',
             !isOpen && 'border-white/15 bg-transparent/5 backdrop-blur-sm rounded-b-lg',
           )}
@@ -55,7 +55,7 @@ export const CurrencyDropdown = () => {
                 className="h-6 w-6"
                 src={option.icon}
               />
-              <span className="text-primary-text text-[20px]">
+              <span className="text-[20px]">
                 {option.label}
               </span>
             </div>

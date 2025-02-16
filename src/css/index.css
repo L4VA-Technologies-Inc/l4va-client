@@ -7,6 +7,7 @@
 }
 
 :root {
+  --layout-top-padding: 84px;
   --color-background-primary: #000322;
   --color-text-primary: #FFFFFF;
   --color-dark-100: #979BB0;
@@ -33,7 +34,7 @@
 }
 
 body {
-  @apply bg-primary-background;
+  @apply bg-primary-background text-primary-text font-satoshi;
 }
 
 .container {

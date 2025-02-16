@@ -16,7 +16,7 @@ export const HeroStats = () => {
     <div className="flex flex-col sm:flex-row gap-10 text-center">
       {stats.map((stat) => (
         <div key={stat.label} className="min-w-[210px]">
-          <div className="text-primary-text mt-2 text-2xl font-bold font-satoshi">
+          <div className=" mt-2 text-2xl font-bold font-satoshi">
             {stat.label}
           </div>
           <div className="font-russo text-main-orange text-2xl sm:text-3xl lg:text-4xl font-bold">

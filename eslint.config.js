@@ -65,7 +65,6 @@ export default [
       'react/jsx-no-script-url': 'error',
       'react/jsx-no-useless-fragment': 'error',
       'react/jsx-pascal-case': 'error',
-      'react/jsx-props-no-spreading': 'warning',
       'react/jsx-sort-props': ['error', {
         callbacksLast: true,
         shorthandFirst: true,

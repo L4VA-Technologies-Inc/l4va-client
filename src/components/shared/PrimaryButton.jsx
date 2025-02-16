@@ -13,7 +13,7 @@ export const PrimaryButton = ({
       transition-colors
       gap-1.5
       font-satoshi
-      text-primary-text
+      
       hover:opacity-90
       px-12 py-4 text-[20px]
       ${className}

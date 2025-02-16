@@ -9,7 +9,7 @@ export const HeroHeader = () => (
       >
         L4VA ASSET
       </h1>
-      <p className="uppercase text-primary-text block text-[22px] lg:text-[44px] tracking-[3px]">
+      <p className="uppercase  block text-[22px] lg:text-[44px] tracking-[3px]">
         Dream Big. Tokenize Bigger
       </p>
     </div>

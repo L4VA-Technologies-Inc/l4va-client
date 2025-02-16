@@ -42,11 +42,11 @@ export const LoginModal = ({
           className="bg-primary-background rounded-xl w-full max-w-md mx-2 p-4 sm:p-6 pointer-events-auto"
         >
           <div className="flex justify-between items-center mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-primary-text">
+            <h2 className="text-lg sm:text-xl font-semibold ">
               {view === 'wallets' ? 'Connect your wallet' : 'Sign in'}
             </h2>
             <button
-              className="text-primary-text p-1"
+              className=" p-1"
               type="button"
               onClick={onClose}
             >
@@ -58,7 +58,7 @@ export const LoginModal = ({
               {SUPPORTED_WALLETS.map(wallet => (
                 <button
                   key={wallet.key}
-                  className="flex items-center justify-between w-full p-3 sm:p-4 bg-dark-600 rounded-lg text-primary-text transition-colors disabled:opacity-50"
+                  className="flex items-center justify-between w-full p-3 sm:p-4 bg-dark-600 rounded-lg  transition-colors disabled:opacity-50"
                   disabled={isConnectingTo === wallet.key}
                   type="button"
                   onClick={() => handleWalletConnect(wallet.key)}
@@ -87,7 +87,7 @@ export const LoginModal = ({
               <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
                 <div className="flex items-center gap-2">
                   <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
-                  <div className="text-primary-text text-sm sm:text-base">
+                  <div className=" text-sm sm:text-base">
                     Wallet connected
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export const LoginModal = ({
                       2
                     </div>
                   )}
-                  <div className="text-primary-text text-sm sm:text-base">
+                  <div className=" text-sm sm:text-base">
                     Sign Terms of Use
                   </div>
                 </div>
@@ -116,7 +116,7 @@ export const LoginModal = ({
                   {isLoading ? 'Signing message...' : 'Sign message'}
                 </PrimaryButton>
               </div>
-              <div className="text-sm text-primary-text mt-4">
+              <div className="text-sm  mt-4">
                 Having issues? Try{' '}
                 <span
                   className="cursor-pointer text-main-orange hover:underline"

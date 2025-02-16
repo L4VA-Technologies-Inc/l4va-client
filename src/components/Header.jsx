@@ -31,15 +31,13 @@ export const Header = () => {
     };
   }, [isMobileMenuOpen]);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   return (
-    <div className="absolute top-6 w-full z-10 px-6">
-      <nav className="container mx-auto text-primary-text flex items-center justify-between">
+    <div className="py-6">
+      <nav className="container mx-auto  flex items-center justify-between">
         <Link to="/">
-          <img alt="L4VA Logo" className="w-[160px] h-[60px]" src="/assets/logo.webp"/>
+          <img alt="L4VA Logo" className="w-[160px]" src="/assets/logo.webp"/>
         </Link>
         <div className="hidden lg:flex items-center text-2xl font-satoshi font-bold">
           <CurrencyDropdown
@@ -60,7 +58,7 @@ export const Header = () => {
         <div className="lg:hidden flex items-center gap-4">
           <button
             aria-label="Toggle mobile menu"
-            className="text-primary-text"
+            className=""
             type="button"
             onClick={toggleMobileMenu}
           >
@@ -79,7 +77,7 @@ export const Header = () => {
         <div className="absolute top-6 right-6">
           <button
             aria-label="Close mobile menu"
-            className="text-primary-text p-2 hover:bg-white/10 rounded-full transition-colors"
+            className=" p-2 hover:bg-white/10 rounded-full transition-colors"
             type="button"
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -108,7 +106,7 @@ export const Header = () => {
                 }}
               >
                 <Link
-                  className="block text-4xl text-center font-satoshi font-bold text-primary-text hover:text-main-red transition-colors duration-200"
+                  className="block text-4xl text-center font-satoshi font-bold  hover:text-main-red transition-colors duration-200"
                   to={to}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

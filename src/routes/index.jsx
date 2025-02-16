@@ -1,30 +1,21 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ProtectedRoute } from './ProtectedRoute';
-import { Layout } from '../layouts/MainLayout.jsx';
-import { NotFound } from '../pages/NotFound.jsx';
-import { Home } from '../pages/Home.jsx';
+import { HomePageLayout, MainLayout } from '@/layouts';
+import { NotFound } from '@/pages/NotFound';
+import { Home } from '@/pages/Home';
+import { CreateVault } from '@/pages/CreateVault';
 
 const HomePage = () => (
-  <Layout>
+  <HomePageLayout>
     <Home />
-  </Layout>
+  </HomePageLayout>
 );
 
-const DashboardPage = () => (
-  <Layout>
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-    </div>
-  </Layout>
-);
-
-const ProfilePage = () => (
-  <Layout>
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold">Profile</h1>
-    </div>
-  </Layout>
+const CreateVaultPage = () => (
+  <MainLayout>
+    <CreateVault />
+  </MainLayout>
 );
 
 export const Routes = () => {
@@ -37,16 +28,12 @@ export const Routes = () => {
 
   const routesForAuthenticatedOnly = [
     {
-      path: '/dashboard',
+      path: '/create',
       element: <ProtectedRoute />,
       children: [
         {
-          path: '/dashboard',
-          element: <DashboardPage />,
-        },
-        {
-          path: '/dashboard/profile',
-          element: <ProfilePage />,
+          path: '/create',
+          element: <CreateVaultPage />,
         },
       ],
     },

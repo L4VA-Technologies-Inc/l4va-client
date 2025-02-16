@@ -55,7 +55,7 @@ export const Faq = () => {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-12">
       <section className="mb-16">
-        <h2 className="text-4xl font-bold mb-8 text-primary-text font-['Russo_One']">
+        <h2 className="text-4xl font-bold mb-8  font-['Russo_One']">
           HOW TO PARTICIPATE
         </h2>
 
@@ -74,7 +74,7 @@ export const Faq = () => {
                   {step.number}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-primary-text mb-2">{step.title}</h3>
+                  <h3 className="text-xl font-bold  mb-2">{step.title}</h3>
                   <p className="text-dark-100">{step.description}</p>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export const Faq = () => {
 
       {/* FAQ Section */}
       <section>
-        <h2 className="text-4xl font-bold mb-8 text-primary-text font-['Russo_One']">
+        <h2 className="text-4xl font-bold mb-8  font-['Russo_One']">
           FREQUENTLY ASKED QUESTIONS
         </h2>
 
@@ -96,7 +96,7 @@ export const Faq = () => {
               value={`item-${index}`}
               className="border border-[#202233] rounded-lg overflow-hidden bg-[#000322]"
             >
-              <AccordionTrigger className="px-6 py-4 text-primary-text hover:no-underline hover:bg-[#202233]">
+              <AccordionTrigger className="px-6 py-4  hover:no-underline hover:bg-[#202233]">
                 {item.question}
               </AccordionTrigger>
               <AccordionContent className="px-6 py-4 text-dark-100">
