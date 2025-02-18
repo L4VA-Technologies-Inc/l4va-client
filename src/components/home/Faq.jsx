@@ -78,9 +78,9 @@ export const Faq = () => {
             {steps.map((step) => (
               <div
                 key={step.number}
-                className="flex items-start py-[30px] pl-[60px] pr-[54px] gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]"
+                className="w-[600px] flex items-start py-[30px] pl-[60px] pr-[54px] gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]"
               >
-                <div className="text-center text-[128px] font-bold text-main-red font-satoshi">
+                <div className="text-center text-[128px] font-extrabold text-main-red font-satoshi">
                   {step.number}
                 </div>
                 <div>
