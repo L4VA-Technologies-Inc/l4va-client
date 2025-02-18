@@ -69,8 +69,8 @@ export const Stats = () => {
   ];
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <h1 className=" text-2xl md:text-4xl font-bold mb-8 md:mb-12 animate-fadeIn">
+    <div className="container mx-auto py-12 sm:py-16">
+      <h1 className="font-russo font-bold text-[40px] mb-8">
         QUICK STATS
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
@@ -79,17 +79,16 @@ export const Stats = () => {
         <StatCard label="Invested" value="$9M+" />
         <StatCard label="TVL All Vaults" value="$18M+" />
       </div>
-
       <div className="space-y-12 md:space-y-16">
         <div>
           <h2 className="text-main-red text-2xl md:text-3xl font-bold mb-8">
-            Vault Status
+            Vault by Status
           </h2>
           <ProgressBar items={vaultStatus} />
         </div>
         <div>
           <h2 className="text-main-red text-2xl md:text-3xl font-bold mb-8">
-            Vault Types
+            Vault by Types
           </h2>
           <ProgressBar items={types} />
         </div>

@@ -101,7 +101,7 @@ export const CreateVaultForm = () => {
                 onChange={formik.handleChange}
               />
               {shouldShowError('name') && (
-                <div className="text-red-500">{formik.errors.name}</div>
+                <div className="text-main-red">{formik.errors.name}</div>
               )}
             </div>
             <LavaRadioGroup

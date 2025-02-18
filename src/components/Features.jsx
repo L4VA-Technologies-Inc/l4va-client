@@ -34,7 +34,7 @@ export const Features = () => {
         <img
           alt={`${title} icon`}
           className="
-            w-32 h-32 sm:w-44 sm:h-44 mx-auto sm:mx-0 sm:absolute sm:-left-12
+            w-[42px] h-[42px] sm:w-[84px] sm:h-[84px] mx-auto sm:mx-0
             transition-transform duration-300 hover:scale-110
           "
           src={icon}
@@ -44,7 +44,7 @@ export const Features = () => {
           }}
         />
       </div>
-      <div className="pt-6 sm:pt-44">
+      <div className="pt-6 sm:pt-12">
         <h3 className=" font-satoshi text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
           {title}
         </h3>
@@ -62,7 +62,9 @@ export const Features = () => {
 
   return (
     <section aria-labelledby="features-heading" className="py-12 sm:py-16">
-      <h2 className="sr-only" id="features-heading">Our Platform Features</h2>
+      <h2 className="sr-only" id="features-heading">
+        Our Platform Features
+      </h2>
       <div className="container mx-auto px-4 lg:px-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 sm:gap-20">
           {features.map((feature) => (
