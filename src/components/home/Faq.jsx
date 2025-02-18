@@ -31,7 +31,7 @@ export const Faq = () => {
 
   const faqItems = [
     {
-      question: 'What is LAVA?',
+      question: 'What is L4VA?',
       answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     },
     {
@@ -98,20 +98,20 @@ export const Faq = () => {
       </section>
 
       <section>
-        <h2 className="text-4xl font-bold mb-8 font-russo">
+        <h2 className="text-[40px] font-bold mb-8 font-russo">
           FREQUENTLY ASKED QUESTIONS
         </h2>
-        <Accordion collapsible className="space-y-2" type="single">
+        <Accordion collapsible className="bg-[#FFFFFF08] rounded-[10px]" type="single">
           {faqItems.map((item, index) => (
             <AccordionItem
               key={index}
-              className="border border-[#202233] rounded-lg overflow-hidden bg-[#000322]"
+              className="backdrop-blur-[20px] rounded-lg data-[state=open]:bg-[#FFFFFF1A] transition-colors border-b border-[#FFFFFF0D]"
               value={`item-${index}`}
             >
-              <AccordionTrigger className="px-6 py-4  hover:no-underline hover:bg-[#202233]">
+              <AccordionTrigger className="hover:no-underline text-[24px] p-8 data-[state=open]:pb-2">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="px-6 py-4 text-dark-100">
+              <AccordionContent className="text-dark-100 px-8 pb-8">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
