@@ -26,7 +26,8 @@ export const VaultsFilters = () => {
                 hover:border-white/30
               `}
             hover:opacity-90
-          `}
+            `}
+            type="button"
             onClick={() => setActiveFilter(filter)}
           >
             {filter}
