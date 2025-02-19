@@ -29,18 +29,19 @@ export const Footer = () => {
       behavior: 'smooth',
     });
   };
+
   return (
-    <div className="relative py-16">
+    <div className="relative py-8 md:py-16">
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[670px]"
         style={{ backgroundImage: 'url(/assets/footer-bg.png)' }}
       />
-      <div className="container mx-auto">
-        <div className="flex items-center flex-col mb-[60px]">
-          <h2 className="text-primary-text text-[24px] font-russo font-bold mb-16">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center flex-col mb-8 md:mb-16">
+          <h2 className="text-primary-text text-xl md:text-2xl font-russo font-bold mb-8 md:mb-16">
             FIND US ON SOCIAL
           </h2>
-          <div className="flex justify-center items-center gap-8">
+          <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
             {socialLinks.map((social) => (
               <a
                 key={social.name}
@@ -52,7 +53,7 @@ export const Footer = () => {
               >
                 <img
                   alt={`${social.name} icon`}
-                  className="w-[60px] h-[60px]"
+                  className="w-10 h-10 md:w-[60px] md:h-[60px]"
                   src={social.icon}
                 />
               </a>
@@ -61,26 +62,30 @@ export const Footer = () => {
         </div>
         <div className="flex justify-center mb-8">
           <Link to="/">
-            <img alt="L4VA Logo" className="w-[210px]" src="/assets/logo.webp"/>
+            <img
+              alt="L4VA Logo"
+              className="w-40 md:w-[210px]"
+              src="/assets/logo.webp"
+            />
           </Link>
         </div>
-        <div className="flex items-center justify-center space-x-8 mb-16">
+        <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16">
           {navLinks.map((link) => (
             <a
               key={link.href}
-              className="font-bold hover:text-main-red transition-colors whitespace-nowrap text-lg"
+              className="font-bold hover:text-main-red transition-colors text-center text-base md:text-lg"
               href={link.href}
             >
               {link.label}
             </a>
           ))}
         </div>
-        <p className="text-center text-sm text-dark-100 pb-6">
+        <p className="text-center text-xs md:text-sm text-dark-100 pb-6">
           Copyright © {new Date().getFullYear()}. All Rights Reserved by L4VA
         </p>
         <button
           aria-label="Scroll to top"
-          className="cursor-pointer absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center hover:opacity-80 transition-opacity"
+          className="cursor-pointer absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:opacity-80 transition-opacity"
           type="button"
           onClick={scrollToTop}
         >

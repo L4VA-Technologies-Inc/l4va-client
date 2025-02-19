@@ -55,7 +55,7 @@ export const Home = () => {
       <Features />
       <section className="relative">
         <div aria-labelledby="features-heading" className="py-12 sm:py-16">
-          <div className="container mx-auto p-6">
+          <div className="container mx-auto">
             <VaultsFilters />
             <div className="flex gap-8 mb-8">
               <SearchInput />
