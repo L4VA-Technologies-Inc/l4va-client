@@ -9,7 +9,7 @@ export const HeroHeader = () => (
       >
         Dream big
       </h1>
-      <p className="uppercase leading-[1]  block text-[22px] lg:text-[72px] tracking-[3px]">
+      <p className="uppercase leading-[1] block text-[22px] lg:text-[72px] tracking-[3px]">
         Tokenize Bigger
       </p>
     </div>
