@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
+import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
@@ -10,7 +11,6 @@ import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { transformYupErrorsIntoObject } from '@/utils/core.utils';
 
 import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
-import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -99,9 +99,19 @@ export const CreateVaultForm = () => {
   const renderStepContent = (step) => {
     switch (step) {
       case 1:
-        return <ConfigureVault data={vaultData} setData={setVaultData} />;
+        return (
+          <ConfigureVault
+            data={vaultData}
+            setData={setVaultData}
+          />
+        );
       case 2:
-        return <AssetContribution data={vaultData} setData={setVaultData} />;
+        return (
+          <AssetContribution
+            data={vaultData}
+            setData={setVaultData}
+          />
+        );
       case 3:
         return <div />;
       case 4:
