@@ -18,6 +18,10 @@
   --color-main-yellow: #FFD012;
   --color-main-green: #65C366;
   --color-input-bg: #080B29;
+  /* For the datepicker */
+  --color-accent: #202233;
+  --color-primary: #FF842C;
+  /* For the datepicker end */
 }
 
 .dark {}
@@ -35,6 +39,8 @@
   --color-main-yellow: var(--color-main-yellow);
   --color-main-green: var(--color-main-green);
   --color-input-bg: var(--color-input-bg);
+  --color-accent: var(--color-accent);
+  --color-primary: var(--color-primary);
 }
 
 body {

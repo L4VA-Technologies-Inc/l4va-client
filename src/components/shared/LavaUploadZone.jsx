@@ -125,7 +125,7 @@ export const UploadZone = ({
               </div>
             </div>
             <p className="text-dark-100 text-[20px] mb-2">
-              Upload the artwork into the selected area
+              Upload file into the selected area
             </p>
             <p className="text-dark-100 text-sm">
               Drag and drop or click to browse

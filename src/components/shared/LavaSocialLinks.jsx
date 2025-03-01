@@ -100,7 +100,7 @@ export const LavaSocialLinks = ({
             <div
               key={link.id}
               className={`flex items-center gap-2 p-3 rounded-lg bg-input-bg border ${
-                linkError && linkTouched ? 'border-red-500' : 'border-[#2D3049]'
+                linkError && linkTouched ? 'border-red-500' : 'border-dark-600'
               }`}
             >
               <Select

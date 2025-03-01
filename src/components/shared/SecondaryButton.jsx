@@ -8,7 +8,7 @@ export const SecondaryButton = ({
       h-[60px]
       cursor-pointer
       flex items-center
-      bg-input-bg backdrop-blur-sm
+      bg-white/5 backdrop-blur-sm
       border border-white/20
       rounded-lg font-semibold
       hover:bg-white/10

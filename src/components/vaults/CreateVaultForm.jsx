@@ -2,20 +2,21 @@ import { useState } from 'react';
 import {
   Formik, Form, Field, ErrorMessage,
 } from 'formik';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+
 import { validationSchema } from '@/components/vaults/constants/vaults.constants';
+
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
-
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -37,17 +38,8 @@ export const CreateVaultForm = () => {
     vaultImage: null,
     vaultBanner: null,
     socialLinks: [],
-  };
-
-  const handleSubmit = (values, { setSubmitting }) => {
-    console.log('Form values:', values);
-    if (currentStep < steps.length) {
-      handleNextStep();
-    } else {
-      // Final form submission
-      alert('Form submitted successfully!');
-    }
-    setSubmitting(false);
+    valuationType: 'lbe',
+    contributionWindowOpenTime: 'launch',
   };
 
   const handleNextStep = () => {
@@ -70,6 +62,17 @@ export const CreateVaultForm = () => {
     }
   };
 
+  const handleSubmit = (values, { setSubmitting }) => {
+    console.log('Form values:', values);
+    if (currentStep < steps.length) {
+      handleNextStep();
+    } else {
+      // Final form submission
+      alert('Form submitted successfully!');
+    }
+    setSubmitting(false);
+  };
+
   const getStepContent = (step, formikProps) => {
     const {
       values, errors, touched, setFieldValue,
@@ -87,7 +90,7 @@ export const CreateVaultForm = () => {
                 <Field
                   as={Input}
                   className={`
-                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-[#2D3049] w-[500px] h-[60px] mt-4
+                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4
                     ${touched.name && errors.name ? 'border-red-500' : ''}
                   `}
                   id="name"
@@ -129,7 +132,7 @@ export const CreateVaultForm = () => {
                 <Field
                   as={Input}
                   className="
-                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-[#2D3049] w-[500px] h-[60px] mt-4
+                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4
                   "
                   id="fractionToken"
                   name="fractionToken"
@@ -146,7 +149,7 @@ export const CreateVaultForm = () => {
                 <Field
                   as={Textarea}
                   className="
-                    resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-[#2D3049] w-[500px] h-[60px] mt-4 min-h-32
+                    resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4 min-h-32
                   "
                   id="description"
                   name="description"
@@ -184,9 +187,33 @@ export const CreateVaultForm = () => {
         );
       case 2:
         return (
-          <div>
-            <h2 className="text-2xl font-bold">Asset Contribution</h2>
-            {/* Asset Contribution step content */}
+          <div className="grid grid-cols-2">
+            <div>
+              <Field
+                component={LavaRadioGroup}
+                label="*Valuation type"
+                name="valuationType"
+                options={[
+                  { id: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' },
+                ]}
+              />
+              <div className="mt-[60px]">
+                <Field
+                  component={LavaRadioGroup}
+                  label="*Contribution window open time"
+                  name="contributionWindowOpenTime"
+                  options={[
+                    { id: 'launch', label: 'Upon Vault Launch' },
+                    { id: 'custom', label: 'Custom' },
+                  ]}
+                />
+                {values.contributionWindowOpenTime === 'custom' && (
+                  <div className="mt-4">
+                    <LavaDatePicker />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         );
       case 3:
@@ -265,10 +292,10 @@ export const CreateVaultForm = () => {
           </div>
 
           <div className="my-[60px] flex gap-[30px] justify-center">
-            <SecondaryButton className="uppercase px-16 py-4">
+            <SecondaryButton className="uppercase px-16 py-4 bg-input-bg">
               Save for later
             </SecondaryButton>
-            <PrimaryButton>
+            <PrimaryButton onClick={handleNextStep}>
               <ChevronRight className="text-dark-700" size={24} />
             </PrimaryButton>
           </div>
