@@ -17,6 +17,7 @@ export const PrimaryButton = ({
       font-satoshi
       hover:opacity-90
       px-12 py-4 text-[20px]
+      text-dark-700
       ${className}
     `}
     disabled={disabled}

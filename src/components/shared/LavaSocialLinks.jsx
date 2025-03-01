@@ -1,4 +1,3 @@
-// LavaSocialLinks.jsx
 import {
   Facebook,
   Twitter,
@@ -21,8 +20,6 @@ import {
 export const LavaSocialLinks = ({
   socialLinks = [],
   setSocialLinks,
-  errors,
-  touched,
 }) => {
   const socialPlatforms = [
     {
@@ -49,21 +46,24 @@ export const LavaSocialLinks = ({
   ];
 
   const addNewLink = () => {
-    setSocialLinks([...socialLinks, {
+    const newLinks = [...socialLinks, {
       platform: 'facebook',
       url: '',
       id: Date.now(),
-    }]);
+    }];
+    setSocialLinks(newLinks);
   };
 
   const updateLink = (id, field, value) => {
-    setSocialLinks(socialLinks.map(link =>
+    const updatedLinks = socialLinks.map(link =>
       link.id === id ? { ...link, [field]: value } : link,
-    ));
+    );
+    setSocialLinks(updatedLinks);
   };
 
   const removeLink = (id) => {
-    setSocialLinks(socialLinks.filter(link => link.id !== id));
+    const filteredLinks = socialLinks.filter(link => link.id !== id);
+    setSocialLinks(filteredLinks);
   };
 
   const getPlaceholderForPlatform = (platformId) => {
@@ -71,14 +71,11 @@ export const LavaSocialLinks = ({
     return platform ? platform.placeholder : '';
   };
 
-  const hasErrors = errors && Array.isArray(errors);
-  const isTouched = touched && Array.isArray(touched);
-
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase text-[20px] font-bold">
-          *SOCIAL LINKS
+          SOCIAL LINKS
         </div>
         <button
           className="border-2 border-white/20 rounded-[10px] p-2"
@@ -92,61 +89,49 @@ export const LavaSocialLinks = ({
         </button>
       </div>
       <div className="space-y-4">
-        {socialLinks.map((link, index) => {
-          const linkError = hasErrors && errors[index];
-          const linkTouched = isTouched && touched[index];
-
-          return (
-            <div
-              key={link.id}
-              className={`flex items-center gap-2 p-3 rounded-lg bg-input-bg border ${
-                linkError && linkTouched ? 'border-red-500' : 'border-dark-600'
-              }`}
+        {socialLinks.map((link) => (
+          <div
+            key={link.id}
+            className="flex items-center gap-2 p-3 rounded-lg bg-input-bg border border-dark-600"
+          >
+            <Select
+              value={link.platform}
+              onValueChange={(value) => updateLink(link.id, 'platform', value)}
             >
-              <Select
-                value={link.platform}
-                onValueChange={(value) => updateLink(link.id, 'platform', value)}
-              >
-                <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
-                  <SelectValue placeholder="Select platform" />
-                </SelectTrigger>
-                <SelectContent className="border-white/20 bg-input-bg">
-                  {socialPlatforms.map((platform) => (
-                    <SelectItem key={platform.id} className="hover:bg-white/5" value={platform.id}>
-                      <div className="flex items-center gap-2">
-                        {platform.icon}
-                        <span>{platform.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                className="py-4 pl-5 text-[20px] border-none shadow-none"
-                placeholder={getPlaceholderForPlatform(link.platform)}
-                style={{ fontSize: '20px' }}
-                value={link.url}
-                onChange={(e) => updateLink(link.id, 'url', e.target.value)}
-              />
-              <Button
-                className="h-8 w-8 rounded-full"
-                size="icon"
-                variant="ghost"
-                onClick={() => removeLink(link.id)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-
-              {linkError && linkTouched && linkError.url && (
-                <div className="absolute -bottom-5 left-0 text-red-500 text-xs">
-                  {linkError.url}
-                </div>
-              )}
-            </div>
-          );
-        })}
+              <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent className="border-white/20 bg-input-bg">
+                {socialPlatforms.map((platform) => (
+                  <SelectItem key={platform.id} className="hover:bg-white/5" value={platform.id}>
+                    <div className="flex items-center gap-2">
+                      {platform.icon}
+                      <span>
+                        {platform.name}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="py-4 pl-5 text-[20px] border-none shadow-none"
+              placeholder={getPlaceholderForPlatform(link.platform)}
+              style={{ fontSize: '20px' }}
+              value={link.url}
+              onChange={(e) => updateLink(link.id, 'url', e.target.value)}
+            />
+            <Button
+              className="h-8 w-8 rounded-full"
+              size="icon"
+              variant="ghost"
+              onClick={() => removeLink(link.id)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
       </div>
-
       {socialLinks.length === 0 && (
         <div className="text-dark-100 text-base mb-2">
           No social links added. Click the + button to add one.

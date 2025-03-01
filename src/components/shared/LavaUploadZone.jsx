@@ -21,7 +21,6 @@ export const UploadZone = ({
   };
 
   const handleFile = (file) => {
-    // Only process image files
     if (!file.type.match('image.*')) {
       alert('Please select an image file');
       return;
@@ -71,7 +70,7 @@ export const UploadZone = ({
   return (
     <div className="py-6 px-9 bg-input-bg rounded-[10px]">
       <div className="uppercase text-[20px] font-bold mb-4">
-        {label} {required && '*'}
+        {required && '*'}{label}
       </div>
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 ${
@@ -135,7 +134,7 @@ export const UploadZone = ({
       </div>
       {error && (
         <div className="text-red-500 text-sm mt-1">
-          {error}
+          {typeof error === 'string' ? error : error.message || 'Upload is required'}
         </div>
       )}
     </div>

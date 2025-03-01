@@ -55,3 +55,7 @@ body {
   background: linear-gradient(135deg, #ff9d4c 0%, #ffba59 100%);
 }
 
+button {
+  cursor: pointer;
+}
+

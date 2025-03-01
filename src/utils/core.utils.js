@@ -41,3 +41,16 @@ export const getButtonText = (status) => {
 };
 
 export const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
+export const transformYupErrorsIntoObject = (errors) => {
+  const validationErrors = {};
+
+  errors.inner.forEach((error) => {
+    if (error.path !== undefined) {
+      // eslint-disable-next-line prefer-destructuring
+      validationErrors[error.path] = error.errors[0];
+    }
+  });
+
+  return validationErrors;
+};
