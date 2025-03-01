@@ -17,6 +17,7 @@
   --color-main-red: #E10134;
   --color-main-yellow: #FFD012;
   --color-main-green: #65C366;
+  --color-input-bg: #080B29;
 }
 
 .dark {}
@@ -33,6 +34,7 @@
   --color-main-red: var(--color-main-red);
   --color-main-yellow: var(--color-main-yellow);
   --color-main-green: var(--color-main-green);
+  --color-input-bg: var(--color-input-bg);
 }
 
 body {
@@ -41,5 +43,9 @@ body {
 
 .container {
   max-width: 1170px;
+}
+
+.orange-gradient {
+  background: linear-gradient(135deg, #ff9d4c 0%, #ffba59 100%);
 }
 

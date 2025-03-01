@@ -1,7 +1,7 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ProtectedRoute } from './ProtectedRoute';
-import { HomePageLayout, MainLayout } from '@/layouts';
+import { CreateVaultLayout, HomePageLayout, MainLayout } from '@/layouts';
 import { NotFound } from '@/pages/NotFound';
 import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
@@ -14,9 +14,9 @@ const HomePage = () => (
 );
 
 const CreateVaultPage = () => (
-  <MainLayout>
+  <CreateVaultLayout>
     <CreateVault />
-  </MainLayout>
+  </CreateVaultLayout>
 );
 
 const VaultsPage = () => (

@@ -19,3 +19,15 @@ export const MainLayout = ({ children }) => (
     {children}
   </>
 );
+
+export const CreateVaultLayout = ({ children }) => (
+  <div className="relative">
+    <div
+      className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[518px]"
+      style={{ backgroundImage: 'url(/assets/vaults/create-vault-bg.webp)' }}
+    />
+    <Header/>
+    {children}
+    <Footer/>
+  </div>
+);

@@ -31,10 +31,10 @@ export const Footer = () => {
   };
 
   return (
-    <div className="relative py-8 md:py-16">
+    <div className="mt-auto relative py-8 md:py-16">
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[670px]"
-        style={{ backgroundImage: 'url(/assets/footer-bg.png)' }}
+        style={{ backgroundImage: 'url(/assets/footer-bg.webp)' }}
       />
       <div className="container mx-auto px-4">
         <div className="flex items-center flex-col mb-8 md:mb-16">
