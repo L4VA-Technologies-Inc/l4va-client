@@ -1,22 +1,14 @@
 import { useState } from 'react';
-import {
-  Formik, Form, Field, ErrorMessage,
-} from 'formik';
+import { Formik, Form } from 'formik';
 import { ChevronRight } from 'lucide-react';
 
-import { validationSchema } from '@/components/vaults/constants/vaults.constants';
+import { ConfigureVault } from './steps/ConfigureVault';
+import { AssetContribution } from './steps/AssetContribution';
 
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-
-import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
-import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
-import { UploadZone } from '@/components/shared/LavaUploadZone';
-import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
-import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
+import { SecondaryButton } from '@/components/shared/SecondaryButton';
+import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
+import { validationSchema } from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -40,6 +32,7 @@ export const CreateVaultForm = () => {
     socialLinks: [],
     valuationType: 'lbe',
     contributionWindowOpenTime: 'launch',
+    whitelistAssets: [],
   };
 
   const handleNextStep = () => {
@@ -73,170 +66,18 @@ export const CreateVaultForm = () => {
     setSubmitting(false);
   };
 
-  const getStepContent = (step, formikProps) => {
-    const {
-      values, errors, touched, setFieldValue,
-    } = formikProps;
-
+  const renderStepContent = (step, formikProps) => {
     switch (step) {
       case 1:
-        return (
-          <div className="grid grid-cols-2">
-            <div>
-              <div>
-                <Label className="uppercase text-[20px] font-bold" htmlFor="name">
-                  * Vault name
-                </Label>
-                <Field
-                  as={Input}
-                  className={`
-                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4
-                    ${touched.name && errors.name ? 'border-red-500' : ''}
-                  `}
-                  id="name"
-                  name="name"
-                  placeholder="Enter the name of your Vault"
-                  style={{ fontSize: '20px' }}
-                />
-                <ErrorMessage className="text-red-500 mt-1" component="div" name="name" />
-              </div>
-
-              <div className="grid grid-cols-2 mt-[60px]">
-                <Field
-                  component={LavaRadioGroup}
-                  label="*Vault type"
-                  name="type"
-                  options={[
-                    { id: 'single', label: 'Single NFT' },
-                    { id: 'multi', label: 'Multi NFT' },
-                    { id: 'cnt', label: 'Any CNT' },
-                  ]}
-                />
-
-                <Field
-                  component={LavaRadioGroup}
-                  label="*Vault privacy"
-                  name="privacy"
-                  options={[
-                    { id: 'private', label: 'Private Vault' },
-                    { id: 'public', label: 'Public Vault' },
-                    { id: 'semi-private', label: 'Semi-Private Vault' },
-                  ]}
-                />
-              </div>
-
-              <div className="mt-[60px]">
-                <Label className="uppercase text-[20px] font-bold" htmlFor="fractionToken">
-                  Fractional Token (FT) Ticker
-                </Label>
-                <Field
-                  as={Input}
-                  className="
-                    rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4
-                  "
-                  id="fractionToken"
-                  name="fractionToken"
-                  placeholder="0.00"
-                  style={{ fontSize: '20px' }}
-                />
-                <ErrorMessage className="text-red-500 mt-1" component="div" name="fractionToken" />
-              </div>
-
-              <div className="mt-[60px]">
-                <Label className="uppercase text-[20px] font-bold" htmlFor="description">
-                  Vault brief
-                </Label>
-                <Field
-                  as={Textarea}
-                  className="
-                    resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 w-[500px] h-[60px] mt-4 min-h-32
-                  "
-                  id="description"
-                  name="description"
-                  placeholder="Add a description for your Vault"
-                  style={{ fontSize: '20px' }}
-                />
-                <ErrorMessage className="text-red-500 mt-1" component="div" name="description" />
-              </div>
-
-              <div className="mt-[60px]">
-                <LavaSocialLinks
-                  errors={errors.socialLinks}
-                  setSocialLinks={(links) => setFieldValue('socialLinks', links)}
-                  socialLinks={values.socialLinks}
-                  touched={touched.socialLinks}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-[60px] px-[36px]">
-              <UploadZone
-                error={touched.vaultImage && errors.vaultImage}
-                image={values.vaultImage}
-                label="*Vault image"
-                setImage={(image) => setFieldValue('vaultImage', image)}
-              />
-              <UploadZone
-                error={touched.vaultBanner && errors.vaultBanner}
-                image={values.vaultBanner}
-                label="Vault banner"
-                setImage={(image) => setFieldValue('vaultBanner', image)}
-              />
-            </div>
-          </div>
-        );
+        return <ConfigureVault formikProps={formikProps} />;
       case 2:
-        return (
-          <div className="grid grid-cols-2">
-            <div>
-              <Field
-                component={LavaRadioGroup}
-                label="*Valuation type"
-                name="valuationType"
-                options={[
-                  { id: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' },
-                ]}
-              />
-              <div className="mt-[60px]">
-                <Field
-                  component={LavaRadioGroup}
-                  label="*Contribution window open time"
-                  name="contributionWindowOpenTime"
-                  options={[
-                    { id: 'launch', label: 'Upon Vault Launch' },
-                    { id: 'custom', label: 'Custom' },
-                  ]}
-                />
-                {values.contributionWindowOpenTime === 'custom' && (
-                  <div className="mt-4">
-                    <LavaDatePicker />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
+        return <AssetContribution formikProps={formikProps} />;
       case 3:
-        return (
-          <div>
-            <h2 className="text-2xl font-bold">Investment</h2>
-            {/* Investment step content */}
-          </div>
-        );
+        return <div />;
       case 4:
-        return (
-          <div>
-            <h2 className="text-2xl font-bold">Governance</h2>
-            {/* Governance step content */}
-          </div>
-        );
+        return <div />;
       case 5:
-        return (
-          <div>
-            <h2 className="text-2xl font-bold">Launch</h2>
-            {/* Launch step content */}
-          </div>
-        );
+        return <div />;
       default:
         return null;
     }
@@ -286,11 +127,9 @@ export const CreateVaultForm = () => {
               </div>
             ))}
           </div>
-
           <div className="mt-[100px]">
-            {getStepContent(currentStep, formikProps)}
+            {renderStepContent(currentStep, formikProps)}
           </div>
-
           <div className="my-[60px] flex gap-[30px] justify-center">
             <SecondaryButton className="uppercase px-16 py-4 bg-input-bg">
               Save for later

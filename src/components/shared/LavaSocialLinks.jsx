@@ -75,7 +75,7 @@ export const LavaSocialLinks = ({
   const isTouched = touched && Array.isArray(touched);
 
   return (
-    <div className="w-[500px]">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase text-[20px] font-bold">
           *SOCIAL LINKS
@@ -148,7 +148,7 @@ export const LavaSocialLinks = ({
       </div>
 
       {socialLinks.length === 0 && (
-        <div className="text-dark-100 text-[20px] mb-2">
+        <div className="text-dark-100 text-base mb-2">
           No social links added. Click the + button to add one.
         </div>
       )}
