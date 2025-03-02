@@ -41,7 +41,7 @@ export const vaultSchema = object({
       value => !value || SUPPORTED_FORMATS.includes(value.type),
     ),
 
-  vaultBanner: Yup.mixed()
+  backgroundBanner: Yup.mixed()
     .nullable()
     .test(
       'fileSize',

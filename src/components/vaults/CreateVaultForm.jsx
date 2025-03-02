@@ -3,6 +3,8 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
+import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
+import { Governance } from '@/components/vaults/steps/Governance';
 
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
@@ -14,28 +16,67 @@ import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState([
-    { id: 1, title: 'Configure Vault', status: 'in progress' },
-    { id: 2, title: 'Asset Contribution', status: 'pending' },
-    { id: 3, title: 'Investment', status: 'pending' },
-    { id: 4, title: 'Governance', status: 'pending' },
-    { id: 5, title: 'Launch', status: 'pending' },
+    {
+      id: 1, title: 'Configure Vault', status: 'in progress', hasErrors: false,
+    },
+    {
+      id: 2, title: 'Asset Contribution', status: 'pending', hasErrors: false,
+    },
+    {
+      id: 3, title: 'Investment', status: 'pending', hasErrors: false,
+    },
+    {
+      id: 4, title: 'Governance', status: 'pending', hasErrors: false,
+    },
+    {
+      id: 5, title: 'Launch', status: 'pending', hasErrors: false,
+    },
   ]);
 
   const [vaultData, setVaultData] = useState({
+    // Step 1: Configure Vault
     name: '',
     type: 'single',
     privacy: 'public',
     fractionToken: '',
     description: '',
     vaultImage: null,
-    vaultBanner: null,
+    backgroundBanner: null,
     socialLinks: [],
+
+    // Step 2: Asset Contribution
     valuationType: 'lbe',
     contributionWindowOpenTime: 'launch',
     whitelistAssets: [],
     minAssetCountCap: 1,
     maxAssetCountCap: 5,
+
+    // Step 3: Investment Window
+    investmentWindowDuration: null,
+    investmentWindowOpenTime: 'assetClose',
+    investmentWindowOpenDate: null,
+    percentAssetsOffered: '',
+    ftInvestmentWindow: null,
+    ftInvestmentReserve: '10%',
+    percentLiquidityPoolContribution: '',
+
+    // Step 4: Governance
+    ftTokenSupply: '',
+    ftTokenDecimals: '',
+    ftTokenImage: null,
+    terminationType: 'dao',
+    // DAO specific fields
+    creationThreshold: '',
+    startThreshold: '',
+    voteThreshold: '',
+    executionThreshold: '',
+    cosigningThreshold: '',
+    // Programmed specific fields
+    timeElapsedIsEqualToTime: null,
+    assetAppreciation: '',
+    ftTokenDescription: '',
   });
 
   const handleNextStep = () => {
@@ -70,14 +111,51 @@ export const CreateVaultForm = () => {
     }
   };
 
+  const updateStepErrorIndicators = (currentErrors) => {
+    const errorFields = Object.keys(currentErrors);
+
+    const stepFields = {
+      1: ['name', 'type', 'privacy', 'fractionToken', 'description', 'vaultImage', 'backgroundBanner', 'socialLinks'],
+      2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
+      3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
+      4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
+      5: [],
+    };
+
+    setSteps(prevSteps =>
+      prevSteps.map(step => ({
+        ...step,
+        hasErrors: errorFields.some(field => stepFields[step.id].includes(field)),
+      })),
+    );
+  };
+
+  const updateFieldAndClearError = (fieldName, value) => {
+    setVaultData({
+      ...vaultData,
+      [fieldName]: value,
+    });
+
+    if (errors[fieldName]) {
+      const newErrors = { ...errors };
+      const { [fieldName]: _, ...remainingErrors } = newErrors;
+      setErrors(remainingErrors);
+      updateStepErrorIndicators(remainingErrors);
+    }
+  };
+
   const onSubmit = async () => {
     if (currentStep < steps.length) {
       handleNextStep();
     } else {
       try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
+        console.log('Form data is valid, submitting:', vaultData);
+        setErrors({});
       } catch (e) {
-        console.log(transformYupErrorsIntoObject(e));
+        const formattedErrors = transformYupErrorsIntoObject(e);
+        setErrors(formattedErrors);
+        updateStepErrorIndicators(formattedErrors);
       }
     }
   };
@@ -87,9 +165,15 @@ export const CreateVaultForm = () => {
     setSteps(prevSteps =>
       prevSteps.map(step => {
         if (step.id === currentStep) {
-          return { ...step, status: step.status === 'in progress' ? 'pending' : step.status };
+          return {
+            ...step,
+            status: step.status === 'in progress' ? 'pending' : step.status,
+          };
         } if (step.id === stepId) {
-          return { ...step, status: 'in progress' };
+          return {
+            ...step,
+            status: 'in progress',
+          };
         }
         return step;
       }),
@@ -102,20 +186,36 @@ export const CreateVaultForm = () => {
         return (
           <ConfigureVault
             data={vaultData}
+            errors={errors}
             setData={setVaultData}
+            updateField={updateFieldAndClearError}
           />
         );
       case 2:
         return (
           <AssetContribution
             data={vaultData}
+            errors={errors}
             setData={setVaultData}
+            updateField={updateFieldAndClearError}
           />
         );
       case 3:
-        return <div />;
+        return (
+          <InvestmentWindow
+            data={vaultData}
+            errors={errors}
+            updateField={updateFieldAndClearError}
+          />
+        );
       case 4:
-        return <div />;
+        return (
+          <Governance
+            data={vaultData}
+            errors={errors}
+            updateField={updateFieldAndClearError}
+          />
+        );
       case 5:
         return <div />;
       default:
@@ -161,6 +261,13 @@ export const CreateVaultForm = () => {
               type="button"
               onClick={() => handleStepClick(step.id)}
             >
+              {step.hasErrors && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white">!</span>
+                  </div>
+                </div>
+              )}
               <div className="relative z-10">
                 <LavaStepCircle
                   isActive={currentStep === step.id}
