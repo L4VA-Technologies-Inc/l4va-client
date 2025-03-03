@@ -174,11 +174,6 @@
     "@babel/helper-string-parser" "^7.25.9"
     "@babel/helper-validator-identifier" "^7.25.9"
 
-"@date-fns/tz@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@date-fns/tz/-/tz-1.2.0.tgz#81cb3211693830babaf3b96aff51607e143030a6"
-  integrity sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==
-
 "@esbuild/aix-ppc64@0.25.0":
   version "0.25.0"
   resolved "https://registry.yarnpkg.com/@esbuild/aix-ppc64/-/aix-ppc64-0.25.0.tgz#499600c5e1757a524990d5d92601f0ac3ce87f64"
@@ -1519,15 +1514,10 @@ data-view-byte-offset@^1.0.1:
     es-errors "^1.3.0"
     is-data-view "^1.0.1"
 
-date-fns-jalali@^4.1.0-0:
-  version "4.1.0-0"
-  resolved "https://registry.yarnpkg.com/date-fns-jalali/-/date-fns-jalali-4.1.0-0.tgz#9c7fb286004fab267a300d3e9f1ada9f10b4b6b0"
-  integrity sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==
-
-date-fns@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"
-  integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
+date-fns@3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.0.1.tgz#a95b3e8296e72cf57c99819f37679aa27ca65ec4"
+  integrity sha512-cr9igCUa0QSqgAMj7JOrYTY6Nh1rmyGrFDko7ADqfmaQqP/I2N4rlfrLl7AWuzDaoIpz6MNjoEcTPzgZYIrhnA==
 
 debug@^3.2.7:
   version "3.2.7"
@@ -2876,14 +2866,10 @@ punycode@^2.1.0:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.3.1.tgz#027422e2faec0b25e1549c3e1bd8309b9133b6e5"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
 
-react-day-picker@^9.5.1:
-  version "9.5.1"
-  resolved "https://registry.yarnpkg.com/react-day-picker/-/react-day-picker-9.5.1.tgz#ec40acdcc3ffbf7c0b9bfea8b6f97924249ea974"
-  integrity sha512-PxuK8inYLlYgM2zZUVBPsaBM5jI40suPeG+naKyx7kpyF032RRlEAUEjkpW9/poTASh/vyWAOVqjGuGw+47isw==
-  dependencies:
-    "@date-fns/tz" "^1.2.0"
-    date-fns "^4.1.0"
-    date-fns-jalali "^4.1.0-0"
+react-day-picker@8.10.1:
+  version "8.10.1"
+  resolved "https://registry.yarnpkg.com/react-day-picker/-/react-day-picker-8.10.1.tgz#4762ec298865919b93ec09ba69621580835b8e80"
+  integrity sha512-TMx7fNbhLk15eqcMt+7Z7S2KF7mfTId/XJDjKE8f+IUcFn0l08/kI4FiYTL/0yuOLmEcbR4Fwe3GJf/NiiMnPA==
 
 react-dom@^19.0.0:
   version "19.0.0"
