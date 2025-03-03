@@ -1,5 +1,4 @@
-import * as Yup from 'yup';
-import { object } from 'yup';
+import { z } from 'zod';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -11,57 +10,70 @@ const SUPPORTED_FORMATS = [
   'image/webp',
 ];
 
-export const vaultSchema = object({
-  name: Yup.string()
-    .required('Vault name is required')
-    .min(3, 'Vault name must be at least 3 characters')
-    .max(50, 'Vault name must be less than 50 characters'),
+// Custom file validation function
+const fileValidator = (maxSize, formats, isRequired = true) =>
+  z.any()
+    .refine(file => !isRequired || file, { message: 'File is required' })
+    .refine(file => !file || file.size <= maxSize, { message: 'File size is too large (max 5MB)' })
+    .refine(file => !file || formats.includes(file.type), { message: 'Unsupported file format' });
 
-  type: Yup.string(),
+// Social link schema
+const socialLinkSchema = z.object({
+  platform: z.string({ required_error: 'Platform is required' }),
+  url: z.string({ required_error: 'URL is required' }),
+});
 
-  privacy: Yup.string(),
-
-  fractionToken: Yup.string()
-    .matches(/^[A-Z0-9]{1,10}$/, 'Ticker must be 1-10 uppercase letters or numbers')
+// Main vault schema
+export const vaultSchema = z.object({
+  // Step 1: Configure Vault
+  name: z.string()
+    .min(3, { message: 'Vault name must be at least 3 characters' })
+    .max(50, { message: 'Vault name must be less than 50 characters' }),
+  type: z.string(),
+  privacy: z.string(),
+  fractionToken: z.string()
+    .regex(/^[A-Z0-9]{1,10}$/, { message: 'Ticker must be 1-10 uppercase letters or numbers' })
     .nullable(),
+  description: z.string()
+    .max(500, { message: 'Description must be less than 500 characters' })
+    .optional(),
+  vaultImage: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS),
+  backgroundBanner: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS, false).nullable(),
+  socialLinks: z.array(socialLinkSchema),
 
-  description: Yup.string()
-    .max(500, 'Description must be less than 500 characters'),
+  // Step 2: Asset Contribution
+  valuationType: z.string(),
+  contributionWindowOpenTime: z.string(),
+  contributionWindowOpenDate: z.any().optional(),
+  whitelistAssets: z.array(z.any()),
+  assetWindowDate: z.any().optional(),
+  minAssetCountCap: z.number().int().min(1),
+  maxAssetCountCap: z.number().int().min(1),
 
-  vaultImage: Yup.mixed()
-    .required('Vault image is required')
-    .test(
-      'fileSize',
-      'File size is too large (max 5MB)',
-      value => !value || value.size <= MAX_FILE_SIZE,
-    )
-    .test(
-      'fileFormat',
-      'Unsupported file format',
-      value => !value || SUPPORTED_FORMATS.includes(value.type),
-    ),
+  // Step 3: Investment Window
+  investmentWindowDuration: z.any().nullable(),
+  investmentWindowOpenTime: z.string(),
+  investmentWindowOpenDate: z.any().nullable(),
+  percentAssetsOffered: z.string(),
+  ftInvestmentWindow: z.any().nullable(),
+  ftInvestmentReserve: z.string(),
+  percentLiquidityPoolContribution: z.string(),
 
-  backgroundBanner: Yup.mixed()
-    .nullable()
-    .test(
-      'fileSize',
-      'File size is too large (max 5MB)',
-      value => !value || value.size <= MAX_FILE_SIZE,
-    )
-    .test(
-      'fileFormat',
-      'Unsupported file format',
-      value => !value || SUPPORTED_FORMATS.includes(value.type),
-    ),
-
-  socialLinks: Yup.array().of(
-    Yup.object().shape({
-      platform: Yup.string()
-        .required('Platform is required'),
-      url: Yup.string()
-        .required('URL is required'),
-    }),
-  ),
+  // Step 4: Governance
+  ftTokenSupply: z.string(),
+  ftTokenDecimals: z.string(),
+  ftTokenImage: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS, false).nullable(),
+  terminationType: z.string(),
+  // DAO specific fields
+  creationThreshold: z.string().optional(),
+  startThreshold: z.string().optional(),
+  voteThreshold: z.string().optional(),
+  executionThreshold: z.string().optional(),
+  cosigningThreshold: z.string().optional(),
+  // Programmed specific fields
+  timeElapsedIsEqualToTime: z.any().nullable(),
+  assetAppreciation: z.string().optional(),
+  ftTokenDescription: z.string().optional(),
 });
 
 export const initialVaultState = {

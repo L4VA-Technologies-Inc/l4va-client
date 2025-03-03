@@ -10,7 +10,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 
-import { transformYupErrorsIntoObject } from '@/utils/core.utils';
+import { transformZodErrorsIntoObject } from '@/utils/core.utils';
 
 import {
   initialVaultState,
@@ -109,16 +109,16 @@ export const CreateVaultForm = () => {
     }
   };
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     if (currentStep < steps.length) {
       handleNextStep();
     } else {
       try {
-        await vaultSchema.validate(vaultData, { abortEarly: false });
-        console.log('Form data is valid, submitting:', vaultData);
+        const validatedData = vaultSchema.parse(vaultData);
+        console.log('Form data is valid, submitting:', validatedData);
         setErrors({});
       } catch (e) {
-        const formattedErrors = transformYupErrorsIntoObject(e);
+        const formattedErrors = transformZodErrorsIntoObject(e);
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);
       }

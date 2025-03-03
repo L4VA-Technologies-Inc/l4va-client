@@ -42,15 +42,24 @@ export const getButtonText = (status) => {
 
 export const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
-export const transformYupErrorsIntoObject = (errors) => {
-  const validationErrors = {};
+export const transformZodErrorsIntoObject = (error) => {
+  if (!error || !error.format) return {};
 
-  errors.inner.forEach((error) => {
-    if (error.path !== undefined) {
+  const formattedErrors = {};
+
+  const extractErrors = (obj, path = '') => {
+    if (obj._errors && obj._errors.length > 0) {
       // eslint-disable-next-line prefer-destructuring
-      validationErrors[error.path] = error.errors[0];
+      formattedErrors[path.slice(0, -1)] = obj._errors[0];
     }
-  });
 
-  return validationErrors;
+    Object.keys(obj).forEach(key => {
+      if (key !== '_errors' && typeof obj[key] === 'object') {
+        extractErrors(obj[key], `${path}${key}.`);
+      }
+    });
+  };
+
+  extractErrors(error.format());
+  return formattedErrors;
 };
