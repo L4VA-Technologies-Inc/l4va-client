@@ -15,7 +15,7 @@ import { transformYupErrorsIntoObject } from '@/utils/core.utils';
 import {
   initialVaultState,
   stepFields,
-  vaultSchema
+  vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
@@ -217,7 +217,7 @@ export const CreateVaultForm = () => {
             >
               {step.hasErrors && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-main-red rounded-full flex items-center justify-center">
                     <span className="text-white">!</span>
                   </div>
                 </div>
