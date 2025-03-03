@@ -37,8 +37,8 @@ export const vaultSchema = z.object({
   description: z.string()
     .max(500, { message: 'Description must be less than 500 characters' })
     .optional(),
-  vaultImage: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS),
-  backgroundBanner: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS, false).nullable(),
+  vaultImage: z.string(),
+  backgroundBanner: z.string(),
   socialLinks: z.array(socialLinkSchema),
 
   // Step 2: Asset Contribution
@@ -62,7 +62,7 @@ export const vaultSchema = z.object({
   // Step 4: Governance
   ftTokenSupply: z.string(),
   ftTokenDecimals: z.string(),
-  ftTokenImage: fileValidator(MAX_FILE_SIZE, SUPPORTED_FORMATS, false).nullable(),
+  ftTokenImage: z.string(),
   terminationType: z.string(),
   // DAO specific fields
   creationThreshold: z.string().optional(),
