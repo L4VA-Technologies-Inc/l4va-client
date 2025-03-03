@@ -74,7 +74,7 @@ export const LavaDatePicker = () => {
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -169,7 +169,7 @@ export const LavaDatePicker = () => {
         </PopoverContent>
       </Popover>
       {date ? (
-        <div className="flex-shrink-0 flex flex-col text-right">
+        <div className="flex-shrink-0 flex flex-col text-right absolute right-2 top-0 bottom-0 justify-center">
           <div className="text-sm text-dark-100">
             {formatCurrentTime(date)}
           </div>
