@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
@@ -40,6 +40,7 @@ export const CreateVaultForm = () => {
   ]);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
+  const stepsContainerRef = useRef(null);
 
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
@@ -54,6 +55,11 @@ export const CreateVaultForm = () => {
         return step;
       }),
     );
+
+    // Scroll to the top of the steps container
+    if (stepsContainerRef.current) {
+      stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handlePreviousStep = () => {
@@ -70,6 +76,11 @@ export const CreateVaultForm = () => {
           return step;
         }),
       );
+
+      // Scroll to the top of the steps container
+      if (stepsContainerRef.current) {
+        stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -132,6 +143,11 @@ export const CreateVaultForm = () => {
         return step;
       }),
     );
+
+    // Scroll to the top of the steps container
+    if (stepsContainerRef.current) {
+      stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const renderStepContent = (step) => {
@@ -204,7 +220,7 @@ export const CreateVaultForm = () => {
 
   return (
     <div className="pb-10">
-      <div className="relative flex items-center">
+      <div ref={stepsContainerRef} className="relative flex items-center">
         {steps.map((step, index) => (
           <div
             key={`step-${step.id}`}
