@@ -4,7 +4,8 @@ FROM node:20-alpine as build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+# Update npm first as suggested in the error logs
+RUN npm install -g npm@11.1.0 && npm install
 COPY . .
 RUN npm run build
 
