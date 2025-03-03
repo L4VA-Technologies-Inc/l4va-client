@@ -34,7 +34,7 @@ export const Governance = ({
             onChange={handleChange}
           />
           {errors.ftTokenSupply && (
-            <p className="text-red-500 mt-1">{errors.ftTokenSupply}</p>
+            <p className="text-main-red mt-1">{errors.ftTokenSupply}</p>
           )}
         </div>
 
@@ -51,7 +51,7 @@ export const Governance = ({
             onChange={handleChange}
           />
           {errors.ftTokenDecimals && (
-            <p className="text-red-500 mt-1">{errors.ftTokenDecimals}</p>
+            <p className="text-main-red mt-1">{errors.ftTokenDecimals}</p>
           )}
         </div>
 
@@ -62,7 +62,7 @@ export const Governance = ({
             setImage={(image) => updateField('ftTokenImage', image)}
           />
           {errors.ftTokenImage && (
-            <p className="text-red-500 mt-1">{errors.ftTokenImage}</p>
+            <p className="text-main-red mt-1">{errors.ftTokenImage}</p>
           )}
         </div>
 
@@ -80,7 +80,7 @@ export const Governance = ({
               onChange={handleChange}
             />
             {errors.ftTokenDescription && (
-              <p className="text-red-500 mt-1">{errors.ftTokenDescription}</p>
+              <p className="text-main-red mt-1">{errors.ftTokenDescription}</p>
             )}
           </div>
         )}
@@ -101,7 +101,7 @@ export const Governance = ({
             onChange={(value) => updateField('terminationType', value)}
           />
           {errors.terminationType && (
-            <p className="text-red-500 mt-1">{errors.terminationType}</p>
+            <p className="text-main-red mt-1">{errors.terminationType}</p>
           )}
         </div>
 
@@ -118,7 +118,7 @@ export const Governance = ({
                   onChange={(date) => updateField('timeElapsedIsEqualToTime', date)}
                 />
                 {errors.timeElapsedIsEqualToTime && (
-                  <p className="text-red-500 mt-1">{errors.timeElapsedIsEqualToTime}</p>
+                  <p className="text-main-red mt-1">{errors.timeElapsedIsEqualToTime}</p>
                 )}
               </div>
             </div>
@@ -140,7 +140,7 @@ export const Governance = ({
                 />
               </div>
               {errors.assetAppreciation && (
-                <p className="text-red-500 mt-1">{errors.assetAppreciation}</p>
+                <p className="text-main-red mt-1">{errors.assetAppreciation}</p>
               )}
             </div>
           </>
@@ -162,7 +162,7 @@ export const Governance = ({
                 onChange={handleChange}
               />
               {errors.creationThreshold && (
-                <p className="text-red-500 mt-1">{errors.creationThreshold}</p>
+                <p className="text-main-red mt-1">{errors.creationThreshold}</p>
               )}
             </div>
 
@@ -180,7 +180,7 @@ export const Governance = ({
                 onChange={handleChange}
               />
               {errors.startThreshold && (
-                <p className="text-red-500 mt-1">{errors.startThreshold}</p>
+                <p className="text-main-red mt-1">{errors.startThreshold}</p>
               )}
             </div>
 
@@ -198,7 +198,7 @@ export const Governance = ({
                 onChange={handleChange}
               />
               {errors.voteThreshold && (
-                <p className="text-red-500 mt-1">{errors.voteThreshold}</p>
+                <p className="text-main-red mt-1">{errors.voteThreshold}</p>
               )}
             </div>
 
@@ -216,7 +216,7 @@ export const Governance = ({
                 onChange={handleChange}
               />
               {errors.executionThreshold && (
-                <p className="text-red-500 mt-1">{errors.executionThreshold}</p>
+                <p className="text-main-red mt-1">{errors.executionThreshold}</p>
               )}
             </div>
 
@@ -233,7 +233,7 @@ export const Governance = ({
                 onChange={handleChange}
               />
               {errors.cosigningThreshold && (
-                <p className="text-red-500 mt-1">{errors.cosigningThreshold}</p>
+                <p className="text-main-red mt-1">{errors.cosigningThreshold}</p>
               )}
             </div>
           </>

@@ -24,7 +24,7 @@ export const AssetContribution = ({
           onChange={(value) => updateField('valuationType', value)}
         />
         {errors.valuationType && (
-          <p className="text-red-500 mt-1">{errors.valuationType}</p>
+          <p className="text-main-red mt-1">{errors.valuationType}</p>
         )}
       </div>
 
@@ -46,7 +46,7 @@ export const AssetContribution = ({
           onChange={(value) => updateField('contributionWindowOpenTime', value)}
         />
         {errors.contributionWindowOpenTime && (
-          <p className="text-red-500 mt-1">{errors.contributionWindowOpenTime}</p>
+          <p className="text-main-red mt-1">{errors.contributionWindowOpenTime}</p>
         )}
 
         {data.contributionWindowOpenTime === 'custom' && (
@@ -56,7 +56,7 @@ export const AssetContribution = ({
               onChange={(date) => updateField('contributionWindowOpenDate', date)}
             />
             {errors.contributionWindowOpenDate && (
-              <p className="text-red-500 mt-1">{errors.contributionWindowOpenDate}</p>
+              <p className="text-main-red mt-1">{errors.contributionWindowOpenDate}</p>
             )}
           </div>
         )}
@@ -70,7 +70,7 @@ export const AssetContribution = ({
           whitelistedAssets={data.whitelistAssets || []}
         />
         {errors.whitelistAssets && (
-          <p className="text-red-500 mt-1">{errors.whitelistAssets}</p>
+          <p className="text-main-red mt-1">{errors.whitelistAssets}</p>
         )}
       </div>
 
@@ -84,7 +84,7 @@ export const AssetContribution = ({
             onChange={(date) => updateField('assetWindowDate', date)}
           />
           {errors.assetWindowDate && (
-            <p className="text-red-500 mt-1">{errors.assetWindowDate}</p>
+            <p className="text-main-red mt-1">{errors.assetWindowDate}</p>
           )}
         </div>
       </div>
@@ -102,10 +102,10 @@ export const AssetContribution = ({
               onMinChange={(value) => updateField('minAssetCountCap', value)}
             />
             {errors.minAssetCountCap && (
-              <p className="text-red-500 mt-1">{errors.minAssetCountCap}</p>
+              <p className="text-main-red mt-1">{errors.minAssetCountCap}</p>
             )}
             {errors.maxAssetCountCap && (
-              <p className="text-red-500 mt-1">{errors.maxAssetCountCap}</p>
+              <p className="text-main-red mt-1">{errors.maxAssetCountCap}</p>
             )}
           </div>
         </div>

@@ -12,7 +12,11 @@ import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 
 import { transformYupErrorsIntoObject } from '@/utils/core.utils';
 
-import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
+import {
+  initialVaultState,
+  stepFields,
+  vaultSchema
+} from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -35,49 +39,7 @@ export const CreateVaultForm = () => {
     },
   ]);
 
-  const [vaultData, setVaultData] = useState({
-    // Step 1: Configure Vault
-    name: '',
-    type: 'single',
-    privacy: 'public',
-    fractionToken: '',
-    description: '',
-    vaultImage: null,
-    backgroundBanner: null,
-    socialLinks: [],
-
-    // Step 2: Asset Contribution
-    valuationType: 'lbe',
-    contributionWindowOpenTime: 'launch',
-    whitelistAssets: [],
-    minAssetCountCap: 1,
-    maxAssetCountCap: 5,
-
-    // Step 3: Investment Window
-    investmentWindowDuration: null,
-    investmentWindowOpenTime: 'assetClose',
-    investmentWindowOpenDate: null,
-    percentAssetsOffered: '',
-    ftInvestmentWindow: null,
-    ftInvestmentReserve: '10%',
-    percentLiquidityPoolContribution: '',
-
-    // Step 4: Governance
-    ftTokenSupply: '',
-    ftTokenDecimals: '',
-    ftTokenImage: null,
-    terminationType: 'dao',
-    // DAO specific fields
-    creationThreshold: '',
-    startThreshold: '',
-    voteThreshold: '',
-    executionThreshold: '',
-    cosigningThreshold: '',
-    // Programmed specific fields
-    timeElapsedIsEqualToTime: null,
-    assetAppreciation: '',
-    ftTokenDescription: '',
-  });
+  const [vaultData, setVaultData] = useState(initialVaultState);
 
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
@@ -113,14 +75,6 @@ export const CreateVaultForm = () => {
 
   const updateStepErrorIndicators = (currentErrors) => {
     const errorFields = Object.keys(currentErrors);
-
-    const stepFields = {
-      1: ['name', 'type', 'privacy', 'fractionToken', 'description', 'vaultImage', 'backgroundBanner', 'socialLinks'],
-      2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
-      3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
-      4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
-      5: [],
-    };
 
     setSteps(prevSteps =>
       prevSteps.map(step => ({

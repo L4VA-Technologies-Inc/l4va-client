@@ -25,7 +25,7 @@ export const ConfigureVault = ({
           </Label>
           <Input
             className={`rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 ${
-              errors.name ? 'border-red-500' : ''
+              errors.name ? 'border-main-red' : ''
             }`}
             id="name"
             placeholder="Enter the name of your Vault"
@@ -34,7 +34,7 @@ export const ConfigureVault = ({
             onChange={handleChange}
           />
           {errors.name && (
-            <p className="text-red-500 mt-1">{errors.name}</p>
+            <p className="text-main-red mt-1">{errors.name}</p>
           )}
         </div>
 
@@ -52,7 +52,7 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('type', value)}
             />
             {errors.type && (
-              <p className="text-red-500 mt-1">{errors.type}</p>
+              <p className="text-main-red mt-1">{errors.type}</p>
             )}
           </div>
 
@@ -69,7 +69,7 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('privacy', value)}
             />
             {errors.privacy && (
-              <p className="text-red-500 mt-1">{errors.privacy}</p>
+              <p className="text-main-red mt-1">{errors.privacy}</p>
             )}
           </div>
         </div>
@@ -80,7 +80,7 @@ export const ConfigureVault = ({
           </Label>
           <Input
             className={`rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 ${
-              errors.fractionToken ? 'border-red-500' : ''
+              errors.fractionToken ? 'border-main-red' : ''
             }`}
             id="fractionToken"
             placeholder="0.00"
@@ -89,7 +89,7 @@ export const ConfigureVault = ({
             onChange={handleChange}
           />
           {errors.fractionToken && (
-            <p className="text-red-500 mt-1">{errors.fractionToken}</p>
+            <p className="text-main-red mt-1">{errors.fractionToken}</p>
           )}
         </div>
 
@@ -100,7 +100,7 @@ export const ConfigureVault = ({
           <Textarea
             className={`
               resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 min-h-32
-              ${errors.description ? 'border-red-500' : ''}
+              ${errors.description ? 'border-main-red' : ''}
             `}
             id="description"
             placeholder="Add a description for your Vault"
@@ -109,7 +109,7 @@ export const ConfigureVault = ({
             onChange={handleChange}
           />
           {errors.description && (
-            <p className="text-red-500 mt-1">{errors.description}</p>
+            <p className="text-main-red mt-1">{errors.description}</p>
           )}
         </div>
 
@@ -119,7 +119,7 @@ export const ConfigureVault = ({
             socialLinks={data.socialLinks || []}
           />
           {errors.socialLinks && (
-            <p className="text-red-500 mt-1">{errors.socialLinks}</p>
+            <p className="text-main-red mt-1">{errors.socialLinks}</p>
           )}
         </div>
       </div>
@@ -132,7 +132,7 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('vaultImage', image)}
           />
           {errors.vaultImage && (
-            <p className="text-red-500 mt-1">{errors.vaultImage}</p>
+            <p className="text-main-red mt-1">{errors.vaultImage}</p>
           )}
         </div>
         <div>
@@ -142,7 +142,7 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('backgroundBanner', image)}
           />
           {errors.backgroundBanner && (
-            <p className="text-red-500 mt-1">{errors.backgroundBanner}</p>
+            <p className="text-main-red mt-1">{errors.backgroundBanner}</p>
           )}
         </div>
       </div>

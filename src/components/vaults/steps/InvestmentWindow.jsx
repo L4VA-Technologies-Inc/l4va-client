@@ -27,7 +27,7 @@ export const InvestmentWindow = ({
               onChange={(date) => updateField('investmentWindowDuration', date)}
             />
             {errors.investmentWindowDuration && (
-              <p className="text-red-500 mt-1">{errors.investmentWindowDuration}</p>
+              <p className="text-main-red mt-1">{errors.investmentWindowDuration}</p>
             )}
           </div>
         </div>
@@ -53,7 +53,7 @@ export const InvestmentWindow = ({
               onChange={(value) => updateField('investmentWindowOpenTime', value)}
             />
             {errors.investmentWindowOpenTime && (
-              <p className="text-red-500 mt-1">{errors.investmentWindowOpenTime}</p>
+              <p className="text-main-red mt-1">{errors.investmentWindowOpenTime}</p>
             )}
 
             {data.investmentWindowOpenTime === 'custom' && (
@@ -63,7 +63,7 @@ export const InvestmentWindow = ({
                   onChange={(date) => updateField('investmentWindowOpenDate', date)}
                 />
                 {errors.investmentWindowOpenDate && (
-                  <p className="text-red-500 mt-1">{errors.investmentWindowOpenDate}</p>
+                  <p className="text-main-red mt-1">{errors.investmentWindowOpenDate}</p>
                 )}
               </div>
             )}
@@ -85,7 +85,7 @@ export const InvestmentWindow = ({
             onChange={handleChange}
           />
           {errors.percentAssetsOffered && (
-            <p className="text-red-500 mt-1">{errors.percentAssetsOffered}</p>
+            <p className="text-main-red mt-1">{errors.percentAssetsOffered}</p>
           )}
         </div>
 
@@ -99,7 +99,7 @@ export const InvestmentWindow = ({
               onChange={(date) => updateField('ftInvestmentWindow', date)}
             />
             {errors.ftInvestmentWindow && (
-              <p className="text-red-500 mt-1">{errors.ftInvestmentWindow}</p>
+              <p className="text-main-red mt-1">{errors.ftInvestmentWindow}</p>
             )}
           </div>
         </div>
@@ -118,7 +118,7 @@ export const InvestmentWindow = ({
             onChange={handleChange}
           />
           {errors.ftInvestmentReserve && (
-            <p className="text-red-500 mt-1">{errors.ftInvestmentReserve}</p>
+            <p className="text-main-red mt-1">{errors.ftInvestmentReserve}</p>
           )}
         </div>
 
@@ -135,7 +135,7 @@ export const InvestmentWindow = ({
             onChange={handleChange}
           />
           {errors.percentLiquidityPoolContribution && (
-            <p className="text-red-500 mt-1">{errors.percentLiquidityPoolContribution}</p>
+            <p className="text-main-red mt-1">{errors.percentLiquidityPoolContribution}</p>
           )}
         </div>
       </div>

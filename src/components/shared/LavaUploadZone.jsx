@@ -75,7 +75,7 @@ export const UploadZone = ({
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 ${
           error
-            ? 'border-red-500'
+            ? 'border-main-red'
             : isDragging
               ? 'border-blue-400'
               : 'border-gray-500'
@@ -133,7 +133,7 @@ export const UploadZone = ({
         )}
       </div>
       {error && (
-        <div className="text-red-500 text-sm mt-1">
+        <div className="text-main-red text-sm mt-1">
           {typeof error === 'string' ? error : error.message || 'Upload is required'}
         </div>
       )}
