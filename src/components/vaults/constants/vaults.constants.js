@@ -1,21 +1,10 @@
 import { z } from 'zod';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-const SUPPORTED_FORMATS = [
-  'image/jpg',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
-
-// Custom file validation function
-const fileValidator = (maxSize, formats, isRequired = true) =>
-  z.any()
-    .refine(file => !isRequired || file, { message: 'File is required' })
-    .refine(file => !file || file.size <= maxSize, { message: 'File size is too large (max 5MB)' })
-    .refine(file => !file || formats.includes(file.type), { message: 'Unsupported file format' });
+export const VAULT_TYPES = {
+  PUBLIC: 'public',
+  PRIVATE: 'private',
+  SEMI_PRIVATE: 'semi-private',
+};
 
 // Social link schema
 const socialLinkSchema = z.object({
