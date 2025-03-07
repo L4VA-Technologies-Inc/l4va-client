@@ -82,6 +82,7 @@ export const initialVaultState = {
   whitelistAssets: [],
   minAssetCountCap: 1,
   maxAssetCountCap: 5,
+  valuationCurrency: 'ADA',
 
   // Step 3: Investment Window
   investmentWindowDuration: null,
