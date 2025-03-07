@@ -2,6 +2,7 @@ import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
+import { LavaInput } from '@/components/shared/LavaInput';
 
 export const Public = ({
   data,
@@ -64,6 +65,7 @@ export const Public = ({
     <div className="px-[36px]">
       <div>
         <LavaWhitelist
+          label="Asset Whitelist"
           setWhitelist={(assets) => updateField('whitelistAssets', assets)}
           whitelist={data.whitelistAssets || []}
         />
@@ -73,20 +75,15 @@ export const Public = ({
       </div>
 
       <div className="mt-[60px]">
-        <div className="uppercase text-[20px] font-bold">
-          *Asset window
-        </div>
-        <div className="mt-4">
-          <LavaDatePicker
-            value={data.assetWindowDate}
-            onChange={(date) => updateField('assetWindowDate', date)}
-          />
-          {errors.assetWindowDate && (
-            <p className="text-main-red mt-1">{errors.assetWindowDate}</p>
-          )}
-        </div>
+        <LavaInput
+          required
+          error={errors.assetWindowDate}
+          label="Asset window"
+          type="date"
+          value={data.assetWindowDate ? data.assetWindowDate.toISOString().split('T')[0] : ''}
+          onChange={(e) => updateField('assetWindowDate', new Date(e.target.value))}
+        />
       </div>
-
       <div className="mt-[60px]">
         <div className="uppercase text-[20px] font-bold">
           Asset Count Cap
@@ -94,6 +91,7 @@ export const Public = ({
         <div className="mt-4">
           <div className="flex flex-col space-y-2">
             <LavaMinMaxInput
+              label="Collection ABC"
               maxValue={data.maxAssetCountCap}
               minValue={data.minAssetCountCap}
               onMaxChange={(value) => updateField('maxAssetCountCap', value)}

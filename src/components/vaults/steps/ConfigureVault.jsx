@@ -1,10 +1,9 @@
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
+import { LavaInput } from '@/components/shared/LavaInput';
 
 export const ConfigureVault = ({
   data,
@@ -20,22 +19,15 @@ export const ConfigureVault = ({
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="name">
-            * Vault name
-          </Label>
-          <Input
-            className={`rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 ${
-              errors.name ? 'border-main-red' : ''
-            }`}
+          <LavaInput
+            label="Vault name"
+            required
             id="name"
             placeholder="Enter the name of your Vault"
-            style={{ fontSize: '20px' }}
             value={data.name || ''}
             onChange={handleChange}
+            error={errors.name}
           />
-          {errors.name && (
-            <p className="text-main-red mt-1">{errors.name}</p>
-          )}
         </div>
 
         <div className="grid grid-cols-2 mt-[60px]">
@@ -75,42 +67,35 @@ export const ConfigureVault = ({
         </div>
 
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold" htmlFor="fractionToken">
-            Fractional Token (FT) Ticker
-          </Label>
-          <Input
-            className={`rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 ${
-              errors.fractionToken ? 'border-main-red' : ''
-            }`}
+          <LavaInput
+            label="Fractional Token (FT) Ticker"
             id="fractionToken"
             placeholder="0.00"
-            style={{ fontSize: '20px' }}
             value={data.fractionToken || ''}
             onChange={handleChange}
+            error={errors.fractionToken}
           />
-          {errors.fractionToken && (
-            <p className="text-main-red mt-1">{errors.fractionToken}</p>
-          )}
         </div>
 
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold" htmlFor="description">
+          <div className="uppercase text-lg font-bold">
             Vault brief
-          </Label>
-          <Textarea
-            className={`
-              resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4 min-h-32
-              ${errors.description ? 'border-main-red' : ''}
-            `}
-            id="description"
-            placeholder="Add a description for your Vault"
-            style={{ fontSize: '20px' }}
-            value={data.description || ''}
-            onChange={handleChange}
-          />
-          {errors.description && (
-            <p className="text-main-red mt-1">{errors.description}</p>
-          )}
+          </div>
+          <div className="mt-4">
+            <Textarea
+              className={`
+                resize-none py-4 pl-5 pr-5 text-lg font-medium w-full focus:outline-none border border-dark-600 bg-input-bg min-h-32
+                ${errors.description ? 'border-main-red' : ''}
+              `}
+              id="description"
+              placeholder="Add a description for your Vault"
+              value={data.description || ''}
+              onChange={handleChange}
+            />
+            {errors.description && (
+              <p className="text-main-red mt-1">{errors.description}</p>
+            )}
+          </div>
         </div>
 
         <div className="mt-[60px]">

@@ -37,7 +37,7 @@ export const InvestmentWindow = ({
           </div>
         )}
         <div>
-          <Label className="uppercase text-[20px] font-bold text-white" htmlFor="investmentWindowDuration">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="investmentWindowDuration">
             *INVESTMENT WINDOW DURATION
           </Label>
           <div className="mt-4">
@@ -51,7 +51,7 @@ export const InvestmentWindow = ({
           </div>
         </div>
         <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold text-white">
+          <div className="uppercase text-[20px] font-bold">
             *INVESTMENT WINDOW OPEN TIME
           </div>
           <div className="mt-4">
@@ -90,7 +90,7 @@ export const InvestmentWindow = ({
       </div>
       <div className="px-[36px]">
         <div>
-          <Label className="uppercase text-[20px] font-bold text-white" htmlFor="percentAssetsOffered">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="percentAssetsOffered">
             % OF ASSETS OFFERED
           </Label>
           <Input
@@ -106,7 +106,7 @@ export const InvestmentWindow = ({
           )}
         </div>
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold text-white" htmlFor="ftInvestmentWindow">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="ftInvestmentWindow">
             FT INVESTMENT WINDOW
           </Label>
           <div className="mt-4">
@@ -120,7 +120,7 @@ export const InvestmentWindow = ({
           </div>
         </div>
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold text-white flex items-center" htmlFor="ftInvestmentReserve">
+          <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="ftInvestmentReserve">
             FT INVESTMENT RESERVE
             <Info className="ml-2 inline-block" color="white" size={16} />
           </Label>
@@ -137,7 +137,7 @@ export const InvestmentWindow = ({
           )}
         </div>
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold text-white" htmlFor="percentLiquidityPoolContribution">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="percentLiquidityPoolContribution">
             % LIQUIDITY POOL CONTRIBUTION
           </Label>
           <Input

@@ -4,7 +4,7 @@ import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
 import { UploadZone } from '@/components/shared/LavaUploadZone.jsx';
 import { LavaSelect } from '@/components/shared/LavaSelect';
-import { Input } from '@/components/ui/input';
+import { LavaInput } from '@/components/shared/LavaInput';
 
 export const Private = ({
   data,
@@ -41,43 +41,32 @@ export const Private = ({
         {valuationType === 'fixed' && (
           <>
             <div className="mt-[60px]">
-              <div className="uppercase text-[20px] font-bold">
-                *Valuation Currency
-              </div>
-              <div className="mt-4">
-                <LavaSelect
-                  required
-                  error={errors.valuationCurrency}
-                  options={[
-                    { id: 'ADA', label: 'ADA' },
-                    { id: 'USD', label: 'USD' },
-                  ]}
-                  placeholder="Select currency"
-                  value={data.valuationCurrency || ''}
-                  onChange={(value) => updateField('valuationCurrency', value)}
-                />
-              </div>
+              <LavaSelect
+                required
+                error={errors.valuationCurrency}
+                label="Valuation Currency"
+                options={[
+                  { id: 'ADA', label: 'ADA' },
+                  { id: 'USD', label: 'USD' },
+                ]}
+                placeholder="Select currency"
+                value={data.valuationCurrency || ''}
+                onChange={(value) => updateField('valuationCurrency', value)}
+              />
             </div>
             <div className="mt-[60px]">
-              <div className="uppercase text-[20px] font-bold">
-                *Valuation Amount
-              </div>
-              <div className="mt-4">
-                <Input
-                  className="bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium w-full focus:outline-none border border-dark-600 h-[60px]"
-                  placeholder="#,###.##"
-                  type="text"
-                  value={data.valuationAmount || ''}
-                  onChange={(e) => updateField('valuationAmount', e.target.value)}
-                />
-                {errors.valuationAmount && (
-                  <p className="text-main-red mt-1">{errors.valuationAmount}</p>
-                )}
-              </div>
+              <LavaInput
+                required
+                error={errors.valuationAmount}
+                label="Valuation Amount"
+                placeholder="#,###.##"
+                type="text"
+                value={data.valuationAmount || ''}
+                onChange={(e) => updateField('valuationAmount', e.target.value)}
+              />
             </div>
           </>
         )}
-
         <div className="mt-[60px]">
           <div className="uppercase text-[20px] font-bold">
             *Asset window
