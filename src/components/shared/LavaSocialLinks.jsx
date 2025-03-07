@@ -1,12 +1,8 @@
-import {
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
-  Youtube,
-  Github,
-  X,
-} from 'lucide-react';
+import { X } from 'lucide-react';
+
+import FacebookIcon from '@/icons/facebook.svg?react';
+import XIcon from '@/icons/x.svg?react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,25 +19,10 @@ export const LavaSocialLinks = ({
 }) => {
   const socialPlatforms = [
     {
-      id: 'facebook', name: 'Facebook', icon: <Facebook size={20} />, placeholder: 'facebook.com/',
+      id: 'facebook', name: 'Facebook', icon: <FacebookIcon className="text-white" size={20} />, placeholder: 'facebook.com/',
     },
     {
-      id: 'twitter', name: 'Twitter', icon: <Twitter size={20} />, placeholder: 'twitter.com/',
-    },
-    {
-      id: 'x', name: 'X', icon: <X size={20} />, placeholder: 'x.com/',
-    },
-    {
-      id: 'instagram', name: 'Instagram', icon: <Instagram size={20} />, placeholder: 'instagram.com/',
-    },
-    {
-      id: 'linkedin', name: 'LinkedIn', icon: <Linkedin size={20} />, placeholder: 'linkedin.com/in/',
-    },
-    {
-      id: 'youtube', name: 'YouTube', icon: <Youtube size={20} />, placeholder: 'youtube.com/',
-    },
-    {
-      id: 'github', name: 'GitHub', icon: <Github size={20} />, placeholder: 'github.com/',
+      id: 'x', name: 'X', icon: <XIcon className="text-white" size={20} />, placeholder: 'x.com/',
     },
   ];
 

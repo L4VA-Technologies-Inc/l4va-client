@@ -2,35 +2,37 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export const LavaWhitelistAssets = ({
-  whitelistedAssets = [],
-  setWhitelistedAssets,
+export const LavaWhitelist = ({
+  required = true,
+  label = 'Asset whitelist',
+  whitelist = [],
+  setWhitelist,
 }) => {
   const addNewAsset = () => {
-    const newAssets = [...whitelistedAssets, {
+    const newAssets = [...whitelist, {
       policyId: '',
       id: Date.now(),
     }];
-    setWhitelistedAssets(newAssets);
+    setWhitelist(newAssets);
   };
 
   const updateAsset = (id, val) => {
-    const updatedAssets = whitelistedAssets.map(asset =>
+    const updatedAssets = whitelist.map(asset =>
       asset.id === id ? { ...asset, policyId: val } : asset,
     );
-    setWhitelistedAssets(updatedAssets);
+    setWhitelist(updatedAssets);
   };
 
   const removeAsset = (id) => {
-    const filteredAssets = whitelistedAssets.filter(asset => asset.id !== id);
-    setWhitelistedAssets(filteredAssets);
+    const filteredAssets = whitelist.filter(asset => asset.id !== id);
+    setWhitelist(filteredAssets);
   };
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase text-[20px] font-bold">
-          *ASSET WHITELIST
+          {required ? '*' : ''}{label}
         </div>
         <button
           className="border-2 border-white/20 rounded-lg p-2"
@@ -44,7 +46,7 @@ export const LavaWhitelistAssets = ({
         </button>
       </div>
       <div className="space-y-4">
-        {whitelistedAssets.map((asset) => (
+        {whitelist.map((asset) => (
           <div key={asset.id} className="relative">
             <Input
               className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"
@@ -64,9 +66,9 @@ export const LavaWhitelistAssets = ({
           </div>
         ))}
       </div>
-      {whitelistedAssets.length === 0 && (
+      {whitelist.length === 0 && (
         <div className="text-dark-100 text-base mb-2">
-          No assets whitelisted. Click the + button to add one.
+          No items. Click the + button to add one.
         </div>
       )}
     </div>

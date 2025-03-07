@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
-import WalletIcon from '../icons/wallet.svg?react';
+import WalletIcon from '@/icons/wallet.svg?react';
 
 import { useAuth } from '@/context/auth';
 import { useModal } from '@/context/modals';

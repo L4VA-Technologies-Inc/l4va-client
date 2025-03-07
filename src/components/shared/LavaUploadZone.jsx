@@ -7,6 +7,7 @@ export const UploadZone = ({
   setImage,
   error,
   required = false,
+  accept = 'image/*',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -21,11 +22,6 @@ export const UploadZone = ({
   };
 
   const handleFile = (file) => {
-    if (!file.type.match('image.*')) {
-      alert('Please select an image file');
-      return;
-    }
-
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -87,7 +83,7 @@ export const UploadZone = ({
       >
         <input
           ref={fileInputRef}
-          accept="image/*"
+          accept={accept}
           className="hidden"
           type="file"
           onChange={handleFileInputChange}
