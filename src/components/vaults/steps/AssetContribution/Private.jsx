@@ -124,11 +124,23 @@ export const Private = ({
             </div>
           )}
         </div>
+        {valuationType === 'lbe' ? (
+          <div className="mt-[60px]">
+            <LavaWhitelist
+              label="Contributor Whitelist"
+              setWhitelist={(assets) => updateField('whitelistContributors', assets)}
+              whitelist={data.whitelistContributors || []}
+            />
+            {errors.whitelistContributors && (
+              <p className="text-main-red mt-1">{errors.whitelistContributors}</p>
+            )}
+          </div>
+        ) : null}
       </div>
       <div className="px-[36px]">
         <div>
           <LavaWhitelist
-            label="*Asset Whitelist"
+            label="Asset Whitelist"
             setWhitelist={(assets) => updateField('whitelistAssets', assets)}
             whitelist={data.whitelistAssets || []}
           />
@@ -167,16 +179,6 @@ export const Private = ({
               )}
             </div>
           </div>
-        </div>
-        <div className="mt-[60px]">
-          <LavaWhitelist
-            label="Contributor Whitelist"
-            setWhitelist={(assets) => updateField('whitelistContributors', assets)}
-            whitelist={data.whitelistContributors || []}
-          />
-          {errors.whitelistContributors && (
-            <p className="text-main-red mt-1">{errors.whitelistContributors}</p>
-          )}
         </div>
       </div>
     </div>

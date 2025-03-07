@@ -1,6 +1,6 @@
 import { Public } from '@/components/vaults/steps/AssetContribution/Public.jsx';
 import { Private } from '@/components/vaults/steps/AssetContribution/Private.jsx';
-import { VAULT_TYPES } from '@/components/vaults/constants/vaults.constants.js';
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
 
 export const AssetContribution = ({
   data,
@@ -15,7 +15,7 @@ export const AssetContribution = ({
     updateField,
   };
 
-  if (vaultPrivacy === VAULT_TYPES.PRIVATE) {
+  if (vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE) {
     return <Private {...props} />;
   }
   return (

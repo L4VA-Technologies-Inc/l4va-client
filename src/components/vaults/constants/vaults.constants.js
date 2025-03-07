@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const VAULT_TYPES = {
+export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
   PRIVATE: 'private',
   SEMI_PRIVATE: 'semi-private',

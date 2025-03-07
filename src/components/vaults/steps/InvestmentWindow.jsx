@@ -3,12 +3,16 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
+import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
 
 export const InvestmentWindow = ({
   data,
   errors = {},
   updateField,
 }) => {
+  const vaultPrivacy = data.privacy;
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     updateField(id, value);
@@ -17,6 +21,21 @@ export const InvestmentWindow = ({
   return (
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
+        {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
+          <div className="mb-[60px]">
+            <LavaWhitelist
+              itemPlaceholder="Wallet address"
+              label="Investor whitelist"
+              setWhitelist={(assets) => updateField('investorWhitelist', assets)}
+              whitelist={data.investorWhitelist || []}
+            />
+            {errors.investorWhitelist && (
+              <p className="text-main-red mt-1">
+                {errors.investorWhitelist}
+              </p>
+            )}
+          </div>
+        )}
         <div>
           <Label className="uppercase text-[20px] font-bold text-white" htmlFor="investmentWindowDuration">
             *INVESTMENT WINDOW DURATION
@@ -31,7 +50,6 @@ export const InvestmentWindow = ({
             )}
           </div>
         </div>
-
         <div className="mt-[60px]">
           <div className="uppercase text-[20px] font-bold text-white">
             *INVESTMENT WINDOW OPEN TIME
@@ -70,7 +88,6 @@ export const InvestmentWindow = ({
           </div>
         </div>
       </div>
-
       <div className="px-[36px]">
         <div>
           <Label className="uppercase text-[20px] font-bold text-white" htmlFor="percentAssetsOffered">
@@ -88,7 +105,6 @@ export const InvestmentWindow = ({
             <p className="text-main-red mt-1">{errors.percentAssetsOffered}</p>
           )}
         </div>
-
         <div className="mt-[60px]">
           <Label className="uppercase text-[20px] font-bold text-white" htmlFor="ftInvestmentWindow">
             FT INVESTMENT WINDOW
@@ -103,7 +119,6 @@ export const InvestmentWindow = ({
             )}
           </div>
         </div>
-
         <div className="mt-[60px]">
           <Label className="uppercase text-[20px] font-bold text-white flex items-center" htmlFor="ftInvestmentReserve">
             FT INVESTMENT RESERVE
@@ -121,7 +136,6 @@ export const InvestmentWindow = ({
             <p className="text-main-red mt-1">{errors.ftInvestmentReserve}</p>
           )}
         </div>
-
         <div className="mt-[60px]">
           <Label className="uppercase text-[20px] font-bold text-white" htmlFor="percentLiquidityPoolContribution">
             % LIQUIDITY POOL CONTRIBUTION

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 export const LavaWhitelist = ({
   required = true,
   label = 'Asset whitelist',
+  itemPlaceholder = 'Enter Policy ID',
   whitelist = [],
   setWhitelist,
 }) => {
@@ -50,7 +51,7 @@ export const LavaWhitelist = ({
           <div key={asset.id} className="relative">
             <Input
               className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"
-              placeholder="Enter Policy ID"
+              placeholder={itemPlaceholder}
               style={{ fontSize: '20px' }}
               value={asset.policyId}
               onChange={(e) => updateAsset(asset.id, e.target.value)}
