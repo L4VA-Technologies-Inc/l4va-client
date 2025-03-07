@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
@@ -13,31 +13,16 @@ import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { transformZodErrorsIntoObject } from '@/utils/core.utils';
 
 import {
+  CREATE_VAULT_STEPS,
   initialVaultState,
-  stepFields,
+  stepFields, VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
-  const [steps, setSteps] = useState([
-    {
-      id: 1, title: 'Configure Vault', status: 'in progress', hasErrors: false,
-    },
-    {
-      id: 2, title: 'Asset Contribution', status: 'pending', hasErrors: false,
-    },
-    {
-      id: 3, title: 'Investment', status: 'pending', hasErrors: false,
-    },
-    {
-      id: 4, title: 'Governance', status: 'pending', hasErrors: false,
-    },
-    {
-      id: 5, title: 'Launch', status: 'pending', hasErrors: false,
-    },
-  ]);
+  const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
   const stepsContainerRef = useRef(null);
@@ -96,11 +81,7 @@ export const CreateVaultForm = () => {
   };
 
   const updateFieldAndClearError = (fieldName, value) => {
-    setVaultData({
-      ...vaultData,
-      [fieldName]: value,
-    });
-
+    setVaultData({ ...vaultData, [fieldName]: value });
     if (errors[fieldName]) {
       const newErrors = { ...errors };
       const { [fieldName]: _, ...remainingErrors } = newErrors;
@@ -217,6 +198,16 @@ export const CreateVaultForm = () => {
       </>
     );
   };
+
+  const updateValuationType = useCallback((value) => {
+    setVaultData(prevData => ({ ...prevData, valuationType: value }));
+  }, []);
+
+  useEffect(() => {
+    if(vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
+      updateValuationType('lbe');
+    }
+  }, [vaultData.privacy, updateValuationType]);
 
   return (
     <div className="pb-10">

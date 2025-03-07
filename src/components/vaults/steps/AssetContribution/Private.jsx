@@ -1,17 +1,30 @@
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
-import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
+import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
-import { UploadZone } from '@/components/shared/LavaUploadZone.jsx';
+import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
+
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const Private = ({
   data,
   errors = {},
   updateField,
 }) => {
-  const { valuationType } = data;
+  const { valuationType, privacy: vaultPrivacy } = data;
+
+  const valuationOptions = vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE ? [
+    {
+      id: 'lbe',
+      label: 'LBE (Liquidity Bootstrapping Event)',
+    },
+    {
+      id: 'fixed',
+      label: 'Fixed',
+    },
+  ] : [ { id: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
 
   return (
     <div className="grid grid-cols-2">
@@ -20,16 +33,7 @@ export const Private = ({
           <LavaRadioGroup
             label="*Valuation type"
             name="valuationType"
-            options={[
-              {
-                id: 'lbe',
-                label: 'LBE (Liquidity Bootstrapping Event)',
-              },
-              {
-                id: 'fixed',
-                label: 'Fixed',
-              },
-            ]}
+            options={valuationOptions}
             value={data.valuationType || ''}
             onChange={(value) => updateField('valuationType', value)}
           />
@@ -37,7 +41,6 @@ export const Private = ({
             <p className="text-main-red mt-1">{errors.valuationType}</p>
           )}
         </div>
-
         {valuationType === 'fixed' && (
           <>
             <div className="mt-[60px]">

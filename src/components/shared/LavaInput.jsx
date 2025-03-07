@@ -9,7 +9,7 @@ export const LavaInput = ({
 }) => (
   <>
     {label ? (
-      <div className="uppercase text-lg font-bold">
+      <div className="uppercase text-[20px] font-bold">
         {required ? '*' : ''}{label}
       </div>
     ) : null}

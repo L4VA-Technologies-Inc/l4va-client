@@ -6,6 +6,24 @@ export const VAULT_PRIVACY_TYPES = {
   SEMI_PRIVATE: 'semi-private',
 };
 
+export const CREATE_VAULT_STEPS = [
+  {
+    id: 1, title: 'Configure Vault', status: 'in progress', hasErrors: false,
+  },
+  {
+    id: 2, title: 'Asset Contribution', status: 'pending', hasErrors: false,
+  },
+  {
+    id: 3, title: 'Investment', status: 'pending', hasErrors: false,
+  },
+  {
+    id: 4, title: 'Governance', status: 'pending', hasErrors: false,
+  },
+  {
+    id: 5, title: 'Launch', status: 'pending', hasErrors: false,
+  },
+];
+
 // Social link schema
 const socialLinkSchema = z.object({
   platform: z.string({ required_error: 'Platform is required' }),

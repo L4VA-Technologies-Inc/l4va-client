@@ -20,16 +20,15 @@ export const ConfigureVault = ({
       <div className="px-[36px]">
         <div>
           <LavaInput
-            label="Vault name"
             required
+            error={errors.name}
             id="name"
+            label="Vault name"
             placeholder="Enter the name of your Vault"
             value={data.name || ''}
             onChange={handleChange}
-            error={errors.name}
           />
         </div>
-
         <div className="grid grid-cols-2 mt-[60px]">
           <div>
             <LavaRadioGroup
@@ -68,12 +67,12 @@ export const ConfigureVault = ({
 
         <div className="mt-[60px]">
           <LavaInput
-            label="Fractional Token (FT) Ticker"
+            error={errors.fractionToken}
             id="fractionToken"
+            label="Fractional Token (FT) Ticker"
             placeholder="0.00"
             value={data.fractionToken || ''}
             onChange={handleChange}
-            error={errors.fractionToken}
           />
         </div>
 

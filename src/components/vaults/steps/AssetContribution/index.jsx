@@ -1,6 +1,7 @@
-import { Public } from '@/components/vaults/steps/AssetContribution/Public.jsx';
-import { Private } from '@/components/vaults/steps/AssetContribution/Private.jsx';
-import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
+import { Public } from '@/components/vaults/steps/AssetContribution/Public';
+import { Private } from '@/components/vaults/steps/AssetContribution/Private';
+
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const AssetContribution = ({
   data,
@@ -14,11 +15,10 @@ export const AssetContribution = ({
     errors,
     updateField,
   };
-
-  if (vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE) {
-    return <Private {...props} />;
+  if (vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC) {
+    return <Public {...props} />;
   }
   return (
-    <Public {...props} />
+    <Private {...props} />
   );
 };

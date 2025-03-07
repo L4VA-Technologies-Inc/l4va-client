@@ -1,8 +1,7 @@
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
-import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
+import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
-import { LavaInput } from '@/components/shared/LavaInput';
 
 export const Public = ({
   data,
@@ -73,16 +72,19 @@ export const Public = ({
           <p className="text-main-red mt-1">{errors.whitelistAssets}</p>
         )}
       </div>
-
       <div className="mt-[60px]">
-        <LavaInput
-          required
-          error={errors.assetWindowDate}
-          label="Asset window"
-          type="date"
-          value={data.assetWindowDate ? data.assetWindowDate.toISOString().split('T')[0] : ''}
-          onChange={(e) => updateField('assetWindowDate', new Date(e.target.value))}
-        />
+        <div className="uppercase text-[20px] font-bold">
+          *Asset window
+        </div>
+        <div className="mt-4">
+          <LavaDatePicker
+            value={data.assetWindowDate}
+            onChange={(date) => updateField('assetWindowDate', date)}
+          />
+          {errors.assetWindowDate && (
+            <p className="text-main-red mt-1">{errors.assetWindowDate}</p>
+          )}
+        </div>
       </div>
       <div className="mt-[60px]">
         <div className="uppercase text-[20px] font-bold">
