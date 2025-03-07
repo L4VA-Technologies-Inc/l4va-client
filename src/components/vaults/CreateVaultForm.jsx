@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
-import { AssetContribution } from 'src/components/vaults/steps/AssetContribution';
+import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 
