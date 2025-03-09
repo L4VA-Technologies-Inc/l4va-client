@@ -77,3 +77,23 @@ export const getTimeDifference = (targetDate) => {
 
   return `${d}d ${h}h ${m}m`;
 };
+
+export const substringAddress = (address) => {
+  const addressLength = address?.length || 0;
+  return `${address?.substring(0, 4)}...${address?.substring(addressLength - 4)}`;
+};
+
+export const getDisplayName = (user) => {
+  const userAddress = user.address;
+  if(userAddress) {
+    return substringAddress(userAddress);
+  }
+  return 'No name';
+};
+
+export const getAvatarLetter = (user) => {
+  if (user) {
+    return user.name.charAt(0).toUpperCase();
+  }
+  return 'U';
+};

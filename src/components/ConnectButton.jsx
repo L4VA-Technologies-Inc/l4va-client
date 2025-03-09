@@ -8,13 +8,10 @@ import { useModal } from '@/context/modals';
 
 import { LoginModal } from '@/components/modals/LoginModal';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { ProfileModal } from '@/components/modals/ProfileModal';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+import { getAvatarLetter, getDisplayName } from '@/utils/core.utils';
 
 import { MODAL_TYPES } from '@/constants/core.constants';
 
@@ -88,13 +85,6 @@ export const ConnectButton = () => {
     }
   };
 
-  const getAvatarLetter = () => {
-    if (user) {
-      return user.name.charAt(0).toUpperCase();
-    }
-    return 'U';
-  };
-
   return (
     <>
       {!isAuthenticated ? (
@@ -103,26 +93,14 @@ export const ConnectButton = () => {
           CONNECT
         </PrimaryButton>
       ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none rounded-full">
-            <Avatar className="h-10 w-10 bg-main-orange cursor-pointer">
-              <AvatarFallback className=" font-medium">
-                {getAvatarLetter()}
-              </AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="bg-primary-background border border-dark-600 "
-          >
-            <DropdownMenuItem
-              className="hover:bg-dark-600 cursor-pointer px-4 py-2 text-sm font-medium"
-              onClick={handleDisconnect}
-            >
-              Disconnect
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <PrimaryButton onClick={() => openModal(MODAL_TYPES.PROFILE)}>
+          <Avatar className="h-10 w-10 bg-dark-600 cursor-pointer">
+            <AvatarFallback className="text-white font-medium">
+              {getAvatarLetter(user)}
+            </AvatarFallback>
+          </Avatar>
+          {getDisplayName(user)}
+        </PrimaryButton>
       )}
       <LoginModal
         disconnect={disconnect}
@@ -134,6 +112,12 @@ export const ConnectButton = () => {
         onClose={closeModal}
         onConnect={handleConnect}
         onSignMessage={handleSignMessage}
+      />
+      <ProfileModal
+        user={user}
+        handleDisconnect={handleDisconnect}
+        isOpen={activeModal === MODAL_TYPES.PROFILE}
+        onClose={closeModal}
       />
     </>
   );

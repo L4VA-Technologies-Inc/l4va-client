@@ -84,7 +84,7 @@ export const Header = () => {
 
   return (
     <div className="py-6">
-      <nav className="container mx-auto flex items-center justify-between px-4">
+      <nav className="relative container mx-auto flex items-center justify-between px-4">
         <Link to="/">
           <img alt="L4VA Logo" className="w-[160px]" src="/assets/logo.webp"/>
         </Link>

@@ -61,7 +61,7 @@ export const Features = () => {
   );
 
   return (
-    <section aria-labelledby="features-heading" className="py-12 sm:py-16">
+    <section className="py-12 sm:py-16">
       <h2 className="sr-only" id="features-heading">
         Our Platform Features
       </h2>
