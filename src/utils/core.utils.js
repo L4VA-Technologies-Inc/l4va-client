@@ -63,3 +63,17 @@ export const transformZodErrorsIntoObject = (error) => {
   extractErrors(error.format());
   return formattedErrors;
 };
+
+export const getTimeDifference = (targetDate) => {
+  const now = new Date();
+  const diffInMs = targetDate - now;
+
+  if (diffInMs <= 0) return '0d 0h 0m';
+
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const d = Math.floor(diffInMinutes / (60 * 24));
+  const h = Math.floor((diffInMinutes % (60 * 24)) / 60);
+  const m = diffInMinutes % 60;
+
+  return `${d}d ${h}h ${m}m`;
+};

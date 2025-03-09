@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
+import { getTimeDifference } from '@/utils/core.utils';
+
 export const LavaDatePicker = () => {
   const [date, setDate] = useState();
   const [isOpen, setIsOpen] = useState(false);
@@ -39,20 +41,6 @@ export const LavaDatePicker = () => {
       }
       setDate(newDate);
     }
-  };
-
-  const getTimeDifference = (targetDate) => {
-    const now = new Date();
-    const diffInMs = targetDate - now;
-
-    if (diffInMs <= 0) return '0d 0h 0m';
-
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const d = Math.floor(diffInMinutes / (60 * 24));
-    const h = Math.floor((diffInMinutes % (60 * 24)) / 60);
-    const m = diffInMinutes % 60;
-
-    return `${d}d ${h}h ${m}m`;
   };
 
   const formatCurrentTime = (dt) => {
