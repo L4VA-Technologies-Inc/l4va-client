@@ -59,11 +59,11 @@ export const InvestmentWindow = ({
               name="investmentWindowOpenTime"
               options={[
                 {
-                  id: 'assetClose',
+                  name: 'assetClose',
                   label: 'Upon Asset Window Closing',
                 },
                 {
-                  id: 'custom',
+                  name: 'custom',
                   label: 'Custom',
                 },
               ]}

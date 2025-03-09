@@ -94,8 +94,8 @@ export const Governance = ({
           <LavaRadioGroup
             name="terminationType"
             options={[
-              { id: 'dao', label: 'DAO' },
-              { id: 'programmed', label: 'Programmed' },
+              { name: 'dao', label: 'DAO' },
+              { name: 'programmed', label: 'Programmed' },
             ]}
             value={data.terminationType || 'dao'}
             onChange={(value) => updateField('terminationType', value)}

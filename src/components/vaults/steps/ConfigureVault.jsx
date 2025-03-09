@@ -1,9 +1,8 @@
-import { Textarea } from '@/components/ui/textarea';
-
 import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { LavaTextarea } from '@/components/shared/LavaTextarea';
 
 export const ConfigureVault = ({
   data,
@@ -11,33 +10,31 @@ export const ConfigureVault = ({
   updateField,
 }) => {
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    updateField(id, value);
+    const { name, value } = e.target;
+    updateField(name, value);
   };
 
   return (
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
-        <div>
-          <LavaInput
-            required
-            error={errors.name}
-            id="name"
-            label="Vault name"
-            placeholder="Enter the name of your Vault"
-            value={data.name || ''}
-            onChange={handleChange}
-          />
-        </div>
+        <LavaInput
+          required
+          error={errors.name}
+          label="Vault name"
+          name="name"
+          placeholder="Add the name of your Vault"
+          value={data.name || ''}
+          onChange={handleChange}
+        />
         <div className="grid grid-cols-2 mt-[60px]">
           <div>
             <LavaRadioGroup
               label="*Vault type"
               name="type"
               options={[
-                { id: 'single', label: 'Single NFT' },
-                { id: 'multi', label: 'Multi NFT' },
-                { id: 'cnt', label: 'Any CNT' },
+                { name: 'single', label: 'Single NFT' },
+                { name: 'multi', label: 'Multi NFT' },
+                { name: 'cnt', label: 'Any CNT' },
               ]}
               value={data.type || ''}
               onChange={(value) => updateField('type', value)}
@@ -46,15 +43,14 @@ export const ConfigureVault = ({
               <p className="text-main-red mt-1">{errors.type}</p>
             )}
           </div>
-
           <div>
             <LavaRadioGroup
               label="*Vault privacy"
               name="privacy"
               options={[
-                { id: 'private', label: 'Private Vault' },
-                { id: 'public', label: 'Public Vault' },
-                { id: 'semi-private', label: 'Semi-Private Vault' },
+                { name: 'private', label: 'Private Vault' },
+                { name: 'public', label: 'Public Vault' },
+                { name: 'semi-private', label: 'Semi-Private Vault' },
               ]}
               value={data.privacy || ''}
               onChange={(value) => updateField('privacy', value)}
@@ -68,43 +64,31 @@ export const ConfigureVault = ({
         <div className="mt-[60px]">
           <LavaInput
             error={errors.fractionToken}
-            id="fractionToken"
             label="Fractional Token (FT) Ticker"
-            placeholder="0.00"
+            name="fractionToken"
+            placeholder="Add ticker"
             value={data.fractionToken || ''}
             onChange={handleChange}
           />
         </div>
 
         <div className="mt-[60px]">
-          <div className="uppercase text-lg font-bold">
-            Vault brief
-          </div>
-          <div className="mt-4">
-            <Textarea
-              className={`
-                resize-none py-4 pl-5 pr-5 text-lg font-medium w-full focus:outline-none border border-dark-600 bg-input-bg min-h-32
-                ${errors.description ? 'border-main-red' : ''}
-              `}
-              id="description"
-              placeholder="Add a description for your Vault"
-              value={data.description || ''}
-              onChange={handleChange}
-            />
-            {errors.description && (
-              <p className="text-main-red mt-1">{errors.description}</p>
-            )}
-          </div>
+          <LavaTextarea
+            error={errors.description}
+            label="Vault brief"
+            name="description"
+            placeholder="Add a description for your Vault"
+            value={data.description || ''}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="mt-[60px]">
           <LavaSocialLinks
+            errors={errors}
             setSocialLinks={(links) => updateField('socialLinks', links)}
             socialLinks={data.socialLinks || []}
           />
-          {errors.socialLinks && (
-            <p className="text-main-red mt-1">{errors.socialLinks}</p>
-          )}
         </div>
       </div>
 

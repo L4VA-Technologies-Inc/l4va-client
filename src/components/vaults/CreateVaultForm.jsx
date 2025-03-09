@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 import { ConfigureVault } from './steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
+import { Launch } from '@/components/vaults/steps/Launch';
 
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
@@ -15,7 +16,8 @@ import { transformZodErrorsIntoObject } from '@/utils/core.utils';
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,
-  stepFields, VAULT_PRIVACY_TYPES,
+  stepFields,
+  VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 
@@ -25,7 +27,6 @@ export const CreateVaultForm = () => {
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
-  const stepsContainerRef = useRef(null);
 
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
@@ -40,11 +41,6 @@ export const CreateVaultForm = () => {
         return step;
       }),
     );
-
-    // Scroll to the top of the steps container
-    if (stepsContainerRef.current) {
-      stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
   };
 
   const handlePreviousStep = () => {
@@ -61,11 +57,6 @@ export const CreateVaultForm = () => {
           return step;
         }),
       );
-
-      // Scroll to the top of the steps container
-      if (stepsContainerRef.current) {
-        stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
     }
   };
 
@@ -80,15 +71,10 @@ export const CreateVaultForm = () => {
     );
   };
 
-  const updateFieldAndClearError = (fieldName, value) => {
-    setVaultData({ ...vaultData, [fieldName]: value });
-    if (errors[fieldName]) {
-      const newErrors = { ...errors };
-      const { [fieldName]: _, ...remainingErrors } = newErrors;
-      setErrors(remainingErrors);
-      updateStepErrorIndicators(remainingErrors);
-    }
-  };
+  const updateField = (fieldName, value) => setVaultData({
+    ...vaultData,
+    [fieldName]: value,
+  });
 
   const onSubmit = () => {
     if (currentStep < steps.length) {
@@ -124,11 +110,6 @@ export const CreateVaultForm = () => {
         return step;
       }),
     );
-
-    // Scroll to the top of the steps container
-    if (stepsContainerRef.current) {
-      stepsContainerRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
   };
 
   const renderStepContent = (step) => {
@@ -139,7 +120,7 @@ export const CreateVaultForm = () => {
             data={vaultData}
             errors={errors}
             setData={setVaultData}
-            updateField={updateFieldAndClearError}
+            updateField={updateField}
           />
         );
       case 2:
@@ -148,7 +129,7 @@ export const CreateVaultForm = () => {
             data={vaultData}
             errors={errors}
             setData={setVaultData}
-            updateField={updateFieldAndClearError}
+            updateField={updateField}
           />
         );
       case 3:
@@ -156,7 +137,7 @@ export const CreateVaultForm = () => {
           <InvestmentWindow
             data={vaultData}
             errors={errors}
-            updateField={updateFieldAndClearError}
+            updateField={updateField}
           />
         );
       case 4:
@@ -164,11 +145,11 @@ export const CreateVaultForm = () => {
           <Governance
             data={vaultData}
             errors={errors}
-            updateField={updateFieldAndClearError}
+            updateField={updateField}
           />
         );
       case 5:
-        return <div />;
+        return <Launch data={vaultData} />;
       default:
         return null;
     }
@@ -211,7 +192,7 @@ export const CreateVaultForm = () => {
 
   return (
     <div className="pb-10">
-      <div ref={stepsContainerRef} className="relative flex items-center">
+      <div className="relative flex items-center">
         {steps.map((step, index) => (
           <div
             key={`step-${step.id}`}

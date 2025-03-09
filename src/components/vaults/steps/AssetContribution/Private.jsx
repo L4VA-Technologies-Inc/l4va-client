@@ -17,14 +17,14 @@ export const Private = ({
 
   const valuationOptions = vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE ? [
     {
-      id: 'lbe',
+      name: 'lbe',
       label: 'LBE (Liquidity Bootstrapping Event)',
     },
     {
-      id: 'fixed',
+      name: 'fixed',
       label: 'Fixed',
     },
-  ] : [ { id: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
+  ] : [ { name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
 
   return (
     <div className="grid grid-cols-2">
@@ -90,11 +90,11 @@ export const Private = ({
             name="contributionWindowOpenTime"
             options={[
               {
-                id: 'launch',
+                name: 'launch',
                 label: 'Upon Vault Launch',
               },
               {
-                id: 'custom',
+                name: 'custom',
                 label: 'Custom',
               },
             ]}

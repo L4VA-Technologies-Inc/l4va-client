@@ -16,16 +16,16 @@ export const LavaRadioGroup = ({
     ) : null}
     <div className="space-y-2 mt-4">
       {options.map((option) => (
-        <label key={option.id} className="flex items-center space-x-2 cursor-pointer">
+        <label key={option.name} className="flex items-center space-x-2 cursor-pointer">
           <div className="relative">
             <input
-              checked={value === option.id}
+              checked={value === option.name}
               className="peer sr-only"
-              id={`${name}-${option.id}`}
+              id={`${name}-${option.name}`}
               name={name}
               type="radio"
-              value={option.id}
-              onChange={() => onChange(option.id)}
+              value={option.name}
+              onChange={() => onChange(option.name)}
             />
             <div className={`w-5 h-5 rounded-full border-2 ${error ? 'border-main-red' : 'border-white/20'} peer-checked:border-[#FF842C]`} />
             <div

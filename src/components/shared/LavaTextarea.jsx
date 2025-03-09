@@ -1,12 +1,13 @@
-export const LavaInput = ({
+export const LavaTextarea = ({
   name,
   label,
   value,
   onChange,
   placeholder = 'Enter text',
   error,
-  type = 'text',
   required = false,
+  minHeight = 'min-h-32',
+  className = '',
 }) => (
   <>
     {label ? (
@@ -15,13 +16,14 @@ export const LavaInput = ({
       </div>
     ) : null}
     <div className="mt-4">
-      <input
-        className="
-          rounded-[10px] bg-input-bg py-4 pl-5 pr-5 text-lg font-medium w-full border border-dark-600 h-[60px]
-        "
+      <textarea
+        className={`
+          resize-none py-4 pl-5 pr-5 text-lg font-medium w-full border border-dark-600 bg-input-bg rounded-[10px] ${minHeight}
+          ${error ? 'border-main-red' : ''}
+          ${className}
+        `}
         name={name}
         placeholder={placeholder}
-        type={type}
         value={value || ''}
         onChange={onChange}
       />

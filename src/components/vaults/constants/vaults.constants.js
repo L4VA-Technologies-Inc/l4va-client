@@ -24,10 +24,9 @@ export const CREATE_VAULT_STEPS = [
   },
 ];
 
-// Social link schema
 const socialLinkSchema = z.object({
-  platform: z.string({ required_error: 'Platform is required' }),
-  url: z.string({ required_error: 'URL is required' }),
+  platform: z.string(),
+  url: z.string().url(),
 });
 
 // Main vault schema
@@ -44,8 +43,8 @@ export const vaultSchema = z.object({
   description: z.string()
     .max(500, { message: 'Description must be less than 500 characters' })
     .optional(),
-  vaultImage: z.string(),
-  backgroundBanner: z.string(),
+  vaultImage: z.string({ message: 'Vault image is required' }),
+  backgroundBanner: z.string({ message: 'Vault background is required' }),
   socialLinks: z.array(socialLinkSchema),
 
   // Step 2: Asset Contribution

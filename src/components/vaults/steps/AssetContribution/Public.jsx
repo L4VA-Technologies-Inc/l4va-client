@@ -16,7 +16,7 @@ export const Public = ({
           name="valuationType"
           options={[
             {
-              id: 'lbe',
+              name: 'lbe',
               label: 'LBE (Liquidity Bootstrapping Event)',
             },
           ]}
@@ -33,11 +33,11 @@ export const Public = ({
           name="contributionWindowOpenTime"
           options={[
             {
-              id: 'launch',
+              name: 'launch',
               label: 'Upon Vault Launch',
             },
             {
-              id: 'custom',
+              name: 'custom',
               label: 'Custom',
             },
           ]}
