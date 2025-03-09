@@ -149,7 +149,7 @@ export const CreateVaultForm = () => {
           />
         );
       case 5:
-        return <Launch data={vaultData} />;
+        return <Launch data={vaultData} setCurrentStep={setCurrentStep} />;
       default:
         return null;
     }

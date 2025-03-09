@@ -140,3 +140,50 @@ export const LavaSocialLinks = ({
     </div>
   );
 };
+
+export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
+  const socialPlatforms = [
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      icon: <FacebookIcon className="text-white" height={16} width={16} />,
+    },
+    {
+      id: 'x',
+      name: 'X',
+      icon: <XIcon className="text-white" height={16} width={16} />,
+    },
+  ];
+
+  const getPlatformIcon = (platformId) => {
+    const platform = socialPlatforms.find(p => p.id === platformId);
+    return platform ? platform.icon : null;
+  };
+
+  const validLinks = socialLinks.filter(link => link.url.trim() !== '');
+
+  return (
+    <div className="space-y-2">
+      {validLinks.length > 0 ? (
+        validLinks.map((link, index) => (
+          <a
+            key={`social-link-${index}`}
+            className="flex items-center gap-2"
+            href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {getPlatformIcon(link.platform)}
+            <span className="text-[20px]">
+              {link.url}
+            </span>
+          </a>
+        ))
+      ) : (
+        <p className="text-[20px]">
+          No social links added.
+        </p>
+      )}
+    </div>
+  );
+};
