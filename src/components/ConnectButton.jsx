@@ -54,9 +54,11 @@ export const ConnectButton = () => {
       connect(walletKey, {
         onSuccess: () => {
           console.log('Successfully connected to wallet');
+          setIsLoading(false);
         },
         onError: (error) => {
           console.error('Failed to connect to wallet:', error);
+          setIsLoading(false);
         },
       });
     }
@@ -114,9 +116,9 @@ export const ConnectButton = () => {
         onSignMessage={handleSignMessage}
       />
       <ProfileModal
-        user={user}
         handleDisconnect={handleDisconnect}
         isOpen={activeModal === MODAL_TYPES.PROFILE}
+        user={user}
         onClose={closeModal}
       />
     </>
