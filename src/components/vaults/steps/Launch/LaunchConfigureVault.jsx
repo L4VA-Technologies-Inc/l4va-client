@@ -1,8 +1,8 @@
 import { Edit } from 'lucide-react';
 import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 
-export const Launch = ({ data, setCurrentStep }) => (
-  <div>
+export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
+  <section>
     <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
       <p className="font-bold text-2xl">
         Configure Vault
@@ -54,7 +54,7 @@ export const Launch = ({ data, setCurrentStep }) => (
           <p className="uppercase font-semibold text-dark-100">
             Social links
           </p>
-          <LavaSocialLinksPreview socialLinks={data.socialLinks} />
+          <LavaSocialLinksPreview socialLinks={data.socialLinks}/>
         </div>
       </div>
       <div className="space-y-10">
@@ -84,5 +84,5 @@ export const Launch = ({ data, setCurrentStep }) => (
         </div>
       </div>
     </div>
-  </div>
+  </section>
 );
