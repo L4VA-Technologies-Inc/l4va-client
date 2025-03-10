@@ -1,8 +1,7 @@
-import { X, Copy, PowerOff } from 'lucide-react';
+import { X } from 'lucide-react';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-
-import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
+import { Link } from 'react-router-dom';
+import { UserAvatar } from '@/components/shared/UserAvatar';
 
 export const ProfileModal = ({
   user,
@@ -32,50 +31,29 @@ export const ProfileModal = ({
           </button>
         </div>
         <div className="p-4 rounded-b-[10px]">
-          <div className="flex items-center gap-2 mb-8">
-            <Avatar className="h-20 w-20 bg-dark-600 cursor-pointer">
-              <AvatarFallback className="text-white font-medium">
-                {getAvatarLetter(user)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="font-medium text-[20px] mb-2">
-                Profile Name
-              </p>
-              <p className="flex items-center gap-2 text-dark-100">
-                {substringAddress(user.address)}
-                <Copy size={20} />
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleDisconnect}
-            >
-              <PowerOff className="text-dark-100" size={20} />
-            </button>
-          </div>
+          <UserAvatar handleDisconnect={handleDisconnect} user={user} />
           <div className="flex flex-col space-y-4">
-            <button
+            <Link
               className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-[#2D3049]"
-              type="button"
-              onClick={handleDisconnect}
+              to="/profile"
+              onClick={onClose}
             >
               My profile
-            </button>
-            <button
+            </Link>
+            <Link
               className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-[#2D3049]"
-              type="button"
-              onClick={handleDisconnect}
+              to="/vaults"
+              onClick={onClose}
             >
               My vaults
-            </button>
-            <button
+            </Link>
+            <Link
               className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-[#2D3049]"
-              type="button"
-              onClick={handleDisconnect}
+              to="/swap"
+              onClick={onClose}
             >
               Swap ADA/VLRM
-            </button>
+            </Link>
           </div>
         </div>
       </div>

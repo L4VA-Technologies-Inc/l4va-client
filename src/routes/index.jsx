@@ -6,6 +6,7 @@ import { NotFound } from '@/pages/NotFound';
 import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
 import { Vaults } from '@/pages/Vaults';
+import { Profile } from '@/pages/Profile';
 
 const HomePage = () => (
   <HomePageLayout>
@@ -17,6 +18,12 @@ const CreateVaultPage = () => (
   <CreateVaultLayout>
     <CreateVault />
   </CreateVaultLayout>
+);
+
+const ProfilePage = () => (
+  <MainLayout>
+    <Profile />
+  </MainLayout>
 );
 
 const VaultsPage = () => (
@@ -45,6 +52,16 @@ export const Routes = () => {
         {
           path: '/create',
           element: <CreateVaultPage />,
+        },
+      ],
+    },
+    {
+      path: '/profile',
+      element: <ProtectedRoute />,
+      children: [
+        {
+          path: '/profile',
+          element: <ProfilePage />,
         },
       ],
     },
