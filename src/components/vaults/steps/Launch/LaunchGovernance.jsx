@@ -1,15 +1,15 @@
 import { Edit } from 'lucide-react';
 
-export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
+export const LaunchGovernance = ({ data, setCurrentStep }) => (
   <section>
     <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
       <p className="font-bold text-2xl">
-        Investment
+        Governance
       </p>
       <button
         className="flex items-center gap-2 text-dark-100"
         type="button"
-        onClick={() => setCurrentStep(3)}
+        onClick={() => setCurrentStep(4)}
       >
         <Edit size={24}/>
         Edit
@@ -19,60 +19,80 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
       <div className="space-y-10">
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            Investor WL
+            FT TOKEN SUPPLY
           </p>
           <p className="text-[20px]">
-            {data.investorWhitelist || 'None'}
+            {data.ftTokenSupply || 'None'}
           </p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            Investment Window Duration
+            FT Token Decimals
           </p>
           <p className="text-[20px]">
-            {data.investmentWindowDuration || 'None'}
+            {data.ftTokenDecimals || 'None'}
           </p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            Investment Window Open Time
+            FT Token image
           </p>
-          <p className="text-[20px]">
-            {data.investmentWindowOpenTime || 'None'}
-          </p>
+          <div className="mt-2 relative w-full h-32 overflow-hidden rounded-lg">
+            <img
+              alt="Background Banner"
+              className="w-1/2 h-full object-cover"
+              src={data.backgroundBanner || '/assets/vault-token-image.png'}
+            />
+          </div>
         </div>
       </div>
       <div className="space-y-10">
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            % of Assets Fractionalized
+            Termination type
           </p>
           <p className="text-[20px]">
-            {data.percentAssetsOffered ? `${data.percentAssetsOffered}%` : 'None'}
+            {data.terminationType}
           </p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            FT Investment Window
+            Creation Threshold %
           </p>
           <p className="text-[20px]">
-            {data.ftInvestmentWindow || 'None'}
+            {data.creationThreshold || 'None'}
           </p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            FT Investment Reserve
+            Start threshold %
           </p>
           <p className="text-[20px]">
-            {data.ftInvestmentReserve || 'None'}
+            {data.startThreshold || 'None'}
           </p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
-            % Liquidity Pool Contribution
+            Vote threshold %
           </p>
           <p className="text-[20px]">
-            {data.percentLiquidityPoolContribution ? `${data.percentLiquidityPoolContribution}%` : 'None'}
+            {data.voteThreshold || 'None'}
+          </p>
+        </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">
+            Execution threshold %
+          </p>
+          <p className="text-[20px]">
+            {data.executionThreshold || 'None'}
+          </p>
+        </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">
+            Cosigning threshold %
+          </p>
+          <p className="text-[20px]">
+            {data.cosigningThreshold || 'None'}
           </p>
         </div>
       </div>
