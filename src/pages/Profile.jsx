@@ -76,8 +76,7 @@ export const Profile = () => {
           My Profile
         </span>
       </div>
-
-      <div className="relative w-full h-64 bg-dark-600 overflow-hidden group">
+      <div className="relative w-full h-96 bg-dark-600 overflow-hidden group">
         {bgImage ? (
           <img
             alt="Profile Background"
@@ -87,7 +86,7 @@ export const Profile = () => {
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <button
-              className="opacity-0 group-hover:opacity-100 flex items-center gap-2 bg-dark-500 rounded-md px-4 py-2 font-medium text-dark-100 transition-all duration-200"
+              className="opacity-0 group-hover:opacity-100 flex items-center gap-2 font-medium text-dark-100"
               onClick={() => bgInputRef.current.click()}
             >
               <Camera size={20} />
@@ -112,12 +111,11 @@ export const Profile = () => {
           onChange={handleBgImageChange}
         />
       </div>
-
       <div className="container mx-auto px-4 md:px-6">
-        <div className="relative -mt-16">
-          <div className="flex flex-col md:flex-row">
+        <div className="relative -mt-24">
+          <div className="flex items-center flex-col md:flex-row">
             <div className="relative mr-4 mb-4 md:mb-0 group">
-              <div className="h-32 w-32 rounded-full bg-dark-600 overflow-hidden border-4 border-primary-background">
+              <div className="h-48 w-48 rounded-full bg-dark-600 overflow-hidden border-4 border-primary-background">
                 {avatar ? (
                   <img
                     alt="Avatar"
@@ -149,7 +147,7 @@ export const Profile = () => {
               </div>
             </div>
 
-            <div className="flex-1 md:pt-8">
+            <div className="flex-1">
               <div className="flex items-center gap-2">
                 {isEditingName ? (
                   <input

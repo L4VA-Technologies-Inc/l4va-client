@@ -13,10 +13,11 @@ export const HomePageLayout = ({ children }) => (
   </div>
 );
 
-export const MainLayout = ({ children }) => (
+export const MainLayout = ({ children, includeFooter = true }) => (
   <>
     <Header/>
     {children}
+    {includeFooter && <Footer />}
   </>
 );
 
