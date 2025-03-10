@@ -40,7 +40,8 @@ export const NotFound = () => {
         <div className="relative">
           <div className="absolute inset-x-0 /10 -z-10">
             <div
-              className="h-[20rem] flex items-center justify-center text-[20rem] font-bold tracking-widest opacity-20">
+              className="h-[20rem] flex items-center justify-center text-[20rem] font-bold tracking-widest opacity-20"
+            >
               404
             </div>
           </div>

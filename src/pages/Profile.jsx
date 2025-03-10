@@ -146,14 +146,13 @@ export const Profile = () => {
                 />
               </div>
             </div>
-
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 {isEditingName ? (
                   <input
                     ref={nameInputRef}
                     autoFocus
-                    className="text-2xl font-medium bg-dark-600 border border-dark-500 rounded px-2 py-1 outline-none focus:border-main-orange"
+                    className="text-[20px] font-medium bg-dark-600 border border-dark-500 rounded px-2 py-1 outline-none"
                     defaultValue={user.name}
                     type="text"
                     onBlur={handleNameSave}
