@@ -40,7 +40,9 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('type', value)}
             />
             {errors.type && (
-              <p className="text-main-red mt-1">{errors.type}</p>
+              <p className="text-main-red mt-1">
+                {errors.type}
+              </p>
             )}
           </div>
           <div>
@@ -56,7 +58,9 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('privacy', value)}
             />
             {errors.privacy && (
-              <p className="text-main-red mt-1">{errors.privacy}</p>
+              <p className="text-main-red mt-1">
+                {errors.privacy}
+              </p>
             )}
           </div>
         </div>
@@ -65,6 +69,7 @@ export const ConfigureVault = ({
           <LavaInput
             error={errors.fractionToken}
             label="Fractional Token (FT) Ticker"
+            maxLength={6}
             name="fractionToken"
             placeholder="Add ticker"
             value={data.fractionToken || ''}
@@ -100,7 +105,9 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('vaultImage', image)}
           />
           {errors.vaultImage && (
-            <p className="text-main-red mt-1">{errors.vaultImage}</p>
+            <p className="text-main-red mt-1">
+              {errors.vaultImage}
+            </p>
           )}
         </div>
         <div>
@@ -110,7 +117,9 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('backgroundBanner', image)}
           />
           {errors.backgroundBanner && (
-            <p className="text-main-red mt-1">{errors.backgroundBanner}</p>
+            <p className="text-main-red mt-1">
+              {errors.backgroundBanner}
+            </p>
           )}
         </div>
       </div>

@@ -7,6 +7,7 @@ export const LavaInput = ({
   error,
   type = 'text',
   required = false,
+  maxLength,
 }) => (
   <>
     {label ? (
@@ -19,6 +20,7 @@ export const LavaInput = ({
         className="
           rounded-[10px] bg-input-bg py-4 pl-5 pr-5 text-lg font-medium w-full border border-dark-600 h-[60px]
         "
+        maxLength={maxLength}
         name={name}
         placeholder={placeholder}
         type={type}
