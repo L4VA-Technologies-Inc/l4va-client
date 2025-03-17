@@ -25,7 +25,7 @@ export const CREATE_VAULT_STEPS = [
 ];
 
 const socialLinkSchema = z.object({
-  platform: z.string(),
+  name: z.string(),
   url: z.string().url(),
 });
 

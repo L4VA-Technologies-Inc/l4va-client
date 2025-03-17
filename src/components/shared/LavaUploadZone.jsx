@@ -163,12 +163,14 @@ export const UploadZone = ({
       </div>
 
       <div
-        className={`relative border-2 border-dashed rounded-lg p-6 
+        className={`
+          relative border-2 border-dashed rounded-lg p-6 
           ${getStatusColor()}
           flex flex-col items-center justify-center 
           bg-navy-900 min-h-64 
           ${!preview ? 'cursor-pointer' : ''}
-          transition-colors duration-200`}
+          transition-colors duration-200
+        `}
         onClick={!preview ? triggerFileInput : undefined}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
