@@ -215,10 +215,7 @@ export const UploadZone = ({
               </div>
             </div>
             <p className="text-dark-100 text-[20px] mb-2">
-              Upload file into the selected area
-            </p>
-            <p className="text-dark-100 text-sm">
-              Drag and drop or click to browse
+              Upload image into the selected area
             </p>
             <p className="text-dark-100 text-xs mt-4">
               {accept !== '*' && `Accepted formats: ${accept}`}
