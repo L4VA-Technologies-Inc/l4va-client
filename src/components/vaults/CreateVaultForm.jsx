@@ -20,6 +20,7 @@ import {
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
+import { VaultsApiProvider } from '@/services/api/vaults';
 
 export const CreateVaultForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -112,6 +113,15 @@ export const CreateVaultForm = () => {
     );
   };
 
+  const saveDraft = async () => {
+    try {
+      const { data } = await VaultsApiProvider.saveDraft(vaultData);
+      console.log(data);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const renderStepContent = (step) => {
     switch (step) {
       case 1:
@@ -170,7 +180,10 @@ export const CreateVaultForm = () => {
             <ChevronLeft size={24}/>
           </SecondaryButton>
         )}
-        <SecondaryButton className="uppercase px-16 py-4 bg-input-bg">
+        <SecondaryButton
+          className="uppercase px-16 py-4 bg-input-bg"
+          onClick={saveDraft}
+        >
           Save for later
         </SecondaryButton>
         <PrimaryButton onClick={handleNextStep}>

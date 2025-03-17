@@ -6,4 +6,8 @@ export class VaultsConfigProvider {
   static getVaults() {
     return '/api/v1/vaults';
   }
+
+  static saveDraft() {
+    return '/api/v1/vaults/save-draft';
+  }
 }
