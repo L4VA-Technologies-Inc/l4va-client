@@ -37,14 +37,13 @@ export const vaultSchema = z.object({
     .max(50, { message: 'Vault name must be less than 50 characters' }),
   type: z.string(),
   privacy: z.string(),
-  fractionToken: z.string()
+  ftTokenTicker: z.string()
     .regex(/^[A-Z0-9]{1,10}$/, { message: 'Ticker must be 1-10 uppercase letters or numbers' })
     .nullable(),
   description: z.string()
     .max(500, { message: 'Description must be less than 500 characters' })
     .optional(),
-  vaultImage: z.string({ message: 'Vault image is required' }),
-  backgroundBanner: z.string({ message: 'Vault background is required' }),
+  imageUrl: z.string({ message: 'Vault image is required' }),
   socialLinks: z.array(socialLinkSchema),
 
   // Step 2: Asset Contribution
@@ -87,10 +86,10 @@ export const initialVaultState = {
   name: '',
   type: 'single',
   privacy: 'public',
-  fractionToken: '',
+  ftTokenTicker: '',
   description: '',
-  vaultImage: null,
-  backgroundBanner: null,
+  imageUrl: null,
+  bannerUrl: null,
   socialLinks: [],
 
   // Step 2: Asset Contribution
@@ -128,7 +127,7 @@ export const initialVaultState = {
 };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'fractionToken', 'description', 'vaultImage', 'backgroundBanner', 'socialLinks'],
+  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
   2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],

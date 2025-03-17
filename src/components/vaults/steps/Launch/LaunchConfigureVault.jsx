@@ -66,7 +66,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             <img
               alt="Vault Image"
               className="w-full h-full object-cover"
-              src={data.vaultImage || '/assets/launch-vault.png'}
+              src={data.imageUrl || '/assets/launch-vault.png'}
             />
           </div>
         </div>
@@ -78,7 +78,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             <img
               alt="Background Banner"
               className="w-full h-full object-cover"
-              src={data.backgroundBanner || '/assets/launch-bg.png'}
+              src={data.bannerUrl || '/assets/launch-bg.png'}
             />
           </div>
         </div>

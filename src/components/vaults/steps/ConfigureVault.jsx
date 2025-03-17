@@ -67,12 +67,12 @@ export const ConfigureVault = ({
 
         <div className="mt-[60px]">
           <LavaInput
-            error={errors.fractionToken}
+            error={errors.ftTokenTicker}
             label="Fractional Token (FT) Ticker"
             maxLength={6}
-            name="fractionToken"
+            name="ftTokenTicker"
             placeholder="Add ticker"
-            value={data.fractionToken || ''}
+            value={data.ftTokenTicker || ''}
             onChange={handleChange}
           />
         </div>
@@ -100,25 +100,25 @@ export const ConfigureVault = ({
       <div className="flex flex-col gap-[60px] px-[36px]">
         <div>
           <UploadZone
-            image={data.vaultImage}
+            image={data.imageUrl}
             label="*Vault image"
-            setImage={(image) => updateField('vaultImage', image)}
+            setImage={(image) => updateField('imageUrl', image)}
           />
-          {errors.vaultImage && (
+          {errors.imageUrl && (
             <p className="text-main-red mt-1">
-              {errors.vaultImage}
+              {errors.imageUrl}
             </p>
           )}
         </div>
         <div>
           <UploadZone
-            image={data.backgroundBanner}
-            label="*Background banner"
-            setImage={(image) => updateField('backgroundBanner', image)}
+            image={data.bannerUrl}
+            label="Background banner"
+            setImage={(image) => updateField('bannerUrl', image)}
           />
-          {errors.backgroundBanner && (
+          {errors.bannerUrl && (
             <p className="text-main-red mt-1">
-              {errors.backgroundBanner}
+              {errors.bannerUrl}
             </p>
           )}
         </div>

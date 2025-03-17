@@ -142,12 +142,12 @@ export const Private = ({
         </div>
         <div className="mt-[60px]">
           <UploadZone
-            image={data.vaultImage}
+            image={data.imageUrl}
             label="*Upload CSV"
-            setImage={(image) => updateField('vaultImage', image)}
+            setImage={(image) => updateField('imageUrl', image)}
           />
-          {errors.vaultImage && (
-            <p className="text-main-red mt-1">{errors.vaultImage}</p>
+          {errors.imageUrl && (
+            <p className="text-main-red mt-1">{errors.imageUrl}</p>
           )}
         </div>
         <div className="mt-[60px]">

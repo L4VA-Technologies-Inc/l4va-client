@@ -41,7 +41,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             <img
               alt="Background Banner"
               className="w-1/2 h-full object-cover"
-              src={data.backgroundBanner || '/assets/vault-token-image.png'}
+              src={data.bannerUrl || '/assets/vault-token-image.png'}
             />
           </div>
         </div>

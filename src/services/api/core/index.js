@@ -11,7 +11,23 @@ export class CoreApiProvider {
   }
 
   static async getProfile() {
-    const response = await axiosInstance.get(CoreConfigProvider.profile());
+    const response = await axiosInstance.get(CoreConfigProvider.getProfile());
+    return response;
+  }
+
+  static async uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await axiosInstance.post(
+      CoreConfigProvider.uploadImage(),
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
     return response;
   }
 }

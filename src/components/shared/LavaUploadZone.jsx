@@ -1,15 +1,20 @@
 import { useState, useRef } from 'react';
 import { X } from 'lucide-react';
 
+import { CoreApiProvider } from '@/services/api/core';
+
 export const UploadZone = ({
   label,
   image,
   setImage,
   error,
   required = false,
-  accept = 'image/*',
+  accept = 'image/jpeg',
+  onUploadSuccess = () => {},
+  onUploadError = () => {},
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -21,18 +26,25 @@ export const UploadZone = ({
     setIsDragging(false);
   };
 
+  const uploadFileToServer = async (file) => {
+    setUploadStatus('uploading');
+
+    try {
+      const response = await CoreApiProvider.uploadImage(file);
+      console.log(response);
+      setUploadStatus('success');
+      onUploadSuccess(response?.data);
+    } catch (err) {
+      console.error('Upload error:', err);
+      setUploadStatus('error');
+      onUploadError(err);
+    }
+  };
+
   const handleFile = (file) => {
     const reader = new FileReader();
 
-    reader.onload = (e) => {
-      setImage({
-        file,
-        preview: e.target.result,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
-    };
+    reader.onload = () => uploadFileToServer(file);
 
     reader.readAsDataURL(file);
   };
@@ -54,14 +66,13 @@ export const UploadZone = ({
 
   const removeImage = () => {
     setImage(null);
+    setUploadStatus(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current.click();
-  };
+  const triggerFileInput = () => fileInputRef.current.click();
 
   return (
     <div className="py-6 px-9 bg-input-bg rounded-[10px]">
@@ -70,11 +81,13 @@ export const UploadZone = ({
       </div>
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 ${
-          error
+          error || uploadStatus === 'error'
             ? 'border-main-red'
-            : isDragging
-              ? 'border-blue-400'
-              : 'border-gray-500'
+            : uploadStatus === 'success'
+              ? 'border-green-500'
+              : isDragging
+                ? 'border-blue-400'
+                : 'border-dark-100'
         } flex flex-col items-center justify-center bg-navy-900 min-h-64 cursor-pointer`}
         onClick={!image ? triggerFileInput : undefined}
         onDragLeave={handleDragLeave}
@@ -96,7 +109,9 @@ export const UploadZone = ({
               src={image.preview}
             />
             <button
-              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-75"
+              className="
+                absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1 hover:bg-opacity-75
+              "
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
