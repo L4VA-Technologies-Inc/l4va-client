@@ -45,12 +45,12 @@ export const Features = () => {
         />
       </div>
       <div className="pt-6 sm:pt-12">
-        <h3 className=" font-satoshi text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
+        <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">
           {title}
         </h3>
         <p
           className="
-            font-satoshi font-semibold text-dark-100 text-lg sm:text-xl leading-relaxed
+            text-dark-100 text-lg sm:text-xl leading-relaxed
             max-w-sm mx-auto sm:mx-0
           "
         >
