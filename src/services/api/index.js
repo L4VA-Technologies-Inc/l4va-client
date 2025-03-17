@@ -16,13 +16,13 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === UNAUTHORIZED_CODE) {
-      localStorage.removeItem('jwt');
-      window.location.href = '/';
-    }
-    return Promise.reject(error);
-  },
-);
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === UNAUTHORIZED_CODE) {
+//       localStorage.removeItem('jwt');
+//       window.location.href = '/';
+//     }
+//     return Promise.reject(error);
+//   },
+// );
