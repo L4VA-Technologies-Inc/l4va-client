@@ -3,8 +3,9 @@ import { Check, X, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions } from '@ada-anvil/weld/react';
 
-import { Spinner } from '../Spinner.jsx';
-import { PrimaryButton } from '../shared/PrimaryButton.jsx';
+import { Spinner } from '@/components/Spinner';
+import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 
 export const LoginModal = ({
   isOpen,
@@ -66,24 +67,16 @@ export const LoginModal = ({
           </button>
         ))}
       </div>
-      <div className="mt-6 flex items-start">
-        <div className="mr-2 mt-1">
-          <input
-            checked={isChecked}
-            className="w-4 h-4"
-            name="terms"
-            type="checkbox"
-            onChange={() => setIsChecked(!isChecked)}
-          />
-        </div>
-        <div>
-          <label className="text-sm" htmlFor="terms">
-            Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span>
-          </label>
-          <p className="text-sm text-dark-100 mt-1">
-            I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use
-          </p>
-        </div>
+      <div className="mt-6">
+        <LavaCheckbox
+          checked={isChecked}
+          description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
+          label={(
+            <>Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span></>
+          )}
+          name="terms"
+          onChange={() => setIsChecked(!isChecked)}
+        />
       </div>
     </>
   );

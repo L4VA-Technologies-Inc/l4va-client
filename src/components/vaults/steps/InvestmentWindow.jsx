@@ -1,7 +1,7 @@
 import { Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
+import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist.jsx';
@@ -55,7 +55,7 @@ export const InvestmentWindow = ({
             *INVESTMENT WINDOW OPEN TIME
           </div>
           <div className="mt-4">
-            <LavaRadioGroup
+            <LavaRadio
               name="investmentWindowOpenTime"
               options={[
                 {

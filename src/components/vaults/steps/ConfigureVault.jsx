@@ -1,4 +1,4 @@
-import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
+import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
@@ -28,7 +28,7 @@ export const ConfigureVault = ({
         />
         <div className="grid grid-cols-2 mt-[60px]">
           <div>
-            <LavaRadioGroup
+            <LavaRadio
               label="*Vault type"
               name="type"
               options={[
@@ -46,7 +46,7 @@ export const ConfigureVault = ({
             )}
           </div>
           <div>
-            <LavaRadioGroup
+            <LavaRadio
               label="*Vault privacy"
               name="privacy"
               options={[

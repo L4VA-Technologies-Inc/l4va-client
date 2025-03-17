@@ -52,7 +52,7 @@ export const Header = () => {
 
   const NavLink = ({ to, label }) => (
     <Link
-      className="min-w-[140px] text-center transition hover:text-main-red"
+      className="min-w-[140px] text-center transition hover:text-main-orange"
       to={to}
       onClick={(e) => handleNavClick(to, e)}
     >
@@ -70,7 +70,7 @@ export const Header = () => {
       }}
     >
       <Link
-        className="block text-4xl text-center font-satoshi font-bold hover:text-main-red transition-colors duration-200"
+        className="block text-4xl text-center font-satoshi font-bold transition-colors duration-200"
         to={to}
         onClick={(e) => {
           setIsMobileMenuOpen(false);

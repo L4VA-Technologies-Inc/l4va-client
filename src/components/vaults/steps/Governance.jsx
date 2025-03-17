@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
+import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 
@@ -91,7 +91,7 @@ export const Governance = ({
           <div className="uppercase text-[20px] font-bold mb-4">
             TERMINATION TYPE
           </div>
-          <LavaRadioGroup
+          <LavaRadio
             name="terminationType"
             options={[
               { name: 'dao', label: 'DAO' },

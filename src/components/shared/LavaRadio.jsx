@@ -1,6 +1,6 @@
 import { Label } from '@/components/ui/label';
 
-export const LavaRadioGroup = ({
+export const LavaRadio = ({
   name,
   value,
   label,

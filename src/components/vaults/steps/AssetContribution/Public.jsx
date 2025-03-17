@@ -1,4 +1,4 @@
-import { LavaRadioGroup } from '@/components/shared/LavaRadioGroup';
+import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
@@ -11,7 +11,7 @@ export const Public = ({
   <div className="grid grid-cols-2">
     <div className="px-[36px]">
       <div>
-        <LavaRadioGroup
+        <LavaRadio
           label="*Valuation type"
           name="valuationType"
           options={[
@@ -28,7 +28,7 @@ export const Public = ({
         )}
       </div>
       <div className="mt-[60px]">
-        <LavaRadioGroup
+        <LavaRadio
           label="*Contribution window open time"
           name="contributionWindowOpenTime"
           options={[
