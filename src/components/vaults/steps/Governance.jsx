@@ -16,7 +16,7 @@ export const Governance = ({
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
     const parts = numericValue.split('.');
-    const sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts[1] : numericValue;
+    const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
 
     if (parts.length === 2 && parts[1].length > 2) {
       return;
@@ -60,8 +60,8 @@ export const Governance = ({
         <div>
           <LavaInput
             error={errors.ftTokenSupply}
-            name="ftTokenSupply"
             label="FT TOKEN SUPPLY"
+            name="ftTokenSupply"
             placeholder="XXX,XXX,XXX"
             value={data.ftTokenSupply || ''}
             onChange={handleSupplyChange}
@@ -70,8 +70,8 @@ export const Governance = ({
         <div className="mt-[60px]">
           <LavaInput
             error={errors.ftTokenDecimals}
-            name="ftTokenDecimals"
             label="FT TOKEN DECIMALS"
+            name="ftTokenDecimals"
             placeholder="Integer between 1-9"
             value={data.ftTokenDecimals || ''}
             onChange={handleDecimalsChange}
@@ -129,8 +129,8 @@ export const Governance = ({
               <LavaInput
                 error={errors.assetAppreciation}
                 icon={<Info color="white" size={16} />}
-                name="assetAppreciation"
                 label="VAULT APPRECIATION %"
+                name="assetAppreciation"
                 placeholder="XX.XX%"
                 value={data.assetAppreciation || ''}
                 onChange={handleNumChange}
@@ -145,8 +145,8 @@ export const Governance = ({
               <LavaInput
                 error={errors.creationThreshold}
                 icon={<Info color="white" size={16} />}
-                name="creationThreshold"
                 label="CREATION THRESHOLD %"
+                name="creationThreshold"
                 placeholder="XX.XX%"
                 value={data.creationThreshold || ''}
                 onChange={handleNumChange}
@@ -157,8 +157,8 @@ export const Governance = ({
               <LavaInput
                 error={errors.startThreshold}
                 icon={<Info color="white" size={16} />}
-                name="startThreshold"
                 label="START THRESHOLD %"
+                name="startThreshold"
                 placeholder="XX.XX%"
                 value={data.startThreshold || ''}
                 onChange={handleNumChange}
@@ -169,8 +169,8 @@ export const Governance = ({
               <LavaInput
                 error={errors.voteThreshold}
                 icon={<Info color="white" size={16} />}
-                name="voteThreshold"
                 label="VOTE THRESHOLD %"
+                name="voteThreshold"
                 placeholder="XX.XX%"
                 value={data.voteThreshold || ''}
                 onChange={handleNumChange}
@@ -181,8 +181,8 @@ export const Governance = ({
               <LavaInput
                 error={errors.executionThreshold}
                 icon={<Info color="white" size={16} />}
-                name="executionThreshold"
                 label="EXECUTION THRESHOLD %"
+                name="executionThreshold"
                 placeholder="XX.XX%"
                 value={data.executionThreshold || ''}
                 onChange={handleNumChange}
@@ -192,8 +192,8 @@ export const Governance = ({
             <div className="mt-[60px]">
               <LavaInput
                 error={errors.cosigningThreshold}
-                name="cosigningThreshold"
                 label="COSIGNING THRESHOLD %"
+                name="cosigningThreshold"
                 placeholder="XX.XX%"
                 value={data.cosigningThreshold || ''}
                 onChange={handleNumChange}

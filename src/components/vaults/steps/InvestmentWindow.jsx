@@ -21,7 +21,7 @@ export const InvestmentWindow = ({
     const numericValue = value.replace(/[^0-9.]/g, '');
 
     const parts = numericValue.split('.');
-    const sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts[1] : numericValue;
+    const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
 
     if (parts.length === 2 && parts[1].length > 2) {
       return;
@@ -39,7 +39,7 @@ export const InvestmentWindow = ({
     if (data.contributionOpenWindowType === 'custom') {
       return addMilliseconds(
         new Date(data.contributionOpenWindowTime),
-        data.contributionDuration
+        data.contributionDuration,
       );
     }
     return null;
@@ -106,9 +106,9 @@ export const InvestmentWindow = ({
             {data.investmentWindowOpenTime === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
+                  minDate={minDate}
                   value={data.investmentWindowOpenDate}
                   onChange={(date) => updateField('investmentWindowOpenDate', date)}
-                  minDate={minDate}
                 />
                 {errors.investmentWindowOpenDate && (
                   <p className="text-main-red mt-1">{errors.investmentWindowOpenDate}</p>
@@ -125,14 +125,14 @@ export const InvestmentWindow = ({
       </div>
       <div className="px-[36px]">
         <LavaInput
-          name="offAssetsOffered"
+          required
+          error={errors.offAssetsOffered}
           label="% OF ASSETS OFFERED"
+          name="offAssetsOffered"
           placeholder="XX.XX%"
           type="text"
-          required
           value={data.offAssetsOffered || ''}
           onChange={handleChange}
-          error={errors.offAssetsOffered}
         />
         <div className="mt-[60px]">
           <Label className="uppercase text-[20px] font-bold" htmlFor="ftInvestmentWindow">
@@ -150,26 +150,26 @@ export const InvestmentWindow = ({
         </div>
         <div className="mt-[60px]">
           <LavaInput
-            name="ftInvestmentReserve"
+            required
+            error={errors.ftInvestmentReserve}
             label="FT INVESTMENT RESERVE"
+            name="ftInvestmentReserve"
             placeholder="XX.XX%"
             type="text"
-            required
             value={data.ftInvestmentReserve || ''}
             onChange={handleChange}
-            error={errors.ftInvestmentReserve}
           />
         </div>
         <div className="mt-[60px]">
           <LavaInput
-            name="liquidityPoolContribution"
+            required
+            error={errors.liquidityPoolContribution}
             label="% LIQUIDITY POOL CONTRIBUTION"
+            name="liquidityPoolContribution"
             placeholder="XX.XX%"
             type="text"
-            required
             value={data.liquidityPoolContribution || ''}
             onChange={handleChange}
-            error={errors.liquidityPoolContribution}
           />
         </div>
       </div>

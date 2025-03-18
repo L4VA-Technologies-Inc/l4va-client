@@ -75,9 +75,9 @@ export const Private = ({
             *Contribution duration
           </div>
           <div className="mt-4">
-            <LavaIntervalPicker 
-              value={data.contributionDuration} 
-              onChange={(value) => updateField('contributionDuration', value)} 
+            <LavaIntervalPicker
+              value={data.contributionDuration}
+              onChange={(value) => updateField('contributionDuration', value)}
             />
             {errors.contributionDuration && (
               <p className="text-main-red mt-1">{errors.contributionDuration}</p>
