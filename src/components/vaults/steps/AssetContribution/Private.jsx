@@ -1,7 +1,7 @@
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
-import { UploadZone } from '@/components/shared/LavaUploadZone';
+import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
@@ -131,23 +131,13 @@ export const Private = ({
       </div>
       <div className="px-[36px]">
         <div>
-          <LavaWhitelist
+          <LavaWhitelistWithCaps
             label="Asset Whitelist"
             setWhitelist={(assets) => updateField('whitelistAssets', assets)}
             whitelist={data.whitelistAssets || []}
           />
           {errors.whitelistAssets && (
             <p className="text-main-red mt-1">{errors.whitelistAssets}</p>
-          )}
-        </div>
-        <div className="mt-[60px]">
-          <UploadZone
-            image={data.imageUrl}
-            label="*Upload CSV"
-            setImage={(image) => updateField('imageUrl', image)}
-          />
-          {errors.imageUrl && (
-            <p className="text-main-red mt-1">{errors.imageUrl}</p>
           )}
         </div>
       </div>

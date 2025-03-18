@@ -125,11 +125,10 @@ export const Governance = ({
 
             <div className="mt-[60px]">
               <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="assetAppreciation">
-                ASSET APPRECIATION %
+                VAULT APPRECIATION %
                 <Info className="ml-2 inline-block" color="white" size={16} />
               </Label>
               <div className="flex items-center mt-4">
-                <span className="flex-shrink-0 text-dark-100 mr-4">Asset A</span>
                 <Input
                   className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
                   id="assetAppreciation"

@@ -48,7 +48,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
             % of Assets Fractionalized
           </p>
           <p className="text-[20px]">
-            {data.percentAssetsOffered ? `${data.percentAssetsOffered}%` : 'None'}
+            {data.offAssetsOffered ? `${data.offAssetsOffered}%` : 'None'}
           </p>
         </div>
         <div>
@@ -72,7 +72,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
             % Liquidity Pool Contribution
           </p>
           <p className="text-[20px]">
-            {data.percentLiquidityPoolContribution ? `${data.percentLiquidityPoolContribution}%` : 'None'}
+            {data.liquidityPoolContribution ? `${data.liquidityPoolContribution}%` : 'None'}
           </p>
         </div>
       </div>

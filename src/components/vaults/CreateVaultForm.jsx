@@ -206,6 +206,8 @@ export const CreateVaultForm = () => {
     }
   }, [vaultData.privacy, updateValuationType]);
 
+  console.log(vaultData.contributionOpenWindowTime);
+
   return (
     <div className="pb-10">
       <div className="relative flex items-center">

@@ -60,7 +60,6 @@ export const Public = ({
         )}
       </div>
     </div>
-
     <div className="px-[36px]">
       <div>
         <LavaWhitelistWithCaps

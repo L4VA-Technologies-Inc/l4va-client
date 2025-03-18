@@ -57,10 +57,10 @@ export const vaultSchema = z.object({
   investmentWindowDuration: z.any().nullable(),
   investmentWindowOpenTime: z.string(),
   investmentWindowOpenDate: z.any().nullable(),
-  percentAssetsOffered: z.string(),
+  offAssetsOffered: z.string(),
   ftInvestmentWindow: z.any().nullable(),
   ftInvestmentReserve: z.string(),
-  percentLiquidityPoolContribution: z.string(),
+  liquidityPoolContribution: z.string(),
 
   // Step 4: Governance
   ftTokenSupply: z.string(),
@@ -93,19 +93,19 @@ export const initialVaultState = {
   // Step 2: Asset Contribution
   valuationType: 'lbe',
   contributionOpenWindowType: 'launch',
+  contributionOpenWindowTime: null,
+  contributionDuration: 0,
   whitelistAssets: [],
-  minAssetCountCap: 1,
-  maxAssetCountCap: 5,
   valuationCurrency: 'ADA',
 
   // Step 3: Investment Window
   investmentWindowDuration: null,
   investmentWindowOpenTime: 'assetClose',
   investmentWindowOpenDate: null,
-  percentAssetsOffered: '',
+  offAssetsOffered: 0,
   ftInvestmentWindow: null,
   ftInvestmentReserve: '10%',
-  percentLiquidityPoolContribution: '',
+  liquidityPoolContribution: 0,
 
   // Step 4: Governance
   ftTokenSupply: '',
@@ -127,7 +127,7 @@ export const initialVaultState = {
 // export const stepFields = {
 //   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
 //   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
-//   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
+//   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'offAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'liquidityPoolContribution'],
 //   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
 //   5: [],
 // };

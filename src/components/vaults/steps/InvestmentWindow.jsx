@@ -1,11 +1,14 @@
+import { addMilliseconds } from 'date-fns';
+
 import { Info } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
-import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const InvestmentWindow = ({
   data,
@@ -16,8 +19,38 @@ export const InvestmentWindow = ({
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    updateField(id, value);
+    // Only allow numbers and one decimal point
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = numericValue.split('.');
+    const sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts[1] : numericValue;
+    
+    // Limit to 2 decimal places
+    if (parts.length === 2 && parts[1].length > 2) {
+      return;
+    }
+
+    // Check if value is greater than 99.99
+    const numValue = parseFloat(sanitizedValue);
+    if (!isNaN(numValue) && numValue > 99.99) {
+      return;
+    }
+
+    updateField(id, sanitizedValue);
   };
+
+  const getMinInvestmentDate = () => {
+    if(data.contributionOpenWindowType === 'custom') {
+      return addMilliseconds(
+        new Date(data.contributionOpenWindowTime),
+        data.contributionDuration
+      );
+    }
+    return null;
+  };
+
+  const minDate = getMinInvestmentDate();
 
   return (
     <div className="grid grid-cols-2">
@@ -42,7 +75,7 @@ export const InvestmentWindow = ({
             *INVESTMENT WINDOW DURATION
           </Label>
           <div className="mt-4">
-            <LavaDatePicker
+            <LavaIntervalPicker
               value={data.investmentWindowDuration}
               onChange={(date) => updateField('investmentWindowDuration', date)}
             />
@@ -80,9 +113,15 @@ export const InvestmentWindow = ({
                 <LavaDatePicker
                   value={data.investmentWindowOpenDate}
                   onChange={(date) => updateField('investmentWindowOpenDate', date)}
+                  minDate={minDate}
                 />
                 {errors.investmentWindowOpenDate && (
                   <p className="text-main-red mt-1">{errors.investmentWindowOpenDate}</p>
+                )}
+                {minDate && (
+                  <p className="text-main-orange mt-1">
+                    Cannot be earlier than {minDate.toLocaleDateString()}
+                  </p>
                 )}
               </div>
             )}
@@ -91,19 +130,20 @@ export const InvestmentWindow = ({
       </div>
       <div className="px-[36px]">
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="percentAssetsOffered">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="offAssetsOffered">
             % OF ASSETS OFFERED
           </Label>
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-            id="percentAssetsOffered"
-            placeholder="XX.XX%"
+            id="offAssetsOffered"
+            placeholder="10.00"
+            type="text"
             style={{ fontSize: '20px' }}
-            value={data.percentAssetsOffered || ''}
+            value={data.offAssetsOffered || ''}
             onChange={handleChange}
           />
-          {errors.percentAssetsOffered && (
-            <p className="text-main-red mt-1">{errors.percentAssetsOffered}</p>
+          {errors.offAssetsOffered && (
+            <p className="text-main-red mt-1">{errors.offAssetsOffered}</p>
           )}
         </div>
         <div className="mt-[60px]">
@@ -128,7 +168,8 @@ export const InvestmentWindow = ({
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
             id="ftInvestmentReserve"
-            placeholder="10%"
+            placeholder="10.00"
+            type="text"
             style={{ fontSize: '20px' }}
             value={data.ftInvestmentReserve || ''}
             onChange={handleChange}
@@ -138,19 +179,20 @@ export const InvestmentWindow = ({
           )}
         </div>
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold" htmlFor="percentLiquidityPoolContribution">
+          <Label className="uppercase text-[20px] font-bold" htmlFor="liquidityPoolContribution">
             % LIQUIDITY POOL CONTRIBUTION
           </Label>
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-            id="percentLiquidityPoolContribution"
-            placeholder="XX.XX%"
+            id="liquidityPoolContribution"
+            placeholder="10.00"
+            type="text"
             style={{ fontSize: '20px' }}
-            value={data.percentLiquidityPoolContribution || ''}
+            value={data.liquidityPoolContribution || ''}
             onChange={handleChange}
           />
-          {errors.percentLiquidityPoolContribution && (
-            <p className="text-main-red mt-1">{errors.percentLiquidityPoolContribution}</p>
+          {errors.liquidityPoolContribution && (
+            <p className="text-main-red mt-1">{errors.liquidityPoolContribution}</p>
           )}
         </div>
       </div>
