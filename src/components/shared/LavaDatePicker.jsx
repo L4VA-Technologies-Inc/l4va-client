@@ -42,16 +42,12 @@ export const LavaDatePicker = () => {
     }
   };
 
-  // Using date-fns for formatting
   const formatDateTime = (dt) => {
     if (!dt) return null;
 
-    // Format date and time: DD.MM.YYYY HH:mm
     const formattedDate = format(dt, 'dd.MM.yyyy HH:mm');
 
-    // Get timezone offset from ISO string (e.g., +01:00)
     const timezoneOffset = formatISO(dt).slice(19, 25);
-    // Convert to GMT format
     const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
     return `${formattedDate} (${timezoneString})`;
@@ -135,8 +131,8 @@ export const LavaDatePicker = () => {
                       size="icon"
                       variant={
                         date
-                        && ((ampm === 'AM' && date.getHours() < 12)
-                          || (ampm === 'PM' && date.getHours() >= 12))
+                          && ((ampm === 'AM' && date.getHours() < 12)
+                            || (ampm === 'PM' && date.getHours() >= 12))
                           ? 'default'
                           : 'ghost'
                       }
