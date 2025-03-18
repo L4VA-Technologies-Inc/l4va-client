@@ -1,60 +1,82 @@
 import { Info } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
+import { LavaInput } from '@/components/shared/LavaInput';
 
 export const Governance = ({
   data,
   errors = {},
   updateField,
 }) => {
-  const handleChange = (e) => {
-    const { id, value } = e.target;
-    updateField(id, value);
+  const handleNumChange = (e) => {
+    const { name, value } = e.target;
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    const parts = numericValue.split('.');
+    const sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts[1] : numericValue;
+
+    if (parts.length === 2 && parts[1].length > 2) {
+      return;
+    }
+
+    const numValue = parseFloat(sanitizedValue);
+    if (!isNaN(numValue) && numValue > 100) {
+      return;
+    }
+
+    updateField(name, sanitizedValue);
+  };
+
+  const handleSupplyChange = (e) => {
+    const { name, value } = e.target;
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    const numValue = parseInt(numericValue);
+    if (numValue <= 0 || numValue > 100000000) {
+      return;
+    }
+
+    updateField(name, numericValue);
+  };
+
+  const handleDecimalsChange = (e) => {
+    const { name, value } = e.target;
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    const numValue = parseInt(numericValue);
+    if (numValue < 1 || numValue > 9) {
+      return;
+    }
+
+    updateField(name, numericValue);
   };
 
   return (
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="ftTokenSupply">
-            FT TOKEN SUPPLY
-          </Label>
-          <Input
-            className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-            id="ftTokenSupply"
+          <LavaInput
+            error={errors.ftTokenSupply}
+            name="ftTokenSupply"
+            label="FT TOKEN SUPPLY"
             placeholder="XXX,XXX,XXX"
-            style={{ fontSize: '20px' }}
             value={data.ftTokenSupply || ''}
-            onChange={handleChange}
+            onChange={handleSupplyChange}
           />
-          {errors.ftTokenSupply && (
-            <p className="text-main-red mt-1">{errors.ftTokenSupply}</p>
-          )}
         </div>
-
         <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold" htmlFor="ftTokenDecimals">
-            FT TOKEN DECIMALS
-          </Label>
-          <Input
-            className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-            id="ftTokenDecimals"
-            placeholder="integer between 1-9"
-            style={{ fontSize: '20px' }}
+          <LavaInput
+            error={errors.ftTokenDecimals}
+            name="ftTokenDecimals"
+            label="FT TOKEN DECIMALS"
+            placeholder="Integer between 1-9"
             value={data.ftTokenDecimals || ''}
-            onChange={handleChange}
+            onChange={handleDecimalsChange}
           />
-          {errors.ftTokenDecimals && (
-            <p className="text-main-red mt-1">{errors.ftTokenDecimals}</p>
-          )}
         </div>
-
         <div className="mt-[60px]">
           <UploadZone
             image={data.ftTokenImage}
@@ -65,27 +87,7 @@ export const Governance = ({
             <p className="text-main-red mt-1">{errors.ftTokenImage}</p>
           )}
         </div>
-
-        {data.terminationType === 'programmed' && (
-          <div className="mt-[60px]">
-            <Label className="uppercase text-[20px] font-bold" htmlFor="ftTokenDescription">
-              FT TOKEN DESCRIPTION
-            </Label>
-            <Textarea
-              className="resize-none rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 mt-4 min-h-32"
-              id="ftTokenDescription"
-              placeholder="Add a description for your Token"
-              style={{ fontSize: '20px' }}
-              value={data.ftTokenDescription || ''}
-              onChange={handleChange}
-            />
-            {errors.ftTokenDescription && (
-              <p className="text-main-red mt-1">{errors.ftTokenDescription}</p>
-            )}
-          </div>
-        )}
       </div>
-
       <div className="px-[36px]">
         <div>
           <div className="uppercase text-[20px] font-bold mb-4">
@@ -124,23 +126,15 @@ export const Governance = ({
             </div>
 
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="assetAppreciation">
-                VAULT APPRECIATION %
-                <Info className="ml-2 inline-block" color="white" size={16} />
-              </Label>
-              <div className="flex items-center mt-4">
-                <Input
-                  className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
-                  id="assetAppreciation"
-                  placeholder="XX.XX%"
-                  style={{ fontSize: '20px' }}
-                  value={data.assetAppreciation || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              {errors.assetAppreciation && (
-                <p className="text-main-red mt-1">{errors.assetAppreciation}</p>
-              )}
+              <LavaInput
+                error={errors.assetAppreciation}
+                icon={<Info color="white" size={16} />}
+                name="assetAppreciation"
+                label="VAULT APPRECIATION %"
+                placeholder="XX.XX%"
+                value={data.assetAppreciation || ''}
+                onChange={handleNumChange}
+              />
             </div>
           </>
         )}
@@ -148,92 +142,62 @@ export const Governance = ({
         {data.terminationType === 'dao' && (
           <>
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="creationThreshold">
-                CREATION THRESHOLD %
-                <Info className="ml-2 inline-block" color="white" size={16} />
-              </Label>
-              <Input
-                className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-                id="creationThreshold"
+              <LavaInput
+                error={errors.creationThreshold}
+                icon={<Info color="white" size={16} />}
+                name="creationThreshold"
+                label="CREATION THRESHOLD %"
                 placeholder="XX.XX%"
-                style={{ fontSize: '20px' }}
                 value={data.creationThreshold || ''}
-                onChange={handleChange}
+                onChange={handleNumChange}
               />
-              {errors.creationThreshold && (
-                <p className="text-main-red mt-1">{errors.creationThreshold}</p>
-              )}
             </div>
 
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="startThreshold">
-                START THRESHOLD %
-                <Info className="ml-2 inline-block" color="white" size={16} />
-              </Label>
-              <Input
-                className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-                id="startThreshold"
+              <LavaInput
+                error={errors.startThreshold}
+                icon={<Info color="white" size={16} />}
+                name="startThreshold"
+                label="START THRESHOLD %"
                 placeholder="XX.XX%"
-                style={{ fontSize: '20px' }}
                 value={data.startThreshold || ''}
-                onChange={handleChange}
+                onChange={handleNumChange}
               />
-              {errors.startThreshold && (
-                <p className="text-main-red mt-1">{errors.startThreshold}</p>
-              )}
             </div>
 
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="voteThreshold">
-                VOTE THRESHOLD %
-                <Info className="ml-2 inline-block" color="white" size={16} />
-              </Label>
-              <Input
-                className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-                id="voteThreshold"
+              <LavaInput
+                error={errors.voteThreshold}
+                icon={<Info color="white" size={16} />}
+                name="voteThreshold"
+                label="VOTE THRESHOLD %"
                 placeholder="XX.XX%"
-                style={{ fontSize: '20px' }}
                 value={data.voteThreshold || ''}
-                onChange={handleChange}
+                onChange={handleNumChange}
               />
-              {errors.voteThreshold && (
-                <p className="text-main-red mt-1">{errors.voteThreshold}</p>
-              )}
             </div>
 
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="executionThreshold">
-                EXECUTION THRESHOLD %
-                <Info className="ml-2 inline-block" color="white" size={16} />
-              </Label>
-              <Input
-                className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-                id="executionThreshold"
+              <LavaInput
+                error={errors.executionThreshold}
+                icon={<Info color="white" size={16} />}
+                name="executionThreshold"
+                label="EXECUTION THRESHOLD %"
                 placeholder="XX.XX%"
-                style={{ fontSize: '20px' }}
                 value={data.executionThreshold || ''}
-                onChange={handleChange}
+                onChange={handleNumChange}
               />
-              {errors.executionThreshold && (
-                <p className="text-main-red mt-1">{errors.executionThreshold}</p>
-              )}
             </div>
 
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="cosigningThreshold">
-                COSIGNING THRESHOLD %
-              </Label>
-              <Input
-                className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
-                id="cosigningThreshold"
+              <LavaInput
+                error={errors.cosigningThreshold}
+                name="cosigningThreshold"
+                label="COSIGNING THRESHOLD %"
                 placeholder="XX.XX%"
-                style={{ fontSize: '20px' }}
                 value={data.cosigningThreshold || ''}
-                onChange={handleChange}
+                onChange={handleNumChange}
               />
-              {errors.cosigningThreshold && (
-                <p className="text-main-red mt-1">{errors.cosigningThreshold}</p>
-              )}
             </div>
           </>
         )}

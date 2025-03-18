@@ -108,16 +108,16 @@ export const initialVaultState = {
   liquidityPoolContribution: 0,
 
   // Step 4: Governance
-  ftTokenSupply: '',
-  ftTokenDecimals: '',
+  ftTokenSupply: 1000000000,
+  ftTokenDecimals: 2,
   ftTokenImage: null,
   terminationType: 'dao',
   // DAO specific fields
-  creationThreshold: '',
-  startThreshold: '',
-  voteThreshold: '',
-  executionThreshold: '',
-  cosigningThreshold: '',
+  creationThreshold: 0,
+  startThreshold: 0,
+  voteThreshold: 0,
+  executionThreshold: 0,
+  cosigningThreshold: 0,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   assetAppreciation: '',

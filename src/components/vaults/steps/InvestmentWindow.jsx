@@ -19,10 +19,10 @@ export const InvestmentWindow = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
-    
+
     const parts = numericValue.split('.');
     const sanitizedValue = parts.length > 2 ? parts[0] + '.' + parts[1] : numericValue;
-    
+
     if (parts.length === 2 && parts[1].length > 2) {
       return;
     }
@@ -36,7 +36,7 @@ export const InvestmentWindow = ({
   };
 
   const getMinInvestmentDate = () => {
-    if(data.contributionOpenWindowType === 'custom') {
+    if (data.contributionOpenWindowType === 'custom') {
       return addMilliseconds(
         new Date(data.contributionOpenWindowTime),
         data.contributionDuration
@@ -136,7 +136,7 @@ export const InvestmentWindow = ({
         />
         <div className="mt-[60px]">
           <Label className="uppercase text-[20px] font-bold" htmlFor="ftInvestmentWindow">
-            FT INVESTMENT WINDOW
+            *FT INVESTMENT WINDOW
           </Label>
           <div className="mt-4">
             <LavaDatePicker
@@ -163,7 +163,7 @@ export const InvestmentWindow = ({
         <div className="mt-[60px]">
           <LavaInput
             name="liquidityPoolContribution"
-            label="% LIQUIDITY POOL CONTRIBUTION" 
+            label="% LIQUIDITY POOL CONTRIBUTION"
             placeholder="XX.XX%"
             type="text"
             required
