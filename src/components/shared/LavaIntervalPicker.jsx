@@ -29,12 +29,12 @@ export const LavaIntervalPicker = () => {
   };
 
   const formatInterval = () => {
-    const { days, hours, minutes } = interval;
+    const { days: d, hours: h, minutes: m } = interval;
     const parts = [];
 
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0) parts.push(`${hours}h`);
-    if (minutes > 0) parts.push(`${minutes}m`);
+    if (d > 0) parts.push(`${d}d`);
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
 
     return parts.length > 0 ? parts.join(' ') : '0m';
   };

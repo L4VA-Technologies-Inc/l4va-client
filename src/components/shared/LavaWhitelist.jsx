@@ -8,8 +8,10 @@ export const LavaWhitelist = ({
   itemPlaceholder = 'Enter Policy ID',
   whitelist = [],
   setWhitelist,
+  maxItems = 10,
 }) => {
   const addNewAsset = () => {
+    if (whitelist.length >= maxItems) return;
     const newAssets = [...whitelist, {
       policyId: '',
       id: Date.now(),
@@ -36,7 +38,8 @@ export const LavaWhitelist = ({
           {required ? '*' : ''}{label}
         </div>
         <button
-          className="border-2 border-white/20 rounded-lg p-2"
+          className={`border-2 border-white/20 rounded-lg p-2 ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={whitelist.length >= maxItems}
           type="button"
           onClick={addNewAsset}
         >
@@ -68,8 +71,13 @@ export const LavaWhitelist = ({
         ))}
       </div>
       {whitelist.length === 0 && (
-        <div className="text-dark-100 text-base mb-2">
+        <div className="text-dark-100 text-base my-4">
           No items. Click the + button to add one.
+        </div>
+      )}
+      {whitelist.length >= maxItems && (
+        <div className="text-main-red text-base my-4">
+          Maximum number of items ({maxItems}) reached.
         </div>
       )}
     </div>

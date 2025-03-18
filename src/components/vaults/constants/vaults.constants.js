@@ -52,8 +52,6 @@ export const vaultSchema = z.object({
   contributionOpenWindowTime: z.any().optional(),
   whitelistAssets: z.array(z.any()),
   assetWindowDate: z.any().optional(),
-  minAssetCountCap: z.number().int().min(1),
-  maxAssetCountCap: z.number().int().min(1),
 
   // Step 3: Investment Window
   investmentWindowDuration: z.any().nullable(),

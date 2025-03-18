@@ -1,7 +1,6 @@
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
-import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
 export const Public = ({
@@ -82,28 +81,6 @@ export const Public = ({
           {errors.contributionDuration && (
             <p className="text-main-red mt-1">{errors.contributionDuration}</p>
           )}
-        </div>
-      </div>
-      <div className="mt-[60px]">
-        <div className="uppercase text-[20px] font-bold">
-          Asset Count Cap
-        </div>
-        <div className="mt-4">
-          <div className="flex flex-col space-y-2">
-            <LavaMinMaxInput
-              label="Collection ABC"
-              maxValue={data.maxAssetCountCap}
-              minValue={data.minAssetCountCap}
-              onMaxChange={(value) => updateField('maxAssetCountCap', value)}
-              onMinChange={(value) => updateField('minAssetCountCap', value)}
-            />
-            {errors.minAssetCountCap && (
-              <p className="text-main-red mt-1">{errors.minAssetCountCap}</p>
-            )}
-            {errors.maxAssetCountCap && (
-              <p className="text-main-red mt-1">{errors.maxAssetCountCap}</p>
-            )}
-          </div>
         </div>
       </div>
     </div>
