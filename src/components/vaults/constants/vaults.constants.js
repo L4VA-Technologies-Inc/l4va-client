@@ -126,10 +126,18 @@ export const initialVaultState = {
   ftTokenDescription: '',
 };
 
+// export const stepFields = {
+//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
+//   2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
+//   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
+//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
+//   5: [],
+// };
+
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
-  2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
-  3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
-  4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
+  2: [],
+  3: [],
+  4: [],
   5: [],
 };

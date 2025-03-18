@@ -182,7 +182,7 @@ export const CreateVaultForm = () => {
         )}
         <SecondaryButton
           className="uppercase px-16 py-4 bg-input-bg"
-          onClick={saveDraft}
+          onClick={onSubmit}
         >
           Save for later
         </SecondaryButton>

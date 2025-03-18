@@ -9,7 +9,7 @@ export const VaultsList = () => {
 
   useEffect(() => {
     VaultsApiProvider.getVaults().then((response) => {
-      setVaults(response.data);
+      setVaults(response.data.items);
     });
   }, []);
 

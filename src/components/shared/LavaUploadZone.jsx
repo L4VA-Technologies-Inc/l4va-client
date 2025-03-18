@@ -152,7 +152,7 @@ export const UploadZone = ({
   };
 
   return (
-    <div className="py-6 px-9 bg-input-bg rounded-[10px]">
+    <div className="py-6 px-8 bg-input-bg rounded-[10px]">
       <div className="flex justify-between items-center mb-4">
         <div className="uppercase text-[20px] font-bold">
           {required && <span className="text-main-red mr-1">*</span>}{label}
@@ -161,7 +161,6 @@ export const UploadZone = ({
           <div className="text-yellow-500 text-sm">Uploading...</div>
         )}
       </div>
-
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-6 
@@ -193,8 +192,10 @@ export const UploadZone = ({
             />
             <button
               aria-label="Remove image"
-              className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1
-                hover:bg-opacity-75 transition-all duration-200"
+              className="
+                absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1
+                hover:bg-opacity-75 transition-all duration-200
+              "
               type="button"
               onClick={removeImage}
             >
@@ -226,10 +227,9 @@ export const UploadZone = ({
           </div>
         )}
       </div>
-
       {error && (
         <div className="text-main-red text-sm mt-1">
-          {typeof error === 'string' ? error : error.message || 'Upload is required'}
+          {typeof error === 'string' ? error : error.message || 'Image is required'}
         </div>
       )}
     </div>

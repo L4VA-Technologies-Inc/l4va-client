@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 import { AuthContext } from './auth';
 import { CoreApiProvider } from '@/services/api/core';
@@ -35,14 +36,12 @@ export const AuthProvider = ({ children }) => {
         signature,
         stakeAddress,
       });
-
       localStorage.setItem('jwt', response.data.accessToken);
       setUser(response.data.user);
       setIsAuthenticated(true);
       return response.data;
     } catch (error) {
-      console.error('Login failed: ', error);
-      throw error;
+      return toast.error(error.message);
     }
   };
 
