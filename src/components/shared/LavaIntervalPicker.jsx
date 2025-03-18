@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ClockIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { msToInterval, intervalToMs } from '@/lib/core.utils';
+import { msToInterval, intervalToMs } from '@/utils/core.utils';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
