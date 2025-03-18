@@ -76,20 +76,22 @@ export const LavaWhitelistWithCaps = ({
                 <Input
                   className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
                   type="number"
+                  min="0"
                   placeholder="Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
-                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMin', e.target.value === '' ? '' : parseInt(e.target.value))}
+                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMin', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))}
                 />
               </div>
               <div className="flex-1">
                 <Input
                   className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
                   type="number"
+                  min="0"
                   placeholder="Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
-                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMax', e.target.value === '' ? '' : parseInt(e.target.value))}
+                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMax', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))}
                 />
               </div>
             </div>

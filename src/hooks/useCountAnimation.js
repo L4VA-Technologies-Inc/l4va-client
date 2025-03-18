@@ -6,10 +6,8 @@ export const useCountAnimation = (endValue, duration = 2000) => {
   const startTime = useRef(null);
 
   useEffect(() => {
-    // Parse the end value - handle currency and numbers with commas
     const parseValue = (val) => {
       if (typeof val === 'string') {
-        // Remove currency symbol and commas
         return Number.parseFloat(val.replace(/[$,]/g, ''));
       }
       return val;
@@ -39,7 +37,6 @@ export const useCountAnimation = (endValue, duration = 2000) => {
     };
   }, [endValue, duration]);
 
-  // Format the count based on the original value format
   const formatCount = () => {
     if (typeof endValue === 'string') {
       if (endValue.startsWith('$')) {

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ClockIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { msToInterval, intervalToMs } from '@/lib/core.utils';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -9,23 +10,25 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-export const LavaIntervalPicker = () => {
-  const [interval, setInterval] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-  });
+export const LavaIntervalPicker = ({ value = 0, onChange }) => {
+  const [interval, setInterval] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setInterval(msToInterval(value));
+  }, [value]);
 
   const days = Array.from({ length: 31 }, (_, i) => i);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
   const handleIntervalChange = (type, value) => {
-    setInterval((prev) => ({
-      ...prev,
+    const newInterval = {
+      ...interval,
       [type]: Number.parseInt(value, 10),
-    }));
+    };
+    setInterval(newInterval);
+    onChange?.(intervalToMs(newInterval));
   };
 
   const formatInterval = () => {
@@ -46,12 +49,12 @@ export const LavaIntervalPicker = () => {
           <Button
             className={cn(
               'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
-              !interval && 'text-muted-foreground',
+              !value && 'text-muted-foreground',
             )}
             variant="outline"
           >
             <ClockIcon className="mr-2 h-4 w-4" />
-            {interval ? (
+            {value ? (
               formatInterval()
             ) : (
               <span className="text-white/60">Select interval</span>
