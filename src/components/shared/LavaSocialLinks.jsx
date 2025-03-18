@@ -62,6 +62,9 @@ export const LavaSocialLinks = ({
   ];
 
   const addNewLink = () => {
+    if (socialLinks.length >= 10) {
+      return;
+    }
     const newLinks = [...socialLinks, {
       name: 'facebook',
       url: '',
