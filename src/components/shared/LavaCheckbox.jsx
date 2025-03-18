@@ -1,5 +1,4 @@
 import { Check } from 'lucide-react';
-import { Label } from '@/components/ui/label';
 
 export const LavaCheckbox = ({
   name,

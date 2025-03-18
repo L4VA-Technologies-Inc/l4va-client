@@ -35,9 +35,7 @@ export const UploadZone = ({
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
+  const handleDragLeave = () => setIsDragging(false);
 
   const validateFile = (file) => {
     if (file.size > maxSizeMB * 1024 * 1024) {
@@ -182,7 +180,6 @@ export const UploadZone = ({
           type="file"
           onChange={handleFileInputChange}
         />
-
         {preview ? (
           <div className="relative w-full h-full flex flex-col items-center">
             <img
