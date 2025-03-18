@@ -4,7 +4,7 @@ export class CoreConfigProvider {
   }
 
   static getProfile() {
-    return '/api/v1/auth/profile';
+    return '/api/v1/users/profile';
   }
 
   static uploadImage() {

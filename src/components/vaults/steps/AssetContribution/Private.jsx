@@ -5,6 +5,7 @@ import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
@@ -72,22 +73,19 @@ export const Private = ({
         )}
         <div className="mt-[60px]">
           <div className="uppercase text-[20px] font-bold">
-            *Asset window
+            *Contribution duration
           </div>
           <div className="mt-4">
-            <LavaDatePicker
-              value={data.assetWindowDate}
-              onChange={(date) => updateField('assetWindowDate', date)}
-            />
-            {errors.assetWindowDate && (
-              <p className="text-main-red mt-1">{errors.assetWindowDate}</p>
+            <LavaIntervalPicker />
+            {errors.contributionDuration && (
+              <p className="text-main-red mt-1">{errors.contributionDuration}</p>
             )}
           </div>
         </div>
         <div className="mt-[60px]">
           <LavaRadio
             label="*Contribution window open time"
-            name="contributionWindowOpenTime"
+            name="contributionOpenWindowType"
             options={[
               {
                 name: 'launch',
@@ -98,20 +96,20 @@ export const Private = ({
                 label: 'Custom',
               },
             ]}
-            value={data.contributionWindowOpenTime || ''}
-            onChange={(value) => updateField('contributionWindowOpenTime', value)}
+            value={data.contributionOpenWindowType || ''}
+            onChange={(value) => updateField('contributionOpenWindowType', value)}
           />
-          {errors.contributionWindowOpenTime && (
-            <p className="text-main-red mt-1">{errors.contributionWindowOpenTime}</p>
+          {errors.contributionOpenWindowType && (
+            <p className="text-main-red mt-1">{errors.contributionOpenWindowType}</p>
           )}
-          {data.contributionWindowOpenTime === 'custom' && (
+          {data.contributionOpenWindowType === 'custom' && (
             <div className="mt-4">
               <LavaDatePicker
-                value={data.contributionWindowOpenDate}
-                onChange={(date) => updateField('contributionWindowOpenDate', date)}
+                value={data.contributionOpenWindowTime}
+                onChange={(date) => updateField('contributionOpenWindowTime', date)}
               />
-              {errors.contributionWindowOpenDate && (
-                <p className="text-main-red mt-1">{errors.contributionWindowOpenDate}</p>
+              {errors.contributionOpenWindowTime && (
+                <p className="text-main-red mt-1">{errors.contributionOpenWindowTime}</p>
               )}
             </div>
           )}

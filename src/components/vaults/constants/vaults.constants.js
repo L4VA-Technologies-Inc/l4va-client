@@ -48,8 +48,8 @@ export const vaultSchema = z.object({
 
   // Step 2: Asset Contribution
   valuationType: z.string(),
-  contributionWindowOpenTime: z.string(),
-  contributionWindowOpenDate: z.any().optional(),
+  contributionOpenWindowType: z.string(),
+  contributionOpenWindowTime: z.any().optional(),
   whitelistAssets: z.array(z.any()),
   assetWindowDate: z.any().optional(),
   minAssetCountCap: z.number().int().min(1),
@@ -94,7 +94,7 @@ export const initialVaultState = {
 
   // Step 2: Asset Contribution
   valuationType: 'lbe',
-  contributionWindowOpenTime: 'launch',
+  contributionOpenWindowType: 'launch',
   whitelistAssets: [],
   minAssetCountCap: 1,
   maxAssetCountCap: 5,
@@ -128,7 +128,7 @@ export const initialVaultState = {
 
 // export const stepFields = {
 //   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
-//   2: ['valuationType', 'contributionWindowOpenTime', 'contributionWindowOpenDate', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
+//   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
 //   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'percentAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'percentLiquidityPoolContribution'],
 //   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
 //   5: [],

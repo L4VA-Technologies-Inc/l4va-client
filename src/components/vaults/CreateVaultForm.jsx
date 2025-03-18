@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-import { ConfigureVault } from './steps/ConfigureVault';
+import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
@@ -115,10 +116,12 @@ export const CreateVaultForm = () => {
 
   const saveDraft = async () => {
     try {
-      const { data } = await VaultsApiProvider.saveDraft(vaultData);
-      console.log(data);
+      const { id } = await VaultsApiProvider.saveDraft(vaultData);
+      updateField('id', id);
+      toast.success('Vault saved as draft');
     } catch (e) {
       console.log(e);
+      toast.error('Failed saving draft');
     }
   };
 
@@ -182,7 +185,7 @@ export const CreateVaultForm = () => {
         )}
         <SecondaryButton
           className="uppercase px-16 py-4 bg-input-bg"
-          onClick={onSubmit}
+          onClick={saveDraft}
         >
           Save for later
         </SecondaryButton>
@@ -218,9 +221,9 @@ export const CreateVaultForm = () => {
             >
               {step.hasErrors && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                  <div className="w-6 h-6 bg-main-red rounded-full flex items-center justify-center">
-                    <span className="text-white">!</span>
-                  </div>
+                  <span className="w-6 h-6 bg-main-red rounded-full flex items-center justify-center">
+                    !
+                  </span>
                 </div>
               )}
               <div className="relative z-10">

@@ -2,6 +2,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaMinMaxInput } from '@/components/shared/LavaMinMaxInput';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
 export const Public = ({
   data,
@@ -30,7 +31,7 @@ export const Public = ({
       <div className="mt-[60px]">
         <LavaRadio
           label="*Contribution window open time"
-          name="contributionWindowOpenTime"
+          name="contributionOpenWindowType"
           options={[
             {
               name: 'launch',
@@ -41,20 +42,20 @@ export const Public = ({
               label: 'Custom',
             },
           ]}
-          value={data.contributionWindowOpenTime || ''}
-          onChange={(value) => updateField('contributionWindowOpenTime', value)}
+          value={data.contributionOpenWindowType || ''}
+          onChange={(value) => updateField('contributionOpenWindowType', value)}
         />
-        {errors.contributionWindowOpenTime && (
-          <p className="text-main-red mt-1">{errors.contributionWindowOpenTime}</p>
+        {errors.contributionOpenWindowType && (
+          <p className="text-main-red mt-1">{errors.contributionOpenWindowType}</p>
         )}
-        {data.contributionWindowOpenTime === 'custom' && (
+        {data.contributionOpenWindowType === 'custom' && (
           <div className="mt-4">
             <LavaDatePicker
-              value={data.contributionWindowOpenDate}
-              onChange={(date) => updateField('contributionWindowOpenDate', date)}
+              value={data.contributionOpenWindowTime}
+              onChange={(date) => updateField('contributionOpenWindowTime', date)}
             />
-            {errors.contributionWindowOpenDate && (
-              <p className="text-main-red mt-1">{errors.contributionWindowOpenDate}</p>
+            {errors.contributionOpenWindowTime && (
+              <p className="text-main-red mt-1">{errors.contributionOpenWindowTime}</p>
             )}
           </div>
         )}
@@ -74,15 +75,12 @@ export const Public = ({
       </div>
       <div className="mt-[60px]">
         <div className="uppercase text-[20px] font-bold">
-          *Asset window
+          *Contribution duration
         </div>
         <div className="mt-4">
-          <LavaDatePicker
-            value={data.assetWindowDate}
-            onChange={(date) => updateField('assetWindowDate', date)}
-          />
-          {errors.assetWindowDate && (
-            <p className="text-main-red mt-1">{errors.assetWindowDate}</p>
+          <LavaIntervalPicker />
+          {errors.contributionDuration && (
+            <p className="text-main-red mt-1">{errors.contributionDuration}</p>
           )}
         </div>
       </div>

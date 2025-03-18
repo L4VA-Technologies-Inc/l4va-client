@@ -2,6 +2,10 @@ import { X } from 'lucide-react';
 
 import FacebookIcon from '@/icons/facebook.svg?react';
 import XIcon from '@/icons/x.svg?react';
+import MediumIcon from '@/icons/medium.svg?react';
+import TelegramIcon from '@/icons/telegram.svg?react';
+import TikTokIcon from '@/icons/tiktok.svg?react';
+import YouTubeIcon from '@/icons/youtube.svg?react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,11 +35,35 @@ export const LavaSocialLinks = ({
       icon: <XIcon className="text-white" size={20} />,
       placeholder: 'x.com/',
     },
+    {
+      id: 'medium',
+      name: 'Medium',
+      icon: <MediumIcon className="text-white" size={20} />,
+      placeholder: 'medium.com/@',
+    },
+    {
+      id: 'telegram',
+      name: 'Telegram',
+      icon: <TelegramIcon className="text-white" size={20} />,
+      placeholder: 't.me/',
+    },
+    {
+      id: 'tiktok',
+      name: 'TikTok',
+      icon: <TikTokIcon className="text-white" size={20} />,
+      placeholder: 'tiktok.com/@',
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      icon: <YouTubeIcon className="text-white" size={20} />,
+      placeholder: 'youtube.com/@',
+    },
   ];
 
   const addNewLink = () => {
     const newLinks = [...socialLinks, {
-      platform: 'facebook',
+      name: 'facebook',
       url: '',
       id: Date.now(),
     }];
@@ -89,8 +117,8 @@ export const LavaSocialLinks = ({
           >
             <div className="flex items-center gap-2 p-3">
               <Select
-                value={link.platform}
-                onValueChange={(value) => updateLink(link.id, 'platform', value)}
+                value={link.name}
+                onValueChange={(value) => updateLink(link.id, 'name', value)}
               >
                 <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
                   <SelectValue placeholder="Select platform" />
@@ -110,7 +138,7 @@ export const LavaSocialLinks = ({
               </Select>
               <Input
                 className={`py-4 pl-5 text-[20px] border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-red-500' : ''}`}
-                placeholder={getPlaceholderForPlatform(link.platform)}
+                placeholder={getPlaceholderForPlatform(link.name)}
                 style={{ fontSize: '20px' }}
                 value={link.url}
                 onChange={(e) => updateLink(link.id, 'url', e.target.value)}
@@ -153,6 +181,26 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
       name: 'X',
       icon: <XIcon className="text-white" height={16} width={16} />,
     },
+    {
+      id: 'medium',
+      name: 'Medium',
+      icon: <MediumIcon className="text-white" height={16} width={16} />,
+    },
+    {
+      id: 'telegram',
+      name: 'Telegram',
+      icon: <TelegramIcon className="text-white" height={16} width={16} />,
+    },
+    {
+      id: 'tiktok',
+      name: 'TikTok',
+      icon: <TikTokIcon className="text-white" height={16} width={16} />,
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      icon: <YouTubeIcon className="text-white" height={16} width={16} />,
+    },
   ];
 
   const getPlatformIcon = (platformId) => {
@@ -173,7 +221,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             rel="noopener noreferrer"
             target="_blank"
           >
-            {getPlatformIcon(link.platform)}
+            {getPlatformIcon(link.name)}
             <span className="text-[20px]">
               {link.url}
             </span>

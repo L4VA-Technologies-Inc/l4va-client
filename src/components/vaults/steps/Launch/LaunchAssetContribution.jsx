@@ -46,7 +46,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution Window Open Time
             </p>
             <p className="text-[20px]">
-              {formatTime(data.contributionWindowOpenTime)}
+              {formatTime(data.contributionOpenWindowType)}
             </p>
           </div>
         </div>

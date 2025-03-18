@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
+import { format, formatISO } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -10,8 +11,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
-import { getTimeDifference } from '@/utils/core.utils';
 
 export const LavaDatePicker = () => {
   const [date, setDate] = useState();
@@ -43,22 +42,19 @@ export const LavaDatePicker = () => {
     }
   };
 
-  const formatCurrentTime = (dt) => {
-    const h = dt.getHours().toString().padStart(2, '0');
-    const m = dt.getMinutes().toString().padStart(2, '0');
+  // Using date-fns for formatting
+  const formatDateTime = (dt) => {
+    if (!dt) return null;
 
-    const timezoneOffset = -dt.getTimezoneOffset() / 60;
-    const timezoneString = `GMT${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`;
+    // Format date and time: DD.MM.YYYY HH:mm
+    const formattedDate = format(dt, 'dd.MM.yyyy HH:mm');
 
-    return `${h}:${m} (${timezoneString})`;
-  };
+    // Get timezone offset from ISO string (e.g., +01:00)
+    const timezoneOffset = formatISO(dt).slice(19, 25);
+    // Convert to GMT format
+    const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
-  const formatDate = (dt) => {
-    const day = dt.getDate().toString().padStart(2, '0');
-    const month = (dt.getMonth() + 1).toString().padStart(2, '0');
-    const year = dt.getFullYear();
-
-    return `${day}.${month}.${year}`;
+    return `${formattedDate} (${timezoneString})`;
   };
 
   return (
@@ -73,10 +69,8 @@ export const LavaDatePicker = () => {
             variant="outline"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? (
-              getTimeDifference(date)
-            ) : (
-              <span className="text-white/60">DD:HH:MM</span>
+            {date ? formatDateTime(date) : (
+              <span className="text-white/60">Select date</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -88,6 +82,7 @@ export const LavaDatePicker = () => {
               mode="single"
               selected={date}
               onSelect={handleDateSelect}
+              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
             />
             <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
               <ScrollArea className="w-64 sm:w-auto bg-input-bg">
@@ -156,16 +151,6 @@ export const LavaDatePicker = () => {
           </div>
         </PopoverContent>
       </Popover>
-      {date ? (
-        <div className="flex-shrink-0 flex flex-col text-right absolute right-2 top-0 bottom-0 justify-center">
-          <div className="text-sm text-dark-100">
-            {formatCurrentTime(date)}
-          </div>
-          <div className="text-sm">
-            {formatDate(date)}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 };
