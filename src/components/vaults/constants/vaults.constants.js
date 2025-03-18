@@ -104,7 +104,7 @@ export const initialVaultState = {
   investmentWindowOpenDate: null,
   offAssetsOffered: 0,
   ftInvestmentWindow: null,
-  ftInvestmentReserve: '10%',
+  ftInvestmentReserve: 0,
   liquidityPoolContribution: 0,
 
   // Step 4: Governance

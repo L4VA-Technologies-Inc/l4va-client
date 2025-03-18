@@ -31,9 +31,9 @@ export const InvestmentWindow = ({
       return;
     }
 
-    // Check if value is greater than 99.99
+    // Check if value is greater than 100
     const numValue = parseFloat(sanitizedValue);
-    if (!isNaN(numValue) && numValue > 99.99) {
+    if (!isNaN(numValue) && numValue > 100) {
       return;
     }
 
@@ -136,7 +136,7 @@ export const InvestmentWindow = ({
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
             id="offAssetsOffered"
-            placeholder="10.00"
+            placeholder="XX.XX%"
             type="text"
             style={{ fontSize: '20px' }}
             value={data.offAssetsOffered || ''}
@@ -168,7 +168,7 @@ export const InvestmentWindow = ({
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
             id="ftInvestmentReserve"
-            placeholder="10.00"
+            placeholder="XX.XX%"
             type="text"
             style={{ fontSize: '20px' }}
             value={data.ftInvestmentReserve || ''}
@@ -185,7 +185,7 @@ export const InvestmentWindow = ({
           <Input
             className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px] mt-4"
             id="liquidityPoolContribution"
-            placeholder="10.00"
+            placeholder="XX.XX%"
             type="text"
             style={{ fontSize: '20px' }}
             value={data.liquidityPoolContribution || ''}
