@@ -14,7 +14,6 @@ import { Faq } from '@/components/home/Faq';
 import { VaultsFilters } from '@/components/home/VaultsFilters';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { MainFilters } from '@/components/home/MainFilters';
-import { VaultsList } from '@/components/shared/VaultsList';
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -61,7 +60,6 @@ export const Home = () => {
               <SearchInput />
               <MainFilters />
             </div>
-            <VaultsList />
           </div>
         </div>
       </section>

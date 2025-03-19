@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import { formatCompactNumber, formatNum } from '@/utils/core.utils.js';
 
 const socialLinks = [
   { icon: '/assets/social/x.svg', url: 'https://twitter.com/yourusername' },

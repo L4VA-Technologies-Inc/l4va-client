@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 
-import { VaultCard } from '@/components/shared/VaultCard';
+import { VaultCard } from '@/components/vaults/VaultCard.jsx';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -46,7 +46,9 @@ const LoadingState = () => (
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400">
-    <p className="text-xl">No vaults found</p>
+    <p className="text-xl">
+      No vaults found
+    </p>
     <NavLink
       className={clsx(
         'mt-2 transition-all',
