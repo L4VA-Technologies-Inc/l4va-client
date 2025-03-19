@@ -110,7 +110,7 @@ export const Governance = ({
           <>
             <div className="mt-[60px]">
               <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="timeElapsedIsEqualToTime">
-                TIME ELAPSED IS EQUAL TO TIME
+                *TIME ELAPSED IS EQUAL TO TIME
                 <Info className="ml-2 inline-block" color="white" size={16} />
               </Label>
               <div className="mt-4">
@@ -126,6 +126,7 @@ export const Governance = ({
 
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.vaultAppreciation}
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
