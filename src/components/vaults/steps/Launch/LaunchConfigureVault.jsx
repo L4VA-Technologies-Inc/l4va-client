@@ -12,7 +12,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
         type="button"
         onClick={() => setCurrentStep(1)}
       >
-        <Edit size={24}/>
+        <Edit size={24} />
         Edit
       </button>
     </div>
@@ -44,6 +44,14 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">
+            FT Token Ticker
+          </p>
+          <p className="text-[20px]">
+            {data.ftTokenTicker || 'Not set'}
+          </p>
+        </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">
             Vault brief
           </p>
           <p className="text-[20px]">
@@ -54,7 +62,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <p className="uppercase font-semibold text-dark-100">
             Social links
           </p>
-          <LavaSocialLinksPreview socialLinks={data.socialLinks}/>
+          <LavaSocialLinksPreview socialLinks={data.socialLinks} />
         </div>
       </div>
       <div className="space-y-10">

@@ -3,11 +3,12 @@ import { getTimeDifference } from '@/utils/core.utils';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = time => {
-    if(time === 'launch') {
+    if (time === 'upon-vault-lunch') {
       return 'Upon vault launch';
     }
     return getTimeDifference(time);
   };
+
   return (
     <section>
       <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
@@ -19,7 +20,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
           type="button"
           onClick={() => setCurrentStep(2)}
         >
-          <Edit size={24}/>
+          <Edit size={24} />
           Edit
         </button>
       </div>
@@ -33,12 +34,32 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               {data.valuationType}
             </p>
           </div>
+          {data.valuationType === 'fixed' && (
+            <>
+              <div>
+                <p className="uppercase font-semibold text-dark-100">
+                  Valuation Currency
+                </p>
+                <p className="text-[20px]">
+                  {data.valuationCurrency || 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="uppercase font-semibold text-dark-100">
+                  Valuation Amount
+                </p>
+                <p className="text-[20px]">
+                  {data.valuationAmount || 'Not set'}
+                </p>
+              </div>
+            </>
+          )}
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              Asset window
+              Contribution duration
             </p>
             <p className="text-[20px]">
-              {data.assetWindowDate ? formatTime(data.assetWindowDate) : 'Not selected'}
+              {data.contributionDuration ? `${data.contributionDuration} days` : 'Not set'}
             </p>
           </div>
           <div>
@@ -46,7 +67,9 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution Window Open Time
             </p>
             <p className="text-[20px]">
-              {formatTime(data.contributionOpenWindowType)}
+              {data.contributionOpenWindowType === 'custom'
+                ? formatTime(data.contributionOpenWindowTime)
+                : formatTime(data.contributionOpenWindowType)}
             </p>
           </div>
         </div>
@@ -56,7 +79,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Asset whitelist
             </p>
             <p className="text-[20px]">
-              Policy ID
+              {data.assetsWhitelist?.length ? `${data.assetsWhitelist.length} assets` : 'No assets whitelisted'}
             </p>
           </div>
           <div>
@@ -65,10 +88,10 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             </p>
             <p className="flex items-center gap-2 text-[20px]">
               <span>
-                min: {data.minAssetCountCap}
+                min: {data.minAssetCountCap || 'Not set'}
               </span>
               <span>
-                max: {data.maxAssetCountCap}
+                max: {data.maxAssetCountCap || 'Not set'}
               </span>
             </p>
           </div>

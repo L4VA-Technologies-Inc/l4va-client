@@ -11,7 +11,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
         type="button"
         onClick={() => setCurrentStep(4)}
       >
-        <Edit size={24}/>
+        <Edit size={24} />
         Edit
       </button>
     </div>
@@ -22,7 +22,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             FT TOKEN SUPPLY
           </p>
           <p className="text-[20px]">
-            {data.ftTokenSupply || 'None'}
+            {data.ftTokenSupply || 'Not set'}
           </p>
         </div>
         <div>
@@ -30,7 +30,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             FT Token Decimals
           </p>
           <p className="text-[20px]">
-            {data.ftTokenDecimals || 'None'}
+            {data.ftTokenDecimals || 'Not set'}
           </p>
         </div>
         <div>
@@ -39,9 +39,9 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
           </p>
           <div className="mt-2 relative w-full h-32 overflow-hidden rounded-lg">
             <img
-              alt="Background Banner"
+              alt="FT Token Image"
               className="w-1/2 h-full object-cover"
-              src={data.bannerImage || '/assets/vault-token-image.png'}
+              src={data.ftTokenImg || '/assets/vault-token-image.png'}
             />
           </div>
         </div>
@@ -52,49 +52,73 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             Termination type
           </p>
           <p className="text-[20px]">
-            {data.terminationType}
+            {data.terminationType || 'Not set'}
           </p>
         </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            Creation Threshold %
-          </p>
-          <p className="text-[20px]">
-            {data.creationThreshold || 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            Start threshold %
-          </p>
-          <p className="text-[20px]">
-            {data.startThreshold || 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            Vote threshold %
-          </p>
-          <p className="text-[20px]">
-            {data.voteThreshold || 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            Execution threshold %
-          </p>
-          <p className="text-[20px]">
-            {data.executionThreshold || 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            Cosigning threshold %
-          </p>
-          <p className="text-[20px]">
-            {data.cosigningThreshold || 'None'}
-          </p>
-        </div>
+        {data.terminationType === 'programmed' && (
+          <>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Time Elapsed
+              </p>
+              <p className="text-[20px]">
+                {data.timeElapsedIsEqualToTime ? `${data.timeElapsedIsEqualToTime} days` : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Vault Appreciation
+              </p>
+              <p className="text-[20px]">
+                {data.vaultAppreciation ? `${data.vaultAppreciation}%` : 'Not set'}
+              </p>
+            </div>
+          </>
+        )}
+        {data.terminationType === 'dao' && (
+          <>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Creation Threshold %
+              </p>
+              <p className="text-[20px]">
+                {data.creationThreshold ? `${data.creationThreshold}%` : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Start Threshold %
+              </p>
+              <p className="text-[20px]">
+                {data.startThreshold ? `${data.startThreshold}%` : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Vote Threshold %
+              </p>
+              <p className="text-[20px]">
+                {data.voteThreshold ? `${data.voteThreshold}%` : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Execution Threshold %
+              </p>
+              <p className="text-[20px]">
+                {data.executionThreshold ? `${data.executionThreshold}%` : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="uppercase font-semibold text-dark-100">
+                Cosigning Threshold %
+              </p>
+              <p className="text-[20px]">
+                {data.cosigningThreshold ? `${data.cosigningThreshold}%` : 'Not set'}
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   </section>
