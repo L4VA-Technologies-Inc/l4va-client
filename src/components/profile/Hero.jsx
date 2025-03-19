@@ -83,7 +83,7 @@ export const Hero = () => {
 
   return (
     <div>
-      <h1 className="font-russo text-[40px] uppercase mb-8 text-center">
+      <h1 className="font-russo text-[40px] uppercase my-8 text-center">
         My Profile
       </h1>
       <div className="relative w-full h-[384px] group">
@@ -102,8 +102,7 @@ export const Hero = () => {
             </div>
           ) : (
             <div
-              className="w-full h-full flex items-center justify-center bg-dark-800"
-              style={{ backgroundImage: 'url(/assets/profile-bg-empty.webp)', backgroundRepeat: 'repeat' }}
+              className="w-full h-full flex items-center justify-center bg-[#0A0D29]"
             >
               <div className="flex items-center gap-2 font-medium transition-all duration-200">
                 <Camera size={24} />
@@ -130,8 +129,7 @@ export const Hero = () => {
                   <AvatarImage alt="Profile" src={avatar} />
                 ) : (
                   <AvatarFallback
-                    className="text-4xl font-medium flex flex-col items-center justify-center gap-2 text-white"
-                    style={{ backgroundImage: 'url(/assets/profile-bg-empty.webp)', backgroundRepeat: 'repeat' }}
+                    className="text-4xl font-medium flex flex-col items-center justify-center gap-2 bg-[#0A0D29]"
                   >
                     <Camera
                       className="text-white"
