@@ -4,8 +4,8 @@ import { Label } from '@/components/ui/label';
 
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
-import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
 export const Governance = ({
   data,
@@ -114,7 +114,7 @@ export const Governance = ({
                 <Info className="ml-2 inline-block" color="white" size={16} />
               </Label>
               <div className="mt-4">
-                <LavaDatePicker
+                <LavaIntervalPicker
                   value={data.timeElapsedIsEqualToTime}
                   onChange={(date) => updateField('timeElapsedIsEqualToTime', date)}
                 />
