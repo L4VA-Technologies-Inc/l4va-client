@@ -121,7 +121,7 @@ export const initialVaultState = {
   cosigningThreshold: 0,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
-  vaultAppreciation: '',
+  vaultAppreciation: 0,
 };
 
 // export const stepFields = {
