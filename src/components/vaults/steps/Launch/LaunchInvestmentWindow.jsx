@@ -38,7 +38,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
             Investment Window Open Time
           </p>
           <p className="text-[20px]">
-            {data.investmentWindowOpenTime || 'None'}
+            {data.investmentOpenWindowType || 'None'}
           </p>
         </div>
       </div>
@@ -49,14 +49,6 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => (
           </p>
           <p className="text-[20px]">
             {data.offAssetsOffered ? `${data.offAssetsOffered}%` : 'None'}
-          </p>
-        </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">
-            FT Investment Window
-          </p>
-          <p className="text-[20px]">
-            {data.ftInvestmentWindow || 'None'}
           </p>
         </div>
         <div>

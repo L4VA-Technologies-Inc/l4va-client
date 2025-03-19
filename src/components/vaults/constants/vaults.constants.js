@@ -59,10 +59,9 @@ export const vaultSchema = z.object({
 
   // Step 3: Investment Window
   investmentWindowDuration: z.any().nullable(),
-  investmentWindowOpenTime: z.string(),
-  investmentWindowOpenDate: z.any().nullable(),
+  investmentOpenWindowType: z.string(),
+  investmentOpenWindowTime: z.any().nullable(),
   offAssetsOffered: z.string(),
-  ftInvestmentWindow: z.any().nullable(),
   ftInvestmentReserve: z.string(),
   liquidityPoolContribution: z.string(),
 
@@ -103,10 +102,9 @@ export const initialVaultState = {
 
   // Step 3: Investment Window
   investmentWindowDuration: null,
-  investmentWindowOpenTime: 'assetClose',
-  investmentWindowOpenDate: null,
+  investmentOpenWindowType: 'upon-asset-window-closing',
+  investmentOpenWindowTime: null,
   offAssetsOffered: 0,
-  ftInvestmentWindow: null,
   ftInvestmentReserve: 0,
   liquidityPoolContribution: 0,
 
@@ -129,7 +127,7 @@ export const initialVaultState = {
 // export const stepFields = {
 //   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
 //   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'assetsWhitelist', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
-//   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'offAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'liquidityPoolContribution'],
+//   3: ['investmentWindowDuration', 'investmentOpenWindowType', 'investmentOpenWindowTime', 'offAssetsOffered', 'ftInvestmentReserve', 'liquidityPoolContribution'],
 //   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
 //   5: [],
 // };

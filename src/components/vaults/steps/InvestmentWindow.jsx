@@ -85,10 +85,10 @@ export const InvestmentWindow = ({
           </div>
           <div className="mt-4">
             <LavaRadio
-              name="investmentWindowOpenTime"
+              name="investmentOpenWindowType"
               options={[
                 {
-                  name: 'assetClose',
+                  name: 'upon-asset-window-closing',
                   label: 'Upon Asset Window Closing',
                 },
                 {
@@ -96,22 +96,22 @@ export const InvestmentWindow = ({
                   label: 'Custom',
                 },
               ]}
-              value={data.investmentWindowOpenTime || ''}
-              onChange={(value) => updateField('investmentWindowOpenTime', value)}
+              value={data.investmentOpenWindowType || ''}
+              onChange={(value) => updateField('investmentOpenWindowType', value)}
             />
-            {errors.investmentWindowOpenTime && (
-              <p className="text-main-red mt-1">{errors.investmentWindowOpenTime}</p>
+            {errors.investmentOpenWindowType && (
+              <p className="text-main-red mt-1">{errors.investmentOpenWindowType}</p>
             )}
 
-            {data.investmentWindowOpenTime === 'custom' && (
+            {data.investmentOpenWindowType === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}
-                  value={data.investmentWindowOpenDate}
-                  onChange={(date) => updateField('investmentWindowOpenDate', date)}
+                  value={data.investmentOpenWindowTime}
+                  onChange={(date) => updateField('investmentOpenWindowTime', date)}
                 />
-                {errors.investmentWindowOpenDate && (
-                  <p className="text-main-red mt-1">{errors.investmentWindowOpenDate}</p>
+                {errors.investmentOpenWindowTime && (
+                  <p className="text-main-red mt-1">{errors.investmentOpenWindowTime}</p>
                 )}
                 {minDate && (
                   <p className="text-main-orange mt-1">
@@ -134,20 +134,6 @@ export const InvestmentWindow = ({
           value={data.offAssetsOffered || ''}
           onChange={handleChange}
         />
-        <div className="mt-[60px]">
-          <Label className="uppercase text-[20px] font-bold" htmlFor="ftInvestmentWindow">
-            *FT INVESTMENT WINDOW
-          </Label>
-          <div className="mt-4">
-            <LavaDatePicker
-              value={data.ftInvestmentWindow}
-              onChange={(date) => updateField('ftInvestmentWindow', date)}
-            />
-            {errors.ftInvestmentWindow && (
-              <p className="text-main-red mt-1">{errors.ftInvestmentWindow}</p>
-            )}
-          </div>
-        </div>
         <div className="mt-[60px]">
           <LavaInput
             required

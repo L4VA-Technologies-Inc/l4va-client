@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Camera, Copy, Edit, Check, X } from 'lucide-react';
+import {
+  Camera, Copy, Edit, Check, X,
+} from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 
@@ -81,9 +83,13 @@ export const Hero = () => {
 
   return (
     <div>
-      <div className="relative w-full h-96 group">
+      <h1 className="font-russo text-[40px] uppercase mb-8 text-center">
+        My Profile
+      </h1>
+      <div className="relative w-full h-[384px] group">
         <button
           className="w-full h-full"
+          type="button"
           onClick={() => bgInputRef.current.click()}
         >
           {bgImage ? (
@@ -95,8 +101,11 @@ export const Hero = () => {
               />
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="flex items-center gap-2 font-medium text-dark-100 transition-all duration-200">
+            <div
+              className="w-full h-full flex items-center justify-center bg-dark-800"
+              style={{ backgroundImage: 'url(/assets/profile-bg-empty.webp)', backgroundRepeat: 'repeat' }}
+            >
+              <div className="flex items-center gap-2 font-medium transition-all duration-200">
                 <Camera size={24} />
                 Add cover
               </div>
@@ -114,21 +123,22 @@ export const Hero = () => {
           <div className="absolute bottom-0">
             <div className="flex items-center gap-6">
               <Avatar
-                className="h-[200px] w-[200px] cursor-pointer"
+                className="h-[200px] w-[200px] cursor-pointer border-2 border-white"
                 onClick={() => avatarInputRef.current.click()}
               >
                 {avatar ? (
-                  <AvatarImage src={avatar} alt="Profile" />
+                  <AvatarImage alt="Profile" src={avatar} />
                 ) : (
                   <AvatarFallback
-                    className="text-dark-700 text-4xl text-white font-medium flex flex-col items-center justify-center gap-2 bg-orange-gradient"
+                    className="text-4xl font-medium flex flex-col items-center justify-center gap-2 text-white"
+                    style={{ backgroundImage: 'url(/assets/profile-bg-empty.webp)', backgroundRepeat: 'repeat' }}
                   >
                     <Camera
+                      className="text-white"
                       size={24}
-                      className="text-dark-700"
                     />
                     <span
-                      className="text-dark-700 text-sm"
+                      className="text-sm"
                     >
                       Add avatar
                     </span>
@@ -148,20 +158,20 @@ export const Hero = () => {
                     <div className="flex items-center gap-2">
                       <Input
                         ref={nameInputRef}
+                        className="w-[200px]"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="w-[200px]"
                       />
                       <button
-                        onClick={handleNameSave}
                         className="text-green-500 hover:text-green-400 transition-colors"
+                        onClick={handleNameSave}
                       >
                         <Check size={18} />
                       </button>
                       <button
-                        onClick={handleNameCancel}
                         className="text-red-500 hover:text-red-400 transition-colors"
+                        onClick={handleNameCancel}
                       >
                         <X size={18} />
                       </button>
@@ -172,8 +182,8 @@ export const Hero = () => {
                         {name}
                       </h1>
                       <button
-                        onClick={handleNameEdit}
                         className="text-dark-100 hover:text-white transition-colors"
+                        onClick={handleNameEdit}
                       >
                         <Edit size={18} />
                       </button>
@@ -183,8 +193,8 @@ export const Hero = () => {
                 <div className="flex items-center gap-2">
                   <p className="text-dark-100">{substringAddress(user.address)}</p>
                   <button
-                    onClick={handleCopyAddress}
                     className="text-dark-100 hover:text-white transition-colors"
+                    onClick={handleCopyAddress}
                   >
                     <Copy size={16} />
                   </button>
