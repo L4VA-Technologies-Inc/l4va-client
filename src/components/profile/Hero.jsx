@@ -18,9 +18,9 @@ const BackgroundImage = ({ bgImage, onClick }) => (
       {bgImage ? (
         <>
           <img
-            src={bgImage}
             alt="Profile Background"
             className="w-full h-full object-cover"
+            src={bgImage}
           />
           <div className="hover-overlay hover-overlay-gradient">
             <div className="flex items-center gap-2 font-medium text-dark-100">
@@ -49,7 +49,9 @@ const BackgroundImage = ({ bgImage, onClick }) => (
   </button>
 );
 
-const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange }) => (
+const ProfileAvatar = ({
+  avatar, onClick, inputRef, onAvatarChange,
+}) => (
   <>
     <Avatar
       className="h-[200px] w-[200px] cursor-pointer group relative"
@@ -89,7 +91,9 @@ const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange }) => (
   </>
 );
 
-const ProfileName = ({ isEditing, name, onEdit, onSave, onCancel, onChange, onKeyDown, inputRef }) => (
+const ProfileName = ({
+  isEditing, name, onEdit, onSave, onCancel, onChange, onKeyDown, inputRef,
+}) => (
   <div className="flex items-center gap-2">
     {isEditing ? (
       <div className="flex items-center gap-2">
@@ -186,8 +190,8 @@ export const Hero = () => {
       <div className="relative w-full h-[384px]">
         <BackgroundImage
           bgImage={bgImage}
-          onClick={() => bgInputRef.current.click()}
           inputRef={bgInputRef}
+          onClick={() => bgInputRef.current.click()}
         />
         <input
           ref={bgInputRef}
@@ -201,26 +205,26 @@ export const Hero = () => {
             <div className="flex items-center gap-6">
               <ProfileAvatar
                 avatar={avatar}
-                onClick={() => avatarInputRef.current.click()}
                 inputRef={avatarInputRef}
                 onAvatarChange={handleFileChange(setAvatar)}
+                onClick={() => avatarInputRef.current.click()}
               />
               <div className="flex flex-col gap-2">
                 <ProfileName
+                  inputRef={nameInputRef}
                   isEditing={isEditingName}
                   name={name}
-                  onEdit={handleNameEdit}
-                  onSave={handleNameSave}
                   onCancel={handleNameCancel}
                   onChange={(e) => setName(e.target.value)}
+                  onEdit={handleNameEdit}
                   onKeyDown={handleKeyDown}
-                  inputRef={nameInputRef}
+                  onSave={handleNameSave}
                 />
                 <div className="flex items-center gap-2">
                   <p className="text-dark-100">{substringAddress(user.address)}</p>
                   <button
-                    type="button"
                     className="text-dark-100 hover:text-white transition-colors"
+                    type="button"
                     onClick={handleCopyAddress}
                   >
                     <Copy size={20} />
