@@ -19,32 +19,32 @@ const socialPlatforms = [
   {
     id: 'facebook',
     name: 'Facebook',
-    icon: <FacebookIcon className="text-white" width={20} height={20} />,
+    icon: <FacebookIcon className="text-white" height={20} width={20} />,
   },
   {
     id: 'x',
     name: 'X',
-    icon: <XIcon className="text-white" width={20} height={20} />,
+    icon: <XIcon className="text-white" height={20} width={20} />,
   },
   {
     id: 'medium',
     name: 'Medium',
-    icon: <MediumIcon className="text-white" width={20} height={20} />,
+    icon: <MediumIcon className="text-white" height={20} width={20} />,
   },
   {
     id: 'telegram',
     name: 'Telegram',
-    icon: <TelegramIcon className="text-white" width={20} height={20} />,
+    icon: <TelegramIcon className="text-white" height={20} width={20} />,
   },
   {
     id: 'tiktok',
     name: 'TikTok',
-    icon: <TikTokIcon className="text-white" width={20} height={20} />,
+    icon: <TikTokIcon className="text-white" height={20} width={20} />,
   },
   {
     id: 'youtube',
     name: 'YouTube',
-    icon: <YouTubeIcon className="text-white" width={20} height={20} />,
+    icon: <YouTubeIcon className="text-white" height={20} width={20} />,
   },
 ];
 
