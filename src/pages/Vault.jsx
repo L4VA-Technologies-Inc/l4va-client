@@ -23,7 +23,6 @@ export const Vault = () => {
         setLoading(false);
       }
     };
-
     fetchVault();
   }, [id]);
 
