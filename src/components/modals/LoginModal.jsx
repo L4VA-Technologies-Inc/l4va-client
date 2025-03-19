@@ -41,18 +41,21 @@ export const LoginModal = ({
         {SUPPORTED_WALLETS.map(wallet => (
           <button
             key={wallet.key}
-            className="flex items-center justify-between w-full p-2 bg-dark-600 rounded-lg  transition-colors disabled:opacity-50 hover:bg-[#2D3049]"
+            className="
+              flex items-center justify-between w-full p-2 bg-dark-600 rounded-lg  
+              transition-colors disabled:opacity-50 hover:bg-[#2D3049]
+            "
             disabled={isConnectingTo === wallet.key || !isChecked}
             type="button"
             onClick={() => handleWalletConnect(wallet.key)}
           >
             <div className="flex items-center gap-2">
-              <img alt="wallet" height={40} src="/assets/wallet.png" width={40}/>
+              <img alt="wallet" height={40} src="/assets/wallet.png" width={40} />
               <span className="font-bold text-sm">
                 {wallet.displayName}
               </span>
             </div>
-            {isConnectingTo === wallet.key && <Spinner/>}
+            {isConnectingTo === wallet.key && <Spinner />}
             {!installed.has(wallet.key) && (
               <a
                 className="text-sm text-dark-100"
@@ -61,7 +64,7 @@ export const LoginModal = ({
                 target="_blank"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Download className="w-4 h-4" size={14}/>
+                <Download className="w-4 h-4" size={14} />
               </a>
             )}
           </button>
@@ -85,7 +88,7 @@ export const LoginModal = ({
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
-          <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange"/>
+          <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
           <div className="text-sm sm:text-base">
             Wallet connected
           </div>
@@ -94,7 +97,7 @@ export const LoginModal = ({
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
-            <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange"/>
+            <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
           ) : (
             <div
               className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-main-orange"
@@ -146,7 +149,7 @@ export const LoginModal = ({
             type="button"
             onClick={onClose}
           >
-            <X className="w-4 h-4" size={20}/>
+            <X className="w-4 h-4" size={20} />
           </button>
         </div>
         <div className="p-4 rounded-b-[10px]">

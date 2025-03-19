@@ -100,13 +100,13 @@ export const ConfigureVault = ({
       <div className="flex flex-col gap-[60px] px-[36px]">
         <div>
           <UploadZone
-            image={data.imageUrl}
+            image={data.vaultImage}
             label="*Vault image"
-            setImage={(image) => updateField('imageUrl', image)}
+            setImage={(image) => updateField('vaultImage', image)}
           />
-          {errors.imageUrl && (
+          {errors.vaultImage && (
             <p className="text-main-red mt-1">
-              {errors.imageUrl}
+              {errors.vaultImage}
             </p>
           )}
         </div>

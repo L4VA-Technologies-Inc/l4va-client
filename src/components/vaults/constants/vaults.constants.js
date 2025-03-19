@@ -43,7 +43,7 @@ export const vaultSchema = z.object({
   description: z.string()
     .max(500, { message: 'Description must be less than 500 characters' })
     .optional(),
-  imageUrl: z.string({ message: 'Vault image is required' }),
+  vaultImage: z.string({ message: 'Vault image is required' }),
   socialLinks: z.array(socialLinkSchema),
 
   // Step 2: Asset Contribution
@@ -86,7 +86,7 @@ export const initialVaultState = {
   privacy: 'public',
   ftTokenTicker: '',
   description: '',
-  imageUrl: null,
+  vaultImage: null,
   bannerUrl: null,
   socialLinks: [],
 
@@ -125,7 +125,7 @@ export const initialVaultState = {
 };
 
 // export const stepFields = {
-//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
+//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerUrl', 'socialLinks'],
 //   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
 //   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'offAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'liquidityPoolContribution'],
 //   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
@@ -133,7 +133,7 @@ export const initialVaultState = {
 // };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'imageUrl', 'bannerUrl', 'socialLinks'],
+  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerUrl', 'socialLinks'],
   2: [],
   3: [],
   4: [],

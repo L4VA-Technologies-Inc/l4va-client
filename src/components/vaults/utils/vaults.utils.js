@@ -3,7 +3,7 @@ export const formatVaultData = (vaultData) => ({
   type: vaultData.type,
   privacy: vaultData.privacy,
   description: vaultData.description,
-  imageUrl: vaultData.imageUrl,
+  vaultImage: vaultData.vaultImage,
   bannerUrl: vaultData.bannerUrl,
   socialLinks: vaultData.socialLinks,
   ftTokenTicker: vaultData.ftTokenTicker,

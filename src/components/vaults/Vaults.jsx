@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
-
-import { VaultsApiProvider } from '@/services/api/vaults';
-
-import { VaultCard } from '@/components/shared/VaultCard';
+import { VaultTabs } from './VaultTabs';
+import { VaultCard } from './VaultCard';
+import { LoadingState } from '../LoadingState';
+import { EmptyState } from '../EmptyState';
+import { VaultsApiProvider } from '../../providers/VaultsApiProvider';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -21,14 +22,14 @@ const VaultTabs = ({ activeTab, onTabChange }) => (
         key={tab}
         className={clsx(
           'px-8 py-2 rounded-xl text-lg font-medium transition-all',
-          activeTab === tab ? 'bg-[#2D3049]' : 'text-white hover:text-main-orange',
+          activeTab === tab ? 'bg-[#2D3049]' : 'text-white hover:text-main-orange'
         )}
         type="button"
         onClick={() => onTabChange(tab)}
       >
         <span
           className={clsx(
-            activeTab === tab && 'text-orange-gradient',
+            activeTab === tab && 'text-orange-gradient'
           )}
         >
           {tab}
@@ -50,7 +51,7 @@ const EmptyState = () => (
     <NavLink
       className={clsx(
         'mt-2 transition-all',
-        'hover:text-main-orange hover:underline',
+        'hover:text-main-orange hover:underline'
       )}
       to="/create"
     >
@@ -114,11 +115,20 @@ export const Vaults = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vaults.map((vault) => (
-              <VaultCard key={vault.id} {...vault} />
+              <NavLink
+                key={vault.id}
+                to={`/vaults/${vault.id}`}
+                className={clsx(
+                  'block transition-all',
+                  'hover:scale-[1.02] hover:shadow-lg'
+                )}
+              >
+                <VaultCard {...vault} />
+              </NavLink>
             ))}
           </div>
         )}
       </div>
     </div>
   );
-};
+}; 
