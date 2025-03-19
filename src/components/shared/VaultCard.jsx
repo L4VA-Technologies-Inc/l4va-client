@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom';
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
-import {
-  VAULT_STATUSES,
-} from '@/components/vaults/constants/vaults.constants';
 
 const socialLinks = [
   { icon: '/assets/social/x.svg', url: 'https://twitter.com/yourusername' },
@@ -21,14 +18,15 @@ const image = '/assets/vaults/space-man.webp';
 
 export const VaultCard = (props) => {
   const {
-    id, vaultStatus, name, description, privacy, vaultImage,
+    id,
+    name,
+    description,
+    privacy,
+    vaultImage,
   } = props;
 
-  const linkTo = vaultStatus === VAULT_STATUSES.DRAFT
-    ? `/create?draft=${id}` : `/vaults/${id}`;
-
   return (
-    <Link className="block" to={linkTo}>
+    <Link className="block" to={`/vaults/${id}`}>
       <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
         <div className="h-48">
           <img

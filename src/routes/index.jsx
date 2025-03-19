@@ -7,7 +7,7 @@ import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
 import { Vaults } from '@/pages/Vaults';
 import { Profile } from '@/pages/Profile';
-import { VaultProfile } from '@/pages/VaultProfile';
+import { Vault } from '@/pages/Vault';
 
 const HomePage = () => (
   <HomePageLayout>
@@ -33,9 +33,9 @@ const VaultsPage = () => (
   </MainLayout>
 );
 
-const VaultProfilePage = () => (
+const VaultPage = () => (
   <MainLayout>
-    <VaultProfile />
+    <Vault />
   </MainLayout>
 );
 
@@ -51,7 +51,7 @@ export const Routes = () => {
     },
     {
       path: '/vaults/:id',
-      element: <VaultProfilePage />,
+      element: <VaultPage />,
     },
   ];
 

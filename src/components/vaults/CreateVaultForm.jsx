@@ -23,7 +23,7 @@ import {
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const CreateVaultForm = ({ draftId }) => {
+export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
@@ -31,20 +31,10 @@ export const CreateVaultForm = ({ draftId }) => {
   const [vaultData, setVaultData] = useState(initialVaultState);
 
   useEffect(() => {
-    const loadDraftData = async () => {
-      if (draftId) {
-        try {
-          const { data } = await VaultsApiProvider.getVault(draftId);
-          setVaultData(data);
-        } catch (error) {
-          console.error('Failed to load draft:', error);
-          toast.error('Failed to load draft data');
-        }
-      }
-    };
-
-    loadDraftData();
-  }, [draftId]);
+    if (vault) {
+      setVaultData(vault);
+    }
+  }, [vault]);
 
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
