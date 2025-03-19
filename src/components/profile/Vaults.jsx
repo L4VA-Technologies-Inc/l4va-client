@@ -4,7 +4,8 @@ import clsx from 'clsx';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 
-import { VaultCard } from '@/components/vaults/VaultCard.jsx';
+import { VaultCard } from '@/components/vaults/VaultCard';
+import { Spinner } from '@/components/Spinner';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -40,7 +41,7 @@ const VaultTabs = ({ activeTab, onTabChange }) => (
 
 const LoadingState = () => (
   <div className="flex items-center justify-center min-h-[400px]">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-main-orange"></div>
+    <Spinner />
   </div>
 );
 

@@ -7,6 +7,10 @@ export class CoreConfigProvider {
     return '/api/v1/users/profile';
   }
 
+  static updateProfile() {
+    return '/api/v1/users/profile';
+  }
+
   static uploadImage() {
     return '/api/v1/upload';
   }

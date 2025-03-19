@@ -1,3 +1,3 @@
 export const Spinner = () => (
-  <div className="w-3 h-3 animate-spin rounded-full border-2 border-black border-t-transparent"/>
+  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-main-orange"></div>
 );

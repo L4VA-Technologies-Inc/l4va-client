@@ -15,6 +15,11 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async updateProfile(profileData) {
+    const response = await axiosInstance.patch(CoreConfigProvider.updateProfile(), profileData);
+    return response;
+  }
+
   static async uploadImage(file) {
     const formData = new FormData();
     formData.append('image', file);

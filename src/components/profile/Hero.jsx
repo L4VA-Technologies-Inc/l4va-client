@@ -3,9 +3,14 @@ import toast from 'react-hot-toast';
 import {
   Camera, Copy, Edit, Check, X,
 } from 'lucide-react';
+
+import { CoreApiProvider } from '@/services/api/core';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+
 import { useAuth } from '@/context/auth';
+
 import { substringAddress } from '@/utils/core.utils';
 
 const BackgroundImage = ({ bgImage, onClick }) => (
@@ -50,7 +55,10 @@ const BackgroundImage = ({ bgImage, onClick }) => (
 );
 
 const ProfileAvatar = ({
-  avatar, onClick, inputRef, onAvatarChange,
+  avatar,
+  onClick,
+  inputRef,
+  onAvatarChange,
 }) => (
   <>
     <Avatar
@@ -59,7 +67,7 @@ const ProfileAvatar = ({
     >
       {avatar ? (
         <>
-          <AvatarImage alt="Profile" src={avatar} />
+          <AvatarImage alt="Profile" className="object-cover" src={avatar} />
           <div className="hover-overlay hover-overlay-gradient rounded-full">
             <div className="flex items-center gap-2 font-medium text-dark-100">
               <Camera size={20} />
@@ -92,7 +100,14 @@ const ProfileAvatar = ({
 );
 
 const ProfileName = ({
-  isEditing, name, onEdit, onSave, onCancel, onChange, onKeyDown, inputRef,
+  isEditing,
+  name,
+  onEdit,
+  onSave,
+  onCancel,
+  onChange,
+  onKeyDown,
+  inputRef,
 }) => (
   <div className="flex items-center gap-2">
     {isEditing ? (
@@ -122,6 +137,7 @@ const ProfileName = ({
         <h1 className="text-2xl font-medium">{name}</h1>
         <button
           className="text-dark-100 hover:text-white transition-colors"
+          type="button"
           onClick={onEdit}
         >
           <Edit size={20} />
@@ -132,22 +148,44 @@ const ProfileName = ({
 );
 
 export const Hero = () => {
-  const { user } = useAuth();
-  const [avatar, setAvatar] = useState(null);
-  const [bgImage, setBgImage] = useState(null);
+  const { user, checkAuth } = useAuth();
+  const [avatar, setAvatar] = useState(user?.profileImage || null);
+  const [bgImage, setBgImage] = useState(user?.bannerImage || null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(user?.name || '');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const bgInputRef = useRef(null);
   const avatarInputRef = useRef(null);
   const nameInputRef = useRef(null);
 
-  const handleFileChange = (setFile) => (e) => {
+  const handleFileUpload = async (file, type) => {
+    try {
+      const { data } = await CoreApiProvider.uploadImage(file);
+      const updateData = type === 'avatar'
+        ? { profileImage: data.url }
+        : { bannerImage: data.url };
+
+      await CoreApiProvider.updateProfile(updateData);
+      await checkAuth(); // Refresh user data
+
+      if (type === 'avatar') {
+        setAvatar(data.url);
+      } else {
+        setBgImage(data.url);
+      }
+
+      toast.success(`${type === 'avatar' ? 'Profile' : 'Banner'} image updated successfully`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(`Failed to update ${type === 'avatar' ? 'profile' : 'banner'} image`);
+    }
+  };
+
+  const handleFileChange = (type) => async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => setFile(event.target.result);
-      reader.readAsDataURL(file);
+      await handleFileUpload(file, type);
     }
   };
 
@@ -156,12 +194,23 @@ export const Hero = () => {
     setTimeout(() => nameInputRef.current?.focus(), 0);
   };
 
-  const handleNameSave = () => {
-    if (name.trim()) {
+  const handleNameSave = async () => {
+    if (!name.trim()) {
+      toast.error('Name cannot be empty');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await CoreApiProvider.updateProfile({ name: name.trim() });
+      await checkAuth(); // Refresh user data
       setIsEditingName(false);
       toast.success('Name updated successfully');
-    } else {
-      toast.error('Name cannot be empty');
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Failed to update name');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -171,7 +220,7 @@ export const Hero = () => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleNameSave();
+    if (e.key === 'Enter' && !isUpdating) handleNameSave();
     else if (e.key === 'Escape') handleNameCancel();
   };
 
@@ -190,7 +239,6 @@ export const Hero = () => {
       <div className="relative w-full h-[384px]">
         <BackgroundImage
           bgImage={bgImage}
-          inputRef={bgInputRef}
           onClick={() => bgInputRef.current.click()}
         />
         <input
@@ -198,7 +246,7 @@ export const Hero = () => {
           accept="image/*"
           className="hidden"
           type="file"
-          onChange={handleFileChange(setBgImage)}
+          onChange={handleFileChange('banner')}
         />
         <div className="container mx-auto">
           <div className="absolute -bottom-[100px]">
@@ -206,7 +254,7 @@ export const Hero = () => {
               <ProfileAvatar
                 avatar={avatar}
                 inputRef={avatarInputRef}
-                onAvatarChange={handleFileChange(setAvatar)}
+                onAvatarChange={handleFileChange('avatar')}
                 onClick={() => avatarInputRef.current.click()}
               />
               <div className="flex flex-col gap-2">

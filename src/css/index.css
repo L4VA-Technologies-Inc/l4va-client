@@ -70,7 +70,7 @@ button {
 }
 
 .hover-overlay-gradient {
-  background: linear-gradient(180deg, rgba(0, 3, 34, 0) 50%, #000322 100%), linear-gradient(0deg, rgba(0, 3, 34, 0.8), rgba(0, 3, 34, 0.8));
+  background: linear-gradient(180deg, rgba(0, 3, 34, 0) 50%, #000322 100%), linear-gradient(0deg, rgba(0, 3, 34, 0.6), rgba(0, 3, 34, 0.6));
 }
 
 .hover-overlay {
