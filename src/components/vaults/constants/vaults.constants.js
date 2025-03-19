@@ -8,7 +8,7 @@ export const VAULT_PRIVACY_TYPES = {
 
 export const VAULT_STATUSES = {
   DRAFT: 'draft',
-}
+};
 
 export const CREATE_VAULT_STEPS = [
   {
@@ -54,7 +54,7 @@ export const vaultSchema = z.object({
   valuationType: z.string(),
   contributionOpenWindowType: z.string(),
   contributionOpenWindowTime: z.any().optional(),
-  whitelistAssets: z.array(z.any()),
+  assetsWhitelist: z.array(z.any()),
   contributionDuration: z.number().optional(),
 
   // Step 3: Investment Window
@@ -69,7 +69,7 @@ export const vaultSchema = z.object({
   // Step 4: Governance
   ftTokenSupply: z.string(),
   ftTokenDecimals: z.string(),
-  ftTokenImage: z.string(),
+  ftTokenImg: z.string(),
   terminationType: z.string(),
   // DAO specific fields
   creationThreshold: z.string().optional(),
@@ -79,7 +79,7 @@ export const vaultSchema = z.object({
   cosigningThreshold: z.string().optional(),
   // Programmed specific fields
   timeElapsedIsEqualToTime: z.any().nullable(),
-  assetAppreciation: z.string().optional(),
+  vaultAppreciation: z.string().optional(),
   ftTokenDescription: z.string().optional(),
 });
 
@@ -91,7 +91,7 @@ export const initialVaultState = {
   ftTokenTicker: '',
   description: '',
   vaultImage: null,
-  bannerUrl: null,
+  bannerImage: null,
   socialLinks: [],
 
   // Step 2: Asset Contribution
@@ -99,7 +99,7 @@ export const initialVaultState = {
   contributionOpenWindowType: 'launch',
   contributionOpenWindowTime: null,
   contributionDuration: 0,
-  whitelistAssets: [],
+  assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
   // Step 3: Investment Window
@@ -114,7 +114,7 @@ export const initialVaultState = {
   // Step 4: Governance
   ftTokenSupply: 1000000000,
   ftTokenDecimals: 2,
-  ftTokenImage: null,
+  ftTokenImg: null,
   terminationType: 'dao',
   // DAO specific fields
   creationThreshold: 0,
@@ -124,20 +124,20 @@ export const initialVaultState = {
   cosigningThreshold: 0,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
-  assetAppreciation: '',
+  vaultAppreciation: '',
   ftTokenDescription: '',
 };
 
 // export const stepFields = {
-//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerUrl', 'socialLinks'],
-//   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'whitelistAssets', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
+//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
+//   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'assetsWhitelist', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
 //   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'offAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'liquidityPoolContribution'],
-//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImage', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'assetAppreciation', 'ftTokenDescription'],
+//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation', 'ftTokenDescription'],
 //   5: [],
 // };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerUrl', 'socialLinks'],
+  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
   2: [],
   3: [],
   4: [],

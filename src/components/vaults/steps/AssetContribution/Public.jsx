@@ -64,11 +64,11 @@ export const Public = ({
       <div>
         <LavaWhitelistWithCaps
           label="Asset Whitelist"
-          setWhitelist={(assets) => updateField('whitelistAssets', assets)}
-          whitelist={data.whitelistAssets || []}
+          setWhitelist={(assets) => updateField('assetsWhitelist', assets)}
+          whitelist={data.assetsWhitelist || []}
         />
-        {errors.whitelistAssets && (
-          <p className="text-main-red mt-1">{errors.whitelistAssets}</p>
+        {errors.assetsWhitelist && (
+          <p className="text-main-red mt-1">{errors.assetsWhitelist}</p>
         )}
       </div>
       <div className="mt-[60px]">

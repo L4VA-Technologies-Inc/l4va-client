@@ -80,7 +80,7 @@ export const ConfigureVault = ({
         <div className="mt-[60px]">
           <LavaTextarea
             error={errors.description}
-            label="Vault brief"
+            label="Vault description"
             name="description"
             placeholder="Add a description for your Vault"
             value={data.description || ''}
@@ -112,13 +112,13 @@ export const ConfigureVault = ({
         </div>
         <div>
           <UploadZone
-            image={data.bannerUrl}
+            image={data.bannerImage}
             label="Background banner"
-            setImage={(image) => updateField('bannerUrl', image)}
+            setImage={(image) => updateField('bannerImage', image)}
           />
-          {errors.bannerUrl && (
+          {errors.bannerImage && (
             <p className="text-main-red mt-1">
-              {errors.bannerUrl}
+              {errors.bannerImage}
             </p>
           )}
         </div>

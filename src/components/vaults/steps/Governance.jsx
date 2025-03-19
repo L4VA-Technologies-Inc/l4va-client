@@ -34,7 +34,7 @@ export const Governance = ({
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9]/g, '');
 
-    const numValue = parseInt(numericValue);
+    const numValue = parseInt(numericValue, 10);
     if (numValue <= 0 || numValue > 100000000) {
       return;
     }
@@ -46,7 +46,7 @@ export const Governance = ({
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9]/g, '');
 
-    const numValue = parseInt(numericValue);
+    const numValue = parseInt(numericValue, 10);
     if (numValue < 1 || numValue > 9) {
       return;
     }
@@ -79,12 +79,12 @@ export const Governance = ({
         </div>
         <div className="mt-[60px]">
           <UploadZone
-            image={data.ftTokenImage}
+            image={data.ftTokenImg}
             label="FT Token Image"
-            setImage={(image) => updateField('ftTokenImage', image)}
+            setImage={(image) => updateField('ftTokenImg', image)}
           />
-          {errors.ftTokenImage && (
-            <p className="text-main-red mt-1">{errors.ftTokenImage}</p>
+          {errors.ftTokenImg && (
+            <p className="text-main-red mt-1">{errors.ftTokenImg}</p>
           )}
         </div>
       </div>
@@ -106,7 +106,6 @@ export const Governance = ({
             <p className="text-main-red mt-1">{errors.terminationType}</p>
           )}
         </div>
-
         {data.terminationType === 'programmed' && (
           <>
             <div className="mt-[60px]">
@@ -127,12 +126,12 @@ export const Governance = ({
 
             <div className="mt-[60px]">
               <LavaInput
-                error={errors.assetAppreciation}
+                error={errors.vaultAppreciation}
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
-                name="assetAppreciation"
+                name="vaultAppreciation"
                 placeholder="XX.XX%"
-                value={data.assetAppreciation || ''}
+                value={data.vaultAppreciation || ''}
                 onChange={handleNumChange}
               />
             </div>
