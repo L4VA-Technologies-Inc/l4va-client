@@ -80,7 +80,6 @@ export const vaultSchema = z.object({
   // Programmed specific fields
   timeElapsedIsEqualToTime: z.any().nullable(),
   vaultAppreciation: z.string().optional(),
-  ftTokenDescription: z.string().optional(),
 });
 
 export const initialVaultState = {
@@ -125,14 +124,13 @@ export const initialVaultState = {
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: '',
-  ftTokenDescription: '',
 };
 
 // export const stepFields = {
 //   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
 //   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'assetsWhitelist', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
 //   3: ['investmentWindowDuration', 'investmentWindowOpenTime', 'investmentWindowOpenDate', 'offAssetsOffered', 'ftInvestmentWindow', 'ftInvestmentReserve', 'liquidityPoolContribution'],
-//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation', 'ftTokenDescription'],
+//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
 //   5: [],
 // };
 
