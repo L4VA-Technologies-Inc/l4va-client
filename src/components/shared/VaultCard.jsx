@@ -1,5 +1,8 @@
-import { formatCompactNumber, formatNum } from '@/utils/core.utils.js';
 import { Link } from 'react-router-dom';
+import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import {
+  VAULT_STATUSES,
+} from '@/components/vaults/constants/vaults.constants';
 
 const socialLinks = [
   { icon: '/assets/social/x.svg', url: 'https://twitter.com/yourusername' },
@@ -17,15 +20,21 @@ const baseAllo = 10000;
 const image = '/assets/vaults/space-man.webp';
 
 export const VaultCard = (props) => {
-  console.log(props);
+  const {
+    id, vaultStatus, name, description, privacy, vaultImage,
+  } = props;
+
+  const linkTo = vaultStatus === VAULT_STATUSES.DRAFT
+    ? `/create?draft=${id}` : `/vaults/${id}`;
+
   return (
-    <Link to={`/vaults/${props.id}`} className="block">
+    <Link className="block" to={linkTo}>
       <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
         <div className="h-48">
           <img
             alt="Vault avatar"
             className="h-full w-full object-cover"
-            src={props.vaultImage || image}
+            src={vaultImage || image}
           />
         </div>
         <div className="p-6">
@@ -37,10 +46,10 @@ export const VaultCard = (props) => {
             />
             <div>
               <h2 className="font-satoshi text-[20px] font-bold ">
-                {props.name || 'No name'}
+                {name || 'No name'}
               </h2>
               <p className="text-sm text-dark-100">
-                {props.description || 'No description'}
+                {description || 'No description'}
               </p>
             </div>
           </div>
@@ -67,7 +76,7 @@ export const VaultCard = (props) => {
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
               <p className="font-bold ">
-                {props.privacy}
+                {privacy}
               </p>
             </div>
             <div>

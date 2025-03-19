@@ -7,10 +7,11 @@ import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 import { Launch } from '@/components/vaults/steps/Launch';
-
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
+
+import { VaultsApiProvider } from '@/services/api/vaults';
 
 import { transformZodErrorsIntoObject } from '@/utils/core.utils';
 
@@ -21,14 +22,29 @@ import {
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
-import { VaultsApiProvider } from '@/services/api/vaults';
 
-export const CreateVaultForm = () => {
+export const CreateVaultForm = ({ draftId }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
+
+  useEffect(() => {
+    const loadDraftData = async () => {
+      if (draftId) {
+        try {
+          const { data } = await VaultsApiProvider.getVault(draftId);
+          setVaultData(data);
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          toast.error('Failed to load draft data');
+        }
+      }
+    };
+
+    loadDraftData();
+  }, [draftId]);
 
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
@@ -169,7 +185,7 @@ export const CreateVaultForm = () => {
   };
 
   const renderButtons = () => {
-    if(currentStep === 5) {
+    if (currentStep === 5) {
       return (
         <PrimaryButton className="uppercase" onClick={onSubmit}>
           Confirm & launch
@@ -180,7 +196,7 @@ export const CreateVaultForm = () => {
       <>
         {currentStep > 1 && (
           <SecondaryButton onClick={handlePreviousStep}>
-            <ChevronLeft size={24}/>
+            <ChevronLeft size={24} />
           </SecondaryButton>
         )}
         <SecondaryButton
@@ -190,7 +206,7 @@ export const CreateVaultForm = () => {
           Save for later
         </SecondaryButton>
         <PrimaryButton onClick={handleNextStep}>
-          <ChevronRight size={24}/>
+          <ChevronRight size={24} />
         </PrimaryButton>
       </>
     );
@@ -201,12 +217,10 @@ export const CreateVaultForm = () => {
   }, []);
 
   useEffect(() => {
-    if(vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
+    if (vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
       updateValuationType('lbe');
     }
   }, [vaultData.privacy, updateValuationType]);
-
-  console.log(vaultData.contributionOpenWindowTime);
 
   return (
     <div className="pb-10">

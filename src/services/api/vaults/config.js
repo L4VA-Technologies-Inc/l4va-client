@@ -22,4 +22,8 @@ export class VaultsConfigProvider {
   static saveDraft() {
     return '/api/v1/vaults/save-draft';
   }
+
+  static getVault(id) {
+    return `/api/v1/vaults/${id}`;
+  }
 }

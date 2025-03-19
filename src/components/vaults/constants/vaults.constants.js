@@ -6,6 +6,10 @@ export const VAULT_PRIVACY_TYPES = {
   SEMI_PRIVATE: 'semi-private',
 };
 
+export const VAULT_STATUSES = {
+  DRAFT: 'draft',
+}
+
 export const CREATE_VAULT_STEPS = [
   {
     id: 1, title: 'Configure Vault', status: 'in progress', hasErrors: false,
