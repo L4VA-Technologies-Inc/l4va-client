@@ -57,7 +57,14 @@ body {
   background: linear-gradient(135deg, #ff9d4c 0%, #ffba59 100%);
 }
 
+.bg-orange-gradient {
+  @apply bg-gradient-to-r from-[#FF842C] to-[#FFD012];
+}
+
+.text-orange-gradient {
+  @apply bg-gradient-to-r from-[#FF842C] to-[#FFD012] bg-clip-text text-transparent;
+}
+
 button {
   cursor: pointer;
 }
-

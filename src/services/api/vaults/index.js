@@ -25,6 +25,21 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async getMyDraftVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getMyDraftVaults());
+    return response;
+  }
+
+  static async getMyOpenVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getMyOpenVaults());
+    return response;
+  }
+
+  static async getMyLockedVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getMyLockedVaults());
+    return response;
+  }
+
   static async saveDraft(vaultData) {
     const formatted = formatVaultData(vaultData);
     const response = await axiosInstance.post(

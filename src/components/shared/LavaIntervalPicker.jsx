@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-export const LavaIntervalPicker = ({ value = 0, onChange }) => {
+export const LavaIntervalPicker = ({ value = 0, onChange = () => {} }) => {
   const [interval, setInterval] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
 
@@ -22,13 +22,13 @@ export const LavaIntervalPicker = ({ value = 0, onChange }) => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
-  const handleIntervalChange = (type, value) => {
+  const handleIntervalChange = (type, val) => {
     const newInterval = {
       ...interval,
-      [type]: Number.parseInt(value, 10),
+      [type]: Number.parseInt(val, 10),
     };
     setInterval(newInterval);
-    onChange?.(intervalToMs(newInterval));
+    onChange(intervalToMs(newInterval));
   };
 
   const formatInterval = () => {
