@@ -13,7 +13,7 @@ export const LavaWhitelistWithCaps = ({
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
     const newAssets = [...whitelist, {
-      id: '',
+      policyId: '',
       countCapMin: '',
       countCapMax: '',
       uniqueId: Date.now(),
@@ -59,8 +59,8 @@ export const LavaWhitelistWithCaps = ({
                 className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"
                 placeholder={itemPlaceholder}
                 style={{ fontSize: '20px' }}
-                value={asset.id}
-                onChange={(e) => updateAsset(asset.uniqueId, 'id', e.target.value)}
+                value={asset.policyId}
+                onChange={(e) => updateAsset(asset.uniqueId, 'policyId', e.target.value)}
               />
               <Button
                 className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
@@ -110,4 +110,4 @@ export const LavaWhitelistWithCaps = ({
       )}
     </div>
   );
-}; 
+};
