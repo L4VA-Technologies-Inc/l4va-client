@@ -96,7 +96,7 @@ export const initialVaultState = {
 
   // Step 2: Asset Contribution
   valuationType: 'lbe',
-  contributionOpenWindowType: 'launch',
+  contributionOpenWindowType: 'upon-vault-lunch',
   contributionOpenWindowTime: null,
   contributionDuration: 0,
   assetsWhitelist: [],
