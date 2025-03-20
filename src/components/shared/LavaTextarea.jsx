@@ -19,6 +19,7 @@ export const LavaTextarea = ({
       <textarea
         className={`
           resize-none py-4 pl-5 pr-5 text-lg font-medium w-full border border-dark-600 bg-input-bg rounded-[10px] ${minHeight}
+          focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200
           ${error ? 'border-main-red' : ''}
           ${className}
         `}
