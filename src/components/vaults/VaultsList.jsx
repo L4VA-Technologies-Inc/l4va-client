@@ -100,10 +100,12 @@ export const VaultsList = ({ isMyVaults = false }) => {
   }, [activeTab]);
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="font-russo text-[40px] uppercase mb-8">
-        My Vaults
-      </h1>
+    <div className="container mx-auto">
+      <div className="mb-8">
+        <h2 className="font-russo text-[40px] uppercase">
+          My Vaults
+        </h2>
+      </div>
       <div className="mb-8">
         <VaultTabs activeTab={activeTab} onTabChange={setActiveTab} />
       </div>

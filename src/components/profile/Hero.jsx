@@ -28,7 +28,7 @@ const BackgroundImage = ({ bgImage, onClick }) => (
             src={bgImage}
           />
           <div className="hover-overlay hover-overlay-gradient">
-            <div className="flex items-center gap-2 font-medium text-dark-100">
+            <div className="flex items-center gap-2 font-medium">
               <Camera size={20} />
               Replace photo
             </div>
@@ -43,7 +43,7 @@ const BackgroundImage = ({ bgImage, onClick }) => (
             backgroundPosition: 'center',
           }}
         >
-          <div className="flex items-center gap-2 font-medium transition-all duration-200 z-10 text-dark-100">
+          <div className="flex items-center gap-2 font-medium transition-all duration-200 z-10">
             <Camera size={20} />
             Add cover
           </div>
@@ -69,7 +69,7 @@ const ProfileAvatar = ({
         <>
           <AvatarImage alt="Profile" className="object-cover" src={avatar} />
           <div className="hover-overlay hover-overlay-gradient rounded-full">
-            <div className="flex items-center gap-2 font-medium text-dark-100">
+            <div className="flex items-center gap-2 font-medium">
               <Camera size={20} />
               Replace photo
             </div>
@@ -77,7 +77,7 @@ const ProfileAvatar = ({
         </>
       ) : (
         <AvatarFallback
-          className="flex flex-col items-center justify-center gap-2 text-dark-100"
+          className="flex flex-col items-center justify-center gap-2"
           style={{
             backgroundImage: 'url(/assets/avatar-bg-empty.webp)',
             backgroundSize: 'cover',
