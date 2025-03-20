@@ -24,7 +24,7 @@ export const Private = ({
       name: 'fixed',
       label: 'Fixed',
     },
-  ] : [ { name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
+  ] : [{ name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
 
   return (
     <div className="grid grid-cols-2">

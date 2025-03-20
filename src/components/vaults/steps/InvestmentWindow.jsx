@@ -53,6 +53,10 @@ export const InvestmentWindow = ({
         {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
           <div className="mb-[60px]">
             <LavaWhitelist
+              itemFieldName="walletAddress"
+              allowCsv
+              csvUrl={data.investorsWhiteListCsv}
+              setCsvUrl={(csvFileUrl) => updateField('investorsWhiteListCsv', csvFileUrl)}
               itemPlaceholder="Wallet address"
               label="Investor whitelist"
               setWhitelist={(assets) => updateField('investorWhitelist', assets)}
