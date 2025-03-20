@@ -167,7 +167,7 @@ export const Hero = () => {
         : { bannerImage: data.url };
 
       await CoreApiProvider.updateProfile(updateData);
-      await checkAuth(); // Refresh user data
+      await checkAuth();
 
       if (type === 'avatar') {
         setAvatar(data.url);

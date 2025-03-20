@@ -84,9 +84,12 @@ export const substringAddress = (address) => {
 };
 
 export const getDisplayName = (user) => {
-  const userAddress = user.address;
-  if(userAddress) {
-    return substringAddress(userAddress);
+  const { name, address } = user;
+  if (name) {
+    return name.length > 0 ? name : `${name.slice(0, 10)}...`;
+  }
+  if (address) {
+    return substringAddress(address);
   }
   return 'No name';
 };
@@ -108,5 +111,5 @@ export const msToInterval = (ms) => ({
   minutes: Math.floor((ms % MS_PER_HOUR) / MS_PER_MINUTE),
 });
 
-export const intervalToMs = ({ days, hours, minutes }) => 
+export const intervalToMs = ({ days, hours, minutes }) =>
   (days * MS_PER_DAY) + (hours * MS_PER_HOUR) + (minutes * MS_PER_MINUTE);

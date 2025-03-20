@@ -124,7 +124,7 @@ export const CreateVaultForm = ({ vault }) => {
     try {
       const { data } = await VaultsApiProvider.saveDraft(vaultData);
       updateField('id', data.id);
-      toast.success('Vault saved as draft');
+      toast.success('Vault saved as a draft');
     } catch (e) {
       console.log(e);
       toast.error('Failed saving draft');
