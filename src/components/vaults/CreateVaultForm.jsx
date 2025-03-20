@@ -221,6 +221,8 @@ export const CreateVaultForm = ({ vault }) => {
     }
   }, [vaultData.privacy, updateValuationType]);
 
+  console.log(errors);
+
   return (
     <div className="pb-10">
       <div className="relative flex items-center">

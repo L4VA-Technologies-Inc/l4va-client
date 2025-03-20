@@ -55,7 +55,7 @@ export const vaultSchema = z.object({
   contributionOpenWindowType: z.string(),
   contributionOpenWindowTime: z.any().optional(),
   assetsWhitelist: z.array(z.any()),
-  contributionDuration: z.number().optional(),
+  contributionDuration: z.string().optional(),
 
   // Step 3: Investment Window
   investmentWindowDuration: z.any().nullable(),
@@ -79,7 +79,19 @@ export const vaultSchema = z.object({
   // Programmed specific fields
   timeElapsedIsEqualToTime: z.any().nullable(),
   vaultAppreciation: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.contributionOpenWindowType === 'custom') {
+      return data.contributionOpenWindowTime !== null
+        && data.contributionOpenWindowTime !== undefined;
+    }
+    return true;
+  },
+  {
+    message: 'Contribution window time is required when type is custom',
+    path: ['contributionOpenWindowTime'],
+  },
+);
 
 export const initialVaultState = {
   // Step 1: Configure Vault
@@ -88,15 +100,15 @@ export const initialVaultState = {
   privacy: 'public',
   ftTokenTicker: '',
   description: '',
-  vaultImage: null,
-  bannerImage: null,
+  vaultImage: '',
+  bannerImage: '',
   socialLinks: [],
 
   // Step 2: Asset Contribution
   valuationType: 'lbe',
   contributionOpenWindowType: 'upon-vault-lunch',
   contributionOpenWindowTime: null,
-  contributionDuration: 0,
+  contributionDuration: '',
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
@@ -104,24 +116,24 @@ export const initialVaultState = {
   investmentWindowDuration: null,
   investmentOpenWindowType: 'upon-asset-window-closing',
   investmentOpenWindowTime: null,
-  offAssetsOffered: 0,
-  ftInvestmentReserve: 0,
-  liquidityPoolContribution: 0,
+  offAssetsOffered: '',
+  ftInvestmentReserve: '',
+  liquidityPoolContribution: '',
 
   // Step 4: Governance
-  ftTokenSupply: 1000000000,
-  ftTokenDecimals: 2,
-  ftTokenImg: null,
+  ftTokenSupply: '1000000000',
+  ftTokenDecimals: '2',
+  ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
-  creationThreshold: 0,
-  startThreshold: 0,
-  voteThreshold: 0,
-  executionThreshold: 0,
-  cosigningThreshold: 0,
+  creationThreshold: '',
+  startThreshold: '',
+  voteThreshold: '',
+  executionThreshold: '',
+  cosigningThreshold: '',
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
-  vaultAppreciation: 0,
+  vaultAppreciation: '',
 };
 
 // export const stepFields = {

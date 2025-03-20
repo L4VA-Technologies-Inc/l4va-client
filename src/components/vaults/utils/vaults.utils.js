@@ -23,6 +23,8 @@ export const formatVaultData = (vaultData) => {
       } else {
         formattedData[field] = parseFloat(formattedData[field]);
       }
+    } else {
+      formattedData[field] = 0;
     }
   });
 
@@ -34,13 +36,6 @@ export const formatVaultData = (vaultData) => {
   if (formattedData.investmentOpenWindowTime) {
     formattedData.investmentOpenWindowTime = new Date(formattedData.investmentOpenWindowTime).getTime();
   }
-
-  // Remove empty optional fields
-  Object.keys(formattedData).forEach(key => {
-    if (formattedData[key] === '' || formattedData[key] === null) {
-      delete formattedData[key];
-    }
-  });
 
   return formattedData;
 };
