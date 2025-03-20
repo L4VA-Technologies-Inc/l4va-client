@@ -29,7 +29,7 @@ export const Public = ({
       </div>
       <div className="mt-[60px]">
         <LavaRadio
-          label="*Contribution window open time"
+          label="*Contribution window open type"
           name="contributionOpenWindowType"
           options={[
             {
@@ -63,7 +63,6 @@ export const Public = ({
     <div className="px-[36px]">
       <div>
         <LavaWhitelistWithCaps
-          required
           label="Asset Whitelist"
           setWhitelist={(assets) => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}

@@ -134,7 +134,7 @@ export const initialVaultState = {
 
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
-  2: [],
+  2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
   3: [],
   4: [],
   5: [],

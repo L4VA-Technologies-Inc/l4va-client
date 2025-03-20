@@ -257,7 +257,10 @@ export const CreateVaultForm = ({ vault }) => {
             </button>
             {index < steps.length - 1 && (
               <div
-                className={`absolute top-[25%] left-[calc(50%+55px)] w-[124px] h-[3px] ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}`}
+                className={
+                  `absolute top-[25%] left-[calc(50%+55px)] w-[124px] h-[3px] 
+                  ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}
+                `}
                 style={{ transform: 'translateX(0)' }}
               />
             )}
