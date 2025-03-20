@@ -67,6 +67,7 @@ export const ConfigureVault = ({
 
         <div className="mt-[60px]">
           <LavaInput
+            required
             error={errors.ftTokenTicker}
             label="Fractional Token (FT) Ticker"
             maxLength={6}
@@ -76,7 +77,6 @@ export const ConfigureVault = ({
             onChange={handleChange}
           />
         </div>
-
         <div className="mt-[60px]">
           <LavaTextarea
             error={errors.description}
