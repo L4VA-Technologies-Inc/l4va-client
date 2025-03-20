@@ -50,5 +50,3 @@ export const socialPlatforms = [
     placeholder: 'https://',
   },
 ];
-
-export const getPlatformById = (platformId) => socialPlatforms.find((platform) => platform.id === platformId);

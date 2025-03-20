@@ -1,6 +1,8 @@
-import { X } from 'lucide-react';
+import { X, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import toast from 'react-hot-toast';
+import { CoreApiProvider } from '@/services/api/core';
 
 export const LavaWhitelist = ({
   required = true,
@@ -9,6 +11,7 @@ export const LavaWhitelist = ({
   whitelist = [],
   setWhitelist,
   maxItems = 10,
+  allowCsv = true,
 }) => {
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
@@ -31,23 +34,72 @@ export const LavaWhitelist = ({
     setWhitelist(filteredAssets);
   };
 
+  const handleCsvUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'text/csv') {
+      toast.error('Please upload a CSV file');
+      return;
+    }
+
+    try {
+      const { data } = await CoreApiProvider.handleCsv(file);
+      const newAssets = data.policyIds.map(policyId => ({
+        policyId,
+        id: Date.now() + Math.random(),
+      }));
+
+      const totalItems = whitelist.length + newAssets.length;
+      if (totalItems > maxItems) {
+        toast.error(`Cannot add more than ${maxItems} items`);
+        return;
+      }
+
+      setWhitelist([...whitelist, ...newAssets]);
+      toast.success('CSV file processed successfully');
+    } catch (error) {
+      console.error('CSV upload error:', error);
+      toast.error('Failed to process CSV file');
+    }
+
+    // Clear the input
+    event.target.value = '';
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase text-[20px] font-bold">
           {required ? '*' : ''}{label}
         </div>
-        <button
-          className={`border-2 border-white/20 rounded-lg p-2 ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={whitelist.length >= maxItems}
-          type="button"
-          onClick={addNewAsset}
-        >
-          <img
-            alt="add-icon"
-            src="/assets/icons/plus.svg"
-          />
-        </button>
+        <div className="flex gap-2">
+          {allowCsv && (
+            <>
+              <input
+                accept=".csv"
+                className="hidden"
+                id="csv-upload"
+                type="file"
+                onChange={handleCsvUpload}
+              />
+              <label
+                className={`border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
+                htmlFor="csv-upload"
+              >
+                <Upload className="w-4 h-4" />
+              </label>
+            </>
+          )}
+          <button
+            className={`border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center hover:bg-white/5 transition-colors ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={whitelist.length >= maxItems}
+            type="button"
+            onClick={addNewAsset}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <div className="space-y-4">
         {whitelist.map((asset) => (
@@ -72,7 +124,7 @@ export const LavaWhitelist = ({
       </div>
       {whitelist.length === 0 && (
         <div className="text-dark-100 text-base my-4">
-          No items. Click the + button to add one.
+          No items. Click the + button to add one {allowCsv ? 'or upload a CSV file' : ''}.
         </div>
       )}
       {whitelist.length >= maxItems && (

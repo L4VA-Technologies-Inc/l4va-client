@@ -27,7 +27,7 @@ export const ProfileModal = ({
             type="button"
             onClick={onClose}
           >
-            <X className="w-4 h-4" size={20}/>
+            <X className="w-4 h-4" size={20} />
           </button>
         </div>
         <div className="p-4 rounded-b-[10px]">
@@ -42,7 +42,7 @@ export const ProfileModal = ({
             </Link>
             <Link
               className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-[#2D3049]"
-              to="/vaults"
+              to="/vaults/my"
               onClick={onClose}
             >
               My vaults

@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom';
 
 import { CreateVault } from './CreateVault';
 import { VaultProfile } from './VaultProfile';
+
 import { Spinner } from '@/components/Spinner';
 
 import { VaultsApiProvider } from '@/services/api/vaults';

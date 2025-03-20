@@ -46,7 +46,7 @@ const LoadingState = () => (
 );
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400">
+  <div className="flex flex-col items-center justify-center min-h-[400px] text-dark-100">
     <p className="text-xl">
       No vaults found
     </p>
@@ -62,7 +62,7 @@ const EmptyState = () => (
   </div>
 );
 
-export const Vaults = () => {
+export const VaultsList = ({ isMyVaults = false }) => {
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [vaults, setVaults] = useState([]);
   const [loading, setLoading] = useState(false);

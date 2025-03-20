@@ -8,7 +8,7 @@ export const SearchInput = () => (
         h-[60px] pl-[20px] pr-12
         bg-white/5 backdrop-blur-sm
         border-2 border-white/5
-        text-dark-100 placeholder:text-gray-400
+        text-dark-100 placeholder:text-dark-100
         rounded-[10px]
         focus-visible:border-white/20
         focus-visible:ring-0

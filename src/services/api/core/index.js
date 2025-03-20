@@ -35,4 +35,20 @@ export class CoreApiProvider {
     );
     return response;
   }
+
+  static async handleCsv(file) {
+    const formData = new FormData();
+    formData.append('csv', file);
+
+    const response = await axiosInstance.post(
+      CoreConfigProvider.handleCsv(),
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+    return response;
+  }
 }

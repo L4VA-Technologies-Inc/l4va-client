@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,10 +63,7 @@ export const LavaSocialLinks = ({
           type="button"
           onClick={addNewLink}
         >
-          <img
-            alt="add-icon"
-            src="/assets/icons/plus.svg"
-          />
+          <Plus className="h-4 w-4" />
         </button>
       </div>
 
@@ -151,7 +148,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             <SocialPlatformIcon
               className="text-white"
               platformId={link.name}
-              size={16}
+              size={20}
             />
             <span className="text-[20px]">
               {link.url}

@@ -1,6 +1,6 @@
 export const VaultProfile = ({ vault }) => (
-  <>
-    <div className="flex justify-center pt-20 pb-8">
+  <div className="min-h-screen">
+    <div className="flex justify-center py-8">
       <span className="font-russo text-[40px] uppercase">
         {vault.name}
       </span>
@@ -27,5 +27,5 @@ export const VaultProfile = ({ vault }) => (
         </div>
       </div>
     </div>
-  </>
+  </div>
 );

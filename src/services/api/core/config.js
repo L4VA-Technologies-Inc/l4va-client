@@ -14,4 +14,8 @@ export class CoreConfigProvider {
   static uploadImage() {
     return '/api/v1/upload';
   }
+
+  static handleCsv() {
+    return '/api/v1/handle-csv';
+  }
 }

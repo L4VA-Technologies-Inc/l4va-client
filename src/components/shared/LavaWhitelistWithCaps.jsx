@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -45,10 +45,7 @@ export const LavaWhitelistWithCaps = ({
           type="button"
           onClick={addNewAsset}
         >
-          <img
-            alt="add-icon"
-            src="/assets/icons/plus.svg"
-          />
+          <Plus className="h-4 w-4" />
         </button>
       </div>
       <div className="space-y-4">

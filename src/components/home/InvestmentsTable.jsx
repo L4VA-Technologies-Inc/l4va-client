@@ -59,34 +59,34 @@ export const InvestmentsTable = () => {
 
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-gray-400">Invested</span>
+          <span className="text-dark-100">Invested</span>
           <span>{formatAmount(investment.investedAmount)} {investment.investedCurrency}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">Value</span>
+          <span className="text-dark-100">Value</span>
           <span className="bg-green-900/20 text-green-500 py-1 px-4 rounded-full">
             +10.00%
           </span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">Asset TVL</span>
+          <span className="text-dark-100">Asset TVL</span>
           <span>{formatAmount(investment.totalValueLocked)} {investment.tvlCurrency}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">Time Left</span>
+          <span className="text-dark-100">Time Left</span>
           <span>{formatDeadline(investment.deadline)}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">Access</span>
+          <span className="text-dark-100">Access</span>
           <span>{capitalizeFirst(investment.accessType)}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">Status</span>
+          <span className="text-dark-100">Status</span>
           <span>{getButtonText(investment.currentStatus)}</span>
         </div>
       </div>
