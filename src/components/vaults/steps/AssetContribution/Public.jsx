@@ -63,6 +63,7 @@ export const Public = ({
     <div className="px-[36px]">
       <div>
         <LavaWhitelistWithCaps
+          required
           label="Asset Whitelist"
           setWhitelist={(assets) => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}

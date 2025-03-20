@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export const LavaWhitelistWithCaps = ({
-  required = true,
+  required = false,
   label = 'Asset whitelist',
   itemPlaceholder = 'Enter Policy ID',
   whitelist = [],

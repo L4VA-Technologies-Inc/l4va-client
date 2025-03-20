@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { VaultsApiProvider } from '@/services/api/vaults';
+
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
@@ -11,8 +13,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 
-import { VaultsApiProvider } from '@/services/api/vaults';
-
+import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformZodErrorsIntoObject } from '@/utils/core.utils';
 
 import {
@@ -84,18 +85,25 @@ export const CreateVaultForm = ({ vault }) => {
     [fieldName]: value,
   });
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (currentStep < steps.length) {
       handleNextStep();
     } else {
       try {
         const validatedData = vaultSchema.parse(vaultData);
-        console.log('Form data is valid, submitting:', validatedData);
+        const formattedData = formatVaultData(validatedData);
+
+        console.log('Form data is valid, submitting:', formattedData);
         setErrors({});
+
+        // TODO: Add API call to submit the vault
+        // const response = await VaultsApiProvider.submitVault(formattedData);
+        // toast.success('Vault submitted successfully');
       } catch (e) {
         const formattedErrors = transformZodErrorsIntoObject(e);
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);
+        toast.error('Please fix the validation errors before submitting');
       }
     }
   };
@@ -122,7 +130,8 @@ export const CreateVaultForm = ({ vault }) => {
 
   const saveDraft = async () => {
     try {
-      const { data } = await VaultsApiProvider.saveDraft(vaultData);
+      const formattedData = formatVaultData(vaultData);
+      const { data } = await VaultsApiProvider.saveDraft(formattedData);
       updateField('id', data.id);
       toast.success('Vault saved as a draft');
     } catch (e) {
