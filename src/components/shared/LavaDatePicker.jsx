@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format, formatISO } from 'date-fns';
 
@@ -12,24 +12,34 @@ import {
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
+export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dateValue, setDateValue] = useState(null);
+
+  useEffect(() => {
+    if (value) {
+      const date = typeof value === 'number' ? new Date(value) : value;
+      setDateValue(date);
+    } else {
+      setDateValue(null);
+    }
+  }, [value]);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  
+
   const handleDateSelect = (selectedDate) => {
     if (selectedDate) {
-      if (value) {
-        selectedDate.setHours(value.getHours());
-        selectedDate.setMinutes(value.getMinutes());
+      if (dateValue) {
+        selectedDate.setHours(dateValue.getHours());
+        selectedDate.setMinutes(dateValue.getMinutes());
       }
       onChange(selectedDate);
     }
   };
 
   const handleTimeChange = (type, val) => {
-    if (value) {
-      const newDate = new Date(value);
+    if (dateValue) {
+      const newDate = new Date(dateValue);
       if (type === 'hour') {
         newDate.setHours(
           (Number.parseInt(val, 10) % 12) + (newDate.getHours() >= 12 ? 12 : 0),
@@ -63,12 +73,12 @@ export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
           <Button
             className={cn(
               'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
-              !value && 'text-muted-foreground',
+              !dateValue && 'text-muted-foreground',
             )}
             variant="outline"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? formatDateTime(value) : (
+            {dateValue ? formatDateTime(dateValue) : (
               <span className="text-white/60">Select date</span>
             )}
           </Button>
@@ -79,7 +89,7 @@ export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
               initialFocus
               className="bg-input-bg rounded-[10px]"
               mode="single"
-              selected={value}
+              selected={dateValue}
               onSelect={handleDateSelect}
               disabled={(date) => {
                 const minimumDate = minDate || new Date(new Date().setHours(0, 0, 0, 0));
@@ -95,7 +105,7 @@ export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
                       className="sm:w-full shrink-0 aspect-square"
                       size="icon"
                       variant={
-                        value && value.getHours() % 12 === hour % 12
+                        dateValue && dateValue.getHours() % 12 === hour % 12
                           ? 'default'
                           : 'ghost'
                       }
@@ -115,7 +125,7 @@ export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
                       className="sm:w-full shrink-0 aspect-square"
                       size="icon"
                       variant={
-                        value && value.getMinutes() === minute
+                        dateValue && dateValue.getMinutes() === minute
                           ? 'default'
                           : 'ghost'
                       }
@@ -136,9 +146,9 @@ export const LavaDatePicker = ({ value, onChange = () => {}, minDate }) => {
                       className="sm:w-full shrink-0 aspect-square"
                       size="icon"
                       variant={
-                        value
-                          && ((ampm === 'AM' && value.getHours() < 12)
-                            || (ampm === 'PM' && value.getHours() >= 12))
+                        dateValue
+                          && ((ampm === 'AM' && dateValue.getHours() < 12)
+                            || (ampm === 'PM' && dateValue.getHours() >= 12))
                           ? 'default'
                           : 'ghost'
                       }

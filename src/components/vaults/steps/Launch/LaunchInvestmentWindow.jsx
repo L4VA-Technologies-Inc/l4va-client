@@ -32,7 +32,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
                 Investor whitelist
               </p>
               <p className="text-[20px]">
-                {data.investorWhitelist?.length ? `${data.investorWhitelist.length} investors` : 'No investors whitelisted'}
+                {data.investorsWhitelist?.length ? `${data.investorsWhitelist.length} investors` : 'No investors whitelisted'}
               </p>
             </div>
           )}

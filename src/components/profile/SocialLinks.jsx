@@ -141,7 +141,9 @@ export const SocialLinks = () => {
               </SelectContent>
             </Select>
             <Input
-              className={`py-4 pl-5 text-[20px] border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
+              className={
+                `py-4 pl-5 text-[20px] border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`
+              }
               placeholder={getPlaceholderForPlatform(editingLink.name)}
               style={{ fontSize: '20px' }}
               value={editingLink.url}
@@ -149,7 +151,10 @@ export const SocialLinks = () => {
             />
             <div className="flex gap-2">
               <Button
-                className={`h-8 w-8 rounded-full ${!editingLink.url.trim() ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                className={
+                  `h-8 w-8 rounded-full 
+                  ${!editingLink.url.trim() ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`
+                }
                 disabled={!editingLink.url.trim()}
                 size="icon"
                 onClick={handleSave}

@@ -59,12 +59,12 @@ export const InvestmentWindow = ({
               setCsvUrl={(csvFileUrl) => updateField('investorsWhiteListCsv', csvFileUrl)}
               itemPlaceholder="Wallet address"
               label="Investor whitelist"
-              setWhitelist={(assets) => updateField('investorWhitelist', assets)}
-              whitelist={data.investorWhitelist || []}
+              setWhitelist={(assets) => updateField('investorsWhitelist', assets)}
+              whitelist={data.investorsWhitelist || []}
             />
-            {errors.investorWhitelist && (
+            {errors.investorsWhitelist && (
               <p className="text-main-red mt-1">
-                {errors.investorWhitelist}
+                {errors.investorsWhitelist}
               </p>
             )}
           </div>
