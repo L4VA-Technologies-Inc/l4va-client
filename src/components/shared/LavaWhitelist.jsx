@@ -1,7 +1,8 @@
 import { X, Plus, Upload } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import toast from 'react-hot-toast';
 import { CoreApiProvider } from '@/services/api/core';
 
 export const LavaWhitelist = ({
@@ -13,9 +14,11 @@ export const LavaWhitelist = ({
   setWhitelist,
   maxItems = 10,
   allowCsv = false,
+  csvData,
   csvUrl,
   setCsvUrl,
 }) => {
+  const [csvName, setCsvName] = useState(csvData?.fileName || '');
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
     const newAssets = [...whitelist, {
@@ -50,18 +53,20 @@ export const LavaWhitelist = ({
       const { data } = await CoreApiProvider.handleCsv(file);
       if (setCsvUrl) {
         setCsvUrl(data.url);
+        setCsvName(data.fileName);
       }
       toast.success('CSV file processed successfully');
     } catch (error) {
       console.error('CSV upload error:', error);
       toast.error('Failed to process CSV file');
     }
-
-    // Clear the input
     event.target.value = '';
   };
 
-  const handleRemoveCsv = () => setCsvUrl(null);
+  const handleRemoveCsv = () => {
+    setCsvUrl(null);
+    setCsvName(null);
+  };
 
   return (
     <div className="w-full">
@@ -97,9 +102,9 @@ export const LavaWhitelist = ({
           </button>
         </div>
       </div>
-      {csvUrl && (
+      {csvName && (
         <div className="flex items-center justify-between mb-4 p-3 bg-input-bg border-dark-600 rounded-[10px]">
-          <span className="text-[20px]">{csvUrl}</span>
+          <span className="text-[20px]">{csvName}</span>
           <Button
             className="h-8 w-8 rounded-full"
             size="icon"
