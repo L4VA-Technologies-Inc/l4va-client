@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Edit, Check } from 'lucide-react';
+import {
+  Plus, X, Edit, Check,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +19,11 @@ import { useAuth } from '@/context/auth';
 
 const MAX_LINKS = 5;
 
-export const SocialLinks = () => {
-  const { user, checkAuth } = useAuth();
+export const ProfileSocialLinks = () => {
+  const { user } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
   const [socialLinks, setSocialLinks] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [editingLink, setEditingLink] = useState({
     name: SOCIAL_PLATFORMS.FACEBOOK,
     url: '',
@@ -28,44 +31,12 @@ export const SocialLinks = () => {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    if (user?.socialLinks) {
+    if (user && Array.isArray(user.socialLinks)) {
       setSocialLinks(user.socialLinks);
     }
   }, [user]);
 
-  const handleSave = async () => {
-    if (!editingLink.url.trim()) {
-      return;
-    }
-
-    try {
-      let newLinks;
-      if (editingId) {
-        // Editing existing link
-        newLinks = socialLinks.map(link =>
-          link.id === editingId ? { ...editingLink, id: editingId } : link
-        );
-      } else {
-        // Adding new link
-        newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
-      }
-
-      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
-      await checkAuth(); // Refresh user data
-      setIsAdding(false);
-      setEditingId(null);
-      setEditingLink({
-        name: SOCIAL_PLATFORMS.FACEBOOK,
-        url: '',
-      });
-      toast.success('Social links updated successfully');
-    } catch (error) {
-      console.error('Update error:', error);
-      toast.error('Failed to update social links');
-    }
-  };
-
-  const handleCancel = () => {
+  const resetEditState = () => {
     setIsAdding(false);
     setEditingId(null);
     setEditingLink({
@@ -74,27 +45,67 @@ export const SocialLinks = () => {
     });
   };
 
+  const handleSave = async () => {
+    if (!editingLink.url.trim()) {
+      toast.error('URL cannot be empty');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let newLinks;
+
+      if (editingId) {
+        newLinks = socialLinks.map(link =>
+          link.id === editingId ? { ...editingLink, id: editingId } : link,
+        );
+      } else {
+        newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
+      }
+
+      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
+      setSocialLinks(newLinks);
+      resetEditState();
+      toast.success(editingId ? 'Social link updated successfully' : 'Social link added successfully');
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Failed to save social link');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleEdit = (link) => {
     setEditingId(link.id);
-    setEditingLink(link);
+    setEditingLink({ ...link });
     setIsAdding(true);
   };
 
   const handleDelete = async (id) => {
+    setIsLoading(true);
+
     try {
       const newLinks = socialLinks.filter(link => link.id !== id);
       await CoreApiProvider.updateProfile({ socialLinks: newLinks });
-      await checkAuth(); // Refresh user data
+      setSocialLinks(newLinks);
       toast.success('Social link removed successfully');
     } catch (error) {
       console.error('Delete error:', error);
       toast.error('Failed to remove social link');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getPlaceholderForPlatform = (platformId) => {
     const platform = socialPlatforms.find(p => p.id === platformId);
-    return platform ? platform.placeholder : '';
+    return platform ? platform.placeholder : 'Enter URL';
+  };
+
+  const formatUrl = (url) => {
+    if (!url) return '';
+    return url.startsWith('http') ? url : `https://${url}`;
   };
 
   return (
@@ -106,6 +117,8 @@ export const SocialLinks = () => {
         {socialLinks.length < MAX_LINKS && !isAdding && (
           <button
             className="border-2 border-white/20 rounded-[10px] p-2"
+            disabled={isLoading}
+            type="button"
             onClick={() => setIsAdding(true)}
           >
             <Plus className="h-4 w-4" />
@@ -117,6 +130,7 @@ export const SocialLinks = () => {
         <div className="flex flex-col rounded-lg bg-input-bg border border-dark-600 mb-4">
           <div className="flex items-center gap-2 p-3">
             <Select
+              disabled={isLoading}
               value={editingLink.name}
               onValueChange={(value) => setEditingLink({ ...editingLink, name: value })}
             >
@@ -144,6 +158,7 @@ export const SocialLinks = () => {
               className={
                 `py-4 pl-5 text-[20px] border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`
               }
+              disabled={isLoading}
               placeholder={getPlaceholderForPlatform(editingLink.name)}
               style={{ fontSize: '20px' }}
               value={editingLink.url}
@@ -153,9 +168,11 @@ export const SocialLinks = () => {
               <Button
                 className={
                   `h-8 w-8 rounded-full 
-                  ${!editingLink.url.trim() ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`
+                  ${!editingLink.url.trim() || isLoading
+          ? 'bg-gray-600 cursor-not-allowed'
+          : 'bg-green-600 hover:bg-green-700'}`
                 }
-                disabled={!editingLink.url.trim()}
+                disabled={!editingLink.url.trim() || isLoading}
                 size="icon"
                 onClick={handleSave}
               >
@@ -163,8 +180,9 @@ export const SocialLinks = () => {
               </Button>
               <Button
                 className="h-8 w-8 rounded-full bg-red-600 hover:bg-red-700"
+                disabled={isLoading}
                 size="icon"
-                onClick={handleCancel}
+                onClick={resetEditState}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -183,7 +201,7 @@ export const SocialLinks = () => {
             />
             <a
               className="text-[20px] hover:text-main-red transition-colors"
-              href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+              href={formatUrl(link.url)}
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -192,6 +210,7 @@ export const SocialLinks = () => {
             <div className="flex gap-2 ml-auto">
               <Button
                 className="h-8 w-8 rounded-full"
+                disabled={isLoading || isAdding}
                 size="icon"
                 variant="ghost"
                 onClick={() => handleEdit(link)}
@@ -200,6 +219,7 @@ export const SocialLinks = () => {
               </Button>
               <Button
                 className="h-8 w-8 rounded-full"
+                disabled={isLoading}
                 size="icon"
                 variant="ghost"
                 onClick={() => handleDelete(link.id)}
