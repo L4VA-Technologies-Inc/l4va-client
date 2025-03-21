@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  Plus, X, Edit, Check,
+  Plus, X, Edit, Check, Trash,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -116,7 +115,7 @@ export const ProfileSocialLinks = () => {
         </h2>
         {socialLinks.length < MAX_LINKS && !isAdding && (
           <button
-            className="border-2 border-white/20 rounded-[10px] p-2"
+            className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
             disabled={isLoading}
             type="button"
             onClick={() => setIsAdding(true)}
@@ -142,7 +141,7 @@ export const ProfileSocialLinks = () => {
                   <SelectItem key={platform.id} className="hover:bg-white/5" value={platform.id}>
                     <div className="flex items-center gap-2">
                       <SocialPlatformIcon
-                        className="text-white"
+                        className="text-dark-100"
                         platformId={platform.id}
                         size={20}
                       />
@@ -154,38 +153,38 @@ export const ProfileSocialLinks = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              className={
-                `py-4 pl-5 text-[20px] border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`
-              }
-              disabled={isLoading}
-              placeholder={getPlaceholderForPlatform(editingLink.name)}
-              style={{ fontSize: '20px' }}
-              value={editingLink.url}
-              onChange={(e) => setEditingLink({ ...editingLink, url: e.target.value })}
-            />
-            <div className="flex gap-2">
-              <Button
+            <div className="flex-1 relative">
+              <Input
                 className={
-                  `h-8 w-8 rounded-full 
-                  ${!editingLink.url.trim() || isLoading
-          ? 'bg-gray-600 cursor-not-allowed'
-          : 'bg-green-600 hover:bg-green-700'}`
+                  `py-4 pl-5 pr-24 text-[20px] bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`
                 }
-                disabled={!editingLink.url.trim() || isLoading}
-                size="icon"
-                onClick={handleSave}
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                className="h-8 w-8 rounded-full bg-red-600 hover:bg-red-700"
                 disabled={isLoading}
-                size="icon"
-                onClick={resetEditState}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+                placeholder={getPlaceholderForPlatform(editingLink.name)}
+                style={{ fontSize: '20px' }}
+                value={editingLink.url}
+                onChange={(e) => setEditingLink({ ...editingLink, url: e.target.value })}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                <button
+                  className={
+                    `p-2 rounded-full transition-colors
+                    ${!editingLink.url.trim() || isLoading
+                      ? 'text-gray-600 cursor-not-allowed'
+                      : 'text-dark-100 hover:bg-white/10'}`
+                  }
+                  disabled={!editingLink.url.trim() || isLoading}
+                  onClick={handleSave}
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
+                  disabled={isLoading}
+                  onClick={resetEditState}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -193,9 +192,9 @@ export const ProfileSocialLinks = () => {
 
       <div className="space-y-4">
         {socialLinks.map((link) => (
-          <div key={link.id} className="flex items-center gap-2">
+          <div key={link.id} className="flex items-center gap-2 group">
             <SocialPlatformIcon
-              className="text-white"
+              className="text-dark-100"
               platformId={link.name}
               size={20}
             />
@@ -207,25 +206,21 @@ export const ProfileSocialLinks = () => {
             >
               {link.url}
             </a>
-            <div className="flex gap-2 ml-auto">
-              <Button
-                className="h-8 w-8 rounded-full"
+            <div className="flex gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                 disabled={isLoading || isAdding}
-                size="icon"
-                variant="ghost"
                 onClick={() => handleEdit(link)}
               >
                 <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                className="h-8 w-8 rounded-full"
+              </button>
+              <button
+                className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                 disabled={isLoading}
-                size="icon"
-                variant="ghost"
                 onClick={() => handleDelete(link.id)}
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <Trash className="h-4 w-4" />
+              </button>
             </div>
           </div>
         ))}

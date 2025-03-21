@@ -232,7 +232,7 @@ export const Hero = () => {
   };
 
   return (
-    <div className="mb-[100px]">
+    <div className="mb-40">
       <h1 className="font-russo text-[40px] uppercase my-8 text-center">
         My Profile
       </h1>

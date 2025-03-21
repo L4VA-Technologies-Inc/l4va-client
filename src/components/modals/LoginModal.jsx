@@ -7,6 +7,8 @@ import { Spinner } from '@/components/Spinner';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 
+const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
+
 export const LoginModal = ({
   isOpen,
   onClose,
@@ -21,7 +23,10 @@ export const LoginModal = ({
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
 
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(() => {
+    const savedAcceptance = localStorage.getItem(TERMS_ACCEPTANCE_KEY);
+    return savedAcceptance === 'true';
+  });
 
   useEffect(() => {
     if (isConnected) {
@@ -30,6 +35,12 @@ export const LoginModal = ({
       setView('wallets');
     }
   }, [isConnected]);
+
+  const handleTermsAcceptance = () => {
+    const newValue = !isChecked;
+    setIsChecked(newValue);
+    localStorage.setItem(TERMS_ACCEPTANCE_KEY, newValue.toString());
+  };
 
   if (!isOpen) return null;
 
@@ -78,7 +89,7 @@ export const LoginModal = ({
             <>Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span></>
           )}
           name="terms"
-          onChange={() => setIsChecked(!isChecked)}
+          onChange={handleTermsAcceptance}
         />
       </div>
     </>
