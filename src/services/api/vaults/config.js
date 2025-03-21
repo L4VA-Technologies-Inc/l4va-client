@@ -12,11 +12,11 @@ export class VaultsConfigProvider {
   }
 
   static getMyOpenVaults() {
-    return '/api/v1/vaults/my/open';
+    return '/api/v1/vaults/my?filter=open';
   }
 
   static getMyLockedVaults() {
-    return '/api/v1/vaults/my/locked';
+    return '/api/v1/vaults/my?filter=locked';
   }
 
   static saveDraft() {
