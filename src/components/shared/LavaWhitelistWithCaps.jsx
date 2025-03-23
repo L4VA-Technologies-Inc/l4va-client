@@ -50,7 +50,7 @@ export const LavaWhitelistWithCaps = ({
       </div>
       <div className="space-y-4">
         {whitelist.map((asset) => (
-          <div key={asset.uniqueId} className="space-y-2">
+          <div key={asset.id || asset.uniqueId} className="space-y-2">
             <div className="relative">
               <Input
                 className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"

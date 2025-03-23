@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as yup from 'yup';
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
@@ -28,57 +28,135 @@ export const CREATE_VAULT_STEPS = [
   },
 ];
 
-const socialLinkSchema = z.object({
-  name: z.string(),
-  url: z.string().url(),
+const socialLinkSchema = yup.object({
+  name: yup.string().required('Name is required'),
+  url: yup.string().url('Invalid URL').required('URL is required'),
 });
 
-// Main vault schema
-export const vaultSchema = z.object({
+export const vaultSchema = yup.object({
   // Step 1: Configure Vault
-  name: z.string()
-    .min(3, { message: 'Vault name must be at least 3 characters' })
-    .max(50, { message: 'Vault name must be less than 50 characters' }),
-  type: z.string(),
-  privacy: z.string(),
-  ftTokenTicker: z.string()
-    .regex(/^[A-Z0-9]{1,10}$/, { message: 'Ticker must be 1-10 uppercase letters or numbers' })
+  name: yup.string()
+    .min(3, 'Vault name must be at least 3 characters')
+    .max(50, 'Vault name must be less than 50 characters')
+    .required('Vault name is required'),
+  type: yup.string()
+    .required('Type is required'),
+  privacy: yup.string()
+    .required('Privacy setting is required'),
+  ftTokenTicker: yup.string()
+    .matches(/^[A-Z0-9]{1,10}$/, 'Ticker must be 1-10 uppercase letters or numbers')
     .nullable(),
-  description: z.string()
-    .max(500, { message: 'Description must be less than 500 characters' })
+  description: yup.string()
+    .max(500, 'Description must be less than 500 characters')
     .optional(),
-  vaultImage: z.string().min(1, { message: 'Vault image is required' }),
-  socialLinks: z.array(socialLinkSchema),
+  vaultImage: yup.string()
+    .required('Vault image is required'),
+  socialLinks: yup.array().of(socialLinkSchema).default([]),
 
   // Step 2: Asset Contribution
-  valuationType: z.string(),
-  contributionOpenWindowType: z.string(),
-  contributionOpenWindowTime: z.any().optional(),
-  assetsWhitelist: z.array(z.any()),
-  contributionDuration: z.number().min(1, { message: 'Contribution duration is required' }),
+  valuationType: yup.string()
+    .required('Valuation type is required'),
+  contributionOpenWindowType: yup.string()
+    .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
+    .required('Contribution window type is required'),
+  contributionOpenWindowTime: yup.number()
+    .typeError('Time is required')
+    .when('contributionOpenWindowType', {
+      is: 'custom',
+      then: (schema) => schema
+        .required('Time is required for custom window type'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  assetsWhitelist: yup.array().default([]),
+  contributionDuration: yup.number()
+    .typeError('Duration is required')
+    .required('Duration is required'),
 
   // Step 3: Investment Window
-  investmentWindowDuration: z.any().nullable(),
-  investmentOpenWindowType: z.string(),
-  investmentOpenWindowTime: z.any().nullable(),
-  offAssetsOffered: z.string(),
-  ftInvestmentReserve: z.string(),
-  liquidityPoolContribution: z.string(),
+  investmentWindowDuration: yup.number()
+    .typeError('Investment window duration is required')
+    .required('Investment window duration is required'),
+  investmentOpenWindowType: yup.string()
+    .required('Investment window type is required'),
+  investmentOpenWindowTime: yup.mixed().nullable(),
+  offAssetsOffered: yup.number()
+    .typeError('Assets offered is required')
+    .required('Assets offered is required'),
+  ftInvestmentReserve: yup.number()
+    .typeError('Investment reserve is required')
+    .required('Investment reserve is required'),
+  liquidityPoolContribution: yup.number()
+    .typeError('Liquidity pool contribution is required')
+    .required('Liquidity pool contribution is required'),
 
   // Step 4: Governance
-  ftTokenSupply: z.string(),
-  ftTokenDecimals: z.string(),
-  ftTokenImg: z.string(),
-  terminationType: z.string(),
+  ftTokenSupply: yup.number()
+    .typeError('Token supply is required')
+    .required('Token supply is required')
+    .integer('Must be an integer')
+    .min(1, 'Must be greater than 0')
+    .max(100000000, 'Must be less than or equal to 100,000,000'),
+  ftTokenDecimals: yup.number()
+    .typeError('Token decimals is required')
+    .required('Token decimals is required')
+    .integer('Must be an integer')
+    .min(1, 'Must be at least 1')
+    .max(9, 'Must be at most 9'),
+  ftTokenImg: yup.string()
+    .required('Token image is required'),
+  terminationType: yup.string()
+    .required('Termination type is required'),
   // DAO specific fields
-  creationThreshold: z.string().optional(),
-  startThreshold: z.string().optional(),
-  voteThreshold: z.string().optional(),
-  executionThreshold: z.string().optional(),
-  cosigningThreshold: z.string().optional(),
+  creationThreshold: yup.number()
+    .typeError('Creation threshold is required')
+    .when('terminationType', {
+      is: 'dao',
+      then: (schema) => schema.required('Creation threshold is required for DAO termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  startThreshold: yup.number()
+    .typeError('Start threshold is required')
+    .when('terminationType', {
+      is: 'dao',
+      then: (schema) => schema.required('Start threshold is required for DAO termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  voteThreshold: yup.number()
+    .typeError('Vote threshold is required')
+    .when('terminationType', {
+      is: 'dao',
+      then: (schema) => schema.required('Vote threshold is required for DAO termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  executionThreshold: yup.number()
+    .typeError('Execution threshold is required')
+    .when('terminationType', {
+      is: 'dao',
+      then: (schema) => schema.required('Execution threshold is required for DAO termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  cosigningThreshold: yup.number()
+    .typeError('Cosigning threshold is required')
+    .when('terminationType', {
+      is: 'dao',
+      then: (schema) => schema.required('Cosigning threshold is required for DAO termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
   // Programmed specific fields
-  timeElapsedIsEqualToTime: z.any().nullable(),
-  vaultAppreciation: z.string().optional(),
+  timeElapsedIsEqualToTime: yup.number()
+    .typeError('Time elapsed is required')
+    .when('terminationType', {
+      is: 'programmed',
+      then: (schema) => schema.required('Time elapsed is required for programmed termination'),
+      otherwise: (schema) => schema.nullable()
+    }),
+  vaultAppreciation: yup.number()
+    .typeError('Vault appreciation is required')
+    .when('terminationType', {
+      is: 'programmed',
+      then: (schema) => schema.required('Vault appreciation is required for programmed termination'),
+      otherwise: (schema) => schema.optional()
+    })
 });
 
 export const initialVaultState = {
@@ -96,46 +174,39 @@ export const initialVaultState = {
   valuationType: 'lbe',
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
-  contributionDuration: 0,
+  contributionDuration: null,
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
   // Step 3: Investment Window
-  investmentWindowDuration: '',
+  investmentWindowDuration: null,
   investmentOpenWindowType: 'upon-asset-window-closing',
-  investmentOpenWindowTime: '',
-  offAssetsOffered: '',
-  ftInvestmentReserve: '',
-  liquidityPoolContribution: '',
+  investmentOpenWindowTime: null,
+  offAssetsOffered: null,
+  ftInvestmentReserve: null,
+  liquidityPoolContribution: null,
 
   // Step 4: Governance
-  ftTokenSupply: '1000000000',
+  ftTokenSupply: 100000000,
   ftTokenDecimals: '5',
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
-  creationThreshold: '',
-  startThreshold: '',
-  voteThreshold: '',
-  executionThreshold: '',
-  cosigningThreshold: '',
+  creationThreshold: null,
+  startThreshold: null,
+  voteThreshold: null,
+  executionThreshold: null,
+  cosigningThreshold: null,
   // Programmed specific fields
-  timeElapsedIsEqualToTime: '',
-  vaultAppreciation: '',
+  timeElapsedIsEqualToTime: null,
+  vaultAppreciation: null,
 };
 
-// export const stepFields = {
-//   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
-//   2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'assetsWhitelist', 'assetWindowDate', 'minAssetCountCap', 'maxAssetCountCap'],
-//   3: ['investmentWindowDuration', 'investmentOpenWindowType', 'investmentOpenWindowTime', 'offAssetsOffered', 'ftInvestmentReserve', 'liquidityPoolContribution'],
-//   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
-//   5: [],
-// };
 
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
   2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
-  3: [],
-  4: [],
+  3: ['investmentWindowDuration', 'investmentOpenWindowType', 'investmentOpenWindowTime', 'offAssetsOffered', 'ftInvestmentReserve', 'liquidityPoolContribution'],
+  4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
   5: [],
 };

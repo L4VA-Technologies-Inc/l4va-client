@@ -1,7 +1,6 @@
 import { Info } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
-import { handlePercentageChange } from '@/utils/core.utils';
 
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
@@ -13,6 +12,18 @@ export const Governance = ({
   errors = {},
   updateField,
 }) => {
+  const handlePercentageChange = (value) => {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    const parts = numericValue.split('.');
+    const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
+
+    if (parts.length === 2 && parts[1].length > 2) {
+      return null;
+    }
+
+    return sanitizedValue === '' ? '' : +sanitizedValue;
+  };
+
   const handleNumChange = (e) => {
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);

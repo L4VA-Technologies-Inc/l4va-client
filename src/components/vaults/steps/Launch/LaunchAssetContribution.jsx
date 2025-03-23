@@ -69,7 +69,9 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             <p className="text-[20px]">
               {data.contributionOpenWindowType === 'custom'
                 ? formatTime(data.contributionOpenWindowTime)
-                : formatTime(data.contributionOpenWindowType)}
+                : data.contributionOpenWindowType === 'upon-vault-lunch'
+                  ? 'Upon vault launch'
+                  : 'Not set'}
             </p>
           </div>
         </div>

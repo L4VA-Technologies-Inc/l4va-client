@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
-import { format, formatISO } from 'date-fns';
+import { formatISO } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
         selectedDate.setHours(dateValue.getHours());
         selectedDate.setMinutes(dateValue.getMinutes());
       }
-      onChange(selectedDate);
+      onChange(selectedDate.getTime());
     }
   };
 
@@ -51,19 +51,20 @@ export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
         const newHours = val === 'PM' ? (currentHours % 12) + 12 : currentHours % 12;
         newDate.setHours(newHours);
       }
-      onChange(newDate);
+      onChange(newDate.getTime());
     }
   };
 
   const formatDateTime = (dt) => {
     if (!dt) return null;
 
-    const formattedDate = format(dt, 'dd.MM.yyyy HH:mm');
+    const date = dt.toLocaleDateString();
+    const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const timezoneOffset = formatISO(dt).slice(19, 25);
     const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
-    return `${formattedDate} (${timezoneString})`;
+    return `${date} ${time} (${timezoneString})`;
   };
 
   return (

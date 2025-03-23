@@ -48,7 +48,7 @@ export const LavaSocialLinks = ({
   };
 
   const getErrorForLink = (index, field) => {
-    const errorKey = `socialLinks.${index}.${field}`;
+    const errorKey = `socialLinks[${index}].${field}`;
     return errors[errorKey];
   };
 

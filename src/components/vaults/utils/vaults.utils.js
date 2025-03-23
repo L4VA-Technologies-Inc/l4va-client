@@ -29,14 +29,5 @@ export const formatVaultData = (vaultData) => {
     }
   });
 
-  // Format dates to timestamps
-  if (formattedData.contributionOpenWindowTime) {
-    formattedData.contributionOpenWindowTime = new Date(formattedData.contributionOpenWindowTime).getTime();
-  }
-
-  if (formattedData.investmentOpenWindowTime) {
-    formattedData.investmentOpenWindowTime = new Date(formattedData.investmentOpenWindowTime).getTime();
-  }
-
   return formattedData;
 };

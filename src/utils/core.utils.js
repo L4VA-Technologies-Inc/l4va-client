@@ -114,24 +114,17 @@ export const msToInterval = (ms) => ({
 export const intervalToMs = ({ days, hours, minutes }) =>
   (days * MS_PER_DAY) + (hours * MS_PER_HOUR) + (minutes * MS_PER_MINUTE);
 
-export const handlePercentageChange = (value) => {
-  const numericValue = value.replace(/[^0-9.]/g, '');
-  const parts = numericValue.split('.');
-  const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
-
-  if (parts.length === 2 && parts[1].length > 2) {
-    return null;
-  }
-
-  const numValue = parseFloat(sanitizedValue);
-  if (!isNaN(numValue) && numValue > 100) {
-    return null;
-  }
-
-  return sanitizedValue;
-};
-
 export const handleNumberInput = (value) => {
   const numericValue = value.replace(/[^0-9]/g, '');
   return numericValue;
+};
+
+export const transformYupErrors = (err) => {
+  if (!err?.inner) return {};
+
+  const errors = {};
+  err.inner.forEach((error) => {
+    errors[error.path] = error.message;
+  });
+  return errors;
 };

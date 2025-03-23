@@ -29,12 +29,7 @@ export const InvestmentWindow = ({
       return;
     }
 
-    const numValue = parseFloat(sanitizedValue);
-    if (!isNaN(numValue) && numValue > 100) {
-      return;
-    }
-
-    updateField(name, sanitizedValue);
+    updateField(name, sanitizedValue === '' ? '' : +sanitizedValue);
   };
 
   const getMinInvestmentDate = () => {
@@ -150,10 +145,7 @@ export const InvestmentWindow = ({
             placeholder="#,###,###"
             type="text"
             value={data.ftInvestmentReserve || ''}
-            onChange={(e) => {
-              const sanitizedValue = handleNumberInput(e.target.value);
-              updateField('ftInvestmentReserve', sanitizedValue);
-            }}
+            onChange={handleChange}
           />
         </div>
         <div className="mt-[60px]">

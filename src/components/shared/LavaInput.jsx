@@ -41,7 +41,8 @@ export const LavaInput = ({
         <div className="relative flex items-center">
           <input
             className={`
-              rounded-[10px] bg-input-bg py-4 pl-5 ${suffix ? 'pr-12' : 'pr-5'} text-lg font-medium w-full border border-dark-600 h-[60px]
+              rounded-[10px] bg-input-bg py-4 pl-5 
+              ${suffix ? 'pr-12' : 'pr-5'} text-lg font-medium w-full border border-dark-600 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200
             `}
             maxLength={maxLength}

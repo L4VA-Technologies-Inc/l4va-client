@@ -14,7 +14,7 @@ import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
-import { transformZodErrorsIntoObject } from '@/utils/core.utils';
+import { transformYupErrors } from '@/utils/core.utils';
 
 import {
   CREATE_VAULT_STEPS,
@@ -89,7 +89,7 @@ export const CreateVaultForm = ({ vault }) => {
     );
   };
 
-  const updateField = (fieldName, value) => setVaultData({
+  const updateField = (fieldName, value) => console.log(fieldName, value) || setVaultData({
     ...vaultData,
     [fieldName]: value,
   });
@@ -99,19 +99,17 @@ export const CreateVaultForm = ({ vault }) => {
       handleNextStep();
     } else {
       try {
+        await vaultSchema.validate(vaultData, { abortEarly: false });
+
         const formattedData = formatVaultData(vaultData);
-
-        console.log({ formattedData });
-        const validatedData = vaultSchema.parse(formattedData);
-
         setErrors({});
 
         // TODO: Add API call to submit the vault
         // const response = await VaultsApiProvider.submitVault(formattedData);
         // toast.success('Vault submitted successfully');
-      } catch (e) {
-        console.log(e);
-        const formattedErrors = transformZodErrorsIntoObject(e);
+      } catch (err) {
+        console.log(err);
+        const formattedErrors = transformYupErrors(err);
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);
         toast.error('Please fix the validation errors before submitting');
@@ -239,8 +237,6 @@ export const CreateVaultForm = ({ vault }) => {
       updateValuationType('lbe');
     }
   }, [vaultData.privacy, updateValuationType]);
-
-  console.log({ errors });
 
   return (
     <div className="pb-10">
