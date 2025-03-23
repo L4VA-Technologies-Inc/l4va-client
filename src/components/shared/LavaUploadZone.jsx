@@ -153,7 +153,7 @@ export const UploadZone = ({
     <div className="py-6 px-8 bg-input-bg rounded-[10px]">
       <div className="flex justify-between items-center mb-4">
         <div className="uppercase text-[20px] font-bold">
-          {required && <span className="text-main-red mr-1">*</span>}{label}
+          {required && <span className="mr-1">*</span>}{label}
         </div>
         {uploadStatus === 'uploading' && (
           <div className="text-yellow-500 text-sm">Uploading...</div>

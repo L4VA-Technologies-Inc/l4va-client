@@ -10,12 +10,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-export const LavaIntervalPicker = ({ value = 0, onChange = () => {} }) => {
-  const [interval, setInterval] = useState(msToInterval(value));
+export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
+  const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setInterval(msToInterval(value));
+    setIntervalValue(msToInterval(value));
   }, [value]);
 
   const days = Array.from({ length: 31 }, (_, i) => i);
@@ -27,7 +27,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => {} }) => {
       ...interval,
       [type]: Number.parseInt(val, 10),
     };
-    setInterval(newInterval);
+    setIntervalValue(newInterval);
     onChange(intervalToMs(newInterval));
   };
 

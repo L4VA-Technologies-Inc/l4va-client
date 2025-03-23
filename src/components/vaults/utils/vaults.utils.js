@@ -3,6 +3,7 @@ export const formatVaultData = (vaultData) => {
 
   // Format numeric fields
   const numericFields = [
+    'contributionDuration',
     'ftTokenSupply',
     'ftTokenDecimals',
     'creationThreshold',

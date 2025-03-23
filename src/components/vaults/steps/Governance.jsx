@@ -122,9 +122,10 @@ export const Governance = ({
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
                 name="vaultAppreciation"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.vaultAppreciation || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
           </>
@@ -138,9 +139,10 @@ export const Governance = ({
                 icon={<Info color="white" size={16} />}
                 label="CREATION THRESHOLD %"
                 name="creationThreshold"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.creationThreshold || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
 
@@ -150,9 +152,10 @@ export const Governance = ({
                 icon={<Info color="white" size={16} />}
                 label="START THRESHOLD %"
                 name="startThreshold"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.startThreshold || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
 
@@ -162,9 +165,10 @@ export const Governance = ({
                 icon={<Info color="white" size={16} />}
                 label="VOTE THRESHOLD %"
                 name="voteThreshold"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.voteThreshold || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
 
@@ -174,9 +178,10 @@ export const Governance = ({
                 icon={<Info color="white" size={16} />}
                 label="EXECUTION THRESHOLD %"
                 name="executionThreshold"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.executionThreshold || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
 
@@ -185,9 +190,10 @@ export const Governance = ({
                 error={errors.cosigningThreshold}
                 label="COSIGNING THRESHOLD %"
                 name="cosigningThreshold"
-                placeholder="XX.XX%"
+                placeholder="XX.XX"
                 value={data.cosigningThreshold || ''}
                 onChange={handleNumChange}
+                suffix="%"
               />
             </div>
           </>

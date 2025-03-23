@@ -47,7 +47,7 @@ export const vaultSchema = z.object({
   description: z.string()
     .max(500, { message: 'Description must be less than 500 characters' })
     .optional(),
-  vaultImage: z.string({ message: 'Vault image is required' }),
+  vaultImage: z.string().min(1, { message: 'Vault image is required' }),
   socialLinks: z.array(socialLinkSchema),
 
   // Step 2: Asset Contribution
@@ -55,7 +55,7 @@ export const vaultSchema = z.object({
   contributionOpenWindowType: z.string(),
   contributionOpenWindowTime: z.any().optional(),
   assetsWhitelist: z.array(z.any()),
-  contributionDuration: z.string().optional(),
+  contributionDuration: z.number().min(1, { message: 'Contribution duration is required' }),
 
   // Step 3: Investment Window
   investmentWindowDuration: z.any().nullable(),
@@ -79,19 +79,7 @@ export const vaultSchema = z.object({
   // Programmed specific fields
   timeElapsedIsEqualToTime: z.any().nullable(),
   vaultAppreciation: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.contributionOpenWindowType === 'custom') {
-      return data.contributionOpenWindowTime !== null
-        && data.contributionOpenWindowTime !== undefined;
-    }
-    return true;
-  },
-  {
-    message: 'Contribution window time is required when type is custom',
-    path: ['contributionOpenWindowTime'],
-  },
-);
+});
 
 export const initialVaultState = {
   // Step 1: Configure Vault
@@ -106,16 +94,16 @@ export const initialVaultState = {
 
   // Step 2: Asset Contribution
   valuationType: 'lbe',
-  contributionOpenWindowType: 'upon-vault-lunch',
+  contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
-  contributionDuration: '',
+  contributionDuration: 0,
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
   // Step 3: Investment Window
-  investmentWindowDuration: null,
+  investmentWindowDuration: '',
   investmentOpenWindowType: 'upon-asset-window-closing',
-  investmentOpenWindowTime: null,
+  investmentOpenWindowTime: '',
   offAssetsOffered: '',
   ftInvestmentReserve: '',
   liquidityPoolContribution: '',
@@ -132,7 +120,7 @@ export const initialVaultState = {
   executionThreshold: '',
   cosigningThreshold: '',
   // Programmed specific fields
-  timeElapsedIsEqualToTime: null,
+  timeElapsedIsEqualToTime: '',
   vaultAppreciation: '',
 };
 
@@ -146,7 +134,7 @@ export const initialVaultState = {
 
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
-  2: ['valuationType', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
+  2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
   3: [],
   4: [],
   5: [],

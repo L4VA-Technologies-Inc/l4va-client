@@ -33,7 +33,7 @@ export const Public = ({
           name="contributionOpenWindowType"
           options={[
             {
-              name: 'upon-vault-lunch',
+              name: 'upon-vault-launch',
               label: 'Upon Vault Launch',
             },
             {

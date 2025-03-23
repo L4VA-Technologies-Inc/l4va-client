@@ -99,16 +99,18 @@ export const CreateVaultForm = ({ vault }) => {
       handleNextStep();
     } else {
       try {
-        const validatedData = vaultSchema.parse(vaultData);
-        const formattedData = formatVaultData(validatedData);
+        const formattedData = formatVaultData(vaultData);
 
-        console.log('Form data is valid, submitting:', formattedData);
+        console.log({ formattedData });
+        const validatedData = vaultSchema.parse(formattedData);
+
         setErrors({});
 
         // TODO: Add API call to submit the vault
         // const response = await VaultsApiProvider.submitVault(formattedData);
         // toast.success('Vault submitted successfully');
       } catch (e) {
+        console.log(e);
         const formattedErrors = transformZodErrorsIntoObject(e);
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);
@@ -237,6 +239,8 @@ export const CreateVaultForm = ({ vault }) => {
       updateValuationType('lbe');
     }
   }, [vaultData.privacy, updateValuationType]);
+
+  console.log({ errors });
 
   return (
     <div className="pb-10">
