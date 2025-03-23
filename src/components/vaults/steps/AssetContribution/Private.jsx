@@ -6,7 +6,10 @@ import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
+import { handleNumberInput } from '@/utils/core.utils';
+
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
+
 
 export const Private = ({
   data,
@@ -62,10 +65,13 @@ export const Private = ({
                 required
                 error={errors.valuationAmount}
                 label="Valuation Amount"
-                placeholder="#,###.##"
+                placeholder="#,###,###"
                 type="text"
                 value={data.valuationAmount || ''}
-                onChange={(e) => updateField('valuationAmount', e.target.value)}
+                onChange={(e) => {
+                  const sanitizedValue = handleNumberInput(e.target.value);
+                  updateField('valuationAmount', sanitizedValue);
+                }}
               />
             </div>
           </>

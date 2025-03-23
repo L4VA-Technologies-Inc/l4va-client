@@ -122,7 +122,7 @@ export const initialVaultState = {
 
   // Step 4: Governance
   ftTokenSupply: '1000000000',
-  ftTokenDecimals: '2',
+  ftTokenDecimals: '5',
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields

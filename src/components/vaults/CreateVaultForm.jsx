@@ -31,6 +31,13 @@ export const CreateVaultForm = ({ vault }) => {
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   useEffect(() => {
     if (vault) {
       setVaultData(vault);
@@ -40,6 +47,7 @@ export const CreateVaultForm = ({ vault }) => {
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
+    scrollToTop();
     setSteps(prevSteps =>
       prevSteps.map(step => {
         if (step.id === currentStep) {
@@ -56,6 +64,7 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
+      scrollToTop();
       setSteps(prevSteps =>
         prevSteps.map(step => {
           if (step.id === currentStep) {
@@ -109,7 +118,9 @@ export const CreateVaultForm = ({ vault }) => {
   };
 
   const handleStepClick = (stepId) => {
+    if (stepId === currentStep) return;
     setCurrentStep(stepId);
+    scrollToTop();
     setSteps(prevSteps =>
       prevSteps.map(step => {
         if (step.id === currentStep) {
@@ -177,7 +188,13 @@ export const CreateVaultForm = ({ vault }) => {
           />
         );
       case 5:
-        return <Launch data={vaultData} setCurrentStep={setCurrentStep} />;
+        return <Launch
+          data={vaultData}
+          setCurrentStep={step => {
+            setCurrentStep(step);
+            scrollToTop();
+          }}
+        />;
       default:
         return null;
     }

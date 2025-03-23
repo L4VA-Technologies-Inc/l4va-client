@@ -7,6 +7,8 @@ import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 
+import { handleNumberInput } from '@/utils/core.utils';
+
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const InvestmentWindow = ({
@@ -144,10 +146,13 @@ export const InvestmentWindow = ({
             error={errors.ftInvestmentReserve}
             label="FT INVESTMENT RESERVE"
             name="ftInvestmentReserve"
-            placeholder="XX.XX%"
+            placeholder="#,###,###"
             type="text"
             value={data.ftInvestmentReserve || ''}
-            onChange={handleChange}
+            onChange={(e) => {
+              const sanitizedValue = handleNumberInput(e.target.value);
+              updateField('ftInvestmentReserve', sanitizedValue);
+            }}
           />
         </div>
         <div className="mt-[60px]">
