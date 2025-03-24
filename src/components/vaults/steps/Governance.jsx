@@ -28,7 +28,7 @@ export const Governance = ({
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);
     if (sanitizedValue !== null) {
-      updateField(name, sanitizedValue);
+      updateField(name, +sanitizedValue);
     }
   };
 
@@ -41,7 +41,7 @@ export const Governance = ({
       return;
     }
 
-    updateField(name, numericValue);
+    updateField(name, +numericValue);
   };
 
   const handleDecimalsChange = (e) => {
