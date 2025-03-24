@@ -199,7 +199,7 @@ export const ProfileSocialLinks = () => {
               size={20}
             />
             <a
-              className="text-[20px] hover:text-main-red transition-colors"
+              className="text-[20px] hover:text-main-orange transition-colors"
               href={formatUrl(link.url)}
               rel="noopener noreferrer"
               target="_blank"
