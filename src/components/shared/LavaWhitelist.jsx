@@ -15,8 +15,7 @@ export const LavaWhitelist = ({
   maxItems = 10,
   allowCsv = false,
   csvData,
-  csvUrl,
-  setCsvUrl,
+  setCsvData,
 }) => {
   const [csvName, setCsvName] = useState(csvData?.fileName || '');
   const addNewAsset = () => {
@@ -51,8 +50,8 @@ export const LavaWhitelist = ({
 
     try {
       const { data } = await CoreApiProvider.handleCsv(file);
-      if (setCsvUrl) {
-        setCsvUrl(data.url);
+      if (setCsvData) {
+        setCsvData(data);
         setCsvName(data.fileName);
       }
       toast.success('CSV file processed successfully');
@@ -64,7 +63,7 @@ export const LavaWhitelist = ({
   };
 
   const handleRemoveCsv = () => {
-    setCsvUrl(null);
+    setCsvData(null);
     setCsvName(null);
   };
 
@@ -136,7 +135,7 @@ export const LavaWhitelist = ({
           </div>
         ))}
       </div>
-      {whitelist.length === 0 && !csvUrl && (
+      {whitelist.length === 0 && !csvData && (
         <div className="text-dark-100 text-base my-4">
           No items. Click the + button to add one {allowCsv ? 'or upload a CSV file' : ''}.
         </div>

@@ -7,8 +7,6 @@ import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 
-import { handleNumberInput } from '@/utils/core.utils';
-
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const InvestmentWindow = ({
@@ -55,7 +53,7 @@ export const InvestmentWindow = ({
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
               label="Investor whitelist"
-              setCsvUrl={(csvFileUrl) => updateField('investorsWhitelistCsv', csvFileUrl)}
+              setCsvData={(csvData) => updateField('investorsWhitelistCsv', csvData)}
               setWhitelist={(assets) => updateField('investorsWhitelist', assets)}
               whitelist={data.investorsWhitelist || []}
             />
