@@ -46,10 +46,13 @@ export const CreateVaultForm = ({ vault }) => {
     }
   }, [vault]);
 
+  useEffect(() => {
+    scrollToTop();
+  }, [currentStep]);
+
   const handleNextStep = () => {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
-    scrollToTop();
     setSteps(prevSteps =>
       prevSteps.map(step => {
         if (step.id === currentStep) {
@@ -66,7 +69,6 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      scrollToTop();
       setSteps(prevSteps =>
         prevSteps.map(step => {
           if (step.id === currentStep) {
@@ -197,10 +199,7 @@ export const CreateVaultForm = ({ vault }) => {
       case 5:
         return <Launch
           data={vaultData}
-          setCurrentStep={step => {
-            setCurrentStep(step);
-            scrollToTop();
-          }}
+          setCurrentStep={setCurrentStep}
         />;
       default:
         return null;

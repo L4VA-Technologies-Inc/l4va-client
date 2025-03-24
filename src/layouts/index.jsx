@@ -7,7 +7,7 @@ export const HomePageLayout = ({ children }) => (
       className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[768px]"
       style={{ backgroundImage: 'url(/assets/hero-bg.webp)' }}
     />
-    <Header/>
+    <Header />
     {children}
     <Footer />
   </div>
@@ -15,7 +15,7 @@ export const HomePageLayout = ({ children }) => (
 
 export const MainLayout = ({ children, includeFooter = true }) => (
   <>
-    <Header/>
+    <Header />
     {children}
     {includeFooter && <Footer />}
   </>
@@ -27,8 +27,8 @@ export const CreateVaultLayout = ({ children }) => (
       className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[518px]"
       style={{ backgroundImage: 'url(/assets/vaults/create-vault-bg.webp)' }}
     />
-    <Header/>
+    <Header />
     {children}
-    <Footer/>
+    <Footer />
   </div>
 );
