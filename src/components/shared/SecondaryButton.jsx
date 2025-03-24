@@ -1,7 +1,9 @@
 export const SecondaryButton = ({
+  type = 'button',
   children,
-  onClick,
+  disabled = false,
   className = '',
+  onClick,
 }) => (
   <button
     className={`
@@ -17,9 +19,14 @@ export const SecondaryButton = ({
       shadow-lg
       gap-1.5
       px-10 py-4 text-[20px]
+      disabled:opacity-50
+      disabled:cursor-not-allowed
+      disabled:hover:bg-white/5
+      disabled:hover:border-white/20
       ${className}
     `}
-    type="button"
+    disabled={disabled}
+    type={type}
     onClick={onClick}
   >
     {children}

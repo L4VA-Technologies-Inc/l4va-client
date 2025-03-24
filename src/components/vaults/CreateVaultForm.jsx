@@ -28,6 +28,8 @@ export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
@@ -99,6 +101,7 @@ export const CreateVaultForm = ({ vault }) => {
       handleNextStep();
     } else {
       try {
+        setIsSubmitting(true);
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
         const formattedData = formatVaultData(vaultData);
@@ -112,6 +115,8 @@ export const CreateVaultForm = ({ vault }) => {
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);
         toast.error('Please fix the validation errors before submitting');
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -140,6 +145,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   const saveDraft = async () => {
     try {
+      setIsSavingDraft(true);
       const formattedData = formatVaultData(vaultData);
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
       updateField('id', data.id);
@@ -147,6 +153,8 @@ export const CreateVaultForm = ({ vault }) => {
     } catch (e) {
       console.log(e);
       toast.error('Failed saving draft');
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -202,25 +210,36 @@ export const CreateVaultForm = ({ vault }) => {
   const renderButtons = () => {
     if (currentStep === 5) {
       return (
-        <PrimaryButton className="uppercase" onClick={onSubmit}>
-          Confirm & launch
+        <PrimaryButton
+          className="uppercase"
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Launching...' : 'Confirm & launch'}
         </PrimaryButton>
       );
     }
     return (
       <>
         {currentStep > 1 && (
-          <SecondaryButton onClick={handlePreviousStep}>
+          <SecondaryButton
+            onClick={handlePreviousStep}
+            disabled={isSubmitting || isSavingDraft}
+          >
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
         <SecondaryButton
           className="uppercase px-16 py-4 bg-input-bg"
           onClick={saveDraft}
+          disabled={isSubmitting || isSavingDraft}
         >
           Save for later
         </SecondaryButton>
-        <PrimaryButton onClick={handleNextStep}>
+        <PrimaryButton
+          onClick={handleNextStep}
+          disabled={isSubmitting || isSavingDraft}
+        >
           <ChevronRight size={24} />
         </PrimaryButton>
       </>

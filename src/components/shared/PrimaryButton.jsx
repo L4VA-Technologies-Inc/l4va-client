@@ -13,11 +13,15 @@ export const PrimaryButton = ({
       bg-gradient-to-r from-[#FF842C] to-[#FFD012]
       rounded-lg font-bold
       transition-colors
-      gap-1.5
       font-satoshi
       hover:opacity-90
-      px-12 py-4 text-[20px]
+      gap-1.5
+      px-10 py-4 text-[20px]
       text-dark-700
+      disabled:opacity-50
+      disabled:cursor-not-allowed
+      disabled:bg-gray-300
+      disabled:hover:opacity-50
       ${className}
     `}
     disabled={disabled}
