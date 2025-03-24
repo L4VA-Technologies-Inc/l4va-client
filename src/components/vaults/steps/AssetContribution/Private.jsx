@@ -96,7 +96,7 @@ export const Private = ({
             name="contributionOpenWindowType"
             options={[
               {
-                name: 'upon-vault-lunch',
+                name: 'upon-vault-launch',
                 label: 'Upon Vault Launch',
               },
               {
