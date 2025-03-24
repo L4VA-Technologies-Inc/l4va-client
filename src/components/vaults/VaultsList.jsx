@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
+import { LavaTabs } from '@/components/shared/LavaTabs';
 
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
@@ -14,30 +15,6 @@ const VAULT_TABS = {
 };
 
 const TABS = Object.values(VAULT_TABS);
-
-const VaultTabs = ({ activeTab, onTabChange }) => (
-  <div className="inline-flex rounded-lg p-1">
-    {TABS.map((tab) => (
-      <button
-        key={tab}
-        className={clsx(
-          'px-8 py-2 rounded-xl text-lg font-medium transition-all',
-          activeTab === tab ? 'bg-[#2D3049]' : 'text-white hover:text-main-orange',
-        )}
-        type="button"
-        onClick={() => onTabChange(tab)}
-      >
-        <span
-          className={clsx(
-            activeTab === tab && 'text-orange-gradient',
-          )}
-        >
-          {tab}
-        </span>
-      </button>
-    ))}
-  </div>
-);
 
 const LoadingState = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -107,7 +84,11 @@ export const VaultsList = ({ isMyVaults = false }) => {
         </h2>
       </div>
       <div className="mb-8">
-        <VaultTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <LavaTabs
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
       </div>
       <div className="mt-8">
         {loading ? (

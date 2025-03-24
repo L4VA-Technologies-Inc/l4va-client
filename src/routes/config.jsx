@@ -6,6 +6,7 @@ import { Profile } from '@/pages/Profile';
 import { Vault } from '@/pages/Vault';
 import { NotFound } from '@/pages/NotFound';
 import { ProtectedRoute } from './ProtectedRoute';
+import { Contribute } from '@/pages/Contribute';
 
 export const publicRoutes = [
   {
@@ -29,14 +30,6 @@ export const publicRoutes = [
     element: (
       <MainLayout>
         <Vault />
-      </MainLayout>
-    ),
-  },
-  {
-    path: '/vaults/my',
-    element: (
-      <MainLayout>
-        <Vaults isMyVaults />
       </MainLayout>
     ),
   },
@@ -66,6 +59,34 @@ export const protectedRoutes = [
         element: (
           <MainLayout>
             <Profile />
+          </MainLayout>
+        ),
+      },
+    ],
+  },
+  {
+    path: '/vaults/my',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '/vaults/my',
+        element: (
+          <MainLayout>
+            <Vaults isMyVaults />
+          </MainLayout>
+        ),
+      },
+    ],
+  },
+  {
+    path: '/contribute',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '/contribute',
+        element: (
+          <MainLayout>
+            <Contribute />
           </MainLayout>
         ),
       },

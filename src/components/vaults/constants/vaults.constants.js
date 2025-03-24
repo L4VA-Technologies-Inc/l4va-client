@@ -65,7 +65,7 @@ export const vaultSchema = yup.object({
       is: 'custom',
       then: (schema) => schema
         .required('Time is required for custom window type'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   assetsWhitelist: yup.array().default([]),
   contributionDuration: yup.number()
@@ -112,35 +112,35 @@ export const vaultSchema = yup.object({
     .when('terminationType', {
       is: 'dao',
       then: (schema) => schema.required('Creation threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   startThreshold: yup.number()
     .typeError('Start threshold is required')
     .when('terminationType', {
       is: 'dao',
       then: (schema) => schema.required('Start threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   voteThreshold: yup.number()
     .typeError('Vote threshold is required')
     .when('terminationType', {
       is: 'dao',
       then: (schema) => schema.required('Vote threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   executionThreshold: yup.number()
     .typeError('Execution threshold is required')
     .when('terminationType', {
       is: 'dao',
       then: (schema) => schema.required('Execution threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   cosigningThreshold: yup.number()
     .typeError('Cosigning threshold is required')
     .when('terminationType', {
       is: 'dao',
       then: (schema) => schema.required('Cosigning threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup.number()
@@ -148,15 +148,15 @@ export const vaultSchema = yup.object({
     .when('terminationType', {
       is: 'programmed',
       then: (schema) => schema.required('Time elapsed is required for programmed termination'),
-      otherwise: (schema) => schema.nullable()
+      otherwise: (schema) => schema.nullable(),
     }),
   vaultAppreciation: yup.number()
     .typeError('Vault appreciation is required')
     .when('terminationType', {
       is: 'programmed',
       then: (schema) => schema.required('Vault appreciation is required for programmed termination'),
-      otherwise: (schema) => schema.optional()
-    })
+      otherwise: (schema) => schema.optional(),
+    }),
 });
 
 export const initialVaultState = {
@@ -201,7 +201,6 @@ export const initialVaultState = {
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,
 };
-
 
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
