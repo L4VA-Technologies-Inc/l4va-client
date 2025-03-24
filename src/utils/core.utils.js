@@ -128,3 +128,17 @@ export const transformYupErrors = (err) => {
   });
   return errors;
 };
+
+export const calculateTimeLeft = (endTime) => {
+  const difference = new Date(endTime) - new Date();
+
+  if (difference <= 0) {
+    return { days: 0, hours: 0, minutes: 0 };
+  }
+
+  return {
+    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((difference / 1000 / 60) % 60),
+  };
+};

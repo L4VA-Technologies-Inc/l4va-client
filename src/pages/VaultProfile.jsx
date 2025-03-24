@@ -5,22 +5,17 @@ import { VaultContent } from '@/components/vault-profile/VaultContent';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 
 export const VaultProfile = ({ vault }) => (
-  <div className="min-h-screen bg-dark-700">
-    <div className="container mx-auto px-4 py-8">
+  <div className="min-h-screen">
+    <div className="container mx-auto">
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-4 space-y-4">
-          <div className="bg-dark-600 rounded-xl p-4">
+          <div className="bg-dark-600 rounded-xl p-4 flex flex-col gap-4">
             <img
               src={vault.vaultImage || '/assets/vaults/space-man.webp'}
               alt={vault.name}
-              className="w-full aspect-square rounded-xl object-cover mb-6"
+              className="w-full aspect-square rounded-xl object-cover"
             />
-            <VaultCountdown
-              endTime={vault.endTime}
-              contributionDuration={vault.contributionDuration}
-              contributionOpenWindowType={vault.contributionOpenWindowType}
-              contributionOpenWindowTime={vault.contributionOpenWindowTime}
-            />
+            <VaultCountdown endTime={vault.contributionOpenWindowTime} />
             <VaultContribution
               totalRaised={vault.totalRaised}
               target={vault.target}
@@ -30,7 +25,6 @@ export const VaultProfile = ({ vault }) => (
               liquidityPoolContribution={vault.liquidityPoolContribution}
             />
           </div>
-
           <VaultSwap
             ftTokenTicker={vault.ftTokenTicker}
             valuationCurrency={vault.valuationCurrency}
