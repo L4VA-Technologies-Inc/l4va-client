@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ClockIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { msToInterval, intervalToMs } from '@/utils/core.utils';
+import { msToInterval, intervalToMs, formatInterval } from '@/utils/core.utils';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -31,17 +31,6 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
     onChange(intervalToMs(newInterval));
   };
 
-  const formatInterval = () => {
-    const { days: d, hours: h, minutes: m } = interval;
-    const parts = [];
-
-    if (d > 0) parts.push(`${d}d`);
-    if (h > 0) parts.push(`${h}h`);
-    if (m > 0) parts.push(`${m}m`);
-
-    return parts.length > 0 ? parts.join(' ') : '0m';
-  };
-
   return (
     <div className="flex items-center gap-4 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -55,7 +44,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
           >
             <ClockIcon className="mr-2 h-4 w-4" />
             {value ? (
-              formatInterval()
+              formatInterval(value)
             ) : (
               <span className="text-white/60">Select interval</span>
             )}

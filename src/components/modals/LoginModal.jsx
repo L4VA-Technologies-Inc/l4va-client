@@ -53,7 +53,7 @@ export const LoginModal = ({
           <button
             key={wallet.key}
             className="
-              flex items-center justify-between w-full p-2 bg-dark-600 rounded-lg
+              flex items-center justify-between w-full p-2 bg-[#181A2A] rounded-lg
               transition-colors disabled:opacity-50 hover:bg-[#2D3049]
             "
             disabled={isConnectingTo === wallet.key || !isChecked}

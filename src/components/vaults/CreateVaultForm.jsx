@@ -104,9 +104,8 @@ export const CreateVaultForm = ({ vault }) => {
         const formattedData = formatVaultData(vaultData);
         setErrors({});
 
-        // TODO: Add API call to submit the vault
-        // const response = await VaultsApiProvider.submitVault(formattedData);
-        // toast.success('Vault submitted successfully');
+        await VaultsApiProvider.launchVault(formattedData);
+        toast.success('Vault launched successfully');
       } catch (err) {
         console.log(err);
         const formattedErrors = transformYupErrors(err);

@@ -15,18 +15,18 @@ export const VaultContent = ({ vault }) => {
   const tabs = Object.keys(tabContent);
 
   return (
-    <div className="bg-dark-600 rounded-xl p-6">
-      <LavaTabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        className="w-full bg-dark-700 rounded-xl mb-6"
-        tabClassName="flex-1 text-center"
-        activeTabClassName="text-primary"
-        inactiveTabClassName="text-dark-100"
-      />
-
-      {/* Table header */}
+    <div className="bg-[#181A2A] rounded-xl p-4">
+      <div className="mb-4">
+        <LavaTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          className="w-full bg-[#202233]"
+          tabClassName="flex-1 text-center"
+          activeTabClassName="text-primary"
+          inactiveTabClassName="text-dark-100"
+        />
+      </div>
       <div className="grid grid-cols-5 gap-4 mb-4 text-dark-100 text-sm">
         <div>Access</div>
         <div>Name</div>

@@ -64,20 +64,6 @@ export const transformZodErrorsIntoObject = (error) => {
   return formattedErrors;
 };
 
-export const getTimeDifference = (targetDate) => {
-  const now = new Date();
-  const diffInMs = targetDate - now;
-
-  if (diffInMs <= 0) return '0d 0h 0m';
-
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const d = Math.floor(diffInMinutes / (60 * 24));
-  const h = Math.floor((diffInMinutes % (60 * 24)) / 60);
-  const m = diffInMinutes % 60;
-
-  return `${d}d ${h}h ${m}m`;
-};
-
 export const substringAddress = (address) => {
   const addressLength = address?.length || 0;
   return `${address?.substring(0, 4)}...${address?.substring(addressLength - 4)}`;
@@ -113,6 +99,17 @@ export const msToInterval = (ms) => ({
 
 export const intervalToMs = ({ days, hours, minutes }) =>
   (days * MS_PER_DAY) + (hours * MS_PER_HOUR) + (minutes * MS_PER_MINUTE);
+
+export const formatInterval = (timestamp) => {
+  const { days, hours, minutes } = msToInterval(timestamp);
+  const parts = [];
+
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+
+  return parts.length > 0 ? parts.join(' ') : '0m';
+};
 
 export const handleNumberInput = (value) => {
   const numericValue = value.replace(/[^0-9]/g, '');

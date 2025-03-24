@@ -23,6 +23,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/save-draft';
   }
 
+  static launchVault() {
+    return '/api/v1/vaults';
+  }
+
   static getVault(id) {
     return `/api/v1/vaults/${id}`;
   }

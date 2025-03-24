@@ -13,7 +13,7 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
 
   return (
     <div className="flex items-center gap-2 mb-8">
-      <Avatar className="h-20 w-20 bg-dark-600 cursor-pointer">
+      <Avatar className="h-20 w-20 bg-[#181A2A] cursor-pointer">
         {user?.profileImage && (
           <AvatarImage
             alt="Profile"

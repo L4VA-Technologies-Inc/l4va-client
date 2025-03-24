@@ -22,8 +22,8 @@ export const VaultCard = (props) => {
   } = props;
 
   return (
-    <Link className="block" to={`/vaults/${id}`}>
-      <div className="max-w-md rounded-xl bg-dark-600 overflow-hidden">
+    <div className="max-w-md rounded-xl bg-[#181A2A] overflow-hidden">
+      <Link className="block" to={`/vaults/${id}`}>
         <div className="h-48">
           <img
             alt="Vault avatar"
@@ -78,29 +78,29 @@ export const VaultCard = (props) => {
               <p className="font-bold ">{formatCompactNumber(baseAllo)}</p>
             </div>
           </div>
-
-          <div className="flex items-center justify-center gap-3 h-10">
-            {socialLinks.length > 0 ? (
-              socialLinks.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.url}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <SocialPlatformIcon
-                    className="text-white"
-                    platformId={social.name}
-                    size={20}
-                  />
-                </a>
-              ))
-            ) : (
-              <span className="text-dark-100 text-sm">No social links</span>
-            )}
-          </div>
         </div>
+      </Link>
+
+      <div className="flex items-center justify-center gap-3 h-10 px-6 pb-6">
+        {socialLinks.length > 0 ? (
+          socialLinks.map((social, index) => (
+            <a
+              key={index}
+              href={social.url}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <SocialPlatformIcon
+                className="text-white"
+                platformId={social.name}
+                size={20}
+              />
+            </a>
+          ))
+        ) : (
+          <span className="text-dark-100 text-sm">No social links</span>
+        )}
       </div>
-    </Link>
+    </div>
   );
 };

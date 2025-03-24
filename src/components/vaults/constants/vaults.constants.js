@@ -155,7 +155,7 @@ export const vaultSchema = yup.object({
     .when('terminationType', {
       is: 'programmed',
       then: (schema) => schema.required('Vault appreciation is required for programmed termination'),
-      otherwise: (schema) => schema.optional(),
+      otherwise: (schema) => schema.nullable(),
     }),
 });
 

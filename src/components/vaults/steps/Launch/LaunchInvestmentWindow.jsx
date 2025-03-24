@@ -1,12 +1,12 @@
 import { Edit } from 'lucide-react';
-import { getTimeDifference } from '@/utils/core.utils';
+import { formatInterval } from '@/utils/core.utils';
 
 export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
   const formatTime = time => {
     if (time === 'upon-asset-window-closing') {
       return 'Upon asset window closing';
     }
-    return getTimeDifference(time);
+    return formatInterval(new Date(time).getTime() - new Date().getTime());
   };
 
   return (

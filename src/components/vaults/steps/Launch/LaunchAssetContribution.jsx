@@ -1,12 +1,12 @@
 import { Edit } from 'lucide-react';
-import { getTimeDifference } from '@/utils/core.utils';
+import { formatInterval } from '@/utils/core.utils';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = time => {
     if (time === 'upon-vault-lunch') {
       return 'Upon vault launch';
     }
-    return getTimeDifference(time);
+    return formatInterval(new Date(time).getTime() - new Date().getTime());
   };
 
   return (
@@ -59,7 +59,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution duration
             </p>
             <p className="text-[20px]">
-              {data.contributionDuration ? `${data.contributionDuration} days` : 'Not set'}
+              {data.contributionDuration ? `${formatInterval(new Date(data.contributionDuration).getTime() - new Date().getTime())} days` : 'Not set'}
             </p>
           </div>
           <div>
@@ -82,19 +82,6 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             </p>
             <p className="text-[20px]">
               {data.assetsWhitelist?.length ? `${data.assetsWhitelist.length} assets` : 'No assets whitelisted'}
-            </p>
-          </div>
-          <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Asset value cap
-            </p>
-            <p className="flex items-center gap-2 text-[20px]">
-              <span>
-                min: {data.minAssetCountCap || 'Not set'}
-              </span>
-              <span>
-                max: {data.maxAssetCountCap || 'Not set'}
-              </span>
             </p>
           </div>
         </div>

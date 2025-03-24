@@ -9,7 +9,7 @@ export const VaultProfile = ({ vault }) => (
     <div className="container mx-auto">
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-4 space-y-4">
-          <div className="bg-dark-600 rounded-xl p-4 flex flex-col gap-4">
+          <div className="bg-[#181A2A] rounded-xl p-4 flex flex-col gap-4">
             <img
               src={vault.vaultImage || '/assets/vaults/space-man.webp'}
               alt={vault.name}
@@ -34,7 +34,7 @@ export const VaultProfile = ({ vault }) => (
         </div>
 
         <div className="col-span-8 space-y-4">
-          <div className="bg-dark-600 rounded-xl p-4">
+          <div className="bg-[#181A2A] rounded-xl p-4">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h1 className="text-4xl font-bold mb-2">{vault.name}</h1>
@@ -89,10 +89,6 @@ export const VaultProfile = ({ vault }) => (
                 <p className="font-medium">N/A</p>
               </div>
             </div>
-
-            <PrimaryButton className="w-full">
-              CONTRIBUTE
-            </PrimaryButton>
           </div>
           <VaultContent vault={vault} />
         </div>

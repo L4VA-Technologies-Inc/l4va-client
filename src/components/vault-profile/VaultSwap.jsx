@@ -8,14 +8,13 @@ export const VaultSwap = ({
   const [amount, setAmount] = useState('0.0');
 
   return (
-    <div className="bg-dark-600 rounded-xl p-6">
+    <div className="bg-[#181A2A] rounded-xl p-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm font-medium">Swap</h2>
         <button className="text-sm text-dark-100 hover:text-white transition-colors">
           ↓
         </button>
       </div>
-
       {/* You pay */}
       <div className="bg-dark-700 rounded-xl p-4 mb-4">
         <div className="flex justify-between mb-2">

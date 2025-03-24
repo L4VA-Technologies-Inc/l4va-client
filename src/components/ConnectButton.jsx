@@ -96,7 +96,7 @@ export const ConnectButton = () => {
         </PrimaryButton>
       ) : (
         <PrimaryButton onClick={() => openModal(MODAL_TYPES.PROFILE)}>
-          <Avatar className="h-10 w-10 bg-dark-600 cursor-pointer">
+          <Avatar className="h-10 w-10 bg-[#181A2A] cursor-pointer">
             <AvatarFallback className="text-white font-medium">
               {getAvatarLetter(user)}
             </AvatarFallback>
