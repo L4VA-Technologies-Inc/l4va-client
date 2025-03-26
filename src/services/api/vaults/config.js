@@ -19,22 +19,6 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/my?filter=locked';
   }
 
-  static getInvestVaults() {
-    return '/api/v1/vaults?filter=invest';
-  }
-
-  static getContributeVaults() {
-    return '/api/v1/vaults?filter=contribute';
-  }
-
-  static getUpcomingVaults() {
-    return '/api/v1/vaults?filter=upcoming';
-  }
-
-  static getPastVaults() {
-    return '/api/v1/vaults?filter=past';
-  }
-
   static saveDraft() {
     return '/api/v1/vaults/save-draft';
   }
