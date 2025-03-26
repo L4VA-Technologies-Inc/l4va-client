@@ -90,10 +90,10 @@ export const Stats = () => {
         QUICK STATS
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
-        <StatCard label="Vaults" value="158" />
+        <StatCard label="MyVaults" value="158" />
         <StatCard label="Assets" value="486" />
         <StatCard label="Invested" value="$9M+" />
-        <StatCard label="TVL All Vaults" value="$18M+" />
+        <StatCard label="TVL All MyVaults" value="$18M+" />
       </div>
       <div className="space-y-16">
         <ProgressBar items={statusData} title="Vault by Status" totalAmount={totalAmount} />

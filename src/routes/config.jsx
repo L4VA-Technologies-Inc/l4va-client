@@ -1,11 +1,11 @@
+import { ProtectedRoute } from './ProtectedRoute';
 import { HomePageLayout, CreateVaultLayout, MainLayout } from '@/layouts';
 import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
-import { Vaults } from '@/pages/Vaults';
+import { MyVaults } from '@/pages/MyVaults';
 import { Profile } from '@/pages/Profile';
 import { Vault } from '@/pages/Vault';
 import { NotFound } from '@/pages/NotFound';
-import { ProtectedRoute } from './ProtectedRoute';
 import { Contribute } from '@/pages/Contribute';
 
 export const publicRoutes = [
@@ -21,7 +21,7 @@ export const publicRoutes = [
     path: '/vaults',
     element: (
       <MainLayout>
-        <Vaults />
+        <MyVaults />
       </MainLayout>
     ),
   },
@@ -72,7 +72,7 @@ export const protectedRoutes = [
         path: '/vaults/my',
         element: (
           <MainLayout>
-            <Vaults isMyVaults />
+            <MyVaults />
           </MainLayout>
         ),
       },
@@ -97,4 +97,4 @@ export const protectedRoutes = [
 export const notFoundRoute = {
   path: '*',
   element: <NotFound />,
-}; 
+};

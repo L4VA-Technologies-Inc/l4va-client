@@ -1,6 +1,7 @@
-import { VaultsList } from "@/components/vaults/VaultsList";
+import { FeaturedVaultsList } from '@/components/vaults/FeaturedVaultsList';
+import { CommunityVaultsList } from '@/components/vaults/CommunityVaultsList';
 
-export const Contribute = ({ isMyVaults = false }) => (
+export const Contribute = () => (
   <div className="min-h-screen">
     <div className="flex justify-center py-8">
       <span className="font-russo text-[40px] uppercase">
@@ -8,7 +9,10 @@ export const Contribute = ({ isMyVaults = false }) => (
       </span>
     </div>
     <div className="container mx-auto">
-      <VaultsList isMyVaults={isMyVaults} />
+      <div className="flex flex-col gap-20">
+        <FeaturedVaultsList />
+        <CommunityVaultsList />
+      </div>
     </div>
   </div>
 );

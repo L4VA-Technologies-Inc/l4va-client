@@ -40,6 +40,26 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async getInvestVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getInvestVaults());
+    return response;
+  }
+
+  static async getContributeVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getContributeVaults());
+    return response;
+  }
+
+  static async getUpcomingVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getUpcomingVaults());
+    return response;
+  }
+
+  static async getPastVaults() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getPastVaults());
+    return response;
+  }
+
   static async saveDraft(vaultData) {
     const formatted = formatVaultData(vaultData);
     const response = await axiosInstance.post(

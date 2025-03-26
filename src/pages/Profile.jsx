@@ -1,7 +1,7 @@
 import { Hero } from '@/components/profile/Hero';
 import { Stats } from '@/components/profile/Stats';
 import { ProfileSocialLinks } from '@/components/profile/ProfileSocialLinks';
-import { VaultsList } from '@/components/vaults/VaultsList';
+import { MyVaultsList } from '@/components/vaults/MyVaultsList';
 
 export const Profile = () => (
   <div className="min-h-screen">
@@ -10,7 +10,7 @@ export const Profile = () => (
       <div className="flex flex-col gap-20">
         <Stats />
         <ProfileSocialLinks />
-        <VaultsList />
+        <MyVaultsList />
       </div>
     </div>
   </div>
