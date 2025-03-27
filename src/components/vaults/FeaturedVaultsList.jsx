@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { VaultList } from './shared/VaultsList';
+import { VaultList } from './VaultsList';
 import { VaultsApiProvider } from '@/services/api/vaults';
 
 
