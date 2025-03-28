@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import { VaultCard } from '@/components/vaults/shared/VaultCard';
+import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
 
 const LoadingState = () => (
