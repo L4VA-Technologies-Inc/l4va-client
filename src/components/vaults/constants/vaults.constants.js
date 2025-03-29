@@ -28,6 +28,28 @@ export const CREATE_VAULT_STEPS = [
   },
 ];
 
+export const VAULT_TYPE_OPTIONS = [
+  { name: 'single', label: 'Single NFT' },
+  { name: 'multi', label: 'Multi NFT' },
+  { name: 'cnt', label: 'Any CNT' },
+];
+
+export const VAULT_PRIVACY_OPTIONS = [
+  { name: 'public', label: 'Public Vault' },
+  { name: 'private', label: 'Private Vault' },
+  { name: 'semi-private', label: 'Semi-Private Vault' },
+];
+
+export const VAULT_VALUATION_TYPE_OPTIONS = [
+  { name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' },
+  { name: 'fixed', label: 'Fixed' },
+];
+
+export const TERMINATION_TYPE_OPTIONS = [
+  { name: 'dao', label: 'DAO' },
+  { name: 'programmed', label: 'Programmed' },
+];
+
 const socialLinkSchema = yup.object({
   name: yup.string().required('Name is required'),
   url: yup.string().url('Invalid URL').required('URL is required'),

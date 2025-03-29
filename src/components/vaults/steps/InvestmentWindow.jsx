@@ -140,10 +140,11 @@ export const InvestmentWindow = ({
             error={errors.ftInvestmentReserve}
             label="FT INVESTMENT RESERVE"
             name="ftInvestmentReserve"
-            placeholder="#,###,###"
+            placeholder="XX.XX"
             type="text"
             value={data.ftInvestmentReserve || ''}
             onChange={handleChange}
+            suffix="%"
           />
         </div>
         <div className="mt-[60px]">

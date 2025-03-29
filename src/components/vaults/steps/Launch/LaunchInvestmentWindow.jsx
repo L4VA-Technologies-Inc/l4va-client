@@ -31,9 +31,36 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               <p className="uppercase font-semibold text-dark-100">
                 Investor whitelist
               </p>
-              <p className="text-[20px]">
-                {data.investorsWhitelist?.length ? `${data.investorsWhitelist.length} investors` : 'No investors whitelisted'}
-              </p>
+              <div className="space-y-2">
+                {data.investorsWhitelist?.length ? (
+                  <>
+                    {data.investorsWhitelist.slice(0, 5).map((investor, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="text-[20px]">{investor.walletAddress || 'Not set'}</span>
+                      </div>
+                    ))}
+                    {data.investorsWhitelist.length > 5 && (
+                      <p className="text-dark-100 text-sm mt-2">
+                        +{data.investorsWhitelist.length - 5} more investors
+                      </p>
+                    )}
+                  </>
+                ) : data.investorsWhitelistCsv ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[20px]">CSV file uploaded</span>
+                    <a
+                      href={data.investorsWhitelistCsv.url}
+                      download={data.investorsWhitelistCsv.fileName}
+                      className="text-primary hover:underline"
+                    >
+                      Download
+                    </a>
+                  </div>
+                ) : (
+                  <span className="text-[20px]">Not set</span>
+                )}
+              </div>
             </div>
           )}
           <div>

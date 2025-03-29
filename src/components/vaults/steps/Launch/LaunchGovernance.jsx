@@ -1,5 +1,9 @@
 import { Edit } from 'lucide-react';
 
+import {
+  TERMINATION_TYPE_OPTIONS,
+} from '@/components/vaults/constants/vaults.constants';
+
 export const LaunchGovernance = ({ data, setCurrentStep }) => (
   <section>
     <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
@@ -52,7 +56,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             Termination type
           </p>
           <p className="text-[20px]">
-            {data.terminationType || 'Not set'}
+            {TERMINATION_TYPE_OPTIONS.find(option => option.name === data.terminationType)?.label || 'Not set'}
           </p>
         </div>
         {data.terminationType === 'programmed' && (

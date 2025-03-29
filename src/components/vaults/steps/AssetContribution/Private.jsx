@@ -125,6 +125,7 @@ export const Private = ({
         {valuationType === 'lbe' ? (
           <div className="mt-[60px]">
             <LavaWhitelist
+              itemPlaceholder="Enter Wallet Address"
               label="Contributor Whitelist"
               setWhitelist={(assets) => updateField('whitelistContributors', assets)}
               whitelist={data.whitelistContributors || []}

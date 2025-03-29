@@ -7,6 +7,8 @@ import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 
+import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+
 export const Governance = ({
   data,
   errors = {},
@@ -97,10 +99,7 @@ export const Governance = ({
           </div>
           <LavaRadio
             name="terminationType"
-            options={[
-              { name: 'dao', label: 'DAO' },
-              { name: 'programmed', label: 'Programmed' },
-            ]}
+            options={TERMINATION_TYPE_OPTIONS}
             value={data.terminationType || 'dao'}
             onChange={(value) => updateField('terminationType', value)}
           />

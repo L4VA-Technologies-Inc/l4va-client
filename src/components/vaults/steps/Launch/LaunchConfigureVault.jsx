@@ -1,6 +1,11 @@
 import { Edit } from 'lucide-react';
 import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 
+import {
+  VAULT_TYPE_OPTIONS,
+  VAULT_PRIVACY_OPTIONS,
+} from '@/components/vaults/constants/vaults.constants';
+
 export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
   <section>
     <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
@@ -31,7 +36,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             Vault type
           </p>
           <p className="text-[20px]">
-            {data.type}
+            {VAULT_TYPE_OPTIONS.find(option => option.name === data.type)?.label}
           </p>
         </div>
         <div>
@@ -39,7 +44,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             Vault privacy
           </p>
           <p className="text-[20px]">
-            {data.privacy}
+            {VAULT_PRIVACY_OPTIONS.find(option => option.name === data.privacy)?.label}
           </p>
         </div>
         <div>

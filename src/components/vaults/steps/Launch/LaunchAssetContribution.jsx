@@ -1,12 +1,21 @@
 import { Edit } from 'lucide-react';
 import { formatInterval } from '@/utils/core.utils';
 
+import {
+  VAULT_VALUATION_TYPE_OPTIONS,
+} from '@/components/vaults/constants/vaults.constants';
+
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = time => {
     if (time === 'upon-vault-lunch') {
       return 'Upon vault launch';
     }
     return formatInterval(new Date(time).getTime() - new Date().getTime());
+  };
+
+  const getContributionDuration = () => {
+    return formatInterval(new Date(data.contributionDuration).getTime()
+      - new Date().getTime())
   };
 
   return (
@@ -31,7 +40,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Valuation type
             </p>
             <p className="text-[20px]">
-              {data.valuationType}
+              {VAULT_VALUATION_TYPE_OPTIONS.find(option => option.name === data.valuationType)?.label}
             </p>
           </div>
           {data.valuationType === 'fixed' && (
@@ -59,7 +68,8 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution duration
             </p>
             <p className="text-[20px]">
-              {data.contributionDuration ? `${formatInterval(new Date(data.contributionDuration).getTime() - new Date().getTime())} days` : 'Not set'}
+              {data.contributionDuration ?
+                `${getContributionDuration()} days` : 'Not set'}
             </p>
           </div>
           <div>
@@ -80,9 +90,21 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             <p className="uppercase font-semibold text-dark-100">
               Asset whitelist
             </p>
-            <p className="text-[20px]">
-              {data.assetsWhitelist?.length ? `${data.assetsWhitelist.length} assets` : 'No assets whitelisted'}
-            </p>
+            {data.assetsWhitelist?.length ? (
+              <div className="space-y-2">
+                {data.assetsWhitelist.slice(0, 5).map((asset, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-[20px]">{asset.policyId}</span>
+                  </div>
+                ))}
+                {data.assetsWhitelist.length > 5 && (
+                  <p className="text-dark-100 text-sm mt-2">
+                    +{data.assetsWhitelist.length - 5} more assets
+                  </p>
+                )}
+              </div>
+            ) : <span className="text-[20px]">Not set</span>}
           </div>
         </div>
       </div>

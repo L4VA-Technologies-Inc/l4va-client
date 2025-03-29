@@ -4,6 +4,11 @@ import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 
+import {
+  VAULT_TYPE_OPTIONS,
+  VAULT_PRIVACY_OPTIONS,
+} from '@/components/vaults/constants/vaults.constants';
+
 export const ConfigureVault = ({
   data,
   errors = {},
@@ -31,11 +36,7 @@ export const ConfigureVault = ({
             <LavaRadio
               label="*Vault type"
               name="type"
-              options={[
-                { name: 'single', label: 'Single NFT' },
-                { name: 'multi', label: 'Multi NFT' },
-                { name: 'cnt', label: 'Any CNT' },
-              ]}
+              options={VAULT_TYPE_OPTIONS}
               value={data.type || ''}
               onChange={(value) => updateField('type', value)}
             />
@@ -49,11 +50,7 @@ export const ConfigureVault = ({
             <LavaRadio
               label="*Vault privacy"
               name="privacy"
-              options={[
-                { name: 'private', label: 'Private Vault' },
-                { name: 'public', label: 'Public Vault' },
-                { name: 'semi-private', label: 'Semi-Private Vault' },
-              ]}
+              options={VAULT_PRIVACY_OPTIONS}
               value={data.privacy || ''}
               onChange={(value) => updateField('privacy', value)}
             />
