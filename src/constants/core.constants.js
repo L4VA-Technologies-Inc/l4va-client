@@ -1,6 +1,7 @@
 export const MODAL_TYPES = {
   LOGIN: 'LOGIN',
   PROFILE: 'PROFILE',
+  CONTRIBUTE: 'CONTRIBUTE',
 };
 
 export const SOCIAL_PLATFORMS = {

@@ -1,3 +1,5 @@
+import { formatNum } from '@/utils/core.utils';
+
 export const VaultStats = ({
   access,
   reserve,
@@ -14,11 +16,11 @@ export const VaultStats = ({
     },
     {
       label: 'Reserve',
-      value: reserve ? `$${reserve.toLocaleString()}` : 'N/A',
+      value: `$${formatNum(reserve)}`,
     },
     {
       label: 'Invested',
-      value: invested ? `$${invested.toLocaleString()}` : '$0',
+      value: `$${formatNum(invested)}`,
     },
     {
       label: 'Inv/Asset Val',
@@ -28,12 +30,12 @@ export const VaultStats = ({
 
   return (
     <div className="grid grid-cols-4 gap-4">
-      {stats.map((stat) => (
-        <div key={stat.label}>
+      {stats.map((stat, index) => (
+        <div key={stat.label} className={`px-4 text-center ${index > 0 ? 'divider-left' : ''}`}>
           <p className="text-dark-100 text-sm mb-1">{stat.label}</p>
           <p className="font-medium">{stat.value}</p>
         </div>
       ))}
     </div>
   );
-}; 
+};

@@ -1,92 +1,86 @@
 import { VaultContribution } from '@/components/vault-profile/VaultContribution';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultContent } from '@/components/vault-profile/VaultContent';
+import { VaultStats } from '@/components/vault-profile/VaultStats';
+import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { ContributeModal } from '@/components/modals/ContributeModal';
 
-export const VaultProfileView = ({ vault }) => (
-  <div className="min-h-screen">
-    <div className="container mx-auto">
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-4 space-y-4">
-          <div className="bg-[#181A2A] rounded-xl p-4">
-            <img
-              src={vault.vaultImage || '/assets/vaults/space-man.webp'}
-              alt={vault.name}
-              className="w-full aspect-square rounded-xl object-cover mb-6"
-            />
-            <p className="text-[20px] mb-2">Countdown name</p>
-            <div className="mb-6">
-              <VaultCountdown
-                endTime={vault.contributionOpenWindowTime}
-              />
-            </div>
-            <VaultContribution
-              totalRaised={vault.totalRaised}
-              target={vault.target}
-              socialLinks={vault.socialLinks}
-            />
-          </div>
-        </div>
+import { useModal } from '@/context/modals';
 
-        <div className="col-span-8 space-y-4">
-          <div className="bg-[#181A2A] rounded-xl p-4">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">{vault.name}</h1>
-                <p className="text-dark-100 text-sm">VAULT ID: {vault.id}</p>
+import { MODAL_TYPES } from '@/constants/core.constants';
+
+import { formatCompactNumber } from '@/utils/core.utils';
+
+import EyeIcon from '@/icons/eye.svg?react';
+
+export const VaultProfileView = ({ vault }) => {
+  const {
+    activeModal,
+    openModal,
+    closeModal,
+    modalProps,
+  } = useModal();
+
+  return (
+    <>
+      <div className="min-h-screen">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-4 space-y-4">
+              <div className="bg-[#181A2A] rounded-xl p-6">
+                <img
+                  alt={vault.name}
+                  className="w-full aspect-square rounded-xl object-cover mb-6"
+                  src={vault.vaultImage || '/assets/vaults/space-man.webp'}
+                />
+                <p className="text-[20px] mb-2">Countdown name</p>
+                <div className="mb-6">
+                  <VaultCountdown
+                    endTime={vault.contributionOpenWindowTime}
+                  />
+                </div>
+                <VaultContribution
+                  socialLinks={vault.socialLinks}
+                  target={vault.target}
+                  totalRaised={vault.totalRaised}
+                />
               </div>
-              <div className="flex gap-2">
-                {vault.type === 'NFT' && (
-                  <span className="bg-dark-700 px-3 py-1 rounded-full text-sm">NFT</span>
-                )}
-                <span className="bg-dark-700 px-3 py-1 rounded-full text-sm capitalize">
-                  {vault.privacy}
-                </span>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h2 className="text-sm font-medium mb-2">Description</h2>
-              <p className="text-dark-100">{vault.description}</p>
             </div>
 
-            {vault.socialLinks?.length > 0 && (
-              <div className="flex gap-3 mb-6">
-                {vault.socialLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-dark-100 hover:text-white transition-colors"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-              </div>
-            )}
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div>
-                <p className="text-dark-100 text-sm mb-1">Access</p>
-                <p className="font-medium">{vault.access || 'Public'}</p>
-              </div>
-              <div>
-                <p className="text-dark-100 text-sm mb-1">Reserve</p>
-                <p className="font-medium">${vault.reserve?.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-dark-100 text-sm mb-1">Invested</p>
-                <p className="font-medium">${vault.invested?.toLocaleString() || '0'}</p>
-              </div>
-              <div>
-                <p className="text-dark-100 text-sm mb-1">Inv/Asset Val</p>
-                <p className="font-medium">N/A</p>
+            <div className="col-span-8 space-y-4">
+              <div className="bg-[#181A2A] rounded-xl p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">{vault.name}</h1>
+                    <p className="text-dark-100 text-sm">VAULT ID: {vault.id}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="bg-dark-600 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
+                      <EyeIcon className="w-4 h-4 text-main-orange" />
+                      <span>{formatCompactNumber(200)}</span>
+                    </span>
+                  </div>
+                </div>
+                <p className="text-dark-100 mb-6">{vault.description || 'No description'}</p>
+                <div className="mb-6">
+                  <VaultStats invested={0} reserve={50000} />
+                </div>
+                <div className="flex justify-center mb-6">
+                  <PrimaryButton className="uppercase" onClick={() => openModal(MODAL_TYPES.CONTRIBUTE)}>
+                    Contribute
+                  </PrimaryButton>
+                </div>
+                <VaultContent vault={vault} />
               </div>
             </div>
           </div>
-          <VaultContent vault={vault} />
         </div>
       </div>
-    </div>
-  </div>
-);
+      <ContributeModal
+        isOpen={activeModal === MODAL_TYPES.CONTRIBUTE}
+        vault={modalProps.vault}
+        onClose={closeModal}
+      />
+    </>
+  );
+};
