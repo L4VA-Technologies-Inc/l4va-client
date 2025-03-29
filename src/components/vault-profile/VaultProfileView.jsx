@@ -1,6 +1,5 @@
 import { VaultContribution } from '@/components/vault-profile/VaultContribution';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
-import { VaultSwap } from '@/components/vault-profile/VaultSwap';
 import { VaultContent } from '@/components/vault-profile/VaultContent';
 
 export const VaultProfileView = ({ vault }) => (
@@ -8,28 +7,24 @@ export const VaultProfileView = ({ vault }) => (
     <div className="container mx-auto">
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-4 space-y-4">
-          <div className="bg-[#181A2A] rounded-xl p-4 flex flex-col gap-4">
+          <div className="bg-[#181A2A] rounded-xl p-4">
             <img
               src={vault.vaultImage || '/assets/vaults/space-man.webp'}
               alt={vault.name}
-              className="w-full aspect-square rounded-xl object-cover"
+              className="w-full aspect-square rounded-xl object-cover mb-6"
             />
-            <VaultCountdown endTime={vault.contributionOpenWindowTime} />
+            <p className="text-[20px] mb-2">Countdown name</p>
+            <div className="mb-6">
+              <VaultCountdown
+                endTime={vault.contributionOpenWindowTime}
+              />
+            </div>
             <VaultContribution
               totalRaised={vault.totalRaised}
               target={vault.target}
-              assetValue={vault.assetValue}
-              valuationType={vault.valuationType}
-              ftInvestmentReserve={vault.ftInvestmentReserve}
-              liquidityPoolContribution={vault.liquidityPoolContribution}
+              socialLinks={vault.socialLinks}
             />
           </div>
-          <VaultSwap
-            ftTokenTicker={vault.ftTokenTicker}
-            valuationCurrency={vault.valuationCurrency}
-            ftTokenSupply={vault.ftTokenSupply}
-            ftTokenDecimals={vault.ftTokenDecimals}
-          />
         </div>
 
         <div className="col-span-8 space-y-4">

@@ -3,9 +3,8 @@ import { calculateTimeLeft } from '@/utils/core.utils';
 
 import TimeBanner from '@/icons/time-banner.svg?react';
 
-export const VaultCountdown = ({
-  endTime,
-}) => {
+export const VaultCountdown = () => {
+  const endTime = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
 
   useEffect(() => {
