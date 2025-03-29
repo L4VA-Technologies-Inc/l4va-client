@@ -1,4 +1,5 @@
 import { Edit } from 'lucide-react';
+import { formatNum } from '@/utils/core.utils';
 import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 
 import {

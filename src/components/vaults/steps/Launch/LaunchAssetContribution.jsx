@@ -1,22 +1,19 @@
 import { Edit } from 'lucide-react';
-import { formatInterval } from '@/utils/core.utils';
+import { formatInterval, formatNum, formatDateTime } from '@/utils/core.utils';
 
 import {
   VAULT_VALUATION_TYPE_OPTIONS,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
-  const formatTime = time => {
-    if (time === 'upon-vault-lunch') {
+  const formatTime = (type, time) => {
+    if (type === 'upon-vault-lunch') {
       return 'Upon vault launch';
     }
-    return formatInterval(new Date(time).getTime() - new Date().getTime());
+    return formatDateTime(new Date(time));
   };
 
-  const getContributionDuration = () => {
-    return formatInterval(new Date(data.contributionDuration).getTime()
-      - new Date().getTime())
-  };
+  const getContributionDuration = () => formatInterval(new Date(data.contributionDuration));
 
   return (
     <section>
@@ -58,7 +55,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
                   Valuation Amount
                 </p>
                 <p className="text-[20px]">
-                  {data.valuationAmount || 'Not set'}
+                  {data.valuationAmount ? formatNum(data.valuationAmount) : 'Not set'}
                 </p>
               </div>
             </>
@@ -68,8 +65,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution duration
             </p>
             <p className="text-[20px]">
-              {data.contributionDuration ?
-                `${getContributionDuration()} days` : 'Not set'}
+              {data.contributionDuration ? getContributionDuration() : 'Not set'}
             </p>
           </div>
           <div>
@@ -77,11 +73,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Contribution Window Open Time
             </p>
             <p className="text-[20px]">
-              {data.contributionOpenWindowType === 'custom'
-                ? formatTime(data.contributionOpenWindowTime)
-                : data.contributionOpenWindowType === 'upon-vault-lunch'
-                  ? 'Upon vault launch'
-                  : 'Not set'}
+              {formatTime(data.contributionOpenWindowType, data.contributionOpenWindowTime)}
             </p>
           </div>
         </div>
@@ -100,7 +92,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
                 ))}
                 {data.assetsWhitelist.length > 5 && (
                   <p className="text-dark-100 text-sm mt-2">
-                    +{data.assetsWhitelist.length - 5} more assets
+                    +{formatNum(data.assetsWhitelist.length - 5)} more assets
                   </p>
                 )}
               </div>

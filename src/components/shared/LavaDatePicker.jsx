@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
-import { formatISO } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+
+import { formatDateTime } from '@/utils/core.utils';
 
 export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,18 +54,6 @@ export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
       }
       onChange(newDate.getTime());
     }
-  };
-
-  const formatDateTime = (dt) => {
-    if (!dt) return null;
-
-    const date = dt.toLocaleDateString();
-    const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const timezoneOffset = formatISO(dt).slice(19, 25);
-    const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
-
-    return `${date} ${time} (${timezoneString})`;
   };
 
   return (

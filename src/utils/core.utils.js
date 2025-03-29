@@ -1,3 +1,5 @@
+import { formatISO } from 'date-fns';
+
 export const formatNum = (value, maximumFractionDigits = 2) => (value ? Number(value).toLocaleString('en', {
   useGrouping: true,
   maximumFractionDigits,
@@ -138,4 +140,16 @@ export const calculateTimeLeft = (endTime) => {
     hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
     minutes: Math.floor((difference / 1000 / 60) % 60),
   };
+};
+
+export const formatDateTime = (dt) => {
+  if (!dt) return null;
+
+  const date = dt.toLocaleDateString();
+  const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const timezoneOffset = formatISO(dt).slice(19, 25);
+  const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
+
+  return `${date} ${time} (${timezoneString})`;
 };

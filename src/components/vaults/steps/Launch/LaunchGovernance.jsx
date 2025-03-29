@@ -1,4 +1,5 @@
 import { Edit } from 'lucide-react';
+import { formatNum } from '@/utils/core.utils';
 
 import {
   TERMINATION_TYPE_OPTIONS,
@@ -26,7 +27,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             FT TOKEN SUPPLY
           </p>
           <p className="text-[20px]">
-            {data.ftTokenSupply || 'Not set'}
+            {data.ftTokenSupply ? formatNum(data.ftTokenSupply) : 'Not set'}
           </p>
         </div>
         <div>
@@ -34,7 +35,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             FT Token Decimals
           </p>
           <p className="text-[20px]">
-            {data.ftTokenDecimals || 'Not set'}
+            {data.ftTokenDecimals ? formatNum(data.ftTokenDecimals) : 'Not set'}
           </p>
         </div>
         <div>
@@ -66,7 +67,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Time Elapsed
               </p>
               <p className="text-[20px]">
-                {data.timeElapsedIsEqualToTime ? `${data.timeElapsedIsEqualToTime} days` : 'Not set'}
+                {data.timeElapsedIsEqualToTime ? `${formatNum(data.timeElapsedIsEqualToTime)} days` : 'Not set'}
               </p>
             </div>
             <div>
@@ -74,7 +75,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Vault Appreciation
               </p>
               <p className="text-[20px]">
-                {data.vaultAppreciation ? `${data.vaultAppreciation}%` : 'Not set'}
+                {data.vaultAppreciation ? `${formatNum(data.vaultAppreciation)}%` : 'Not set'}
               </p>
             </div>
           </>
@@ -86,7 +87,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Creation Threshold %
               </p>
               <p className="text-[20px]">
-                {data.creationThreshold ? `${data.creationThreshold}%` : 'Not set'}
+                {data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}
               </p>
             </div>
             <div>
@@ -94,7 +95,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Start Threshold %
               </p>
               <p className="text-[20px]">
-                {data.startThreshold ? `${data.startThreshold}%` : 'Not set'}
+                {data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}
               </p>
             </div>
             <div>
@@ -102,7 +103,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Vote Threshold %
               </p>
               <p className="text-[20px]">
-                {data.voteThreshold ? `${data.voteThreshold}%` : 'Not set'}
+                {data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}
               </p>
             </div>
             <div>
@@ -110,7 +111,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Execution Threshold %
               </p>
               <p className="text-[20px]">
-                {data.executionThreshold ? `${data.executionThreshold}%` : 'Not set'}
+                {data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}
               </p>
             </div>
             <div>
@@ -118,7 +119,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
                 Cosigning Threshold %
               </p>
               <p className="text-[20px]">
-                {data.cosigningThreshold ? `${data.cosigningThreshold}%` : 'Not set'}
+                {data.cosigningThreshold ? `${formatNum(data.cosigningThreshold)}%` : 'Not set'}
               </p>
             </div>
           </>

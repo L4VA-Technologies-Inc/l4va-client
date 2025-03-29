@@ -1,13 +1,15 @@
 import { Edit } from 'lucide-react';
-import { formatInterval } from '@/utils/core.utils';
+import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
 
 export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
-  const formatTime = time => {
-    if (time === 'upon-asset-window-closing') {
+  const formatTime = (type, time) => {
+    if (type === 'upon-asset-window-closing') {
       return 'Upon asset window closing';
     }
-    return formatInterval(new Date(time).getTime() - new Date().getTime());
+    return formatDateTime(new Date(time));
   };
+
+  const getInvestmentWindowDuration = () => formatInterval(new Date(data.investmentWindowDuration));
 
   return (
     <section>
@@ -42,7 +44,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
                     ))}
                     {data.investorsWhitelist.length > 5 && (
                       <p className="text-dark-100 text-sm mt-2">
-                        +{data.investorsWhitelist.length - 5} more investors
+                        +{formatNum(data.investorsWhitelist.length - 5)} more investors
                       </p>
                     )}
                   </>
@@ -68,7 +70,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               Investment Window Duration
             </p>
             <p className="text-[20px]">
-              {data.investmentWindowDuration ? `${data.investmentWindowDuration} days` : 'Not set'}
+              {data.investmentWindowDuration ? getInvestmentWindowDuration() : 'Not set'}
             </p>
           </div>
           <div>
@@ -76,9 +78,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               Investment Window Open Time
             </p>
             <p className="text-[20px]">
-              {data.investmentOpenWindowType === 'custom'
-                ? formatTime(data.investmentOpenWindowTime)
-                : formatTime(data.investmentOpenWindowType)}
+              {formatTime(data.investmentOpenWindowType, data.investmentOpenWindowTime)}
             </p>
           </div>
         </div>
@@ -88,7 +88,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               % of Assets Fractionalized
             </p>
             <p className="text-[20px]">
-              {data.offAssetsOffered ? `${data.offAssetsOffered}%` : 'Not set'}
+              {data.offAssetsOffered ? `${formatNum(data.offAssetsOffered)}%` : 'Not set'}
             </p>
           </div>
           <div>
@@ -96,7 +96,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               FT Investment Reserve
             </p>
             <p className="text-[20px]">
-              {data.ftInvestmentReserve ? `${data.ftInvestmentReserve}%` : 'Not set'}
+              {data.ftInvestmentReserve ? `${formatNum(data.ftInvestmentReserve)}%` : 'Not set'}
             </p>
           </div>
           <div>
@@ -104,7 +104,7 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
               % Liquidity Pool Contribution
             </p>
             <p className="text-[20px]">
-              {data.liquidityPoolContribution ? `${data.liquidityPoolContribution}%` : 'Not set'}
+              {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}
             </p>
           </div>
         </div>
