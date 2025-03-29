@@ -18,7 +18,6 @@ export const VaultProfileView = ({ vault }) => {
     activeModal,
     openModal,
     closeModal,
-    modalProps,
   } = useModal();
 
   return (
@@ -46,7 +45,6 @@ export const VaultProfileView = ({ vault }) => {
                 />
               </div>
             </div>
-
             <div className="col-span-8 space-y-4">
               <div className="bg-[#181A2A] rounded-xl p-6">
                 <div className="flex justify-between items-start mb-6">
@@ -78,7 +76,7 @@ export const VaultProfileView = ({ vault }) => {
       </div>
       <ContributeModal
         isOpen={activeModal === MODAL_TYPES.CONTRIBUTE}
-        vault={modalProps.vault}
+        vaultName={vault.name}
         onClose={closeModal}
       />
     </>

@@ -57,7 +57,7 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-6xl p-0 bg-[#181a2a] text-white border-none max-h-[90vh]">
+      <DialogContent className="sm:max-w-6xl p-0 bg-[#181a2a] text-white border-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
           <DialogTitle className="text-2xl text-center font-medium">Contribute to {vaultName}</DialogTitle>
         </DialogHeader>
@@ -124,7 +124,7 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
 
               <div className="space-y-3">
                 <h3 className="text-lg font-medium">{selectedNFTs.length} Assets Contributed</h3>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                <div className="space-y-2 h-[300px] overflow-y-auto">
                   {selectedNFTs.length > 0 ? (
                     selectedNFTsData.map((nft) => (
                       <div key={nft.id} className="flex items-center justify-between p-2 bg-[#282b3f] rounded-md">
