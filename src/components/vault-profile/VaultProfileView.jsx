@@ -2,9 +2,8 @@ import { VaultContribution } from '@/components/vault-profile/VaultContribution'
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultSwap } from '@/components/vault-profile/VaultSwap';
 import { VaultContent } from '@/components/vault-profile/VaultContent';
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
 
-export const VaultProfile = ({ vault }) => (
+export const VaultProfileView = ({ vault }) => (
   <div className="min-h-screen">
     <div className="container mx-auto">
       <div className="grid grid-cols-12 gap-4">

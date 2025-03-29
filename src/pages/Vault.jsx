@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 
-import { CreateVault } from './CreateVault';
-import { VaultProfile } from './VaultProfile';
+import { EditVault } from '@/components/vaults/EditVault';
+import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';
 
 import { Spinner } from '@/components/Spinner';
 
@@ -42,8 +42,8 @@ export const Vault = () => {
   }
 
   if (vault.vaultStatus === VAULT_STATUSES.DRAFT) {
-    return <CreateVault vault={vault} />;
+    return <EditVault vault={vault} />;
   }
 
-  return <VaultProfile vault={vault} />;
+  return <VaultProfileView vault={vault} />;
 };
