@@ -24,3 +24,24 @@ export const mockVaultAssets = [
     description: 'Hosky Token is a meme token on the Cardano blockchain, known for its community-driven approach and playful nature.',
   },
 ];
+
+export const mockInvestments = [
+  {
+    name: 'CelloBach',
+    publicKey: '0x55....7fdf',
+    allocation: 14,
+    invested: 626.99,
+  },
+  {
+    name: 'YoYoMa',
+    publicKey: '0x55....7fdf',
+    allocation: 4,
+    invested: 26.99,
+  },
+  {
+    name: 'ClassicalGas',
+    publicKey: '0x55....7fdf',
+    allocation: 82,
+    invested: 5626.99,
+  },
+];

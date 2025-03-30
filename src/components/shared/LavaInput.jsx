@@ -14,7 +14,7 @@ export const LavaInput = ({
 }) => {
   const handleChange = (e) => {
     const newValue = e.target.value;
-    const isNumber = /^\d*$/.test(newValue.replace(/,/g, ''));
+    const isNumber = (/^\d*$/).test(newValue.replace(/,/g, ''));
 
     if (isNumber) {
       const rawValue = newValue.replace(/,/g, '');
@@ -26,7 +26,7 @@ export const LavaInput = ({
     }
   };
 
-  const displayValue = value && /^\d*$/.test(value.toString().replace(/,/g, ''))
+  const displayValue = value && (/^\d*$/).test(value.toString().replace(/,/g, ''))
     ? formatNum(value)
     : (value || '');
 

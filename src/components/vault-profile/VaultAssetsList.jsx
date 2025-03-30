@@ -8,7 +8,7 @@ export const VaultAssetsList = ({ assets = mockVaultAssets }) => {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr] mb-4 text-dark-100 text-sm px-4">
-        <div>Asset</div>
+        <div>Image</div>
         <div>Name</div>
         <div>Value</div>
         <div>% Vault</div>
