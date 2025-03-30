@@ -19,7 +19,7 @@ export const InvestmentsList = ({ investments = [] }) => {
           {totalValuePercentage}
         </div>
       </div>
-      <div className="grid grid-cols-4 px-6 py-4 text-sm text-dark-100">
+      <div className="grid grid-cols-4 px-4 py-4 text-sm text-dark-100">
         <div>Name</div>
         <div>Public key</div>
         <div>% Alloc.</div>
@@ -29,7 +29,7 @@ export const InvestmentsList = ({ investments = [] }) => {
         {investments.map((investment, index) => (
           <div
             key={index}
-            className="grid grid-cols-4 px-6 py-3 hover:bg-[#2D3049] transition-colors"
+            className="grid grid-cols-4 px-4 py-4 bg-[#202233] hover:bg-[#2D3049] transition-colors rounded-lg"
           >
             <div className="font-medium">{investment.name}</div>
             <div className="font-medium text-dark-100">{investment.publicKey}</div>
