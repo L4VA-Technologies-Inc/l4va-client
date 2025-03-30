@@ -27,13 +27,6 @@ export const VaultContent = ({ vault }) => {
           onTabChange={setActiveTab}
         />
       </div>
-      <div className="grid grid-cols-5 gap-4 mb-4 text-dark-100 text-sm">
-        <div>Access</div>
-        <div>Name</div>
-        <div>Value</div>
-        <div>% Vault</div>
-        <div className="text-right">Contribute</div>
-      </div>
       {tabContent[activeTab]}
     </>
   );
