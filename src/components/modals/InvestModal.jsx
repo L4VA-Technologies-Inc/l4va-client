@@ -35,7 +35,7 @@ const nftData = [
   },
 ];
 
-export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
+export const InvestModal = ({ isOpen, onClose, vaultName }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
 
   const toggleNFT = (id) => {
@@ -59,7 +59,7 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-6xl p-0 bg-[#181a2a] text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">Contribute to {vaultName}</DialogTitle>
+          <DialogTitle className="text-2xl text-center font-medium">Invest in {vaultName}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col md:flex-row gap-6 p-6">
           <div className="w-full md:w-1/2 space-y-4">
@@ -121,6 +121,7 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
                   <p className="text-2xl font-medium">{estimatedTickerVal.toLocaleString()}</p>
                 </div>
               </div>
+
               <div className="space-y-3">
                 <h3 className="text-lg font-medium">{selectedNFTs.length} Assets Contributed</h3>
                 <div className="space-y-2 h-[300px] overflow-y-auto">

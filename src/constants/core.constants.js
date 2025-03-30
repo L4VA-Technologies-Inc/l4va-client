@@ -2,6 +2,7 @@ export const MODAL_TYPES = {
   LOGIN: 'LOGIN',
   PROFILE: 'PROFILE',
   CONTRIBUTE: 'CONTRIBUTE',
+  INVEST: 'INVEST',
 };
 
 export const SOCIAL_PLATFORMS = {

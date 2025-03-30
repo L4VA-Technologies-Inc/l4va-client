@@ -1,17 +1,13 @@
-import { useState } from 'react';
-
 import { InvestmentsList } from '@/components/vault-profile/InvestmentsList';
 import { VaultAssetsList } from '@/components/vault-profile/VaultAssetsList';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 
 import { mockInvestments } from '@/mocks/vaultAssets';
 
-export const VaultContent = ({ vault }) => {
-  const [activeTab, setActiveTab] = useState('Assets');
-
+export const VaultTabs = ({ vault, activeTab, onTabChange }) => {
   const tabContent = {
     Assets: <VaultAssetsList assets={vault.assets} />,
-    Investments: <InvestmentsList investments={mockInvestments} />,
+    Invest: <InvestmentsList investments={mockInvestments} />,
     Governance: <div>Governance content</div>,
     Settings: <div>Settings content</div>,
   };
@@ -28,7 +24,7 @@ export const VaultContent = ({ vault }) => {
           inactiveTabClassName="text-dark-100"
           tabClassName="flex-1 text-center"
           tabs={tabs}
-          onTabChange={setActiveTab}
+          onTabChange={onTabChange}
         />
       </div>
       {tabContent[activeTab]}
