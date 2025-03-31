@@ -30,11 +30,12 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (signature, stakeAddress) => {
+  const login = async (signature, stakeAddress, walletAddress) => {
     try {
       const response = await CoreApiProvider.login({
         signature,
         stakeAddress,
+        walletAddress
       });
       localStorage.setItem('jwt', response.data.accessToken);
       setUser(response.data.user);

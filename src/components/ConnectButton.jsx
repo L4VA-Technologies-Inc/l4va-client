@@ -77,7 +77,7 @@ export const ConnectButton = () => {
     try {
       const message = `account: ${wallet.stakeAddressBech32}`;
       const signature = await wallet.handler.signData(messageHex(message));
-      await login(signature, wallet.stakeAddressBech32);
+      await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
       closeModal();
       return modalProps.onSuccess && modalProps.onSuccess();
     } catch (error) {
