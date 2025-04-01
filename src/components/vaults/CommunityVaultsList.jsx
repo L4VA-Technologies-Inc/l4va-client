@@ -33,7 +33,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
           response = await VaultsApiProvider.getVaults();
           break;
         case VAULT_TABS.PAST:
-          response = await VaultsApiProvider.getVaults();
+          response = await VaultsApiProvider.getVaults('locked');
           break;
         default:
           break;
