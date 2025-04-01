@@ -41,7 +41,7 @@ export const Vault = () => {
     return <Navigate replace to="/vaults" />;
   }
 
-  if (vault.vaultStatus !== VAULT_STATUSES.DRAFT) {
+  if (vault.vaultStatus === VAULT_STATUSES.DRAFT) {
     return <EditVault vault={vault} />;
   }
 
