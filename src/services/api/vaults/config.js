@@ -3,7 +3,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults';
   }
 
-  static getVaults() {
+  static getVaults(filter) {
+    if(filter){
+      return '/api/v1/vaults?filter=' + filter;
+    }
     return '/api/v1/vaults';
   }
 

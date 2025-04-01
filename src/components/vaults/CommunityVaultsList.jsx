@@ -24,10 +24,10 @@ export const CommunityVaultsList = ({ className = '' }) => {
       let response;
       switch (tab) {
         case VAULT_TABS.INVEST:
-          response = await VaultsApiProvider.getVaults();
+          response = await VaultsApiProvider.getVaults('investment');
           break;
         case VAULT_TABS.CONTRIBUTE:
-          response = await VaultsApiProvider.getVaults();
+          response = await VaultsApiProvider.getVaults('contribution');
           break;
         case VAULT_TABS.UPCOMING:
           response = await VaultsApiProvider.getVaults();

@@ -20,8 +20,8 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getVaults() {
-    const response = await axiosInstance.get(VaultsConfigProvider.getVaults());
+  static async getVaults(tab) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getVaults(tab));
     return response;
   }
 
