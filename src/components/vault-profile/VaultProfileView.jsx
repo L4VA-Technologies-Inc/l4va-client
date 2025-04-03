@@ -38,10 +38,7 @@ export const VaultProfileView = ({ vault }) => {
         text: 'Invest',
         onClick: () => openModal(MODAL_TYPES.INVEST),
       },
-      Governance: {
-        text: 'Vote',
-        onClick: () => {},
-      },
+      Governance: null,
       Settings: {
         text: 'Save',
         onClick: () => {},
@@ -49,6 +46,8 @@ export const VaultProfileView = ({ vault }) => {
     };
 
     const config = buttonConfig[activeTab];
+
+    if (!config) return null;
 
     return (
       <PrimaryButton className="uppercase" onClick={config.onClick}>
