@@ -39,10 +39,7 @@ export const VaultProfileView = ({ vault }) => {
         onClick: () => openModal(MODAL_TYPES.INVEST),
       },
       Governance: null,
-      Settings: {
-        text: 'Save',
-        onClick: () => {},
-      },
+      Settings: null,
     };
 
     const config = buttonConfig[activeTab];

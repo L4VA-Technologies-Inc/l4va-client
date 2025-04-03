@@ -5,7 +5,7 @@ import {
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { formatDate } from '@/utils/core.utils';
 
-export const VaultGovernance = () => {
+export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
   const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
 
@@ -55,19 +55,14 @@ export const VaultGovernance = () => {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen p-6">
-      {/* Header with Logo */}
-      <div className="flex items-center mb-8">
-        <div className="w-12 h-12 rounded-full overflow-hidden mr-4 bg-orange-500">
-          <img
-            alt="Spaceman Token Logo"
-            className="w-full h-full object-cover"
-            src="/api/placeholder/48/48"
-          />
-        </div>
-        <h1 className="text-2xl font-bold">Spaceman Token</h1>
+      <div className="flex flex-col items-center mb-6">
+        <img
+          alt={vault.name}
+          className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
+          src={vault.imageUrl || '/assets/vaults/space-man.webp'}
+        />
+        <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
-
-      {/* Tabs using LavaTabs component */}
       <div className="mb-6">
         <LavaTabs
           activeTab={activeTab}
@@ -79,8 +74,6 @@ export const VaultGovernance = () => {
           onTabChange={setActiveTab}
         />
       </div>
-
-      {/* Proposals List */}
       <div className="space-y-6">
         {filteredProposals.map((proposal, index) => (
           <div key={index} className="bg-gray-800 rounded-lg p-6">
