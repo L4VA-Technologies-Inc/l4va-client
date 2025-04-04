@@ -92,7 +92,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
           <div className="flex flex-col gap-8">
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Asset Name:</p>
+                <p className="font-medium mb-2">Asset Name:</p>
                 <LavaSelect
                   className="bg-steel-850"
                   options={[{ value: 'SNEK', label: 'SNEK' }]}
@@ -102,7 +102,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Exec:</p>
+                <p className="font-medium mb-2">Exec:</p>
                 <LavaSelect
                   className="bg-steel-850"
                   options={execOptions}
@@ -112,7 +112,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Quantity</p>
+                <p className="font-medium mb-2">Quantity</p>
                 <LavaInput
                   className="bg-steel-850"
                   placeholder="Enter quantity"
@@ -121,7 +121,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Sell Type</p>
+                <p className="font-medium mb-2">Sell Type</p>
                 <LavaSelect
                   className="bg-steel-850"
                   options={sellTypeOptions}
@@ -133,7 +133,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
             </div>
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Method</p>
+                <p className="font-medium mb-2">Method</p>
                 <LavaSelect
                   className="bg-steel-850"
                   options={methodOptions}
@@ -143,7 +143,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Duration</p>
+                <p className="font-medium mb-2">Duration</p>
                 <LavaInput
                   className="bg-steel-850"
                   placeholder="Enter duration"
@@ -152,7 +152,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Market</p>
+                <p className="font-medium mb-2">Market</p>
                 <LavaSelect
                   className="bg-steel-850"
                   options={marketOptions}
@@ -162,7 +162,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
               <div className="col-span-1">
-                <p className="text-[16px] font-medium mb-2">Price</p>
+                <p className="font-medium mb-2">Price</p>
                 <LavaInput
                   className="bg-steel-850"
                   placeholder="Enter price"
