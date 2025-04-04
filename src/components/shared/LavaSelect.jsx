@@ -14,6 +14,7 @@ export const LavaSelect = ({
   placeholder = 'Select an option',
   error,
   required = false,
+  className,
 }) => (
   <div className="w-full">
     {label && (
@@ -23,7 +24,13 @@ export const LavaSelect = ({
     )}
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
-        className="bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium border border-dark-600 h-[60px] focus:ring-0 focus:ring-offset-0"
+        className={
+          `
+            bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium border border-dark-600 h-[60px] 
+            focus:ring-0 focus:ring-offset-0 mt-4
+            ${className}
+          `
+        }
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
