@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { Check, X } from 'lucide-react';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import {
@@ -7,36 +7,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-const nftData = [
-  {
-    id: 1, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 2, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 3, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 4, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 5, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 6, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 7, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-  {
-    id: 8, name: 'Asset Name', policyId: 'addr1q...qpyuxn', image: '/assets/vault-token-image.png',
-  },
-];
+import {useWallet} from "@ada-anvil/weld/react";
 
 export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
+  const [nftData, setNftData] = useState([]);
+  const wallet = useWallet('handler')
+
+  useEffect(() => {
+    loadNftData()
+  }, [])
+
+  const loadNftData = async () => {
+    const assetsBalance = await wallet.getBalanceAssets()
+    const result = Object.entries(assetsBalance).flatMap(([policyId, assets]) =>
+      Object.keys(assets).map(name => ({ name, policyId, id: name }))
+    );
+    const filtered = result.filter(value => value.name !== 'lovelace')
+    setNftData(filtered)
+  }
 
   const toggleNFT = (id) => {
     if (selectedNFTs.includes(id)) {
