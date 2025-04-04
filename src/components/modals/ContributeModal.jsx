@@ -27,6 +27,13 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
     setNftData(filtered)
   }
 
+  const handleContribute = () => {
+    // TODO: 1. create transaction with created status on a backend. Receive from the backend tx_id
+    // TODO: 2. create onchain transaction put assets and tx_hash to it and publish to the blockchain
+    // TODO: 3. update outchain transaction hash, and it will update status to pending also.
+    //
+  }
+
   const toggleNFT = (id) => {
     if (selectedNFTs.includes(id)) {
       setSelectedNFTs(selectedNFTs.filter((nftId) => nftId !== id));
@@ -149,6 +156,7 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
             <div className="flex justify-center">
               <PrimaryButton
                 disabled={selectedNFTs.length === 0}
+                onClick={handleContribute}
               >
                 CONTRIBUTE
               </PrimaryButton>
