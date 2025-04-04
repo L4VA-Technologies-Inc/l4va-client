@@ -13,7 +13,9 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 import { formatDateTime } from '@/utils/core.utils';
 
-export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
+export const LavaDatePicker = ({
+  value, minDate, className, onChange = () => { },
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dateValue, setDateValue] = useState(null);
 
@@ -64,6 +66,7 @@ export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
             className={cn(
               'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
               !dateValue && 'text-muted-foreground',
+              className,
             )}
             variant="outline"
           >
@@ -78,13 +81,13 @@ export const LavaDatePicker = ({ value, onChange = () => { }, minDate }) => {
             <Calendar
               initialFocus
               className="bg-input-bg rounded-[10px]"
-              mode="single"
-              selected={dateValue}
-              onSelect={handleDateSelect}
               disabled={(date) => {
                 const minimumDate = minDate || new Date(new Date().setHours(0, 0, 0, 0));
                 return date < minimumDate;
               }}
+              mode="single"
+              selected={dateValue}
+              onSelect={handleDateSelect}
             />
             <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
               <ScrollArea className="w-64 sm:w-auto bg-input-bg">

@@ -11,6 +11,7 @@ export const LavaInput = ({
   required = false,
   maxLength,
   suffix,
+  className,
 }) => {
   const handleChange = (e) => {
     const newValue = e.target.value;
@@ -44,6 +45,7 @@ export const LavaInput = ({
               rounded-[10px] bg-input-bg py-4 pl-5 
               ${suffix ? 'pr-12' : 'pr-5'} text-lg font-medium w-full border border-dark-600 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200
+              ${className}
             `}
             maxLength={maxLength}
             name={name}

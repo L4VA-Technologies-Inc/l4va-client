@@ -5,8 +5,10 @@ import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
+
 import { ContributeModal } from '@/components/modals/ContributeModal';
 import { InvestModal } from '@/components/modals/InvestModal';
+import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
 
 import { useModal } from '@/context/modals';
 
@@ -15,7 +17,6 @@ import { MODAL_TYPES } from '@/constants/core.constants';
 import { formatCompactNumber } from '@/utils/core.utils';
 
 import EyeIcon from '@/icons/eye.svg?react';
-
 export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
   const {
@@ -24,9 +25,7 @@ export const VaultProfileView = ({ vault }) => {
     closeModal,
   } = useModal();
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
+  const handleTabChange = (tab) => setActiveTab(tab);
 
   const renderActionButton = () => {
     const buttonConfig = {
@@ -38,7 +37,10 @@ export const VaultProfileView = ({ vault }) => {
         text: 'Invest',
         onClick: () => openModal(MODAL_TYPES.INVEST),
       },
-      Governance: null,
+      Governance: {
+        text: 'Create Proposal',
+        onClick: () => openModal(MODAL_TYPES.CREATE_PROPOSAL),
+      },
       Settings: null,
     };
 
@@ -67,6 +69,14 @@ export const VaultProfileView = ({ vault }) => {
         return (
           <InvestModal
             isOpen={activeModal === MODAL_TYPES.INVEST}
+            vaultName={vault.name}
+            onClose={closeModal}
+          />
+        );
+      case 'Governance':
+        return (
+          <CreateProposalModal
+            isOpen={activeModal === MODAL_TYPES.CREATE_PROPOSAL}
             vaultName={vault.name}
             onClose={closeModal}
           />
