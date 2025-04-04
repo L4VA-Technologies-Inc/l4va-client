@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { LavaCheckbox } from '../shared/LavaCheckbox';
+import { LavaDatePicker } from '../shared/LavaDatePicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -36,6 +38,8 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
   const [market, setMarket] = useState('');
   const [price, setPrice] = useState('');
   const [sellType, setSellType] = useState('');
+  const [abstain, setAbstain] = useState(false);
+  const [proposalEndDate, setProposalEndDate] = useState('');
 
   const execOptions = [
     { value: 'BUY', label: 'BUY' },
@@ -90,6 +94,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
             />
           </div>
           <div className="flex flex-col gap-8">
+            <p className="text-[20px] font-medium">Option 1</p>
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1">
                 <p className="font-medium mb-2">Asset Name:</p>
@@ -171,6 +176,27 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                 />
               </div>
             </div>
+          </div>
+          <div>
+            <p className="text-[20px] font-medium mb-4">Option 2</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="col-span-1">
+                <p className="font-medium mb-2">No</p>
+              </div>
+            </div>
+          </div>
+          <LavaCheckbox
+            label="Abstain"
+            value={abstain}
+            onChange={(e) => setAbstain(e.target.value)}
+          />
+          <div>
+            <p className="text-[20px] font-medium mb-4">Proposal Start</p>
+            <LavaDatePicker
+              className="bg-steel-850"
+              value={proposalEndDate}
+              onChange={(e) => setProposalEndDate(e.target.value)}
+            />
           </div>
         </div>
       </DialogContent>
