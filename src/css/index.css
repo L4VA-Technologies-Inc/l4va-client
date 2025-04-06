@@ -15,6 +15,8 @@
   --color-dark-600: #202233;
   --color-dark-700: #000322;
   --color-steel-850: #202233;
+  --color-steel-900: #1D1F2F;
+  --color-steel-950: #181a2a;
   --color-main-orange: #FF842C;
   --color-main-red: #E10134;
   --color-main-yellow: #FFD012;
@@ -38,6 +40,8 @@
   --color-dark-600: var(--color-dark-600);
   --color-dark-700: var(--color-dark-700);
   --color-steel-850: var(--color-steel-850);
+  --color-steel-900: var(--color-steel-900);
+  --color-steel-950: var(--color-steel-950);
   --color-main-orange: var(--color-main-orange);
   --color-main-red: var(--color-main-red);
   --color-main-yellow: var(--color-main-yellow);
@@ -86,4 +90,31 @@ button {
 .divider-left::before {
   content: '';
   @apply absolute left-0 top-0 h-full w-[1px] bg-dark-600;
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-steel-900);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-500);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dark-100);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-dark-500) var(--color-steel-900);
 }

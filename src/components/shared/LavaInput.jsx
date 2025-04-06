@@ -1,4 +1,5 @@
-import { formatNum } from '../../utils/core.utils';
+import { useState } from 'react';
+import { formatNum } from '@/utils/core.utils';
 
 export const LavaInput = ({
   name,
@@ -67,5 +68,41 @@ export const LavaInput = ({
         )}
       </div>
     </>
+  );
+};
+
+export const LavaSteelInput = ({
+  label,
+  required = false,
+  placeholder = 'Lorem ipsum',
+  value,
+  className = '',
+  onChange,
+}) => {
+  const [inputValue, setInputValue] = useState(value || '');
+
+  const handleChange = (e) => {
+    setInputValue(e.target.value);
+    if (onChange) onChange(e.target.value);
+  };
+
+  return (
+    <div>
+      {label ? (
+        <div className="text-[20px] font-semibold mb-4">
+          {required ? '*' : ''}{label}
+        </div>
+      ) : null}
+      <input
+        className={`
+          w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
+          focus:outline-none focus:ring-2 focus:ring-[#2D3049] ${className}
+        `}
+        placeholder={placeholder}
+        type="text"
+        value={inputValue}
+        onChange={handleChange}
+      />
+    </div>
   );
 };

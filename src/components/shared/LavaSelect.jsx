@@ -1,3 +1,5 @@
+import { useState, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -5,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 export const LavaSelect = ({
   label,
@@ -51,3 +54,56 @@ export const LavaSelect = ({
     )}
   </div>
 );
+
+export const LavaSteelSelect = ({
+  options = [],
+  value,
+  onChange,
+  placeholder = 'Select an option',
+  className,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const toggleDropdown = () => setIsOpen(!isOpen);
+
+  const handleOptionClick = (optionValue) => {
+    setIsOpen(false);
+    if (onChange) {
+      onChange(optionValue);
+    }
+  };
+
+  useClickOutside(dropdownRef, () => setIsOpen(false));
+
+  const selectedOption = options.find(option => option.value === value)?.label || placeholder;
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        className={`flex items-center justify-between w-full px-4 py-2 text-dark-100 bg-steel-850 rounded-lg ${className}`}
+        type="button"
+        onClick={toggleDropdown}
+      >
+        <span>{selectedOption}</span>
+        <ChevronDown className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute left-0 z-10 mt-2 w-full rounded-lg bg-steel-850 shadow-lg">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              className="
+                block w-full px-4 py-2 text-left hover:bg-steel-900 first:rounded-t-lg last:rounded-b-lg
+              "
+              type="button"
+              onClick={() => handleOptionClick(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
