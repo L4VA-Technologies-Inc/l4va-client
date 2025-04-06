@@ -8,6 +8,7 @@ export const LavaCheckbox = ({
   description,
   error,
   className = '',
+  labelClassName = '',
 }) => (
   <div className={`flex items-start ${className}`}>
     <label className="flex items-start cursor-pointer" htmlFor={name}>
@@ -27,7 +28,7 @@ export const LavaCheckbox = ({
         </div>
       </div>
       <div>
-        <span className="text-white text-sm">
+        <span className={`text-sm ${labelClassName}`}>
           {label}
         </span>
         {description && (
