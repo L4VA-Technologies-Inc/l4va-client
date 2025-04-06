@@ -20,7 +20,7 @@ export const LavaCheckbox = ({
           type="checkbox"
           onChange={onChange}
         />
-        <div className={`w-5 h-5 flex items-center justify-center border ${error ? 'border-main-red' : 'border-main-orange'} rounded-sm bg-transparent peer-checked:bg-transparent`}>
+        <div className={`w-5 h-5 flex items-center justify-center border ${error ? 'border-main-red' : 'border-[#2D3049]'} rounded-sm bg-transparent peer-checked:bg-transparent`}>
           {checked && (
             <Check size={16} strokeWidth={2} />
           )}

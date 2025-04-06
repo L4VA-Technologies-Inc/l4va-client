@@ -20,6 +20,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
   const [options, setOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
   const [proposalEndDate, setProposalEndDate] = useState('');
+  const [executionOption, setExecutionOption] = useState('');
 
   const handleAddOption = () => {
     setOptions([...options, {
@@ -100,11 +101,12 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
               <p className="text-[20px] font-medium mb-4">
                 Execution Options
               </p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <LavaSteelSelect
                   options={executionOptions}
                   placeholder="Buying/Selling"
-                  onChange={(value) => console.log(value)}
+                  value={executionOption}
+                  onChange={(value) => setExecutionOption(value)}
                 />
                 <button
                   className="flex items-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors"
@@ -121,9 +123,9 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
             ) : (
               <div className="space-y-8">
                 {options.map((option, index) => (
-                  <div key={option.id} className="relative bg-steel-850 p-6 rounded-[10px]">
+                  <div key={option.id} className="relative border border-white/60 p-6 rounded-[10px]">
                     <div className="flex justify-between items-center mb-4">
-                      <p className="text-[20px] font-medium">Options {index + 1}</p>
+                      <p className="text-[20px] font-medium">Option {index + 1}</p>
                       <button
                         className="bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors"
                         type="button"

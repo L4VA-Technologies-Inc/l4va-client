@@ -96,6 +96,7 @@ export const LavaSteelInput = ({
       <input
         className={`
           w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
+          border border-[#2D3049]
           focus:outline-none focus:ring-2 focus:ring-[#2D3049] ${className}
         `}
         placeholder={placeholder}
