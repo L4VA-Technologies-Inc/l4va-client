@@ -62,6 +62,7 @@ export const VaultProfileView = ({ vault }) => {
           <ContributeModal
             isOpen={activeModal === MODAL_TYPES.CONTRIBUTE}
             vaultName={vault.name}
+            vaultId={vault.id}
             onClose={closeModal}
           />
         );

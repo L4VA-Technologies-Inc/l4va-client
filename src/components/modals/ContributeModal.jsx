@@ -8,10 +8,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {useWallet} from "@ada-anvil/weld/react";
+import {ContributeApiProvider} from "@/services/api/contribute/index.js";
 
-export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
-  const [selectedNFTs, setSelectedNFTs] = useState([]);
+export const ContributeModal = ({ isOpen, onClose, vaultName, vaultId }) => {
+  const [selectedNFTs, setSelectedNFTs] = useState([]);  // Now stores full NFT objects
   const [nftData, setNftData] = useState([]);
+  const [isContributing, setIsContributing] = useState(false);
   const wallet = useWallet('handler')
 
   useEffect(() => {
@@ -27,26 +29,46 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
     setNftData(filtered)
   }
 
-  const handleContribute = () => {
-    // TODO: 1. create transaction with created status on a backend. Receive from the backend tx_id
-    // TODO: 2. create onchain transaction put assets and tx_hash to it and publish to the blockchain
-    // TODO: 3. update outchain transaction hash, and it will update status to pending also.
-    //
+  const handleContribute = async () => {
+    setIsContributing(true);
+    try {
+      // 1. Create transaction with created status on backend
+      const {data} = await ContributeApiProvider.createContributionTx({
+        vaultId: vaultId,
+        assets: selectedNFTs.map(nft => ({
+          policyId: nft.policyId,
+          assetId: nft.name,
+          quantity: '1' // Assuming quantity is 1 for each NFT, adjust if needed
+        }))
+      });
+      console.log('Transaction created with ID:', data.txId);
+      // TODO: 2. create onchain transaction with assets and tx_id
+
+      // TODO: 3. update outchain transaction hash (tx_hash) to update status to pending
+
+      onClose(); // Close modal after successful contribution
+    } catch (error) {
+      console.error('Error creating contribution:', error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsContributing(false);
+    }
   }
 
-  const toggleNFT = (id) => {
-    if (selectedNFTs.includes(id)) {
-      setSelectedNFTs(selectedNFTs.filter((nftId) => nftId !== id));
+  const toggleNFT = (nft) => {
+    const isSelected = selectedNFTs.some((selected) => selected.id === nft.id);
+    if (isSelected) {
+      setSelectedNFTs(selectedNFTs.filter((selected) => selected.id !== nft.id));
     } else {
-      setSelectedNFTs([...selectedNFTs, id]);
+      setSelectedNFTs([...selectedNFTs, nft]);
     }
   };
 
   const removeNFT = (id) => {
-    setSelectedNFTs(selectedNFTs.filter((nftId) => nftId !== id));
+    setSelectedNFTs(selectedNFTs.filter((nft) => nft.id !== id));
   };
 
-  const selectedNFTsData = nftData.filter((nft) => selectedNFTs.includes(nft.id));
+  const selectedNFTsData = selectedNFTs;
 
   const estimatedValue = selectedNFTs.length * 152;
   const estimatedTickerVal = selectedNFTs.length * 1751.67;
@@ -70,10 +92,10 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
                   <div
                     key={nft.id}
                     className="flex items-center gap-3 p-2 hover:bg-[#202233] rounded-md cursor-pointer"
-                    onClick={() => toggleNFT(nft.id)}
+                    onClick={() => toggleNFT(nft)}
                   >
                     <div className="relative w-6 h-6 flex items-center justify-center rounded-full border border-[#2f324c]">
-                      {selectedNFTs.includes(nft.id) && (
+                      {selectedNFTs.some((selected) => selected.id === nft.id) && (
                         <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[#ff8a00]">
                           <Check className="w-4 h-4 text-white" />
                         </div>
@@ -155,10 +177,10 @@ export const ContributeModal = ({ isOpen, onClose, vaultName }) => {
 
             <div className="flex justify-center">
               <PrimaryButton
-                disabled={selectedNFTs.length === 0}
+                disabled={selectedNFTs.length === 0 || isContributing}
                 onClick={handleContribute}
               >
-                CONTRIBUTE
+                {isContributing ? 'CONTRIBUTING...' : 'CONTRIBUTE'}
               </PrimaryButton>
             </div>
           </div>
