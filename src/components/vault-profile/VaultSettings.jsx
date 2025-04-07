@@ -33,7 +33,7 @@ export const VaultSettings = ({ vault }) => (
       />
       <h1 className="text-3xl font-bold">{vault.name}</h1>
     </div>
-    <div className="bg-[#2D3049] rounded-lg p-4">
+    <div className="bg-steel-750 rounded-lg p-4">
       <div className="space-y-2">
         <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
         <InfoRow label="Token Name" value={vault.tokenName} />

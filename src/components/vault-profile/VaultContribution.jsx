@@ -14,7 +14,7 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
           <span className="text-dark-100">Total Raised: <span className="text-[#F97316]">95%</span></span>
           <span className="text-dark-100">max 225</span>
         </div>
-        <div className="h-2 rounded-full bg-[#2D3049] mb-4">
+        <div className="h-2 rounded-full bg-steel-750 mb-4">
           <div
             className="h-full rounded-full bg-gradient-to-r from-[#F97316] via-[#F97316] to-[#FFD012]"
             style={{ width: `${progress}%` }}
@@ -28,7 +28,7 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
             <span className="text-dark-100">Reserve</span>
             <span className="text-dark-100">${formatNum(50000)}</span>
           </div>
-          <div className="h-2 rounded-full bg-[#2D3049] opacity-50" />
+          <div className="h-2 rounded-full bg-steel-750 opacity-50" />
         </div>
       </div>
       <VaultSocialLinks socialLinks={socialLinks} />

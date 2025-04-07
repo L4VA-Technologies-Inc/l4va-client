@@ -82,8 +82,8 @@ export const LavaSteelSelect = ({
     <div ref={dropdownRef} className="relative">
       <button
         className={`
-          flex items-center justify-between w-full px-4 py-2 text-dark-100 bg-steel-850 rounded-lg 
-          border border-[#2D3049]
+          flex items-center justify-between w-full px-4 py-2 bg-steel-850 rounded-lg 
+          border border-steel-750
           ${className}
         `}
         type="button"
@@ -93,12 +93,12 @@ export const LavaSteelSelect = ({
         <ChevronDown className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
-        <div className="absolute left-0 z-10 mt-2 w-full rounded-lg bg-steel-850 shadow-lg border border-[#2D3049]">
+        <div className="absolute left-0 z-10 mt-1 w-full rounded-lg bg-dark-600 shadow-lg border border-steel-750">
           {options.map((option) => (
             <button
               key={option.value}
               className="
-                block w-full px-4 py-2 text-left hover:bg-steel-900 first:rounded-t-lg last:rounded-b-lg
+                block w-full px-4 py-2 text-left hover:bg-white/5 first:rounded-t-lg last:rounded-b-lg
               "
               type="button"
               onClick={() => handleOptionClick(option.value)}

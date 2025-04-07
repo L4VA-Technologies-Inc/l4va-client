@@ -14,6 +14,9 @@
   --color-dark-500: #282B3F;
   --color-dark-600: #202233;
   --color-dark-700: #000322;
+  --color-gray-400: #979BB0;
+  --color-gray-500: #6B7280;
+  --color-steel-750: #2D3049;
   --color-steel-850: #202233;
   --color-steel-900: #1D1F2F;
   --color-steel-950: #181a2a;
@@ -39,6 +42,9 @@
   --color-dark-500: var(--color-dark-500);
   --color-dark-600: var(--color-dark-600);
   --color-dark-700: var(--color-dark-700);
+  --color-gray-400: var(--color-gray-400);
+  --color-gray-500: var(--color-gray-500);
+  --color-steel-750: var(--color-steel-750);
   --color-steel-850: var(--color-steel-850);
   --color-steel-900: var(--color-steel-900);
   --color-steel-950: var(--color-steel-950);

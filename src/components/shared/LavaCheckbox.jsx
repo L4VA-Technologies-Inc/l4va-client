@@ -10,8 +10,8 @@ export const LavaCheckbox = ({
   className = '',
   labelClassName = '',
 }) => (
-  <div className={`flex items-start ${className}`}>
-    <label className="flex items-start cursor-pointer" htmlFor={name}>
+  <div className={`flex items-center ${className}`}>
+    <label className="flex items-center cursor-pointer" htmlFor={name}>
       <div className="relative mr-2 mt-1">
         <input
           checked={checked}
@@ -21,9 +21,9 @@ export const LavaCheckbox = ({
           type="checkbox"
           onChange={onChange}
         />
-        <div className={`w-5 h-5 flex items-center justify-center border ${error ? 'border-main-red' : 'border-[#2D3049]'} rounded-sm bg-transparent peer-checked:bg-transparent`}>
+        <div className={`w-8 h-8 flex items-center justify-center border ${error ? 'border-main-red' : 'border-steel-750'} bg-steel-850 rounded-lg`}>
           {checked && (
-            <Check size={16} strokeWidth={2} />
+            <Check size={20} strokeWidth={2} />
           )}
         </div>
       </div>

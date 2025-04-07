@@ -16,7 +16,7 @@ export const LavaTabs = ({
         className={clsx(
           'px-8 py-2 rounded-xl text-lg font-medium transition-all',
           activeTab === tab
-            ? 'bg-[#2D3049]'
+            ? 'bg-steel-750'
             : 'text-white hover:text-main-orange',
           tabClassName,
           activeTab === tab ? activeTabClassName : inactiveTabClassName,
