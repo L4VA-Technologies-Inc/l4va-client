@@ -19,7 +19,7 @@ export const VaultAssetsList = ({ assets = mockVaultAssets }) => {
           <div
             key={index}
             className={`rounded-lg transition-all duration-300 ${
-              expandedAsset === index ? 'bg-[#2D3049]' : 'bg-[#202233] hover:bg-[#2D3049]'
+              expandedAsset === index ? 'bg-steel-750' : 'bg-[#202233] hover:bg-steel-750'
             }`}
             onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
           >

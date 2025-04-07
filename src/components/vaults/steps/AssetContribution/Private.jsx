@@ -10,7 +10,6 @@ import { handleNumberInput } from '@/utils/core.utils';
 
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
-
 export const Private = ({
   data,
   errors = {},

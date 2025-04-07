@@ -36,7 +36,7 @@ export const CreateVaultForm = ({ vault }) => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
@@ -197,10 +197,12 @@ export const CreateVaultForm = ({ vault }) => {
           />
         );
       case 5:
-        return <Launch
-          data={vaultData}
-          setCurrentStep={setCurrentStep}
-        />;
+        return (
+          <Launch
+            data={vaultData}
+            setCurrentStep={setCurrentStep}
+          />
+        );
       default:
         return null;
     }
@@ -211,8 +213,8 @@ export const CreateVaultForm = ({ vault }) => {
       return (
         <PrimaryButton
           className="uppercase"
-          onClick={onSubmit}
           disabled={isSubmitting}
+          onClick={onSubmit}
         >
           {isSubmitting ? 'Launching...' : 'Confirm & launch'}
         </PrimaryButton>
@@ -222,22 +224,22 @@ export const CreateVaultForm = ({ vault }) => {
       <>
         {currentStep > 1 && (
           <SecondaryButton
-            onClick={handlePreviousStep}
             disabled={isSubmitting || isSavingDraft}
+            onClick={handlePreviousStep}
           >
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
         <SecondaryButton
           className="uppercase px-16 py-4 bg-input-bg"
-          onClick={saveDraft}
           disabled={isSubmitting || isSavingDraft}
+          onClick={saveDraft}
         >
           Save for later
         </SecondaryButton>
         <PrimaryButton
-          onClick={handleNextStep}
           disabled={isSubmitting || isSavingDraft}
+          onClick={handleNextStep}
         >
           <ChevronRight size={24} />
         </PrimaryButton>
@@ -294,7 +296,8 @@ export const CreateVaultForm = ({ vault }) => {
                 className={
                   `absolute top-[25%] left-[calc(50%+55px)] w-[124px] h-[3px] 
                   ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}
-                `}
+                `
+                }
                 style={{ transform: 'translateX(0)' }}
               />
             )}

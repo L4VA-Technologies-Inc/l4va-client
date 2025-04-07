@@ -13,8 +13,27 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 import { formatDateTime } from '@/utils/core.utils';
 
+const variants = {
+  default: {
+    button: 'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-4 px-5',
+    popover: 'bg-input-bg border border-dark-600',
+    calendar: 'bg-input-bg rounded-[10px]',
+    scrollArea: 'bg-input-bg',
+  },
+  steel: {
+    button: 'text-[20px] bg-steel-850 rounded-lg border border-steel-750 w-full h-[40px] py-4 px-5',
+    popover: 'bg-steel-850 rounded-lg border border-steel-750',
+    calendar: 'bg-steel-850 rounded-[10px]',
+    scrollArea: 'bg-steel-850',
+  },
+};
+
 export const LavaDatePicker = ({
-  value, minDate, className, onChange = () => { },
+  value,
+  minDate,
+  className,
+  variant = 'default',
+  onChange = () => { },
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dateValue, setDateValue] = useState(null);
@@ -58,29 +77,38 @@ export const LavaDatePicker = ({
     }
   };
 
+  const styles = variants[variant];
+
   return (
     <div className="flex items-center gap-4 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             className={cn(
-              'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
+              styles.button,
+              'justify-start text-left font-normal',
               !dateValue && 'text-muted-foreground',
               className,
             )}
             variant="outline"
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateValue ? formatDateTime(dateValue) : (
-              <span className="text-white/60">Select date</span>
+            {dateValue ? (
+              <span className={variant === 'steel' ? 'text-base' : ''}>
+                {formatDateTime(dateValue)}
+              </span>
+            ) : (
+              <span className={cn('text-white/60', variant === 'steel' ? 'text-base' : '')}>
+                Select date
+              </span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-input-bg border border-dark-600">
+        <PopoverContent className={cn('w-auto p-0', styles.popover)}>
           <div className="sm:flex">
             <Calendar
               initialFocus
-              className="bg-input-bg rounded-[10px]"
+              className={styles.calendar}
               disabled={(date) => {
                 const minimumDate = minDate || new Date(new Date().setHours(0, 0, 0, 0));
                 return date < minimumDate;
@@ -90,7 +118,7 @@ export const LavaDatePicker = ({
               onSelect={handleDateSelect}
             />
             <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-              <ScrollArea className="w-64 sm:w-auto bg-input-bg">
+              <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
                 <div className="flex sm:flex-col p-2">
                   {hours.reverse().map((hour) => (
                     <Button
@@ -110,7 +138,7 @@ export const LavaDatePicker = ({
                 </div>
                 <ScrollBar className="sm:hidden" orientation="horizontal" />
               </ScrollArea>
-              <ScrollArea className="w-64 sm:w-auto bg-input-bg">
+              <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
                 <div className="flex sm:flex-col p-2">
                   {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
                     <Button
@@ -122,8 +150,7 @@ export const LavaDatePicker = ({
                           ? 'default'
                           : 'ghost'
                       }
-                      onClick={() =>
-                        handleTimeChange('minute', minute.toString())}
+                      onClick={() => handleTimeChange('minute', minute.toString())}
                     >
                       {minute}
                     </Button>
@@ -131,7 +158,7 @@ export const LavaDatePicker = ({
                 </div>
                 <ScrollBar className="sm:hidden" orientation="horizontal" />
               </ScrollArea>
-              <ScrollArea className="bg-input-bg rounded-[10px]">
+              <ScrollArea className={cn(styles.scrollArea, 'rounded-[10px]')}>
                 <div className="flex sm:flex-col p-2">
                   {['AM', 'PM'].map((ampm) => (
                     <Button
