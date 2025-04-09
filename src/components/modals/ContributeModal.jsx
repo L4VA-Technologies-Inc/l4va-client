@@ -7,7 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {useWallet} from "@ada-anvil/weld/react";
+import { useWallet } from "@ada-anvil/weld/react";
+import { Lucid, Blockfrost } from "lucid-cardano";
 import {ContributeApiProvider} from "@/services/api/contribute/index.js";
 
 export const ContributeModal = ({ isOpen, onClose, vaultName, vaultId }) => {
@@ -42,11 +43,71 @@ export const ContributeModal = ({ isOpen, onClose, vaultName, vaultId }) => {
         }))
       });
       console.log('Transaction created with ID:', data.txId);
-      // TODO: 2. create onchain transaction with assets and tx_id
 
-      // TODO: 3. update outchain transaction hash (tx_hash) to update status to pending
+      // 2. Create onchain transaction with assets and tx_id
 
-      onClose(); // Close modal after successful contribution
+      const metadata = {
+        l4va: {
+          txId: data.txId
+        }
+      };
+      console.log("Metadata has created  ", metadata)
+
+      // Prepare assets for transaction
+      const assets = selectedNFTs.reduce((acc, nft) => {
+        acc[`${nft.policyId}.${nft.name}`] = 1; // quantity is 1 for each NFT
+        return acc;
+      }, {});
+
+      // Initialize Lucid with Blockfrost provider
+      const lucid = await Lucid.new(
+        new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", import.meta.env.VITE_BLOCKFROST_API_KEY),
+        "Preprod"
+      );
+
+      // Set wallet provider using the existing wallet instance from useWallet hook
+      lucid.selectWallet(wallet.getDefaultApi());
+
+      console.log('lucid instance ', lucid)
+
+      // Get UTXOs for the transaction
+      const utxos = await lucid.wallet.getUtxos();
+      const utxo = utxos[0];
+
+      try {
+        // Create and complete the transaction
+        const tx = await lucid
+          .newTx()
+          .collectFrom([utxo])
+          .payToAddress('addr_test1qpngt4n7vyg4uw2dyqhucjxs400hz92zf67l87plrnq9s4evsy3rlxfvscmu2y2c4m98rkkzc4c5txd7034u5a5uejksnnm4yr', assets)
+          .attachMetadata(87, metadata)
+          .complete();
+
+        console.log('transaction built:', tx);
+
+        // Sign the transaction
+        const signedTx = await tx.sign().complete();
+        console.log('transaction signed:', signedTx);
+
+        // Submit the transaction
+        const txHash = await signedTx.submit();
+        console.log('transaction submitted:', txHash);
+
+        // Wait for transaction confirmation
+        const success = await lucid.awaitTx(txHash);
+        console.log('transaction confirmed:', success);
+
+        // 3. Update outchain transaction with blockchain tx hash
+        await ContributeApiProvider.updateTransactionHash({
+          txId: data.txId,
+          txHash
+        });
+
+        onClose(); // Close modal after successful contribution
+      } catch (error) {
+        console.error('Error in transaction:', error);
+        throw error; // Re-throw to be caught by outer catch block
+      }
     } catch (error) {
       console.error('Error creating contribution:', error);
       // You might want to show an error message to the user here

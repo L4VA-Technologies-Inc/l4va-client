@@ -27,6 +27,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.4.2",
+    "lucid-cardano": "^0.10.11",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-day-picker": "8.10.1",
@@ -36,6 +37,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "vite-plugin-svgr": "^4.3.0",
+    "vite-plugin-top-level-await": "^1.5.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {

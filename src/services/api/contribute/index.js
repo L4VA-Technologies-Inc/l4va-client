@@ -8,4 +8,10 @@ export class ContributeApiProvider {
     });
     return response;
   }
+  static async updateTransactionHash({ txId, txHash }){
+    const response = await axiosInstance.patch(ContributeConfigProvider.updateTx(txId), {
+      txHash,
+    });
+    return response;
+  }
 }
