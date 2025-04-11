@@ -93,7 +93,7 @@ export const CreateVaultForm = ({ vault }) => {
     );
   };
 
-  const updateField = (fieldName, value) => console.log(fieldName, value) || setVaultData({
+  const updateField = (fieldName, value) => setVaultData({
     ...vaultData,
     [fieldName]: value,
   });

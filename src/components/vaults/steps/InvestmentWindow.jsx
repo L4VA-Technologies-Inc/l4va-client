@@ -129,10 +129,10 @@ export const InvestmentWindow = ({
           label="% OF ASSETS OFFERED"
           name="offAssetsOffered"
           placeholder="XX.XX"
+          suffix="%"
           type="text"
           value={data.offAssetsOffered || ''}
           onChange={handleChange}
-          suffix="%"
         />
         <div className="mt-[60px]">
           <LavaInput
@@ -141,10 +141,10 @@ export const InvestmentWindow = ({
             label="FT INVESTMENT RESERVE"
             name="ftInvestmentReserve"
             placeholder="XX.XX"
+            suffix="%"
             type="text"
             value={data.ftInvestmentReserve || ''}
             onChange={handleChange}
-            suffix="%"
           />
         </div>
         <div className="mt-[60px]">
@@ -154,10 +154,10 @@ export const InvestmentWindow = ({
             label="% LIQUIDITY POOL CONTRIBUTION"
             name="liquidityPoolContribution"
             placeholder="XX.XX"
+            suffix="%"
             type="text"
             value={data.liquidityPoolContribution || ''}
             onChange={handleChange}
-            suffix="%"
           />
         </div>
       </div>

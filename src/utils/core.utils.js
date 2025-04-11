@@ -74,7 +74,7 @@ export const substringAddress = (address) => {
 export const getDisplayName = (user) => {
   const { name, address } = user;
   if (name) {
-    return name.length > 0 ? name : `${name.slice(0, 10)}...`;
+    return name.length < 10 ? name : `${name.slice(0, 10)}...`;
   }
   if (address) {
     return substringAddress(address);

@@ -7,6 +7,7 @@ import { Profile } from '@/pages/Profile';
 import { Vault } from '@/pages/Vault';
 import { NotFound } from '@/pages/NotFound';
 import { Contribute } from '@/pages/Contribute';
+import { Sandbox } from '@/pages/Sandbox';
 
 export const publicRoutes = [
   {
@@ -15,6 +16,14 @@ export const publicRoutes = [
       <HomePageLayout>
         <Home />
       </HomePageLayout>
+    ),
+  },
+  {
+    path: '/sandbox',
+    element: (
+      <MainLayout>
+        <Sandbox />
+      </MainLayout>
     ),
   },
   {

@@ -4,8 +4,8 @@ export class VaultsConfigProvider {
   }
 
   static getVaults(filter) {
-    if(filter){
-      return '/api/v1/vaults?filter=' + filter;
+    if(filter) {
+      return `/api/v1/vaults?filter=${filter}`;
     }
     return '/api/v1/vaults';
   }

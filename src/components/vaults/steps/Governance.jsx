@@ -83,6 +83,7 @@ export const Governance = ({
         </div>
         <div className="mt-[60px]">
           <UploadZone
+            required
             image={data.ftTokenImg}
             label="FT Token Image"
             setImage={(image) => updateField('ftTokenImg', image)}
@@ -133,9 +134,9 @@ export const Governance = ({
                 label="VAULT APPRECIATION %"
                 name="vaultAppreciation"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.vaultAppreciation || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
           </>
@@ -145,65 +146,70 @@ export const Governance = ({
           <>
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.creationThreshold}
                 icon={<Info color="white" size={16} />}
                 label="CREATION THRESHOLD %"
                 name="creationThreshold"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.creationThreshold || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
 
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.startThreshold}
                 icon={<Info color="white" size={16} />}
                 label="START THRESHOLD %"
                 name="startThreshold"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.startThreshold || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
 
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.voteThreshold}
                 icon={<Info color="white" size={16} />}
                 label="VOTE THRESHOLD %"
                 name="voteThreshold"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.voteThreshold || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
 
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.executionThreshold}
                 icon={<Info color="white" size={16} />}
                 label="EXECUTION THRESHOLD %"
                 name="executionThreshold"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.executionThreshold || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
 
             <div className="mt-[60px]">
               <LavaInput
+                required
                 error={errors.cosigningThreshold}
                 label="COSIGNING THRESHOLD %"
                 name="cosigningThreshold"
                 placeholder="XX.XX"
+                suffix="%"
                 value={data.cosigningThreshold || ''}
                 onChange={handleNumChange}
-                suffix="%"
               />
             </div>
           </>
