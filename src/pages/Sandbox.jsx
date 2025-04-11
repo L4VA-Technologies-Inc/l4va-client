@@ -75,7 +75,6 @@ export const Sandbox = () => {
                 {wallet.balanceAda?.toFixed(6) || '0'} ADA
               </span>
             </div>
-
             <div className="mt-4">
               <h3 className="text-lg font-medium mb-3 text-white">Your Assets</h3>
               {nftData.length > 0 ? (
@@ -90,7 +89,9 @@ export const Sandbox = () => {
                               Policy: {asset.policyId.substring(0, 8)}...
                             </div>
                           </div>
-                          <div className="bg-main-orange/20 text-main-orange px-3 py-1 rounded-full text-sm font-medium">
+                          <div
+                            className="bg-main-orange/20 text-main-orange px-3 py-1 rounded-full text-sm font-medium"
+                          >
                             {asset.quantity}
                           </div>
                         </div>
@@ -104,7 +105,6 @@ export const Sandbox = () => {
                 </div>
               )}
             </div>
-
             <PrimaryButton
               className="w-full"
               disabled={status !== 'idle'}

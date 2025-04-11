@@ -11,7 +11,10 @@ export const useTransaction = () => {
   const wallet = useWallet();
 
   const sendTransaction = useCallback(async ({
-    recipient, ada, vaultId, selectedNFTs,
+    recipient,
+    ada,
+    vaultId,
+    selectedNFTs,
   }) => {
     try {
       setError(null);
@@ -25,7 +28,7 @@ export const useTransaction = () => {
         vaultId,
         assets: selectedNFTs.map(nft => ({
           policyId: nft.policyId,
-          assetId: nft.assetName,
+          assetName: nft.assetName,
           quantity: nft.quantity,
         })),
       });
