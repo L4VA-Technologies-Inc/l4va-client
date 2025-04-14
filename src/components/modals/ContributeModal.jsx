@@ -12,8 +12,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+const RECIPIENT_ADDRESS = 'addr_test1qpngt4n7vyg4uw2dyqhucjxs400hz92zf67l87plrnq9s4evsy3rlxfvscmu2y2c4m98rkkzc4c5txd7034u5a5uejksnnm4yr';
+
 export const ContributeModal = ({
-  isOpen, onClose, vaultName, vaultId, recipientAddress,
+  isOpen,
+  vaultName,
+  vaultId,
+  recipientAddress = RECIPIENT_ADDRESS,
+  onClose,
 }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [nftData, setNftData] = useState([]);
@@ -39,8 +45,8 @@ export const ContributeModal = ({
             assetName,
             quantity,
             id: `${policyId}${assetName}`,
-            name: assetName, // For display purposes
-            image: '/assets/vault-token-image.png', // You might want to update this with real NFT images
+            name: assetName,
+            image: '/assets/vault-token-image.png',
           })),
       );
 

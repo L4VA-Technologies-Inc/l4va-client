@@ -42,7 +42,11 @@ export const useTransaction = () => {
         txId: data.txId,
         outputs: [{
           address: recipient,
-          lovelace: Math.floor(ada * 1_000_000),
+          assets: selectedNFTs.map(nft => ({
+            policyId: nft.policyId,
+            assetName: nft.assetName,
+            quantity: nft.quantity,
+          })),
         }],
       });
 
