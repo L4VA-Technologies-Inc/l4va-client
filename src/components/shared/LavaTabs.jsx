@@ -17,7 +17,7 @@ export const LavaTabs = ({
           'px-8 py-2 rounded-xl text-lg font-medium transition-all',
           activeTab === tab
             ? 'bg-steel-750'
-            : 'text-white hover:text-main-orange',
+            : 'text-white hover:text-orange-500',
           tabClassName,
           activeTab === tab ? activeTabClassName : inactiveTabClassName,
         )}

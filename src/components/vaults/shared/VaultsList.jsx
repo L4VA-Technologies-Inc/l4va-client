@@ -20,7 +20,7 @@ const EmptyState = () => (
     <NavLink
       className={clsx(
         'mt-2 transition-all',
-        'hover:text-main-orange hover:underline',
+        'hover:text-orange-500 hover:underline',
       )}
       to="/create"
     >
@@ -65,7 +65,7 @@ export const VaultList = ({
       {isLoading ? (
         <LoadingState />
       ) : error ? (
-        <div className="text-center text-main-red py-8">{error}</div>
+        <div className="text-center text-red-600 py-8">{error}</div>
       ) : vaults.length === 0 ? (
         renderEmptyState()
       ) : (

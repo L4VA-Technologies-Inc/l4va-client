@@ -101,7 +101,7 @@ export const LavaWhitelistWithCaps = ({
         </div>
       )}
       {whitelist.length >= maxItems && (
-        <div className="text-main-red text-base my-4">
+        <div className="text-red-600 text-base my-4">
           Maximum number of items ({maxItems}) reached.
         </div>
       )}

@@ -15,7 +15,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 
   return (
     <div className="mb-16">
-      <h2 className="text-[32px] font-extrabold text-main-red mb-8">{title}</h2>
+      <h2 className="text-[32px] font-extrabold text-red-600 mb-8">{title}</h2>
       <div className="space-y-8">
         <div className="grid gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -60,7 +60,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-main-red text-[60px] font-bold mb-2">
+    <p className="font-russo text-red-600 text-[60px] font-bold mb-2">
       {value}
     </p>
     <p className="font-bold font-satoshi  text-[24px]">{label}</p>

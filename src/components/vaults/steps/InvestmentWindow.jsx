@@ -58,7 +58,7 @@ export const InvestmentWindow = ({
               whitelist={data.investorsWhitelist || []}
             />
             {errors.investorsWhitelist && (
-              <p className="text-main-red mt-1">
+              <p className="text-red-600 mt-1">
                 {errors.investorsWhitelist}
               </p>
             )}
@@ -74,7 +74,7 @@ export const InvestmentWindow = ({
               onChange={(date) => updateField('investmentWindowDuration', date)}
             />
             {errors.investmentWindowDuration && (
-              <p className="text-main-red mt-1">{errors.investmentWindowDuration}</p>
+              <p className="text-red-600 mt-1">{errors.investmentWindowDuration}</p>
             )}
           </div>
         </div>
@@ -99,7 +99,7 @@ export const InvestmentWindow = ({
               onChange={(value) => updateField('investmentOpenWindowType', value)}
             />
             {errors.investmentOpenWindowType && (
-              <p className="text-main-red mt-1">{errors.investmentOpenWindowType}</p>
+              <p className="text-red-600 mt-1">{errors.investmentOpenWindowType}</p>
             )}
 
             {data.investmentOpenWindowType === 'custom' && (
@@ -110,10 +110,10 @@ export const InvestmentWindow = ({
                   onChange={(date) => updateField('investmentOpenWindowTime', date)}
                 />
                 {errors.investmentOpenWindowTime && (
-                  <p className="text-main-red mt-1">{errors.investmentOpenWindowTime}</p>
+                  <p className="text-red-600 mt-1">{errors.investmentOpenWindowTime}</p>
                 )}
                 {minDate && (
-                  <p className="text-main-orange mt-1">
+                  <p className="text-orange-500 mt-1">
                     Cannot be earlier than {minDate.toLocaleDateString()}
                   </p>
                 )}

@@ -89,7 +89,7 @@ export const Governance = ({
             setImage={(image) => updateField('ftTokenImg', image)}
           />
           {errors.ftTokenImg && (
-            <p className="text-main-red mt-1">{errors.ftTokenImg}</p>
+            <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>
           )}
         </div>
       </div>
@@ -105,7 +105,7 @@ export const Governance = ({
             onChange={(value) => updateField('terminationType', value)}
           />
           {errors.terminationType && (
-            <p className="text-main-red mt-1">{errors.terminationType}</p>
+            <p className="text-red-600 mt-1">{errors.terminationType}</p>
           )}
         </div>
         {data.terminationType === 'programmed' && (
@@ -121,7 +121,7 @@ export const Governance = ({
                   onChange={(date) => updateField('timeElapsedIsEqualToTime', date)}
                 />
                 {errors.timeElapsedIsEqualToTime && (
-                  <p className="text-main-red mt-1">{errors.timeElapsedIsEqualToTime}</p>
+                  <p className="text-red-600 mt-1">{errors.timeElapsedIsEqualToTime}</p>
                 )}
               </div>
             </div>

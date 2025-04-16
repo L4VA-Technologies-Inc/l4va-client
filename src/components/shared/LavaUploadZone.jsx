@@ -142,7 +142,7 @@ export const UploadZone = ({
   const triggerFileInput = () => fileInputRef.current.click();
 
   const getStatusColor = () => {
-    if (error || uploadStatus === 'error') return 'border-main-red';
+    if (error || uploadStatus === 'error') return 'border-red-600';
     if (uploadStatus === 'success') return 'border-green-500';
     if (uploadStatus === 'uploading') return 'border-yellow-500';
     if (isDragging) return 'border-blue-400';
@@ -225,7 +225,7 @@ export const UploadZone = ({
         )}
       </div>
       {error && (
-        <div className="text-main-red text-sm mt-1">
+        <div className="text-red-600 text-sm mt-1">
           {typeof error === 'string' ? error : error.message || 'Image is required'}
         </div>
       )}

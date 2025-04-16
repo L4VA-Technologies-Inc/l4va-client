@@ -62,7 +62,7 @@ export const LavaInput = ({
           )}
         </div>
         {error && (
-          <p className="text-main-red mt-1">
+          <p className="text-red-600 mt-1">
             {error}
           </p>
         )}

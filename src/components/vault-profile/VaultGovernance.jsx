@@ -81,15 +81,15 @@ export const VaultGovernance = ({ vault }) => {
               <h3 className="text-lg font-medium">{proposal.title}</h3>
               <div className="flex items-center">
                 {proposal.approved && (
-                  <span className="inline-flex items-center mr-2 text-main-green text-sm">
+                  <span className="inline-flex items-center mr-2 text-green-500 text-sm">
                     <Check className="w-4 h-4 mr-1" />
                     Approved
                   </span>
                 )}
                 <span
                   className={`px-3 py-1 rounded-full text-xs ${
-                    proposal.status === 'Closed' ? 'bg-red-900 text-main-red'
-                      : proposal.status === 'Open' ? 'bg-green-900 text-main-green'
+                    proposal.status === 'Closed' ? 'bg-red-900 text-red-600'
+                      : proposal.status === 'Open' ? 'bg-green-900 text-green-500'
                         : 'bg-yellow-800 text-yellow-400'
                   }`}
                 >
@@ -111,15 +111,15 @@ export const VaultGovernance = ({ vault }) => {
               <div className="space-y-3 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-main-green text-sm flex items-center">
+                    <span className="text-green-500 text-sm flex items-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
                       Yes, pass this Proposal
                     </span>
-                    <span className="text-main-green text-sm">{proposal.votes.yes}%</span>
+                    <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
                   </div>
                   <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-main-green h-2 rounded-full"
+                      className="bg-green-500 h-2 rounded-full"
                       style={{ width: `${proposal.votes.yes}%` }}
                     />
                   </div>
@@ -127,15 +127,15 @@ export const VaultGovernance = ({ vault }) => {
 
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-main-red text-sm flex items-center">
+                    <span className="text-red-600 text-sm flex items-center">
                       <XCircle className="w-4 h-4 mr-1" />
                       No, do not pass this Proposal
                     </span>
-                    <span className="text-main-red text-sm">{proposal.votes.no}%</span>
+                    <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
                   </div>
                   <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-main-red h-2 rounded-full"
+                      className="bg-red-600 h-2 rounded-full"
                       style={{ width: `${proposal.votes.no}%` }}
                     />
                   </div>
@@ -147,27 +147,27 @@ export const VaultGovernance = ({ vault }) => {
               <div className="space-y-3 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-main-green text-sm flex items-center">
+                    <span className="text-green-500 text-sm flex items-center">
                       <CheckCircle className="w-4 h-4 mr-1" />
                       Yes, pass this Proposal
                     </span>
                     <span className="text-dark-100 text-sm">-</span>
                   </div>
                   <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                    <div className="bg-main-green h-2 rounded-full" style={{ width: '0%' }} />
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '0%' }} />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-main-red text-sm flex items-center">
+                    <span className="text-red-600 text-sm flex items-center">
                       <XCircle className="w-4 h-4 mr-1" />
                       No, do not pass this Proposal
                     </span>
                     <span className="text-dark-100 text-sm">-</span>
                   </div>
                   <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                    <div className="bg-main-red h-2 rounded-full" style={{ width: '0%' }} />
+                    <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }} />
                   </div>
                 </div>
               </div>

@@ -19,7 +19,7 @@ export const VaultCountdown = () => {
 
   return (
     <div className="relative">
-      <TimeBanner className="w-full text-main-red" />
+      <TimeBanner className="w-full text-red-600" />
       <div className="absolute inset-0 flex items-center justify-start pl-4">
         <div className="font-mono text-2xl font-bold text-white">
           {formatNumber(timeLeft.days)}D : {formatNumber(timeLeft.hours)}H : {formatNumber(timeLeft.minutes)}M

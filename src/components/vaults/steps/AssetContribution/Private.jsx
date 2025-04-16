@@ -40,7 +40,7 @@ export const Private = ({
             onChange={(value) => updateField('valuationType', value)}
           />
           {errors.valuationType && (
-            <p className="text-main-red mt-1">{errors.valuationType}</p>
+            <p className="text-red-600 mt-1">{errors.valuationType}</p>
           )}
         </div>
         {valuationType === 'fixed' && (
@@ -85,7 +85,7 @@ export const Private = ({
               onChange={(value) => updateField('contributionDuration', value)}
             />
             {errors.contributionDuration && (
-              <p className="text-main-red mt-1">{errors.contributionDuration}</p>
+              <p className="text-red-600 mt-1">{errors.contributionDuration}</p>
             )}
           </div>
         </div>
@@ -107,7 +107,7 @@ export const Private = ({
             onChange={(value) => updateField('contributionOpenWindowType', value)}
           />
           {errors.contributionOpenWindowType && (
-            <p className="text-main-red mt-1">{errors.contributionOpenWindowType}</p>
+            <p className="text-red-600 mt-1">{errors.contributionOpenWindowType}</p>
           )}
           {data.contributionOpenWindowType === 'custom' && (
             <div className="mt-4">
@@ -116,7 +116,7 @@ export const Private = ({
                 onChange={(date) => updateField('contributionOpenWindowTime', date)}
               />
               {errors.contributionOpenWindowTime && (
-                <p className="text-main-red mt-1">{errors.contributionOpenWindowTime}</p>
+                <p className="text-red-600 mt-1">{errors.contributionOpenWindowTime}</p>
               )}
             </div>
           )}
@@ -130,7 +130,7 @@ export const Private = ({
               whitelist={data.whitelistContributors || []}
             />
             {errors.whitelistContributors && (
-              <p className="text-main-red mt-1">{errors.whitelistContributors}</p>
+              <p className="text-red-600 mt-1">{errors.whitelistContributors}</p>
             )}
           </div>
         ) : null}
@@ -144,7 +144,7 @@ export const Private = ({
             whitelist={data.assetsWhitelist || []}
           />
           {errors.assetsWhitelist && (
-            <p className="text-main-red mt-1">{errors.assetsWhitelist}</p>
+            <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>
           )}
         </div>
       </div>

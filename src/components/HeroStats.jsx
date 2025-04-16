@@ -19,7 +19,7 @@ export const HeroStats = () => {
           <div className=" mt-2 text-2xl font-bold font-satoshi">
             {stat.label}
           </div>
-          <div className="font-russo text-main-orange text-2xl sm:text-3xl lg:text-4xl font-bold">
+          <div className="font-russo text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-bold">
             <Counter value={stat.value}/>
           </div>
         </div>

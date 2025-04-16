@@ -27,7 +27,7 @@ export const LavaRadio = ({
               value={option.name}
               onChange={() => onChange(option.name)}
             />
-            <div className={`w-5 h-5 rounded-full border-2 ${error ? 'border-main-red' : 'border-white/20'} peer-checked:border-[#FF842C]`} />
+            <div className={`w-5 h-5 rounded-full border-2 ${error ? 'border-red-600' : 'border-white/20'} peer-checked:border-[#FF842C]`} />
             <div
               className="w-2.5 h-2.5 m-[5px] absolute inset-0 rounded-full scale-0 peer-checked:scale-100 transition-transform"
               style={{
@@ -40,7 +40,7 @@ export const LavaRadio = ({
       ))}
     </div>
     {error && (
-      <p className="text-main-red text-sm mt-1">{typeof error === 'string' ? error : 'This field is required'}</p>
+      <p className="text-red-600 text-sm mt-1">{typeof error === 'string' ? error : 'This field is required'}</p>
     )}
   </div>
 );

@@ -149,7 +149,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                         <div className="flex justify-between items-center mb-4">
                           <p className="text-[20px] font-medium">Option {index + 1}</p>
                           <button
-                            className="bg-main-red/10 hover:bg-main-red/20 text-main-red text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors"
+                            className="bg-red-600/10 hover:bg-red-600/20 text-red-600 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors"
                             type="button"
                             onClick={() => handleRemoveOption(option.id)}
                           >

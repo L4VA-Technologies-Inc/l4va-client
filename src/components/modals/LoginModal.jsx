@@ -99,7 +99,7 @@ export const LoginModal = ({
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
-          <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
+          <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-orange-500" />
           <div className="text-sm sm:text-base">
             Wallet connected
           </div>
@@ -108,10 +108,10 @@ export const LoginModal = ({
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
-            <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-main-orange" />
+            <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-orange-500" />
           ) : (
             <div
-              className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-main-orange"
+              className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-orange-500"
             >
               2
             </div>
@@ -134,7 +134,7 @@ export const LoginModal = ({
       <div className="text-sm mt-4">
         Having issues? Try{' '}
         <span
-          className="cursor-pointer text-main-orange hover:underline"
+          className="cursor-pointer text-orange-500 hover:underline"
           onClick={disconnect}
         >
           disconnecting

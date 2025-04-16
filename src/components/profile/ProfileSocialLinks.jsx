@@ -199,7 +199,7 @@ export const ProfileSocialLinks = () => {
               size={20}
             />
             <a
-              className="text-[20px] hover:text-main-orange transition-colors"
+              className="text-[20px] hover:text-orange-500 transition-colors"
               href={formatUrl(link.url)}
               rel="noopener noreferrer"
               target="_blank"
@@ -230,7 +230,7 @@ export const ProfileSocialLinks = () => {
           </div>
         )}
         {socialLinks.length >= MAX_LINKS && (
-          <div className="text-main-red text-base mb-2">
+          <div className="text-red-600 text-base mb-2">
             Maximum number of links ({MAX_LINKS}) reached.
           </div>
         )}

@@ -97,7 +97,7 @@ export const VaultProfileView = ({ vault }) => {
       </div>
       <div className="flex gap-2">
         <span className="bg-dark-600 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
-          <EyeIcon className="w-4 h-4 text-main-orange" />
+          <EyeIcon className="w-4 h-4 text-orange-500" />
           <span>{formatCompactNumber(200)}</span>
         </span>
       </div>

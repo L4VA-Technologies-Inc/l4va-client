@@ -138,66 +138,73 @@ export const ContributeModal = ({
           </div>
           <div className="w-full md:w-1/2 space-y-6 flex flex-col p-6 bg-dark-700 rounded-[10px]">
             <div className="flex-1 space-y-6">
-              <h2 className="text-xl text-center font-medium">Contribution Details</h2>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="space-y-1">
+              <h2 className="text-xl text-center font-medium pb-2 border-b border-dark-500">Contribution Details</h2>
+
+              <div className="grid grid-cols-2 gap-6 text-center">
+                <div className="space-y-2 p-3 bg-dark-600 rounded-lg">
                   <p className="text-dark-100 text-sm">Total Assets Selected</p>
                   <p className="text-2xl font-medium">{contributionDetails.totalAssets}</p>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-2 p-3 bg-dark-600 rounded-lg">
                   <p className="text-dark-100 text-sm">Vault Allocation</p>
                   <p className="text-2xl font-medium">{contributionDetails.vaultAllocation}%</p>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-2 p-3 bg-dark-600 rounded-lg">
                   <p className="text-dark-100 text-sm">Estimated Value</p>
                   <p className="text-2xl font-medium">${contributionDetails.estimatedValue.toLocaleString()}</p>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-2 p-3 bg-dark-600 rounded-lg">
                   <p className="text-dark-100 text-sm">Estimated TICKER VAL ($VAL)</p>
                   <p className="text-2xl font-medium">{contributionDetails.estimatedTickerVal.toLocaleString()}</p>
                 </div>
               </div>
+
               <div className="space-y-3">
-                <h3 className="text-lg font-medium">{contributionDetails.totalAssets} Assets Contributed</h3>
-                <div className="space-y-2 h-[300px] overflow-y-auto">
+                <h3 className="text-lg font-medium flex justify-center">
+                  <span>{contributionDetails.totalAssets} Assets Contributed</span>
+                </h3>
+
+                <div className="space-y-2 h-[300px] overflow-y-auto pr-2">
                   {selectedNFTs.length > 0 ? (
                     selectedNFTs.map((nft) => (
-                      <div key={nft.id} className="flex items-center justify-between p-2 bg-dark-500 rounded-md">
+                      <div key={nft.id} className="flex items-center justify-between p-3 bg-dark-600 rounded-lg hover:bg-dark-500 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="relative w-8 h-8 overflow-hidden rounded-full">
+                          <div className="relative w-10 h-10 overflow-hidden rounded-lg border border-dark-500">
                             <img alt={nft.name} className="w-full h-full object-cover" src={nft.image} />
                           </div>
-                          <span>{nft.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{nft.name}</span>
+                            <span className="text-dark-100 text-xs">{nft.policyId.substring(0, 8)}...</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-dark-100 text-sm">{nft.policyId.substring(0, 8)}...</span>
-                          <button
-                            className="text-dark-100 hover:text-white"
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeNFT(nft.id);
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <button
+                          className="text-dark-100 hover:text-white p-1 rounded-full hover:bg-dark-500 transition-colors"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeNFT(nft.id);
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-dark-100">
-                      No assets contributed
+                    <div className="text-center py-12 text-dark-100 bg-dark-600 rounded-lg">
+                      <p className="mb-2">No assets contributed</p>
+                      <p className="text-sm">Select assets from the left panel to contribute</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex justify-center pt-4 border-t border-dark-500">
               <PrimaryButton
+                className="w-full max-w-xs"
                 disabled={selectedNFTs.length === 0 || status !== 'idle'}
                 onClick={handleContribute}
               >

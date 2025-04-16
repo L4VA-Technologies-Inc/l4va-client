@@ -42,7 +42,7 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
         <button
           type="button"
           onClick={handleDisconnect}
-          className="text-dark-100 hover:text-main-red transition-colors duration-200"
+          className="text-dark-100 hover:text-red-600 transition-colors duration-200"
         >
           <PowerOff size={20} />
         </button>

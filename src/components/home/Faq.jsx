@@ -85,7 +85,7 @@ export const Faq = () => {
                   key={step.number}
                   className="w-full lg:w-[600px] flex flex-col sm:flex-row items-center sm:items-start p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]"
                 >
-                  <div className="text-center text-6xl sm:text-8xl lg:text-[128px] font-extrabold text-main-red font-satoshi">
+                  <div className="text-center text-6xl sm:text-8xl lg:text-[128px] font-extrabold text-red-600 font-satoshi">
                     {step.number}
                   </div>
                   <div className="text-center sm:text-left">

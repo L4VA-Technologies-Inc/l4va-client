@@ -73,7 +73,7 @@ export const Footer = () => {
           {navLinks.map((link) => (
             <a
               key={link.href}
-              className="font-bold hover:text-main-red transition-colors text-center text-base md:text-lg"
+              className="font-bold hover:text-red-600 transition-colors text-center text-base md:text-lg"
               href={link.href}
             >
               {link.label}

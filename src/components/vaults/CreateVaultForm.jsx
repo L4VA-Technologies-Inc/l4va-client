@@ -272,7 +272,7 @@ export const CreateVaultForm = ({ vault }) => {
             >
               {step.hasErrors && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                  <span className="w-6 h-6 bg-main-red rounded-full flex items-center justify-center">
+                  <span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
                     !
                   </span>
                 </div>

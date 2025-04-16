@@ -41,7 +41,7 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('type', value)}
             />
             {errors.type && (
-              <p className="text-main-red mt-1">
+              <p className="text-red-600 mt-1">
                 {errors.type}
               </p>
             )}
@@ -55,7 +55,7 @@ export const ConfigureVault = ({
               onChange={(value) => updateField('privacy', value)}
             />
             {errors.privacy && (
-              <p className="text-main-red mt-1">
+              <p className="text-red-600 mt-1">
                 {errors.privacy}
               </p>
             )}
@@ -103,7 +103,7 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('vaultImage', image)}
           />
           {errors.vaultImage && (
-            <p className="text-main-red mt-1">
+            <p className="text-red-600 mt-1">
               {errors.vaultImage}
             </p>
           )}
@@ -115,7 +115,7 @@ export const ConfigureVault = ({
             setImage={(image) => updateField('bannerImage', image)}
           />
           {errors.bannerImage && (
-            <p className="text-main-red mt-1">
+            <p className="text-red-600 mt-1">
               {errors.bannerImage}
             </p>
           )}

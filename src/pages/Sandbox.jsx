@@ -71,7 +71,7 @@ export const Sandbox = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
               <span className="text-sm font-medium">ADA Balance:</span>
-              <span className="text-lg font-bold text-main-orange">
+              <span className="text-lg font-bold text-orange-500">
                 {wallet.balanceAda?.toFixed(6) || '0'} ADA
               </span>
             </div>
@@ -90,7 +90,7 @@ export const Sandbox = () => {
                             </div>
                           </div>
                           <div
-                            className="bg-main-orange/20 text-main-orange px-3 py-1 rounded-full text-sm font-medium"
+                            className="bg-orange-500/20 text-orange-500 px-3 py-1 rounded-full text-sm font-medium"
                           >
                             {asset.quantity}
                           </div>

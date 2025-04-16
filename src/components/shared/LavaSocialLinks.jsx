@@ -99,7 +99,7 @@ export const LavaSocialLinks = ({
                 </SelectContent>
               </Select>
               <Input
-                className={`py-4 pl-5 text-[20px] border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-main-red' : ''}`}
+                className={`py-4 pl-5 text-[20px] border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-red-600' : ''}`}
                 placeholder={getPlaceholderForPlatform(link.name)}
                 style={{ fontSize: '20px' }}
                 value={link.url}
@@ -115,7 +115,7 @@ export const LavaSocialLinks = ({
               </Button>
             </div>
             {getErrorForLink(index, 'url') && (
-              <div className="px-3 pb-2 text-main-red text-sm">
+              <div className="px-3 pb-2 text-red-600 text-sm">
                 {getErrorForLink(index, 'url')}
               </div>
             )}

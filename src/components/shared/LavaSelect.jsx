@@ -50,7 +50,7 @@ export const LavaSelect = ({
       </SelectContent>
     </Select>
     {error && (
-      <p className="text-main-red mt-1">{error}</p>
+      <p className="text-red-600 mt-1">{error}</p>
     )}
   </div>
 );
