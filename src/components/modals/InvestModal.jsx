@@ -29,7 +29,7 @@ export const InvestModal = ({ isOpen, onClose, vaultName }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl p-0 bg-[#181a2a] text-white border-none">
+      <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
           <DialogTitle className="text-2xl text-center font-medium">Invest in {vaultName}</DialogTitle>
         </DialogHeader>

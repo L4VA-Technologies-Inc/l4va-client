@@ -64,7 +64,7 @@ export const Sandbox = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="rounded-lg shadow-md p-6 bg-[#181A2A] text-white w-full max-w-md">
+      <div className="rounded-lg shadow-md p-6 bg-steel-950 text-white w-full max-w-md">
         {!wallet.isConnected ? (
           <ConnectButton />
         ) : (

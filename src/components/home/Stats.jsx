@@ -44,7 +44,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
                     left: '50%',
                   }}
                 >
-                  <div className="bg-[#181A2A] text-sm py-1 px-2 rounded whitespace-nowrap shadow-lg">
+                  <div className="bg-steel-950 text-sm py-1 px-2 rounded whitespace-nowrap shadow-lg">
                     {item.label}: {formatNum(item.actualValue)} ADA
                     <div className="absolute left-1/2 top-full -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-dark-600" />
                   </div>

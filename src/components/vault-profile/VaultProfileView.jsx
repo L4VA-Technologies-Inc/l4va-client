@@ -106,7 +106,7 @@ export const VaultProfileView = ({ vault }) => {
 
   const renderSidebar = () => (
     <div className="col-span-4 space-y-4">
-      <div className="bg-[#181A2A] rounded-xl p-6">
+      <div className="bg-steel-950 rounded-xl p-6">
         <img
           alt={vault.name}
           className="w-full aspect-square rounded-xl object-cover mb-6"
@@ -134,7 +134,7 @@ export const VaultProfileView = ({ vault }) => {
           <div className="grid grid-cols-12 gap-4">
             {renderSidebar()}
             <div className="col-span-8 space-y-4">
-              <div className="bg-[#181A2A] rounded-xl p-6">
+              <div className="bg-steel-950 rounded-xl p-6">
                 {renderVaultInfo()}
                 <p className="text-dark-100 mb-6">{vault.description || 'No description'}</p>
                 <div className="mb-6">

@@ -22,7 +22,7 @@ export const VaultCard = (props) => {
   } = props;
 
   return (
-    <div className="max-w-md rounded-xl bg-[#181A2A] overflow-hidden">
+    <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
       <Link className="block" to={`/vaults/${id}`}>
         <div className="h-48">
           <img

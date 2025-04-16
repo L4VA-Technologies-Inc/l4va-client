@@ -17,7 +17,7 @@ export const ProfileModal = ({
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
         onClick={onClose}
       />
-      <div className="bg-[#181A2A] absolute top-0 right-4 z-50 w-[360px] rounded-t-[10px]">
+      <div className="bg-steel-950 absolute top-0 right-4 z-50 w-[360px] rounded-t-[10px]">
         <div className="rounded-t-[10px] flex items-center justify-between px-4 py-2 bg-white/5">
           <p className="font-bold text-2xl">
             Wallet
