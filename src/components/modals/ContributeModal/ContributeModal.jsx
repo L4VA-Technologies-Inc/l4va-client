@@ -20,7 +20,6 @@ import {
 
 const RECIPIENT_ADDRESS = 'addr_test1qpngt4n7vyg4uw2dyqhucjxs400hz92zf67l87plrnq9s4evsy3rlxfvscmu2y2c4m98rkkzc4c5txd7034u5a5uejksnnm4yr';
 
-// Constants for calculations
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
@@ -41,12 +40,10 @@ export const ContributeModal = ({
   const [selectedAmount, setSelectedAmount] = useState({});
 
   const contributionDetails = useMemo(() => {
-    // Count NFTs and FTs with amounts
     const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
     const ftCount = selectedNFTs.filter(asset => asset.type === 'FT').length;
     const totalAssets = nftCount + ftCount;
 
-    // Calculate estimated values based on total assets
     const estimatedValue = totalAssets * ASSET_VALUE_USD;
     const estimatedTickerVal = totalAssets * TICKER_VAL_RATE;
     const vaultAllocation = totalAssets > 0 ? VAULT_ALLOCATION_PERCENTAGE : 0;
@@ -59,47 +56,51 @@ export const ContributeModal = ({
     };
   }, [selectedNFTs]);
 
-  useEffect(() => {
-    const fetchWalletSummary = async () => {
-      setIsLoading(true);
-      try {
-        const changeAddress = await wallet.handler.getChangeAddressBech32();
-        const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-        if (data?.assets) {
-          const formattedAssets = data.assets.map(asset => {
-            if (asset.isNft) {
-              return {
-                id: asset.tokenId,
-                name: asset.displayName || asset.name,
-                policyId: asset.metadata.policyId,
-                image: asset.metadata.image?.replace('ipfs://', 'https://ipfs.io/ipfs/') || '/placeholder.svg',
-                description: asset.metadata.description,
-                quantity: asset.quantity,
-                type: 'NFT',
-              };
-            } if (asset.isFungibleToken) {
-              return {
-                id: asset.tokenId,
-                name: asset.displayName || asset.name,
-                policyId: asset.metadata.policyId,
-                quantity: asset.quantity,
-                decimals: asset.metadata.decimals,
-                type: 'FT',
-              };
-            }
-            return null;
-          }).filter(Boolean);
-
-          setAssets(formattedAssets);
-        }
-      } catch (err) {
-        console.error('Error fetching wallet summary:', err);
-        toast.error('Failed to load assets');
-      } finally {
-        setIsLoading(false);
+  const fetchAndFormatWalletAssets = async () => {
+    try {
+      const changeAddress = await wallet.handler.getChangeAddressBech32();
+      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
+      if (data?.assets) {
+        const formattedAssets = data.assets.map(asset => {
+          if (asset.isNft) {
+            return {
+              id: asset.tokenId,
+              name: asset.displayName || asset.name,
+              policyId: asset.metadata.policyId,
+              image: asset.metadata.image?.replace('ipfs://', 'https://ipfs.io/ipfs/') || '/placeholder.svg',
+              description: asset.metadata.description,
+              quantity: asset.quantity,
+              type: 'NFT',
+              assetName: asset.metadata.assetName,
+            };
+          } if (asset.isFungibleToken) {
+            return {
+              id: asset.tokenId,
+              name: asset.displayName || asset.name,
+              policyId: asset.metadata.policyId,
+              quantity: asset.quantity,
+              decimals: asset.metadata.decimals,
+              type: 'FT',
+              assetName: asset.metadata.assetName,
+            };
+          }
+          return null;
+        }).filter(Boolean);
+        setAssets(formattedAssets);
       }
+    } catch (err) {
+      console.error('Error fetching wallet summary:', err);
+      toast.error('Failed to load assets');
+    }
+  };
+
+  useEffect(() => {
+    const loadWalletAssets = async () => {
+      setIsLoading(true);
+      await fetchAndFormatWalletAssets();
+      setIsLoading(false);
     };
-    fetchWalletSummary();
+    loadWalletAssets();
   }, [wallet.handler]);
 
   const toggleNFT = (asset) => {
@@ -142,16 +143,25 @@ export const ContributeModal = ({
 
   const handleContribute = async () => {
     try {
-      const hash = await sendTransaction({
-        vaultId,
-        selectedNFTs,
-        recipient: recipientAddress,
+      // Prepare NFTs and FTs with correct quantities
+      const formattedAssets = selectedNFTs.map(asset => {
+        if (asset.type === 'FT') {
+          return {
+            ...asset,
+            quantity: Number(asset.amount),
+          };
+        }
+        return asset;
       });
 
-      if (hash) {
-        toast.success(`Contribution successful! Hash: ${hash}`);
-        onClose();
-      }
+      await sendTransaction({
+        vaultId,
+        selectedNFTs: formattedAssets,
+        recipient: recipientAddress,
+      });
+      setSelectedNFTs([]);
+      setSelectedAmount({});
+      await fetchAndFormatWalletAssets();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
     }
@@ -161,6 +171,14 @@ export const ContributeModal = ({
     assets.filter(asset => asset.type === activeTab), [assets, activeTab]);
 
   const renderAssetList = () => {
+    if (filteredAssets.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-32 text-dark-100">
+          No {activeTab}s available
+        </div>
+      );
+    }
+
     if (activeTab === 'NFT') {
       return filteredAssets.map((nft) => (
         <NFTItem
@@ -217,7 +235,6 @@ export const ContributeModal = ({
               </div>
             </div>
           </div>
-
           <ContributionDetails
             contributionDetails={contributionDetails}
             selectedNFTs={selectedNFTs}

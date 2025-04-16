@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 import { TransactionsApiProvider } from '@/services/api/transactions';
 import { ContributeApiProvider } from '@/services/api/contribute';
 
@@ -12,7 +13,6 @@ export const useTransaction = () => {
 
   const sendTransaction = useCallback(async ({
     recipient,
-    ada,
     vaultId,
     selectedNFTs,
   }) => {
@@ -67,13 +67,17 @@ export const useTransaction = () => {
         signatures: [signature],
       });
 
-      setTxHash(submitResult.data?.hash);
-      setStatus('success');
-      return submitResult.data?.hash;
+      const hash = submitResult.data?.hash;
+      setTxHash(hash);
+      toast.success('Transaction completed successfully');
+      setStatus('idle');
+      return hash;
     } catch (err) {
       console.error('Transaction error:', err);
-      setError(err.message || 'Transaction failed');
-      setStatus('error');
+      const errorMessage = err.message || 'Transaction failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      setStatus('idle');
       return null;
     }
   }, [wallet]);

@@ -35,7 +35,7 @@ export const ContributionDetails = ({
       </div>
       <div className="space-y-3">
         <h3 className="text-lg font-medium flex justify-center">
-          <span>{contributionDetails.totalAssets} Asset(s) Contributed</span>
+          <span>{contributionDetails.totalAssets} Asset(s) Selected</span>
         </h3>
         <div className="space-y-1 h-[300px] overflow-y-auto pr-2">
           {selectedNFTs.length > 0 ? (
@@ -48,7 +48,7 @@ export const ContributionDetails = ({
             ))
           ) : (
             <div className="text-center py-12 text-dark-100 bg-steel-850 rounded-lg">
-              <p className="mb-2">No assets contributed</p>
+              <p className="mb-2">No assets selected</p>
               <p className="text-sm">Select assets from the left panel to contribute</p>
             </div>
           )}
@@ -57,7 +57,6 @@ export const ContributionDetails = ({
     </div>
     <div className="flex justify-center pt-4 border-t border-steel-800">
       <PrimaryButton
-        className="w-full max-w-xs"
         disabled={selectedNFTs.length === 0 || status !== 'idle'}
         onClick={onContribute}
       >
