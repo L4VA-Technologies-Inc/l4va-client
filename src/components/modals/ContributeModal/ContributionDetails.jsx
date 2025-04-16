@@ -35,9 +35,9 @@ export const ContributionDetails = ({
       </div>
       <div className="space-y-3">
         <h3 className="text-lg font-medium flex justify-center">
-          <span>{contributionDetails.totalAssets} Assets Contributed</span>
+          <span>{contributionDetails.totalAssets} Asset(s) Contributed</span>
         </h3>
-        <div className="space-y-2 h-[300px] overflow-y-auto pr-2">
+        <div className="space-y-1 h-[300px] overflow-y-auto pr-2">
           {selectedNFTs.length > 0 ? (
             selectedNFTs.map((asset) => (
               <SelectedAssetItem
