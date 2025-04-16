@@ -126,7 +126,7 @@ export const ProfileSocialLinks = () => {
       </div>
 
       {isAdding && (
-        <div className="flex flex-col rounded-lg bg-input-bg border border-dark-600 mb-4">
+        <div className="flex flex-col rounded-lg bg-input-bg border border-steel-850 mb-4">
           <div className="flex items-center gap-2 p-3">
             <Select
               disabled={isLoading}

@@ -34,21 +34,21 @@ export const ProfileModal = ({
           <UserAvatar handleDisconnect={handleDisconnect} user={user} />
           <div className="flex flex-col space-y-4">
             <Link
-              className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
+              className="rounded-[10px] bg-steel-800 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
               to="/profile"
               onClick={onClose}
             >
               My profile
             </Link>
             <Link
-              className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
+              className="rounded-[10px] bg-steel-800 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
               to="/vaults/my"
               onClick={onClose}
             >
               My vaults
             </Link>
             <Link
-              className="rounded-[10px] bg-dark-500 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
+              className="rounded-[10px] bg-steel-800 py-3 text-[20px] font-medium text-center hover:bg-steel-750"
               to="/swap"
               onClick={onClose}
             >

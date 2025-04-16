@@ -37,7 +37,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
         <PopoverTrigger asChild>
           <Button
             className={cn(
-              'text-[20px] border border-dark-600 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
+              'text-[20px] border border-steel-850 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
               !value && 'text-muted-foreground',
             )}
             variant="outline"
@@ -50,7 +50,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-input-bg border border-dark-600">
+        <PopoverContent className="w-auto p-0 bg-input-bg border border-steel-850">
           <div className="flex">
             <div className="p-4 bg-input-bg">
               <div className="text-sm font-medium mb-2 text-center">Days</div>
@@ -70,7 +70,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
                 ))}
               </div>
             </div>
-            <div className="p-4 bg-input-bg border-l border-dark-600">
+            <div className="p-4 bg-input-bg border-l border-steel-850">
               <div className="text-sm font-medium mb-2 text-center">Hours</div>
               <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
                 {hours.map((hour) => (
@@ -88,7 +88,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
                 ))}
               </div>
             </div>
-            <div className="p-4 bg-input-bg border-l border-dark-600">
+            <div className="p-4 bg-input-bg border-l border-steel-850">
               <div className="text-sm font-medium mb-2 text-center">Minutes</div>
               <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
                 {minutes.map((minute) => (

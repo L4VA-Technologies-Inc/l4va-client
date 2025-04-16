@@ -53,7 +53,7 @@ export const LavaWhitelistWithCaps = ({
           <div key={asset.id || asset.uniqueId} className="space-y-2">
             <div className="relative">
               <Input
-                className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"
+                className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-steel-850 h-[60px]"
                 placeholder={itemPlaceholder}
                 style={{ fontSize: '20px' }}
                 value={asset.policyId}
@@ -71,7 +71,7 @@ export const LavaWhitelistWithCaps = ({
             <div className="flex gap-4">
               <div className="flex-1">
                 <Input
-                  className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
+                  className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-steel-850 h-[60px]"
                   type="number"
                   min="0"
                   placeholder="Min asset cap"
@@ -82,7 +82,7 @@ export const LavaWhitelistWithCaps = ({
               </div>
               <div className="flex-1">
                 <Input
-                  className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-dark-600 h-[60px]"
+                  className="rounded-[10px] py-4 pl-5 text-[20px] bg-input-bg border-steel-850 h-[60px]"
                   type="number"
                   min="0"
                   placeholder="Max asset cap"

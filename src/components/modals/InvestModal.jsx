@@ -41,7 +41,7 @@ export const InvestModal = ({ isOpen, onClose, vaultName }) => {
               <span className="font-bold">{formatNum(walletBalance)} ADA</span>
             </div>
 
-            <div className="bg-[#202233] p-4 rounded-lg">
+            <div className="bg-steel-850 p-4 rounded-lg">
               <h3 className="font-bold mb-2">Invest</h3>
               <div className="flex items-center gap-4">
                 <input

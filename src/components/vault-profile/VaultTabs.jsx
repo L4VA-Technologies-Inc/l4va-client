@@ -23,7 +23,7 @@ export const VaultTabs = ({ vault, activeTab, onTabChange }) => {
         <LavaTabs
           activeTab={activeTab}
           activeTabClassName="text-primary"
-          className="w-full bg-[#202233]"
+          className="w-full bg-steel-850"
           inactiveTabClassName="text-dark-100"
           tabClassName="flex-1 text-center"
           tabs={tabs}

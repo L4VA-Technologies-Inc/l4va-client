@@ -157,7 +157,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                             Remove
                           </button>
                         </div>
-                        <div className="relative bg-dark-500 p-4 rounded-[10px]">
+                        <div className="relative bg-steel-800 p-4 rounded-[10px]">
                           <div className="grid grid-cols-4 gap-4">
                             <div>
                               <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
@@ -238,7 +238,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
                       <div className="flex justify-between items-center mb-4">
                         <p className="text-[20px] font-medium">Option {options.length + 1}</p>
                       </div>
-                      <div className="relative bg-dark-500 p-4 rounded-[10px]">
+                      <div className="relative bg-steel-800 p-4 rounded-[10px]">
                         <p className="font-medium">Do nothing</p>
                       </div>
                     </div>

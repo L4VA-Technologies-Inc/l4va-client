@@ -29,7 +29,7 @@ export const InvestmentsList = ({ investments = [] }) => {
         {investments.map((investment, index) => (
           <div
             key={index}
-            className="grid grid-cols-4 px-4 py-4 bg-[#202233] hover:bg-steel-750 transition-colors rounded-lg"
+            className="grid grid-cols-4 px-4 py-4 bg-steel-850 hover:bg-steel-750 transition-colors rounded-lg"
           >
             <div className="font-medium">{investment.name}</div>
             <div className="font-medium text-dark-100">{investment.publicKey}</div>

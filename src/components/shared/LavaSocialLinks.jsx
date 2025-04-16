@@ -71,7 +71,7 @@ export const LavaSocialLinks = ({
         {socialLinks.map((link, index) => (
           <div
             key={link.id}
-            className="flex flex-col rounded-lg bg-input-bg border border-dark-600"
+            className="flex flex-col rounded-lg bg-input-bg border border-steel-850"
           >
             <div className="flex items-center gap-2 p-3">
               <Select

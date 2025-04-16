@@ -11,8 +11,6 @@
   --color-background-primary: #000322;
   --color-text-primary: #FFFFFF;
   --color-dark-100: #979BB0;
-  --color-dark-500: #282B3F;
-  --color-dark-600: #202233;
   --color-dark-700: #000322;
   --color-input-bg: #080B29;
   
@@ -29,7 +27,7 @@
   --color-steel-950: #181A2A;
   --color-steel-900: #1D1F2F;
   --color-steel-850: #202233;
-  --color-steel-800: #2B2B3F;
+  --color-steel-800: #282B3F;
   --color-steel-750: #2D3049;
   --color-gray-500: #6B7280;
   --color-gray-400: #979BB0;
@@ -56,8 +54,6 @@
   --color-primary-background: var(--color-background-primary);
   --color-primary-text: var(--color-text-primary);
   --color-dark-100: var(--color-dark-100);
-  --color-dark-500: var(--color-dark-500);
-  --color-dark-600: var(--color-dark-600);
   --color-dark-700: var(--color-dark-700);
   --color-input-bg: var(--color-input-bg);
   --color-accent: var(--color-accent);
@@ -128,7 +124,7 @@ button {
 
 .divider-left::before {
   content: '';
-  @apply absolute left-0 top-0 h-full w-[1px] bg-dark-600;
+  @apply absolute left-0 top-0 h-full w-[1px] bg-steel-850;
 }
 
 /* Custom Scrollbar Styles */
@@ -143,7 +139,7 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-dark-500);
+  background: var(--color-steel-800);
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }
@@ -155,5 +151,5 @@ button {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-dark-500) var(--color-steel-900);
+  scrollbar-color: var(--color-steel-800) var(--color-steel-900);
 }

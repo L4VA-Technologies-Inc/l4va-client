@@ -6,7 +6,7 @@ import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 
-import { ContributeModal } from '@/components/modals/ContributeModal';
+import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
 import { InvestModal } from '@/components/modals/InvestModal';
 import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
 
@@ -96,7 +96,7 @@ export const VaultProfileView = ({ vault }) => {
         <p className="text-dark-100 text-sm">VAULT ID: {vault.id}</p>
       </div>
       <div className="flex gap-2">
-        <span className="bg-dark-600 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
+        <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
           <EyeIcon className="w-4 h-4 text-orange-500" />
           <span>{formatCompactNumber(200)}</span>
         </span>
@@ -136,7 +136,9 @@ export const VaultProfileView = ({ vault }) => {
             <div className="col-span-8 space-y-4">
               <div className="bg-steel-950 rounded-xl p-6">
                 {renderVaultInfo()}
-                <p className="text-dark-100 mb-6">{vault.description || 'No description'}</p>
+                {vault.description ? (
+                  <p className="text-dark-100 mb-6">{vault.description}</p>
+                ) : null}
                 <div className="mb-6">
                   <VaultStats invested={0} reserve={50000} />
                 </div>

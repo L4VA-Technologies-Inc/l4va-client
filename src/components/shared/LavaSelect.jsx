@@ -29,7 +29,7 @@ export const LavaSelect = ({
       <SelectTrigger
         className={
           `
-            bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium border border-dark-600 h-[60px] 
+            bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium border border-steel-850 h-[60px] 
             focus:ring-0 focus:ring-offset-0 mt-4
             ${className}
           `
@@ -37,7 +37,7 @@ export const LavaSelect = ({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-input-bg border border-dark-600">
+      <SelectContent className="bg-input-bg border border-steel-850">
         {options.map((option) => (
           <SelectItem
             key={option.id || option.value}
@@ -93,7 +93,7 @@ export const LavaSteelSelect = ({
         <ChevronDown className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
-        <div className="absolute left-0 z-10 mt-1 w-full rounded-lg bg-dark-600 shadow-lg border border-steel-750">
+        <div className="absolute left-0 z-10 mt-1 w-full rounded-lg bg-steel-850 shadow-lg border border-steel-750">
           {options.map((option) => (
             <button
               key={option.value}

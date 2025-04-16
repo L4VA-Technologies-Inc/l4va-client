@@ -102,7 +102,7 @@ export const LavaWhitelist = ({
         </div>
       </div>
       {csvName && (
-        <div className="flex items-center justify-between mb-4 p-3 bg-input-bg border-dark-600 rounded-[10px]">
+        <div className="flex items-center justify-between mb-4 p-3 bg-input-bg border-steel-850 rounded-[10px]">
           <span className="text-[20px]">{csvName}</span>
           <Button
             className="h-8 w-8 rounded-full"
@@ -118,7 +118,7 @@ export const LavaWhitelist = ({
         {whitelist.map((asset) => (
           <div key={asset.id} className="relative">
             <Input
-              className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-dark-600 h-[60px]"
+              className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-steel-850 h-[60px]"
               placeholder={itemPlaceholder}
               style={{ fontSize: '20px' }}
               value={asset[itemFieldName]}
