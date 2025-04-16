@@ -31,15 +31,15 @@ export const VaultProfileView = ({ vault }) => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        onClick: () => openModal(MODAL_TYPES.CONTRIBUTE),
+        handleClick: () => openModal(MODAL_TYPES.CONTRIBUTE),
       },
       Invest: {
         text: 'Invest',
-        onClick: () => openModal(MODAL_TYPES.INVEST),
+        handleClick: () => openModal(MODAL_TYPES.INVEST),
       },
       Governance: {
         text: 'Create Proposal',
-        onClick: () => openModal(MODAL_TYPES.CREATE_PROPOSAL),
+        handleClick: () => openModal(MODAL_TYPES.CREATE_PROPOSAL),
       },
       Settings: null,
     };
@@ -49,35 +49,37 @@ export const VaultProfileView = ({ vault }) => {
     if (!config) return null;
 
     return (
-      <PrimaryButton className="uppercase" onClick={config.onClick}>
+      <PrimaryButton className="uppercase" onClick={config.handleClick}>
         {config.text}
       </PrimaryButton>
     );
   };
 
   const renderModal = () => {
-    switch (activeTab) {
-      case 'Assets':
+    if (!activeModal) return null;
+
+    switch (activeModal) {
+      case MODAL_TYPES.CONTRIBUTE:
         return (
           <ContributeModal
-            isOpen={activeModal === MODAL_TYPES.CONTRIBUTE}
+            isOpen
             vaultId={vault.id}
             vaultName={vault.name}
             onClose={closeModal}
           />
         );
-      case 'Invest':
+      case MODAL_TYPES.INVEST:
         return (
           <InvestModal
-            isOpen={activeModal === MODAL_TYPES.INVEST}
+            isOpen
             vaultName={vault.name}
             onClose={closeModal}
           />
         );
-      case 'Governance':
+      case MODAL_TYPES.CREATE_PROPOSAL:
         return (
           <CreateProposalModal
-            isOpen={activeModal === MODAL_TYPES.CREATE_PROPOSAL}
+            isOpen
             vaultName={vault.name}
             onClose={closeModal}
           />
