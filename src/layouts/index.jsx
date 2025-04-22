@@ -1,5 +1,6 @@
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
+import { AuthModals } from '@/components/AuthModals';
 
 export const Layout = ({
   children,
@@ -20,5 +21,6 @@ export const Layout = ({
     <Header />
     {children}
     {includeFooter && <Footer />}
+    <AuthModals />
   </div>
 );
