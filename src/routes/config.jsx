@@ -1,5 +1,5 @@
 import { ProtectedRoute } from './ProtectedRoute';
-import { HomePageLayout, CreateVaultLayout, MainLayout } from '@/layouts';
+import { Layout } from '@/layouts';
 import { Home } from '@/pages/Home';
 import { CreateVault } from '@/pages/CreateVault';
 import { MyVaults } from '@/pages/MyVaults';
@@ -13,33 +13,36 @@ export const publicRoutes = [
   {
     path: '/',
     element: (
-      <HomePageLayout>
+      <Layout
+        backgroundHeight="768px"
+        backgroundImage="/assets/hero-bg.webp"
+      >
         <Home />
-      </HomePageLayout>
+      </Layout>
     ),
   },
   {
     path: '/sandbox',
     element: (
-      <MainLayout>
+      <Layout>
         <Sandbox />
-      </MainLayout>
+      </Layout>
     ),
   },
   {
     path: '/vaults',
     element: (
-      <MainLayout>
+      <Layout>
         <MyVaults />
-      </MainLayout>
+      </Layout>
     ),
   },
   {
     path: '/vaults/:id',
     element: (
-      <MainLayout>
+      <Layout>
         <Vault />
-      </MainLayout>
+      </Layout>
     ),
   },
 ];
@@ -52,9 +55,12 @@ export const protectedRoutes = [
       {
         path: '/create',
         element: (
-          <CreateVaultLayout>
+          <Layout
+            backgroundHeight="518px"
+            backgroundImage="/assets/vaults/create-vault-bg.webp"
+          >
             <CreateVault />
-          </CreateVaultLayout>
+          </Layout>
         ),
       },
     ],
@@ -66,9 +72,9 @@ export const protectedRoutes = [
       {
         path: '/profile',
         element: (
-          <MainLayout>
+          <Layout>
             <Profile />
-          </MainLayout>
+          </Layout>
         ),
       },
     ],
@@ -80,9 +86,9 @@ export const protectedRoutes = [
       {
         path: '/vaults/my',
         element: (
-          <MainLayout>
+          <Layout>
             <MyVaults />
-          </MainLayout>
+          </Layout>
         ),
       },
     ],
@@ -94,9 +100,9 @@ export const protectedRoutes = [
       {
         path: '/contribute',
         element: (
-          <MainLayout>
+          <Layout>
             <Contribute />
-          </MainLayout>
+          </Layout>
         ),
       },
     ],

@@ -1,34 +1,24 @@
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 
-export const HomePageLayout = ({ children }) => (
+export const Layout = ({
+  children,
+  includeFooter = true,
+  backgroundImage = null,
+  backgroundHeight = null,
+}) => (
   <div className="relative">
-    <div
-      className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[768px]"
-      style={{ backgroundImage: 'url(/assets/hero-bg.webp)' }}
-    />
-    <Header />
-    {children}
-    <Footer />
-  </div>
-);
-
-export const MainLayout = ({ children, includeFooter = true }) => (
-  <>
+    {backgroundImage && (
+      <div
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          height: backgroundHeight || '100%',
+        }}
+      />
+    )}
     <Header />
     {children}
     {includeFooter && <Footer />}
-  </>
-);
-
-export const CreateVaultLayout = ({ children }) => (
-  <div className="relative">
-    <div
-      className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[518px]"
-      style={{ backgroundImage: 'url(/assets/vaults/create-vault-bg.webp)' }}
-    />
-    <Header />
-    {children}
-    <Footer />
   </div>
 );
