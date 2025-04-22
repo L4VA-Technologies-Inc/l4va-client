@@ -65,7 +65,7 @@ export const Footer = () => {
             <img
               alt="L4VA Logo"
               className="w-40 md:w-[210px]"
-              src="/assets/logo.webp"
+              src="/assets/l4va-logo.webp"
             />
           </Link>
         </div>

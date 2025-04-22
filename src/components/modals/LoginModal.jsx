@@ -36,6 +36,17 @@ export const LoginModal = ({
     }
   }, [isConnected]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;
     setIsChecked(newValue);
@@ -48,7 +59,7 @@ export const LoginModal = ({
 
   const renderWalletsList = () => (
     <>
-      <div className="space-y-2 max-h-[30vh] overflow-y-auto">
+      <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
         {SUPPORTED_WALLETS.map(wallet => (
           <button
             key={wallet.key}
@@ -61,7 +72,7 @@ export const LoginModal = ({
             onClick={() => handleWalletConnect(wallet.key)}
           >
             <div className="flex items-center gap-2">
-              <img alt="wallet" height={40} src="/assets/wallet.png" width={40} />
+              <img alt="wallet" className="w-8 h-8 md:w-10 md:h-10" height={40} src="/assets/wallet.png" width={40} />
               <span className="font-bold text-sm">
                 {wallet.displayName}
               </span>
@@ -69,7 +80,7 @@ export const LoginModal = ({
             {isConnectingTo === wallet.key && <Spinner />}
             {!installed.has(wallet.key) && (
               <a
-                className="text-sm text-dark-100"
+                className="text-sm text-dark-100 p-1"
                 href={wallet.website}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -81,12 +92,12 @@ export const LoginModal = ({
           </button>
         ))}
       </div>
-      <div className="mt-6">
+      <div className="mt-4 md:mt-6">
         <LavaCheckbox
           checked={isChecked}
           description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
           label={(
-            <>Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span></>
+            <span className="text-sm md:text-base">Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span></span>
           )}
           name="terms"
           onChange={handleTermsAcceptance}
@@ -150,9 +161,29 @@ export const LoginModal = ({
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
         onClick={onClose}
       />
-      <div className="bg-steel-950 absolute top-0 right-4 z-50 w-[360px] rounded-t-[10px]">
-        <div className="rounded-t-[10px] flex items-center justify-between px-4 py-2 bg-white/5">
-          <p className="font-bold text-2xl">
+      <div
+        className="
+        fixed z-50 bg-steel-950
+
+        /* Desktop styles */
+        md:fixed-center md:w-[360px] md:rounded-[10px]
+
+        /* Mobile styles */
+        max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
+      "
+      >
+        <div
+          className="
+          flex items-center justify-between px-4 bg-white/5
+
+          /* Desktop styles */
+          md:py-3 md:rounded-t-[10px]
+
+          /* Mobile styles */
+          max-md:py-3 max-md:rounded-t-xl
+        "
+        >
+          <p className="font-bold text-2xl max-md:text-xl">
             Connect Wallet
           </p>
           <button
@@ -163,7 +194,7 @@ export const LoginModal = ({
             <X className="w-4 h-4" size={20} />
           </button>
         </div>
-        <div className="p-4 rounded-b-[10px]">
+        <div className="p-4 md:p-5 md:rounded-b-[10px] max-md:pb-8 max-md:pt-3">
           {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
         </div>
       </div>

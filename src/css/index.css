@@ -13,12 +13,12 @@
   --color-dark-100: #979BB0;
   --color-dark-700: #000322;
   --color-input-bg: #080B29;
-  
+
   /* For the datepicker */
   --color-accent: #202233;
   --color-primary: #FF842C;
   /* For the datepicker end */
-  
+
   /* Color System */
   --color-orange-500: #FF842C;
   --color-slate-950: #000322;
@@ -58,7 +58,7 @@
   --color-input-bg: var(--color-input-bg);
   --color-accent: var(--color-accent);
   --color-primary: var(--color-primary);
-  
+
   /* Color System */
   --color-orange-500: var(--color-orange-500);
   --color-slate-950: var(--color-slate-950);
@@ -152,4 +152,11 @@ button {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-steel-800) var(--color-steel-900);
+}
+
+.fixed-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }

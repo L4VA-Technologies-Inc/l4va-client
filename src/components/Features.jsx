@@ -34,7 +34,7 @@ export const Features = () => {
         <img
           alt={`${title} icon`}
           className="
-            w-[42px] h-[42px] sm:w-[84px] sm:h-[84px] mx-auto sm:mx-0
+            w-[84px] h-[84px] mx-auto sm:mx-0
             transition-transform duration-300 hover:scale-110
           "
           src={icon}
