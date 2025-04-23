@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Russo+One&display=swap");
-@import "./fonts.css";
 @import "tailwindcss";
+@import "./fonts.css";
+@import "./scrollbar.css";
 
 #nufi-widget {
   z-index: 10 !important;
@@ -11,13 +12,11 @@
   --color-background-primary: #000322;
   --color-text-primary: #FFFFFF;
   --color-dark-100: #979BB0;
-  --color-dark-700: #000322;
   --color-input-bg: #080B29;
 
   /* For the datepicker */
   --color-accent: #202233;
   --color-primary: #FF842C;
-  /* For the datepicker end */
 
   /* Color System */
   --color-orange-500: #FF842C;
@@ -54,7 +53,6 @@
   --color-primary-background: var(--color-background-primary);
   --color-primary-text: var(--color-text-primary);
   --color-dark-100: var(--color-dark-100);
-  --color-dark-700: var(--color-dark-700);
   --color-input-bg: var(--color-input-bg);
   --color-accent: var(--color-accent);
   --color-primary: var(--color-primary);
@@ -127,32 +125,6 @@ button {
   @apply absolute left-0 top-0 h-full w-[1px] bg-steel-850;
 }
 
-/* Custom Scrollbar Styles */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-steel-900);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-steel-800);
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-dark-100);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-steel-800) var(--color-steel-900);
-}
 
 @utility fixed-center {
   position: fixed;

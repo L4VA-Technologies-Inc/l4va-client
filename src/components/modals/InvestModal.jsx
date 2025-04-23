@@ -74,7 +74,7 @@ export const InvestModal = ({ isOpen, onClose, vaultName }) => {
           </div>
 
           <div className="md:w-1/2 md:pl-6 md:border-l border-[#2f324c]">
-            <div className="bg-dark-700 p-6 rounded-[10px]">
+            <div className="bg-slate-950 p-6 rounded-[10px]">
               <h2 className="text-xl text-center font-medium mb-8">Investment</h2>
 
               <div className="grid grid-cols-2 gap-6">

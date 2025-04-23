@@ -41,7 +41,7 @@ export const LavaSelect = ({
         {options.map((option) => (
           <SelectItem
             key={option.id || option.value}
-            className="text-dark-100 hover:text-white hover:bg-dark-700 cursor-pointer py-3"
+            className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
             value={option.id || option.value}
           >
             {option.label}

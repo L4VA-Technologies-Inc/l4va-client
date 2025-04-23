@@ -1,7 +1,9 @@
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
 import { UserAvatar } from '@/components/shared/UserAvatar';
+
+import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
 export const ProfileModal = ({
   user,
@@ -9,16 +11,7 @@ export const ProfileModal = ({
   isOpen,
   onClose,
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useBodyOverflow(isOpen);
 
   if (!isOpen) return null;
 

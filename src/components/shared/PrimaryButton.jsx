@@ -17,7 +17,7 @@ export const PrimaryButton = ({
       hover:opacity-90
       gap-1.5
       px-10 py-4 text-[20px]
-      text-dark-700
+      text-slate-950
       disabled:opacity-50
       disabled:cursor-not-allowed
       disabled:bg-gray-300

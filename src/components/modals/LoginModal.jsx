@@ -7,6 +7,8 @@ import { Spinner } from '@/components/Spinner';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 
+import { useBodyOverflow } from '@/hooks/useBodyOverflow';
+
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 
 export const LoginModal = ({
@@ -36,16 +38,7 @@ export const LoginModal = ({
     }
   }, [isConnected]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useBodyOverflow(isOpen);
 
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;

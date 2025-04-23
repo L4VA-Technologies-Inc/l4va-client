@@ -43,7 +43,7 @@ export const CurrencyDropdown = () => {
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
-            className="px-6 py-4 cursor-pointer hover:bg-dark-700 focus:bg-dark-700"
+            className="px-6 py-4 cursor-pointer hover:bg-slate-950 focus:bg-slate-950"
             onClick={() => {
               setSelected(option.value);
               setIsOpen(false);

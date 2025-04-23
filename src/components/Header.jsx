@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 
 import { ConnectButton } from './ConnectButton';
-import { CurrencyDropdown } from './CurrencyDropdown.jsx';
+import { CurrencyDropdown } from './CurrencyDropdown';
+import { MenuDrawer } from './MenuDrawer';
 
-import { useModal } from '@/context/modals';
 import { useAuth } from '@/context/auth';
+import { useModal } from '@/context/modals';
 
 import { MODAL_TYPES } from '@/constants/core.constants';
 
@@ -48,8 +49,7 @@ export const Header = () => {
     <div className="py-6">
       <nav className="relative container mx-auto flex items-center justify-between px-4">
         <Link to="/">
-          <img alt="L4VA Logo" className="hidden lg:block w-[160px]" src="/assets/l4va-logo.webp"/>
-          <img alt="L4VA Logo" className="lg:hidden w-[60px]" src="/assets/l4va-icon.png"/>
+          <img alt="L4VA Logo" className="w-[160px]" src="/assets/l4va-logo.webp" />
         </Link>
         <div className="hidden lg:flex items-center text-2xl font-satoshi font-bold">
           <CurrencyDropdown
@@ -61,7 +61,10 @@ export const Header = () => {
             <NavLink key={link.to} {...link} />
           ))}
         </div>
-        <ConnectButton />
+        <div className="flex items-center">
+          <ConnectButton />
+          <MenuDrawer navLinks={navLinks} />
+        </div>
       </nav>
     </div>
   );

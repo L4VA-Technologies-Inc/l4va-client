@@ -1,6 +1,6 @@
+import { WeldProvider } from '@ada-anvil/weld/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { WeldProvider } from '@ada-anvil/weld/react';
 
 import './css/index.css';
 

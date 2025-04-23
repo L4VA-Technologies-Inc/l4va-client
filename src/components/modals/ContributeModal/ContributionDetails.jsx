@@ -8,7 +8,7 @@ export const ContributionDetails = ({
   status,
   onContribute,
 }) => (
-  <div className="w-full md:w-1/2 space-y-6 flex flex-col p-6 bg-dark-700 rounded-md">
+  <div className="w-full md:w-1/2 space-y-6 flex flex-col p-6 bg-slate-950 rounded-md">
     <div className="flex-1 space-y-6">
       <h2 className="text-xl text-center font-medium pb-2 border-b border-steel-800">Contribution Details</h2>
 

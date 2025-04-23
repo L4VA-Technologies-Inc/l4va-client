@@ -2,7 +2,7 @@ import { Copy, PowerOff } from 'lucide-react';
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
-import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
+import { getAvatarLetter, getDisplayName, substringAddress } from '@/utils/core.utils';
 
 export const UserAvatar = ({ user, handleDisconnect }) => {
   const handleCopyAddress = () => {
@@ -27,7 +27,7 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
       </Avatar>
       <div className="flex-1">
         <p className="font-medium text-[20px] mb-2">
-          {user.name}
+          {getDisplayName(user)}
         </p>
         <button
           className="flex items-center gap-2 text-dark-100"
@@ -40,9 +40,9 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
       </div>
       {handleDisconnect ? (
         <button
+          className="text-dark-100 hover:text-red-600 transition-colors duration-200"
           type="button"
           onClick={handleDisconnect}
-          className="text-dark-100 hover:text-red-600 transition-colors duration-200"
         >
           <PowerOff size={20} />
         </button>
