@@ -11,10 +11,41 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SandboxImport } from './routes/sandbox'
+import { Route as ProfileImport } from './routes/profile'
+import { Route as CreateImport } from './routes/create'
+import { Route as ContributeImport } from './routes/contribute'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
+import { Route as VaultsIndexImport } from './routes/vaults/index'
+import { Route as VaultsMyImport } from './routes/vaults/my'
+import { Route as VaultsIdImport } from './routes/vaults/$id'
 
 // Create/Update Routes
+
+const SandboxRoute = SandboxImport.update({
+  id: '/sandbox',
+  path: '/sandbox',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProfileRoute = ProfileImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CreateRoute = CreateImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ContributeRoute = ContributeImport.update({
+  id: '/contribute',
+  path: '/contribute',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AboutRoute = AboutImport.update({
   id: '/about',
@@ -25,6 +56,24 @@ const AboutRoute = AboutImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const VaultsIndexRoute = VaultsIndexImport.update({
+  id: '/vaults/',
+  path: '/vaults/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const VaultsMyRoute = VaultsMyImport.update({
+  id: '/vaults/my',
+  path: '/vaults/my',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const VaultsIdRoute = VaultsIdImport.update({
+  id: '/vaults/$id',
+  path: '/vaults/$id',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +95,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutImport
       parentRoute: typeof rootRoute
     }
+    '/contribute': {
+      id: '/contribute'
+      path: '/contribute'
+      fullPath: '/contribute'
+      preLoaderRoute: typeof ContributeImport
+      parentRoute: typeof rootRoute
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateImport
+      parentRoute: typeof rootRoute
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileImport
+      parentRoute: typeof rootRoute
+    }
+    '/sandbox': {
+      id: '/sandbox'
+      path: '/sandbox'
+      fullPath: '/sandbox'
+      preLoaderRoute: typeof SandboxImport
+      parentRoute: typeof rootRoute
+    }
+    '/vaults/$id': {
+      id: '/vaults/$id'
+      path: '/vaults/$id'
+      fullPath: '/vaults/$id'
+      preLoaderRoute: typeof VaultsIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/vaults/my': {
+      id: '/vaults/my'
+      path: '/vaults/my'
+      fullPath: '/vaults/my'
+      preLoaderRoute: typeof VaultsMyImport
+      parentRoute: typeof rootRoute
+    }
+    '/vaults/': {
+      id: '/vaults/'
+      path: '/vaults'
+      fullPath: '/vaults'
+      preLoaderRoute: typeof VaultsIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +152,99 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contribute': typeof ContributeRoute
+  '/create': typeof CreateRoute
+  '/profile': typeof ProfileRoute
+  '/sandbox': typeof SandboxRoute
+  '/vaults/$id': typeof VaultsIdRoute
+  '/vaults/my': typeof VaultsMyRoute
+  '/vaults': typeof VaultsIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contribute': typeof ContributeRoute
+  '/create': typeof CreateRoute
+  '/profile': typeof ProfileRoute
+  '/sandbox': typeof SandboxRoute
+  '/vaults/$id': typeof VaultsIdRoute
+  '/vaults/my': typeof VaultsMyRoute
+  '/vaults': typeof VaultsIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contribute': typeof ContributeRoute
+  '/create': typeof CreateRoute
+  '/profile': typeof ProfileRoute
+  '/sandbox': typeof SandboxRoute
+  '/vaults/$id': typeof VaultsIdRoute
+  '/vaults/my': typeof VaultsMyRoute
+  '/vaults/': typeof VaultsIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/contribute'
+    | '/create'
+    | '/profile'
+    | '/sandbox'
+    | '/vaults/$id'
+    | '/vaults/my'
+    | '/vaults'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about'
-  id: '__root__' | '/' | '/about'
+  to:
+    | '/'
+    | '/about'
+    | '/contribute'
+    | '/create'
+    | '/profile'
+    | '/sandbox'
+    | '/vaults/$id'
+    | '/vaults/my'
+    | '/vaults'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/contribute'
+    | '/create'
+    | '/profile'
+    | '/sandbox'
+    | '/vaults/$id'
+    | '/vaults/my'
+    | '/vaults/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ContributeRoute: typeof ContributeRoute
+  CreateRoute: typeof CreateRoute
+  ProfileRoute: typeof ProfileRoute
+  SandboxRoute: typeof SandboxRoute
+  VaultsIdRoute: typeof VaultsIdRoute
+  VaultsMyRoute: typeof VaultsMyRoute
+  VaultsIndexRoute: typeof VaultsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ContributeRoute: ContributeRoute,
+  CreateRoute: CreateRoute,
+  ProfileRoute: ProfileRoute,
+  SandboxRoute: SandboxRoute,
+  VaultsIdRoute: VaultsIdRoute,
+  VaultsMyRoute: VaultsMyRoute,
+  VaultsIndexRoute: VaultsIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +258,14 @@ export const routeTree = rootRoute
       "filePath": "__root.jsx",
       "children": [
         "/",
-        "/about"
+        "/about",
+        "/contribute",
+        "/create",
+        "/profile",
+        "/sandbox",
+        "/vaults/$id",
+        "/vaults/my",
+        "/vaults/"
       ]
     },
     "/": {
@@ -105,6 +273,27 @@ export const routeTree = rootRoute
     },
     "/about": {
       "filePath": "about.jsx"
+    },
+    "/contribute": {
+      "filePath": "contribute.jsx"
+    },
+    "/create": {
+      "filePath": "create.jsx"
+    },
+    "/profile": {
+      "filePath": "profile.jsx"
+    },
+    "/sandbox": {
+      "filePath": "sandbox.jsx"
+    },
+    "/vaults/$id": {
+      "filePath": "vaults/$id.jsx"
+    },
+    "/vaults/my": {
+      "filePath": "vaults/my.jsx"
+    },
+    "/vaults/": {
+      "filePath": "vaults/index.jsx"
     }
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
@@ -17,7 +17,7 @@ const EmptyState = () => (
     <p className="text-xl">
       No vaults found
     </p>
-    <NavLink
+    <Link
       className={clsx(
         'mt-2 transition-all',
         'hover:text-orange-500 hover:underline',
@@ -25,7 +25,7 @@ const EmptyState = () => (
       to="/create"
     >
       Create your first vault to get started
-    </NavLink>
+    </Link>
   </div>
 );
 
