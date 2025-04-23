@@ -163,14 +163,14 @@ export const LoginModal = ({
       />
       <div
         className="
-        fixed z-50 bg-steel-950
+          fixed z-50 bg-steel-950
 
-        /* Desktop styles */
-        md:fixed-center md:w-[360px] md:rounded-[10px]
+          /* Desktop styles */
+          md:fixed-center md:w-[360px] md:rounded-[10px]
 
-        /* Mobile styles */
-        max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
-      "
+          /* Mobile styles */
+          max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
+        "
       >
         <div
           className="

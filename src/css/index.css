@@ -154,7 +154,7 @@ button {
   scrollbar-color: var(--color-steel-800) var(--color-steel-900);
 }
 
-.fixed-center {
+@utility fixed-center {
   position: fixed;
   top: 50%;
   left: 50%;
