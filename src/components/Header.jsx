@@ -37,6 +37,7 @@ export const Header = () => {
 
   const NavLink = ({ to, label }) => (
     <Link
+      activeProps={{ className: 'text-orange-500' }}
       className="min-w-[140px] text-center transition hover:text-orange-500"
       to={to}
       onClick={(e) => handleNavClick(to, e)}
