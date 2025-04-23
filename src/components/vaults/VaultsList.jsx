@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from '@tanstack/react-router';
 import clsx from 'clsx';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';

@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 
 import { UserAvatar } from '@/components/shared/UserAvatar';
 

@@ -89,9 +89,6 @@ export const LoginModal = ({
         <LavaCheckbox
           checked={isChecked}
           description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
-          label={(
-            <span className="text-sm md:text-base">Accept the <span className="text-blue-400">Privacy Policy and Terms of Use</span></span>
-          )}
           name="terms"
           onChange={handleTermsAcceptance}
         />

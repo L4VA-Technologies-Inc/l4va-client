@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 import { ConnectButton } from './ConnectButton';
 import { CurrencyDropdown } from './CurrencyDropdown';

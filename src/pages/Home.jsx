@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '@/context/auth';
 import { useModal } from '@/context/modals';
 import { MODAL_TYPES } from '@/constants/core.constants';

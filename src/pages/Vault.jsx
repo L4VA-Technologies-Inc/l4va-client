@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from '@tanstack/react-router';
 
 import { EditVault } from '@/components/vaults/EditVault';
 import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 
 export const MenuDrawer = ({ navLinks }) => {
   const [isOpen, setIsOpen] = useState(false);
