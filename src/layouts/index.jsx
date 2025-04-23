@@ -22,6 +22,5 @@ export const Layout = ({
     {children}
     {includeFooter && <Footer />}
     <AuthModals />
-    <div className="fixed right-4 bottom-4 translate-x-[110px] translate-y-[10px] transform rounded-lg p-4 shadow-lg transition-transform duration-300 hover:translate-x-0 hover:translate-y-0">Transform translate example</div>
   </div>
 );
