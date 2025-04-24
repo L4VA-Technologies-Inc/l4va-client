@@ -30,7 +30,7 @@ export const Header = () => {
     if (!isAuthenticated) {
       e.preventDefault();
       openModal(MODAL_TYPES.LOGIN, {
-        onSuccess: () => navigate(to),
+        onSuccess: () => navigate({ to }),
       });
     }
   };

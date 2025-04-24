@@ -1,19 +1,21 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useAuth } from '@/context/auth';
-import { useModal } from '@/context/modals';
-import { MODAL_TYPES } from '@/constants/core.constants';
 
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { Features } from '@/components/Features';
-import { InvestmentsTable } from '@/components/home/InvestmentsTable';
-import { Stats } from '@/components/home/Stats';
 import { HeroHeader } from '@/components/HeroHeader';
 import { HeroStats } from '@/components/HeroStats';
 import { Faq } from '@/components/home/Faq';
-import { VaultsFilters } from '@/components/home/VaultsFilters';
-import { SearchInput } from '@/components/shared/SearchInput';
+import { InvestmentsTable } from '@/components/home/InvestmentsTable';
 import { MainFilters } from '@/components/home/MainFilters';
+import { Stats } from '@/components/home/Stats';
+import { VaultsFilters } from '@/components/home/VaultsFilters';
+import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { SearchInput } from '@/components/shared/SearchInput';
+import { SecondaryButton } from '@/components/shared/SecondaryButton';
+
+import { MODAL_TYPES } from '@/constants/core.constants';
+
+import { useAuth } from '@/context/auth';
+import { useModal } from '@/context/modals';
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -24,14 +26,14 @@ export const Home = () => {
     if (!isAuthenticated) {
       e.preventDefault();
       openModal(MODAL_TYPES.LOGIN, {
-        onSuccess: () => navigate('/create'),
+        onSuccess: () => navigate({ to: '/create' }),
       });
     } else {
-      navigate('/create');
+      navigate({ to: '/create' });
     }
   };
 
-  const handleViewVaults = () => navigate('/vaults');
+  const handleViewVaults = () => navigate({ to: '/vaults' });
 
   return (
     <>
