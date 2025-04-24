@@ -1,12 +1,12 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { publicRoutes, protectedRoutes, notFoundRoute } from './config';
+import { createFileRoute } from '@tanstack/react-router';
+import { Home } from '@/pages/Home';
 
-export const Routes = () => {
-  const router = createBrowserRouter([
-    ...publicRoutes,
-    ...protectedRoutes,
-    notFoundRoute,
-  ]);
+const HomeComponent = () => (
+  <div className="p-2">
+    <Home />
+  </div>
+);
 
-  return <RouterProvider router={router} />;
-};
+export const Route = createFileRoute('/')({
+  component: HomeComponent,
+});

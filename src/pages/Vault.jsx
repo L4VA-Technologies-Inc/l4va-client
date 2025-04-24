@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from '@tanstack/react-router';
 
 import { EditVault } from '@/components/vaults/EditVault';
 import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';
@@ -11,11 +11,20 @@ import { VaultsApiProvider } from '@/services/api/vaults';
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 
 export const Vault = () => {
-  const { id } = useParams();
+  const id = useParams({
+    from: '/vaults/$id',
+    select: (params) => params.id,
+  });
+
   const [vault, setVault] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
     const fetchVault = async () => {
       try {
         const response = await VaultsApiProvider.getVault(id);
@@ -28,6 +37,10 @@ export const Vault = () => {
     };
     fetchVault();
   }, [id]);
+
+  if (!id) {
+    return <Navigate replace to="/vaults" />;
+  }
 
   if (loading) {
     return (

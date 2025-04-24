@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { Home, ArrowLeft } from 'lucide-react';
 
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
