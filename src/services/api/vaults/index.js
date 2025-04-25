@@ -5,18 +5,11 @@ import { VaultsConfigProvider } from '@/services/api/vaults/config';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 export class VaultsApiProvider {
-  static async createVault({
-    name,
-    type,
-    privacy,
-    description,
-  }) {
-    const response = await axiosInstance.post(VaultsConfigProvider.createVault(), {
-      name,
-      type,
-      privacy,
-      description,
-    });
+  static async createVault(vaultData) {
+    const response = await axiosInstance.post(
+      VaultsConfigProvider.createVault(),
+      vaultData,
+    );
     return response;
   }
 
@@ -54,6 +47,7 @@ export class VaultsApiProvider {
       VaultsConfigProvider.launchVault(),
       vaultData,
     );
+    return response;
   }
 
   static async getVault(id) {

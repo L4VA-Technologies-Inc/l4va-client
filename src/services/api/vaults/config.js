@@ -4,7 +4,7 @@ export class VaultsConfigProvider {
   }
 
   static getVaults(filter) {
-    if(filter) {
+    if (filter) {
       return `/api/v1/vaults?filter=${filter}`;
     }
     return '/api/v1/vaults';
@@ -27,7 +27,7 @@ export class VaultsConfigProvider {
   }
 
   static launchVault() {
-    return '/api/v1/vaults';
+    return '/api/v1/vaults/publish';
   }
 
   static getVault(id) {

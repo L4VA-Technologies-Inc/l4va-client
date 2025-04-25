@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { AuthContext } from './auth';
 import { CoreApiProvider } from '@/services/api/core';
+import { AuthContext } from './auth';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       const response = await CoreApiProvider.login({
         signature,
         stakeAddress,
-        walletAddress
+        walletAddress,
       });
       localStorage.setItem('jwt', response.data.accessToken);
       setUser(response.data.user);

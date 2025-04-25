@@ -109,7 +109,8 @@ export const CreateVaultForm = ({ vault }) => {
         const formattedData = formatVaultData(vaultData);
         setErrors({});
 
-        await VaultsApiProvider.launchVault(formattedData);
+        const { presignedTx } = await VaultsApiProvider.createVault(formattedData);
+        console.log(presignedTx);
         toast.success('Vault launched successfully');
       } catch (err) {
         console.log(err);
