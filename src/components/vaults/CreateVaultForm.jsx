@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { useWallet } from '@ada-anvil/weld/react';
 import { VaultsApiProvider } from '@/services/api/vaults';
 
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
@@ -32,6 +33,8 @@ export const CreateVaultForm = ({ vault }) => {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
+
+  const wallet = useWallet('handler', 'isConnected');
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -110,7 +113,11 @@ export const CreateVaultForm = ({ vault }) => {
         setErrors({});
 
         const { presignedTx } = await VaultsApiProvider.createVault(formattedData);
-        console.log(presignedTx);
+
+        const signData = await wallet.handler.signTx(presignedTx);
+
+        console.log(signData);
+
         toast.success('Vault launched successfully');
       } catch (err) {
         console.log(err);
