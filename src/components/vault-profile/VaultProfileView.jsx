@@ -9,6 +9,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
 import { InvestModal } from '@/components/modals/InvestModal';
 import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
+import { SwapComponent } from '@/components/swap/Swap';
 
 import { useModal } from '@/context/modals';
 
@@ -17,13 +18,10 @@ import { MODAL_TYPES } from '@/constants/core.constants';
 import { formatCompactNumber } from '@/utils/core.utils';
 
 import EyeIcon from '@/icons/eye.svg?react';
+
 export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
-  const {
-    activeModal,
-    openModal,
-    closeModal,
-  } = useModal();
+  const { activeModal, openModal, closeModal } = useModal();
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
@@ -60,30 +58,11 @@ export const VaultProfileView = ({ vault }) => {
 
     switch (activeModal) {
       case MODAL_TYPES.CONTRIBUTE:
-        return (
-          <ContributeModal
-            isOpen
-            vaultId={vault.id}
-            vaultName={vault.name}
-            onClose={closeModal}
-          />
-        );
+        return <ContributeModal isOpen vaultId={vault.id} vaultName={vault.name} onClose={closeModal} />;
       case MODAL_TYPES.INVEST:
-        return (
-          <InvestModal
-            isOpen
-            vaultName={vault.name}
-            onClose={closeModal}
-          />
-        );
+        return <InvestModal isOpen vaultName={vault.name} onClose={closeModal} />;
       case MODAL_TYPES.CREATE_PROPOSAL:
-        return (
-          <CreateProposalModal
-            isOpen
-            vaultName={vault.name}
-            onClose={closeModal}
-          />
-        );
+        return <CreateProposalModal isOpen vaultName={vault.name} onClose={closeModal} />;
       default:
         return null;
     }
@@ -105,7 +84,7 @@ export const VaultProfileView = ({ vault }) => {
   );
 
   const renderSidebar = () => (
-    <div className="col-span-4 space-y-4">
+    <div className="col-span-4 flex flex-col gap-4">
       <div className="bg-steel-950 rounded-xl p-6">
         <img
           alt={vault.name}
@@ -114,16 +93,11 @@ export const VaultProfileView = ({ vault }) => {
         />
         <p className="text-[20px] mb-2">Countdown name</p>
         <div className="mb-6">
-          <VaultCountdown
-            endTime={vault.contributionOpenWindowTime}
-          />
+          <VaultCountdown endTime={vault.contributionOpenWindowTime} />
         </div>
-        <VaultContribution
-          socialLinks={vault.socialLinks}
-          target={vault.target}
-          totalRaised={vault.totalRaised}
-        />
+        <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
       </div>
+      <SwapComponent />
     </div>
   );
 
@@ -136,15 +110,11 @@ export const VaultProfileView = ({ vault }) => {
             <div className="col-span-8 space-y-4">
               <div className="bg-steel-950 rounded-xl p-6">
                 {renderVaultInfo()}
-                {vault.description ? (
-                  <p className="text-dark-100 mb-6">{vault.description}</p>
-                ) : null}
+                {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
                 <div className="mb-6">
                   <VaultStats invested={0} reserve={50000} />
                 </div>
-                <div className="flex justify-center mb-6">
-                  {renderActionButton()}
-                </div>
+                <div className="flex justify-center mb-6">{renderActionButton()}</div>
                 <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
               </div>
             </div>
