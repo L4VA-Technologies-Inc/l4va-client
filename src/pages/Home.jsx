@@ -12,22 +12,18 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 
-import { MODAL_TYPES } from '@/constants/core.constants';
-
-import { useAuth } from '@/context/auth';
-import { useModal } from '@/context/modals';
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 export const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { openModal } = useModal();
+  const { openModal } = useModalControls();
 
   const handleCreateVault = (e) => {
     if (!isAuthenticated) {
       e.preventDefault();
-      openModal(MODAL_TYPES.LOGIN, {
-        onSuccess: () => navigate({ to: '/create' }),
-      });
+      openModal('LoginModal');
     } else {
       navigate({ to: '/create' });
     }
@@ -43,12 +39,8 @@ export const Home = () => {
             <HeroHeader />
           </div>
           <div className="flex flex-col sm:flex-row gap-4 mb-[60px]">
-            <PrimaryButton onClick={handleViewVaults}>
-              VIEW VAULTS
-            </PrimaryButton>
-            <SecondaryButton onClick={handleCreateVault}>
-              CREATE VAULT
-            </SecondaryButton>
+            <PrimaryButton onClick={handleViewVaults}>VIEW VAULTS</PrimaryButton>
+            <SecondaryButton onClick={handleCreateVault}>CREATE VAULT</SecondaryButton>
           </div>
           <HeroStats />
         </div>

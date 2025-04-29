@@ -4,6 +4,8 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
+import { Modal } from '@/lib/modals/modal.registry';
+
 const RootComponent = () => (
   <>
     <Header />
@@ -12,6 +14,7 @@ const RootComponent = () => (
     </div>
     <TanStackRouterDevtools position="bottom-right" />
     <Footer />
+    <Modal />
   </>
 );
 

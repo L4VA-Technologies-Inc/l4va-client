@@ -1,13 +1,11 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 
 import { ConnectButton } from './ConnectButton';
 import { CurrencyDropdown } from './CurrencyDropdown';
 import { MenuDrawer } from './MenuDrawer';
 
 import { useAuth } from '@/lib/auth/auth';
-import { useModal } from '@/context/modals';
-
-import { MODAL_TYPES } from '@/constants/core.constants';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const options = [
   { value: 'USD', icon: '/assets/icons/flag.svg', label: 'USD' },
@@ -23,15 +21,12 @@ const navLinks = [
 
 export const Header = () => {
   const { isAuthenticated } = useAuth();
-  const { openModal } = useModal();
-  const navigate = useNavigate();
+  const { openModal } = useModalControls();
 
-  const handleNavClick = (to, e) => {
+  const handleNavClick = (e) => {
     if (!isAuthenticated) {
       e.preventDefault();
-      openModal(MODAL_TYPES.LOGIN, {
-        onSuccess: () => navigate({ to }),
-      });
+      openModal('LoginModal');
     }
   };
 
@@ -53,11 +48,7 @@ export const Header = () => {
           <img alt="L4VA Logo" className="w-[160px]" src="/assets/l4va-logo.webp" />
         </Link>
         <div className="hidden lg:flex items-center text-2xl font-satoshi font-bold">
-          <CurrencyDropdown
-            options={options}
-            value="ADA"
-            onSelect={(value) => console.log(value)}
-          />
+          <CurrencyDropdown options={options} value="ADA" onSelect={(value) => console.log(value)} />
           {navLinks.map((link) => (
             <NavLink key={link.to} {...link} />
           ))}

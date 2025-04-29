@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Check, X, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
-import { useExtensions } from '@ada-anvil/weld/react';
+import { useExtensions, useWallet } from '@ada-anvil/weld/react';
+import { useModal, useModalControls } from '@/lib/modals/modal.context';
+import { useAuth } from '@/lib/auth/auth';
 
 import { Spinner } from '@/components/Spinner';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
@@ -11,19 +13,22 @@ import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 
-export const LoginModal = ({
-  isOpen,
-  onClose,
-  isConnected,
-  isConnectingTo,
-  isAuthenticated,
-  onConnect,
-  onSignMessage,
-  isLoading,
-  disconnect,
-}) => {
+const messageHex = (msg) =>
+  Array.from(msg)
+    .map((char) => char.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('');
+
+export const LoginModal = () => {
+  const { activeModalData } = useModal();
+  const { closeModal } = useModalControls();
+  const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
+
+  const { isAuthenticated, login, logout } = useAuth();
+  const wallet = useWallet('isConnectingTo', 'isConnected', 'handler', 'stakeAddressBech32', 'changeAddressBech32');
+  const connect = useWallet('connect');
+  const disconnect = useWallet('disconnect');
 
   const [isChecked, setIsChecked] = useState(() => {
     const savedAcceptance = localStorage.getItem(TERMS_ACCEPTANCE_KEY);
@@ -31,14 +36,14 @@ export const LoginModal = ({
   });
 
   useEffect(() => {
-    if (isConnected) {
+    if (wallet.isConnected) {
       setView('sign');
     } else {
       setView('wallets');
     }
-  }, [isConnected]);
+  }, [wallet.isConnected]);
 
-  useBodyOverflow(isOpen);
+  useBodyOverflow(activeModalData?.name === 'LoginModal');
 
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;
@@ -46,31 +51,65 @@ export const LoginModal = ({
     localStorage.setItem(TERMS_ACCEPTANCE_KEY, newValue.toString());
   };
 
-  if (!isOpen) return null;
+  const handleConnect = (walletKey) => {
+    if (walletKey) {
+      connect(walletKey, {
+        onSuccess: () => {
+          console.log('Successfully connected to wallet');
+          setIsLoading(false);
+        },
+        onError: (error) => {
+          console.error('Failed to connect to wallet:', error);
+          setIsLoading(false);
+        },
+      });
+    }
+  };
 
-  const handleWalletConnect = (walletKey) => onConnect(walletKey);
+  const handleDisconnect = () => {
+    disconnect();
+    logout();
+    closeModal();
+  };
+
+  const handleSignMessage = async () => {
+    if (!wallet.isConnected || !wallet.handler) return false;
+    setIsLoading(true);
+
+    try {
+      const message = `account: ${wallet.stakeAddressBech32}`;
+      const signature = await wallet.handler.signData(messageHex(message));
+      await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
+      closeModal();
+      return activeModalData?.props?.onSuccess && activeModalData.props.onSuccess();
+    } catch (error) {
+      return console.error('Authentication failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (activeModalData?.name !== 'LoginModal') return null;
 
   const renderWalletsList = () => (
     <>
       <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-        {SUPPORTED_WALLETS.map(wallet => (
+        {SUPPORTED_WALLETS.map((wallet) => (
           <button
             key={wallet.key}
             className="
               flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
               transition-colors disabled:opacity-50 hover:bg-steel-750
             "
-            disabled={isConnectingTo === wallet.key || !isChecked}
+            disabled={wallet.isConnectingTo === wallet.key || !isChecked}
             type="button"
-            onClick={() => handleWalletConnect(wallet.key)}
+            onClick={() => handleConnect(wallet.key)}
           >
             <div className="flex items-center gap-2">
               <img alt="wallet" className="w-8 h-8 md:w-10 md:h-10" height={40} src="/assets/wallet.png" width={40} />
-              <span className="font-bold text-sm">
-                {wallet.displayName}
-              </span>
+              <span className="font-bold text-sm">{wallet.displayName}</span>
             </div>
-            {isConnectingTo === wallet.key && <Spinner />}
+            {wallet.isConnectingTo === wallet.key && <Spinner />}
             {!installed.has(wallet.key) && (
               <a
                 className="text-sm text-dark-100 p-1"
@@ -101,9 +140,7 @@ export const LoginModal = ({
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-orange-500" />
-          <div className="text-sm sm:text-base">
-            Wallet connected
-          </div>
+          <div className="text-sm sm:text-base">Wallet connected</div>
         </div>
       </div>
       <div className="flex items-center justify-between w-full mb-3 sm:mb-4">
@@ -111,15 +148,11 @@ export const LoginModal = ({
           {isAuthenticated ? (
             <Check className="w-6 h-6 sm:w-[30px] sm:h-[30px] text-orange-500" />
           ) : (
-            <div
-              className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-orange-500"
-            >
+            <div className="w-6 h-6 sm:w-[30px] sm:h-[30px] bg-yellow-500/20 rounded-full flex items-center justify-center text-orange-500">
               2
             </div>
           )}
-          <div className="text-sm sm:text-base">
-            Sign Message
-          </div>
+          <div className="text-sm sm:text-base">Sign Message</div>
         </div>
       </div>
       <div className="flex justify-center">
@@ -127,30 +160,24 @@ export const LoginModal = ({
           disabled={isLoading}
           icon={isLoading ? Spinner : undefined}
           size="small"
-          onClick={onSignMessage}
+          onClick={handleSignMessage}
         >
           {isLoading ? 'Signing message...' : 'Sign message'}
         </PrimaryButton>
       </div>
       <div className="text-sm mt-4">
         Having issues? Try{' '}
-        <span
-          className="cursor-pointer text-orange-500 hover:underline"
-          onClick={disconnect}
-        >
+        <span className="cursor-pointer text-orange-500 hover:underline" onClick={handleDisconnect}>
           disconnecting
-        </span>
-        {' '}your wallet
+        </span>{' '}
+        your wallet
       </div>
     </div>
   );
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={closeModal} />
       <div
         className="
           fixed z-50 bg-steel-950
@@ -173,14 +200,8 @@ export const LoginModal = ({
           max-md:py-3 max-md:rounded-t-xl
         "
         >
-          <p className="font-bold text-2xl max-md:text-xl">
-            Connect Wallet
-          </p>
-          <button
-            className="p-1"
-            type="button"
-            onClick={onClose}
-          >
+          <p className="font-bold text-2xl max-md:text-xl">Connect Wallet</p>
+          <button className="p-1" type="button" onClick={closeModal}>
             <X className="w-4 h-4" size={20} />
           </button>
         </div>

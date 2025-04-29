@@ -1,26 +1,32 @@
 import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import { useWallet } from '@ada-anvil/weld/react';
 
 import { UserAvatar } from '@/components/shared/UserAvatar';
 
+import { useModal, useModalControls } from '@/lib/modals/modal.context';
+import { useAuth } from '@/lib/auth/auth';
+
 import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
-export const ProfileModal = ({
-  user,
-  handleDisconnect,
-  isOpen,
-  onClose,
-}) => {
-  useBodyOverflow(isOpen);
+export const ProfileModal = () => {
+  const { activeModalData } = useModal();
+  const { closeModal } = useModalControls();
+  const { user, logout } = useAuth();
 
-  if (!isOpen) return null;
+  const disconnect = useWallet('disconnect');
+
+  useBodyOverflow(activeModalData?.name === 'ProfileModal');
+
+  const handleDisconnect = () => {
+    disconnect();
+    logout();
+    closeModal();
+  };
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={closeModal} />
       <div
         className="
           fixed z-50 bg-steel-950
@@ -43,14 +49,8 @@ export const ProfileModal = ({
             max-md:py-3 max-md:rounded-t-xl
           "
         >
-          <p className="font-bold text-2xl max-md:text-xl">
-            Wallet
-          </p>
-          <button
-            className="p-1"
-            type="button"
-            onClick={onClose}
-          >
+          <p className="font-bold text-2xl max-md:text-xl">Wallet</p>
+          <button className="p-1" type="button" onClick={closeModal}>
             <X className="w-4 h-4" size={20} />
           </button>
         </div>
@@ -60,21 +60,21 @@ export const ProfileModal = ({
             <Link
               className="rounded-[10px] bg-steel-800 py-3 text-[20px] max-md:text-lg font-medium text-center hover:bg-steel-750"
               to="/profile"
-              onClick={onClose}
+              onClick={closeModal}
             >
               My profile
             </Link>
             <Link
               className="rounded-[10px] bg-steel-800 py-3 text-[20px] max-md:text-lg font-medium text-center hover:bg-steel-750"
               to="/vaults/my"
-              onClick={onClose}
+              onClick={closeModal}
             >
               My vaults
             </Link>
             <Link
               className="rounded-[10px] bg-steel-800 py-3 text-[20px] max-md:text-lg font-medium text-center hover:bg-steel-750"
               to="/swap"
-              onClick={onClose}
+              onClick={closeModal}
             >
               Swap ADA/VLRM
             </Link>

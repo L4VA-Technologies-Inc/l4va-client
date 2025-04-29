@@ -9,7 +9,6 @@ import { routeTree } from './routeTree.gen';
 
 import { AuthProvider } from '@/lib/auth/auth.context';
 import { ModalProvider } from '@/lib/modals/modal.context';
-import { Modal } from '@/lib/modals/modal.registry';
 
 import '@/css/index.css';
 
@@ -36,7 +35,6 @@ createRoot(document.getElementById('root')).render(
               },
             }}
           />
-          <Modal />
         </ModalProvider>
       </AuthProvider>
     </WeldProvider>
