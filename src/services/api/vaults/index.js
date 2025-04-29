@@ -3,6 +3,7 @@ import { VaultsConfigProvider } from '@/services/api/vaults/config';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 export class VaultsApiProvider {
+
   static async createVault(vaultData) {
     const response = await axiosInstance.post(
       VaultsConfigProvider.createVault(),
