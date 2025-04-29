@@ -1,3 +1,5 @@
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
@@ -5,9 +7,10 @@ import prettier from 'eslint-plugin-prettier';
 import importPlugin from 'eslint-plugin-import';
 import reactPlugin from 'eslint-plugin-react';
 
-export default [
-  { ignores: ['dist'] },
+export default defineConfig([
+  { ignores: ['dist', 'src/components/ui'] },
   {
+    extends: [js.configs.recommended],
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,
@@ -19,10 +22,11 @@ export default [
       },
     },
     plugins: {
+      js,
       react: reactPlugin,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
-      prettier: prettier,
+      prettier,
       import: importPlugin,
     },
     rules: {
@@ -42,4 +46,4 @@ export default [
       'react/prop-types': 'off',
     },
   },
-];
+]);
