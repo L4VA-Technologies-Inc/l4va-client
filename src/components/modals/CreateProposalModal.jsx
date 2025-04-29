@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
+export const CreateProposalModal = ({ onClose, vaultName }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [options, setOptions] = useState([]);
@@ -27,25 +27,26 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
   const handleAddOption = () => {
     if (options.length >= 10) return;
 
-    setOptions([...options, {
-      id: Date.now(),
-      assetName: '',
-      exec: '',
-      quantity: '',
-      sellType: '',
-      method: '',
-      duration: '',
-      market: '',
-      price: '',
-    }]);
+    setOptions([
+      ...options,
+      {
+        id: Date.now(),
+        assetName: '',
+        exec: '',
+        quantity: '',
+        sellType: '',
+        method: '',
+        duration: '',
+        market: '',
+        price: '',
+      },
+    ]);
   };
 
-  const handleRemoveOption = (id) => setOptions(options.filter(option => option.id !== id));
+  const handleRemoveOption = (id) => setOptions(options.filter((option) => option.id !== id));
 
   const handleOptionChange = (id, field, value) => {
-    setOptions(options.map(option =>
-      option.id === id ? { ...option, [field]: value } : option,
-    ));
+    setOptions(options.map((option) => (option.id === id ? { ...option, [field]: value } : option)));
   };
 
   const executionOptions = [
@@ -60,22 +61,16 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
     { value: 'BUY', label: 'BUY' },
   ];
 
-  const methodOptions = [
-    { value: 'N/A', label: 'N/A' },
-  ];
+  const methodOptions = [{ value: 'N/A', label: 'N/A' }];
 
-  const marketOptions = [
-    { value: 'WayUp', label: 'WayUp' },
-  ];
+  const marketOptions = [{ value: 'WayUp', label: 'WayUp' }];
 
   const sellTypeOptions = [
     { value: 'List', label: 'List' },
     { value: 'Market', label: 'Market' },
   ];
 
-  const assetOptions = [
-    { value: 'Derplings', label: 'Derplings' },
-  ];
+  const assetOptions = [{ value: 'Derplings', label: 'Derplings' }];
 
   const handlePropose = () => setShowConfirmation(true);
 
@@ -93,12 +88,10 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 border-none max-h-[90vh] flex flex-col">
           <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-            <DialogTitle className="text-2xl text-center font-medium">
-              Proposal for {vaultName}
-            </DialogTitle>
+            <DialogTitle className="text-2xl text-center font-medium">Proposal for {vaultName}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 flex flex-col gap-8">
@@ -116,9 +109,7 @@ export const CreateProposalModal = ({ isOpen, onClose, vaultName }) => {
               />
               <div>
                 <div>
-                  <p className="text-[20px] font-medium mb-4">
-                    Execution Options
-                  </p>
+                  <p className="text-[20px] font-medium mb-4">Execution Options</p>
                   <div className="flex items-center justify-between mb-4">
                     <LavaSteelSelect
                       options={executionOptions}

@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/lib/auth/auth';
 import { useModal } from '@/context/modals';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -25,9 +25,7 @@ export const ConnectButton = () => {
         ) : (
           <PrimaryButton onClick={() => openModal(MODAL_TYPES.PROFILE)}>
             <Avatar className="h-10 w-10 bg-steel-950 cursor-pointer">
-              <AvatarFallback className="text-white font-medium">
-                {getAvatarLetter(user)}
-              </AvatarFallback>
+              <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
             {getDisplayName(user)}
           </PrimaryButton>
@@ -44,14 +42,9 @@ export const ConnectButton = () => {
             <WalletIcon className="text-slate-950" height={24} width={24} />
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => openModal(MODAL_TYPES.PROFILE)}
-          >
+          <button type="button" onClick={() => openModal(MODAL_TYPES.PROFILE)}>
             <Avatar className="h-10 w-10 bg-orange-gradient cursor-pointer">
-              <AvatarFallback className="text-slate-950 font-medium">
-                {getAvatarLetter(user)}
-              </AvatarFallback>
+              <AvatarFallback className="text-slate-950 font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
           </button>
         )}

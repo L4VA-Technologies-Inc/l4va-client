@@ -9,15 +9,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-export const InvestModal = ({ isOpen, onClose, vaultName }) => {
+export const InvestModal = ({ onClose, vaultName }) => {
   const [investAmount, setInvestAmount] = useState('130.25');
   const [selectedCurrency, setSelectedCurrency] = useState('ADA');
 
   // These would come from props or context in a real app
   const walletBalance = 4556;
-  const totalInvested = 13025.00;
+  const totalInvested = 13025.0;
   const assetsOffered = 50;
-  const currentVaultTVL = 16050.00;
+  const currentVaultTVL = 16050.0;
   const estimatedValue = investAmount ? parseFloat(investAmount) * 3.5 : 0;
   const estimatedTickerVal = investAmount ? parseFloat(investAmount) * 40.35 : 0;
   const vaultAllocation = investAmount ? '1%' : '0%';
@@ -28,12 +28,11 @@ export const InvestModal = ({ isOpen, onClose, vaultName }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
           <DialogTitle className="text-2xl text-center font-medium">Invest in {vaultName}</DialogTitle>
         </DialogHeader>
-
         <div className="flex flex-col p-6 space-y-6 md:space-y-0 md:flex-row">
           <div className="md:w-1/2 pr-0 md:pr-6 space-y-6">
             <div className="flex justify-between items-center">
@@ -50,10 +49,7 @@ export const InvestModal = ({ isOpen, onClose, vaultName }) => {
                   value={investAmount}
                   onChange={(e) => setInvestAmount(e.target.value)}
                 />
-                <CurrencyDropdown
-                  value={selectedCurrency}
-                  onSelect={setSelectedCurrency}
-                />
+                <CurrencyDropdown value={selectedCurrency} onSelect={setSelectedCurrency} />
               </div>
             </div>
 

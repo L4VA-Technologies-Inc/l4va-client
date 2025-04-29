@@ -1,32 +1,16 @@
 import { ChevronLeft } from 'lucide-react';
 import { SecondaryButton } from '../shared/SecondaryButton';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export const ProposalConfirmationModal = ({
-  isOpen,
-  onClose,
-  proposalData,
-  onConfirm,
-}) => {
-  if (!isOpen) return null;
-
-  const {
-    proposalTitle, proposalDescription, options, abstain, proposalEndDate,
-  } = proposalData;
+export const ProposalConfirmationModal = ({ onClose, proposalData, onConfirm }) => {
+  const { proposalTitle, proposalDescription, options, abstain, proposalEndDate } = proposalData;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 border-none max-h-[90vh] flex flex-col">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">
-            Confirm Proposal
-          </DialogTitle>
+          <DialogTitle className="text-2xl text-center font-medium">Confirm Proposal</DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 flex flex-col gap-8">
@@ -98,15 +82,10 @@ export const ProposalConfirmationModal = ({
         </div>
         <div className="p-6 border-t border-white/10">
           <div className="flex justify-center gap-4">
-            <SecondaryButton
-              onClick={onClose}
-            >
+            <SecondaryButton onClick={onClose}>
               <ChevronLeft size={24} />
             </SecondaryButton>
-            <PrimaryButton
-              className="uppercase"
-              onClick={onConfirm}
-            >
+            <PrimaryButton className="uppercase" onClick={onConfirm}>
               Confirm & Launch
             </PrimaryButton>
           </div>

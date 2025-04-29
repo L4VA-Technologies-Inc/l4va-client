@@ -4,7 +4,7 @@ import { ConnectButton } from './ConnectButton';
 import { CurrencyDropdown } from './CurrencyDropdown';
 import { MenuDrawer } from './MenuDrawer';
 
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/lib/auth/auth';
 import { useModal } from '@/context/modals';
 
 import { MODAL_TYPES } from '@/constants/core.constants';

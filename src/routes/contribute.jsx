@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { Contribute } from '@/pages/Contribute';
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/lib/auth/auth';
 
 const ContributeComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();

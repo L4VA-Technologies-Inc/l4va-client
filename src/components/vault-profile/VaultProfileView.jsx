@@ -6,14 +6,7 @@ import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 
-import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
-import { InvestModal } from '@/components/modals/InvestModal';
-import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
-import { SwapComponent } from '@/components/swap/Swap';
-
-import { useModal } from '@/context/modals';
-
-import { MODAL_TYPES } from '@/constants/core.constants';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 import { formatCompactNumber } from '@/utils/core.utils';
 
@@ -21,7 +14,7 @@ import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
-  const { activeModal, openModal, closeModal } = useModal();
+  const { openModal } = useModalControls();
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
@@ -29,15 +22,15 @@ export const VaultProfileView = ({ vault }) => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        handleClick: () => openModal(MODAL_TYPES.CONTRIBUTE),
+        handleClick: () => openModal('ContributeModal', { vaultName: vault.name, vaultId: vault.id }),
       },
       Invest: {
         text: 'Invest',
-        handleClick: () => openModal(MODAL_TYPES.INVEST),
+        handleClick: () => openModal('InvestModal', { vaultName: vault.name }),
       },
       Governance: {
         text: 'Create Proposal',
-        handleClick: () => openModal(MODAL_TYPES.CREATE_PROPOSAL),
+        handleClick: () => openModal('CreateProposalModal', { vaultName: vault.name }),
       },
       Settings: null,
     };
@@ -51,21 +44,6 @@ export const VaultProfileView = ({ vault }) => {
         {config.text}
       </PrimaryButton>
     );
-  };
-
-  const renderModal = () => {
-    if (!activeModal) return null;
-
-    switch (activeModal) {
-      case MODAL_TYPES.CONTRIBUTE:
-        return <ContributeModal isOpen vaultId={vault.id} vaultName={vault.name} onClose={closeModal} />;
-      case MODAL_TYPES.INVEST:
-        return <InvestModal isOpen vaultName={vault.name} onClose={closeModal} />;
-      case MODAL_TYPES.CREATE_PROPOSAL:
-        return <CreateProposalModal isOpen vaultName={vault.name} onClose={closeModal} />;
-      default:
-        return null;
-    }
   };
 
   const renderVaultInfo = () => (
@@ -97,31 +75,27 @@ export const VaultProfileView = ({ vault }) => {
         </div>
         <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
       </div>
-      <SwapComponent />
     </div>
   );
 
   return (
-    <>
-      <div className="min-h-screen">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-12 gap-4">
-            {renderSidebar()}
-            <div className="col-span-8 space-y-4">
-              <div className="bg-steel-950 rounded-xl p-6">
-                {renderVaultInfo()}
-                {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
-                <div className="mb-6">
-                  <VaultStats invested={0} reserve={50000} />
-                </div>
-                <div className="flex justify-center mb-6">{renderActionButton()}</div>
-                <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
+    <div className="min-h-screen">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-12 gap-4">
+          {renderSidebar()}
+          <div className="col-span-8 space-y-4">
+            <div className="bg-steel-950 rounded-xl p-6">
+              {renderVaultInfo()}
+              {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
+              <div className="mb-6">
+                <VaultStats invested={0} reserve={50000} />
               </div>
+              <div className="flex justify-center mb-6">{renderActionButton()}</div>
+              <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
             </div>
           </div>
         </div>
       </div>
-      {renderModal()}
-    </>
+    </div>
   );
-};
+}; 

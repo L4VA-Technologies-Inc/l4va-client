@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { MyVaults } from '@/pages/MyVaults';
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/lib/auth/auth';
 
 const MyVaultsComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();

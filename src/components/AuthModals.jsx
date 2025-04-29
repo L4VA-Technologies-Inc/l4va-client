@@ -1,40 +1,25 @@
 import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
-import { useAuth } from '@/context/auth';
-import { useModal } from '@/context/modals';
+import { useAuth } from '@/lib/auth/auth';
+import { useModal, useModalControls } from '@/lib/modals/modal.context';
 
 import { LoginModal } from '@/components/modals/LoginModal';
 import { ProfileModal } from '@/components/modals/ProfileModal';
 
-import { MODAL_TYPES } from '@/constants/core.constants';
-
-const messageHex = msg => Array.from(msg).map(char =>
-  char.charCodeAt(0).toString(16).padStart(2, '0'),
-).join('');
+const messageHex = (msg) =>
+  Array.from(msg)
+    .map((char) => char.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('');
 
 export const AuthModals = () => {
-  const {
-    activeModal,
-    closeModal,
-    modalProps,
-  } = useModal();
+  const { activeModalData } = useModal();
+  const { closeModal } = useModalControls();
   const [isLoading, setIsLoading] = useState(false);
 
-  const {
-    isAuthenticated,
-    login,
-    logout,
-    user,
-  } = useAuth();
+  const { isAuthenticated, login, logout, user } = useAuth();
 
-  const wallet = useWallet(
-    'isConnectingTo',
-    'isConnected',
-    'handler',
-    'stakeAddressBech32',
-    'changeAddressBech32',
-  );
+  const wallet = useWallet('isConnectingTo', 'isConnected', 'handler', 'stakeAddressBech32', 'changeAddressBech32');
 
   const connect = useWallet('connect');
   const disconnect = useWallet('disconnect');
@@ -69,7 +54,7 @@ export const AuthModals = () => {
       const signature = await wallet.handler.signData(messageHex(message));
       await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
       closeModal();
-      return modalProps.onSuccess && modalProps.onSuccess();
+      return activeModalData?.props?.onSuccess && activeModalData.props.onSuccess();
     } catch (error) {
       return console.error('Authentication failed:', error);
     } finally {
@@ -85,14 +70,14 @@ export const AuthModals = () => {
         isConnected={wallet.isConnected}
         isConnectingTo={wallet.isConnectingTo}
         isLoading={isLoading}
-        isOpen={activeModal === MODAL_TYPES.LOGIN}
+        isOpen={activeModalData?.name === 'LoginModal'}
         onClose={closeModal}
         onConnect={handleConnect}
         onSignMessage={handleSignMessage}
       />
       <ProfileModal
         handleDisconnect={handleDisconnect}
-        isOpen={activeModal === MODAL_TYPES.PROFILE}
+        isOpen={activeModalData?.name === 'ProfileModal'}
         user={user}
         onClose={closeModal}
       />

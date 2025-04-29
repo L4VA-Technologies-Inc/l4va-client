@@ -15,7 +15,6 @@ import { Route as SandboxImport } from './routes/sandbox'
 import { Route as ProfileImport } from './routes/profile'
 import { Route as CreateImport } from './routes/create'
 import { Route as ContributeImport } from './routes/contribute'
-import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as VaultsIndexImport } from './routes/vaults/index'
 import { Route as VaultsMyImport } from './routes/vaults/my'
@@ -44,12 +43,6 @@ const CreateRoute = CreateImport.update({
 const ContributeRoute = ContributeImport.update({
   id: '/contribute',
   path: '/contribute',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -86,13 +79,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
       parentRoute: typeof rootRoute
     }
     '/contribute': {
@@ -151,7 +137,6 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -163,7 +148,6 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -176,7 +160,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -190,7 +173,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -201,7 +183,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -212,7 +193,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/about'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -225,7 +205,6 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   ContributeRoute: typeof ContributeRoute
   CreateRoute: typeof CreateRoute
   ProfileRoute: typeof ProfileRoute
@@ -237,7 +216,6 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   ContributeRoute: ContributeRoute,
   CreateRoute: CreateRoute,
   ProfileRoute: ProfileRoute,
@@ -258,7 +236,6 @@ export const routeTree = rootRoute
       "filePath": "__root.jsx",
       "children": [
         "/",
-        "/about",
         "/contribute",
         "/create",
         "/profile",
@@ -270,9 +247,6 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.jsx"
-    },
-    "/about": {
-      "filePath": "about.jsx"
     },
     "/contribute": {
       "filePath": "contribute.jsx"

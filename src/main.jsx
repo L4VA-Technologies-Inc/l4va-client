@@ -7,22 +7,26 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 
 import { routeTree } from './routeTree.gen';
 
-import { AuthProvider } from '@/context/AuthContext';
-import { ModalProvider } from '@/context/ModalsContext';
+import { AuthProvider } from '@/lib/auth/auth.context';
+import { ModalProvider } from '@/lib/modals/modal.context';
+import { Modal } from '@/lib/modals/modal.registry';
 
-import './css/index.css';
+import '@/css/index.css';
 
 const router = createRouter({
   routeTree,
+  context: {},
   defaultPreload: 'intent',
   scrollRestoration: true,
+  defaultStructuralSharing: true,
+  defaultPreloadStaleTime: 0,
 });
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <WeldProvider>
-      <ModalProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ModalProvider>
           <RouterProvider router={router} />
           <Toaster
             toastOptions={{
@@ -32,8 +36,9 @@ createRoot(document.getElementById('root')).render(
               },
             }}
           />
-        </AuthProvider>
-      </ModalProvider>
+          <Modal />
+        </ModalProvider>
+      </AuthProvider>
     </WeldProvider>
-  </StrictMode>,
+  </StrictMode>
 );

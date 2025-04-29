@@ -1,11 +1,3 @@
-export const MODAL_TYPES = {
-  LOGIN: 'LOGIN',
-  PROFILE: 'PROFILE',
-  CONTRIBUTE: 'CONTRIBUTE',
-  INVEST: 'INVEST',
-  CREATE_PROPOSAL: 'CREATE_PROPOSAL',
-};
-
 export const SOCIAL_PLATFORMS = {
   FACEBOOK: 'facebook',
   X: 'x',

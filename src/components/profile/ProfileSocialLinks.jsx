@@ -14,7 +14,7 @@ import {
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
 import { CoreApiProvider } from '@/services/api/core';
-import { useAuth } from '@/context/auth';
+import { useAuth } from '@/lib/auth/auth';
 
 const MAX_LINKS = 5;
 
