@@ -5,12 +5,11 @@ import toast from 'react-hot-toast';
 import { NFTItem } from './NFTItem';
 import { FTItem } from './FTItem';
 import { ContributionDetails } from './ContributionDetails';
+
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Spinner } from '@/components/Spinner';
-
 import { useTransaction } from '@/hooks/useTransaction';
-
 import {
   Dialog,
   DialogContent,

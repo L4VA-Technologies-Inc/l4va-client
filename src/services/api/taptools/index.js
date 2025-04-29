@@ -1,4 +1,5 @@
 import { TapToolsConfigProvider } from './config';
+
 import { axiosInstance } from '@/services/api';
 
 export class TapToolsApiProvider {

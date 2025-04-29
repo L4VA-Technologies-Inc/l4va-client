@@ -2,9 +2,7 @@ import { InvestmentsList } from '@/components/vault-profile/InvestmentsList';
 import { VaultAssetsList } from '@/components/vault-profile/VaultAssetsList';
 import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
-
 import { LavaTabs } from '@/components/shared/LavaTabs';
-
 import { mockInvestments } from '@/mocks/vaultAssets';
 
 export const VaultTabs = ({ vault, activeTab, onTabChange }) => {

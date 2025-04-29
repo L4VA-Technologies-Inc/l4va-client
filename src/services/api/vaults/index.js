@@ -1,7 +1,5 @@
 import { axiosInstance } from '@/services/api';
-
 import { VaultsConfigProvider } from '@/services/api/vaults/config';
-
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 export class VaultsApiProvider {

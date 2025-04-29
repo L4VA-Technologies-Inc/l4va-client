@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { CoreApiProvider } from '@/services/api/core';
 import { AuthContext } from './auth';
+
+import { CoreApiProvider } from '@/services/api/core';
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

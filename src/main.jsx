@@ -2,7 +2,6 @@ import { WeldProvider } from '@ada-anvil/weld/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
-
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 
 import { routeTree } from './routeTree.gen';

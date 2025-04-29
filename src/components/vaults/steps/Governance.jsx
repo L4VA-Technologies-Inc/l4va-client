@@ -1,12 +1,10 @@
 import { Info } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
-
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-
 import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
 export const Governance = ({

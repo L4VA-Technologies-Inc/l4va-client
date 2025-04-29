@@ -1,4 +1,5 @@
 import { Copy } from 'lucide-react';
+
 import { formatNum } from '@/utils/core.utils';
 
 const InfoRow = ({ label, value, copyable }) => {

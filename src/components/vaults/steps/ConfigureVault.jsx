@@ -3,7 +3,6 @@ import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
-
 import {
   VAULT_TYPE_OPTIONS,
   VAULT_PRIVACY_OPTIONS,

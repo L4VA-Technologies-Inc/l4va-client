@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+
 import { VaultList } from './VaultsList';
+
 import { VaultsApiProvider } from '@/services/api/vaults';
 
 const VAULT_TABS = {

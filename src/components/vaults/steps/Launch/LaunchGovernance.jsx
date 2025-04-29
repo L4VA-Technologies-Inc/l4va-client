@@ -1,6 +1,6 @@
 import { Edit } from 'lucide-react';
-import { formatNum } from '@/utils/core.utils';
 
+import { formatNum } from '@/utils/core.utils';
 import {
   TERMINATION_TYPE_OPTIONS,
 } from '@/components/vaults/constants/vaults.constants';

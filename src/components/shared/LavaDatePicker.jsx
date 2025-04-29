@@ -10,7 +10,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
 import { formatDateTime } from '@/utils/core.utils';
 
 const variants = {

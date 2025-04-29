@@ -1,4 +1,5 @@
 import { Edit } from 'lucide-react';
+
 import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
 
 export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {

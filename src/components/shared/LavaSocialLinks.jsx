@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
 
 export const LavaSocialLinks = ({

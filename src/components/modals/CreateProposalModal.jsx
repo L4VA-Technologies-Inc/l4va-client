@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
+
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
@@ -7,7 +8,6 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmationModal';
-
 import {
   Dialog,
   DialogContent,

@@ -1,4 +1,5 @@
 import { CoreConfigProvider } from './config';
+
 import { axiosInstance } from '@/services/api';
 
 export class CoreApiProvider {

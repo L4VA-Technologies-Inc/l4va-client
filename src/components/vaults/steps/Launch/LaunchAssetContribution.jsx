@@ -1,6 +1,6 @@
 import { Edit } from 'lucide-react';
-import { formatInterval, formatNum, formatDateTime } from '@/utils/core.utils';
 
+import { formatInterval, formatNum, formatDateTime } from '@/utils/core.utils';
 import {
   VAULT_VALUATION_TYPE_OPTIONS,
 } from '@/components/vaults/constants/vaults.constants';

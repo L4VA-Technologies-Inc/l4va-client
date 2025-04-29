@@ -3,10 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { UserAvatar } from '@/components/shared/UserAvatar';
-
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
-
 import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
 export const ProfileModal = () => {

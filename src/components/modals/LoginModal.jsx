@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { Check, X, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
+
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
-
 import { Spinner } from '@/components/Spinner';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-
 import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';

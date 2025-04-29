@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+
 import { mockVaultAssets } from '@/mocks/vaultAssets';
 
 export const VaultAssetsList = ({ assets = mockVaultAssets }) => {

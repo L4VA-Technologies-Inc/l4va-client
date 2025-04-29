@@ -51,7 +51,7 @@ export const transformZodErrorsIntoObject = (error) => {
 
   const extractErrors = (obj, path = '') => {
     if (obj._errors && obj._errors.length > 0) {
-      // eslint-disable-next-line prefer-destructuring
+
       formattedErrors[path.slice(0, -1)] = obj._errors[0];
     }
 

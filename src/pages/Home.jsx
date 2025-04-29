@@ -11,7 +11,6 @@ import { VaultsFilters } from '@/components/home/VaultsFilters';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
-
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 

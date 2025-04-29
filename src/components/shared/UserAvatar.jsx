@@ -1,7 +1,6 @@
 import { Copy, PowerOff } from 'lucide-react';
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-
 import { getAvatarLetter, getDisplayName, substringAddress } from '@/utils/core.utils';
 
 export const UserAvatar = ({ user, handleDisconnect }) => {

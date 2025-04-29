@@ -3,11 +3,8 @@ import { useParams, Navigate } from '@tanstack/react-router';
 
 import { EditVault } from '@/components/vaults/EditVault';
 import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';
-
 import { Spinner } from '@/components/Spinner';
-
 import { VaultsApiProvider } from '@/services/api/vaults';
-
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 
 export const Vault = () => {

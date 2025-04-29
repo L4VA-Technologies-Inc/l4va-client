@@ -5,12 +5,9 @@ import {
 } from 'lucide-react';
 
 import { CoreApiProvider } from '@/services/api/core';
-
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-
 import { useAuth } from '@/lib/auth/auth';
-
 import { substringAddress } from '@/utils/core.utils';
 
 const BackgroundImage = ({ bgImage, onClick }) => (

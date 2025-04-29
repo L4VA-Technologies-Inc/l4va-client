@@ -1,6 +1,5 @@
 import { Public } from '@/components/vaults/steps/AssetContribution/Public';
 import { Private } from '@/components/vaults/steps/AssetContribution/Private';
-
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const AssetContribution = ({

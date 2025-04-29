@@ -5,11 +5,8 @@ import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-
 import { useModalControls } from '@/lib/modals/modal.context';
-
 import { formatCompactNumber } from '@/utils/core.utils';
-
 import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {

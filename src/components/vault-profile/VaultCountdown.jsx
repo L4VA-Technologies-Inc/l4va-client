@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { calculateTimeLeft } from '@/utils/core.utils';
 
+import { calculateTimeLeft } from '@/utils/core.utils';
 import TimeBanner from '@/icons/time-banner.svg?react';
 
 export const VaultCountdown = () => {

@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
 
 const progress = 75;

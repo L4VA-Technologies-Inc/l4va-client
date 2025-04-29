@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+
 import { MyVaults } from '@/pages/MyVaults';
 
 const VaultsComponent = () => (

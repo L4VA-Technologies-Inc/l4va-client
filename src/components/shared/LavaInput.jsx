@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { formatNum } from '@/utils/core.utils';
 
 export const LavaInput = ({

@@ -1,4 +1,5 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
+
 import { MyVaults } from '@/pages/MyVaults';
 import { useAuth } from '@/lib/auth/auth';
 

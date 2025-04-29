@@ -1,4 +1,5 @@
 import { ContributeConfigProvider } from './config';
+
 import { axiosInstance } from '@/services/api';
 
 export class ContributeApiProvider {

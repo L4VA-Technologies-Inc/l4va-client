@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+
 import { formatNum } from '@/utils/core.utils';
 
 export const SelectedAssetItem = ({ asset, onRemove }) => (

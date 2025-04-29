@@ -5,9 +5,7 @@ import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-
 import { handleNumberInput } from '@/utils/core.utils';
-
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const Private = ({

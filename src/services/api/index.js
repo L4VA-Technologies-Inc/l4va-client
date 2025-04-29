@@ -6,7 +6,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('jwt');
     if (token) {
-      // eslint-disable-next-line no-param-reassign
+       
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

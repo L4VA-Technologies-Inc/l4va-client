@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-
 import { useWallet } from '@ada-anvil/weld/react';
-import { VaultsApiProvider } from '@/services/api/vaults';
 
+import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
@@ -13,10 +12,8 @@ import { Launch } from '@/components/vaults/steps/Launch';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
-
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformYupErrors } from '@/utils/core.utils';
-
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,

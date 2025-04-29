@@ -6,7 +6,6 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
-
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const InvestmentWindow = ({

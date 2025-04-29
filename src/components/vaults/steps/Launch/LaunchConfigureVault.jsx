@@ -1,6 +1,6 @@
 import { Edit } from 'lucide-react';
-import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 
+import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 import {
   VAULT_TYPE_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
