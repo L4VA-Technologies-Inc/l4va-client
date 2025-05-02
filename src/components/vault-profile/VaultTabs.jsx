@@ -7,7 +7,7 @@ import { mockInvestments } from '@/mocks/vaultAssets';
 
 export const VaultTabs = ({ vault, activeTab, onTabChange }) => {
   const tabContent = {
-    Assets: <VaultAssetsList assets={vault.assets} />,
+    Assets: <VaultAssetsList vault={vault} />,
     Invest: <InvestmentsList investments={mockInvestments} />,
     Governance: <VaultGovernance vault={vault} />,
     Settings: <VaultSettings vault={vault} />,

@@ -33,4 +33,8 @@ export class VaultsConfigProvider {
   static getVault(id) {
     return `/api/v1/vaults/${id}`;
   }
+
+  static getVaultAssets(id) {
+    return `/api/v1/assets/vault/${id}`;
+  }
 }
