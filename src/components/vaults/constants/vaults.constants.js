@@ -128,42 +128,22 @@ export const vaultSchema = yup.object({
     .required('Token image is required'),
   terminationType: yup.string()
     .required('Termination type is required'),
-  // DAO specific fields
   creationThreshold: yup.number()
     .typeError('Creation threshold is required')
-    .when('terminationType', {
-      is: 'dao',
-      then: (schema) => schema.required('Creation threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    .required('Creation threshold is required'),
   startThreshold: yup.number()
     .typeError('Start threshold is required')
-    .when('terminationType', {
-      is: 'dao',
-      then: (schema) => schema.required('Start threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    .required('Start threshold is required'),
   voteThreshold: yup.number()
     .typeError('Vote threshold is required')
-    .when('terminationType', {
-      is: 'dao',
-      then: (schema) => schema.required('Vote threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    .required('Vote threshold is required'),
   executionThreshold: yup.number()
     .typeError('Execution threshold is required')
-    .when('terminationType', {
-      is: 'dao',
-      then: (schema) => schema.required('Execution threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    .required('Execution threshold is required'),
   cosigningThreshold: yup.number()
     .typeError('Cosigning threshold is required')
-    .when('terminationType', {
-      is: 'dao',
-      then: (schema) => schema.required('Cosigning threshold is required for DAO termination'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    .required('Cosigning threshold is required'),
+
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup.number()
     .typeError('Time elapsed is required')

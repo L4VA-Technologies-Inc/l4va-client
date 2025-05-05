@@ -138,85 +138,78 @@ export const Governance = ({
             </div>
           </>
         )}
-
-        {data.terminationType === 'dao' && (
-          <>
-            <div className="mt-[60px]">
-              <LavaInput
-                required
-                error={errors.creationThreshold}
-                icon={<Info color="white" size={16} />}
-                hint="Minimum FT as % of total FT supply required to create a proposal"
-                label="CREATION THRESHOLD (%)"
-                name="creationThreshold"
-                placeholder="XX.XX"
-                suffix="%"
-                value={data.creationThreshold || ''}
-                onChange={handleNumChange}
-              />
-            </div>
-
-            <div className="mt-[60px]">
-              <LavaInput
-                required
-                error={errors.startThreshold}
-                icon={<Info color="white" size={16} />}
-                hint="Minimum FT as % of total FT supply co-signed to start voting phase"
-                label="START THRESHOLD (%)"
-                name="startThreshold"
-                placeholder="XX.XX"
-                suffix="%"
-                value={data.startThreshold || ''}
-                onChange={handleNumChange}
-              />
-            </div>
-
-            <div className="mt-[60px]">
-              <LavaInput
-                required
-                error={errors.voteThreshold}
-                icon={<Info color="white" size={16} />}
-                hint="Minimum FT as % of total staked FT for vote to be valid"
-                label="VOTE THRESHOLD (%)"
-                name="voteThreshold"
-                placeholder="XX.XX"
-                suffix="%"
-                value={data.voteThreshold || ''}
-                onChange={handleNumChange}
-              />
-            </div>
-
-            <div className="mt-[60px]">
-              <LavaInput
-                required
-                error={errors.executionThreshold}
-                icon={<Info color="white" size={16} />}
-                hint="Minimum FT as % of total FT voted, for the largest vote tallied for proposal to win"
-                label="EXECUTION THRESHOLD (%)"
-                name="executionThreshold"
-                placeholder="XX.XX"
-                suffix="%"
-                value={data.executionThreshold || ''}
-                onChange={handleNumChange}
-              />
-            </div>
-
-            <div className="mt-[60px]">
-              <LavaInput
-                required
-                error={errors.cosigningThreshold}
-                icon={<Info color="white" size={16} />}
-                hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
-                label="COSIGNING THRESHOLD (%)"
-                name="cosigningThreshold"
-                placeholder="XX.XX"
-                suffix="%"
-                value={data.cosigningThreshold || ''}
-                onChange={handleNumChange}
-              />
-            </div>
-          </>
-        )}
+        <>
+          <div className="mt-[60px]">
+            <LavaInput
+              required
+              error={errors.creationThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum FT as % of total FT supply required to create a proposal"
+              label="CREATION THRESHOLD (%)"
+              name="creationThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.creationThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+          <div className="mt-[60px]">
+            <LavaInput
+              required
+              error={errors.startThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum FT as % of total FT supply co-signed to start voting phase"
+              label="START THRESHOLD (%)"
+              name="startThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.startThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+          <div className="mt-[60px]">
+            <LavaInput
+              required
+              error={errors.voteThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum FT as % of total staked FT for vote to be valid"
+              label="VOTE THRESHOLD (%)"
+              name="voteThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.voteThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+          <div className="mt-[60px]">
+            <LavaInput
+              required
+              error={errors.executionThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum FT as % of total FT voted, for the largest vote tallied for proposal to win"
+              label="EXECUTION THRESHOLD (%)"
+              name="executionThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.executionThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+          <div className="mt-[60px]">
+            <LavaInput
+              required
+              error={errors.cosigningThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
+              label="COSIGNING THRESHOLD (%)"
+              name="cosigningThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.cosigningThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+        </>
       </div>
     </div>
   );
