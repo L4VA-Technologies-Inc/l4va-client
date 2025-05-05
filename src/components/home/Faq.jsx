@@ -19,7 +19,7 @@ export const Faq = () => {
     },
     {
       number: 3,
-      title: 'Invest',
+      title: 'Acquire',
       description: 'Investors with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
     },
     {
