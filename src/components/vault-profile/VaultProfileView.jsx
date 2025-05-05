@@ -6,7 +6,7 @@ import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { formatCompactNumber } from '@/utils/core.utils';
+import { formatCompactNumber, getCountdownName } from '@/utils/core.utils';
 import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
@@ -66,9 +66,9 @@ export const VaultProfileView = ({ vault }) => {
           className="w-full aspect-square rounded-xl object-cover mb-6"
           src={vault.vaultImage || '/assets/vaults/space-man.webp'}
         />
-        <p className="text-[20px] mb-2">Countdown name</p>
+        <p className="text-[20px] mb-2">{getCountdownName(vault)}</p>
         <div className="mb-6">
-          <VaultCountdown endTime={vault.contributionOpenWindowTime} />
+          <VaultCountdown endTime={new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration} />
         </div>
         <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
       </div>

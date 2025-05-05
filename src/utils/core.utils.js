@@ -132,13 +132,14 @@ export const calculateTimeLeft = (endTime) => {
   const difference = new Date(endTime) - new Date();
 
   if (difference <= 0) {
-    return { days: 0, hours: 0, minutes: 0 };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
   return {
     days: Math.floor(difference / (1000 * 60 * 60 * 24)),
     hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
     minutes: Math.floor((difference / 1000 / 60) % 60),
+    seconds: Math.floor((difference / 1000) % 60)
   };
 };
 
@@ -161,4 +162,17 @@ export const formatDateTime = (dt) => {
   const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
   return `${date} ${time} (${timezoneString})`;
+};
+
+export const getCountdownName = (vault) => {
+  if (vault.vaultStatus === 'contribution') {
+    return 'Contribution ends in';
+  }
+  if (vault.vaultStatus === 'investment') {
+    return 'Investment ends in';
+  }
+  if (vault.vaultStatus === 'locked') {
+    return 'Vault Locked';
+  }
+  return 'Countdown';
 };
