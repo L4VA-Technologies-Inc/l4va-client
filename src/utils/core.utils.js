@@ -36,7 +36,7 @@ export const formatDeadline = (deadline) => {
 export const getButtonText = (status) => {
   switch (status) {
     case 'active': return 'Contribute';
-    case 'pending': return 'Invest';
+    case 'pending': return 'Acquire';
     case 'completed': return 'Govern';
     default: return 'View';
   }
@@ -168,8 +168,8 @@ export const getCountdownName = (vault) => {
   if (vault.vaultStatus === 'contribution') {
     return 'Contribution ends in';
   }
-  if (vault.vaultStatus === 'investment') {
-    return 'Investment ends in';
+  if (vault.vaultStatus === 'acquire') {
+    return 'Acquire ends in';
   }
   if (vault.vaultStatus === 'locked') {
     return 'Vault Locked';

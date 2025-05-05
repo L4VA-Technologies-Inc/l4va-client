@@ -1,14 +1,14 @@
-import { InvestmentsList } from '@/components/vault-profile/InvestmentsList';
+import { AcquireList } from '@/components/vault-profile/AcquireList';
 import { VaultAssetsList } from '@/components/vault-profile/VaultAssetsList';
 import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import { mockInvestments } from '@/mocks/vaultAssets';
+import { mockAcquires } from '@/mocks/vaultAssets';
 
 export const VaultTabs = ({ vault, activeTab, onTabChange }) => {
   const tabContent = {
     Assets: <VaultAssetsList vault={vault} />,
-    Invest: <InvestmentsList investments={mockInvestments} />,
+    Acquire: <AcquireList acquires={mockAcquires} />,
     Governance: <VaultGovernance vault={vault} />,
     Settings: <VaultSettings vault={vault} />,
   };

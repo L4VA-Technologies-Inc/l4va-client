@@ -8,7 +8,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
-export const InvestmentWindow = ({
+export const AcquireWindow = ({
   data,
   errors = {},
   updateField,
@@ -48,38 +48,38 @@ export const InvestmentWindow = ({
           <div className="mb-[60px]">
             <LavaWhitelist
               allowCsv
-              csvData={data.investorsWhitelistCsv}
+              csvData={data.acquirersWhitelistCsv}
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
-              label="Investor whitelist"
-              setCsvData={(csvData) => updateField('investorsWhitelistCsv', csvData)}
-              setWhitelist={(assets) => updateField('investorsWhitelist', assets)}
-              whitelist={data.investorsWhitelist || []}
+              label="Acquirer whitelist"
+              setCsvData={(csvData) => updateField('acquirersWhitelistCsv', csvData)}
+              setWhitelist={(assets) => updateField('acquirersWhitelist', assets)}
+              whitelist={data.acquirersWhitelist || []}
             />
-            {errors.investorsWhitelist && (
+            {errors.acquirersWhitelist && (
               <p className="text-red-600 mt-1">
-                {errors.investorsWhitelist}
+                {errors.acquirersWhitelist}
               </p>
             )}
           </div>
         )}
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="investmentWindowDuration">
-            *INVESTMENT WINDOW DURATION
+          <Label className="uppercase text-[20px] font-bold" htmlFor="acquireWindowDuration">
+            *ACQUIRE WINDOW DURATION
           </Label>
           <div className="mt-4">
             <LavaIntervalPicker
-              value={data.investmentWindowDuration}
-              onChange={(date) => updateField('investmentWindowDuration', date)}
+              value={data.acquireWindowDuration}
+              onChange={(date) => updateField('acquireWindowDuration', date)}
             />
-            {errors.investmentWindowDuration && (
-              <p className="text-red-600 mt-1">{errors.investmentWindowDuration}</p>
+            {errors.acquireWindowDuration && (
+              <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>
             )}
           </div>
         </div>
         <div className="mt-[60px]">
           <div className="uppercase text-[20px] font-bold">
-            *INVESTMENT WINDOW OPEN TIME
+            *ACQUIRE WINDOW OPEN TIME
           </div>
           <div className="mt-4">
             <LavaRadio
@@ -94,11 +94,11 @@ export const InvestmentWindow = ({
                   label: 'Custom',
                 },
               ]}
-              value={data.investmentOpenWindowType || ''}
-              onChange={(value) => updateField('investmentOpenWindowType', value)}
+              value={data.acquireOpenWindowType || ''}
+              onChange={(value) => updateField('acquireOpenWindowType', value)}
             />
-            {errors.investmentOpenWindowType && (
-              <p className="text-red-600 mt-1">{errors.investmentOpenWindowType}</p>
+            {errors.acquireOpenWindowType && (
+              <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>
             )}
 
             {data.investmentOpenWindowType === 'custom' && (
@@ -106,10 +106,10 @@ export const InvestmentWindow = ({
                 <LavaDatePicker
                   minDate={minDate}
                   value={data.investmentOpenWindowTime}
-                  onChange={(date) => updateField('investmentOpenWindowTime', date)}
+                  onChange={(date) => updateField('acquireOpenWindowTime', date)}
                 />
-                {errors.investmentOpenWindowTime && (
-                  <p className="text-red-600 mt-1">{errors.investmentOpenWindowTime}</p>
+                {errors.acquireOpenWindowTime && (
+                  <p className="text-red-600 mt-1">{errors.acquireOpenWindowTime}</p>
                 )}
                 {minDate && (
                   <p className="text-orange-500 mt-1">

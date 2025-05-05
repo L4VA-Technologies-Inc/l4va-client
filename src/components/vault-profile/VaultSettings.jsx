@@ -43,10 +43,10 @@ export const VaultSettings = ({ vault }) => (
         <InfoRow copyable label="Token Policy" value={vault.tokenPolicy} />
         <InfoRow label="Total Supply" value={vault.totalSupply} />
         <InfoRow label="% of Asset Fractionalized @ Lock" value={vault.assetFractionalized} />
-        <InfoRow label="Investment Window" value={vault.investmentWindow} />
+        <InfoRow label="Acquire Window" value={vault.acquireWindow} />
         <InfoRow label="Asset Value Cap @ Lock" value={vault.assetValueCap} />
-        <InfoRow label="Investment Amount @ Lock" value={vault.investmentAmount} />
-        <InfoRow label="Investment Reserve" value={vault.investmentReserve} />
+        <InfoRow label="Acquire Amount @ Lock" value={vault.acquireAmount} />
+        <InfoRow label="Acquire Reserve" value={vault.acquireReserve} />
         <InfoRow label="% Liquidity Pool Contribution" value={vault.liquidityPoolContribution} />
         <InfoRow label="Termination Type" value={vault.terminationType} />
         <InfoRow label="Proposal Creation Threshold %" value={vault.proposalCreationThreshold} />

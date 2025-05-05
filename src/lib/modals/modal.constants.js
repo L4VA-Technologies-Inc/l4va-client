@@ -1,5 +1,5 @@
 import { LoginModal } from '@/components/modals/LoginModal';
-import { InvestModal } from '@/components/modals/InvestModal';
+import { AcquireModal } from '@/components/modals/AcquireModal';
 import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmationModal';
 import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
 import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
@@ -15,8 +15,8 @@ export const MODAL_ENTRIES = [
     Component: ProfileModal,
   },
   {
-    name: 'InvestModal',
-    Component: InvestModal,
+    name: 'AcquireModal',
+    Component: AcquireModal,
   },
   {
     name: 'ProposalConfirmationModal',

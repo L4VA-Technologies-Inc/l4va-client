@@ -6,7 +6,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
-import { InvestmentWindow } from '@/components/vaults/steps/InvestmentWindow';
+import { AcquireWindow } from '@/components/vaults/steps/AcquireWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 import { Launch } from '@/components/vaults/steps/Launch';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
@@ -190,7 +190,7 @@ export const CreateVaultForm = ({ vault }) => {
         );
       case 3:
         return (
-          <InvestmentWindow
+          <AcquireWindow
             data={vaultData}
             errors={errors}
             updateField={updateField}

@@ -18,7 +18,7 @@ export const CREATE_VAULT_STEPS = [
     id: 2, title: 'Asset Contribution', status: 'pending', hasErrors: false,
   },
   {
-    id: 3, title: 'Investment', status: 'pending', hasErrors: false,
+    id: 3, title: 'Acquire', status: 'pending', hasErrors: false,
   },
   {
     id: 4, title: 'Governance', status: 'pending', hasErrors: false,
@@ -94,19 +94,19 @@ export const vaultSchema = yup.object({
     .typeError('Duration is required')
     .required('Duration is required'),
 
-  // Step 3: Investment Window
-  investmentWindowDuration: yup.number()
-    .typeError('Investment window duration is required')
-    .required('Investment window duration is required'),
-  investmentOpenWindowType: yup.string()
-    .required('Investment window type is required'),
-  investmentOpenWindowTime: yup.mixed().nullable(),
+  // Step 3: Acquire Window
+  acquireWindowDuration: yup.number()
+    .typeError('Acquire window duration is required')
+    .required('Acquire window duration is required'),
+  acquireOpenWindowType: yup.string()
+    .required('Acquire window type is required'),
+  acquireOpenWindowTime: yup.mixed().nullable(),
   offAssetsOffered: yup.number()
     .typeError('Assets offered is required')
     .required('Assets offered is required'),
-  ftInvestmentReserve: yup.number()
-    .typeError('Investment reserve is required')
-    .required('Investment reserve is required'),
+  ftAcquireReserve: yup.number()
+    .typeError('Acquire reserve is required')
+    .required('Acquire reserve is required'),
   liquidityPoolContribution: yup.number()
     .typeError('Liquidity pool contribution is required')
     .required('Liquidity pool contribution is required'),
@@ -200,12 +200,12 @@ export const initialVaultState = {
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
-  // Step 3: Investment Window
-  investmentWindowDuration: null,
-  investmentOpenWindowType: 'upon-asset-window-closing',
-  investmentOpenWindowTime: null,
+  // Step 3: Acquire Window
+  acquireWindowDuration: null,
+  acquireOpenWindowType: 'upon-asset-window-closing',
+  acquireOpenWindowTime: null,
   offAssetsOffered: null,
-  ftInvestmentReserve: null,
+  ftAcquireReserve: null,
   liquidityPoolContribution: null,
 
   // Step 4: Governance
@@ -227,7 +227,7 @@ export const initialVaultState = {
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
   2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
-  3: ['investmentWindowDuration', 'investmentOpenWindowType', 'investmentOpenWindowTime', 'offAssetsOffered', 'ftInvestmentReserve', 'liquidityPoolContribution'],
+  3: ['acquireWindowDuration', 'acquireOpenWindowType', 'acquireOpenWindowTime', 'offAssetsOffered', 'ftAcquireReserve', 'liquidityPoolContribution'],
   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
   5: [],
 };

@@ -22,7 +22,7 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
         </div>
         <div>
           <h2 className="text-[20px] font-medium mb-2">
-            Investment:
+            Acquire:
           </h2>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">Reserve</span>

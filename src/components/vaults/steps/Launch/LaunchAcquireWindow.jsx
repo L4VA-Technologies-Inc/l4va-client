@@ -2,7 +2,7 @@ import { Edit } from 'lucide-react';
 
 import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
 
-export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
+export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
   const formatTime = (type, time) => {
     if (type === 'upon-asset-window-closing') {
       return 'Upon asset window closing';
@@ -10,13 +10,13 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
     return formatDateTime(new Date(time));
   };
 
-  const getInvestmentWindowDuration = () => formatInterval(new Date(data.investmentWindowDuration));
+  const getAcquireWindowDuration = () => formatInterval(new Date(data.acquireWindowDuration));
 
   return (
     <section>
       <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
         <p className="font-bold text-2xl">
-          Investment
+          Acquire
         </p>
         <button
           className="flex items-center gap-2 text-dark-100"
@@ -32,29 +32,29 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
           {data.privacy !== 'public' && (
             <div>
               <p className="uppercase font-semibold text-dark-100">
-                Investor whitelist
+                Acquirer whitelist
               </p>
               <div className="space-y-2">
-                {data.investorsWhitelist?.length ? (
+                {data.acquirersWhitelist?.length ? (
                   <>
-                    {data.investorsWhitelist.slice(0, 5).map((investor, index) => (
+                    {data.acquirersWhitelist.slice(0, 5).map((acquirer, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-[20px]">{investor.walletAddress || 'Not set'}</span>
+                        <span className="text-[20px]">{acquirer.walletAddress || 'Not set'}</span>
                       </div>
                     ))}
-                    {data.investorsWhitelist.length > 5 && (
+                    {data.acquirersWhitelist.length > 5 && (
                       <p className="text-dark-100 text-sm mt-2">
-                        +{formatNum(data.investorsWhitelist.length - 5)} more investors
+                        +{formatNum(data.acquirersWhitelist.length - 5)} more acquirers
                       </p>
                     )}
                   </>
-                ) : data.investorsWhitelistCsv ? (
+                ) : data.acquirersWhitelistCsv ? (
                   <div className="flex items-center gap-2">
                     <span className="text-[20px]">CSV file uploaded</span>
                     <a
-                      href={data.investorsWhitelistCsv.url}
-                      download={data.investorsWhitelistCsv.fileName}
+                      href={data.acquirersWhitelistCsv.url}
+                      download={data.acquirersWhitelistCsv.fileName}
                       className="text-primary hover:underline"
                     >
                       Download
@@ -68,18 +68,18 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
           )}
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              Investment Window Duration
+              Acquire Window Duration
             </p>
             <p className="text-[20px]">
-              {data.investmentWindowDuration ? getInvestmentWindowDuration() : 'Not set'}
+              {data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}
             </p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              Investment Window Open Time
+              Acquire Window Open Time
             </p>
             <p className="text-[20px]">
-              {formatTime(data.investmentOpenWindowType, data.investmentOpenWindowTime)}
+              {formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}
             </p>
           </div>
         </div>
@@ -94,10 +94,10 @@ export const LaunchInvestmentWindow = ({ data, setCurrentStep }) => {
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              FT Investment Reserve
+              FT Acquire Reserve
             </p>
             <p className="text-[20px]">
-              {data.ftInvestmentReserve ? `${formatNum(data.ftInvestmentReserve)}%` : 'Not set'}
+              {data.ftAcquireReserve ? `${formatNum(data.ftAcquireReserve)}%` : 'Not set'}
             </p>
           </div>
           <div>

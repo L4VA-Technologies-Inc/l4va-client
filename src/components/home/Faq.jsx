@@ -20,7 +20,7 @@ export const Faq = () => {
     {
       number: 3,
       title: 'Acquire',
-      description: 'Investors with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
+      description: 'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
     },
     {
       number: 4,
@@ -47,7 +47,7 @@ export const Faq = () => {
       answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     },
     {
-      question: 'How do I invest in a vault?',
+      question: 'How do I acquire a vault?',
       answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     },
     {
@@ -60,7 +60,7 @@ export const Faq = () => {
     <div className="relative py-8 sm:py-12 lg:py-16">
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-full lg:h-[1200px]"
-        style={{ backgroundImage: 'url(/assets/investments-bg.png)' }}
+        style={{ backgroundImage: 'url(/assets/acquire-bg.png)' }}
       />
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
         <section className="mb-8 sm:mb-12 lg:mb-16">
