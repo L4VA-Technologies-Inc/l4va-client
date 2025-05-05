@@ -3,7 +3,7 @@ export const Features = () => {
     {
       title: 'Decentralized',
       description:
-        'You have the power to create custom asset vaults and new fractional tokens representing them.',
+        'You have the power to create custom asset vaults and new vault tokens representing them.',
       icon: '/assets/icons/decentralized.png',
     },
     {

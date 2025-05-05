@@ -10,22 +10,22 @@ export const Faq = () => {
     {
       number: 1,
       title: 'Create',
-      description: 'Create a new vault by locking the required $VLRM, then configure the vault settings and governance options.',
+      description: 'Click "Create", customize the settings and governance options, send required amount of $VLRM to the vault, and launch!',
     },
     {
       number: 2,
       title: 'Contribute',
-      description: 'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault FT.',
+      description: 'Choose a vault, review settings, click "Contribute", select assets from your wallet to contribute, and sign transaction to send assets to the vault.',
     },
     {
       number: 3,
       title: 'Acquire',
-      description: 'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
+      description: 'Choose a vault, review settings, click "Acquire", enter the ADA you want to send, review the Vault Token estimate, and sign transaction to send ADA to the Vault.',
     },
     {
       number: 4,
       title: 'Govern',
-      description: 'Once successfully locked the Vault FT holders now control the fate of the vault and its assets.',
+      description: 'Choose a vault, click Governance, stake Vault Tokens, and then create a proposal or vote on existing proposals to decide what will happen to the assets in the vault (buy, sell, terminate, etc.).',
     },
   ];
 

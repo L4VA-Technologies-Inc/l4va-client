@@ -12,7 +12,7 @@ export const AcquireList = ({ acquires = [] }) => {
         }}
       >
         <div className="text-dark-100 text-2xl">
-          Investment / Assets Value (%)
+          Acquire / Assets Value (%)
         </div>
         <div className="text-2xl font-semibold">
           {totalValuePercentage}

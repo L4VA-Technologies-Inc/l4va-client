@@ -109,9 +109,8 @@ export const Governance = ({
         {data.terminationType === 'programmed' && (
           <>
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold flex items-center" htmlFor="timeElapsedIsEqualToTime">
+              <Label className="uppercase text-[20px] font-bold" htmlFor="timeElapsedIsEqualToTime">
                 *TIME ELAPSED IS EQUAL TO TIME
-                <Info className="ml-2 inline-block" color="white" size={16} />
               </Label>
               <div className="mt-4">
                 <LavaIntervalPicker
@@ -147,7 +146,8 @@ export const Governance = ({
                 required
                 error={errors.creationThreshold}
                 icon={<Info color="white" size={16} />}
-                label="CREATION THRESHOLD %"
+                hint="Minimum FT as % of total FT supply required to create a proposal"
+                label="CREATION THRESHOLD (%)"
                 name="creationThreshold"
                 placeholder="XX.XX"
                 suffix="%"
@@ -161,7 +161,8 @@ export const Governance = ({
                 required
                 error={errors.startThreshold}
                 icon={<Info color="white" size={16} />}
-                label="START THRESHOLD %"
+                hint="Minimum FT as % of total FT supply co-signed to start voting phase"
+                label="START THRESHOLD (%)"
                 name="startThreshold"
                 placeholder="XX.XX"
                 suffix="%"
@@ -175,7 +176,8 @@ export const Governance = ({
                 required
                 error={errors.voteThreshold}
                 icon={<Info color="white" size={16} />}
-                label="VOTE THRESHOLD %"
+                hint="Minimum FT as % of total staked FT for vote to be valid"
+                label="VOTE THRESHOLD (%)"
                 name="voteThreshold"
                 placeholder="XX.XX"
                 suffix="%"
@@ -189,7 +191,8 @@ export const Governance = ({
                 required
                 error={errors.executionThreshold}
                 icon={<Info color="white" size={16} />}
-                label="EXECUTION THRESHOLD %"
+                hint="Minimum FT as % of total FT voted, for the largest vote tallied for proposal to win"
+                label="EXECUTION THRESHOLD (%)"
                 name="executionThreshold"
                 placeholder="XX.XX"
                 suffix="%"
@@ -202,7 +205,9 @@ export const Governance = ({
               <LavaInput
                 required
                 error={errors.cosigningThreshold}
-                label="COSIGNING THRESHOLD %"
+                icon={<Info color="white" size={16} />}
+                hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
+                label="COSIGNING THRESHOLD (%)"
                 name="cosigningThreshold"
                 placeholder="XX.XX"
                 suffix="%"

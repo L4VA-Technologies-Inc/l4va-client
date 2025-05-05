@@ -86,23 +86,23 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
         <div className="space-y-10">
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              % of Assets Fractionalized
+              Assets Fractionalized (%)
             </p>
             <p className="text-[20px]">
-              {data.offAssetsOffered ? `${formatNum(data.offAssetsOffered)}%` : 'Not set'}
+              {data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}
             </p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              FT Acquire Reserve
+              Reserve (%)
             </p>
             <p className="text-[20px]">
-              {data.ftAcquireReserve ? `${formatNum(data.ftAcquireReserve)}%` : 'Not set'}
+              {data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}
             </p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">
-              % Liquidity Pool Contribution
+              Liquidity Pool (LP) Contribution (%)
             </p>
             <p className="text-[20px]">
               {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}

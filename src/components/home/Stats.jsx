@@ -96,7 +96,7 @@ export const Stats = () => {
         <StatCard label="TVL All MyVaults" value="$18M+" />
       </div>
       <div className="space-y-16">
-        <ProgressBar items={statusData} title="Vault by Status" totalAmount={totalAmount} />
+        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} />
         <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} />
       </div>
     </div>

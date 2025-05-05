@@ -12,19 +12,19 @@ export const VAULT_STATUSES = {
 
 export const CREATE_VAULT_STEPS = [
   {
-    id: 1, title: 'Configure Vault', status: 'in progress', hasErrors: false,
+    id: 1, title: 'Configure', status: 'in progress', hasErrors: false,
   },
   {
-    id: 2, title: 'Asset Contribution', status: 'pending', hasErrors: false,
+    id: 2, title: 'Contribute', status: 'pending', hasErrors: false,
   },
   {
     id: 3, title: 'Acquire', status: 'pending', hasErrors: false,
   },
   {
-    id: 4, title: 'Governance', status: 'pending', hasErrors: false,
+    id: 4, title: 'Govern', status: 'pending', hasErrors: false,
   },
   {
-    id: 5, title: 'Launch', status: 'pending', hasErrors: false,
+    id: 5, title: 'Confirm', status: 'pending', hasErrors: false,
   },
 ];
 
@@ -40,8 +40,8 @@ export const VAULT_PRIVACY_OPTIONS = [
   { name: 'semi-private', label: 'Semi-Private Vault' },
 ];
 
-export const VAULT_VALUATION_TYPE_OPTIONS = [
-  { name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' },
+export const VAULT_VALUE_METHOD_OPTIONS = [
+  { name: 'lbe', label: 'Market / Floor Price' },
   { name: 'fixed', label: 'Fixed' },
 ];
 
@@ -65,7 +65,7 @@ export const vaultSchema = yup.object({
     .required('Type is required'),
   privacy: yup.string()
     .required('Privacy setting is required'),
-  ftTokenTicker: yup.string()
+  vaultTokenTicker: yup.string()
     .matches(/^[A-Z0-9]{1,10}$/, 'Ticker must be 1-10 uppercase letters or numbers')
     .nullable(),
   description: yup.string()
@@ -76,8 +76,8 @@ export const vaultSchema = yup.object({
   socialLinks: yup.array().of(socialLinkSchema).default([]),
 
   // Step 2: Asset Contribution
-  valuationType: yup.string()
-    .required('Valuation type is required'),
+  valueMethod: yup.string()
+    .required('Vault value method is required'),
   contributionOpenWindowType: yup.string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
     .required('Contribution window type is required'),
@@ -101,10 +101,10 @@ export const vaultSchema = yup.object({
   acquireOpenWindowType: yup.string()
     .required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
-  offAssetsOffered: yup.number()
+  tokensForAcquires: yup.number()
     .typeError('Assets offered is required')
     .required('Assets offered is required'),
-  ftAcquireReserve: yup.number()
+  acquireReserve: yup.number()
     .typeError('Acquire reserve is required')
     .required('Acquire reserve is required'),
   liquidityPoolContribution: yup.number()
@@ -186,14 +186,13 @@ export const initialVaultState = {
   name: '',
   type: 'single',
   privacy: 'public',
-  ftTokenTicker: '',
+  vaultTokenTicker: '',
   description: '',
   vaultImage: '',
-  bannerImage: '',
   socialLinks: [],
 
   // Step 2: Asset Contribution
-  valuationType: 'lbe',
+  valueMethod: 'lbe',
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
   contributionDuration: null,
@@ -204,8 +203,8 @@ export const initialVaultState = {
   acquireWindowDuration: null,
   acquireOpenWindowType: 'upon-asset-window-closing',
   acquireOpenWindowTime: null,
-  offAssetsOffered: null,
-  ftAcquireReserve: null,
+  tokensForAcquires: null,
+  acquireReserve: null,
   liquidityPoolContribution: null,
 
   // Step 4: Governance
@@ -225,9 +224,25 @@ export const initialVaultState = {
 };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'ftTokenTicker', 'description', 'vaultImage', 'bannerImage', 'socialLinks'],
+  1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks'],
   2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
-  3: ['acquireWindowDuration', 'acquireOpenWindowType', 'acquireOpenWindowTime', 'offAssetsOffered', 'ftAcquireReserve', 'liquidityPoolContribution'],
+  3: ['acquireWindowDuration', 'acquireOpenWindowType', 'acquireOpenWindowTime', 'tokensForAcquires', 'acquireReserve', 'liquidityPoolContribution'],
   4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
   5: [],
 };
+
+export const PRIVACY_HINT = `Public Vault HH: Public vaults allow anyone to contribute assets and acquire Vault Tokens.\n
+Private Vault HH: Private vaults allow contribution only by the creator and/or whitelisted wallets, and Vault Tokens can only be acquired by whitelisted wallets.\n
+Semi-private Vault HH: Semi-private vaults can be configured to allow public or private whitelisted access for users to contribute assets and/or acquire Vault Tokens.
+`;
+
+export const VALUE_METHOD_HINT = `Market / Floor Price: Vault value for reserve % purposes set equal to aggregated price of all assets in the vault at end of the Contribution Window.\n
+Fixed: Vault value for reserve % purposes set as fixed amount.
+`;
+
+export const RESERVE_HINT = `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ADA sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ADA, and ADA sent by Acquirers is = 7,999 ADA at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
+
+export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `HH: This setting determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool on VyFi. The % entered will be multiplied by the vault value at the end of the Acquire Window to calculate the ADA and Vault Tokens sent. \n
+Note: LP Contribution % cannot be larger than the % of Tokens for Acquirers. \n
+
+Warning: If the LP Contribution % is equal to the % of Tokens for Acquirers, then 100% of ADA received from Acquirers will go to the initial Liquidity Pool and Asset Contributors will receive 0% of ADA sent to the vault.`;

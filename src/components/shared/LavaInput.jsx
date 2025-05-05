@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HelpCircle } from 'lucide-react';
 
 import { formatNum } from '@/utils/core.utils';
 
@@ -14,6 +15,7 @@ export const LavaInput = ({
   maxLength,
   suffix,
   className,
+  hint,
 }) => {
   const handleChange = (e) => {
     const newValue = e.target.value;
@@ -36,8 +38,24 @@ export const LavaInput = ({
   return (
     <>
       {label ? (
-        <div className="uppercase text-[20px] font-bold">
-          {required ? '*' : ''}{label}
+        <div className="text-[20px] font-bold flex items-center gap-2">
+          <span className="uppercase">
+            {required ? '*' : ''}{label}
+          </span>
+          {hint && (
+            <div className="group relative inline-flex">
+              <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
+              <div 
+                className="
+                  absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 
+                  whitespace-pre-wrap break-words text-left pointer-events-none
+                "
+              >
+                {hint}
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
       <div className="mt-4">
@@ -79,6 +97,7 @@ export const LavaSteelInput = ({
   value,
   className = '',
   onChange,
+  hint,
 }) => {
   const [inputValue, setInputValue] = useState(value || '');
 
@@ -90,8 +109,16 @@ export const LavaSteelInput = ({
   return (
     <div>
       {label ? (
-        <div className="text-[20px] font-semibold mb-4">
+        <div className="text-[20px] font-semibold mb-4 flex items-center gap-2">
           {required ? '*' : ''}{label}
+          {hint && (
+            <div className="group relative">
+              <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                {hint}
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
       <input
