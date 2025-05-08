@@ -1,4 +1,5 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
+import { formatNum } from '@/utils/core.utils';
 
 export const FTItem = ({
   ft, amount, onAmountChange,
@@ -9,9 +10,14 @@ export const FTItem = ({
         <div className="relative w-8 h-8 overflow-hidden rounded-full">
           <img alt={ft.name} className="w-full h-full object-cover" src={ft.image || '/assets/icons/ada.png'} />
         </div>
-        <span className="font-medium">
-          {ft.name}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-medium">
+            {ft.name}
+          </span>
+          <span className="text-dark-100 text-sm">
+            Available: {formatNum(ft.quantity)}
+          </span>
+        </div>
       </div>
       <div>
         <LavaSteelInput
@@ -22,7 +28,7 @@ export const FTItem = ({
         />
       </div>
       <span className="text-dark-100 hover:underline text-sm">
-        {ft.policyId.substring(0, 8)}...
+        {ft.policyId ? `${ft.policyId.substring(0, 8)}...` : ''}
       </span>
     </div>
   </div>

@@ -53,8 +53,23 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
     try {
       const changeAddress = await wallet.handler.getChangeAddressBech32();
       const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
+      
+      // Add ADA as a fungible token
+      const adaAsset = {
+        id: 'lovelace',
+        name: 'ADA',
+        policyId: '',
+        quantity: wallet.balanceAda || 0,
+        decimals: 6,
+        type: 'FT',
+        assetName: 'lovelace',
+        image: '/assets/icons/ada.png'
+      };
+
+      const formattedAssets = [adaAsset];
+      
       if (data?.assets) {
-        const formattedAssets = data.assets
+        const otherAssets = data.assets
           .map((asset) => {
             if (asset.isNft) {
               return {
@@ -82,8 +97,9 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
             return null;
           })
           .filter(Boolean);
-        setAssets(formattedAssets);
+        formattedAssets.push(...otherAssets);
       }
+      setAssets(formattedAssets);
     } catch (err) {
       console.error('Error fetching wallet summary:', err);
       toast.error('Failed to load assets');
