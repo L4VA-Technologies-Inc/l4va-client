@@ -5,7 +5,7 @@ import { VaultList } from './VaultsList';
 import { VaultsApiProvider } from '@/services/api/vaults';
 
 const VAULT_TABS = {
-  INVEST: 'Invest',
+  ACQUIRE: 'Acquire',
   CONTRIBUTE: 'Contribute',
   UPCOMING: 'Upcoming',
   PAST: 'Past',
@@ -25,8 +25,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
     try {
       let response;
       switch (tab) {
-        case VAULT_TABS.INVEST:
-          response = await VaultsApiProvider.getVaults('investment');
+        case VAULT_TABS.ACQUIRE:
+          response = await VaultsApiProvider.getVaults('acquire');
           break;
         case VAULT_TABS.CONTRIBUTE:
           response = await VaultsApiProvider.getVaults('contribution');

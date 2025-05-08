@@ -25,23 +25,23 @@ export const mockVaultAssets = [
   },
 ];
 
-export const mockInvestments = [
+export const mockAcquires = [
   {
     name: 'CelloBach',
     publicKey: '0x55....7fdf',
     allocation: 14,
-    invested: 626.99,
+    acquired: 626.99,
   },
   {
     name: 'YoYoMa',
     publicKey: '0x55....7fdf',
     allocation: 4,
-    invested: 26.99,
+    acquired: 26.99,
   },
   {
     name: 'ClassicalGas',
     publicKey: '0x55....7fdf',
     allocation: 82,
-    invested: 5626.99,
+    acquired: 5626.99,
   },
 ];

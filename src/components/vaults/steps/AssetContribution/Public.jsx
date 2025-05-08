@@ -2,7 +2,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-
+import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 export const Public = ({
   data,
   errors = {},
@@ -12,19 +12,20 @@ export const Public = ({
     <div className="px-[36px]">
       <div>
         <LavaRadio
-          label="*Valuation type"
-          name="valuationType"
+          label="*Vault Value Method"
+          name="valueMethod"
           options={[
             {
               name: 'lbe',
-              label: 'LBE (Liquidity Bootstrapping Event)',
+              label: 'Market / Floor Price',
             },
           ]}
-          value={data.valuationType || ''}
-          onChange={(value) => updateField('valuationType', value)}
+          value={data.valueMethod || ''}
+          onChange={(value) => updateField('valueMethod', value)}
+          hint={VALUE_METHOD_HINT}
         />
-        {errors.valuationType && (
-          <p className="text-red-600 mt-1">{errors.valuationType}</p>
+        {errors.valueMethod && (
+          <p className="text-red-600 mt-1">{errors.valueMethod}</p>
         )}
       </div>
       <div className="mt-[60px]">

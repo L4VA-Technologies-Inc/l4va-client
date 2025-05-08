@@ -3,25 +3,25 @@ export const Features = () => {
     {
       title: 'Decentralized',
       description:
-        'Our platform puts power back in your hands, offering unmatched security, transparency, and true ownership',
+        'You have the power to create custom asset vaults and new vault tokens representing them.',
       icon: '/assets/icons/decentralized.png',
     },
     {
       title: 'Secure',
       description:
-        'Our platform ensures all assets and data remain protected, giving L4VA investors peace of mind and fostering trust',
+        'Non-custodial with all assets remaining securely on-chain, giving users peace of mind.',
       icon: '/assets/icons/secure.png',
     },
     {
       title: 'Fair',
       description:
-        'Level playing field, ensuring transparency and equal opportunities for everyone in the L4VA ecosystem',
+        'Open source, transparent, and trustless to maximize fairness and effective governance.',
       icon: '/assets/icons/fair.png',
     },
     {
       title: 'Liquid',
       description:
-        'Our Platform enables seamless liquidity, for fast, efficient, and accessible transactions for owners and creators',
+        'Designed to provide unique tokenized liquidity solutions for RWAs, NFTs, and any on-chain asset.',
       icon: '/assets/icons/liquid.png',
     },
   ];

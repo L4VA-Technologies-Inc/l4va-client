@@ -6,6 +6,7 @@ import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import {
   VAULT_TYPE_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
+  PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const ConfigureVault = ({
@@ -52,6 +53,7 @@ export const ConfigureVault = ({
               options={VAULT_PRIVACY_OPTIONS}
               value={data.privacy || ''}
               onChange={(value) => updateField('privacy', value)}
+              hint={PRIVACY_HINT}
             />
             {errors.privacy && (
               <p className="text-red-600 mt-1">
@@ -64,13 +66,14 @@ export const ConfigureVault = ({
         <div className="mt-[60px]">
           <LavaInput
             required
-            error={errors.ftTokenTicker}
-            label="Fractional Token (FT) Ticker"
+            error={errors.vaultTokenTicker}
+            label="Vault Token Ticker"
             maxLength={6}
-            name="ftTokenTicker"
+            name="vaultTokenTicker"
             placeholder="Add ticker"
-            value={data.ftTokenTicker || ''}
+            value={data.vaultTokenTicker || ''}
             onChange={handleChange}
+            hint="This is the ticker that the Governance Token will have when minted."
           />
         </div>
         <div className="mt-[60px]">
@@ -100,22 +103,11 @@ export const ConfigureVault = ({
             image={data.vaultImage}
             label="Vault image"
             setImage={(image) => updateField('vaultImage', image)}
+            hint="This is the image that will live on the Vault Profile page."
           />
           {errors.vaultImage && (
             <p className="text-red-600 mt-1">
               {errors.vaultImage}
-            </p>
-          )}
-        </div>
-        <div>
-          <UploadZone
-            image={data.bannerImage}
-            label="Background banner"
-            setImage={(image) => updateField('bannerImage', image)}
-          />
-          {errors.bannerImage && (
-            <p className="text-red-600 mt-1">
-              {errors.bannerImage}
             </p>
           )}
         </div>

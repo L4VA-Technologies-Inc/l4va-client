@@ -21,9 +21,9 @@ export const VaultProfileView = ({ vault }) => {
         text: 'Contribute',
         handleClick: () => openModal('ContributeModal', { vaultName: vault.name, vaultId: vault.id }),
       },
-      Invest: {
-        text: 'Invest',
-        handleClick: () => openModal('InvestModal', { vaultName: vault.name }),
+      Acquire: {
+        text: 'Acquire',
+        handleClick: () => openModal('AcquireModal', { vaultName: vault.name }),
       },
       Governance: {
         text: 'Create Proposal',
@@ -85,7 +85,7 @@ export const VaultProfileView = ({ vault }) => {
               {renderVaultInfo()}
               {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
               <div className="mb-6">
-                <VaultStats invested={0} reserve={50000} />
+                <VaultStats acquired={0} reserve={50000} />
               </div>
               <div className="flex justify-center mb-6">{renderActionButton()}</div>
               <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />

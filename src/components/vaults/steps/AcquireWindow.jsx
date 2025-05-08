@@ -6,9 +6,13 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
-import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
+import {
+  VAULT_PRIVACY_TYPES,
+  RESERVE_HINT,
+  LIQUIDITY_POOL_CONTRIBUTION_HINT,
+} from '@/components/vaults/constants/vaults.constants';
 
-export const InvestmentWindow = ({
+export const AcquireWindow = ({
   data,
   errors = {},
   updateField,
@@ -29,7 +33,7 @@ export const InvestmentWindow = ({
     updateField(name, sanitizedValue === '' ? '' : +sanitizedValue);
   };
 
-  const getMinInvestmentDate = () => {
+  const getMinAcquireDate = () => {
     if (data.contributionOpenWindowType === 'custom') {
       return addMilliseconds(
         new Date(data.contributionOpenWindowTime),
@@ -39,7 +43,7 @@ export const InvestmentWindow = ({
     return null;
   };
 
-  const minDate = getMinInvestmentDate();
+  const minDate = getMinAcquireDate();
 
   return (
     <div className="grid grid-cols-2">
@@ -48,42 +52,42 @@ export const InvestmentWindow = ({
           <div className="mb-[60px]">
             <LavaWhitelist
               allowCsv
-              csvData={data.investorsWhitelistCsv}
+              csvData={data.acquirersWhitelistCsv}
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
-              label="Investor whitelist"
-              setCsvData={(csvData) => updateField('investorsWhitelistCsv', csvData)}
-              setWhitelist={(assets) => updateField('investorsWhitelist', assets)}
-              whitelist={data.investorsWhitelist || []}
+              label="Acquirer whitelist"
+              setCsvData={(csvData) => updateField('acquirersWhitelistCsv', csvData)}
+              setWhitelist={(assets) => updateField('acquirersWhitelist', assets)}
+              whitelist={data.acquirersWhitelist || []}
             />
-            {errors.investorsWhitelist && (
+            {errors.acquirersWhitelist && (
               <p className="text-red-600 mt-1">
-                {errors.investorsWhitelist}
+                {errors.acquirersWhitelist}
               </p>
             )}
           </div>
         )}
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="investmentWindowDuration">
-            *INVESTMENT WINDOW DURATION
+          <Label className="uppercase text-[20px] font-bold" htmlFor="acquireWindowDuration">
+            *ACQUIRE WINDOW DURATION
           </Label>
           <div className="mt-4">
             <LavaIntervalPicker
-              value={data.investmentWindowDuration}
-              onChange={(date) => updateField('investmentWindowDuration', date)}
+              value={data.acquireWindowDuration}
+              onChange={(date) => updateField('acquireWindowDuration', date)}
             />
-            {errors.investmentWindowDuration && (
-              <p className="text-red-600 mt-1">{errors.investmentWindowDuration}</p>
+            {errors.acquireWindowDuration && (
+              <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>
             )}
           </div>
         </div>
         <div className="mt-[60px]">
           <div className="uppercase text-[20px] font-bold">
-            *INVESTMENT WINDOW OPEN TIME
+            *ACQUIRE WINDOW OPEN TIME
           </div>
           <div className="mt-4">
             <LavaRadio
-              name="investmentOpenWindowType"
+              name="acquireOpenWindowType"
               options={[
                 {
                   name: 'upon-asset-window-closing',
@@ -94,22 +98,22 @@ export const InvestmentWindow = ({
                   label: 'Custom',
                 },
               ]}
-              value={data.investmentOpenWindowType || ''}
-              onChange={(value) => updateField('investmentOpenWindowType', value)}
+              value={data.acquireOpenWindowType || ''}
+              onChange={(value) => updateField('acquireOpenWindowType', value)}
             />
-            {errors.investmentOpenWindowType && (
-              <p className="text-red-600 mt-1">{errors.investmentOpenWindowType}</p>
+            {errors.acquireOpenWindowType && (
+              <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>
             )}
 
-            {data.investmentOpenWindowType === 'custom' && (
+            {data.acquireOpenWindowType === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}
-                  value={data.investmentOpenWindowTime}
-                  onChange={(date) => updateField('investmentOpenWindowTime', date)}
+                  value={data.acquireOpenWindowType}
+                  onChange={(date) => updateField('acquireOpenWindowTime', date)}
                 />
-                {errors.investmentOpenWindowTime && (
-                  <p className="text-red-600 mt-1">{errors.investmentOpenWindowTime}</p>
+                {errors.acquireOpenWindowTime && (
+                  <p className="text-red-600 mt-1">{errors.acquireOpenWindowTime}</p>
                 )}
                 {minDate && (
                   <p className="text-orange-500 mt-1">
@@ -124,39 +128,42 @@ export const InvestmentWindow = ({
       <div className="px-[36px]">
         <LavaInput
           required
-          error={errors.offAssetsOffered}
-          label="% OF ASSETS OFFERED"
-          name="offAssetsOffered"
+          error={errors.tokensForAcquires}
+          label="TOKENS FOR ACQUIRES (%)"
+          name="tokensForAcquires"
           placeholder="XX.XX"
           suffix="%"
           type="text"
-          value={data.offAssetsOffered || ''}
+          value={data.tokensForAcquires || ''}
           onChange={handleChange}
+          hint="The percentage (%) of total tokens minted which will be received by Acquirers when Vault locks; while asset Contributors will receive 100% minus this amount."
         />
         <div className="mt-[60px]">
           <LavaInput
             required
-            error={errors.ftInvestmentReserve}
-            label="FT INVESTMENT RESERVE"
-            name="ftInvestmentReserve"
+            error={errors.acquireReserve}
+            label="RESERVE (%)"
+            name="acquireReserve"
             placeholder="XX.XX"
             suffix="%"
             type="text"
-            value={data.ftInvestmentReserve || ''}
+            value={data.acquireReserve || ''}
             onChange={handleChange}
+            hint={RESERVE_HINT}
           />
         </div>
         <div className="mt-[60px]">
           <LavaInput
             required
             error={errors.liquidityPoolContribution}
-            label="% LIQUIDITY POOL CONTRIBUTION"
+            label="LIQUIDITY POOL (LP) CONTRIBUTION (%)"
             name="liquidityPoolContribution"
             placeholder="XX.XX"
             suffix="%"
             type="text"
             value={data.liquidityPoolContribution || ''}
             onChange={handleChange}
+            hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
         </div>
       </div>

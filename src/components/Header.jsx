@@ -15,7 +15,7 @@ const options = [
 const navLinks = [
   { to: '/create', label: 'Create' },
   { to: '/contribute', label: 'Contribute' },
-  { to: '/invest', label: 'Invest' },
+  { to: '/acquire', label: 'Acquire' },
   { to: '/govern', label: 'Govern' },
 ];
 

@@ -52,7 +52,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             FT Token Ticker
           </p>
           <p className="text-[20px]">
-            {data.ftTokenTicker || 'Not set'}
+            {data.vaultTokenTicker || 'Not set'}
           </p>
         </div>
         <div>

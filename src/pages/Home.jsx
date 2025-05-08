@@ -4,12 +4,8 @@ import { Features } from '@/components/Features';
 import { HeroHeader } from '@/components/HeroHeader';
 import { HeroStats } from '@/components/HeroStats';
 import { Faq } from '@/components/home/Faq';
-import { InvestmentsTable } from '@/components/home/InvestmentsTable';
-import { MainFilters } from '@/components/home/MainFilters';
 import { Stats } from '@/components/home/Stats';
-import { VaultsFilters } from '@/components/home/VaultsFilters';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { SearchInput } from '@/components/shared/SearchInput';
 import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
@@ -45,18 +41,6 @@ export const Home = () => {
         </div>
       </div>
       <Features />
-      <section className="relative">
-        <div aria-labelledby="features-heading" className="py-12 sm:py-16">
-          <div className="container mx-auto">
-            <VaultsFilters />
-            <div className="flex gap-8 mb-8">
-              <SearchInput />
-              <MainFilters />
-            </div>
-          </div>
-        </div>
-      </section>
-      <InvestmentsTable />
       <Stats />
       <Faq />
     </>

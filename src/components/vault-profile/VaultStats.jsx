@@ -3,11 +3,8 @@ import { formatNum } from '@/utils/core.utils';
 export const VaultStats = ({
   access,
   reserve,
-  invested,
+  acquired,
   invAssetVal,
-  valuationType,
-  ftInvestmentReserve,
-  liquidityPoolContribution,
 }) => {
   const stats = [
     {
@@ -19,8 +16,8 @@ export const VaultStats = ({
       value: `$${formatNum(reserve)}`,
     },
     {
-      label: 'Invested',
-      value: `$${formatNum(invested)}`,
+      label: 'Acquired',
+      value: `$${formatNum(acquired)}`,
     },
     {
       label: 'Inv/Asset Val',

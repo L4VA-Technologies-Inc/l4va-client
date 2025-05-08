@@ -73,7 +73,7 @@ export const Stats = () => {
   const statusData = [
     { label: 'Draft', percentage: 10.0 },
     { label: 'Contribution', percentage: 22.0 },
-    { label: 'Investment', percentage: 16.33 },
+    { label: 'Acquire', percentage: 16.33 },
     { label: 'Locked', percentage: 18.0 },
     { label: 'Terminated', percentage: 33.67 },
   ];
@@ -92,11 +92,11 @@ export const Stats = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         <StatCard label="MyVaults" value="158" />
         <StatCard label="Assets" value="486" />
-        <StatCard label="Invested" value="$9M+" />
+        <StatCard label="Acquired" value="$9M+" />
         <StatCard label="TVL All MyVaults" value="$18M+" />
       </div>
       <div className="space-y-16">
-        <ProgressBar items={statusData} title="Vault by Status" totalAmount={totalAmount} />
+        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} />
         <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} />
       </div>
     </div>

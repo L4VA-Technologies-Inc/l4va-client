@@ -6,7 +6,7 @@ import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { handleNumberInput } from '@/utils/core.utils';
-import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
+import { VAULT_PRIVACY_TYPES, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const Private = ({
   data,
@@ -15,30 +15,31 @@ export const Private = ({
 }) => {
   const { valuationType, privacy: vaultPrivacy } = data;
 
-  const valuationOptions = vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE ? [
+  const valueMethodOptions = vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE ? [
     {
       name: 'lbe',
-      label: 'LBE (Liquidity Bootstrapping Event)',
+      label: 'Market / Floor Price',
     },
     {
       name: 'fixed',
       label: 'Fixed',
     },
-  ] : [{ name: 'lbe', label: 'LBE (Liquidity Bootstrapping Event)' }];
+  ] : [{ name: 'lbe', label: 'Market / Floor Price' }];
 
   return (
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
         <div>
           <LavaRadio
-            label="*Valuation type"
-            name="valuationType"
-            options={valuationOptions}
-            value={data.valuationType || ''}
-            onChange={(value) => updateField('valuationType', value)}
+            label="*Vault Value Method"
+            name="valueMethod"
+            options={valueMethodOptions}
+            value={data.valueMethod || ''}
+            onChange={(value) => updateField('valueMethod', value)}
+            hint={VALUE_METHOD_HINT}
           />
-          {errors.valuationType && (
-            <p className="text-red-600 mt-1">{errors.valuationType}</p>
+          {errors.valueMethod && (
+            <p className="text-red-600 mt-1">{errors.valueMethod}</p>
           )}
         </div>
         {valuationType === 'fixed' && (

@@ -19,8 +19,8 @@ export const Faq = () => {
     },
     {
       number: 3,
-      title: 'Invest',
-      description: 'Investors with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
+      title: 'Acquire',
+      description: 'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
     },
     {
       number: 4,
@@ -47,7 +47,7 @@ export const Faq = () => {
       answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     },
     {
-      question: 'How do I invest in a vault?',
+      question: 'How do I acquire a vault?',
       answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     },
     {
@@ -60,7 +60,7 @@ export const Faq = () => {
     <div className="relative py-8 sm:py-12 lg:py-16">
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-full lg:h-[1200px]"
-        style={{ backgroundImage: 'url(/assets/investments-bg.png)' }}
+        style={{ backgroundImage: 'url(/assets/acquire-bg.png)' }}
       />
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
         <section className="mb-8 sm:mb-12 lg:mb-16">
@@ -85,7 +85,7 @@ export const Faq = () => {
                   key={step.number}
                   className="w-full lg:w-[600px] flex flex-col sm:flex-row items-center sm:items-start p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]"
                 >
-                  <div className="text-center text-6xl sm:text-8xl lg:text-[128px] font-extrabold text-red-600 font-satoshi">
+                  <div className="min-w-[80px] text-center text-6xl sm:text-8xl lg:text-[128px] font-extrabold text-red-600 font-satoshi">
                     {step.number}
                   </div>
                   <div className="text-center sm:text-left">

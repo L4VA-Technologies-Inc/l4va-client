@@ -14,7 +14,7 @@ const socialLinks = [
 const navLinks = [
   { href: '/create', label: 'Create' },
   { href: '/contribute', label: 'Contribute' },
-  { href: '/invest', label: 'Invest' },
+  { href: '/acquire', label: 'Acquire' },
   { href: '/how-it-works', label: 'How it works' },
   { href: '/about-us', label: 'About us' },
   { href: '/social-media', label: 'Social media' },

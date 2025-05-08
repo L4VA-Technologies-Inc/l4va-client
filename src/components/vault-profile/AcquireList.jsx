@@ -1,8 +1,7 @@
 import { formatNum } from '@/utils/core.utils';
 
-export const InvestmentsList = ({ investments = [] }) => {
+export const AcquireList = ({ acquires = [] }) => {
   const totalValuePercentage = '5%';
-
   return (
     <div>
       <div
@@ -13,7 +12,7 @@ export const InvestmentsList = ({ investments = [] }) => {
         }}
       >
         <div className="text-dark-100 text-2xl">
-          Investment / Assets Value (%)
+          Acquire / Assets Value (%)
         </div>
         <div className="text-2xl font-semibold">
           {totalValuePercentage}
@@ -23,18 +22,18 @@ export const InvestmentsList = ({ investments = [] }) => {
         <div>Name</div>
         <div>Public key</div>
         <div>% Alloc.</div>
-        <div className="text-right">Invested</div>
+        <div className="text-right">Acquired</div>
       </div>
       <div className="space-y-2">
-        {investments.map((investment, index) => (
+        {acquires.map((acquire, index) => (
           <div
             key={index}
             className="grid grid-cols-4 px-4 py-4 bg-steel-850 hover:bg-steel-750 transition-colors rounded-lg"
           >
-            <div className="font-medium">{investment.name}</div>
-            <div className="font-medium text-dark-100">{investment.publicKey}</div>
-            <div>{investment.allocation}%</div>
-            <div className="text-right">${formatNum(investment.invested)}</div>
+            <div className="font-medium">{acquire.name}</div>
+            <div className="font-medium text-dark-100">{acquire.publicKey}</div>
+            <div>{acquire.allocation}%</div>
+            <div className="text-right">${formatNum(acquire.acquired)}</div>
           </div>
         ))}
       </div>

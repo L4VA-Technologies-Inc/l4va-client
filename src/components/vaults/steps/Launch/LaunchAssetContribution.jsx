@@ -2,12 +2,12 @@ import { Edit } from 'lucide-react';
 
 import { formatInterval, formatNum, formatDateTime } from '@/utils/core.utils';
 import {
-  VAULT_VALUATION_TYPE_OPTIONS,
+  VAULT_VALUE_METHOD_OPTIONS,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = (type, time) => {
-    if (type === 'upon-vault-lunch') {
+    if (type === 'upon-vault-launch') {
       return 'Upon vault launch';
     }
     return formatDateTime(new Date(time));
@@ -37,7 +37,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               Valuation type
             </p>
             <p className="text-[20px]">
-              {VAULT_VALUATION_TYPE_OPTIONS.find(option => option.name === data.valuationType)?.label}
+              {VAULT_VALUE_METHOD_OPTIONS.find(option => option.name === data.valuationType)?.label}
             </p>
           </div>
           {data.valuationType === 'fixed' && (

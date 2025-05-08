@@ -80,50 +80,51 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             </div>
           </>
         )}
-        {data.terminationType === 'dao' && (
-          <>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Creation Threshold %
-              </p>
-              <p className="text-[20px]">
-                {data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}
-              </p>
-            </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Start Threshold %
-              </p>
-              <p className="text-[20px]">
-                {data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}
-              </p>
-            </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Vote Threshold %
-              </p>
-              <p className="text-[20px]">
-                {data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}
-              </p>
-            </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Execution Threshold %
-              </p>
-              <p className="text-[20px]">
-                {data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}
-              </p>
-            </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Cosigning Threshold %
-              </p>
-              <p className="text-[20px]">
-                {data.cosigningThreshold ? `${formatNum(data.cosigningThreshold)}%` : 'Not set'}
-              </p>
-            </div>
-          </>
-        )}
+        <div>
+          <p className="uppercase font-semibold text-dark-100 text-xl mb-6">
+            Governance Proposal Rules
+          </p>
+          <div>
+            <p className="uppercase font-semibold text-dark-100">
+              Creation Threshold %
+            </p>
+            <p className="text-[20px]">
+              {data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}
+            </p>
+          </div>
+          <div>
+            <p className="uppercase font-semibold text-dark-100">
+              Start Threshold %
+            </p>
+            <p className="text-[20px]">
+              {data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}
+            </p>
+          </div>
+          <div>
+            <p className="uppercase font-semibold text-dark-100">
+              Vote Threshold %
+            </p>
+            <p className="text-[20px]">
+              {data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}
+            </p>
+          </div>
+          <div>
+            <p className="uppercase font-semibold text-dark-100">
+              Execution Threshold %
+            </p>
+            <p className="text-[20px]">
+              {data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}
+            </p>
+          </div>
+          <div>
+            <p className="uppercase font-semibold text-dark-100">
+              Cosigning Threshold %
+            </p>
+            <p className="text-[20px]">
+              {data.cosigningThreshold ? `${formatNum(data.cosigningThreshold)}%` : 'Not set'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
