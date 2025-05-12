@@ -104,12 +104,11 @@ export const AcquireWindow = ({
             {errors.acquireOpenWindowType && (
               <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>
             )}
-
             {data.acquireOpenWindowType === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}
-                  value={data.acquireOpenWindowType}
+                  value={data.acquireOpenWindowTime}
                   onChange={(date) => updateField('acquireOpenWindowTime', date)}
                 />
                 {errors.acquireOpenWindowTime && (
