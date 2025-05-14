@@ -40,6 +40,7 @@ export const useTransaction = () => {
 
       const buildResult = await TransactionsApiProvider.buildTransaction({
         changeAddress,
+        vaultId,
         txId: data.txId,
         outputs: [{
           address: recipient,
@@ -51,12 +52,12 @@ export const useTransaction = () => {
         }],
       });
 
-      if (!buildResult.data?.complete) {
+      if (!buildResult.data?.presignedTx) {
         throw new Error('Failed to build transaction');
       }
 
       setStatus('signing');
-      const signature = await wallet.handler.signTx(buildResult.data.complete);
+      const signature = await wallet.handler.signTx(buildResult.data.presignedTx, true);
 
       if (!signature) {
         throw new Error('Transaction signing was cancelled');
@@ -64,7 +65,9 @@ export const useTransaction = () => {
 
       setStatus('submitting');
       const submitResult = await TransactionsApiProvider.submitTransaction({
-        transaction: buildResult.data.complete,
+        transaction: buildResult.data.presignedTx,
+        vaultId: vaultId,
+        txId: data.txId,
         signatures: [signature],
       });
 
