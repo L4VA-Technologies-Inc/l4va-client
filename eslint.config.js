@@ -44,6 +44,18 @@ export default defineConfig([
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'prettier/prettier': [
+        'error',
+        {
+          semi: true,
+          singleQuote: true,
+          tabWidth: 2,
+          trailingComma: 'es5',
+          printWidth: 120,
+          bracketSpacing: true,
+          arrowParens: 'avoid',
+        },
+      ],
     },
   },
 ]);
