@@ -21,14 +21,14 @@ export const NotFound = () => {
         <div className="mt-10 flex gap-4 justify-center">
           <SecondaryButton
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.back()}
           >
             <ArrowLeft className="w-4 h-4"/>
             Go back
           </SecondaryButton>
           <PrimaryButton
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate({ to: '/' })}
           >
             <Home className="w-4 h-4"/>
             Go home
