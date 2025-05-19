@@ -47,16 +47,16 @@ export const VaultAssetsList = ({ vault }) => {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-steel-750">
       <table className="w-full">
         <thead>
-          <tr className="text-dark-100 text-sm">
-            <th className="w-[80px] px-4 py-2 text-left">Image</th>
-            <th className="px-4 py-2 text-left">Name</th>
-            <th className="px-4 py-2 text-left">Type</th>
-            <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-right">Quantity</th>
-            <th className="w-[40px]"></th>
+          <tr className="text-dark-100 text-sm border-b border-steel-750">
+            <th className="px-4 py-3 text-left">Image</th>
+            <th className="px-4 py-3 text-left">Name</th>
+            <th className="px-4 py-3 text-left">Type</th>
+            <th className="px-4 py-3 text-left">Status</th>
+            <th className="px-4 py-3 text-left">Quantity</th>
+            <th className="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
@@ -68,22 +68,28 @@ export const VaultAssetsList = ({ vault }) => {
                 }`}
                 onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
               >
-                <td className="px-4 py-4">
-                  <img alt={asset.assetId} className="w-12 h-12 rounded-lg" src="/assets/icons/ada.png" />
+                <td className="px-4 py-3">
+                  <img
+                    alt={asset.metadata?.onchainMetadata?.name || 'NFT'}
+                    className="w-12 h-12 rounded-lg object-cover"
+                    src={asset.metadata?.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')}
+                  />
                 </td>
-                <td className="px-4 py-4 font-medium">{substringAddress(asset.assetId)}</td>
-                <td className="px-4 py-4 capitalize">{asset.type}</td>
-                <td className="px-4 py-4 capitalize">{asset.status}</td>
-                <td className="px-4 py-4 text-right">{asset.quantity}</td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-3 font-medium">
+                  {asset.metadata?.onchainMetadata?.name || substringAddress(asset.assetId)}
+                </td>
+                <td className="px-4 py-3 capitalize">{asset.type}</td>
+                <td className="px-4 py-3 capitalize">{asset.status}</td>
+                <td className="px-4 py-3">{asset.quantity}</td>
+                <td className="px-4 py-3 text-center">
                   <button
                     className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                     type="button"
                   >
                     {expandedAsset === index ? (
-                      <ChevronUp className="transition-transform duration-200" size={20} />
+                      <ChevronUp className="transition-transform duration-200" size={24} />
                     ) : (
-                      <ChevronDown className="transition-transform duration-200" size={20} />
+                      <ChevronDown className="transition-transform duration-200" size={24} />
                     )}
                   </button>
                 </td>
@@ -97,7 +103,8 @@ export const VaultAssetsList = ({ vault }) => {
                         <div className="flex items-center gap-2">
                           <p className="break-all">{substringAddress(asset.policyId)}</p>
                           <button
-                            onClick={() => {
+                            onClick={e => {
+                              e.stopPropagation();
                               navigator.clipboard.writeText(asset.policyId);
                               toast.success('Policy ID copied to clipboard');
                             }}
@@ -112,7 +119,8 @@ export const VaultAssetsList = ({ vault }) => {
                         <div className="flex items-center gap-2">
                           <p className="break-all">{substringAddress(asset.assetId)}</p>
                           <button
-                            onClick={() => {
+                            onClick={e => {
+                              e.stopPropagation();
                               navigator.clipboard.writeText(asset.assetId);
                               toast.success('Asset ID copied to clipboard');
                             }}
@@ -130,6 +138,12 @@ export const VaultAssetsList = ({ vault }) => {
                         <p className="font-medium">Updated At:</p>
                         <p>{new Date(asset.updatedAt).toLocaleDateString()}</p>
                       </div>
+                      {asset.metadata?.onchainMetadata?.description && (
+                        <div className="col-span-2">
+                          <p className="font-medium">Description:</p>
+                          <p>{asset.metadata.onchainMetadata.description}</p>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
