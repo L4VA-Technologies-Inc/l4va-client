@@ -13,13 +13,18 @@ export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
   const { openModal } = useModalControls();
 
-  const handleTabChange = (tab) => setActiveTab(tab);
+  const handleTabChange = tab => setActiveTab(tab);
 
   const renderActionButton = () => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        handleClick: () => openModal('ContributeModal', { vaultName: vault.name, vaultId: vault.id }),
+        handleClick: () =>
+          openModal('ContributeModal', {
+            vaultName: vault.name,
+            recipientAddress: vault.contractAddress,
+            vaultId: vault.id,
+          }),
       },
       Acquire: {
         text: 'Acquire',
@@ -95,4 +100,4 @@ export const VaultProfileView = ({ vault }) => {
       </div>
     </div>
   );
-}; 
+};

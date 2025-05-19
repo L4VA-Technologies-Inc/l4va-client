@@ -10,7 +10,7 @@ import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 export const Vault = () => {
   const id = useParams({
     from: '/vaults/$id',
-    select: (params) => params.id,
+    select: params => params.id,
   });
 
   const [vault, setVault] = useState(null);

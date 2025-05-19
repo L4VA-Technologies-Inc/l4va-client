@@ -10,20 +10,13 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Spinner } from '@/components/Spinner';
 import { useTransaction } from '@/hooks/useTransaction';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-
-const RECIPIENT_ADDRESS = 'addr_test1qpngt4n7vyg4uw2dyqhucjxs400hz92zf67l87plrnq9s4evsy3rlxfvscmu2y2c4m98rkkzc4c5txd7034u5a5uejksnnm4yr';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
-export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIENT_ADDRESS, onClose }) => {
+export const ContributeModal = ({ vaultName, vaultId, recipientAddress, onClose }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -33,8 +26,8 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
   const [selectedAmount, setSelectedAmount] = useState({});
 
   const contributionDetails = useMemo(() => {
-    const nftCount = selectedNFTs.filter((asset) => asset.type === 'NFT').length;
-    const ftCount = selectedNFTs.filter((asset) => asset.type === 'FT').length;
+    const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
+    const ftCount = selectedNFTs.filter(asset => asset.type === 'FT').length;
     const totalAssets = nftCount + ftCount;
 
     const estimatedValue = totalAssets * ASSET_VALUE_USD;
@@ -53,7 +46,7 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
     try {
       const changeAddress = await wallet.handler.getChangeAddressBech32();
       const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-      
+
       // Add ADA as a fungible token
       const adaAsset = {
         id: 'lovelace',
@@ -63,14 +56,14 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
         decimals: 6,
         type: 'FT',
         assetName: 'lovelace',
-        image: '/assets/icons/ada.png'
+        image: '/assets/icons/ada.png',
       };
 
       const formattedAssets = [adaAsset];
-      
+
       if (data?.assets) {
         const otherAssets = data.assets
-          .map((asset) => {
+          .map(asset => {
             if (asset.isNft) {
               return {
                 id: asset.tokenId,
@@ -81,6 +74,7 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
                 quantity: asset.quantity,
                 type: 'NFT',
                 assetName: asset.metadata.assetName,
+                metadata: asset.metadata,
               };
             }
             if (asset.isFungibleToken) {
@@ -92,6 +86,7 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
                 decimals: asset.metadata.decimals,
                 type: 'FT',
                 assetName: asset.metadata.assetName,
+                metadata: asset.metadata,
               };
             }
             return null;
@@ -115,57 +110,59 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
     loadWalletAssets();
   }, [wallet.handler]);
 
-  const toggleNFT = (asset) => {
+  const toggleNFT = asset => {
     if (asset.type === 'FT') return; // Ignore toggle for FT tokens
 
-    if (selectedNFTs.some((nft) => nft.id === asset.id)) {
-      setSelectedNFTs(selectedNFTs.filter((nft) => nft.id !== asset.id));
+    if (selectedNFTs.some(nft => nft.id === asset.id)) {
+      setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== asset.id));
     } else {
       setSelectedNFTs([...selectedNFTs, asset]);
     }
   };
 
   const handleFTAmountChange = (ft, amount) => {
-    setSelectedAmount((prev) => ({
+    setSelectedAmount(prev => ({
       ...prev,
       [ft.id]: amount,
     }));
 
     // Update selected NFTs based on amount
-    const existingIndex = selectedNFTs.findIndex((nft) => nft.id === ft.id);
+    const existingIndex = selectedNFTs.findIndex(nft => nft.id === ft.id);
 
     if (amount && amount !== '0') {
       if (existingIndex >= 0) {
-        setSelectedNFTs((prev) => prev.map((item) => (item.id === ft.id ? { ...item, amount } : item)));
+        setSelectedNFTs(prev => prev.map(item => (item.id === ft.id ? { ...item, amount } : item)));
       } else {
         setSelectedNFTs([...selectedNFTs, { ...ft, amount }]);
       }
     } else {
       if (existingIndex >= 0) {
-        setSelectedNFTs((prev) => prev.filter((item) => item.id !== ft.id));
+        setSelectedNFTs(prev => prev.filter(item => item.id !== ft.id));
       }
     }
   };
 
-  const removeNFT = (id) => setSelectedNFTs(selectedNFTs.filter((nft) => nft.id !== id));
+  const removeNFT = id => setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== id));
 
   const handleContribute = async () => {
     try {
-      // Prepare NFTs and FTs with correct quantities
-      const formattedAssets = selectedNFTs.map((asset) => {
+      const formattedAssets = selectedNFTs.map(asset => {
         if (asset.type === 'FT') {
           return {
             ...asset,
             quantity: Number(asset.amount),
           };
         }
-        return asset;
+        return {
+          ...asset,
+          metadata: asset.metadata,
+        };
       });
 
       await sendTransaction({
         vaultId,
-        selectedNFTs: formattedAssets,
         recipient: recipientAddress,
+        selectedNFTs: formattedAssets,
       });
       setSelectedNFTs([]);
       setSelectedAmount({});
@@ -175,7 +172,7 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
     }
   };
 
-  const filteredAssets = useMemo(() => assets.filter((asset) => asset.type === activeTab), [assets, activeTab]);
+  const filteredAssets = useMemo(() => assets.filter(asset => asset.type === activeTab), [assets, activeTab]);
 
   const renderAssetList = () => {
     if (filteredAssets.length === 0) {
@@ -183,17 +180,17 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress = RECIPIE
     }
 
     if (activeTab === 'NFT') {
-      return filteredAssets.map((nft) => (
+      return filteredAssets.map(nft => (
         <NFTItem
           key={nft.id}
-          isSelected={selectedNFTs.some((selected) => selected.id === nft.id)}
+          isSelected={selectedNFTs.some(selected => selected.id === nft.id)}
           nft={nft}
           onToggle={toggleNFT}
         />
       ));
     }
 
-    return filteredAssets.map((ft) => (
+    return filteredAssets.map(ft => (
       <FTItem key={ft.id} amount={selectedAmount[ft.id] || ''} ft={ft} onAmountChange={handleFTAmountChange} />
     ));
   };
