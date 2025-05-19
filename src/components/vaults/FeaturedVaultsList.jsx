@@ -4,7 +4,6 @@ import { VaultList } from './VaultsList';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 
-
 export const FeaturedVaultsList = ({ className = '' }) => {
   const [vaults, setVaults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,13 +27,5 @@ export const FeaturedVaultsList = ({ className = '' }) => {
     fetchVaults();
   }, []);
 
-  return (
-    <VaultList
-      className={className}
-      error={error}
-      isLoading={loading}
-      title="Featured Vaults"
-      vaults={vaults}
-    />
-  );
+  return <VaultList className={className} error={error} isLoading={loading} title="Featured Vaults" vaults={vaults} />;
 };

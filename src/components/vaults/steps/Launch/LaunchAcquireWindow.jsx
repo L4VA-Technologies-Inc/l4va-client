@@ -15,14 +15,8 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
   return (
     <section>
       <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
-        <p className="font-bold text-2xl">
-          Acquire
-        </p>
-        <button
-          className="flex items-center gap-2 text-dark-100"
-          type="button"
-          onClick={() => setCurrentStep(3)}
-        >
+        <p className="font-bold text-2xl">Acquire</p>
+        <button className="flex items-center gap-2 text-dark-100" type="button" onClick={() => setCurrentStep(3)}>
           <Edit size={24} />
           Edit
         </button>
@@ -31,9 +25,7 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
         <div className="space-y-10">
           {data.privacy !== 'public' && (
             <div>
-              <p className="uppercase font-semibold text-dark-100">
-                Acquirer whitelist
-              </p>
+              <p className="uppercase font-semibold text-dark-100">Acquirer whitelist</p>
               <div className="space-y-2">
                 {data.acquirersWhitelist?.length ? (
                   <>
@@ -67,43 +59,27 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
             </div>
           )}
           <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Acquire Window Duration
-            </p>
-            <p className="text-[20px]">
-              {data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}
-            </p>
+            <p className="uppercase font-semibold text-dark-100">Acquire Window Duration</p>
+            <p className="text-[20px]">{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>
           </div>
           <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Acquire Window Open Time
-            </p>
-            <p className="text-[20px]">
-              {formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}
-            </p>
+            <p className="uppercase font-semibold text-dark-100">Acquire Window Open Time</p>
+            <p className="text-[20px]">{formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}</p>
           </div>
         </div>
         <div className="space-y-10">
           <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Assets Fractionalized (%)
-            </p>
+            <p className="uppercase font-semibold text-dark-100">Assets Fractionalized (%)</p>
             <p className="text-[20px]">
               {data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}
             </p>
           </div>
           <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Reserve (%)
-            </p>
-            <p className="text-[20px]">
-              {data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}
-            </p>
+            <p className="uppercase font-semibold text-dark-100">Reserve (%)</p>
+            <p className="text-[20px]">{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
           </div>
           <div>
-            <p className="uppercase font-semibold text-dark-100">
-              Liquidity Pool (LP) Contribution (%)
-            </p>
+            <p className="uppercase font-semibold text-dark-100">Liquidity Pool (LP) Contribution (%)</p>
             <p className="text-[20px]">
               {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}
             </p>

@@ -1,4 +1,4 @@
-export const formatVaultData = (vaultData) => {
+export const formatVaultData = vaultData => {
   const formattedData = { ...vaultData };
   return formattedData;
 };

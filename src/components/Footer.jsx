@@ -42,7 +42,7 @@ export const Footer = () => {
             FIND US ON SOCIAL
           </h2>
           <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
-            {socialLinks.map((social) => (
+            {socialLinks.map(social => (
               <a
                 key={social.name}
                 aria-label={`Visit our ${social.name} page`}
@@ -51,26 +51,18 @@ export const Footer = () => {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <img
-                  alt={`${social.name} icon`}
-                  className="w-10 h-10 md:w-[60px] md:h-[60px]"
-                  src={social.icon}
-                />
+                <img alt={`${social.name} icon`} className="w-10 h-10 md:w-[60px] md:h-[60px]" src={social.icon} />
               </a>
             ))}
           </div>
         </div>
         <div className="flex justify-center mb-8">
           <Link to="/">
-            <img
-              alt="L4VA Logo"
-              className="w-40 md:w-[210px]"
-              src="/assets/l4va-logo.webp"
-            />
+            <img alt="L4VA Logo" className="w-40 md:w-[210px]" src="/assets/l4va-logo.webp" />
           </Link>
         </div>
         <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16">
-          {navLinks.map((link) => (
+          {navLinks.map(link => (
             <a
               key={link.href}
               className="font-bold hover:text-red-600 transition-colors text-center text-base md:text-lg"

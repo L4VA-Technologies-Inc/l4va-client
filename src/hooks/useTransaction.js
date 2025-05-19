@@ -28,6 +28,7 @@ export const useTransaction = () => {
             policyId: nft.policyId,
             assetName: nft.assetName,
             quantity: nft.quantity,
+            metadata: nft.metadata,
           })),
         });
 
@@ -46,6 +47,7 @@ export const useTransaction = () => {
                 policyId: nft.policyId,
                 assetName: nft.assetName,
                 quantity: nft.quantity,
+                metadata: nft.metadata,
               })),
             },
           ],

@@ -1,6 +1,6 @@
 import { formatNum } from '@/utils/core.utils.js';
 
-const getBackgroundColor = (index) => {
+const getBackgroundColor = index => {
   const colors = ['bg-red-900', 'bg-red-800', 'bg-red-700', 'bg-red-600', 'bg-red-500'];
   return colors[index] || colors[colors.length - 1];
 };
@@ -8,7 +8,7 @@ const getBackgroundColor = (index) => {
 const ProgressBar = ({ items, title, totalAmount }) => {
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
-  const itemsWithValues = items.map((item) => ({
+  const itemsWithValues = items.map(item => ({
     ...item,
     actualValue: Math.round((item.percentage / total) * totalAmount),
   }));
@@ -60,9 +60,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-red-600 text-[60px] font-bold mb-2">
-      {value}
-    </p>
+    <p className="font-russo text-red-600 text-[60px] font-bold mb-2">{value}</p>
     <p className="font-bold font-satoshi  text-[24px]">{label}</p>
   </div>
 );
@@ -86,9 +84,7 @@ export const Stats = () => {
 
   return (
     <div className="container mx-auto py-12 sm:py-16">
-      <h1 className="font-russo font-bold text-[40px] mb-8">
-        QUICK STATS
-      </h1>
+      <h1 className="font-russo font-bold text-[40px] mb-8">QUICK STATS</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         <StatCard label="MyVaults" value="158" />
         <StatCard label="Assets" value="486" />

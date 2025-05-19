@@ -13,23 +13,24 @@ export const LavaWhitelistWithCaps = ({
 }) => {
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
-    const newAssets = [...whitelist, {
-      policyId: '',
-      countCapMin: '',
-      countCapMax: '',
-      uniqueId: Date.now(),
-    }];
+    const newAssets = [
+      ...whitelist,
+      {
+        policyId: '',
+        countCapMin: '',
+        countCapMax: '',
+        uniqueId: Date.now(),
+      },
+    ];
     setWhitelist(newAssets);
   };
 
   const updateAsset = (uniqueId, field, val) => {
-    const updatedAssets = whitelist.map(asset =>
-      asset.uniqueId === uniqueId ? { ...asset, [field]: val } : asset,
-    );
+    const updatedAssets = whitelist.map(asset => (asset.uniqueId === uniqueId ? { ...asset, [field]: val } : asset));
     setWhitelist(updatedAssets);
   };
 
-  const removeAsset = (uniqueId) => {
+  const removeAsset = uniqueId => {
     const filteredAssets = whitelist.filter(asset => asset.uniqueId !== uniqueId);
     setWhitelist(filteredAssets);
   };
@@ -38,7 +39,8 @@ export const LavaWhitelistWithCaps = ({
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase text-[20px] font-bold">
-          {required ? '*' : ''}{label}
+          {required ? '*' : ''}
+          {label}
         </div>
         <button
           className={`border-2 border-white/20 rounded-lg p-2 ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -50,7 +52,7 @@ export const LavaWhitelistWithCaps = ({
         </button>
       </div>
       <div className="space-y-4">
-        {whitelist.map((asset) => (
+        {whitelist.map(asset => (
           <div key={asset.id || asset.uniqueId} className="space-y-2">
             <div className="relative">
               <Input
@@ -58,7 +60,7 @@ export const LavaWhitelistWithCaps = ({
                 placeholder={itemPlaceholder}
                 style={{ fontSize: '20px' }}
                 value={asset.policyId}
-                onChange={(e) => updateAsset(asset.uniqueId, 'policyId', e.target.value)}
+                onChange={e => updateAsset(asset.uniqueId, 'policyId', e.target.value)}
               />
               <Button
                 className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
@@ -78,7 +80,13 @@ export const LavaWhitelistWithCaps = ({
                   placeholder="Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
-                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMin', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))}
+                  onChange={e =>
+                    updateAsset(
+                      asset.uniqueId,
+                      'countCapMin',
+                      e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value))
+                    )
+                  }
                 />
               </div>
               <div className="flex-1">
@@ -89,7 +97,13 @@ export const LavaWhitelistWithCaps = ({
                   placeholder="Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
-                  onChange={(e) => updateAsset(asset.uniqueId, 'countCapMax', e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value)))}
+                  onChange={e =>
+                    updateAsset(
+                      asset.uniqueId,
+                      'countCapMax',
+                      e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value))
+                    )
+                  }
                 />
               </div>
             </div>
@@ -97,14 +111,10 @@ export const LavaWhitelistWithCaps = ({
         ))}
       </div>
       {whitelist.length === 0 && (
-        <div className="text-dark-100 text-base my-4">
-          No items. Click the + button to add one.
-        </div>
+        <div className="text-dark-100 text-base my-4">No items. Click the + button to add one.</div>
       )}
       {whitelist.length >= maxItems && (
-        <div className="text-red-600 text-base my-4">
-          Maximum number of items ({maxItems}) reached.
-        </div>
+        <div className="text-red-600 text-base my-4">Maximum number of items ({maxItems}) reached.</div>
       )}
     </div>
   );

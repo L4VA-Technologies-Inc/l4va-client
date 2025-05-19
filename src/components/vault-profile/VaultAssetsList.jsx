@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -61,9 +61,8 @@ export const VaultAssetsList = ({ vault }) => {
         </thead>
         <tbody>
           {assets.map((asset, index) => (
-            <>
+            <React.Fragment key={asset.id}>
               <tr
-                key={asset.id}
                 className={`cursor-pointer transition-all duration-300 ${
                   expandedAsset === index ? 'bg-steel-750' : 'bg-steel-850 hover:bg-steel-750'
                 }`}
@@ -135,7 +134,7 @@ export const VaultAssetsList = ({ vault }) => {
                   </td>
                 </tr>
               )}
-            </>
+            </React.Fragment>
           ))}
         </tbody>
       </table>

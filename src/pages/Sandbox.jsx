@@ -11,10 +11,6 @@ const customizations = {
 
 export const Sandbox = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <Swap
-      partnerCode="YOUR_PARTNER_CODE"
-      partnerName="L4VA"
-      {...customizations}
-    />
+    <Swap partnerCode="YOUR_PARTNER_CODE" partnerName="L4VA" {...customizations} />
   </div>
 );

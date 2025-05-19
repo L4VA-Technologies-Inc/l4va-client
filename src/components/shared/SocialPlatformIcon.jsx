@@ -23,7 +23,5 @@ export const SocialPlatformIcon = ({ platformId, className }) => {
 
   if (!Icon) return null;
 
-  return (
-    <Icon className={className} height={20} width={20} />
-  );
+  return <Icon className={className} height={20} width={20} />;
 };

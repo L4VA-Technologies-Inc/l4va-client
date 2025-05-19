@@ -15,13 +15,9 @@ export const VaultSocialLinks = ({ socialLinks = [] }) => {
           rel="noopener noreferrer"
           className="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity border border-dark-100"
         >
-          <SocialPlatformIcon
-            className="text-dark-100"
-            platformId={link.name}
-            size={20}
-          />
+          <SocialPlatformIcon className="text-dark-100" platformId={link.name} size={20} />
         </a>
       ))}
     </div>
   );
-}; 
+};

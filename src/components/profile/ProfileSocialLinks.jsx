@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react';
-import {
-  Plus, X, Edit, Check, Trash,
-} from 'lucide-react';
+import { Plus, X, Edit, Check, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
 import { CoreApiProvider } from '@/services/api/core';
@@ -57,9 +49,7 @@ export const ProfileSocialLinks = () => {
       let newLinks;
 
       if (editingId) {
-        newLinks = socialLinks.map(link =>
-          link.id === editingId ? { ...editingLink, id: editingId } : link,
-        );
+        newLinks = socialLinks.map(link => (link.id === editingId ? { ...editingLink, id: editingId } : link));
       } else {
         newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
       }
@@ -76,13 +66,13 @@ export const ProfileSocialLinks = () => {
     }
   };
 
-  const handleEdit = (link) => {
+  const handleEdit = link => {
     setEditingId(link.id);
     setEditingLink({ ...link });
     setIsAdding(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     setIsLoading(true);
 
     try {
@@ -98,12 +88,12 @@ export const ProfileSocialLinks = () => {
     }
   };
 
-  const getPlaceholderForPlatform = (platformId) => {
+  const getPlaceholderForPlatform = platformId => {
     const platform = socialPlatforms.find(p => p.id === platformId);
     return platform ? platform.placeholder : 'Enter URL';
   };
 
-  const formatUrl = (url) => {
+  const formatUrl = url => {
     if (!url) return '';
     return url.startsWith('http') ? url : `https://${url}`;
   };
@@ -111,9 +101,7 @@ export const ProfileSocialLinks = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="font-russo text-[40px] uppercase">
-          Socials
-        </h2>
+        <h2 className="font-russo text-[40px] uppercase">Socials</h2>
         {socialLinks.length < MAX_LINKS && !isAdding && (
           <button
             className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
@@ -132,23 +120,17 @@ export const ProfileSocialLinks = () => {
             <Select
               disabled={isLoading}
               value={editingLink.name}
-              onValueChange={(value) => setEditingLink({ ...editingLink, name: value })}
+              onValueChange={value => setEditingLink({ ...editingLink, name: value })}
             >
               <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
                 <SelectValue placeholder="Select platform" />
               </SelectTrigger>
               <SelectContent className="border-white/20 bg-input-bg">
-                {socialPlatforms.map((platform) => (
+                {socialPlatforms.map(platform => (
                   <SelectItem key={platform.id} className="hover:bg-white/5" value={platform.id}>
                     <div className="flex items-center gap-2">
-                      <SocialPlatformIcon
-                        className="text-dark-100"
-                        platformId={platform.id}
-                        size={20}
-                      />
-                      <span>
-                        {platform.name}
-                      </span>
+                      <SocialPlatformIcon className="text-dark-100" platformId={platform.id} size={20} />
+                      <span>{platform.name}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -156,23 +138,21 @@ export const ProfileSocialLinks = () => {
             </Select>
             <div className="flex-1 relative">
               <Input
-                className={
-                  `py-4 pl-5 pr-24 text-[20px] bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`
-                }
+                className={`py-4 pl-5 pr-24 text-[20px] bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
                 disabled={isLoading}
                 placeholder={getPlaceholderForPlatform(editingLink.name)}
                 style={{ fontSize: '20px' }}
                 value={editingLink.url}
-                onChange={(e) => setEditingLink({ ...editingLink, url: e.target.value })}
+                onChange={e => setEditingLink({ ...editingLink, url: e.target.value })}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
                 <button
-                  className={
-                    `p-2 rounded-full transition-colors
-                    ${!editingLink.url.trim() || isLoading
-                      ? 'text-gray-600 cursor-not-allowed'
-                      : 'text-dark-100 hover:bg-white/10'}`
-                  }
+                  className={`p-2 rounded-full transition-colors
+                    ${
+                      !editingLink.url.trim() || isLoading
+                        ? 'text-gray-600 cursor-not-allowed'
+                        : 'text-dark-100 hover:bg-white/10'
+                    }`}
                   disabled={!editingLink.url.trim() || isLoading}
                   onClick={handleSave}
                 >
@@ -192,13 +172,9 @@ export const ProfileSocialLinks = () => {
       )}
 
       <div className="space-y-4">
-        {socialLinks.map((link) => (
+        {socialLinks.map(link => (
           <div key={link.id} className="flex items-center gap-2 group">
-            <SocialPlatformIcon
-              className="text-dark-100"
-              platformId={link.name}
-              size={20}
-            />
+            <SocialPlatformIcon className="text-dark-100" platformId={link.name} size={20} />
             <a
               className="text-[20px] hover:text-orange-500 transition-colors"
               href={formatUrl(link.url)}
@@ -226,14 +202,10 @@ export const ProfileSocialLinks = () => {
           </div>
         ))}
         {socialLinks.length === 0 && (
-          <div className="text-dark-100 text-base mb-2">
-            No social links added. Click the + button to add one.
-          </div>
+          <div className="text-dark-100 text-base mb-2">No social links added. Click the + button to add one.</div>
         )}
         {socialLinks.length >= MAX_LINKS && (
-          <div className="text-red-600 text-base mb-2">
-            Maximum number of links ({MAX_LINKS}) reached.
-          </div>
+          <div className="text-red-600 text-base mb-2">Maximum number of links ({MAX_LINKS}) reached.</div>
         )}
       </div>
     </div>

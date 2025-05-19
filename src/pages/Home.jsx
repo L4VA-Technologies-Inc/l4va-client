@@ -15,7 +15,7 @@ export const Home = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
 
-  const handleCreateVault = (e) => {
+  const handleCreateVault = e => {
     if (!isAuthenticated) {
       e.preventDefault();
       openModal('LoginModal');

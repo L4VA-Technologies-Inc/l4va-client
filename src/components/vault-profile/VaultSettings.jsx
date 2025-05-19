@@ -56,5 +56,4 @@ export const VaultSettings = ({ vault }) => (
       </div>
     </div>
   </>
-
 );

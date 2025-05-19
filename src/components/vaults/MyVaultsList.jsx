@@ -18,7 +18,7 @@ export const MyVaultsList = ({ className = '' }) => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
-  const fetchVaults = async (tab) => {
+  const fetchVaults = async tab => {
     setLoading(true);
     setError(null);
     try {

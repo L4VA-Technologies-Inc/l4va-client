@@ -1,10 +1,7 @@
 import CheckmarkIcon from '@/icons/checkmark.svg?react';
 
 export const NFTItem = ({ nft, isSelected, onToggle }) => (
-  <div
-    className="flex items-center gap-3 cursor-pointer"
-    onClick={() => onToggle(nft)}
-  >
+  <div className="flex items-center gap-3 cursor-pointer" onClick={() => onToggle(nft)}>
     <div
       className={`
         relative w-6 h-6 flex items-center justify-center rounded-full
@@ -23,13 +20,9 @@ export const NFTItem = ({ nft, isSelected, onToggle }) => (
         <div className="relative w-8 h-8 overflow-hidden rounded-full">
           <img alt={nft.name} className="w-full h-full object-cover" src={nft.image} />
         </div>
-        <span className="font-medium">
-          {nft.name}
-        </span>
+        <span className="font-medium">{nft.name}</span>
       </div>
-      <span className="text-dark-100 hover:underline text-sm">
-        {nft.policyId.substring(0, 8)}...
-      </span>
+      <span className="text-dark-100 hover:underline text-sm">{nft.policyId.substring(0, 8)}...</span>
     </div>
   </div>
 );

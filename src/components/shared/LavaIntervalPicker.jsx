@@ -4,13 +4,9 @@ import { ClockIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { msToInterval, intervalToMs, formatInterval } from '@/utils/core.utils';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
+export const LavaIntervalPicker = ({ value = 0, onChange = () => {} }) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
 
@@ -38,16 +34,12 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
           <Button
             className={cn(
               'text-[20px] border border-steel-850 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
-              !value && 'text-muted-foreground',
+              !value && 'text-muted-foreground'
             )}
             variant="outline"
           >
             <ClockIcon className="mr-2 h-4 w-4" />
-            {value ? (
-              formatInterval(value)
-            ) : (
-              <span className="text-white/60">Select interval</span>
-            )}
+            {value ? formatInterval(value) : <span className="text-white/60">Select interval</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0 bg-input-bg border border-steel-850">
@@ -55,14 +47,12 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
             <div className="p-4 bg-input-bg">
               <div className="text-sm font-medium mb-2 text-center">Days</div>
               <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                {days.map((day) => (
+                {days.map(day => (
                   <Button
                     key={day}
                     className="w-12 h-12"
                     size="icon"
-                    variant={
-                      interval.days === day ? 'default' : 'ghost'
-                    }
+                    variant={interval.days === day ? 'default' : 'ghost'}
                     onClick={() => handleIntervalChange('days', day.toString())}
                   >
                     {day}
@@ -73,14 +63,12 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
             <div className="p-4 bg-input-bg border-l border-steel-850">
               <div className="text-sm font-medium mb-2 text-center">Hours</div>
               <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                {hours.map((hour) => (
+                {hours.map(hour => (
                   <Button
                     key={hour}
                     className="w-12 h-12"
                     size="icon"
-                    variant={
-                      interval.hours === hour ? 'default' : 'ghost'
-                    }
+                    variant={interval.hours === hour ? 'default' : 'ghost'}
                     onClick={() => handleIntervalChange('hours', hour.toString())}
                   >
                     {hour}
@@ -91,14 +79,12 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => { } }) => {
             <div className="p-4 bg-input-bg border-l border-steel-850">
               <div className="text-sm font-medium mb-2 text-center">Minutes</div>
               <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                {minutes.map((minute) => (
+                {minutes.map(minute => (
                   <Button
                     key={minute}
                     className="w-12 h-12"
                     size="icon"
-                    variant={
-                      interval.minutes === minute ? 'default' : 'ghost'
-                    }
+                    variant={interval.minutes === minute ? 'default' : 'ghost'}
                     onClick={() => handleIntervalChange('minutes', minute.toString())}
                   >
                     {minute}

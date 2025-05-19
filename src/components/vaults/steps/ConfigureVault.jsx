@@ -9,12 +9,8 @@ import {
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const ConfigureVault = ({
-  data,
-  errors = {},
-  updateField,
-}) => {
-  const handleChange = (e) => {
+export const ConfigureVault = ({ data, errors = {}, updateField }) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     updateField(name, value);
   };
@@ -38,13 +34,9 @@ export const ConfigureVault = ({
               name="type"
               options={VAULT_TYPE_OPTIONS}
               value={data.type || ''}
-              onChange={(value) => updateField('type', value)}
+              onChange={value => updateField('type', value)}
             />
-            {errors.type && (
-              <p className="text-red-600 mt-1">
-                {errors.type}
-              </p>
-            )}
+            {errors.type && <p className="text-red-600 mt-1">{errors.type}</p>}
           </div>
           <div>
             <LavaRadio
@@ -52,14 +44,10 @@ export const ConfigureVault = ({
               name="privacy"
               options={VAULT_PRIVACY_OPTIONS}
               value={data.privacy || ''}
-              onChange={(value) => updateField('privacy', value)}
+              onChange={value => updateField('privacy', value)}
               hint={PRIVACY_HINT}
             />
-            {errors.privacy && (
-              <p className="text-red-600 mt-1">
-                {errors.privacy}
-              </p>
-            )}
+            {errors.privacy && <p className="text-red-600 mt-1">{errors.privacy}</p>}
           </div>
         </div>
 
@@ -90,7 +78,7 @@ export const ConfigureVault = ({
         <div className="mt-[60px]">
           <LavaSocialLinks
             errors={errors}
-            setSocialLinks={(links) => updateField('socialLinks', links)}
+            setSocialLinks={links => updateField('socialLinks', links)}
             socialLinks={data.socialLinks || []}
           />
         </div>
@@ -102,14 +90,10 @@ export const ConfigureVault = ({
             required
             image={data.vaultImage}
             label="Vault image"
-            setImage={(image) => updateField('vaultImage', image)}
+            setImage={image => updateField('vaultImage', image)}
             hint="This is the image that will live on the Vault Profile page."
           />
-          {errors.vaultImage && (
-            <p className="text-red-600 mt-1">
-              {errors.vaultImage}
-            </p>
-          )}
+          {errors.vaultImage && <p className="text-red-600 mt-1">{errors.vaultImage}</p>}
         </div>
       </div>
     </div>

@@ -17,9 +17,9 @@ export const LavaInput = ({
   className,
   hint,
 }) => {
-  const handleChange = (e) => {
+  const handleChange = e => {
     const newValue = e.target.value;
-    const isNumber = (/^\d*$/).test(newValue.replace(/,/g, ''));
+    const isNumber = /^\d*$/.test(newValue.replace(/,/g, ''));
 
     if (isNumber) {
       const rawValue = newValue.replace(/,/g, '');
@@ -31,21 +31,20 @@ export const LavaInput = ({
     }
   };
 
-  const displayValue = value && (/^\d*$/).test(value.toString().replace(/,/g, ''))
-    ? formatNum(value)
-    : (value || '');
+  const displayValue = value && /^\d*$/.test(value.toString().replace(/,/g, '')) ? formatNum(value) : value || '';
 
   return (
     <>
       {label ? (
         <div className="text-[20px] font-bold flex items-center gap-2">
           <span className="uppercase">
-            {required ? '*' : ''}{label}
+            {required ? '*' : ''}
+            {label}
           </span>
           {hint && (
             <div className="group relative inline-flex">
               <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div 
+              <div
                 className="
                   absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg 
                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 
@@ -74,17 +73,9 @@ export const LavaInput = ({
             value={displayValue}
             onChange={handleChange}
           />
-          {suffix && (
-            <div className="absolute right-5 text-lg text-white/60 select-none">
-              {suffix}
-            </div>
-          )}
+          {suffix && <div className="absolute right-5 text-lg text-white/60 select-none">{suffix}</div>}
         </div>
-        {error && (
-          <p className="text-red-600 mt-1">
-            {error}
-          </p>
-        )}
+        {error && <p className="text-red-600 mt-1">{error}</p>}
       </div>
     </>
   );
@@ -101,7 +92,7 @@ export const LavaSteelInput = ({
 }) => {
   const [inputValue, setInputValue] = useState(value || '');
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setInputValue(e.target.value);
     if (onChange) onChange(e.target.value);
   };
@@ -110,7 +101,8 @@ export const LavaSteelInput = ({
     <div>
       {label ? (
         <div className="text-[20px] font-semibold mb-4 flex items-center gap-2">
-          {required ? '*' : ''}{label}
+          {required ? '*' : ''}
+          {label}
           {hint && (
             <div className="group relative">
               <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />

@@ -10,27 +10,19 @@ export const LavaTabs = ({
   inactiveTabClassName = '',
 }) => (
   <div className={clsx('inline-flex rounded-lg p-1', className)}>
-    {tabs.map((tab) => (
+    {tabs.map(tab => (
       <button
         key={tab}
         className={clsx(
           'px-8 py-2 rounded-xl text-lg font-medium transition-all',
-          activeTab === tab
-            ? 'bg-steel-750'
-            : 'text-white hover:text-orange-500',
+          activeTab === tab ? 'bg-steel-750' : 'text-white hover:text-orange-500',
           tabClassName,
-          activeTab === tab ? activeTabClassName : inactiveTabClassName,
+          activeTab === tab ? activeTabClassName : inactiveTabClassName
         )}
         type="button"
         onClick={() => onTabChange(tab)}
       >
-        <span
-          className={clsx(
-            activeTab === tab && 'text-orange-gradient',
-          )}
-        >
-          {tab}
-        </span>
+        <span className={clsx(activeTab === tab && 'text-orange-gradient')}>{tab}</span>
       </button>
     ))}
   </div>

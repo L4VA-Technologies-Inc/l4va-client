@@ -6,11 +6,7 @@ import svgr from 'vite-plugin-svgr';
 import tailwindcss from '@tailwindcss/vite';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 
-const env = loadEnv(
-  'mock',
-  process.cwd(),
-  '',
-);
+const env = loadEnv('mock', process.cwd(), '');
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,12 +15,7 @@ export default defineConfig({
       '/api': env.PUBLIC_VITE_API_URL,
     },
   },
-  plugins: [
-    TanStackRouterVite({ target: 'react', autoCodeSplitting: true }),
-    react(),
-    svgr(),
-    tailwindcss(),
-  ],
+  plugins: [TanStackRouterVite({ target: 'react', autoCodeSplitting: true }), react(), svgr(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

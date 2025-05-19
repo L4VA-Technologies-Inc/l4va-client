@@ -31,14 +31,14 @@ export const UploadZone = ({
     }
   }, [image]);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = e => {
     e.preventDefault();
     setIsDragging(true);
   };
 
   const handleDragLeave = () => setIsDragging(false);
 
-  const validateFile = (file) => {
+  const validateFile = file => {
     if (file.size > maxSizeMB * 1024 * 1024) {
       toast.error(`File size must be less than ${maxSizeMB}MB`);
       return false;
@@ -65,7 +65,7 @@ export const UploadZone = ({
     return true;
   };
 
-  const uploadFileToServer = async (file) => {
+  const uploadFileToServer = async file => {
     setUploadStatus('uploading');
 
     if (!validateFile(file)) {
@@ -92,7 +92,7 @@ export const UploadZone = ({
     }
   };
 
-  const handleFile = (file) => {
+  const handleFile = file => {
     if (!file) return;
 
     const tempPreview = URL.createObjectURL(file);
@@ -106,7 +106,7 @@ export const UploadZone = ({
     uploadFileToServer(file);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = e => {
     e.preventDefault();
     setIsDragging(false);
 
@@ -115,13 +115,13 @@ export const UploadZone = ({
     }
   };
 
-  const handleFileInputChange = (e) => {
+  const handleFileInputChange = e => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
 
-  const removeImage = (e) => {
+  const removeImage = e => {
     if (e) e.stopPropagation();
 
     if (preview && preview.startsWith('blob:')) {
@@ -155,12 +155,13 @@ export const UploadZone = ({
       <div className="flex justify-between items-center mb-4">
         <div className="text-[20px] font-bold flex items-center gap-2">
           <span className="uppercase">
-            {required && <span className="mr-1">*</span>}{label}
+            {required && <span className="mr-1">*</span>}
+            {label}
           </span>
           {hint && (
             <div className="group relative inline-flex">
               <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div 
+              <div
                 className="
                   absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg 
                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 
@@ -172,9 +173,7 @@ export const UploadZone = ({
             </div>
           )}
         </div>
-        {uploadStatus === 'uploading' && (
-          <div className="text-yellow-500 text-sm">Uploading...</div>
-        )}
+        {uploadStatus === 'uploading' && <div className="text-yellow-500 text-sm">Uploading...</div>}
       </div>
       <div
         className={`
@@ -190,20 +189,10 @@ export const UploadZone = ({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <input
-          ref={fileInputRef}
-          accept={accept}
-          className="hidden"
-          type="file"
-          onChange={handleFileInputChange}
-        />
+        <input ref={fileInputRef} accept={accept} className="hidden" type="file" onChange={handleFileInputChange} />
         {preview ? (
           <div className="relative w-full h-full flex flex-col items-center">
-            <img
-              alt="Uploaded preview"
-              className="w-full h-full object-contain max-h-64"
-              src={preview}
-            />
+            <img alt="Uploaded preview" className="w-full h-full object-contain max-h-64" src={preview} />
             <button
               aria-label="Remove image"
               className="
@@ -225,15 +214,10 @@ export const UploadZone = ({
           <div className="text-center">
             <div className="mb-4 flex justify-center">
               <div className="p-4 rounded-full bg-transparent">
-                <img
-                  alt="upload-icon"
-                  src="/assets/icons/upload.svg"
-                />
+                <img alt="upload-icon" src="/assets/icons/upload.svg" />
               </div>
             </div>
-            <p className="text-dark-100 text-[20px] mb-2">
-              Upload image into the selected area
-            </p>
+            <p className="text-dark-100 text-[20px] mb-2">Upload image into the selected area</p>
             <p className="text-dark-100 text-xs mt-4">
               {accept !== '*' && `Accepted formats: ${accept}`}
               {maxSizeMB && ` • Max size: ${maxSizeMB}MB`}

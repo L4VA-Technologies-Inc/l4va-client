@@ -2,13 +2,7 @@ import { SelectedAssetItem } from './SelectedAssetItem';
 
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 
-export const ContributionDetails = ({
-  contributionDetails,
-  selectedNFTs,
-  onRemove,
-  status,
-  onContribute,
-}) => (
+export const ContributionDetails = ({ contributionDetails, selectedNFTs, onRemove, status, onContribute }) => (
   <div className="w-full md:w-1/2 space-y-6 flex flex-col p-6 bg-slate-950 rounded-md">
     <div className="flex-1 space-y-6">
       <h2 className="text-xl text-center font-medium pb-2 border-b border-steel-800">Contribution Details</h2>
@@ -40,13 +34,7 @@ export const ContributionDetails = ({
         </h3>
         <div className="space-y-1 h-[300px] overflow-y-auto pr-2">
           {selectedNFTs.length > 0 ? (
-            selectedNFTs.map((asset) => (
-              <SelectedAssetItem
-                key={asset.id}
-                asset={asset}
-                onRemove={onRemove}
-              />
-            ))
+            selectedNFTs.map(asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={onRemove} />)
           ) : (
             <div className="text-center py-12 text-dark-100 bg-steel-850 rounded-lg">
               <p className="mb-2">No assets selected</p>
@@ -57,10 +45,7 @@ export const ContributionDetails = ({
       </div>
     </div>
     <div className="flex justify-center pt-4 border-t border-steel-800">
-      <PrimaryButton
-        disabled={selectedNFTs.length === 0 || status !== 'idle'}
-        onClick={onContribute}
-      >
+      <PrimaryButton disabled={selectedNFTs.length === 0 || status !== 'idle'} onClick={onContribute}>
         {status === 'idle' ? 'CONTRIBUTE' : status.toUpperCase()}
       </PrimaryButton>
     </div>

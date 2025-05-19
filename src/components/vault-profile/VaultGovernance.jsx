@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import {
-  CheckCircle, XCircle, ArrowRight, Check,
-} from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, Check } from 'lucide-react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { formatDate } from '@/utils/core.utils';
@@ -13,7 +11,8 @@ export const VaultGovernance = ({ vault }) => {
   const proposals = [
     {
       title: 'Vault Open Sale',
-      description: 'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
+      description:
+        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
       status: 'Closed',
       endDate: '2024-12-22T02:00:00Z',
       votes: {
@@ -23,7 +22,8 @@ export const VaultGovernance = ({ vault }) => {
     },
     {
       title: 'Vault Proposal',
-      description: 'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
+      description:
+        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
       status: 'Open',
       endDate: '2025-01-22T02:00:00Z',
       votes: {
@@ -33,13 +33,15 @@ export const VaultGovernance = ({ vault }) => {
     },
     {
       title: 'Distribution of Assets',
-      description: 'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
+      description:
+        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
       status: 'Upcoming',
       endDate: '2025-01-22T02:00:00Z',
     },
     {
       title: 'Distribution of Assets',
-      description: 'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
+      description:
+        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
       status: 'Closed',
       approved: true,
       endDate: '2025-01-22T02:00:00Z',
@@ -89,8 +91,10 @@ export const VaultGovernance = ({ vault }) => {
                 )}
                 <span
                   className={`px-3 py-1 rounded-full text-xs ${
-                    proposal.status === 'Closed' ? 'bg-red-900 text-red-600'
-                      : proposal.status === 'Open' ? 'bg-green-900 text-green-500'
+                    proposal.status === 'Closed'
+                      ? 'bg-red-900 text-red-600'
+                      : proposal.status === 'Open'
+                        ? 'bg-green-900 text-green-500'
                         : 'bg-yellow-800 text-yellow-400'
                   }`}
                 >
@@ -104,9 +108,7 @@ export const VaultGovernance = ({ vault }) => {
               {formatDate(proposal.endDate)}
             </div>
 
-            <p className="text-dark-100 mb-6 text-sm">
-              {proposal.description}
-            </p>
+            <p className="text-dark-100 mb-6 text-sm">{proposal.description}</p>
 
             {proposal.votes && (
               <div className="space-y-3 mb-6">
@@ -119,10 +121,7 @@ export const VaultGovernance = ({ vault }) => {
                     <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
                   </div>
                   <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${proposal.votes.yes}%` }}
-                    />
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${proposal.votes.yes}%` }} />
                   </div>
                 </div>
 
@@ -135,10 +134,7 @@ export const VaultGovernance = ({ vault }) => {
                     <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
                   </div>
                   <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-red-600 h-2 rounded-full"
-                      style={{ width: `${proposal.votes.no}%` }}
-                    />
+                    <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
                   </div>
                 </div>
               </div>

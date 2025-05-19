@@ -12,9 +12,9 @@ import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 
-const messageHex = (msg) =>
+const messageHex = msg =>
   Array.from(msg)
-    .map((char) => char.charCodeAt(0).toString(16).padStart(2, '0'))
+    .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
     .join('');
 
 export const LoginModal = () => {
@@ -50,14 +50,14 @@ export const LoginModal = () => {
     localStorage.setItem(TERMS_ACCEPTANCE_KEY, newValue.toString());
   };
 
-  const handleConnect = (walletKey) => {
+  const handleConnect = walletKey => {
     if (walletKey) {
       connect(walletKey, {
         onSuccess: () => {
           console.log('Successfully connected to wallet');
           setIsLoading(false);
         },
-        onError: (error) => {
+        onError: error => {
           console.error('Failed to connect to wallet:', error);
           setIsLoading(false);
         },
@@ -93,7 +93,7 @@ export const LoginModal = () => {
   const renderWalletsList = () => (
     <>
       <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-        {SUPPORTED_WALLETS.map((wallet) => (
+        {SUPPORTED_WALLETS.map(wallet => (
           <button
             key={wallet.key}
             className="
@@ -115,7 +115,7 @@ export const LoginModal = () => {
                 href={wallet.website}
                 rel="noopener noreferrer"
                 target="_blank"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <Download className="w-4 h-4" size={14} />
               </a>

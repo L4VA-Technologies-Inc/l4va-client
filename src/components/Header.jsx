@@ -23,7 +23,7 @@ export const Header = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
 
-  const handleNavClick = (e) => {
+  const handleNavClick = e => {
     if (!isAuthenticated) {
       e.preventDefault();
       openModal('LoginModal');
@@ -35,7 +35,7 @@ export const Header = () => {
       activeProps={{ className: 'text-orange-500' }}
       className="min-w-[140px] text-center transition hover:text-orange-500"
       to={to}
-      onClick={(e) => handleNavClick(to, e)}
+      onClick={e => handleNavClick(to, e)}
     >
       {label}
     </Link>
@@ -48,8 +48,8 @@ export const Header = () => {
           <img alt="L4VA Logo" className="w-[160px]" src="/assets/l4va-logo.webp" />
         </Link>
         <div className="hidden lg:flex items-center text-2xl font-satoshi font-bold">
-          <CurrencyDropdown options={options} value="ADA" onSelect={(value) => console.log(value)} />
-          {navLinks.map((link) => (
+          <CurrencyDropdown options={options} value="ADA" onSelect={value => console.log(value)} />
+          {navLinks.map(link => (
             <NavLink key={link.to} {...link} />
           ))}
         </div>

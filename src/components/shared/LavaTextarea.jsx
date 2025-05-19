@@ -14,7 +14,8 @@ export const LavaTextarea = ({
   <>
     {label ? (
       <div className="uppercase text-[20px] font-bold">
-        {required ? '*' : ''}{label}
+        {required ? '*' : ''}
+        {label}
       </div>
     ) : null}
     <div className="mt-4">
@@ -31,11 +32,7 @@ export const LavaTextarea = ({
         value={value || ''}
         onChange={onChange}
       />
-      {error && (
-        <p className="text-red-600 mt-1">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-red-600 mt-1">{error}</p>}
     </div>
   </>
 );
@@ -51,7 +48,7 @@ export const LavaSteelTextarea = ({
 }) => {
   const [inputValue, setInputValue] = useState(value || '');
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setInputValue(e.target.value);
     if (onChange) onChange(e.target.value);
   };
@@ -60,7 +57,8 @@ export const LavaSteelTextarea = ({
     <div>
       {label ? (
         <div className="text-[20px] font-semibold mb-4">
-          {required ? '*' : ''}{label}
+          {required ? '*' : ''}
+          {label}
         </div>
       ) : null}
       <textarea

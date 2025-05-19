@@ -7,11 +7,11 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[20px] font-medium mb-2">
-          Contribution:
-        </h2>
+        <h2 className="text-[20px] font-medium mb-2">Contribution:</h2>
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-dark-100">Total Raised: <span className="text-[#F97316]">95%</span></span>
+          <span className="text-dark-100">
+            Total Raised: <span className="text-[#F97316]">95%</span>
+          </span>
           <span className="text-dark-100">max 225</span>
         </div>
         <div className="h-2 rounded-full bg-steel-750 mb-4">
@@ -21,9 +21,7 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
           />
         </div>
         <div>
-          <h2 className="text-[20px] font-medium mb-2">
-            Acquire:
-          </h2>
+          <h2 className="text-[20px] font-medium mb-2">Acquire:</h2>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">Reserve</span>
             <span className="text-dark-100">${formatNum(50000)}</span>
@@ -34,4 +32,4 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
       <VaultSocialLinks socialLinks={socialLinks} />
     </div>
   );
-}; 
+};

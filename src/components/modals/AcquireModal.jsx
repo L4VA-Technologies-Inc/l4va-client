@@ -3,12 +3,7 @@ import { useState } from 'react';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { CurrencyDropdown } from '@/components/CurrencyDropdown';
 import { formatNum, formatCompactNumber } from '@/utils/core.utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export const AcquireModal = ({ onClose, vaultName }) => {
   const [acquireAmount, setAcquireAmount] = useState('130.25');
@@ -48,7 +43,7 @@ export const AcquireModal = ({ onClose, vaultName }) => {
                   className="bg-transparent text-4xl w-full outline-none font-bold"
                   type="text"
                   value={acquireAmount}
-                  onChange={(e) => setAcquireAmount(e.target.value)}
+                  onChange={e => setAcquireAmount(e.target.value)}
                 />
                 <CurrencyDropdown value={selectedCurrency} onSelect={setSelectedCurrency} />
               </div>

@@ -12,19 +12,34 @@ export const VAULT_STATUSES = {
 
 export const CREATE_VAULT_STEPS = [
   {
-    id: 1, title: 'Configure', status: 'in progress', hasErrors: false,
+    id: 1,
+    title: 'Configure',
+    status: 'in progress',
+    hasErrors: false,
   },
   {
-    id: 2, title: 'Contribute', status: 'pending', hasErrors: false,
+    id: 2,
+    title: 'Contribute',
+    status: 'pending',
+    hasErrors: false,
   },
   {
-    id: 3, title: 'Acquire', status: 'pending', hasErrors: false,
+    id: 3,
+    title: 'Acquire',
+    status: 'pending',
+    hasErrors: false,
   },
   {
-    id: 4, title: 'Govern', status: 'pending', hasErrors: false,
+    id: 4,
+    title: 'Govern',
+    status: 'pending',
+    hasErrors: false,
   },
   {
-    id: 5, title: 'Confirm', status: 'pending', hasErrors: false,
+    id: 5,
+    title: 'Confirm',
+    status: 'pending',
+    hasErrors: false,
   },
 ];
 
@@ -57,107 +72,100 @@ const socialLinkSchema = yup.object({
 
 export const vaultSchema = yup.object({
   // Step 1: Configure Vault
-  name: yup.string()
+  name: yup
+    .string()
     .min(3, 'Vault name must be at least 3 characters')
     .max(50, 'Vault name must be less than 50 characters')
     .required('Vault name is required'),
-  type: yup.string()
-    .required('Type is required'),
-  privacy: yup.string()
-    .required('Privacy setting is required'),
-  vaultTokenTicker: yup.string()
+  type: yup.string().required('Type is required'),
+  privacy: yup.string().required('Privacy setting is required'),
+  vaultTokenTicker: yup
+    .string()
     .matches(/^[A-Z0-9]{1,10}$/, 'Ticker must be 1-10 uppercase letters or numbers')
     .nullable(),
-  description: yup.string()
-    .max(500, 'Description must be less than 500 characters')
-    .optional(),
-  vaultImage: yup.string()
-    .required('Vault image is required'),
+  description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
+  vaultImage: yup.string().required('Vault image is required'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
 
   // Step 2: Asset Contribution
-  valueMethod: yup.string()
-    .required('Vault value method is required'),
-  contributionOpenWindowType: yup.string()
+  valueMethod: yup.string().required('Vault value method is required'),
+  contributionOpenWindowType: yup
+    .string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
     .required('Contribution window type is required'),
-  contributionOpenWindowTime: yup.number()
+  contributionOpenWindowTime: yup
+    .number()
     .typeError('Time is required')
     .when('contributionOpenWindowType', {
       is: 'custom',
-      then: (schema) => schema
-        .required('Time is required for custom window type'),
-      otherwise: (schema) => schema.nullable(),
+      then: schema => schema.required('Time is required for custom window type'),
+      otherwise: schema => schema.nullable(),
     }),
-  assetsWhitelist: yup.array().default([]),
-  contributionDuration: yup.number()
-    .typeError('Duration is required')
-    .required('Duration is required'),
+  assetsWhitelist: yup.array().default([]).required('Assets whitelist is required'),
+  contributionDuration: yup.number().typeError('Duration is required').required('Duration is required'),
 
   // Step 3: Acquire Window
-  acquireWindowDuration: yup.number()
+  acquireWindowDuration: yup
+    .number()
     .typeError('Acquire window duration is required')
     .required('Acquire window duration is required'),
-  acquireOpenWindowType: yup.string()
-    .required('Acquire window type is required'),
+  acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
-  tokensForAcquires: yup.number()
-    .typeError('Assets offered is required')
-    .required('Assets offered is required'),
-  acquireReserve: yup.number()
-    .typeError('Acquire reserve is required')
-    .required('Acquire reserve is required'),
-  liquidityPoolContribution: yup.number()
+  tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
+  acquireReserve: yup.number().typeError('Acquire reserve is required').required('Acquire reserve is required'),
+  liquidityPoolContribution: yup
+    .number()
     .typeError('Liquidity pool contribution is required')
     .required('Liquidity pool contribution is required'),
 
   // Step 4: Governance
-  ftTokenSupply: yup.number()
+  ftTokenSupply: yup
+    .number()
     .typeError('Token supply is required')
     .required('Token supply is required')
     .integer('Must be an integer')
     .min(1, 'Must be greater than 0')
     .max(100000000, 'Must be less than or equal to 100,000,000'),
-  ftTokenDecimals: yup.number()
+  ftTokenDecimals: yup
+    .number()
     .typeError('Token decimals is required')
     .required('Token decimals is required')
     .integer('Must be an integer')
     .min(1, 'Must be at least 1')
     .max(9, 'Must be at most 9'),
-  ftTokenImg: yup.string()
-    .required('Token image is required'),
-  terminationType: yup.string()
-    .required('Termination type is required'),
-  creationThreshold: yup.number()
+  ftTokenImg: yup.string().required('Token image is required'),
+  terminationType: yup.string().required('Termination type is required'),
+  creationThreshold: yup
+    .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required'),
-  startThreshold: yup.number()
-    .typeError('Start threshold is required')
-    .required('Start threshold is required'),
-  voteThreshold: yup.number()
-    .typeError('Vote threshold is required')
-    .required('Vote threshold is required'),
-  executionThreshold: yup.number()
+  startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
+  voteThreshold: yup.number().typeError('Vote threshold is required').required('Vote threshold is required'),
+  executionThreshold: yup
+    .number()
     .typeError('Execution threshold is required')
     .required('Execution threshold is required'),
-  cosigningThreshold: yup.number()
+  cosigningThreshold: yup
+    .number()
     .typeError('Cosigning threshold is required')
     .required('Cosigning threshold is required'),
 
   // Programmed specific fields
-  timeElapsedIsEqualToTime: yup.number()
+  timeElapsedIsEqualToTime: yup
+    .number()
     .typeError('Time elapsed is required')
     .when('terminationType', {
       is: 'programmed',
-      then: (schema) => schema.required('Time elapsed is required for programmed termination'),
-      otherwise: (schema) => schema.nullable(),
+      then: schema => schema.required('Time elapsed is required for programmed termination'),
+      otherwise: schema => schema.nullable(),
     }),
-  vaultAppreciation: yup.number()
+  vaultAppreciation: yup
+    .number()
     .typeError('Vault appreciation is required')
     .when('terminationType', {
       is: 'programmed',
-      then: (schema) => schema.required('Vault appreciation is required for programmed termination'),
-      otherwise: (schema) => schema.nullable(),
+      then: schema => schema.required('Vault appreciation is required for programmed termination'),
+      otherwise: schema => schema.nullable(),
     }),
 });
 
@@ -206,8 +214,27 @@ export const initialVaultState = {
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks'],
   2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
-  3: ['acquireWindowDuration', 'acquireOpenWindowType', 'acquireOpenWindowTime', 'tokensForAcquires', 'acquireReserve', 'liquidityPoolContribution'],
-  4: ['ftTokenSupply', 'ftTokenDecimals', 'ftTokenImg', 'terminationType', 'creationThreshold', 'startThreshold', 'voteThreshold', 'executionThreshold', 'cosigningThreshold', 'timeElapsedIsEqualToTime', 'vaultAppreciation'],
+  3: [
+    'acquireWindowDuration',
+    'acquireOpenWindowType',
+    'acquireOpenWindowTime',
+    'tokensForAcquires',
+    'acquireReserve',
+    'liquidityPoolContribution',
+  ],
+  4: [
+    'ftTokenSupply',
+    'ftTokenDecimals',
+    'ftTokenImg',
+    'terminationType',
+    'creationThreshold',
+    'startThreshold',
+    'voteThreshold',
+    'executionThreshold',
+    'cosigningThreshold',
+    'timeElapsedIsEqualToTime',
+    'vaultAppreciation',
+  ],
   5: [],
 };
 

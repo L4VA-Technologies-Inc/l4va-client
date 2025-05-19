@@ -6,7 +6,7 @@ export const useCountAnimation = (endValue, duration = 2000) => {
   const startTime = useRef(null);
 
   useEffect(() => {
-    const parseValue = (val) => {
+    const parseValue = val => {
       if (typeof val === 'string') {
         return Number.parseFloat(val.replace(/[$,]/g, ''));
       }
@@ -15,7 +15,7 @@ export const useCountAnimation = (endValue, duration = 2000) => {
 
     const endVal = parseValue(endValue);
 
-    const animate = (timestamp) => {
+    const animate = timestamp => {
       if (!startTime.current) startTime.current = timestamp;
       const progress = timestamp - startTime.current;
 

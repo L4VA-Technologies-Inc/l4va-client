@@ -57,11 +57,12 @@ export const CreateVaultForm = ({ vault }) => {
       prevSteps.map(step => {
         if (step.id === currentStep) {
           return { ...step, status: 'completed' };
-        } if (step.id === nextStep) {
+        }
+        if (step.id === nextStep) {
           return { ...step, status: 'in progress' };
         }
         return step;
-      }),
+      })
     );
   };
 
@@ -73,30 +74,32 @@ export const CreateVaultForm = ({ vault }) => {
         prevSteps.map(step => {
           if (step.id === currentStep) {
             return { ...step, status: 'pending' };
-          } if (step.id === prevStep) {
+          }
+          if (step.id === prevStep) {
             return { ...step, status: 'in progress' };
           }
           return step;
-        }),
+        })
       );
     }
   };
 
-  const updateStepErrorIndicators = (currentErrors) => {
+  const updateStepErrorIndicators = currentErrors => {
     const errorFields = Object.keys(currentErrors);
 
     setSteps(prevSteps =>
       prevSteps.map(step => ({
         ...step,
         hasErrors: errorFields.some(field => stepFields[step.id].includes(field)),
-      })),
+      }))
     );
   };
 
-  const updateField = (fieldName, value) => setVaultData({
-    ...vaultData,
-    [fieldName]: value,
-  });
+  const updateField = (fieldName, value) =>
+    setVaultData({
+      ...vaultData,
+      [fieldName]: value,
+    });
 
   const onSubmit = async () => {
     if (currentStep < steps.length) {
@@ -109,7 +112,7 @@ export const CreateVaultForm = ({ vault }) => {
         const formattedData = formatVaultData(vaultData);
         setErrors({});
 
-        const {data} = await VaultsApiProvider.createVault(formattedData);
+        const { data } = await VaultsApiProvider.createVault(formattedData);
 
         const signature = await wallet.handler.signTx(data.presignedTx, true);
 
@@ -117,7 +120,7 @@ export const CreateVaultForm = ({ vault }) => {
           vaultId: data.vaultId,
           transaction: data.presignedTx,
           signatures: [signature],
-        })
+        });
         toast.success('Vault launched successfully');
       } catch (err) {
         console.log(err);
@@ -131,7 +134,7 @@ export const CreateVaultForm = ({ vault }) => {
     }
   };
 
-  const handleStepClick = (stepId) => {
+  const handleStepClick = stepId => {
     if (stepId === currentStep) return;
     setCurrentStep(stepId);
     scrollToTop();
@@ -142,14 +145,15 @@ export const CreateVaultForm = ({ vault }) => {
             ...step,
             status: step.status === 'in progress' ? 'pending' : step.status,
           };
-        } if (step.id === stepId) {
+        }
+        if (step.id === stepId) {
           return {
             ...step,
             status: 'in progress',
           };
         }
         return step;
-      }),
+      })
     );
   };
 
@@ -168,49 +172,18 @@ export const CreateVaultForm = ({ vault }) => {
     }
   };
 
-  const renderStepContent = (step) => {
+  const renderStepContent = step => {
     switch (step) {
       case 1:
-        return (
-          <ConfigureVault
-            data={vaultData}
-            errors={errors}
-            setData={setVaultData}
-            updateField={updateField}
-          />
-        );
+        return <ConfigureVault data={vaultData} errors={errors} setData={setVaultData} updateField={updateField} />;
       case 2:
-        return (
-          <AssetContribution
-            data={vaultData}
-            errors={errors}
-            setData={setVaultData}
-            updateField={updateField}
-          />
-        );
+        return <AssetContribution data={vaultData} errors={errors} setData={setVaultData} updateField={updateField} />;
       case 3:
-        return (
-          <AcquireWindow
-            data={vaultData}
-            errors={errors}
-            updateField={updateField}
-          />
-        );
+        return <AcquireWindow data={vaultData} errors={errors} updateField={updateField} />;
       case 4:
-        return (
-          <Governance
-            data={vaultData}
-            errors={errors}
-            updateField={updateField}
-          />
-        );
+        return <Governance data={vaultData} errors={errors} updateField={updateField} />;
       case 5:
-        return (
-          <Launch
-            data={vaultData}
-            setCurrentStep={setCurrentStep}
-          />
-        );
+        return <Launch data={vaultData} setCurrentStep={setCurrentStep} />;
       default:
         return null;
     }
@@ -219,11 +192,7 @@ export const CreateVaultForm = ({ vault }) => {
   const renderButtons = () => {
     if (currentStep === 5) {
       return (
-        <PrimaryButton
-          className="uppercase"
-          disabled={isSubmitting}
-          onClick={onSubmit}
-        >
+        <PrimaryButton className="uppercase" disabled={isSubmitting} onClick={onSubmit}>
           {isSubmitting ? 'Launching...' : 'Confirm & launch'}
         </PrimaryButton>
       );
@@ -231,10 +200,7 @@ export const CreateVaultForm = ({ vault }) => {
     return (
       <>
         {currentStep > 1 && (
-          <SecondaryButton
-            disabled={isSubmitting || isSavingDraft}
-            onClick={handlePreviousStep}
-          >
+          <SecondaryButton disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
@@ -245,17 +211,14 @@ export const CreateVaultForm = ({ vault }) => {
         >
           Save for later
         </SecondaryButton>
-        <PrimaryButton
-          disabled={isSubmitting || isSavingDraft}
-          onClick={handleNextStep}
-        >
+        <PrimaryButton disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
           <ChevronRight size={24} />
         </PrimaryButton>
       </>
     );
   };
 
-  const updateValuationType = useCallback((value) => {
+  const updateValuationType = useCallback(value => {
     setVaultData(prevData => ({ ...prevData, valuationType: value }));
   }, []);
 
@@ -269,10 +232,7 @@ export const CreateVaultForm = ({ vault }) => {
     <div className="pb-10">
       <div className="relative flex items-center">
         {steps.map((step, index) => (
-          <div
-            key={`step-${step.id}`}
-            className="flex-1 flex flex-col items-center relative"
-          >
+          <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
               className="focus:outline-none flex flex-col items-center"
               type="button"
@@ -280,44 +240,28 @@ export const CreateVaultForm = ({ vault }) => {
             >
               {step.hasErrors && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
-                  <span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
-                    !
-                  </span>
+                  <span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">!</span>
                 </div>
               )}
               <div className="relative z-10">
-                <LavaStepCircle
-                  isActive={currentStep === step.id}
-                  number={step.id}
-                  status={step.status}
-                />
+                <LavaStepCircle isActive={currentStep === step.id} number={step.id} status={step.status} />
               </div>
-              <p className="uppercase font-russo text-sm text-dark-100 mt-8">
-                {step.status}
-              </p>
-              <p className="font-bold text-2xl whitespace-nowrap">
-                {step.title}
-              </p>
+              <p className="uppercase font-russo text-sm text-dark-100 mt-8">{step.status}</p>
+              <p className="font-bold text-2xl whitespace-nowrap">{step.title}</p>
             </button>
             {index < steps.length - 1 && (
               <div
-                className={
-                  `absolute top-[25%] left-[calc(50%+55px)] w-[124px] h-[3px] 
+                className={`absolute top-[25%] left-[calc(50%+55px)] w-[124px] h-[3px] 
                   ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}
-                `
-                }
+                `}
                 style={{ transform: 'translateX(0)' }}
               />
             )}
           </div>
         ))}
       </div>
-      <div className="mt-[100px]">
-        {renderStepContent(currentStep)}
-      </div>
-      <div className="my-[60px] flex gap-[30px] justify-center">
-        {renderButtons()}
-      </div>
+      <div className="mt-[100px]">{renderStepContent(currentStep)}</div>
+      <div className="my-[60px] flex gap-[30px] justify-center">{renderButtons()}</div>
     </div>
   );
 };

@@ -13,26 +13,12 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
   return (
     <div className="flex items-center gap-2 mb-8">
       <Avatar className="h-20 w-20 bg-steel-950 cursor-pointer">
-        {user?.profileImage && (
-          <AvatarImage
-            alt="Profile"
-            className="object-cover"
-            src={user.profileImage}
-          />
-        )}
-        <AvatarFallback className="text-white font-medium">
-          {getAvatarLetter(user)}
-        </AvatarFallback>
+        {user?.profileImage && <AvatarImage alt="Profile" className="object-cover" src={user.profileImage} />}
+        <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="font-medium text-[20px] mb-2">
-          {getDisplayName(user)}
-        </p>
-        <button
-          className="flex items-center gap-2 text-dark-100"
-          type="button"
-          onClick={handleCopyAddress}
-        >
+        <p className="font-medium text-[20px] mb-2">{getDisplayName(user)}</p>
+        <button className="flex items-center gap-2 text-dark-100" type="button" onClick={handleCopyAddress}>
           {substringAddress(user.address)}
           <Copy size={20} />
         </button>

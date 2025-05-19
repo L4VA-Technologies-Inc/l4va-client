@@ -18,14 +18,14 @@ export const MenuDrawer = ({ navLinks }) => {
       <div
         className={clsx(
           'fixed inset-0 bg-black/50 z-50 transition-all duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none',
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         onClick={() => setIsOpen(!isOpen)}
       />
       <div
         className={clsx(
           'fixed top-0 right-0 w-64 h-full bg-steel-950 transform transition-all duration-300 ease-out z-50',
-          isOpen ? 'translate-x-0' : 'translate-x-full',
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         <div className="p-6">
@@ -39,7 +39,7 @@ export const MenuDrawer = ({ navLinks }) => {
             </button>
           </div>
           <div className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
+            {navLinks.map(link => (
               <Link
                 key={link.to}
                 className="text-2xl font-satoshi font-bold text-white hover:text-orange-500 transition-colors"

@@ -1,26 +1,24 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const Faq = () => {
   const steps = [
     {
       number: 1,
       title: 'Create',
-      description: 'Create a new vault by locking the required $VLRM, then configure the vault settings and governance options.',
+      description:
+        'Create a new vault by locking the required $VLRM, then configure the vault settings and governance options.',
     },
     {
       number: 2,
       title: 'Contribute',
-      description: 'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault FT.',
+      description:
+        'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault FT.',
     },
     {
       number: 3,
       title: 'Acquire',
-      description: 'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
+      description:
+        'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
     },
     {
       number: 4,
@@ -36,7 +34,8 @@ export const Faq = () => {
     },
     {
       question: 'What can I do with a vault?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel leo non ante egestas tincidunt lacinia at urna. Vestibulum tempor, erat id vestibulum.',
+      answer:
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel leo non ante egestas tincidunt lacinia at urna. Vestibulum tempor, erat id vestibulum.',
     },
     {
       question: 'How do I create a vault?',
@@ -70,17 +69,20 @@ export const Faq = () => {
                 HOW TO PARTICIPATE
               </h2>
               <p className="text-base sm:text-lg lg:text-[20px]">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent congue malesuada turpis ut lacinia. Aenean vel rhoncus nisl, nec molestie ligula.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent congue malesuada turpis ut lacinia.
+                Aenean vel rhoncus nisl, nec molestie ligula.
               </p>
               <p className="text-base sm:text-lg lg:text-[20px]">
-                Vivamus ut porta mi. Integer sodales porta nunc, commodo nunc. Morbi nec feugiat diam. Vivamus pretium pulvinar tortor enim.
+                Vivamus ut porta mi. Integer sodales porta nunc, commodo nunc. Morbi nec feugiat diam. Vivamus pretium
+                pulvinar tortor enim.
               </p>
               <p className="text-base sm:text-lg lg:text-[20px]">
-                Curabitur mollis scelerisque mi id pulvinar. Mauris mollis libero est, at facilisis nisl vulputat vitae. Donec ut nibh nec massa pulvinar elementum. Nunc sagittis.
+                Curabitur mollis scelerisque mi id pulvinar. Mauris mollis libero est, at facilisis nisl vulputat vitae.
+                Donec ut nibh nec massa pulvinar elementum. Nunc sagittis.
               </p>
             </div>
             <div className="space-y-4 sm:space-y-6">
-              {steps.map((step) => (
+              {steps.map(step => (
                 <div
                   key={step.number}
                   className="w-full lg:w-[600px] flex flex-col sm:flex-row items-center sm:items-start p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]"
@@ -89,12 +91,8 @@ export const Faq = () => {
                     {step.number}
                   </div>
                   <div className="text-center sm:text-left">
-                    <h3 className="text-xl sm:text-2xl lg:text-[32px] font-bold mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-base sm:text-lg lg:text-[20px] text-dark-100">
-                      {step.description}
-                    </p>
+                    <h3 className="text-xl sm:text-2xl lg:text-[32px] font-bold mb-2">{step.title}</h3>
+                    <p className="text-base sm:text-lg lg:text-[20px] text-dark-100">{step.description}</p>
                   </div>
                 </div>
               ))}

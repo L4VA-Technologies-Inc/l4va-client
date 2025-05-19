@@ -73,7 +73,13 @@ export const VaultProfileView = ({ vault }) => {
         />
         <p className="text-[20px] mb-2">{getCountdownName(vault)}</p>
         <div className="mb-6">
-          <VaultCountdown endTime={new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration} />
+          <VaultCountdown
+            endTime={
+              vault.vaultStatus === 'contribution'
+                ? new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration
+                : new Date(vault.contributionPhaseStart).getTime()
+            }
+          />
         </div>
         <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
       </div>

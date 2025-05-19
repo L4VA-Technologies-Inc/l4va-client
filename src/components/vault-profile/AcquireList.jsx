@@ -7,16 +7,13 @@ export const AcquireList = ({ acquires = [] }) => {
       <div
         className="relative flex items-center justify-between p-4 rounded-lg"
         style={{
-          background: 'linear-gradient(90deg, #2D3049 0%, rgba(45, 48, 73, 0.95) 70%, rgba(45, 48, 73, 0.9) 100%), linear-gradient(90deg, rgba(34, 197, 94, 0) 70%, rgba(34, 197, 94, 0.3) 100%)',
+          background:
+            'linear-gradient(90deg, #2D3049 0%, rgba(45, 48, 73, 0.95) 70%, rgba(45, 48, 73, 0.9) 100%), linear-gradient(90deg, rgba(34, 197, 94, 0) 70%, rgba(34, 197, 94, 0.3) 100%)',
           backgroundBlendMode: 'overlay',
         }}
       >
-        <div className="text-dark-100 text-2xl">
-          Acquire / Assets Value (%)
-        </div>
-        <div className="text-2xl font-semibold">
-          {totalValuePercentage}
-        </div>
+        <div className="text-dark-100 text-2xl">Acquire / Assets Value (%)</div>
+        <div className="text-2xl font-semibold">{totalValuePercentage}</div>
       </div>
       <div className="grid grid-cols-4 px-4 py-4 text-sm text-dark-100">
         <div>Name</div>

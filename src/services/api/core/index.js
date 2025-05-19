@@ -26,15 +26,11 @@ export class CoreApiProvider {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await axiosInstance.post(
-      CoreConfigProvider.uploadImage(),
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+    const response = await axiosInstance.post(CoreConfigProvider.uploadImage(), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-    );
+    });
     return response;
   }
 
@@ -42,15 +38,11 @@ export class CoreApiProvider {
     const formData = new FormData();
     formData.append('csv', file);
 
-    const response = await axiosInstance.post(
-      CoreConfigProvider.handleCsv(),
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+    const response = await axiosInstance.post(CoreConfigProvider.handleCsv(), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-    );
+    });
     return response;
   }
 }

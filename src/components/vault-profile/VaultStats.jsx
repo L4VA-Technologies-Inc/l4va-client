@@ -1,11 +1,6 @@
 import { formatNum } from '@/utils/core.utils';
 
-export const VaultStats = ({
-  access,
-  reserve,
-  acquired,
-  invAssetVal,
-}) => {
+export const VaultStats = ({ access, reserve, acquired, invAssetVal }) => {
   const stats = [
     {
       label: 'Access',

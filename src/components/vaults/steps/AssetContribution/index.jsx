@@ -2,11 +2,7 @@ import { Public } from '@/components/vaults/steps/AssetContribution/Public';
 import { Private } from '@/components/vaults/steps/AssetContribution/Private';
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
-export const AssetContribution = ({
-  data,
-  errors = {},
-  updateField,
-}) => {
+export const AssetContribution = ({ data, errors = {}, updateField }) => {
   const vaultPrivacy = data.privacy;
 
   const props = {
@@ -17,7 +13,5 @@ export const AssetContribution = ({
   if (vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC) {
     return <Public {...props} />;
   }
-  return (
-    <Private {...props} />
-  );
+  return <Private {...props} />;
 };

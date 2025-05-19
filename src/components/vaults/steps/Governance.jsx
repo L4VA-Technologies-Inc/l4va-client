@@ -7,12 +7,8 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
-export const Governance = ({
-  data,
-  errors = {},
-  updateField,
-}) => {
-  const handlePercentageChange = (value) => {
+export const Governance = ({ data, errors = {}, updateField }) => {
+  const handlePercentageChange = value => {
     const numericValue = value.replace(/[^0-9.]/g, '');
     const parts = numericValue.split('.');
     const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
@@ -24,7 +20,7 @@ export const Governance = ({
     return sanitizedValue === '' ? '' : +sanitizedValue;
   };
 
-  const handleNumChange = (e) => {
+  const handleNumChange = e => {
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);
     if (sanitizedValue !== null) {
@@ -32,7 +28,7 @@ export const Governance = ({
     }
   };
 
-  const handleSupplyChange = (e) => {
+  const handleSupplyChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9]/g, '');
 
@@ -44,7 +40,7 @@ export const Governance = ({
     updateField(name, +numericValue);
   };
 
-  const handleDecimalsChange = (e) => {
+  const handleDecimalsChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9]/g, '');
 
@@ -84,27 +80,21 @@ export const Governance = ({
             required
             image={data.ftTokenImg}
             label="FT Token Image"
-            setImage={(image) => updateField('ftTokenImg', image)}
+            setImage={image => updateField('ftTokenImg', image)}
           />
-          {errors.ftTokenImg && (
-            <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>
-          )}
+          {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
         </div>
       </div>
       <div className="px-[36px]">
         <div>
-          <div className="uppercase text-[20px] font-bold mb-4">
-            TERMINATION TYPE
-          </div>
+          <div className="uppercase text-[20px] font-bold mb-4">TERMINATION TYPE</div>
           <LavaRadio
             name="terminationType"
             options={TERMINATION_TYPE_OPTIONS}
             value={data.terminationType || 'dao'}
-            onChange={(value) => updateField('terminationType', value)}
+            onChange={value => updateField('terminationType', value)}
           />
-          {errors.terminationType && (
-            <p className="text-red-600 mt-1">{errors.terminationType}</p>
-          )}
+          {errors.terminationType && <p className="text-red-600 mt-1">{errors.terminationType}</p>}
         </div>
         {data.terminationType === 'programmed' && (
           <>
@@ -115,7 +105,7 @@ export const Governance = ({
               <div className="mt-4">
                 <LavaIntervalPicker
                   value={data.timeElapsedIsEqualToTime}
-                  onChange={(date) => updateField('timeElapsedIsEqualToTime', date)}
+                  onChange={date => updateField('timeElapsedIsEqualToTime', date)}
                 />
                 {errors.timeElapsedIsEqualToTime && (
                   <p className="text-red-600 mt-1">{errors.timeElapsedIsEqualToTime}</p>

@@ -1,10 +1,4 @@
-export const SecondaryButton = ({
-  type = 'button',
-  children,
-  disabled = false,
-  className = '',
-  onClick,
-}) => (
+export const SecondaryButton = ({ type = 'button', children, disabled = false, className = '', onClick }) => (
   <button
     className={`
       h-[60px]

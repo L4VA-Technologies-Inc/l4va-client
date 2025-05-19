@@ -61,6 +61,8 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress, onClose 
 
       const formattedAssets = [adaAsset];
 
+      console.log(data);
+
       if (data?.assets) {
         const otherAssets = data.assets
           .map(asset => {

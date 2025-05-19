@@ -25,23 +25,18 @@ export const CurrencyDropdown = () => {
           className={clsx(
             'w-[125px] rounded-t-lg px-6 py-4 border-2  text-[20px]',
             isOpen && 'border-transparent bg-steel-950',
-            !isOpen && 'border-white/15 bg-transparent/5 backdrop-blur-sm rounded-b-lg',
+            !isOpen && 'border-white/15 bg-transparent/5 backdrop-blur-sm rounded-b-lg'
           )}
           type="button"
         >
           <div className="flex items-center justify-between">
-            <span>
-              {options.find(option => option.value === selected)?.label}
-            </span>
+            <span>{options.find(option => option.value === selected)?.label}</span>
             {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </div>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-[125px] p-0 bg-steel-950 backdrop-blur-sm border-0"
-        style={{ marginTop: '0' }}
-      >
-        {options.map((option) => (
+      <DropdownMenuContent className="w-[125px] p-0 bg-steel-950 backdrop-blur-sm border-0" style={{ marginTop: '0' }}>
+        {options.map(option => (
           <DropdownMenuItem
             key={option.value}
             className="px-6 py-4 cursor-pointer hover:bg-slate-950 focus:bg-slate-950"
@@ -51,14 +46,8 @@ export const CurrencyDropdown = () => {
             }}
           >
             <div className="flex items-center gap-2">
-              <img
-                alt={option.value}
-                className="h-6 w-6"
-                src={option.icon}
-              />
-              <span className="text-[20px]">
-                {option.label}
-              </span>
+              <img alt={option.value} className="h-6 w-6" src={option.icon} />
+              <span className="text-[20px]">{option.label}</span>
             </div>
           </DropdownMenuItem>
         ))}

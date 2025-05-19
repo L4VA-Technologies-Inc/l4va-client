@@ -8,12 +8,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmationModal';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export const CreateProposalModal = ({ onClose, vaultName }) => {
   const [proposalTitle, setProposalTitle] = useState('');
@@ -43,10 +38,10 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
     ]);
   };
 
-  const handleRemoveOption = (id) => setOptions(options.filter((option) => option.id !== id));
+  const handleRemoveOption = id => setOptions(options.filter(option => option.id !== id));
 
   const handleOptionChange = (id, field, value) => {
-    setOptions(options.map((option) => (option.id === id ? { ...option, [field]: value } : option)));
+    setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
   };
 
   const executionOptions = [
@@ -99,13 +94,13 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                 label="Proposal Title"
                 placeholder="Enter proposal title"
                 value={proposalTitle}
-                onChange={(value) => setProposalTitle(value)}
+                onChange={value => setProposalTitle(value)}
               />
               <LavaSteelTextarea
                 label="Proposal Description"
                 placeholder="Enter proposal description"
                 value={proposalDescription}
-                onChange={(value) => setProposalDescription(value)}
+                onChange={value => setProposalDescription(value)}
               />
               <div>
                 <div>
@@ -115,7 +110,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                       options={executionOptions}
                       placeholder="Buying/Selling"
                       value={executionOption}
-                      onChange={(value) => setExecutionOption(value)}
+                      onChange={value => setExecutionOption(value)}
                     />
                     <button
                       className="
@@ -156,7 +151,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                                 options={assetOptions}
                                 placeholder="Select asset"
                                 value={option.assetName}
-                                onChange={(value) => handleOptionChange(option.id, 'assetName', value)}
+                                onChange={value => handleOptionChange(option.id, 'assetName', value)}
                               />
                             </div>
                             <div>
@@ -165,7 +160,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                                 options={execOptions}
                                 placeholder="Select type"
                                 value={option.exec}
-                                onChange={(value) => handleOptionChange(option.id, 'exec', value)}
+                                onChange={value => handleOptionChange(option.id, 'exec', value)}
                               />
                             </div>
                             <div>
@@ -173,7 +168,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                               <LavaSteelInput
                                 placeholder="Enter quantity"
                                 value={option.quantity}
-                                onChange={(value) => handleOptionChange(option.id, 'quantity', value)}
+                                onChange={value => handleOptionChange(option.id, 'quantity', value)}
                               />
                             </div>
                             <div>
@@ -182,7 +177,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                                 options={sellTypeOptions}
                                 placeholder="Select type"
                                 value={option.sellType}
-                                onChange={(value) => handleOptionChange(option.id, 'sellType', value)}
+                                onChange={value => handleOptionChange(option.id, 'sellType', value)}
                               />
                             </div>
                           </div>
@@ -193,7 +188,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                                 options={methodOptions}
                                 placeholder="Select method"
                                 value={option.method}
-                                onChange={(value) => handleOptionChange(option.id, 'method', value)}
+                                onChange={value => handleOptionChange(option.id, 'method', value)}
                               />
                             </div>
                             <div>
@@ -201,7 +196,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                               <LavaSteelInput
                                 placeholder="Enter duration"
                                 value={option.duration}
-                                onChange={(value) => handleOptionChange(option.id, 'duration', value)}
+                                onChange={value => handleOptionChange(option.id, 'duration', value)}
                               />
                             </div>
                             <div>
@@ -210,7 +205,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                                 options={marketOptions}
                                 placeholder="Select market"
                                 value={option.market}
-                                onChange={(value) => handleOptionChange(option.id, 'market', value)}
+                                onChange={value => handleOptionChange(option.id, 'market', value)}
                               />
                             </div>
                             <div>
@@ -218,7 +213,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                               <LavaSteelInput
                                 placeholder="Enter price"
                                 value={option.price}
-                                onChange={(value) => handleOptionChange(option.id, 'price', value)}
+                                onChange={value => handleOptionChange(option.id, 'price', value)}
                               />
                             </div>
                           </div>
@@ -240,15 +235,11 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                 checked={abstain}
                 label="Abstain"
                 labelClassName="text-[20px]"
-                onChange={(e) => setAbstain(e.target.checked)}
+                onChange={e => setAbstain(e.target.checked)}
               />
               <div>
                 <p className="text-[20px] font-medium mb-4">Proposal Start</p>
-                <LavaDatePicker
-                  value={proposalEndDate}
-                  variant="steel"
-                  onChange={(value) => setProposalEndDate(value)}
-                />
+                <LavaDatePicker value={proposalEndDate} variant="steel" onChange={value => setProposalEndDate(value)} />
               </div>
             </div>
           </div>

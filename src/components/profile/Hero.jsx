@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import {
-  Camera, Copy, Edit, Check, X,
-} from 'lucide-react';
+import { Camera, Copy, Edit, Check, X } from 'lucide-react';
 
 import { CoreApiProvider } from '@/services/api/core';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -11,19 +9,11 @@ import { useAuth } from '@/lib/auth/auth';
 import { substringAddress } from '@/utils/core.utils';
 
 const BackgroundImage = ({ bgImage, onClick }) => (
-  <button
-    className="w-full h-full group relative"
-    type="button"
-    onClick={onClick}
-  >
+  <button className="w-full h-full group relative" type="button" onClick={onClick}>
     <div className="relative w-full h-full">
       {bgImage ? (
         <>
-          <img
-            alt="Profile Background"
-            className="w-full h-full object-cover"
-            src={bgImage}
-          />
+          <img alt="Profile Background" className="w-full h-full object-cover" src={bgImage} />
           <div className="hover-overlay hover-overlay-gradient">
             <div className="flex items-center gap-2 font-medium">
               <Camera size={20} />
@@ -51,17 +41,9 @@ const BackgroundImage = ({ bgImage, onClick }) => (
   </button>
 );
 
-const ProfileAvatar = ({
-  avatar,
-  onClick,
-  inputRef,
-  onAvatarChange,
-}) => (
+const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange }) => (
   <>
-    <Avatar
-      className="h-[200px] w-[200px] cursor-pointer group relative"
-      onClick={onClick}
-    >
+    <Avatar className="h-[200px] w-[200px] cursor-pointer group relative" onClick={onClick}>
       {avatar ? (
         <>
           <AvatarImage alt="Profile" className="object-cover" src={avatar} />
@@ -86,57 +68,26 @@ const ProfileAvatar = ({
         </AvatarFallback>
       )}
     </Avatar>
-    <input
-      ref={inputRef}
-      accept="image/*"
-      className="hidden"
-      type="file"
-      onChange={onAvatarChange}
-    />
+    <input ref={inputRef} accept="image/*" className="hidden" type="file" onChange={onAvatarChange} />
   </>
 );
 
-const ProfileName = ({
-  isEditing,
-  name,
-  onEdit,
-  onSave,
-  onCancel,
-  onChange,
-  onKeyDown,
-  inputRef,
-}) => (
+const ProfileName = ({ isEditing, name, onEdit, onSave, onCancel, onChange, onKeyDown, inputRef }) => (
   <div className="flex items-center gap-2">
     {isEditing ? (
       <div className="flex items-center gap-2">
-        <Input
-          ref={inputRef}
-          className="w-[200px]"
-          value={name}
-          onChange={onChange}
-          onKeyDown={onKeyDown}
-        />
-        <button
-          className="text-green-500 hover:text-green-400 transition-colors"
-          onClick={onSave}
-        >
+        <Input ref={inputRef} className="w-[200px]" value={name} onChange={onChange} onKeyDown={onKeyDown} />
+        <button className="text-green-500 hover:text-green-400 transition-colors" onClick={onSave}>
           <Check size={20} />
         </button>
-        <button
-          className="text-red-500 hover:text-red-400 transition-colors"
-          onClick={onCancel}
-        >
+        <button className="text-red-500 hover:text-red-400 transition-colors" onClick={onCancel}>
           <X size={20} />
         </button>
       </div>
     ) : (
       <>
         <h1 className="text-2xl font-medium">{name}</h1>
-        <button
-          className="text-dark-100 hover:text-white transition-colors"
-          type="button"
-          onClick={onEdit}
-        >
+        <button className="text-dark-100 hover:text-white transition-colors" type="button" onClick={onEdit}>
           <Edit size={20} />
         </button>
       </>
@@ -159,9 +110,7 @@ export const Hero = () => {
   const handleFileUpload = async (file, type) => {
     try {
       const { data } = await CoreApiProvider.uploadImage(file);
-      const updateData = type === 'avatar'
-        ? { profileImage: data.url }
-        : { bannerImage: data.url };
+      const updateData = type === 'avatar' ? { profileImage: data.url } : { bannerImage: data.url };
 
       await CoreApiProvider.updateProfile(updateData);
       await checkAuth();
@@ -179,7 +128,7 @@ export const Hero = () => {
     }
   };
 
-  const handleFileChange = (type) => async (e) => {
+  const handleFileChange = type => async e => {
     const file = e.target.files[0];
     if (file) {
       await handleFileUpload(file, type);
@@ -216,7 +165,7 @@ export const Hero = () => {
     setIsEditingName(false);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     if (e.key === 'Enter' && !isUpdating) handleNameSave();
     else if (e.key === 'Escape') handleNameCancel();
   };
@@ -230,21 +179,10 @@ export const Hero = () => {
 
   return (
     <div className="mb-40">
-      <h1 className="font-russo text-[40px] uppercase my-8 text-center">
-        My Profile
-      </h1>
+      <h1 className="font-russo text-[40px] uppercase my-8 text-center">My Profile</h1>
       <div className="relative w-full h-[384px]">
-        <BackgroundImage
-          bgImage={bgImage}
-          onClick={() => bgInputRef.current.click()}
-        />
-        <input
-          ref={bgInputRef}
-          accept="image/*"
-          className="hidden"
-          type="file"
-          onChange={handleFileChange('banner')}
-        />
+        <BackgroundImage bgImage={bgImage} onClick={() => bgInputRef.current.click()} />
+        <input ref={bgInputRef} accept="image/*" className="hidden" type="file" onChange={handleFileChange('banner')} />
         <div className="container mx-auto">
           <div className="absolute -bottom-[100px]">
             <div className="flex items-center gap-6">
@@ -260,7 +198,7 @@ export const Hero = () => {
                   isEditing={isEditingName}
                   name={name}
                   onCancel={handleNameCancel}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   onEdit={handleNameEdit}
                   onKeyDown={handleKeyDown}
                   onSave={handleNameSave}

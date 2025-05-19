@@ -12,14 +12,10 @@ import {
   LIQUIDITY_POOL_CONTRIBUTION_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const AcquireWindow = ({
-  data,
-  errors = {},
-  updateField,
-}) => {
+export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   const vaultPrivacy = data.privacy;
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
 
@@ -35,10 +31,7 @@ export const AcquireWindow = ({
 
   const getMinAcquireDate = () => {
     if (data.contributionOpenWindowType === 'custom') {
-      return addMilliseconds(
-        new Date(data.contributionOpenWindowTime),
-        data.contributionDuration,
-      );
+      return addMilliseconds(new Date(data.contributionOpenWindowTime), data.contributionDuration);
     }
     return null;
   };
@@ -51,20 +44,17 @@ export const AcquireWindow = ({
         {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
           <div className="mb-[60px]">
             <LavaWhitelist
+              required
               allowCsv
               csvData={data.acquirersWhitelistCsv}
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
               label="Acquirer whitelist"
-              setCsvData={(csvData) => updateField('acquirersWhitelistCsv', csvData)}
-              setWhitelist={(assets) => updateField('acquirersWhitelist', assets)}
+              setCsvData={csvData => updateField('acquirersWhitelistCsv', csvData)}
+              setWhitelist={assets => updateField('acquirersWhitelist', assets)}
               whitelist={data.acquirersWhitelist || []}
             />
-            {errors.acquirersWhitelist && (
-              <p className="text-red-600 mt-1">
-                {errors.acquirersWhitelist}
-              </p>
-            )}
+            {errors.acquirersWhitelist && <p className="text-red-600 mt-1">{errors.acquirersWhitelist}</p>}
           </div>
         )}
         <div>
@@ -74,17 +64,13 @@ export const AcquireWindow = ({
           <div className="mt-4">
             <LavaIntervalPicker
               value={data.acquireWindowDuration}
-              onChange={(date) => updateField('acquireWindowDuration', date)}
+              onChange={date => updateField('acquireWindowDuration', date)}
             />
-            {errors.acquireWindowDuration && (
-              <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>
-            )}
+            {errors.acquireWindowDuration && <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>}
           </div>
         </div>
         <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold">
-            *ACQUIRE WINDOW OPEN TIME
-          </div>
+          <div className="uppercase text-[20px] font-bold">*ACQUIRE WINDOW OPEN TIME</div>
           <div className="mt-4">
             <LavaRadio
               name="acquireOpenWindowType"
@@ -99,25 +85,19 @@ export const AcquireWindow = ({
                 },
               ]}
               value={data.acquireOpenWindowType || ''}
-              onChange={(value) => updateField('acquireOpenWindowType', value)}
+              onChange={value => updateField('acquireOpenWindowType', value)}
             />
-            {errors.acquireOpenWindowType && (
-              <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>
-            )}
+            {errors.acquireOpenWindowType && <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>}
             {data.acquireOpenWindowType === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}
                   value={data.acquireOpenWindowTime}
-                  onChange={(date) => updateField('acquireOpenWindowTime', date)}
+                  onChange={date => updateField('acquireOpenWindowTime', date)}
                 />
-                {errors.acquireOpenWindowTime && (
-                  <p className="text-red-600 mt-1">{errors.acquireOpenWindowTime}</p>
-                )}
+                {errors.acquireOpenWindowTime && <p className="text-red-600 mt-1">{errors.acquireOpenWindowTime}</p>}
                 {minDate && (
-                  <p className="text-orange-500 mt-1">
-                    Cannot be earlier than {minDate.toLocaleDateString()}
-                  </p>
+                  <p className="text-orange-500 mt-1">Cannot be earlier than {minDate.toLocaleDateString()}</p>
                 )}
               </div>
             )}

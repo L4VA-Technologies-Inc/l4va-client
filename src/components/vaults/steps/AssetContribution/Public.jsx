@@ -3,11 +3,8 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
-export const Public = ({
-  data,
-  errors = {},
-  updateField,
-}) => (
+
+export const Public = ({ data, errors = {}, updateField }) => (
   <div className="grid grid-cols-2">
     <div className="px-[36px]">
       <div>
@@ -21,12 +18,10 @@ export const Public = ({
             },
           ]}
           value={data.valueMethod || ''}
-          onChange={(value) => updateField('valueMethod', value)}
+          onChange={value => updateField('valueMethod', value)}
           hint={VALUE_METHOD_HINT}
         />
-        {errors.valueMethod && (
-          <p className="text-red-600 mt-1">{errors.valueMethod}</p>
-        )}
+        {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
       </div>
       <div className="mt-[60px]">
         <LavaRadio
@@ -43,16 +38,14 @@ export const Public = ({
             },
           ]}
           value={data.contributionOpenWindowType || ''}
-          onChange={(value) => updateField('contributionOpenWindowType', value)}
+          onChange={value => updateField('contributionOpenWindowType', value)}
         />
-        {errors.contributionOpenWindowType && (
-          <p className="text-red-600 mt-1">{errors.contributionOpenWindowType}</p>
-        )}
+        {errors.contributionOpenWindowType && <p className="text-red-600 mt-1">{errors.contributionOpenWindowType}</p>}
         {data.contributionOpenWindowType === 'custom' && (
           <div className="mt-4">
             <LavaDatePicker
               value={data.contributionOpenWindowTime}
-              onChange={(date) => updateField('contributionOpenWindowTime', date)}
+              onChange={date => updateField('contributionOpenWindowTime', date)}
             />
             {errors.contributionOpenWindowTime && (
               <p className="text-red-600 mt-1">{errors.contributionOpenWindowTime}</p>
@@ -64,26 +57,21 @@ export const Public = ({
     <div className="px-[36px]">
       <div>
         <LavaWhitelistWithCaps
+          required
           label="Asset Whitelist"
-          setWhitelist={(assets) => updateField('assetsWhitelist', assets)}
+          setWhitelist={assets => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}
         />
-        {errors.assetsWhitelist && (
-          <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>
-        )}
+        {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
       </div>
       <div className="mt-[60px]">
-        <div className="uppercase text-[20px] font-bold">
-          *Contribution duration
-        </div>
+        <div className="uppercase text-[20px] font-bold">*Contribution duration</div>
         <div className="mt-4">
           <LavaIntervalPicker
             value={data.contributionDuration}
-            onChange={(value) => updateField('contributionDuration', value)}
+            onChange={value => updateField('contributionDuration', value)}
           />
-          {errors.contributionDuration && (
-            <p className="text-red-600 mt-1">{errors.contributionDuration}</p>
-          )}
+          {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
         </div>
       </div>
     </div>

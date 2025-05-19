@@ -8,23 +8,22 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { handleNumberInput } from '@/utils/core.utils';
 import { VAULT_PRIVACY_TYPES, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
-export const Private = ({
-  data,
-  errors = {},
-  updateField,
-}) => {
+export const Private = ({ data, errors = {}, updateField }) => {
   const { valuationType, privacy: vaultPrivacy } = data;
 
-  const valueMethodOptions = vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE ? [
-    {
-      name: 'lbe',
-      label: 'Market / Floor Price',
-    },
-    {
-      name: 'fixed',
-      label: 'Fixed',
-    },
-  ] : [{ name: 'lbe', label: 'Market / Floor Price' }];
+  const valueMethodOptions =
+    vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE
+      ? [
+          {
+            name: 'lbe',
+            label: 'Market / Floor Price',
+          },
+          {
+            name: 'fixed',
+            label: 'Fixed',
+          },
+        ]
+      : [{ name: 'lbe', label: 'Market / Floor Price' }];
 
   return (
     <div className="grid grid-cols-2">
@@ -35,12 +34,10 @@ export const Private = ({
             name="valueMethod"
             options={valueMethodOptions}
             value={data.valueMethod || ''}
-            onChange={(value) => updateField('valueMethod', value)}
+            onChange={value => updateField('valueMethod', value)}
             hint={VALUE_METHOD_HINT}
           />
-          {errors.valueMethod && (
-            <p className="text-red-600 mt-1">{errors.valueMethod}</p>
-          )}
+          {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
         </div>
         {valuationType === 'fixed' && (
           <>
@@ -55,7 +52,7 @@ export const Private = ({
                 ]}
                 placeholder="Select currency"
                 value={data.valuationCurrency || ''}
-                onChange={(value) => updateField('valuationCurrency', value)}
+                onChange={value => updateField('valuationCurrency', value)}
               />
             </div>
             <div className="mt-[60px]">
@@ -66,7 +63,7 @@ export const Private = ({
                 placeholder="#,###,###"
                 type="text"
                 value={data.valuationAmount || ''}
-                onChange={(e) => {
+                onChange={e => {
                   const sanitizedValue = handleNumberInput(e.target.value);
                   updateField('valuationAmount', sanitizedValue);
                 }}
@@ -75,17 +72,13 @@ export const Private = ({
           </>
         )}
         <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold">
-            *Contribution duration
-          </div>
+          <div className="uppercase text-[20px] font-bold">*Contribution duration</div>
           <div className="mt-4">
             <LavaIntervalPicker
               value={data.contributionDuration}
-              onChange={(value) => updateField('contributionDuration', value)}
+              onChange={value => updateField('contributionDuration', value)}
             />
-            {errors.contributionDuration && (
-              <p className="text-red-600 mt-1">{errors.contributionDuration}</p>
-            )}
+            {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
           </div>
         </div>
         <div className="mt-[60px]">
@@ -103,7 +96,7 @@ export const Private = ({
               },
             ]}
             value={data.contributionOpenWindowType || ''}
-            onChange={(value) => updateField('contributionOpenWindowType', value)}
+            onChange={value => updateField('contributionOpenWindowType', value)}
           />
           {errors.contributionOpenWindowType && (
             <p className="text-red-600 mt-1">{errors.contributionOpenWindowType}</p>
@@ -112,7 +105,7 @@ export const Private = ({
             <div className="mt-4">
               <LavaDatePicker
                 value={data.contributionOpenWindowTime}
-                onChange={(date) => updateField('contributionOpenWindowTime', date)}
+                onChange={date => updateField('contributionOpenWindowTime', date)}
               />
               {errors.contributionOpenWindowTime && (
                 <p className="text-red-600 mt-1">{errors.contributionOpenWindowTime}</p>
@@ -123,14 +116,13 @@ export const Private = ({
         {valuationType === 'lbe' ? (
           <div className="mt-[60px]">
             <LavaWhitelist
+              required
               itemPlaceholder="Enter Wallet Address"
               label="Contributor Whitelist"
-              setWhitelist={(assets) => updateField('whitelistContributors', assets)}
+              setWhitelist={assets => updateField('whitelistContributors', assets)}
               whitelist={data.whitelistContributors || []}
             />
-            {errors.whitelistContributors && (
-              <p className="text-red-600 mt-1">{errors.whitelistContributors}</p>
-            )}
+            {errors.whitelistContributors && <p className="text-red-600 mt-1">{errors.whitelistContributors}</p>}
           </div>
         ) : null}
       </div>
@@ -139,12 +131,10 @@ export const Private = ({
           <LavaWhitelistWithCaps
             required
             label="Asset Whitelist"
-            setWhitelist={(assets) => updateField('assetsWhitelist', assets)}
+            setWhitelist={assets => updateField('assetsWhitelist', assets)}
             whitelist={data.assetsWhitelist || []}
           />
-          {errors.assetsWhitelist && (
-            <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>
-          )}
+          {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
         </div>
       </div>
     </div>

@@ -14,16 +14,8 @@ const LoadingState = () => (
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[400px] text-dark-100">
-    <p className="text-xl">
-      No vaults found
-    </p>
-    <Link
-      className={clsx(
-        'mt-2 transition-all',
-        'hover:text-orange-500 hover:underline',
-      )}
-      to="/create"
-    >
+    <p className="text-xl">No vaults found</p>
+    <Link className={clsx('mt-2 transition-all', 'hover:text-orange-500 hover:underline')} to="/create">
       Create your first vault to get started
     </Link>
   </div>
@@ -41,7 +33,7 @@ export const VaultList = ({
 }) => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = tab => {
     setActiveTab(tab);
     onTabChange?.(tab);
   };
@@ -50,17 +42,9 @@ export const VaultList = ({
     <div className={`container mx-auto ${className}`}>
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex justify-between items-center">
-          <h2 className="font-russo text-[40px] uppercase">
-            {title}
-          </h2>
+          <h2 className="font-russo text-[40px] uppercase">{title}</h2>
         </div>
-        {tabs.length > 0 && (
-          <LavaTabs
-            activeTab={activeTab}
-            tabs={tabs}
-            onTabChange={handleTabChange}
-          />
-        )}
+        {tabs.length > 0 && <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />}
       </div>
       {isLoading ? (
         <LoadingState />
@@ -70,7 +54,7 @@ export const VaultList = ({
         renderEmptyState()
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vaults.map((vault) => (
+          {vaults.map(vault => (
             <VaultCard key={vault.id} {...vault} />
           ))}
         </div>
