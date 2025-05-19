@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { MyVaults } from '@/pages/MyVaults';
+import { CommunityVaultsList } from '@/components/vaults/CommunityVaultsList';
 
-const VaultsComponent = () => <MyVaults />;
+const VaultsComponent = () => <CommunityVaultsList />;
 
 export const Route = createFileRoute('/vaults/')({
   component: VaultsComponent,
