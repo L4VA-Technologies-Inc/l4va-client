@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-
-import { VaultList } from './VaultsList';
-
-import { VaultsApiProvider } from '@/services/api/vaults';
+import { useState } from 'react';
+import { VaultList } from '@/components/vaults/VaultsList';
+import { useMyDraftVaults, useMyOpenVaults, useMyLockedVaults } from '@/services/api/queries';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -13,47 +11,44 @@ const VAULT_TABS = {
 const TABS = Object.values(VAULT_TABS);
 
 export const MyVaultsList = ({ className = '' }) => {
-  const [vaults, setVaults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
-  const fetchVaults = async tab => {
-    setLoading(true);
-    setError(null);
-    try {
-      let response;
-      switch (tab) {
-        case VAULT_TABS.DRAFT:
-          response = await VaultsApiProvider.getMyDraftVaults();
-          break;
-        case VAULT_TABS.OPEN:
-          response = await VaultsApiProvider.getMyOpenVaults();
-          break;
-        case VAULT_TABS.LOCKED:
-          response = await VaultsApiProvider.getMyLockedVaults();
-          break;
-        default:
-          break;
-      }
-      setVaults(response.data.items || []);
-    } catch (err) {
-      console.error('Error fetching vaults:', err);
-      setError('Failed to load vaults. Please try again later.');
-    } finally {
-      setLoading(false);
+  const draftVaults = useMyDraftVaults();
+  const openVaults = useMyOpenVaults();
+  const lockedVaults = useMyLockedVaults();
+
+  const getVaultsData = () => {
+    switch (activeTab) {
+      case VAULT_TABS.DRAFT:
+        return {
+          data: draftVaults.data?.data?.items || [],
+          isLoading: draftVaults.isLoading,
+          error: draftVaults.error?.message,
+        };
+      case VAULT_TABS.OPEN:
+        return {
+          data: openVaults.data?.data?.items || [],
+          isLoading: openVaults.isLoading,
+          error: openVaults.error?.message,
+        };
+      case VAULT_TABS.LOCKED:
+        return {
+          data: lockedVaults.data?.data?.items || [],
+          isLoading: lockedVaults.isLoading,
+          error: lockedVaults.error?.message,
+        };
+      default:
+        return { data: [], isLoading: false, error: null };
     }
   };
 
-  useEffect(() => {
-    fetchVaults(activeTab);
-  }, [activeTab]);
+  const { data: vaults, isLoading, error } = getVaultsData();
 
   return (
     <VaultList
       className={className}
       error={error}
-      isLoading={loading}
+      isLoading={isLoading}
       tabs={TABS}
       title="My Vaults"
       vaults={vaults}

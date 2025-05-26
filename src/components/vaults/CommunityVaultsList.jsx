@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
-
-import { VaultList } from './VaultsList';
-
-import { VaultsApiProvider } from '@/services/api/vaults';
+import { useState } from 'react';
+import { VaultList } from '@/components/vaults/VaultsList';
+import { useVaults } from '@/services/api/queries';
 
 const VAULT_TABS = {
-  ACQUIRE: 'Acquire',
   CONTRIBUTE: 'Contribute',
+  ACQUIRE: 'Acquire',
   UPCOMING: 'Upcoming',
   PAST: 'Past',
 };
@@ -14,50 +12,51 @@ const VAULT_TABS = {
 const TABS = Object.values(VAULT_TABS);
 
 export const CommunityVaultsList = ({ className = '' }) => {
-  const [vaults, setVaults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
-  const fetchVaults = async tab => {
-    setLoading(true);
-    setError(null);
-    try {
-      let response;
-      switch (tab) {
-        case VAULT_TABS.ACQUIRE:
-          response = await VaultsApiProvider.getVaults('acquire');
-          break;
-        case VAULT_TABS.CONTRIBUTE:
-          response = await VaultsApiProvider.getVaults('contribution');
-          break;
-        case VAULT_TABS.UPCOMING:
-          response = await VaultsApiProvider.getVaults();
-          break;
-        case VAULT_TABS.PAST:
-          response = await VaultsApiProvider.getVaults('locked');
-          break;
-        default:
-          break;
-      }
-      setVaults(response.data.items || []);
-    } catch (err) {
-      console.error('Error fetching vaults:', err);
-      setError('Failed to load vaults. Please try again later.');
-    } finally {
-      setLoading(false);
+  const acquireVaults = useVaults('acquire');
+  const contributeVaults = useVaults('contribution');
+  const upcomingVaults = useVaults();
+  const pastVaults = useVaults('locked');
+
+  const getVaultsData = () => {
+    switch (activeTab) {
+      case VAULT_TABS.ACQUIRE:
+        return {
+          data: acquireVaults.data?.data?.items || [],
+          isLoading: acquireVaults.isLoading,
+          error: acquireVaults.error?.message,
+        };
+      case VAULT_TABS.CONTRIBUTE:
+        return {
+          data: contributeVaults.data?.data?.items || [],
+          isLoading: contributeVaults.isLoading,
+          error: contributeVaults.error?.message,
+        };
+      case VAULT_TABS.UPCOMING:
+        return {
+          data: upcomingVaults.data?.data?.items || [],
+          isLoading: upcomingVaults.isLoading,
+          error: upcomingVaults.error?.message,
+        };
+      case VAULT_TABS.PAST:
+        return {
+          data: pastVaults.data?.data?.items || [],
+          isLoading: pastVaults.isLoading,
+          error: pastVaults.error?.message,
+        };
+      default:
+        return { data: [], isLoading: false, error: null };
     }
   };
 
-  useEffect(() => {
-    fetchVaults(activeTab);
-  }, [activeTab]);
+  const { data: vaults, isLoading, error } = getVaultsData();
 
   return (
     <VaultList
       className={className}
       error={error}
-      isLoading={loading}
+      isLoading={isLoading}
       tabs={TABS}
       title="Community Vaults"
       vaults={vaults}

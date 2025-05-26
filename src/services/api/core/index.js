@@ -1,4 +1,4 @@
-import { CoreConfigProvider } from './config';
+import { CoreConfigProvider } from '@/services/api/core/config';
 
 import { axiosInstance } from '@/services/api';
 

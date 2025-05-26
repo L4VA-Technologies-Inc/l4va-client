@@ -15,6 +15,7 @@ import { Route as SandboxImport } from './routes/sandbox'
 import { Route as ProfileImport } from './routes/profile'
 import { Route as CreateImport } from './routes/create'
 import { Route as ContributeImport } from './routes/contribute'
+import { Route as AcquireImport } from './routes/acquire'
 import { Route as IndexImport } from './routes/index'
 import { Route as VaultsIndexImport } from './routes/vaults/index'
 import { Route as VaultsMyImport } from './routes/vaults/my'
@@ -43,6 +44,12 @@ const CreateRoute = CreateImport.update({
 const ContributeRoute = ContributeImport.update({
   id: '/contribute',
   path: '/contribute',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AcquireRoute = AcquireImport.update({
+  id: '/acquire',
+  path: '/acquire',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -79,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/acquire': {
+      id: '/acquire'
+      path: '/acquire'
+      fullPath: '/acquire'
+      preLoaderRoute: typeof AcquireImport
       parentRoute: typeof rootRoute
     }
     '/contribute': {
@@ -137,6 +151,7 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acquire': typeof AcquireRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -148,6 +163,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acquire': typeof AcquireRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -160,6 +176,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/acquire': typeof AcquireRoute
   '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
@@ -173,6 +190,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/acquire'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -183,6 +201,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/acquire'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -193,6 +212,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/acquire'
     | '/contribute'
     | '/create'
     | '/profile'
@@ -205,6 +225,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcquireRoute: typeof AcquireRoute
   ContributeRoute: typeof ContributeRoute
   CreateRoute: typeof CreateRoute
   ProfileRoute: typeof ProfileRoute
@@ -216,6 +237,7 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcquireRoute: AcquireRoute,
   ContributeRoute: ContributeRoute,
   CreateRoute: CreateRoute,
   ProfileRoute: ProfileRoute,
@@ -236,6 +258,7 @@ export const routeTree = rootRoute
       "filePath": "__root.jsx",
       "children": [
         "/",
+        "/acquire",
         "/contribute",
         "/create",
         "/profile",
@@ -247,6 +270,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.jsx"
+    },
+    "/acquire": {
+      "filePath": "acquire.jsx"
     },
     "/contribute": {
       "filePath": "contribute.jsx"

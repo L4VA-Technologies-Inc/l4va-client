@@ -1,36 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-import { VaultsApiProvider } from '@/services/api/vaults';
+import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
 
 export const VaultAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data, isLoading, error } = useVaultAssets(vault?.id);
+  const assets = data?.data?.items || [];
 
-  useEffect(() => {
-    const fetchVaultAssets = async () => {
-      if (!vault?.id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await VaultsApiProvider.getVaultAssets(vault.id);
-        setAssets(response.data.items || []);
-      } catch (err) {
-        console.error('Error fetching vault assets:', err);
-        setError('Failed to load vault assets. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVaultAssets();
-  }, [vault?.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -39,7 +18,7 @@ export const VaultAssetsList = ({ vault }) => {
   }
 
   if (error) {
-    return <div className="text-center p-8 text-red-500">{error}</div>;
+    return <div className="text-center p-8 text-red-500">{error.message}</div>;
   }
 
   if (!assets.length) {

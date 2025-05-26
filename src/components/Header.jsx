@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router';
 
-import { ConnectButton } from './ConnectButton';
-import { CurrencyDropdown } from './CurrencyDropdown';
-import { MenuDrawer } from './MenuDrawer';
+import { ConnectButton } from '@/components/ConnectButton';
+import { CurrencyDropdown } from '@/components/CurrencyDropdown';
+import { MenuDrawer } from '@/components/MenuDrawer';
 
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';

@@ -1,4 +1,4 @@
-import { ContributeConfigProvider } from './config';
+import { ContributeConfigProvider } from '@/services/api/contribute/config';
 
 import { axiosInstance } from '@/services/api';
 

@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { routeTree } from './routeTree.gen';
 
@@ -10,6 +11,15 @@ import { AuthProvider } from '@/lib/auth/auth.context';
 import { ModalProvider } from '@/lib/modals/modal.context';
 
 import '@/css/index.css';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const router = createRouter({
   routeTree,
@@ -22,20 +32,22 @@ const router = createRouter({
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <WeldProvider>
-      <AuthProvider>
-        <ModalProvider>
-          <RouterProvider router={router} />
-          <Toaster
-            toastOptions={{
-              style: {
-                background: '#282B3F',
-                color: '#fff',
-              },
-            }}
-          />
-        </ModalProvider>
-      </AuthProvider>
-    </WeldProvider>
+    <QueryClientProvider client={queryClient}>
+      <WeldProvider>
+        <AuthProvider>
+          <ModalProvider>
+            <RouterProvider router={router} />
+            <Toaster
+              toastOptions={{
+                style: {
+                  background: '#282B3F',
+                  color: '#fff',
+                },
+              }}
+            />
+          </ModalProvider>
+        </AuthProvider>
+      </WeldProvider>
+    </QueryClientProvider>
   </StrictMode>
 );

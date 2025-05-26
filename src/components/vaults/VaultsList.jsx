@@ -41,7 +41,7 @@ export const VaultList = ({
   return (
     <div className={`container mx-auto ${className}`}>
       <div className="flex flex-col gap-6 mb-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-center items-center">
           <h2 className="font-russo text-[40px] uppercase">{title}</h2>
         </div>
         {tabs.length > 0 && <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />}

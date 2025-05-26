@@ -1,4 +1,4 @@
-import { TransactionsConfigProvider } from './config';
+import { TransactionsConfigProvider } from '@/services/api/transactions/config';
 
 import { axiosInstance } from '@/services/api';
 

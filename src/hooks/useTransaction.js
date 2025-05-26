@@ -1,9 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
-
-import { TransactionsApiProvider } from '@/services/api/transactions';
-import { ContributeApiProvider } from '@/services/api/contribute';
+import { useCreateContributionTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
 
 export const useTransaction = () => {
   const [status, setStatus] = useState('idle');
@@ -11,6 +9,9 @@ export const useTransaction = () => {
   const [error, setError] = useState(null);
 
   const wallet = useWallet();
+  const createContributionTx = useCreateContributionTx();
+  const buildTransaction = useBuildTransaction();
+  const submitTransaction = useSubmitTransaction();
 
   const sendTransaction = useCallback(
     async ({ recipient, vaultId, selectedNFTs }) => {
@@ -22,7 +23,7 @@ export const useTransaction = () => {
           throw new Error('Wallet not connected');
         }
 
-        const { data } = await ContributeApiProvider.createContributionTx({
+        const { data } = await createContributionTx.mutateAsync({
           vaultId,
           assets: selectedNFTs.map(nft => ({
             policyId: nft.policyId,
@@ -36,7 +37,7 @@ export const useTransaction = () => {
 
         setStatus('building');
 
-        const buildResult = await TransactionsApiProvider.buildTransaction({
+        const buildResult = await buildTransaction.mutateAsync({
           changeAddress,
           vaultId,
           txId: data.txId,
@@ -65,7 +66,7 @@ export const useTransaction = () => {
         }
 
         setStatus('submitting');
-        const submitResult = await TransactionsApiProvider.submitTransaction({
+        const submitResult = await submitTransaction.mutateAsync({
           transaction: buildResult.data.presignedTx,
           vaultId: vaultId,
           txId: data.txId,
@@ -86,7 +87,7 @@ export const useTransaction = () => {
         return null;
       }
     },
-    [wallet]
+    [wallet, createContributionTx, buildTransaction, submitTransaction]
   );
 
   const reset = useCallback(() => {

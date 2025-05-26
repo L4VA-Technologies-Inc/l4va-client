@@ -1,46 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import toast from 'react-hot-toast';
-
-import { AuthContext } from './auth';
-
-import { CoreApiProvider } from '@/services/api/core';
+import { useQueryClient } from '@tanstack/react-query';
+import { AuthContext } from '@/lib/auth/auth';
+import { useProfile, useLogin } from '@/services/api/queries';
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  const checkAuth = async () => {
-    const token = localStorage.getItem('jwt');
-    if (token) {
-      try {
-        const { data } = await CoreApiProvider.getProfile();
-        setUser(data);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('jwt');
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    }
-    setIsLoading(false);
-  };
+  const queryClient = useQueryClient();
+  const { data: profileData, isLoading } = useProfile();
+  const loginMutation = useLogin();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    const token = localStorage.getItem('jwt');
+    if (!token) {
+      queryClient.setQueryData(['profile'], null);
+    }
+  }, [queryClient]);
 
   const login = async (signature, stakeAddress, walletAddress) => {
     try {
-      const response = await CoreApiProvider.login({
+      const response = await loginMutation.mutateAsync({
         signature,
         stakeAddress,
         walletAddress,
       });
       localStorage.setItem('jwt', response.data.accessToken);
-      setUser(response.data.user);
-      setIsAuthenticated(true);
+      queryClient.setQueryData(['profile'], { data: response.data.user });
       return response.data;
     } catch (error) {
       return toast.error(error.message);
@@ -49,17 +33,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('jwt');
-    setIsAuthenticated(false);
-    setUser(null);
+    queryClient.setQueryData(['profile'], null);
   };
 
   const value = {
-    isAuthenticated,
+    isAuthenticated: !!profileData?.data,
     isLoading,
-    user,
+    user: profileData?.data,
     login,
     logout,
-    checkAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
