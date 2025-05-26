@@ -50,16 +50,6 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             />
           </div>
         </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">Background banner</p>
-          <div className="mt-2 relative w-full h-32 overflow-hidden rounded-lg">
-            <img
-              alt="Background Banner"
-              className="w-full h-full object-cover"
-              src={data.bannerImage || '/assets/launch-bg.png'}
-            />
-          </div>
-        </div>
       </div>
     </div>
   </section>

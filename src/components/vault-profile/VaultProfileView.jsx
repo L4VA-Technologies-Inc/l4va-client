@@ -63,6 +63,8 @@ export const VaultProfileView = ({ vault }) => {
     </div>
   );
 
+  console.log(vault);
+
   const renderSidebar = () => (
     <div className="col-span-4 flex flex-col gap-4">
       <div className="bg-steel-950 rounded-xl p-6">
