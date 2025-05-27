@@ -5,7 +5,6 @@ import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 
-// Vault Queries
 export const useVaults = tab => {
   return useQuery({
     queryKey: ['vaults', tab],
@@ -46,6 +45,14 @@ export const useVaultAssets = id => {
   return useQuery({
     queryKey: ['vault-assets', id],
     queryFn: () => VaultsApiProvider.getVaultAssets(id),
+    enabled: !!id,
+  });
+};
+
+export const useVaultAcquiredAssets = id => {
+  return useQuery({
+    queryKey: ['vault-acquired-assets', id],
+    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id),
     enabled: !!id,
   });
 };

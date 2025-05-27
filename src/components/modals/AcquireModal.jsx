@@ -5,13 +5,17 @@ import toast from 'react-hot-toast';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { formatNum, formatCompactNumber } from '@/utils/core.utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useCreateAcquireTx } from '@/services/api/queries';
+import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
+import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
   const { vaultName } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
-  const balanceAda = useWallet('balanceAda');
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
+  const [status, setStatus] = useState('idle');
+  const buildTransaction = useBuildTransaction();
+  const submitTransaction = useSubmitTransaction();
 
   const totalAcquired = 13025.0;
   const assetsOffered = 50;
@@ -35,12 +39,49 @@ export const AcquireModal = ({ vault, onClose }) => {
         ],
       });
 
-      console.log(data);
+      const changeAddress = await wallet.handler.getChangeAddressBech32();
 
-      setAcquireAmount('');
-      onClose && onClose();
+      setStatus('building');
+
+      const buildResult = await buildTransaction.mutateAsync({
+        changeAddress,
+        vaultId: vault.id,
+        txId: data.txId,
+        outputs: [
+          {
+            assets: data.assets,
+          },
+        ],
+      });
+
+      if (!buildResult.data?.presignedTx) {
+        throw new Error('Failed to build transaction');
+      }
+
+      setStatus('signing');
+      const signature = await wallet.handler.signTx(buildResult.data.presignedTx, true);
+
+      if (!signature) {
+        throw new Error('Transaction signing was cancelled');
+      }
+
+      setStatus('submitting');
+      const submitResult = await submitTransaction.mutateAsync({
+        transaction: buildResult.data.presignedTx,
+        vaultId: vault.id,
+        txId: data.txId,
+        signatures: [signature],
+      });
+
+      if (submitResult.data?.hash) {
+        toast.success('Acquisition completed successfully');
+        onClose();
+      }
     } catch (err) {
-      toast.error(err.message || 'Acquire failed');
+      console.error('Acquisition error:', err);
+      toast.error(err.message || 'Acquisition failed');
+    } finally {
+      setStatus('idle');
     }
   };
 
@@ -54,7 +95,7 @@ export const AcquireModal = ({ vault, onClose }) => {
           <div className="md:w-1/2 pr-0 md:pr-6 space-y-6">
             <div className="flex justify-between items-center">
               <span>ADA in wallet</span>
-              <span className="font-bold">{formatNum(balanceAda || 0)} ADA</span>
+              <span className="font-bold">{formatNum(wallet.balanceAda || 0)} ADA</span>
             </div>
             <div className="bg-steel-850 p-4 rounded-lg">
               <h3 className="font-bold mb-2">Acquire</h3>
@@ -110,16 +151,11 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="flex justify-center mt-8">
                 <PrimaryButton
                   className="uppercase"
-                  disabled={
-                    !acquireAmount ||
-                    parseFloat(acquireAmount) <= 0 ||
-                    status === 'building' ||
-                    status === 'signing' ||
-                    status === 'submitting'
-                  }
+                  disabled={status !== 'idle'}
                   onClick={handleAcquire}
+                  icon={status !== 'idle' ? Spinner : null}
                 >
-                  Acquire
+                  {status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
                 </PrimaryButton>
               </div>
             </div>

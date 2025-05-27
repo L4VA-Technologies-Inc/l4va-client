@@ -48,4 +48,9 @@ export class VaultsApiProvider {
     const response = await axiosInstance.get(VaultsConfigProvider.getVaultAssets(id));
     return response;
   }
+
+  static async getVaultAcquiredAssets(id) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getVaultAcquiredAssets(id));
+    return response;
+  }
 }

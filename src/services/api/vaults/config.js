@@ -35,6 +35,10 @@ export class VaultsConfigProvider {
   }
 
   static getVaultAssets(id) {
-    return `/api/v1/assets/vault/${id}`;
+    return `/api/v1/assets/contributed/${id}`;
+  }
+
+  static getVaultAcquiredAssets(id) {
+    return `/api/v1/assets/acquired/${id}`;
   }
 }

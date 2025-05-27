@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
+
 import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
 
-export const VaultAssetsList = ({ vault }) => {
+export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { data, isLoading, error } = useVaultAssets(vault?.id);
   const assets = data?.data?.items || [];
@@ -51,7 +52,11 @@ export const VaultAssetsList = ({ vault }) => {
                   <img
                     alt={asset.metadata?.onchainMetadata?.name || 'NFT'}
                     className="w-12 h-12 rounded-lg object-cover"
-                    src={asset.metadata?.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')}
+                    src={
+                      asset.metadata?.image
+                        ? asset.metadata?.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')
+                        : '/assets/icons/ada.png'
+                    }
                   />
                 </td>
                 <td className="px-4 py-3 font-medium">

@@ -10,7 +10,7 @@ export const useVaultStatusTracker = vaultId => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['vault', vaultId] });
       queryClient.invalidateQueries({ queryKey: ['vault-assets', vaultId] });
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [vaultId, queryClient]);
