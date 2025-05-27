@@ -8,6 +8,11 @@ export const VAULT_PRIVACY_TYPES = {
 
 export const VAULT_STATUSES = {
   DRAFT: 'draft',
+  CREATED: 'created',
+  PUBLISHED: 'published',
+  CONTRIBUTION: 'contribution',
+  ACQUIRE: 'acquire',
+  LOCKED: 'locked',
 };
 
 export const CREATE_VAULT_STEPS = [

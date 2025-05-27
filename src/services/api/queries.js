@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { TransactionsApiProvider } from '@/services/api/transactions';
 import { ContributeApiProvider } from '@/services/api/contribute';
@@ -6,7 +7,7 @@ import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 
 // Vault Queries
-export const useVaults = (tab) => {
+export const useVaults = tab => {
   return useQuery({
     queryKey: ['vaults', tab],
     queryFn: () => VaultsApiProvider.getVaults(tab),
@@ -34,7 +35,7 @@ export const useMyLockedVaults = () => {
   });
 };
 
-export const useVault = (id) => {
+export const useVault = id => {
   return useQuery({
     queryKey: ['vault', id],
     queryFn: () => VaultsApiProvider.getVault(id),
@@ -42,7 +43,7 @@ export const useVault = (id) => {
   });
 };
 
-export const useVaultAssets = (id) => {
+export const useVaultAssets = id => {
   return useQuery({
     queryKey: ['vault-assets', id],
     queryFn: () => VaultsApiProvider.getVaultAssets(id),
@@ -53,32 +54,32 @@ export const useVaultAssets = (id) => {
 // Vault Mutations
 export const useCreateVault = () => {
   return useMutation({
-    mutationFn: (vaultData) => VaultsApiProvider.createVault(vaultData),
+    mutationFn: vaultData => VaultsApiProvider.createVault(vaultData),
   });
 };
 
 export const useSaveDraft = () => {
   return useMutation({
-    mutationFn: (vaultData) => VaultsApiProvider.saveDraft(vaultData),
+    mutationFn: vaultData => VaultsApiProvider.saveDraft(vaultData),
   });
 };
 
 export const useLaunchVault = () => {
   return useMutation({
-    mutationFn: (vaultData) => VaultsApiProvider.launchVault(vaultData),
+    mutationFn: vaultData => VaultsApiProvider.launchVault(vaultData),
   });
 };
 
 // Transaction Mutations
 export const useBuildTransaction = () => {
   return useMutation({
-    mutationFn: (params) => TransactionsApiProvider.buildTransaction(params),
+    mutationFn: params => TransactionsApiProvider.buildTransaction(params),
   });
 };
 
 export const useSubmitTransaction = () => {
   return useMutation({
-    mutationFn: (params) => TransactionsApiProvider.submitTransaction(params),
+    mutationFn: params => TransactionsApiProvider.submitTransaction(params),
   });
 };
 
@@ -106,33 +107,33 @@ export const useProfile = () => {
 // Core Mutations
 export const useLogin = () => {
   return useMutation({
-    mutationFn: (credentials) => CoreApiProvider.login(credentials),
+    mutationFn: credentials => CoreApiProvider.login(credentials),
   });
 };
 
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationFn: (profileData) => CoreApiProvider.updateProfile(profileData),
+    mutationFn: profileData => CoreApiProvider.updateProfile(profileData),
   });
 };
 
 export const useUploadImage = () => {
   return useMutation({
-    mutationFn: (file) => CoreApiProvider.uploadImage(file),
+    mutationFn: file => CoreApiProvider.uploadImage(file),
   });
 };
 
 export const useHandleCsv = () => {
   return useMutation({
-    mutationFn: (file) => CoreApiProvider.handleCsv(file),
+    mutationFn: file => CoreApiProvider.handleCsv(file),
   });
 };
 
 // TapTools Queries
-export const useWalletSummary = (address) => {
+export const useWalletSummary = address => {
   return useQuery({
     queryKey: ['wallet-summary', address],
     queryFn: () => TapToolsApiProvider.getWalletSummary(address),
     enabled: !!address,
   });
-}; 
+};

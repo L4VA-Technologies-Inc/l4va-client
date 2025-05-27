@@ -6,12 +6,15 @@ import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { formatCompactNumber, getCountdownName } from '@/utils/core.utils';
+import { formatCompactNumber, getCountdownName, getCountdownTime } from '@/utils/core.utils';
+import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
   const { openModal } = useModalControls();
+
+  useVaultStatusTracker(vault);
 
   const handleTabChange = tab => setActiveTab(tab);
 
@@ -63,8 +66,6 @@ export const VaultProfileView = ({ vault }) => {
     </div>
   );
 
-  console.log(vault);
-
   const renderSidebar = () => (
     <div className="col-span-4 flex flex-col gap-4">
       <div className="bg-steel-950 rounded-xl p-6">
@@ -73,15 +74,9 @@ export const VaultProfileView = ({ vault }) => {
           className="w-full aspect-square rounded-xl object-cover mb-6"
           src={vault.vaultImage || '/assets/vaults/space-man.webp'}
         />
-        <p className="text-[20px] mb-2">{getCountdownName(vault)}</p>
+        <p className="text-[20px] mb-2 font-medium">{getCountdownName(vault)}</p>
         <div className="mb-6">
-          <VaultCountdown
-            endTime={
-              vault.vaultStatus === 'contribution'
-                ? new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration
-                : new Date(vault.contributionPhaseStart).getTime()
-            }
-          />
+          <VaultCountdown endTime={getCountdownTime(vault)} />
         </div>
         <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
       </div>

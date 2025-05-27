@@ -171,6 +171,9 @@ export const formatDateTime = dt => {
 };
 
 export const getCountdownName = vault => {
+  if (vault.vaultStatus === 'created') {
+    return 'Contribution starts in';
+  }
   if (vault.vaultStatus === 'contribution') {
     return 'Contribution ends in';
   }
@@ -181,4 +184,22 @@ export const getCountdownName = vault => {
     return 'Vault Locked';
   }
   return 'Contribution starts in';
+};
+
+export const getCountdownTime = vault => {
+  if (!vault) return null;
+
+  if (vault.vaultStatus === 'created' || vault.vaultStatus === 'published') {
+    return new Date(vault.contributionOpenWindowTime).getTime();
+  }
+  if (vault.vaultStatus === 'contribution') {
+    return new Date(vault.contributionOpenWindowTime).getTime() + vault.contributionDuration;
+  }
+  if (vault.vaultStatus === 'acquire') {
+    return new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration;
+  }
+  if (vault.vaultStatus === 'locked') {
+    return new Date(vault.lockedPhaseStart).getTime() + vault.lockedDuration;
+  }
+  return null;
 };
