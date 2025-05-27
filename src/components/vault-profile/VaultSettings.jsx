@@ -30,7 +30,7 @@ export const VaultSettings = ({ vault }) => (
       <img
         alt={vault.name}
         className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
-        src={vault.imageUrl || '/assets/vaults/space-man.webp'}
+        src={vault.vaultImage || '/assets/vaults/space-man.webp'}
       />
       <h1 className="text-3xl font-bold">{vault.name}</h1>
     </div>

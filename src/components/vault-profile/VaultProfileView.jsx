@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+import { VAULT_STATUSES } from '../vaults/constants/vaults.constants';
+
+import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { VaultContribution } from '@/components/vault-profile/VaultContribution';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTabs } from '@/components/vault-profile/VaultTabs';
@@ -7,14 +10,13 @@ import { VaultStats } from '@/components/vault-profile/VaultStats';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { formatCompactNumber, getCountdownName, getCountdownTime } from '@/utils/core.utils';
-import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('Assets');
   const { openModal } = useModalControls();
 
-  useVaultStatusTracker(vault);
+  useVaultStatusTracker(vault?.id);
 
   const handleTabChange = tab => setActiveTab(tab);
 
@@ -22,20 +24,17 @@ export const VaultProfileView = ({ vault }) => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        handleClick: () =>
-          openModal('ContributeModal', {
-            vaultName: vault.name,
-            recipientAddress: vault.contractAddress,
-            vaultId: vault.id,
-          }),
+        handleClick: () => openModal('ContributeModal', { vault }),
+        available: vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION,
       },
       Acquire: {
         text: 'Acquire',
-        handleClick: () => openModal('AcquireModal', { vaultName: vault.name }),
+        handleClick: () => openModal('AcquireModal', { vault }),
+        available: vault.vaultStatus === VAULT_STATUSES.ACQUIRE,
       },
       Governance: {
         text: 'Create Proposal',
-        handleClick: () => openModal('CreateProposalModal', { vaultName: vault.name }),
+        handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,
     };
@@ -45,7 +44,7 @@ export const VaultProfileView = ({ vault }) => {
     if (!config) return null;
 
     return (
-      <PrimaryButton className="uppercase" onClick={config.handleClick}>
+      <PrimaryButton disabled={!config.available} className="uppercase" onClick={config.handleClick}>
         {config.text}
       </PrimaryButton>
     );
@@ -78,7 +77,7 @@ export const VaultProfileView = ({ vault }) => {
         <div className="mb-6">
           <VaultCountdown endTime={getCountdownTime(vault)} />
         </div>
-        <VaultContribution socialLinks={vault.socialLinks} target={vault.target} totalRaised={vault.totalRaised} />
+        <VaultContribution vault={vault} />
       </div>
     </div>
   );

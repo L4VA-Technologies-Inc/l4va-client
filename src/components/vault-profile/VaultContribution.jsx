@@ -1,18 +1,19 @@
+import { VAULT_STATUSES } from '../vaults/constants/vaults.constants';
+
 import { formatNum } from '@/utils/core.utils';
 import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
 
-export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => {
-  const progress = (totalRaised / target) * 100;
-
+export const VaultContribution = ({ vault, phase }) => {
+  const progress = (vault.assetsCount / vault.maxContributeAssets) * 100;
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-[20px] font-medium mb-2">Contribution:</h2>
         <div className="flex justify-between text-sm mb-1">
           <span className="text-dark-100">
-            Total Raised: <span className="text-[#F97316]">95%</span>
+            Total Raised: <span className="text-[#F97316]">{vault.assetsCount}</span>
           </span>
-          <span className="text-dark-100">max 225</span>
+          <span className="text-dark-100">max {vault.maxContributeAssets}</span>
         </div>
         <div className="h-2 rounded-full bg-steel-750 mb-4">
           <div
@@ -20,16 +21,18 @@ export const VaultContribution = ({ totalRaised, target, socialLinks = [] }) => 
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div>
-          <h2 className="text-[20px] font-medium mb-2">Acquire:</h2>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-dark-100">Reserve</span>
-            <span className="text-dark-100">${formatNum(50000)}</span>
+        {phase === VAULT_STATUSES.ACQUIRE && (
+          <div>
+            <h2 className="text-[20px] font-medium mb-2">Acquire:</h2>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-dark-100">Reserve</span>
+              <span className="text-dark-100">${formatNum(50000)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-steel-750 opacity-50" />
           </div>
-          <div className="h-2 rounded-full bg-steel-750 opacity-50" />
-        </div>
+        )}
       </div>
-      <VaultSocialLinks socialLinks={socialLinks} />
+      <VaultSocialLinks socialLinks={vault.socialLinks} />
     </div>
   );
 };

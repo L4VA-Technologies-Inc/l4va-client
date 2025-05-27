@@ -45,4 +45,23 @@ export class CoreApiProvider {
     });
     return response;
   }
+
+  static async acquireAda({ vaultId, assets }) {
+    const response = await axiosInstance.post(CoreConfigProvider.acquire(vaultId), { assets });
+    return response;
+  }
+
+  static async createContributionTx({ vaultId, assets }) {
+    const response = await axiosInstance.post(CoreConfigProvider.createContributionTx(vaultId), {
+      assets,
+    });
+    return response;
+  }
+
+  static async updateTransactionHash({ txId, txHash }) {
+    const response = await axiosInstance.patch(CoreConfigProvider.updateTransactionHash(txId), {
+      txHash,
+    });
+    return response;
+  }
 }

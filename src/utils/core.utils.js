@@ -189,7 +189,7 @@ export const getCountdownName = vault => {
 export const getCountdownTime = vault => {
   if (!vault) return null;
 
-  if (vault.vaultStatus === 'created' || vault.vaultStatus === 'published') {
+  if (vault.vaultStatus === 'published') {
     return new Date(vault.contributionOpenWindowTime).getTime();
   }
   if (vault.vaultStatus === 'contribution') {

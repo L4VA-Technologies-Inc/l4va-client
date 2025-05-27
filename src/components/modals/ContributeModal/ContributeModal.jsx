@@ -16,7 +16,8 @@ const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
-export const ContributeModal = ({ vaultName, vaultId, recipientAddress, onClose }) => {
+export const ContributeModal = ({ vault, onClose }) => {
+  const { vaultName, recipientAddress } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -162,7 +163,7 @@ export const ContributeModal = ({ vaultName, vaultId, recipientAddress, onClose 
       });
 
       await sendTransaction({
-        vaultId,
+        vaultId: vault.id,
         recipient: recipientAddress,
         selectedNFTs: formattedAssets,
       });

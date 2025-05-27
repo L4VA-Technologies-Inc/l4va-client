@@ -2,7 +2,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { TransactionsApiProvider } from '@/services/api/transactions';
-import { ContributeApiProvider } from '@/services/api/contribute';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 
@@ -86,13 +85,13 @@ export const useSubmitTransaction = () => {
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({
-    mutationFn: ({ vaultId, assets }) => ContributeApiProvider.createContributionTx({ vaultId, assets }),
+    mutationFn: ({ vaultId, assets }) => CoreApiProvider.createContributionTx({ vaultId, assets }),
   });
 };
 
 export const useUpdateTransactionHash = () => {
   return useMutation({
-    mutationFn: ({ txId, txHash }) => ContributeApiProvider.updateTransactionHash({ txId, txHash }),
+    mutationFn: ({ txId, txHash }) => CoreApiProvider.updateTransactionHash({ txId, txHash }),
   });
 };
 
@@ -129,7 +128,12 @@ export const useHandleCsv = () => {
   });
 };
 
-// TapTools Queries
+export const useCreateAcquireTx = () => {
+  return useMutation({
+    mutationFn: ({ vaultId, assets }) => CoreApiProvider.acquireAda({ vaultId, assets }),
+  });
+};
+
 export const useWalletSummary = address => {
   return useQuery({
     queryKey: ['wallet-summary', address],

@@ -1,16 +1,18 @@
 import { useState } from 'react';
+import { useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { CurrencyDropdown } from '@/components/CurrencyDropdown';
 import { formatNum, formatCompactNumber } from '@/utils/core.utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useCreateAcquireTx } from '@/services/api/queries';
 
-export const AcquireModal = ({ onClose, vaultName }) => {
-  const [acquireAmount, setAcquireAmount] = useState('130.25');
-  const [selectedCurrency, setSelectedCurrency] = useState('ADA');
+export const AcquireModal = ({ vault, onClose }) => {
+  const { vaultName } = vault;
+  const [acquireAmount, setAcquireAmount] = useState(0);
+  const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
+  const balanceAda = useWallet('balanceAda');
 
-  // These would come from props or context in a real app
-  const walletBalance = 4556;
   const totalAcquired = 13025.0;
   const assetsOffered = 50;
   const currentVaultTVL = 16050.0;
@@ -18,9 +20,28 @@ export const AcquireModal = ({ onClose, vaultName }) => {
   const estimatedTickerVal = acquireAmount ? parseFloat(acquireAmount) * 40.35 : 0;
   const vaultAllocation = acquireAmount ? '1%' : '0%';
 
-  const handleAcquire = () => {
-    // Handle acquire logic
-    console.log('Acquiring:', acquireAmount, selectedCurrency);
+  const handleAcquire = async () => {
+    try {
+      if (!acquireAmount || parseFloat(acquireAmount) <= 0) return;
+
+      const { data } = await createAcquireTx({
+        vaultId: vault.id,
+        assets: [
+          {
+            assetName: 'lovelace',
+            policyId: 'lovelace',
+            quantity: Number(acquireAmount),
+          },
+        ],
+      });
+
+      console.log(data);
+
+      setAcquireAmount('');
+      onClose && onClose();
+    } catch (err) {
+      toast.error(err.message || 'Acquire failed');
+    }
   };
 
   return (
@@ -33,9 +54,8 @@ export const AcquireModal = ({ onClose, vaultName }) => {
           <div className="md:w-1/2 pr-0 md:pr-6 space-y-6">
             <div className="flex justify-between items-center">
               <span>ADA in wallet</span>
-              <span className="font-bold">{formatNum(walletBalance)} ADA</span>
+              <span className="font-bold">{formatNum(balanceAda || 0)} ADA</span>
             </div>
-
             <div className="bg-steel-850 p-4 rounded-lg">
               <h3 className="font-bold mb-2">Acquire</h3>
               <div className="flex items-center gap-4">
@@ -45,7 +65,7 @@ export const AcquireModal = ({ onClose, vaultName }) => {
                   value={acquireAmount}
                   onChange={e => setAcquireAmount(e.target.value)}
                 />
-                <CurrencyDropdown value={selectedCurrency} onSelect={setSelectedCurrency} />
+                <span className="text-2xl font-bold">ADA</span>
               </div>
             </div>
 
@@ -70,8 +90,8 @@ export const AcquireModal = ({ onClose, vaultName }) => {
               <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1 text-center">
-                  <p className="text-dark-100 text-sm">Total {selectedCurrency} Acquired</p>
-                  <p className="text-2xl font-medium">{formatNum(acquireAmount) || '0'}</p>
+                  <p className="text-dark-100 text-sm">Total ADA Acquired</p>
+                  <p className="text-2xl font-medium">{formatNum(totalAcquired)}</p>
                 </div>
                 <div className="space-y-1 text-center">
                   <p className="text-dark-100 text-sm">Vault Allocation</p>
@@ -90,7 +110,13 @@ export const AcquireModal = ({ onClose, vaultName }) => {
               <div className="flex justify-center mt-8">
                 <PrimaryButton
                   className="uppercase"
-                  disabled={!acquireAmount || parseFloat(acquireAmount) <= 0}
+                  disabled={
+                    !acquireAmount ||
+                    parseFloat(acquireAmount) <= 0 ||
+                    status === 'building' ||
+                    status === 'signing' ||
+                    status === 'submitting'
+                  }
                   onClick={handleAcquire}
                 >
                   Acquire
