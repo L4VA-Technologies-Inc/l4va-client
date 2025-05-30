@@ -59,9 +59,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     }
                   />
                 </td>
-                <td className="px-4 py-3 font-medium">
-                  {asset.metadata?.onchainMetadata?.name || substringAddress(asset.assetId)}
-                </td>
+                <td className="px-4 py-3 font-medium">ADA</td>
                 <td className="px-4 py-3 capitalize">{asset.type}</td>
                 <td className="px-4 py-3 capitalize">{asset.status}</td>
                 <td className="px-4 py-3">{asset.quantity}</td>

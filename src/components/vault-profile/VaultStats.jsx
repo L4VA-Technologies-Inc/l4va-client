@@ -1,6 +1,6 @@
 import { formatNum } from '@/utils/core.utils';
 
-export const VaultStats = ({ access, reserve, acquired, invAssetVal }) => {
+export const VaultStats = ({ access, requireReservedCostUsd, acquired, invAssetVal }) => {
   const stats = [
     {
       label: 'Access',
@@ -8,7 +8,7 @@ export const VaultStats = ({ access, reserve, acquired, invAssetVal }) => {
     },
     {
       label: 'Reserve',
-      value: `$${formatNum(reserve)}`,
+      value: `$${formatNum(requireReservedCostUsd)}`,
     },
     {
       label: 'Acquired',

@@ -60,7 +60,8 @@ export const VaultContributedAssetsList = ({ vault }) => {
                   />
                 </td>
                 <td className="px-4 py-3 font-medium">
-                  {asset.metadata?.onchainMetadata?.name || substringAddress(asset.assetId)}
+                  {asset.metadata?.onchainMetadata?.name ||
+                    (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
                 </td>
                 <td className="px-4 py-3 capitalize">{asset.type}</td>
                 <td className="px-4 py-3 capitalize">{asset.status}</td>

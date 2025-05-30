@@ -92,7 +92,7 @@ export const VaultProfileView = ({ vault }) => {
               {renderVaultInfo()}
               {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
               <div className="mb-6">
-                <VaultStats acquired={0} reserve={50000} />
+                <VaultStats acquired={0} requireReservedCostUsd={vault.requireReservedCostUsd} />
               </div>
               <div className="flex justify-center mb-6">{renderActionButton()}</div>
               <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
