@@ -52,7 +52,7 @@ export const ContributeModal = ({ vault, onClose }) => {
       const adaAsset = {
         id: 'lovelace',
         name: 'ADA',
-        policyId: '',
+        policyId: 'lovelace',
         quantity: wallet.balanceAda || 0,
         decimals: 6,
         type: 'FT',
