@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { HelpCircle } from 'lucide-react';
 
 import { formatNum } from '@/utils/core.utils';
@@ -8,14 +7,14 @@ export const LavaInput = ({
   label,
   value,
   onChange,
-  placeholder = 'Enter text',
   error,
-  type = 'text',
-  required = false,
   maxLength,
   suffix,
   className,
   hint,
+  placeholder = 'Enter text',
+  type = 'text',
+  required = false,
 }) => {
   const handleChange = e => {
     const newValue = e.target.value;
@@ -83,17 +82,16 @@ export const LavaInput = ({
 
 export const LavaSteelInput = ({
   label,
-  required = false,
-  placeholder = 'Lorem ipsum',
   value,
-  className = '',
   onChange,
   hint,
+  type = 'text',
+  className = '',
+  required = false,
+  placeholder = 'Lorem ipsum',
+  ...props
 }) => {
-  const [inputValue, setInputValue] = useState(value || '');
-
   const handleChange = e => {
-    setInputValue(e.target.value);
     if (onChange) onChange(e.target.value);
   };
 
@@ -120,9 +118,10 @@ export const LavaSteelInput = ({
           focus:outline-none focus:ring-2 focus:ring-steel-750 ${className}
         `}
         placeholder={placeholder}
-        type="text"
-        value={inputValue}
+        type={type}
+        value={value}
         onChange={handleChange}
+        {...props}
       />
     </div>
   );
