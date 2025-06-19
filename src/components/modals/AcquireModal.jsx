@@ -23,6 +23,7 @@ export const AcquireModal = ({ vault, onClose }) => {
   const estimatedValue = acquireAmount ? parseFloat(acquireAmount) * 3.5 : 0;
   const estimatedTickerVal = acquireAmount ? parseFloat(acquireAmount) * 40.35 : 0;
   const vaultAllocation = acquireAmount ? '1%' : '0%';
+  const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
 
   const handleAcquire = async () => {
     try {
@@ -85,6 +86,25 @@ export const AcquireModal = ({ vault, onClose }) => {
     }
   };
 
+  const handleAmountChange = e => {
+    let value = e.target.value;
+
+    const parts = value.split('.');
+    if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+
+    if (value.includes('.')) {
+      const [int, dec] = value.split('.');
+      value = int + '.' + dec.slice(0, 2);
+    }
+
+    // Clamp to maxValue
+    if (Number(value) > maxValue) {
+      value = maxValue.toFixed(2);
+    }
+
+    setAcquireAmount(value);
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 text-white border-none">
@@ -102,9 +122,10 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="flex items-center gap-4">
                 <input
                   className="bg-transparent text-4xl w-full outline-none font-bold"
-                  type="text"
+                  type="number"
+                  min="0"
                   value={acquireAmount}
-                  onChange={e => setAcquireAmount(e.target.value)}
+                  onChange={handleAmountChange}
                 />
                 <span className="text-2xl font-bold">ADA</span>
               </div>
@@ -134,17 +155,17 @@ export const AcquireModal = ({ vault, onClose }) => {
                   <p className="text-dark-100 text-sm">Total ADA Acquired</p>
                   <p className="text-2xl font-medium">{formatNum(totalAcquired)}</p>
                 </div>
-                <div className="space-y-1 text-center">
+                <div className="space-y-1 text-center ">
                   <p className="text-dark-100 text-sm">Vault Allocation</p>
                   <p className="text-2xl font-medium">{vaultAllocation}</p>
                 </div>
                 <div className="space-y-1 text-center">
                   <p className="text-dark-100 text-sm">Estimated Value</p>
-                  <p className="text-2xl font-medium">${formatNum(estimatedValue)}</p>
+                  <p className="text-2xl font-medium truncate">${formatNum(estimatedValue)}</p>
                 </div>
                 <div className="space-y-1 text-center">
                   <p className="text-dark-100 text-sm">Estimated TICKER VAL ($VLRM)</p>
-                  <p className="text-2xl font-medium">{formatNum(estimatedTickerVal)}</p>
+                  <p className="text-2xl font-medium truncate">{formatNum(estimatedTickerVal)}</p>
                 </div>
               </div>
 
