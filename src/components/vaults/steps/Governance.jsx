@@ -40,18 +40,6 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     updateField(name, +numericValue);
   };
 
-  const handleDecimalsChange = e => {
-    const { name, value } = e.target;
-    const numericValue = value.replace(/[^0-9]/g, '');
-
-    const numValue = parseInt(numericValue, 10);
-    if (numValue < 1 || numValue > 9) {
-      return;
-    }
-
-    updateField(name, numericValue);
-  };
-
   return (
     <div className="grid grid-cols-2">
       <div className="px-[36px]">
@@ -63,16 +51,6 @@ export const Governance = ({ data, errors = {}, updateField }) => {
             placeholder="XXX,XXX,XXX"
             value={data.ftTokenSupply || ''}
             onChange={handleSupplyChange}
-          />
-        </div>
-        <div className="mt-[60px]">
-          <LavaInput
-            error={errors.ftTokenDecimals}
-            label="FT TOKEN DECIMALS"
-            name="ftTokenDecimals"
-            placeholder="Integer between 1-9"
-            value={data.ftTokenDecimals || ''}
-            onChange={handleDecimalsChange}
           />
         </div>
         <div className="mt-[60px]">

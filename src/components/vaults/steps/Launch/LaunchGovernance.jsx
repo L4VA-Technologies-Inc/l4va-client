@@ -19,10 +19,6 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
           <p className="text-[20px]">{data.ftTokenSupply ? formatNum(data.ftTokenSupply) : 'Not set'}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">FT Token Decimals</p>
-          <p className="text-[20px]">{data.ftTokenDecimals ? formatNum(data.ftTokenDecimals) : 'Not set'}</p>
-        </div>
-        <div>
           <p className="uppercase font-semibold text-dark-100">FT Token image</p>
           <div className="mt-2 relative w-full h-32 overflow-hidden rounded-lg">
             <img

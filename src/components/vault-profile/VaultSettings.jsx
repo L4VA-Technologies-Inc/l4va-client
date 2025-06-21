@@ -39,7 +39,6 @@ export const VaultSettings = ({ vault }) => (
         <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
         <InfoRow label="Token Name" value={vault.tokenName} />
         <InfoRow label="Token Symbol" value={vault.tokenSymbol} />
-        <InfoRow label="Token Decimals" value={vault.tokenDecimals} />
         <InfoRow copyable label="Token Policy" value={vault.tokenPolicy} />
         <InfoRow label="Total Supply" value={vault.totalSupply} />
         <InfoRow label="% of Asset Fractionalized @ Lock" value={vault.assetFractionalized} />

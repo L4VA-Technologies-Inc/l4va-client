@@ -129,15 +129,8 @@ export const vaultSchema = yup.object({
     .typeError('Token supply is required')
     .required('Token supply is required')
     .integer('Must be an integer')
-    .min(1, 'Must be greater than 0')
+    .min(100000000, 'Must be greater than 1,000,000')
     .max(100000000, 'Must be less than or equal to 100,000,000'),
-  ftTokenDecimals: yup
-    .number()
-    .typeError('Token decimals is required')
-    .required('Token decimals is required')
-    .integer('Must be an integer')
-    .min(1, 'Must be at least 1')
-    .max(9, 'Must be at most 9'),
   ftTokenImg: yup.string().required('Token image is required'),
   terminationType: yup.string().required('Termination type is required'),
   creationThreshold: yup
@@ -201,8 +194,7 @@ export const initialVaultState = {
   liquidityPoolContribution: null,
 
   // Step 4: Governance
-  ftTokenSupply: 100000000,
-  ftTokenDecimals: 5,
+  ftTokenSupply: 1000000,
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
@@ -229,7 +221,6 @@ export const stepFields = {
   ],
   4: [
     'ftTokenSupply',
-    'ftTokenDecimals',
     'ftTokenImg',
     'terminationType',
     'creationThreshold',
