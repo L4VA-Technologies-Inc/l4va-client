@@ -18,7 +18,7 @@ export const VaultContribution = ({ vault, phase }) => {
         <div className="h-2 rounded-full bg-steel-750 mb-4">
           <div
             className="h-full rounded-full bg-gradient-to-r from-[#F97316] via-[#F97316] to-[#FFD012]"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${progress}%`, maxWidth: '100%' }}
           />
         </div>
         {phase === VAULT_STATUSES.ACQUIRE && (
