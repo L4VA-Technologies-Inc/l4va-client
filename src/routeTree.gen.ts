@@ -8,146 +8,62 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SandboxRouteImport } from './routes/sandbox'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as CreateRouteImport } from './routes/create'
+import { Route as ContributeRouteImport } from './routes/contribute'
+import { Route as AcquireRouteImport } from './routes/acquire'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
+import { Route as VaultsMyRouteImport } from './routes/vaults/my'
+import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as SandboxImport } from './routes/sandbox'
-import { Route as ProfileImport } from './routes/profile'
-import { Route as CreateImport } from './routes/create'
-import { Route as ContributeImport } from './routes/contribute'
-import { Route as AcquireImport } from './routes/acquire'
-import { Route as IndexImport } from './routes/index'
-import { Route as VaultsIndexImport } from './routes/vaults/index'
-import { Route as VaultsMyImport } from './routes/vaults/my'
-import { Route as VaultsIdImport } from './routes/vaults/$id'
-
-// Create/Update Routes
-
-const SandboxRoute = SandboxImport.update({
+const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ProfileRoute = ProfileImport.update({
+const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const CreateRoute = CreateImport.update({
+const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ContributeRoute = ContributeImport.update({
+const ContributeRoute = ContributeRouteImport.update({
   id: '/contribute',
   path: '/contribute',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AcquireRoute = AcquireImport.update({
+const AcquireRoute = AcquireRouteImport.update({
   id: '/acquire',
   path: '/acquire',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const VaultsIndexRoute = VaultsIndexImport.update({
+const VaultsIndexRoute = VaultsIndexRouteImport.update({
   id: '/vaults/',
   path: '/vaults/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const VaultsMyRoute = VaultsMyImport.update({
+const VaultsMyRoute = VaultsMyRouteImport.update({
   id: '/vaults/my',
   path: '/vaults/my',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const VaultsIdRoute = VaultsIdImport.update({
+const VaultsIdRoute = VaultsIdRouteImport.update({
   id: '/vaults/$id',
   path: '/vaults/$id',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/acquire': {
-      id: '/acquire'
-      path: '/acquire'
-      fullPath: '/acquire'
-      preLoaderRoute: typeof AcquireImport
-      parentRoute: typeof rootRoute
-    }
-    '/contribute': {
-      id: '/contribute'
-      path: '/contribute'
-      fullPath: '/contribute'
-      preLoaderRoute: typeof ContributeImport
-      parentRoute: typeof rootRoute
-    }
-    '/create': {
-      id: '/create'
-      path: '/create'
-      fullPath: '/create'
-      preLoaderRoute: typeof CreateImport
-      parentRoute: typeof rootRoute
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileImport
-      parentRoute: typeof rootRoute
-    }
-    '/sandbox': {
-      id: '/sandbox'
-      path: '/sandbox'
-      fullPath: '/sandbox'
-      preLoaderRoute: typeof SandboxImport
-      parentRoute: typeof rootRoute
-    }
-    '/vaults/$id': {
-      id: '/vaults/$id'
-      path: '/vaults/$id'
-      fullPath: '/vaults/$id'
-      preLoaderRoute: typeof VaultsIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/vaults/my': {
-      id: '/vaults/my'
-      path: '/vaults/my'
-      fullPath: '/vaults/my'
-      preLoaderRoute: typeof VaultsMyImport
-      parentRoute: typeof rootRoute
-    }
-    '/vaults/': {
-      id: '/vaults/'
-      path: '/vaults'
-      fullPath: '/vaults'
-      preLoaderRoute: typeof VaultsIndexImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,7 +76,6 @@ export interface FileRoutesByFullPath {
   '/vaults/my': typeof VaultsMyRoute
   '/vaults': typeof VaultsIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/acquire': typeof AcquireRoute
@@ -172,9 +87,8 @@ export interface FileRoutesByTo {
   '/vaults/my': typeof VaultsMyRoute
   '/vaults': typeof VaultsIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/acquire': typeof AcquireRoute
   '/contribute': typeof ContributeRoute
@@ -185,7 +99,6 @@ export interface FileRoutesById {
   '/vaults/my': typeof VaultsMyRoute
   '/vaults/': typeof VaultsIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
@@ -222,7 +135,6 @@ export interface FileRouteTypes {
     | '/vaults/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcquireRoute: typeof AcquireRoute
@@ -233,6 +145,74 @@ export interface RootRouteChildren {
   VaultsIdRoute: typeof VaultsIdRoute
   VaultsMyRoute: typeof VaultsMyRoute
   VaultsIndexRoute: typeof VaultsIndexRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/sandbox': {
+      id: '/sandbox'
+      path: '/sandbox'
+      fullPath: '/sandbox'
+      preLoaderRoute: typeof SandboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contribute': {
+      id: '/contribute'
+      path: '/contribute'
+      fullPath: '/contribute'
+      preLoaderRoute: typeof ContributeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acquire': {
+      id: '/acquire'
+      path: '/acquire'
+      fullPath: '/acquire'
+      preLoaderRoute: typeof AcquireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vaults/': {
+      id: '/vaults/'
+      path: '/vaults'
+      fullPath: '/vaults'
+      preLoaderRoute: typeof VaultsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vaults/my': {
+      id: '/vaults/my'
+      path: '/vaults/my'
+      fullPath: '/vaults/my'
+      preLoaderRoute: typeof VaultsMyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vaults/$id': {
+      id: '/vaults/$id'
+      path: '/vaults/$id'
+      fullPath: '/vaults/$id'
+      preLoaderRoute: typeof VaultsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -246,55 +226,6 @@ const rootRouteChildren: RootRouteChildren = {
   VaultsMyRoute: VaultsMyRoute,
   VaultsIndexRoute: VaultsIndexRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.jsx",
-      "children": [
-        "/",
-        "/acquire",
-        "/contribute",
-        "/create",
-        "/profile",
-        "/sandbox",
-        "/vaults/$id",
-        "/vaults/my",
-        "/vaults/"
-      ]
-    },
-    "/": {
-      "filePath": "index.jsx"
-    },
-    "/acquire": {
-      "filePath": "acquire.jsx"
-    },
-    "/contribute": {
-      "filePath": "contribute.jsx"
-    },
-    "/create": {
-      "filePath": "create.jsx"
-    },
-    "/profile": {
-      "filePath": "profile.jsx"
-    },
-    "/sandbox": {
-      "filePath": "sandbox.jsx"
-    },
-    "/vaults/$id": {
-      "filePath": "vaults/$id.jsx"
-    },
-    "/vaults/my": {
-      "filePath": "vaults/my.jsx"
-    },
-    "/vaults/": {
-      "filePath": "vaults/index.jsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

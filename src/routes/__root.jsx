@@ -9,9 +9,7 @@ import { NotFound } from '@/pages/NotFound';
 const RootComponent = () => (
   <>
     <Header />
-    <div className="min-h-screen">
-      <Outlet />
-    </div>
+    <Outlet />
     <TanStackRouterDevtools position="bottom-right" />
     <Footer />
     <Modal />

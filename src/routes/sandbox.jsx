@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { Sandbox } from '@/pages/Sandbox';
+import Test from '@/components/Test';
 
-const SandboxComponent = () => <Sandbox />;
+const SandboxComponent = () => <Test />;
 
 export const Route = createFileRoute('/sandbox')({
   component: SandboxComponent,
