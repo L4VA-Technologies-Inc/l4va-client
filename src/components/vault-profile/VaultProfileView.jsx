@@ -75,7 +75,10 @@ export const VaultProfileView = ({ vault }) => {
         />
         <p className="text-[20px] mb-2 font-medium">{getCountdownName(vault)}</p>
         <div className="mb-6">
-          <VaultCountdown endTime={getCountdownTime(vault)} isLocked={vault.vaultStatus === 'locked' || 'governance'} />
+          <VaultCountdown
+            endTime={getCountdownTime(vault)}
+            isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
+          />
         </div>
         <VaultContribution vault={vault} />
       </div>
