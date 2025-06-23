@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 
-import { CreateVault } from '@/pages/CreateVault';
+import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { useAuth } from '@/lib/auth/auth';
 
 const CreateComponent = () => {
@@ -14,7 +14,14 @@ const CreateComponent = () => {
     return <Navigate to="/" />;
   }
 
-  return <CreateVault />;
+  return (
+    <>
+      <div className="flex justify-center py-8">
+        <span className="font-russo text-4xl uppercase">Create Vault</span>
+      </div>
+      <CreateVaultForm />
+    </>
+  );
 };
 
 export const Route = createFileRoute('/create')({

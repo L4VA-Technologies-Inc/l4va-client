@@ -3,8 +3,8 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Toaster } from 'react-hot-toast';
 
 import MainLayout from '@/components/layout/MainLayout';
+import { NotFound } from '@/components/NotFound';
 import { Modal } from '@/lib/modals/modal.registry';
-import { NotFound } from '@/pages/NotFound';
 
 const RootComponent = () => (
   <>

@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 
-import { MyVaults } from '@/pages/MyVaults';
+import { MyVaultsList } from '@/components/vaults/MyVaultsList';
 import { useAuth } from '@/lib/auth/auth';
 
 const MyVaultsComponent = () => {
@@ -14,7 +14,7 @@ const MyVaultsComponent = () => {
     return <Navigate to="/" />;
   }
 
-  return <MyVaults />;
+  return <MyVaultsList />;
 };
 
 export const Route = createFileRoute('/vaults/my')({

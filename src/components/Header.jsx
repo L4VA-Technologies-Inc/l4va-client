@@ -10,9 +10,9 @@ import L4vaIcon from '@/icons/l4va.svg?react';
 
 const navLinks = [
   { to: '/create', label: 'Create' },
-  { to: '/contribute', label: 'Contribute' },
-  { to: '/acquire', label: 'Acquire' },
-  { to: '/govern', label: 'Govern' },
+  { to: '/vaults?tab=contribute', label: 'Contribute' },
+  { to: '/vaults?tab=acquire', label: 'Acquire' },
+  { to: '/vaults?tab=govern', label: 'Govern' },
 ];
 
 // Memoized NavLink for performance
@@ -43,13 +43,9 @@ export const Header = () => {
     [isAuthenticated, openModal]
   );
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
     <header className="h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-steel-900/50">

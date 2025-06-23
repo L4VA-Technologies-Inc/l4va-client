@@ -12,8 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SandboxRouteImport } from './routes/sandbox'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as CreateRouteImport } from './routes/create'
-import { Route as ContributeRouteImport } from './routes/contribute'
-import { Route as AcquireRouteImport } from './routes/acquire'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
 import { Route as VaultsMyRouteImport } from './routes/vaults/my'
@@ -32,16 +30,6 @@ const ProfileRoute = ProfileRouteImport.update({
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContributeRoute = ContributeRouteImport.update({
-  id: '/contribute',
-  path: '/contribute',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AcquireRoute = AcquireRouteImport.update({
-  id: '/acquire',
-  path: '/acquire',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,8 +55,6 @@ const VaultsIdRoute = VaultsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/acquire': typeof AcquireRoute
-  '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
   '/sandbox': typeof SandboxRoute
@@ -78,8 +64,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/acquire': typeof AcquireRoute
-  '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
   '/sandbox': typeof SandboxRoute
@@ -90,8 +74,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/acquire': typeof AcquireRoute
-  '/contribute': typeof ContributeRoute
   '/create': typeof CreateRoute
   '/profile': typeof ProfileRoute
   '/sandbox': typeof SandboxRoute
@@ -103,8 +85,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/acquire'
-    | '/contribute'
     | '/create'
     | '/profile'
     | '/sandbox'
@@ -114,8 +94,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/acquire'
-    | '/contribute'
     | '/create'
     | '/profile'
     | '/sandbox'
@@ -125,8 +103,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/acquire'
-    | '/contribute'
     | '/create'
     | '/profile'
     | '/sandbox'
@@ -137,8 +113,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AcquireRoute: typeof AcquireRoute
-  ContributeRoute: typeof ContributeRoute
   CreateRoute: typeof CreateRoute
   ProfileRoute: typeof ProfileRoute
   SandboxRoute: typeof SandboxRoute
@@ -168,20 +142,6 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contribute': {
-      id: '/contribute'
-      path: '/contribute'
-      fullPath: '/contribute'
-      preLoaderRoute: typeof ContributeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/acquire': {
-      id: '/acquire'
-      path: '/acquire'
-      fullPath: '/acquire'
-      preLoaderRoute: typeof AcquireRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -217,8 +177,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AcquireRoute: AcquireRoute,
-  ContributeRoute: ContributeRoute,
   CreateRoute: CreateRoute,
   ProfileRoute: ProfileRoute,
   SandboxRoute: SandboxRoute,

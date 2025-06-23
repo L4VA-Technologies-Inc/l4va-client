@@ -101,7 +101,7 @@ export const ProfileSocialLinks = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="font-russo text-[40px] uppercase">Socials</h2>
+        <h2 className="font-russo text-4xl uppercase">Socials</h2>
         {socialLinks.length < MAX_LINKS && !isAdding && (
           <button
             className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
