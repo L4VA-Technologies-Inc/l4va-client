@@ -16,7 +16,7 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+    <div className="p-0 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
       <div className="space-y-12">
         <div>
           <LavaInput
@@ -29,29 +29,29 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             onChange={handleChange}
           />
         </div>
-
-        <div>
-          <LavaRadio
-            label="*Vault type"
-            name="type"
-            options={VAULT_TYPE_OPTIONS}
-            value={data.type || ''}
-            onChange={value => updateField('type', value)}
-            hint="Type of assets that can be contributed to the Vault."
-          />
-          {errors.type && <p className="text-red-600 mt-2 text-sm">{errors.type}</p>}
-        </div>
-
-        <div>
-          <LavaRadio
-            label="*Vault privacy"
-            name="privacy"
-            options={VAULT_PRIVACY_OPTIONS}
-            value={data.privacy || ''}
-            onChange={value => updateField('privacy', value)}
-            hint={PRIVACY_HINT}
-          />
-          {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <LavaRadio
+              label="*Vault type"
+              name="type"
+              options={VAULT_TYPE_OPTIONS}
+              value={data.type || ''}
+              onChange={value => updateField('type', value)}
+              hint="Type of assets that can be contributed to the Vault."
+            />
+            {errors.type && <p className="text-red-600 mt-2 text-sm">{errors.type}</p>}
+          </div>
+          <div>
+            <LavaRadio
+              label="*Vault privacy"
+              name="privacy"
+              options={VAULT_PRIVACY_OPTIONS}
+              value={data.privacy || ''}
+              onChange={value => updateField('privacy', value)}
+              hint={PRIVACY_HINT}
+            />
+            {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
+          </div>
         </div>
 
         <div>

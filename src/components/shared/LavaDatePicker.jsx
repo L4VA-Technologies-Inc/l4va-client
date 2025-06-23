@@ -120,7 +120,40 @@ export const LavaDatePicker = ({
               <div className="sm:flex">
                 <Calendar
                   initialFocus
-                  className={styles.calendar}
+                  className={cn(styles.calendar, 'p-3')}
+                  classNames={{
+                    root: 'w-fit',
+                    months: 'flex gap-4 flex-col md:flex-row relative',
+                    month: 'flex flex-col w-full gap-4',
+                    nav: 'flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between',
+                    button_previous: cn(
+                      'size-8 aria-disabled:opacity-50 p-0 select-none',
+                      'hover:bg-accent hover:text-accent-foreground'
+                    ),
+                    button_next: cn(
+                      'size-8 aria-disabled:opacity-50 p-0 select-none',
+                      'hover:bg-accent hover:text-accent-foreground'
+                    ),
+                    month_caption: 'flex items-center justify-center h-8 w-full px-8',
+                    dropdowns: 'w-full flex items-center text-sm font-medium justify-center h-8 gap-1.5',
+                    dropdown_root:
+                      'relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md',
+                    dropdown: 'absolute inset-0 opacity-0',
+                    caption_label: 'select-none font-medium text-sm',
+                    table: 'w-full border-collapse',
+                    weekdays: 'flex',
+                    weekday: 'text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none',
+                    week: 'flex w-full mt-2',
+                    day: cn(
+                      'relative w-full h-full p-0 text-center aspect-square select-none',
+                      'hover:bg-accent hover:text-accent-foreground rounded-md'
+                    ),
+                    today: 'bg-accent text-accent-foreground rounded-md',
+                    outside: 'text-muted-foreground aria-selected:text-muted-foreground',
+                    disabled: 'text-muted-foreground opacity-50',
+                    selected:
+                      'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+                  }}
                   disabled={date => {
                     const minimumDate = minDate || new Date(new Date().setHours(0, 0, 0, 0));
                     return date < minimumDate;
