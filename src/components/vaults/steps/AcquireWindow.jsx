@@ -39,10 +39,10 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   const minDate = getMinAcquireDate();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2">
-      <div className="px-[36px]">
+    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="space-y-12">
         {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
-          <div className="mb-[60px]">
+          <div>
             <LavaWhitelist
               required
               allowCsv
@@ -69,7 +69,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             {errors.acquireWindowDuration && <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>}
           </div>
         </div>
-        <div className="mt-[60px]">
+        <div>
           <div className="uppercase font-bold">*ACQUIRE WINDOW OPEN TIME</div>
           <div className="mt-4">
             <LavaRadio
@@ -104,20 +104,22 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           </div>
         </div>
       </div>
-      <div className="px-[36px]">
-        <LavaInput
-          required
-          error={errors.tokensForAcquires}
-          label="TOKENS FOR ACQUIRES (%)"
-          name="tokensForAcquires"
-          placeholder="XX.XX"
-          suffix="%"
-          type="text"
-          value={data.tokensForAcquires || ''}
-          onChange={handleChange}
-          hint="The percentage (%) of total tokens minted which will be received by Acquirers when Vault locks; while asset Contributors will receive 100% minus this amount."
-        />
-        <div className="mt-[60px]">
+      <div className="space-y-12">
+        <div>
+          <LavaInput
+            required
+            error={errors.tokensForAcquires}
+            label="TOKENS FOR ACQUIRES (%)"
+            name="tokensForAcquires"
+            placeholder="XX.XX"
+            suffix="%"
+            type="text"
+            value={data.tokensForAcquires || ''}
+            onChange={handleChange}
+            hint="The percentage (%) of total tokens minted which will be received by Acquirers when Vault locks; while asset Contributors will receive 100% minus this amount."
+          />
+        </div>
+        <div>
           <LavaInput
             required
             error={errors.acquireReserve}
@@ -131,7 +133,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             hint={RESERVE_HINT}
           />
         </div>
-        <div className="mt-[60px]">
+        <div>
           <LavaInput
             required
             error={errors.liquidityPoolContribution}

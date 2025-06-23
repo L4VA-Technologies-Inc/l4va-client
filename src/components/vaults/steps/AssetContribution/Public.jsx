@@ -5,8 +5,8 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const Public = ({ data, errors = {}, updateField }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2">
-    <div className="px-[36px]">
+  <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+    <div className="space-y-12">
       <div>
         <LavaRadio
           label="*Vault Value Method"
@@ -23,7 +23,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
         />
         {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
       </div>
-      <div className="mt-[60px]">
+      <div>
         <LavaRadio
           label="*Contribution window open type"
           name="contributionOpenWindowType"
@@ -54,7 +54,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
         )}
       </div>
     </div>
-    <div className="px-[36px]">
+    <div className="space-y-12">
       <div>
         <LavaWhitelistWithCaps
           required
@@ -64,7 +64,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
         />
         {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
       </div>
-      <div className="mt-[60px]">
+      <div>
         <div className="uppercase font-bold">*Contribution duration</div>
         <div className="mt-4">
           <LavaIntervalPicker

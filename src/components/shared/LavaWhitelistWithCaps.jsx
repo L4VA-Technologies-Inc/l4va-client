@@ -38,7 +38,7 @@ export const LavaWhitelistWithCaps = ({
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <div className="uppercase font-bold">
+        <div className="uppercase font-bold mb-2">
           {required ? '*' : ''}
           {label}
         </div>

@@ -16,7 +16,7 @@ const CreateComponent = () => {
 
   return (
     <>
-      <div className="flex justify-center py-8">
+      <div className="flex justify-center py-4">
         <span className="font-russo text-4xl uppercase">Create Vault</span>
       </div>
       <CreateVaultForm />

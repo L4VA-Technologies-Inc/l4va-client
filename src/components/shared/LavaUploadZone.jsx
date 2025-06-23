@@ -151,7 +151,7 @@ export const UploadZone = ({
   };
 
   return (
-    <div className="py-6 px-8 bg-input-bg rounded-[10px]">
+    <div>
       <div className="flex justify-between items-center mb-4">
         <div className="font-bold flex items-center gap-2">
           <span className="uppercase">

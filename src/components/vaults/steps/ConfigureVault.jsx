@@ -16,42 +16,45 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2">
-      <div className="px-[36px]">
-        <LavaInput
-          required
-          error={errors.name}
-          label="Vault name"
-          name="name"
-          placeholder="Add the name of your Vault"
-          value={data.name || ''}
-          onChange={handleChange}
-        />
-        <div className="grid grid-cols-2 mt-[60px]">
-          <div>
-            <LavaRadio
-              label="*Vault type"
-              name="type"
-              options={VAULT_TYPE_OPTIONS}
-              value={data.type || ''}
-              onChange={value => updateField('type', value)}
-            />
-            {errors.type && <p className="text-red-600 mt-1">{errors.type}</p>}
-          </div>
-          <div>
-            <LavaRadio
-              label="*Vault privacy"
-              name="privacy"
-              options={VAULT_PRIVACY_OPTIONS}
-              value={data.privacy || ''}
-              onChange={value => updateField('privacy', value)}
-              hint={PRIVACY_HINT}
-            />
-            {errors.privacy && <p className="text-red-600 mt-1">{errors.privacy}</p>}
-          </div>
+    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="space-y-12">
+        <div>
+          <LavaInput
+            required
+            error={errors.name}
+            label="Vault name"
+            name="name"
+            placeholder="Add the name of your Vault"
+            value={data.name || ''}
+            onChange={handleChange}
+          />
         </div>
 
-        <div className="mt-[60px]">
+        <div>
+          <LavaRadio
+            label="*Vault type"
+            name="type"
+            options={VAULT_TYPE_OPTIONS}
+            value={data.type || ''}
+            onChange={value => updateField('type', value)}
+            hint="Type of assets that can be contributed to the Vault."
+          />
+          {errors.type && <p className="text-red-600 mt-2 text-sm">{errors.type}</p>}
+        </div>
+
+        <div>
+          <LavaRadio
+            label="*Vault privacy"
+            name="privacy"
+            options={VAULT_PRIVACY_OPTIONS}
+            value={data.privacy || ''}
+            onChange={value => updateField('privacy', value)}
+            hint={PRIVACY_HINT}
+          />
+          {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
+        </div>
+
+        <div>
           <LavaInput
             required
             error={errors.vaultTokenTicker}
@@ -64,7 +67,8 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             hint="This is the ticker that the Governance Token will have when minted."
           />
         </div>
-        <div className="mt-[60px]">
+
+        <div>
           <LavaTextarea
             error={errors.description}
             label="Vault description"
@@ -74,17 +78,9 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             onChange={handleChange}
           />
         </div>
-
-        <div className="mt-[60px]">
-          <LavaSocialLinks
-            errors={errors}
-            setSocialLinks={links => updateField('socialLinks', links)}
-            socialLinks={data.socialLinks || []}
-          />
-        </div>
       </div>
 
-      <div className="flex flex-col gap-[60px] px-[36px]">
+      <div className="space-y-12">
         <div>
           <UploadZone
             required
@@ -93,7 +89,14 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             setImage={image => updateField('vaultImage', image)}
             hint="This is the image that will live on the Vault Profile page."
           />
-          {errors.vaultImage && <p className="text-red-600 mt-1">{errors.vaultImage}</p>}
+          {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
+        </div>
+        <div>
+          <LavaSocialLinks
+            errors={errors}
+            setSocialLinks={links => updateField('socialLinks', links)}
+            socialLinks={data.socialLinks || []}
+          />
         </div>
       </div>
     </div>

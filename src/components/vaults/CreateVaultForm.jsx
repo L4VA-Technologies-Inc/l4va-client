@@ -198,23 +198,19 @@ export const CreateVaultForm = ({ vault }) => {
       );
     }
     return (
-      <>
+      <div className="flex gap-4">
         {currentStep > 1 && (
-          <SecondaryButton disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
+          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
-        <SecondaryButton
-          className="uppercase px-16 py-4 bg-input-bg"
-          disabled={isSubmitting || isSavingDraft}
-          onClick={saveDraft}
-        >
+        <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>
           Save for later
         </SecondaryButton>
-        <PrimaryButton disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
+        <PrimaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
           <ChevronRight size={24} />
         </PrimaryButton>
-      </>
+      </div>
     );
   };
 
@@ -230,7 +226,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   return (
     <div className="pb-10">
-      <div className="relative flex items-center">
+      <div className="hidden md:flex relative items-center">
         {steps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
@@ -260,8 +256,8 @@ export const CreateVaultForm = ({ vault }) => {
           </div>
         ))}
       </div>
-      <div className="mt-[100px]">{renderStepContent(currentStep)}</div>
-      <div className="my-[60px] flex gap-[30px] justify-center">{renderButtons()}</div>
+      <div>{renderStepContent(currentStep)}</div>
+      <div className="flex justify-center">{renderButtons()}</div>
     </div>
   );
 };

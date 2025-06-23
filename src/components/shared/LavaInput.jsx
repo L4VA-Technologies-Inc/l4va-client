@@ -62,7 +62,7 @@ export const LavaInput = ({
           <input
             className={`
               rounded-[10px] bg-input-bg py-4 pl-5 
-              ${suffix ? 'pr-12' : 'pr-5'} text-lg font-medium w-full border border-steel-850 h-[60px]
+              ${suffix ? 'pr-12' : 'pr-5'} font-medium w-full border border-steel-850 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200
               ${className}
             `}
@@ -73,7 +73,7 @@ export const LavaInput = ({
             value={displayValue}
             onChange={handleChange}
           />
-          {suffix && <div className="absolute right-5 text-lg text-white/60 select-none">{suffix}</div>}
+          {suffix && <div className="absolute right-5 text-white/60 select-none">{suffix}</div>}
         </div>
         {error && <p className="text-red-600 mt-1">{error}</p>}
       </div>

@@ -41,8 +41,8 @@ export const Governance = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2">
-      <div className="px-[36px]">
+    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="space-y-12">
         <div>
           <LavaInput
             error={errors.ftTokenSupply}
@@ -53,7 +53,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
             onChange={handleSupplyChange}
           />
         </div>
-        <div className="mt-[60px]">
+        <div>
           <UploadZone
             required
             image={data.ftTokenImg}
@@ -63,7 +63,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
         </div>
       </div>
-      <div className="px-[36px]">
+      <div className="space-y-12">
         <div>
           <div className="uppercase font-bold mb-4">TERMINATION TYPE</div>
           <LavaRadio
@@ -76,7 +76,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
         </div>
         {data.terminationType === 'programmed' && (
           <>
-            <div className="mt-[60px]">
+            <div>
               <Label className="uppercase font-bold" htmlFor="timeElapsedIsEqualToTime">
                 *TIME ELAPSED IS EQUAL TO TIME
               </Label>
@@ -91,7 +91,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               </div>
             </div>
 
-            <div className="mt-[60px]">
+            <div>
               <LavaInput
                 required
                 error={errors.vaultAppreciation}
@@ -107,7 +107,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           </>
         )}
         <>
-          <div className="mt-[60px]">
+          <div>
             <LavaInput
               required
               error={errors.creationThreshold}
@@ -121,7 +121,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               onChange={handleNumChange}
             />
           </div>
-          <div className="mt-[60px]">
+          <div>
             <LavaInput
               required
               error={errors.startThreshold}
@@ -135,7 +135,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               onChange={handleNumChange}
             />
           </div>
-          <div className="mt-[60px]">
+          <div>
             <LavaInput
               required
               error={errors.voteThreshold}
@@ -149,7 +149,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               onChange={handleNumChange}
             />
           </div>
-          <div className="mt-[60px]">
+          <div>
             <LavaInput
               required
               error={errors.executionThreshold}
@@ -163,7 +163,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               onChange={handleNumChange}
             />
           </div>
-          <div className="mt-[60px]">
+          <div>
             <LavaInput
               required
               error={errors.cosigningThreshold}
