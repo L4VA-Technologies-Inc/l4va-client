@@ -13,8 +13,8 @@ interface PrimaryButtonProps {
 const PrimaryButton = ({ children, className, disabled = false, size = 'md', onClick }: PrimaryButtonProps) => {
   const sizeClasses = {
     sm: 'h-9 px-4 py-2 rounded-lg text-sm',
-    md: 'h-10 px-4 py-2.5 rounded-lg text-sm',
-    lg: 'h-12 px-6 py-3 rounded-xl text-sm',
+    md: 'h-10 px-4 py-2.5 rounded-lg',
+    lg: 'h-12 px-6 py-3 rounded-lg',
   } as const;
 
   return (

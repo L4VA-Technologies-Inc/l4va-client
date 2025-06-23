@@ -1,18 +1,26 @@
 import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { Toaster } from 'react-hot-toast';
 
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
+import MainLayout from '@/components/layout/MainLayout';
 import { Modal } from '@/lib/modals/modal.registry';
 import { NotFound } from '@/pages/NotFound';
 
 const RootComponent = () => (
   <>
-    <Header />
-    <Outlet />
+    <MainLayout>
+      <Outlet />
+    </MainLayout>
     <TanStackRouterDevtools position="bottom-right" />
-    <Footer />
     <Modal />
+    <Toaster
+      toastOptions={{
+        style: {
+          background: '#282B3F',
+          color: '#fff',
+        },
+      }}
+    />
   </>
 );
 

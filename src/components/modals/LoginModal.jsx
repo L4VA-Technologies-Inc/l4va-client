@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, X, Download } from 'lucide-react';
+import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
 
@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-import { useBodyOverflow } from '@/hooks/useBodyOverflow';
+import { ModalWrapper } from '@/components/shared/ModalWrapper';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 
@@ -41,8 +41,6 @@ export const LoginModal = () => {
       setView('wallets');
     }
   }, [wallet.isConnected]);
-
-  useBodyOverflow(activeModalData?.name === 'LoginModal');
 
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;
@@ -87,8 +85,6 @@ export const LoginModal = () => {
       setIsLoading(false);
     }
   };
-
-  if (activeModalData?.name !== 'LoginModal') return null;
 
   const renderWalletsList = () => (
     <>
@@ -155,13 +151,8 @@ export const LoginModal = () => {
         </div>
       </div>
       <div className="flex justify-center">
-        <PrimaryButton
-          disabled={isLoading}
-          icon={isLoading ? Spinner : undefined}
-          size="small"
-          onClick={handleSignMessage}
-        >
-          {isLoading ? 'Signing message...' : 'Sign message'}
+        <PrimaryButton disabled={isLoading} icon={isLoading ? Spinner : undefined} onClick={handleSignMessage}>
+          {isLoading ? 'Signing Message...' : 'Sign Message'}
         </PrimaryButton>
       </div>
       <div className="text-sm mt-4">
@@ -175,39 +166,8 @@ export const LoginModal = () => {
   );
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={closeModal} />
-      <div
-        className="
-          fixed z-50 bg-steel-950
-
-          /* Desktop styles */
-          md:fixed-center md:w-[360px] md:rounded-[10px]
-
-          /* Mobile styles */
-          max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
-        "
-      >
-        <div
-          className="
-          flex items-center justify-between px-4 bg-white/5
-
-          /* Desktop styles */
-          md:py-3 md:rounded-t-[10px]
-
-          /* Mobile styles */
-          max-md:py-3 max-md:rounded-t-xl
-        "
-        >
-          <p className="font-bold text-2xl max-md:text-xl">Connect Wallet</p>
-          <button className="p-1" type="button" onClick={closeModal}>
-            <X className="w-4 h-4" size={20} />
-          </button>
-        </div>
-        <div className="p-4 md:p-5 md:rounded-b-[10px] max-md:pb-8 max-md:pt-3">
-          {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
-        </div>
-      </div>
-    </>
+    <ModalWrapper title="Connect Wallet" modalName="LoginModal">
+      {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
+    </ModalWrapper>
   );
 };

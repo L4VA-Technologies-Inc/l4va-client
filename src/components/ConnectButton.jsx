@@ -19,7 +19,7 @@ export const ConnectButton = () => {
           </PrimaryButton>
         ) : (
           <PrimaryButton onClick={() => openModal('ProfileModal')}>
-            <Avatar className="h-10 w-10 bg-steel-950 cursor-pointer">
+            <Avatar className="h-8 w-8 bg-steel-950 cursor-pointer">
               <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
             {getDisplayName(user)}
@@ -34,7 +34,7 @@ export const ConnectButton = () => {
           </button>
         ) : (
           <button type="button" onClick={() => openModal('ProfileModal')}>
-            <Avatar className="h-10 w-10 bg-orange-gradient cursor-pointer">
+            <Avatar className="h-8 w-8 bg-orange-gradient cursor-pointer">
               <AvatarFallback className="text-slate-950 font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
           </button>
