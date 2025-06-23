@@ -6,7 +6,7 @@ import { useExtensions, useWallet } from '@ada-anvil/weld/react';
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { Spinner } from '@/components/Spinner';
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { useBodyOverflow } from '@/hooks/useBodyOverflow';
 

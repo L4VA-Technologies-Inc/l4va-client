@@ -13,11 +13,11 @@ export const HeroStats = () => {
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row gap-10 text-center">
+    <div className="flex flex-col sm:flex-row gap-8">
       {stats.map(stat => (
-        <div key={stat.label} className="min-w-[210px]">
-          <div className=" mt-2 text-2xl font-bold font-satoshi">{stat.label}</div>
-          <div className="font-russo text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-bold">
+        <div key={stat.label} className="flex flex-col items-center text-2xl">
+          <div className="font-bold font-satoshi">{stat.label}</div>
+          <div className="font-russo text-orange-500 text-2xl font-bold">
             <Counter value={stat.value} />
           </div>
         </div>

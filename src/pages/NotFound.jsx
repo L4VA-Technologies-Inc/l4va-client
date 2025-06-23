@@ -1,8 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Home, ArrowLeft } from 'lucide-react';
 
-import { SecondaryButton } from '@/components/shared/SecondaryButton';
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import SecondaryButton from '@/components/shared/SecondaryButton';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 
 export const NotFound = () => {
   const navigate = useNavigate();

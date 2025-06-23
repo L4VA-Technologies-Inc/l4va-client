@@ -1,6 +1,6 @@
 import { SelectedAssetItem } from './SelectedAssetItem';
 
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 
 export const ContributionDetails = ({ contributionDetails, selectedNFTs, onRemove, status, onContribute }) => (
   <div className="w-full md:w-1/2 space-y-6 flex flex-col p-6 bg-slate-950 rounded-md">

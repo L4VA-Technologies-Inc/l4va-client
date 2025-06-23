@@ -1,57 +1,61 @@
 import clsx from 'clsx';
-import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
-export const MenuDrawer = ({ navLinks }) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
+  const handleNavClick = (link, e) => {
+    if (onNavClick) {
+      onNavClick(link.to, e);
+    }
+    onClose();
+  };
 
   return (
-    <div className="lg:hidden">
-      <button
-        className="ml-4 p-2 rounded-full hover:bg-steel-850 transition-colors"
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Menu className="w-6 h-6 text-white" />
-      </button>
+    <>
       <div
         className={clsx(
-          'fixed inset-0 bg-black/50 z-50 transition-all duration-300',
+          'fixed inset-0 bg-black/50 z-40 transition-opacity duration-300',
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onClose}
       />
       <div
         className={clsx(
-          'fixed top-0 right-0 w-64 h-full bg-steel-950 transform transition-all duration-300 ease-out z-50',
+          'fixed top-0 right-0 w-80 h-full bg-steel-900 shadow-xl transform transition-transform duration-300 ease-out z-50',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        <div className="p-6">
-          <div className="flex justify-end mb-6">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-6 border-b border-steel-850">
+            <h2 className="text-lg font-semibold text-primary-text">Menu</h2>
             <button
               className="p-2 rounded-full hover:bg-steel-850 transition-colors"
               type="button"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={onClose}
+              aria-label="Close menu"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
-          <div className="flex flex-col space-y-4">
-            {navLinks.map(link => (
-              <Link
-                key={link.to}
-                className="text-2xl font-satoshi font-bold text-white hover:text-orange-500 transition-colors"
-                to={link.to}
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="flex-1 p-6">
+            <nav className="space-y-4">
+              {navLinks.map(link => (
+                <Link
+                  key={link.to}
+                  className="block text-lg font-medium text-primary-text hover:text-orange-500 transition-colors py-2"
+                  to={link.to}
+                  onClick={e => handleNavClick(link, e)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+          <div className="p-6 border-t border-steel-850">
+            <div className="text-sm text-gray-400">L4VA Platform</div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

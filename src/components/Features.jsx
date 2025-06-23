@@ -24,7 +24,7 @@ export const Features = () => {
 
   const FeatureCard = ({ title, description, icon }) => (
     <div className="relative flex flex-col items-center sm:items-start text-center sm:text-left px-4 sm:px-0">
-      <div className="relative w-full max-w-[240px] sm:max-w-none">
+      <div className="relative w-full ">
         <img
           alt={`${title} icon`}
           className="

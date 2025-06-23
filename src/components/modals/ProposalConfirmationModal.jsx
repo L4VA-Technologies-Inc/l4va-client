@@ -1,8 +1,8 @@
 import { ChevronLeft } from 'lucide-react';
 
-import { SecondaryButton } from '../shared/SecondaryButton';
+import SecondaryButton from '../shared/SecondaryButton';
 
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export const ProposalConfirmationModal = ({ onClose, proposalData, onConfirm }) => {

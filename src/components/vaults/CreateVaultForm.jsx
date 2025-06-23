@@ -3,14 +3,14 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { AcquireWindow } from '@/components/vaults/steps/AcquireWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 import { Launch } from '@/components/vaults/steps/Launch';
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformYupErrors } from '@/utils/core.utils';
