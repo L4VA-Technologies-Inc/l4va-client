@@ -23,7 +23,7 @@ export const VaultCard = props => {
           <div className="flex gap-4 mb-6">
             <img alt="icon" className="h-16 w-16 rounded-xl" src="/assets/vault-logo.png" />
             <div>
-              <h2 className="font-satoshi text-[20px] font-bold ">{name || 'No name'}</h2>
+              <h2 className="font-bold ">{name || 'No name'}</h2>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>
           </div>

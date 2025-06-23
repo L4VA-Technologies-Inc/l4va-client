@@ -13,7 +13,7 @@ export const LavaTextarea = ({
 }) => (
   <>
     {label ? (
-      <div className="uppercase text-[20px] font-bold">
+      <div className="uppercase font-bold">
         {required ? '*' : ''}
         {label}
       </div>
@@ -56,7 +56,7 @@ export const LavaSteelTextarea = ({
   return (
     <div>
       {label ? (
-        <div className="text-[20px] font-semibold mb-4">
+        <div className="font-semibold mb-4">
           {required ? '*' : ''}
           {label}
         </div>

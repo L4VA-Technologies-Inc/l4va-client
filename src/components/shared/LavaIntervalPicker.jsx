@@ -33,7 +33,7 @@ export const LavaIntervalPicker = ({ value = 0, onChange = () => {} }) => {
         <PopoverTrigger asChild>
           <Button
             className={cn(
-              'text-[20px] border border-steel-850 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
+              'border border-steel-850 w-full h-[60px] bg-input-bg py-5 justify-start text-left font-normal',
               !value && 'text-muted-foreground'
             )}
             variant="outline"

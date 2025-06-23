@@ -138,7 +138,7 @@ export const ProfileSocialLinks = () => {
             </Select>
             <div className="flex-1 relative">
               <Input
-                className={`py-4 pl-5 pr-24 text-[20px] bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
+                className={`py-4 pl-5 pr-24 bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
                 disabled={isLoading}
                 placeholder={getPlaceholderForPlatform(editingLink.name)}
                 style={{ fontSize: '20px' }}
@@ -176,7 +176,7 @@ export const ProfileSocialLinks = () => {
           <div key={link.id} className="flex items-center gap-2 group">
             <SocialPlatformIcon className="text-dark-100" platformId={link.name} size={20} />
             <a
-              className="text-[20px] hover:text-orange-500 transition-colors"
+              className="hover:text-orange-500 transition-colors"
               href={formatUrl(link.url)}
               rel="noopener noreferrer"
               target="_blank"

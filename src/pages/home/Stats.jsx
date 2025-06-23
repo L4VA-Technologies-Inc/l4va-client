@@ -8,7 +8,7 @@ const getBackgroundColor = index => {
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
     <p className="font-russo text-red-600 text-3xl lg:text-6xl xl:text-7xl font-bold mb-2">{value}</p>
-    <p className="font-bold font-satoshi text-lg lg:text-2xl xl:text-3xl">{label}</p>
+    <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
   </div>
 );
 

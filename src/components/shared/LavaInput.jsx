@@ -36,7 +36,7 @@ export const LavaInput = ({
   return (
     <>
       {label ? (
-        <div className="text-[20px] font-bold flex items-center gap-2">
+        <div className="font-bold flex items-center gap-2">
           <span className="uppercase">
             {required ? '*' : ''}
             {label}
@@ -100,7 +100,7 @@ export const LavaSteelInput = ({
   return (
     <div>
       {label ? (
-        <div className="text-[20px] font-semibold mb-4 flex items-center gap-2">
+        <div className="font-semibold mb-4 flex items-center gap-2">
           {required ? '*' : ''}
           {label}
           {hint && (

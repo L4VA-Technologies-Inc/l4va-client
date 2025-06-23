@@ -19,7 +19,7 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
         <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="font-medium text-[20px] mb-2">{getDisplayName(user)}</p>
+        <p className="font-medium mb-2">{getDisplayName(user)}</p>
         <button className="flex items-center gap-2 text-dark-100" type="button" onClick={handleCopyAddress}>
           {substringAddress(user.address)}
           <Copy size={20} />

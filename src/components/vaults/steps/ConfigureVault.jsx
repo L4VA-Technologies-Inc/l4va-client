@@ -16,7 +16,7 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-1 md:grid-cols-2">
       <div className="px-[36px]">
         <LavaInput
           required

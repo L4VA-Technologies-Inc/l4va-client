@@ -72,7 +72,7 @@ export const LavaWhitelist = ({
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <div className="uppercase text-[20px] font-bold">
+        <div className="uppercase font-bold">
           {required ? '*' : ''}
           {label}
         </div>
@@ -110,7 +110,7 @@ export const LavaWhitelist = ({
         {whitelist.map(asset => (
           <div key={asset.id} className="relative">
             <Input
-              className="rounded-[10px] py-4 pl-5 pr-12 text-[20px] bg-input-bg border-steel-850 h-[60px]"
+              className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
               placeholder={itemPlaceholder}
               style={{ fontSize: '20px' }}
               value={asset[itemFieldName]}

@@ -10,13 +10,13 @@ import { formatDateTime } from '@/utils/core.utils';
 
 const variants = {
   default: {
-    button: 'text-[20px] border border-steel-850 w-full h-[60px] bg-input-bg py-4 px-5',
+    button: 'border border-steel-850 w-full h-[60px] bg-input-bg py-4 px-5',
     popover: 'bg-input-bg border border-steel-850',
     calendar: 'bg-input-bg rounded-[10px]',
     scrollArea: 'bg-input-bg',
   },
   steel: {
-    button: 'text-[20px] bg-steel-850 rounded-lg border border-steel-750 w-full h-[40px] py-4 px-5',
+    button: 'bg-steel-850 rounded-lg border border-steel-750 w-full h-[40px] py-4 px-5',
     popover: 'bg-steel-850 rounded-lg border border-steel-750',
     calendar: 'bg-steel-850 rounded-[10px]',
     scrollArea: 'bg-steel-850',

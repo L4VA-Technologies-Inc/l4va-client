@@ -26,7 +26,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
       : [{ name: 'lbe', label: 'Market / Floor Price' }];
 
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-1 md:grid-cols-2">
       <div className="px-[36px]">
         <div>
           <LavaRadio
@@ -72,7 +72,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
           </>
         )}
         <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold">*Contribution duration</div>
+          <div className="uppercase font-bold">*Contribution duration</div>
           <div className="mt-4">
             <LavaIntervalPicker
               value={data.contributionDuration}

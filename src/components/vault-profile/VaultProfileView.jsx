@@ -73,7 +73,7 @@ export const VaultProfileView = ({ vault }) => {
           className="w-full aspect-square rounded-xl object-cover mb-6"
           src={vault.vaultImage || '/assets/vaults/space-man.webp'}
         />
-        <p className="text-[20px] mb-2 font-medium">{getCountdownName(vault)}</p>
+        <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
         <div className="mb-6">
           <VaultCountdown endTime={getCountdownTime(vault)} />
         </div>

@@ -8,7 +8,7 @@ export const VaultContribution = ({ vault, phase }) => {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[20px] font-medium mb-2">Contribution:</h2>
+        <h2 className="font-medium mb-2">Contribution:</h2>
         <div className="flex justify-between text-sm mb-1">
           <span className="text-dark-100">
             Total Raised: <span className="text-[#F97316]">{vault.assetsCount}</span>
@@ -23,7 +23,7 @@ export const VaultContribution = ({ vault, phase }) => {
         </div>
         {phase === VAULT_STATUSES.ACQUIRE && (
           <div>
-            <h2 className="text-[20px] font-medium mb-2">Acquire:</h2>
+            <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-dark-100">Reserve</span>
               <span className="text-dark-100">${formatNum(50000)}</span>

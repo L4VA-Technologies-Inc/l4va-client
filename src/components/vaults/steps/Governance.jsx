@@ -41,7 +41,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-1 md:grid-cols-2">
       <div className="px-[36px]">
         <div>
           <LavaInput
@@ -65,7 +65,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
       </div>
       <div className="px-[36px]">
         <div>
-          <div className="uppercase text-[20px] font-bold mb-4">TERMINATION TYPE</div>
+          <div className="uppercase font-bold mb-4">TERMINATION TYPE</div>
           <LavaRadio
             name="terminationType"
             options={TERMINATION_TYPE_OPTIONS}
@@ -77,7 +77,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
         {data.terminationType === 'programmed' && (
           <>
             <div className="mt-[60px]">
-              <Label className="uppercase text-[20px] font-bold" htmlFor="timeElapsedIsEqualToTime">
+              <Label className="uppercase font-bold" htmlFor="timeElapsedIsEqualToTime">
                 *TIME ELAPSED IS EQUAL TO TIME
               </Label>
               <div className="mt-4">

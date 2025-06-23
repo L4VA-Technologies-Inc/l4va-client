@@ -16,7 +16,7 @@ export const LavaSelect = ({
 }) => (
   <div className="w-full">
     {label && (
-      <div className="text-dark-100 text-[20px] font-medium mb-2">
+      <div className="text-dark-100 font-medium mb-2">
         {required && '*'}
         {label}
       </div>
@@ -24,7 +24,7 @@ export const LavaSelect = ({
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         className={`
-            bg-input-bg py-4 pl-5 pr-5 text-[20px] font-medium border border-steel-850 h-[60px] 
+            bg-input-bg py-4 pl-5 pr-5 font-medium border border-steel-850 h-[60px] 
             focus:ring-0 focus:ring-offset-0 mt-4
             ${className}
           `}

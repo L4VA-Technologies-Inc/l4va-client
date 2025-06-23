@@ -39,7 +39,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   const minDate = getMinAcquireDate();
 
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-1 md:grid-cols-2">
       <div className="px-[36px]">
         {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
           <div className="mb-[60px]">
@@ -58,7 +58,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           </div>
         )}
         <div>
-          <Label className="uppercase text-[20px] font-bold" htmlFor="acquireWindowDuration">
+          <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">
             *ACQUIRE WINDOW DURATION
           </Label>
           <div className="mt-4">
@@ -70,7 +70,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           </div>
         </div>
         <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold">*ACQUIRE WINDOW OPEN TIME</div>
+          <div className="uppercase font-bold">*ACQUIRE WINDOW OPEN TIME</div>
           <div className="mt-4">
             <LavaRadio
               name="acquireOpenWindowType"

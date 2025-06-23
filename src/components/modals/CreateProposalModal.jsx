@@ -104,7 +104,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
               />
               <div>
                 <div>
-                  <p className="text-[20px] font-medium mb-4">Execution Options</p>
+                  <p className="font-medium mb-4">Execution Options</p>
                   <div className="flex items-center justify-between mb-4">
                     <LavaSteelSelect
                       options={executionOptions}
@@ -133,7 +133,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                     {options.map((option, index) => (
                       <div key={option.id}>
                         <div className="flex justify-between items-center mb-4">
-                          <p className="text-[20px] font-medium">Option {index + 1}</p>
+                          <p className="font-medium">Option {index + 1}</p>
                           <button
                             className="bg-red-600/10 hover:bg-red-600/20 text-red-600 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors"
                             type="button"
@@ -222,7 +222,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                     ))}
                     <div>
                       <div className="flex justify-between items-center mb-4">
-                        <p className="text-[20px] font-medium">Option {options.length + 1}</p>
+                        <p className="font-medium">Option {options.length + 1}</p>
                       </div>
                       <div className="relative bg-steel-800 p-4 rounded-[10px]">
                         <p className="font-medium">Do nothing</p>
@@ -238,7 +238,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
                 onChange={e => setAbstain(e.target.checked)}
               />
               <div>
-                <p className="text-[20px] font-medium mb-4">Proposal Start</p>
+                <p className="font-medium mb-4">Proposal Start</p>
                 <LavaDatePicker value={proposalEndDate} variant="steel" onChange={value => setProposalEndDate(value)} />
               </div>
             </div>
