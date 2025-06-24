@@ -5,6 +5,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
+import { LavaSelect } from '@/components/shared/LavaSelect';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
@@ -198,7 +199,7 @@ export const CreateVaultForm = ({ vault }) => {
       );
     }
     return (
-      <div className="flex gap-4">
+      <div className="flex justify-center gap-4 py-8">
         {currentStep > 1 && (
           <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
@@ -224,8 +225,42 @@ export const CreateVaultForm = ({ vault }) => {
     }
   }, [vaultData.privacy, updateValuationType]);
 
+  const stepOptions = steps.map(step => ({
+    value: step.id.toString(),
+    label: `${step.id}. ${step.title}`,
+  }));
+
+  const handleStepSelect = stepId => {
+    const numericStepId = parseInt(stepId);
+    handleStepClick(numericStepId);
+  };
+
   return (
-    <div className="pb-10">
+    <div className="pb-8">
+      <div className="md:hidden mb-8">
+        <LavaSelect
+          label="Current Step"
+          options={stepOptions}
+          value={currentStep.toString()}
+          onChange={handleStepSelect}
+          placeholder="Select a step"
+        />
+        <div className="mt-4 p-4 bg-steel-850 rounded-lg border border-steel-750">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-dark-100 uppercase font-russo">
+                {steps.find(step => step.id === currentStep)?.status || 'pending'}
+              </p>
+              <p className="text-lg font-bold text-white">{steps.find(step => step.id === currentStep)?.title || ''}</p>
+            </div>
+            {steps.find(step => step.id === currentStep)?.hasErrors && (
+              <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">!</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       <div className="hidden md:flex relative items-center">
         {steps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
@@ -257,7 +292,7 @@ export const CreateVaultForm = ({ vault }) => {
         ))}
       </div>
       <div>{renderStepContent(currentStep)}</div>
-      <div className="flex justify-center">{renderButtons()}</div>
+      <div>{renderButtons()}</div>
     </div>
   );
 };

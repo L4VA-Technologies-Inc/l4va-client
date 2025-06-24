@@ -5,8 +5,31 @@ import { cn } from '@/lib/utils';
 import { msToInterval, intervalToMs, formatInterval } from '@/utils/core.utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-export const LavaIntervalPicker = ({ label, required = false, value = 0, onChange = () => {}, hint, className }) => {
+const variants = {
+  default: {
+    button:
+      'rounded-[10px] bg-input-bg py-4 pl-5 pr-5 font-medium w-full border border-steel-850 h-[60px] focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200',
+    popover: 'bg-input-bg border border-steel-850',
+    scrollArea: 'bg-input-bg',
+  },
+  steel: {
+    button: 'bg-steel-850 rounded-lg border border-steel-750 w-full h-[40px] py-4 px-5',
+    popover: 'bg-steel-850 rounded-lg border border-steel-750',
+    scrollArea: 'bg-steel-850',
+  },
+};
+
+export const LavaIntervalPicker = ({
+  label,
+  required = false,
+  value = 0,
+  onChange = () => {},
+  hint,
+  className,
+  variant = 'default',
+}) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
 
@@ -26,6 +49,8 @@ export const LavaIntervalPicker = ({ label, required = false, value = 0, onChang
     setIntervalValue(newInterval);
     onChange(intervalToMs(newInterval));
   };
+
+  const styles = variants[variant];
 
   return (
     <>
@@ -56,67 +81,76 @@ export const LavaIntervalPicker = ({ label, required = false, value = 0, onChang
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
-                className={cn(
-                  'rounded-[10px] bg-input-bg py-4 pl-5 pr-5 font-medium w-full border border-steel-850 h-[60px] justify-start text-left focus:outline-none focus:ring-[1px] focus:ring-white focus:border-white transition-all duration-200',
-                  !value && 'text-white/60',
-                  className
-                )}
+                className={cn(styles.button, 'justify-start text-left', !value && 'text-white/60', className)}
                 variant="outline"
               >
                 <ClockIcon className="mr-2 h-4 w-4" />
-                {value ? formatInterval(value) : <span>Select interval</span>}
+                {value ? (
+                  <span className={variant === 'steel' ? 'text-base' : ''}>{formatInterval(value)}</span>
+                ) : (
+                  <span className={cn(variant === 'steel' ? 'text-base' : '')}>Select interval</span>
+                )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-input-bg border border-steel-850">
+            <PopoverContent className={cn('w-auto p-0', styles.popover)}>
               <div className="flex">
-                <div className="p-4 bg-input-bg">
-                  <div className="text-sm font-medium mb-2 text-center">Days</div>
-                  <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                    {days.map(day => (
-                      <Button
-                        key={day}
-                        className="w-12 h-12"
-                        size="icon"
-                        variant={interval.days === day ? 'default' : 'ghost'}
-                        onClick={() => handleIntervalChange('days', day.toString())}
-                      >
-                        {day}
-                      </Button>
-                    ))}
+                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                  <div className="p-4">
+                    <div className="text-sm font-medium mb-2 text-center">Days</div>
+                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                      {days.map(day => (
+                        <Button
+                          key={day}
+                          className="w-12 h-12"
+                          size="icon"
+                          variant={interval.days === day ? 'default' : 'ghost'}
+                          onClick={() => handleIntervalChange('days', day.toString())}
+                        >
+                          {day}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4 bg-input-bg border-l border-steel-850">
-                  <div className="text-sm font-medium mb-2 text-center">Hours</div>
-                  <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                    {hours.map(hour => (
-                      <Button
-                        key={hour}
-                        className="w-12 h-12"
-                        size="icon"
-                        variant={interval.hours === hour ? 'default' : 'ghost'}
-                        onClick={() => handleIntervalChange('hours', hour.toString())}
-                      >
-                        {hour}
-                      </Button>
-                    ))}
+                  <ScrollBar className="sm:hidden" orientation="horizontal" />
+                </ScrollArea>
+                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                  <div className="p-4 border-l border-steel-850">
+                    <div className="text-sm font-medium mb-2 text-center">Hours</div>
+                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                      {hours.map(hour => (
+                        <Button
+                          key={hour}
+                          className="w-12 h-12"
+                          size="icon"
+                          variant={interval.hours === hour ? 'default' : 'ghost'}
+                          onClick={() => handleIntervalChange('hours', hour.toString())}
+                        >
+                          {hour}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4 bg-input-bg border-l border-steel-850">
-                  <div className="text-sm font-medium mb-2 text-center">Minutes</div>
-                  <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
-                    {minutes.map(minute => (
-                      <Button
-                        key={minute}
-                        className="w-12 h-12"
-                        size="icon"
-                        variant={interval.minutes === minute ? 'default' : 'ghost'}
-                        onClick={() => handleIntervalChange('minutes', minute.toString())}
-                      >
-                        {minute}
-                      </Button>
-                    ))}
+                  <ScrollBar className="sm:hidden" orientation="horizontal" />
+                </ScrollArea>
+                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                  <div className="p-4 border-l border-steel-850">
+                    <div className="text-sm font-medium mb-2 text-center">Minutes</div>
+                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                      {minutes.map(minute => (
+                        <Button
+                          key={minute}
+                          className="w-12 h-12"
+                          size="icon"
+                          variant={interval.minutes === minute ? 'default' : 'ghost'}
+                          onClick={() => handleIntervalChange('minutes', minute.toString())}
+                        >
+                          {minute}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                  <ScrollBar className="sm:hidden" orientation="horizontal" />
+                </ScrollArea>
               </div>
             </PopoverContent>
           </Popover>
