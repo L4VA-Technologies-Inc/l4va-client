@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useMatchRoute } from '@tanstack/react-router';
 import React, { useCallback, useState } from 'react';
 import { Menu } from 'lucide-react';
 
@@ -32,6 +32,8 @@ export const Header = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const matchRoute = useMatchRoute();
+  const isCreateRoute = !!matchRoute({ to: '/create' });
 
   const handleNavClick = useCallback(
     (to, e) => {
@@ -48,7 +50,9 @@ export const Header = () => {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <header className="h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-steel-900/50">
+    <header
+      className={`h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-steel-900/50 ${isCreateRoute ? 'bg-transparent' : 'bg-slate-950/80'}`}
+    >
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
