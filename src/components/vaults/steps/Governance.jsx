@@ -41,7 +41,8 @@ export const Governance = ({ data, errors = {}, updateField }) => {
   };
 
   return (
-    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+    <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16">
+
       <div className="space-y-12">
         <div>
           <LavaInput
