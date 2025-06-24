@@ -15,7 +15,6 @@ const navLinks = [
   { to: '/vaults?tab=govern', label: 'Govern' },
 ];
 
-// Memoized NavLink for performance
 const NavLink = React.memo(({ to, label, onClick }) => (
   <Link
     activeProps={{ className: 'text-orange-500' }}
@@ -52,7 +51,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-            <L4vaIcon className="flex-shrink-0" style={{ width: '24px', height: '24px' }} />
+            <L4vaIcon className="flex-shrink-0" height={24} width={24} />
             <span className="hidden md:block text-2xl font-bold uppercase">L4VA</span>
           </Link>
           <button
