@@ -3,14 +3,15 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import SecondaryButton from '@/components/shared/SecondaryButton';
+import { LavaSelect } from '@/components/shared/LavaSelect';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfigureVault } from '@/components/vaults/steps/ConfigureVault';
 import { AssetContribution } from '@/components/vaults/steps/AssetContribution';
 import { AcquireWindow } from '@/components/vaults/steps/AcquireWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 import { Launch } from '@/components/vaults/steps/Launch';
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { SecondaryButton } from '@/components/shared/SecondaryButton';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformYupErrors } from '@/utils/core.utils';
@@ -198,23 +199,19 @@ export const CreateVaultForm = ({ vault }) => {
       );
     }
     return (
-      <>
+      <div className="flex justify-center gap-4 py-8">
         {currentStep > 1 && (
-          <SecondaryButton disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
+          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
-        <SecondaryButton
-          className="uppercase px-16 py-4 bg-input-bg"
-          disabled={isSubmitting || isSavingDraft}
-          onClick={saveDraft}
-        >
+        <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>
           Save for later
         </SecondaryButton>
-        <PrimaryButton disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
+        <PrimaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
           <ChevronRight size={24} />
         </PrimaryButton>
-      </>
+      </div>
     );
   };
 
@@ -228,9 +225,43 @@ export const CreateVaultForm = ({ vault }) => {
     }
   }, [vaultData.privacy, updateValuationType]);
 
+  const stepOptions = steps.map(step => ({
+    value: step.id.toString(),
+    label: `${step.id}. ${step.title}`,
+  }));
+
+  const handleStepSelect = stepId => {
+    const numericStepId = parseInt(stepId);
+    handleStepClick(numericStepId);
+  };
+
   return (
-    <div className="pb-10">
-      <div className="relative flex items-center">
+    <div className="pb-8">
+      <div className="md:hidden mb-8">
+        <LavaSelect
+          label="Current Step"
+          options={stepOptions}
+          value={currentStep.toString()}
+          onChange={handleStepSelect}
+          placeholder="Select a step"
+        />
+        <div className="mt-4 p-4 bg-steel-850 rounded-lg border border-steel-750">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-dark-100 uppercase font-russo">
+                {steps.find(step => step.id === currentStep)?.status || 'pending'}
+              </p>
+              <p className="text-lg font-bold text-white">{steps.find(step => step.id === currentStep)?.title || ''}</p>
+            </div>
+            {steps.find(step => step.id === currentStep)?.hasErrors && (
+              <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">!</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="hidden md:flex relative items-center">
         {steps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
@@ -260,8 +291,8 @@ export const CreateVaultForm = ({ vault }) => {
           </div>
         ))}
       </div>
-      <div className="mt-[100px]">{renderStepContent(currentStep)}</div>
-      <div className="my-[60px] flex gap-[30px] justify-center">{renderButtons()}</div>
+      <div>{renderStepContent(currentStep)}</div>
+      <div>{renderButtons()}</div>
     </div>
   );
 };

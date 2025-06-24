@@ -45,7 +45,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div className="uppercase text-[20px] font-bold">SOCIAL LINKS</div>
+        <div className="uppercase font-bold">SOCIAL LINKS</div>
         <button className="border-2 border-white/20 rounded-[10px] p-2" type="button" onClick={addNewLink}>
           <Plus className="h-4 w-4" />
         </button>
@@ -71,7 +71,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
                 </SelectContent>
               </Select>
               <Input
-                className={`py-4 pl-5 text-[20px] border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-red-600' : ''}`}
+                className={`py-4 pl-5 border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-red-600' : ''}`}
                 placeholder={getPlaceholderForPlatform(link.name)}
                 style={{ fontSize: '20px' }}
                 value={link.url}
@@ -86,9 +86,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
             )}
           </div>
         ))}
-        {socialLinks.length === 0 && (
-          <div className="text-dark-100 text-base mb-2">No social links added. Click the + button to add one.</div>
-        )}
+        {socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
       </div>
     </div>
   );
@@ -109,11 +107,11 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             target="_blank"
           >
             <SocialPlatformIcon className="text-white" platformId={link.name} size={20} />
-            <span className="text-[20px]">{link.url}</span>
+            <span>{link.url}</span>
           </a>
         ))
       ) : (
-        <p className="text-[20px]">No social links added.</p>
+        <p>No social links added.</p>
       )}
     </div>
   );

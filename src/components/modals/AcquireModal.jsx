@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
-import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 import { formatNum, formatCompactNumber } from '@/utils/core.utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';

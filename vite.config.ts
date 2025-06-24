@@ -18,19 +18,19 @@ export default defineConfig({
     },
   },
   plugins: [
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }), 
+    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
     react({
       // Enable TypeScript support
-      include: "**/*.{jsx,tsx}",
-    }), 
-    svgr(), 
-    tailwindcss()
+      include: '**/*.{jsx,tsx}',
+    }),
+    svgr(),
+    tailwindcss(),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   build: {
     target: 'esnext', // enables top-level await in deps like lucid
@@ -40,4 +40,4 @@ export default defineConfig({
       target: 'esnext',
     },
   },
-}); 
+});

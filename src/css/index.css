@@ -43,6 +43,9 @@
   --color-blue-500: #EAB308;
   --color-white: #FFFFFF;
   --color-black: #000000;
+
+  --header-height: 72px;
+  --content-space-top: 24px;
 }
 
 .dark {}
@@ -131,4 +134,10 @@ button {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+@layer utilities {
+  .content-space-top {
+    padding: calc(var(--header-height) + var(--content-space-top)) 0;
+  }
 }

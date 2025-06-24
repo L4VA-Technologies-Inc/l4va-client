@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 export const LavaRadio = ({ name, value, label, options, onChange, error, hint }) => (
   <div className="space-y-2">
     {label ? (
-      <Label className="text-[20px] font-bold flex items-center gap-2">
+      <Label className="font-bold flex items-center gap-2">
         <span className="uppercase">{label}</span>
         {hint && (
           <div className="group relative inline-flex">

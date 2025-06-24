@@ -5,6 +5,13 @@ const getBackgroundColor = index => {
   return colors[index] || colors[colors.length - 1];
 };
 
+const StatCard = ({ value, label }) => (
+  <div className="text-center p-6">
+    <p className="font-russo text-red-600 text-3xl lg:text-6xl xl:text-7xl font-bold mb-2">{value}</p>
+    <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
+  </div>
+);
+
 const ProgressBar = ({ items, title, totalAmount }) => {
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
@@ -15,7 +22,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 
   return (
     <div className="mb-16">
-      <h2 className="text-[32px] font-extrabold text-red-600 mb-8">{title}</h2>
+      <h2 className="text-2xl lg:text-5xl xl:text-6xl font-extrabold text-red-600 mb-8">{title}</h2>
       <div className="space-y-8">
         <div className="grid gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -23,9 +30,9 @@ const ProgressBar = ({ items, title, totalAmount }) => {
               <div key={`label-${item.label}`} className="flex items-start gap-3 bg-gray-900/50 p-3 rounded-lg">
                 <div className={`w-3 h-3 rounded-sm mt-1 ${getBackgroundColor(index)}`} />
                 <div>
-                  <div className="text-dark-100 text-sm">{item.label}</div>
-                  <div className="text-lg font-semibold">{item.percentage.toFixed(2)}%</div>
-                  <div className="text-dark-100 text-sm">{formatNum(item.actualValue)} ADA</div>
+                  <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>
+                  <div className="text-base lg:text-lg xl:text-xl font-semibold">{item.percentage.toFixed(2)}%</div>
+                  <div className="text-dark-100 text-sm lg:text-base">{formatNum(item.actualValue)} ADA</div>
                 </div>
               </div>
             ))}
@@ -58,15 +65,15 @@ const ProgressBar = ({ items, title, totalAmount }) => {
   );
 };
 
-const StatCard = ({ value, label }) => (
-  <div className="text-center p-6">
-    <p className="font-russo text-red-600 text-[60px] font-bold mb-2">{value}</p>
-    <p className="font-bold font-satoshi  text-[24px]">{label}</p>
-  </div>
-);
-
 export const Stats = () => {
   const totalAmount = 25000000; // 25 million ADA
+
+  const stats = [
+    { label: 'MyVaults', value: '158' },
+    { label: 'Assets', value: '486' },
+    { label: 'Acquired', value: '$9M+' },
+    { label: 'TVL All MyVaults', value: '$18M+' },
+  ];
 
   const statusData = [
     { label: 'Draft', percentage: 10.0 },
@@ -84,12 +91,11 @@ export const Stats = () => {
 
   return (
     <div className="container mx-auto py-12 sm:py-16">
-      <h1 className="font-russo font-bold text-[40px] mb-8">QUICK STATS</h1>
+      <h1 className="font-russo font-bold text-3xl lg:text-6xl xl:text-7xl mb-8">QUICK STATS</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
-        <StatCard label="MyVaults" value="158" />
-        <StatCard label="Assets" value="486" />
-        <StatCard label="Acquired" value="$9M+" />
-        <StatCard label="TVL All MyVaults" value="$18M+" />
+        {stats.map(stat => (
+          <StatCard key={stat.label} label={stat.label} value={stat.value} />
+        ))}
       </div>
       <div className="space-y-16">
         <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} />

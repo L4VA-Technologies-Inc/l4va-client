@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 

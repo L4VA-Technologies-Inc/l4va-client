@@ -26,8 +26,8 @@ export const Private = ({ data, errors = {}, updateField }) => {
       : [{ name: 'lbe', label: 'Market / Floor Price' }];
 
   return (
-    <div className="grid grid-cols-2">
-      <div className="px-[36px]">
+    <div className="p-4 md:p-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="space-y-12">
         <div>
           <LavaRadio
             label="*Vault Value Method"
@@ -41,7 +41,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
         </div>
         {valuationType === 'fixed' && (
           <>
-            <div className="mt-[60px]">
+            <div>
               <LavaSelect
                 required
                 error={errors.valuationCurrency}
@@ -55,7 +55,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
                 onChange={value => updateField('valuationCurrency', value)}
               />
             </div>
-            <div className="mt-[60px]">
+            <div>
               <LavaInput
                 required
                 error={errors.valuationAmount}
@@ -71,8 +71,8 @@ export const Private = ({ data, errors = {}, updateField }) => {
             </div>
           </>
         )}
-        <div className="mt-[60px]">
-          <div className="uppercase text-[20px] font-bold">*Contribution duration</div>
+        <div>
+          <div className="uppercase font-bold">*Contribution duration</div>
           <div className="mt-4">
             <LavaIntervalPicker
               value={data.contributionDuration}
@@ -81,7 +81,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
             {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
           </div>
         </div>
-        <div className="mt-[60px]">
+        <div>
           <LavaRadio
             label="*Contribution window open type"
             name="contributionOpenWindowType"
@@ -114,7 +114,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
           )}
         </div>
         {valuationType === 'lbe' ? (
-          <div className="mt-[60px]">
+          <div>
             <LavaWhitelist
               required
               itemPlaceholder="Enter Wallet Address"
@@ -126,7 +126,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
           </div>
         ) : null}
       </div>
-      <div className="px-[36px]">
+      <div className="space-y-12">
         <div>
           <LavaWhitelistWithCaps
             required

@@ -101,7 +101,7 @@ export const ProfileSocialLinks = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h2 className="font-russo text-[40px] uppercase">Socials</h2>
+        <h2 className="font-russo text-4xl uppercase">Socials</h2>
         {socialLinks.length < MAX_LINKS && !isAdding && (
           <button
             className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
@@ -138,7 +138,7 @@ export const ProfileSocialLinks = () => {
             </Select>
             <div className="flex-1 relative">
               <Input
-                className={`py-4 pl-5 pr-24 text-[20px] bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
+                className={`py-4 pl-5 pr-24 bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
                 disabled={isLoading}
                 placeholder={getPlaceholderForPlatform(editingLink.name)}
                 style={{ fontSize: '20px' }}
@@ -176,7 +176,7 @@ export const ProfileSocialLinks = () => {
           <div key={link.id} className="flex items-center gap-2 group">
             <SocialPlatformIcon className="text-dark-100" platformId={link.name} size={20} />
             <a
-              className="text-[20px] hover:text-orange-500 transition-colors"
+              className="hover:text-orange-500 transition-colors"
               href={formatUrl(link.url)}
               rel="noopener noreferrer"
               target="_blank"
@@ -201,9 +201,7 @@ export const ProfileSocialLinks = () => {
             </div>
           </div>
         ))}
-        {socialLinks.length === 0 && (
-          <div className="text-dark-100 text-base mb-2">No social links added. Click the + button to add one.</div>
-        )}
+        {socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
         {socialLinks.length >= MAX_LINKS && (
           <div className="text-red-600 text-base mb-2">Maximum number of links ({MAX_LINKS}) reached.</div>
         )}

@@ -12,7 +12,7 @@ export const VaultsFilters = () => {
           <button
             key={filter}
             className={`
-            cursor-pointer font-satoshi w-full md:w-44 h-12 md:h-[60px] rounded-lg
+            cursor-pointer w-full md:w-44 h-12 md:h-[60px] rounded-lg
             transition-all duration-200 text-base md:text-xl font-semibold
             ${
               activeFilter === filter

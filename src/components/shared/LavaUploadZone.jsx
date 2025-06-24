@@ -151,9 +151,9 @@ export const UploadZone = ({
   };
 
   return (
-    <div className="py-6 px-8 bg-input-bg rounded-[10px]">
+    <div>
       <div className="flex justify-between items-center mb-4">
-        <div className="text-[20px] font-bold flex items-center gap-2">
+        <div className="font-bold flex items-center gap-2">
           <span className="uppercase">
             {required && <span className="mr-1">*</span>}
             {label}
@@ -217,7 +217,7 @@ export const UploadZone = ({
                 <img alt="upload-icon" src="/assets/icons/upload.svg" />
               </div>
             </div>
-            <p className="text-dark-100 text-[20px] mb-2">Upload image into the selected area</p>
+            <p className="text-dark-100 mb-2">Upload image into the selected area</p>
             <p className="text-dark-100 text-xs mt-4">
               {accept !== '*' && `Accepted formats: ${accept}`}
               {maxSizeMB && ` • Max size: ${maxSizeMB}MB`}

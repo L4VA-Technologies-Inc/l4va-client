@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 
-import { Profile } from '@/pages/Profile';
+import { Profile } from '@/pages/profile';
 import { useAuth } from '@/lib/auth/auth';
 
 const ProfileComponent = () => {
