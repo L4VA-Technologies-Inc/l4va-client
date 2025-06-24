@@ -180,8 +180,8 @@ export const getCountdownName = vault => {
   if (vault.vaultStatus === 'acquire') {
     return 'Acquire ends in';
   }
-  if (vault.vaultStatus === 'locked') {
-    return 'Vault Locked';
+  if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance') {
+    return '';
   }
   return 'Contribution starts in';
 };
@@ -193,13 +193,10 @@ export const getCountdownTime = vault => {
     return new Date(vault.contributionOpenWindowTime).getTime();
   }
   if (vault.vaultStatus === 'contribution') {
-    return new Date(vault.contributionOpenWindowTime).getTime() + vault.contributionDuration;
+    return new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
   }
   if (vault.vaultStatus === 'acquire') {
     return new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration;
-  }
-  if (vault.vaultStatus === 'locked') {
-    return new Date(vault.lockedPhaseStart).getTime() + vault.lockedDuration;
   }
   return null;
 };
