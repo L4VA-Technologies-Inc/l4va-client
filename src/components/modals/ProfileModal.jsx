@@ -62,7 +62,7 @@ export const ProfileModal = () => {
         <span className="font-bold">{formatNum(vlrmBalance)} VLRM</span>
       </div>
       <div className="flex justify-between items-center mt-2 p-3 bg-steel-850 rounded-lg">
-        <span className="text-dark-100">ADA Balance</span>
+        <span className="text-dark-100">ADA</span>
         <span className="font-bold">{formatNum(wallet.balanceAda)} ADA</span>
       </div>
       <div className="flex flex-col space-y-4 mt-6">
