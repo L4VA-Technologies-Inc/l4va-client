@@ -7,16 +7,16 @@ import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
 
 const LoadingState = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
+  <div className="py-8 flex items-center justify-center">
     <Spinner />
   </div>
 );
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center min-h-[400px] text-dark-100">
+  <div className="py-8 flex flex-col items-center justify-center">
     <p className="text-xl">No vaults found</p>
-    <Link className={clsx('mt-2 transition-all', 'hover:text-orange-500 hover:underline')} to="/create">
-      Create your first vault to get started
+    <Link className={clsx('mt-2 transition-all')} to="/create">
+      <span className="text-orange-500 hover:underline">Create</span> your first vault to get started
     </Link>
   </div>
 );
@@ -27,7 +27,6 @@ export const VaultList = ({
   vaults = [],
   isLoading = false,
   error = null,
-  className = '',
   onTabChange,
   renderEmptyState = EmptyState,
 }) => {
@@ -39,11 +38,9 @@ export const VaultList = ({
   };
 
   return (
-    <div className={`container mx-auto ${className}`}>
-      <div className="flex flex-col gap-6 mb-8">
-        <div className="flex justify-center items-center">
-          <h2 className="font-russo text-4xl uppercase">{title}</h2>
-        </div>
+    <div>
+      <div className="flex flex-col gap-8">
+        <h2 className="font-russo text-4xl uppercase">{title}</h2>
         {tabs.length > 0 && <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />}
       </div>
       {isLoading ? (

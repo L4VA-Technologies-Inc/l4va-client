@@ -86,9 +86,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
             )}
           </div>
         ))}
-        {socialLinks.length === 0 && (
-          <div className="text-dark-100 text-base mb-2">No social links added. Click the + button to add one.</div>
-        )}
+        {socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
       </div>
     </div>
   );
@@ -109,11 +107,11 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             target="_blank"
           >
             <SocialPlatformIcon className="text-white" platformId={link.name} size={20} />
-            <span className="text-[20px]">{link.url}</span>
+            <span>{link.url}</span>
           </a>
         ))
       ) : (
-        <p className="text-[20px]">No social links added.</p>
+        <p>No social links added.</p>
       )}
     </div>
   );
