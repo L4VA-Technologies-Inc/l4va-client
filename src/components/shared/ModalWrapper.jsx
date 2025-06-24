@@ -46,7 +46,7 @@ export const ModalWrapper = ({
     if (position === 'top-right') {
       return `
         /* Desktop styles */
-        md:absolute md:top-0 md:right-4 md:w-[360px] md:rounded-[10px]
+        md:absolute md:top-0 md:right-4 md:w-[360px] md:rounded-lg
 
         /* Mobile styles */
         max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
@@ -56,7 +56,7 @@ export const ModalWrapper = ({
     // Default center positioning
     return `
       /* Desktop styles */
-      md:fixed-center md:w-[360px] md:rounded-[10px]
+      md:fixed-center md:w-[360px] md:rounded-lg
 
       /* Mobile styles */
       max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:w-full max-md:rounded-t-xl
@@ -78,7 +78,7 @@ export const ModalWrapper = ({
             flex items-center justify-between px-4 bg-white/5
 
             /* Desktop styles */
-            md:py-3 md:rounded-t-[10px]
+            md:py-3 md:rounded-t-lg
 
             /* Mobile styles */
             max-md:py-3 max-md:rounded-t-xl
@@ -91,7 +91,7 @@ export const ModalWrapper = ({
             </button>
           )}
         </div>
-        <div className="p-4 md:p-5 md:rounded-b-[10px] max-md:pb-8 max-md:pt-3">{children}</div>
+        <div className="p-4 md:p-5 md:rounded-b-lg max-md:pb-8 max-md:pt-2">{children}</div>
       </div>
     </>
   );
