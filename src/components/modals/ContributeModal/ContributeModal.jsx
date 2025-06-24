@@ -62,8 +62,6 @@ export const ContributeModal = ({ vault, onClose }) => {
 
       const formattedAssets = [adaAsset];
 
-      console.log(data);
-
       if (data?.assets) {
         const otherAssets = data.assets
           .map(asset => {
@@ -124,6 +122,10 @@ export const ContributeModal = ({ vault, onClose }) => {
   };
 
   const handleFTAmountChange = (ft, amount) => {
+    const isValid = amount === '' || /^\d+(\.\d{0,2})?$/.test(amount);
+
+    if (!isValid) return;
+
     setSelectedAmount(prev => ({
       ...prev,
       [ft.id]: amount,
