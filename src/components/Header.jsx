@@ -49,7 +49,7 @@ export const Header = () => {
 
   return (
     <header className="h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-steel-900/50">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
             <L4vaIcon className="flex-shrink-0" style={{ width: '24px', height: '24px' }} />
