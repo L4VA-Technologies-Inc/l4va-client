@@ -6,6 +6,7 @@ import { ConnectButton } from '@/components/ConnectButton';
 import { MenuDrawer } from '@/components/MenuDrawer';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 const navLinks = [
@@ -51,7 +52,10 @@ export const Header = () => {
 
   return (
     <header
-      className={`h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-steel-900/50 ${isCreateRoute ? 'bg-transparent' : 'bg-slate-950/80'}`}
+      className={cn(
+        'h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-steel-900/50',
+        isCreateRoute ? 'bg-transparent' : 'bg-slate-950/80'
+      )}
     >
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
@@ -60,7 +64,7 @@ export const Header = () => {
             <span className="hidden md:block text-2xl font-bold uppercase">L4VA</span>
           </Link>
           <button
-            className="md:hidden p-2 ml-2 rounded-full hover:bg-steel-850 transition-colors"
+            className={cn('md:hidden p-2 ml-2 rounded-full hover:bg-steel-850 transition-colors')}
             aria-label="Toggle mobile menu"
             onClick={toggleMobileMenu}
           >
