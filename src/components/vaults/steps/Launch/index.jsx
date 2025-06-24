@@ -4,7 +4,7 @@ import { LaunchAcquireWindow } from '@/components/vaults/steps/Launch/LaunchAcqu
 import { LaunchGovernance } from '@/components/vaults/steps/Launch/LaunchGovernance';
 
 export const Launch = ({ data, setCurrentStep }) => (
-  <div className="py-20 space-y-10">
+  <div className="space-y-12">
     <LaunchConfigureVault data={data} setCurrentStep={setCurrentStep} />
     <LaunchAssetContribution data={data} setCurrentStep={setCurrentStep} />
     <LaunchAcquireWindow data={data} setCurrentStep={setCurrentStep} />

@@ -14,15 +14,19 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
 
   return (
     <section>
-      <div className="rounded-t-[10px] py-4 px-8 flex justify-between bg-white/5">
-        <p className="font-bold text-2xl">Acquire</p>
-        <button className="flex items-center gap-2 text-dark-100" type="button" onClick={() => setCurrentStep(3)}>
-          <Edit size={24} />
+      <div className="rounded-t-[10px] py-4 px-4 md:px-8 flex justify-between bg-white/5 gap-4">
+        <p className="font-bold text-xl md:text-2xl">Acquire</p>
+        <button
+          className="flex items-center gap-2 text-dark-100 self-start md:self-auto hover:text-orange-500"
+          type="button"
+          onClick={() => setCurrentStep(3)}
+        >
+          <Edit size={20} className="w-6 h-6" />
           Edit
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-8 rounded-b-[10px] bg-input-bg pt-4 pb-8 px-16">
-        <div className="space-y-10">
+      <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
+        <div className="space-y-12">
           {data.privacy !== 'public' && (
             <div>
               <p className="uppercase font-semibold text-dark-100">Acquirer whitelist</p>
@@ -32,18 +36,18 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
                     {data.acquirersWhitelist.slice(0, 5).map((acquirer, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-[20px]">{acquirer.walletAddress || 'Not set'}</span>
+                        <span>{acquirer.walletAddress || 'Not set'}</span>
                       </div>
                     ))}
                     {data.acquirersWhitelist.length > 5 && (
-                      <p className="text-dark-100 text-sm mt-2">
+                      <p className="text-dark-100 mt-2">
                         +{formatNum(data.acquirersWhitelist.length - 5)} more acquirers
                       </p>
                     )}
                   </>
                 ) : data.acquirersWhitelistCsv ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-[20px]">CSV file uploaded</span>
+                    <span>CSV file uploaded</span>
                     <a
                       href={data.acquirersWhitelistCsv.url}
                       download={data.acquirersWhitelistCsv.fileName}
@@ -53,36 +57,32 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
                     </a>
                   </div>
                 ) : (
-                  <span className="text-[20px]">Not set</span>
+                  <span>Not set</span>
                 )}
               </div>
             </div>
           )}
           <div>
             <p className="uppercase font-semibold text-dark-100">Acquire Window Duration</p>
-            <p className="text-[20px]">{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>
+            <p>{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">Acquire Window Open Time</p>
-            <p className="text-[20px]">{formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}</p>
+            <p>{formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}</p>
           </div>
         </div>
-        <div className="space-y-10">
+        <div className="space-y-12">
           <div>
             <p className="uppercase font-semibold text-dark-100">Assets Fractionalized (%)</p>
-            <p className="text-[20px]">
-              {data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}
-            </p>
+            <p>{data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}</p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">Reserve (%)</p>
-            <p className="text-[20px]">{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
+            <p>{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">Liquidity Pool (LP) Contribution (%)</p>
-            <p className="text-[20px]">
-              {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}
-            </p>
+            <p>{data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}</p>
           </div>
         </div>
       </div>

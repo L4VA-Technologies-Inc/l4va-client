@@ -5,8 +5,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const Public = ({ data, errors = {}, updateField }) => (
-  <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16">
-
+  <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
     <div className="space-y-12">
       <div>
         <LavaRadio
