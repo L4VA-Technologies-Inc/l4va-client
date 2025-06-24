@@ -1,28 +1,66 @@
 import { Link } from '@tanstack/react-router';
+import React, { useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
+import L4vaIcon from '@/icons/l4va.svg?react';
+import XIcon from '@/icons/x.svg?react';
+import TelegramIcon from '@/icons/telegram.svg?react';
+import MediumIcon from '@/icons/medium.svg?react';
+import DiscordIcon from '@/icons/discord.svg?react';
+import LinkedInIcon from '@/icons/linkedin.svg?react';
+import InstagramIcon from '@/icons/instagram.svg?react';
+import FacebookIcon from '@/icons/facebook.svg?react';
+
 const socialLinks = [
-  { name: 'X (Twitter)', icon: '/assets/social/footer/x.png', url: 'https://x.com' },
-  { name: 'Telegram', icon: '/assets/social/footer/telegram.png', url: 'https://telegram.org' },
-  { name: 'Medium', icon: '/assets/social/footer/medium.png', url: 'https://medium.com' },
-  { name: 'Discord', icon: '/assets/social/footer/discord.png', url: 'https://discord.com' },
-  { name: 'LinkedIn', icon: '/assets/social/footer/linkedin.png', url: 'https://linkedin.com' },
-  { name: 'Instagram', icon: '/assets/social/footer/instagram.png', url: 'https://instagram.com' },
-  { name: 'Facebook', icon: '/assets/social/footer/facebook.png', url: 'https://facebook.com' },
+  { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com' },
+  { name: 'Telegram', icon: TelegramIcon, url: 'https://telegram.org' },
+  { name: 'Medium', icon: MediumIcon, url: 'https://medium.com' },
+  { name: 'Discord', icon: DiscordIcon, url: 'https://discord.com' },
+  { name: 'LinkedIn', icon: LinkedInIcon, url: 'https://linkedin.com' },
+  { name: 'Instagram', icon: InstagramIcon, url: 'https://instagram.com' },
+  { name: 'Facebook', icon: FacebookIcon, url: 'https://facebook.com' },
 ];
 
 const navLinks = [
-  { href: '/create', label: 'Create' },
-  { href: '/contribute', label: 'Contribute' },
-  { href: '/acquire', label: 'Acquire' },
-  { href: '/how-it-works', label: 'How it works' },
-  { href: '/about-us', label: 'About us' },
-  { href: '/social-media', label: 'Social media' },
-  { href: '/terms-of-service', label: 'Terms of Service' },
-  { href: '/privacy-policy', label: 'Privacy Policy' },
+  { to: '/create', label: 'Create' },
+  { to: '/vaults?tab=contribute', label: 'Contribute' },
+  { to: '/vaults?tab=acquire', label: 'Acquire' },
+  { to: '/how-it-works', label: 'How it works' },
+  { to: '/about-us', label: 'About us' },
+  { to: '/social-media', label: 'Social media' },
+  { to: '/terms-of-service', label: 'Terms of Service' },
+  { to: '/privacy-policy', label: 'Privacy Policy' },
 ];
 
+// Memoized NavLink for performance - matching Header pattern
+const NavLink = React.memo(({ to, label, onClick }) => (
+  <Link
+    activeProps={{ className: 'text-orange-500' }}
+    className="font-medium hover:text-orange-500 transition-colors"
+    to={to}
+    onClick={onClick}
+  >
+    {label}
+  </Link>
+));
+NavLink.displayName = 'NavLink';
+
 export const Footer = () => {
+  const { isAuthenticated } = useAuth();
+  const { openModal } = useModalControls();
+
+  const handleNavClick = useCallback(
+    (to, e) => {
+      if (!isAuthenticated) {
+        e.preventDefault();
+        openModal('LoginModal');
+      }
+    },
+    [isAuthenticated, openModal]
+  );
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -31,18 +69,13 @@ export const Footer = () => {
   };
 
   return (
-    <div className="mt-auto relative py-8 md:py-16">
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-[670px]"
-        style={{ backgroundImage: 'url(/assets/footer-bg.webp)' }}
-      />
-      <div className="container mx-auto px-4">
-        <div className="flex items-center flex-col mb-8 md:mb-16">
-          <h2 className="text-primary-text text-xl md:text-2xl font-russo font-bold mb-8 md:mb-16">
-            FIND US ON SOCIAL
-          </h2>
-          <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
-            {socialLinks.map(social => (
+    <div className="container mx-auto px-4 xl:px-0">
+      <div className="flex items-center flex-col mb-8 md:mb-16">
+        <h2 className="text-primary-text text-xl md:text-2xl font-russo font-bold mb-8 md:mb-16">FIND US ON SOCIAL</h2>
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-16">
+          {socialLinks.map(social => {
+            const IconComponent = social.icon;
+            return (
               <a
                 key={social.name}
                 aria-label={`Visit our ${social.name} page`}
@@ -51,39 +84,34 @@ export const Footer = () => {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <img alt={`${social.name} icon`} className="w-10 h-10 md:w-[60px] md:h-[60px]" src={social.icon} />
+                <IconComponent className="w-8 h-8" />
               </a>
-            ))}
-          </div>
+            );
+          })}
         </div>
-        <div className="flex justify-center mb-8">
-          <Link to="/">
-            <img alt="L4VA Logo" className="w-40 md:w-[210px]" src="/assets/l4va-logo.webp" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16">
-          {navLinks.map(link => (
-            <a
-              key={link.href}
-              className="font-bold hover:text-red-600 transition-colors text-center text-base md:text-lg"
-              href={link.href}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-        <p className="text-center text-xs md:text-sm text-dark-100 pb-6">
-          Copyright © {new Date().getFullYear()}. All Rights Reserved by L4VA
-        </p>
-        <button
-          aria-label="Scroll to top"
-          className="cursor-pointer absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:opacity-80 transition-opacity"
-          type="button"
-          onClick={scrollToTop}
-        >
-          <ChevronDown className="rotate-180" size={24} />
-        </button>
       </div>
+      <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16">
+        {navLinks.map(link => (
+          <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
+        ))}
+      </div>
+      <div className="flex justify-center mb-8">
+        <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
+          <L4vaIcon className="flex-shrink-0" style={{ width: '48px', height: '48px' }} />
+          <span className="text-4xl font-bold uppercase">L4VA</span>
+        </Link>
+      </div>
+      <p className="text-center text-dark-100 pb-6">
+        Copyright © {new Date().getFullYear()}. All Rights Reserved by L4VA
+      </p>
+      <button
+        aria-label="Scroll to top"
+        className="cursor-pointer absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:opacity-80 transition-opacity"
+        type="button"
+        onClick={scrollToTop}
+      >
+        <ChevronDown className="rotate-180" size={24} />
+      </button>
     </div>
   );
 };

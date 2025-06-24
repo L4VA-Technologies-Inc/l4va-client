@@ -13,12 +13,12 @@ export const ConnectButton = () => {
     <>
       <div className="hidden sm:flex">
         {!isAuthenticated ? (
-          <PrimaryButton onClick={() => openModal('LoginModal')}>
+          <PrimaryButton size="md" onClick={() => openModal('LoginModal')}>
             <WalletIcon />
             CONNECT
           </PrimaryButton>
         ) : (
-          <PrimaryButton onClick={() => openModal('ProfileModal')}>
+          <PrimaryButton size="md" onClick={() => openModal('ProfileModal')}>
             <Avatar className="h-8 w-8 bg-steel-950 cursor-pointer">
               <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
@@ -29,7 +29,7 @@ export const ConnectButton = () => {
 
       <div className="flex sm:hidden">
         {!isAuthenticated ? (
-          <button className="p-2 rounded-lg bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>
+          <button className="p-2 rounded-md bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>
             <WalletIcon className="text-slate-950" height={24} width={24} />
           </button>
         ) : (

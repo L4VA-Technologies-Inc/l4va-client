@@ -42,20 +42,20 @@ export const VaultList = ({
       <div className="flex flex-col gap-8">
         <h2 className="font-russo text-4xl uppercase">{title}</h2>
         {tabs.length > 0 && <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />}
+        {isLoading ? (
+          <LoadingState />
+        ) : error ? (
+          <div className="text-center text-red-600 py-8">{error}</div>
+        ) : vaults.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vaults.map(vault => (
+              <VaultCard key={vault.id} {...vault} />
+            ))}
+          </div>
+        )}
       </div>
-      {isLoading ? (
-        <LoadingState />
-      ) : error ? (
-        <div className="text-center text-red-600 py-8">{error}</div>
-      ) : vaults.length === 0 ? (
-        renderEmptyState()
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vaults.map(vault => (
-            <VaultCard key={vault.id} {...vault} />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
