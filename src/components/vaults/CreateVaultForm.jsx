@@ -22,6 +22,7 @@ import {
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
+import { TapToolsApiProvider } from '@/services/api/taptools';
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -107,6 +108,24 @@ export const CreateVaultForm = ({ vault }) => {
       handleNextStep();
     } else {
       try {
+        // setIsSubmitting(true);
+
+        const latestVlrm = await fetchVlrmBalance();
+        if (latestVlrm < 1000) {
+          // TODO: Add swap token popup
+
+          toast.error('You need at least 1000 VLRM to launch a vault.');
+          return;
+        } else {
+          toast.success(`You have ${latestVlrm} VLRM available.`);
+          return;
+        }
+      } catch (err) {
+        toast.error('Failed to fetch VLRM balance');
+        setIsSubmitting(false);
+      }
+
+      try {
         setIsSubmitting(true);
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
@@ -132,6 +151,18 @@ export const CreateVaultForm = ({ vault }) => {
       } finally {
         setIsSubmitting(false);
       }
+    }
+  };
+
+  const fetchVlrmBalance = async () => {
+    try {
+      if (!wallet.handler) return;
+      const changeAddress = await wallet.handler.getChangeAddressBech32();
+      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
+      const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
+      return vlrmToken ? vlrmToken.quantity : 0;
+    } catch (err) {
+      return 0;
     }
   };
 
