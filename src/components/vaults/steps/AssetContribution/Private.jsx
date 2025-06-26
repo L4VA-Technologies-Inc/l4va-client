@@ -119,10 +119,10 @@ export const Private = ({ data, errors = {}, updateField }) => {
               required
               itemPlaceholder="Enter Wallet Address"
               label="Contributor Whitelist"
-              setWhitelist={assets => updateField('whitelistContributors', assets)}
-              whitelist={data.whitelistContributors || []}
+              setWhitelist={assets => updateField('contributorWhitelist', assets)}
+              whitelist={data.contributorWhitelist || []}
             />
-            {errors.whitelistContributors && <p className="text-red-600 mt-1">{errors.whitelistContributors}</p>}
+            {errors.contributorWhitelist && <p className="text-red-600 mt-1">{errors.contributorWhitelist}</p>}
           </div>
         ) : null}
       </div>

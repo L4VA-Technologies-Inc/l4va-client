@@ -31,26 +31,26 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
             <div>
               <p className="uppercase font-semibold text-dark-100">Acquirer whitelist</p>
               <div className="space-y-2">
-                {data.acquirersWhitelist?.length ? (
+                {data.acquirerWhitelist?.length ? (
                   <>
-                    {data.acquirersWhitelist.slice(0, 5).map((acquirer, index) => (
+                    {data.acquirerWhitelist.slice(0, 5).map((acquirer, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary" />
                         <span>{acquirer.walletAddress || 'Not set'}</span>
                       </div>
                     ))}
-                    {data.acquirersWhitelist.length > 5 && (
+                    {data.acquirerWhitelist.length > 5 && (
                       <p className="text-dark-100 mt-2">
-                        +{formatNum(data.acquirersWhitelist.length - 5)} more acquirers
+                        +{formatNum(data.acquirerWhitelist.length - 5)} more acquirers
                       </p>
                     )}
                   </>
-                ) : data.acquirersWhitelistCsv ? (
+                ) : data.acquirerWhitelistCsv ? (
                   <div className="flex items-center gap-2">
                     <span>CSV file uploaded</span>
                     <a
-                      href={data.acquirersWhitelistCsv.url}
-                      download={data.acquirersWhitelistCsv.fileName}
+                      href={data.acquirerWhitelistCsv.url}
+                      download={data.acquirerWhitelistCsv.fileName}
                       className="text-primary hover:underline"
                     >
                       Download
