@@ -99,11 +99,7 @@ export const CreateVaultForm = ({ vault }) => {
     );
   };
 
-  const updateField = (fieldName, value) =>
-    setVaultData({
-      ...vaultData,
-      [fieldName]: value,
-    });
+  const updateField = (fieldName, value) => setVaultData(prev => ({ ...prev, [fieldName]: value }));
 
   const onSubmit = async () => {
     if (currentStep < steps.length) {
