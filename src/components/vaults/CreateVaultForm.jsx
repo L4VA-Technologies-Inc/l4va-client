@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useNavigate } from '@tanstack/react-router';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -33,6 +34,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
+  const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
 
   const scrollToTop = () => {
@@ -142,6 +144,13 @@ export const CreateVaultForm = ({ vault }) => {
           signatures: [signature],
         });
         toast.success('Vault launched successfully');
+
+        // Redirect to the created vault and reset form
+        navigate({ to: `/vaults/${data.vaultId}` });
+        setVaultData(initialVaultState);
+        setCurrentStep(1);
+        setSteps(CREATE_VAULT_STEPS);
+        setErrors({});
       } catch (err) {
         console.log(err);
         const formattedErrors = transformYupErrors(err);
