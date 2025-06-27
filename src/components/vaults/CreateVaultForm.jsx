@@ -4,8 +4,7 @@ import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 
-import { SwapComponent } from '../swap/Swap';
-
+import { SwapComponent } from '@/components/swap/Swap';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -27,6 +26,8 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+const MIN_VLRM_REQUIRED = 1000;
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -113,8 +114,8 @@ export const CreateVaultForm = ({ vault }) => {
         setIsSubmitting(true);
 
         const latestVlrm = await fetchVlrmBalance();
-        if (latestVlrm < 1000) {
-          toast.error('You need at least 1000 VLRM to launch a vault.');
+        if (latestVlrm < MIN_VLRM_REQUIRED) {
+          toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
           setIsSubmitting(false);
           setIsVisibleSwipe(true);
           return;
@@ -337,8 +338,8 @@ export const CreateVaultForm = ({ vault }) => {
           <SwapComponent
             config={{
               // Only allow VLRM token
-              defaultToken: '63efb704b7396890e4d9539d030c0e667739043add65c00f96c586c056616c6f72756d',
-              supportedTokens: ['63efb704b7396890e4d9539d030c0e667739043add65c00f96c586c056616c6f72756d'],
+              defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+              supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
             }}
           />
         </DialogContent>
