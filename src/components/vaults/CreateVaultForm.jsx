@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useNavigate } from '@tanstack/react-router';
 
+import { SwapComponent } from '@/components/swap/Swap';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -22,6 +24,10 @@ import {
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
+import { TapToolsApiProvider } from '@/services/api/taptools';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+const MIN_VLRM_REQUIRED = 1000;
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -29,9 +35,11 @@ export const CreateVaultForm = ({ vault }) => {
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
+  const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
 
   const scrollToTop = () => {
@@ -96,11 +104,7 @@ export const CreateVaultForm = ({ vault }) => {
     );
   };
 
-  const updateField = (fieldName, value) =>
-    setVaultData({
-      ...vaultData,
-      [fieldName]: value,
-    });
+  const updateField = (fieldName, value) => setVaultData(prev => ({ ...prev, [fieldName]: value }));
 
   const onSubmit = async () => {
     if (currentStep < steps.length) {
@@ -108,6 +112,23 @@ export const CreateVaultForm = ({ vault }) => {
     } else {
       try {
         setIsSubmitting(true);
+
+        const latestVlrm = await fetchVlrmBalance();
+        if (latestVlrm < MIN_VLRM_REQUIRED) {
+          toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
+          setIsSubmitting(false);
+          setIsVisibleSwipe(true);
+          return;
+        } else {
+          toast.success(`You have ${latestVlrm} VLRM available.`);
+          return;
+        }
+      } catch (err) {
+        toast.error('Failed to fetch VLRM balance');
+        setIsSubmitting(false);
+      }
+
+      try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
         const formattedData = formatVaultData(vaultData);
@@ -123,6 +144,13 @@ export const CreateVaultForm = ({ vault }) => {
           signatures: [signature],
         });
         toast.success('Vault launched successfully');
+
+        // Redirect to the created vault and reset form
+        navigate({ to: `/vaults/${data.vaultId}` });
+        setVaultData(initialVaultState);
+        setCurrentStep(1);
+        setSteps(CREATE_VAULT_STEPS);
+        setErrors({});
       } catch (err) {
         console.log(err);
         const formattedErrors = transformYupErrors(err);
@@ -132,6 +160,18 @@ export const CreateVaultForm = ({ vault }) => {
       } finally {
         setIsSubmitting(false);
       }
+    }
+  };
+
+  const fetchVlrmBalance = async () => {
+    try {
+      if (!wallet.handler) return;
+      const changeAddress = await wallet.handler.getChangeAddressBech32();
+      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
+      const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
+      return vlrmToken ? vlrmToken.quantity : 0;
+    } catch (err) {
+      return 0;
     }
   };
 
@@ -293,6 +333,17 @@ export const CreateVaultForm = ({ vault }) => {
       </div>
       <div>{renderStepContent(currentStep)}</div>
       <div>{renderButtons()}</div>
+      <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
+        <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
+          <SwapComponent
+            config={{
+              // Only allow VLRM token
+              defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+              supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
