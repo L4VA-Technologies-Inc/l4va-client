@@ -79,7 +79,7 @@ export const ProfileModal = () => {
         </SecondaryButton>
         <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
           <ArrowLeftRight size={20} />
-          Swap ADA/$VLRM 0-0
+          Swap ADA/$VLRM
         </SecondaryButton>
 
         <div className="border-t border-white/10 my-4" />
