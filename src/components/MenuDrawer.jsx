@@ -26,7 +26,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-6 pb-0 border-b border-steel-850">
+          <div className="flex items-center justify-between p-4 pb-0 border-b border-steel-850">
             <h2 className="text-lg font-semibold text-primary-text">Menu</h2>
             <button
               className="p-2 rounded-full hover:bg-steel-850 transition-colors"
@@ -37,7 +37,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
-          <div className="flex-1 p-6 bg-steel-900">
+          <div className="flex-1 p-4 bg-steel-900">
             <nav className="space-y-4">
               {navLinks.map(link => (
                 <Link
@@ -51,7 +51,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
               ))}
             </nav>
           </div>
-          <div className="p-6 border-t border-steel-850 bg-steel-900">
+          <div className="p-4 border-t border-steel-850 bg-steel-900">
             <div className="text-sm text-gray-400">L4VA Platform</div>
           </div>
         </div>
