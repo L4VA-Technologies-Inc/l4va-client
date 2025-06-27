@@ -1,4 +1,3 @@
-import '@/css/swap-custom.css';
 import Swap from '@dexhunterio/swaps';
 import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
 import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
