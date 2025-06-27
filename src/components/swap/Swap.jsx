@@ -1,5 +1,5 @@
+import '@/css/swap-custom.css';
 import Swap from '@dexhunterio/swaps';
-import '@dexhunterio/swaps/lib/assets/style.css';
 
 export const SwapComponent = () => {
   return (
