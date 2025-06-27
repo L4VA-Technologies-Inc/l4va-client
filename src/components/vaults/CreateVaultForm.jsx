@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 
+import { SwapComponent } from '../swap/Swap';
+
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -24,6 +26,7 @@ import {
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { TapToolsApiProvider } from '@/services/api/taptools';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,6 +34,7 @@ export const CreateVaultForm = ({ vault }) => {
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
@@ -106,13 +110,13 @@ export const CreateVaultForm = ({ vault }) => {
       handleNextStep();
     } else {
       try {
-        // setIsSubmitting(true);
+        setIsSubmitting(true);
 
         const latestVlrm = await fetchVlrmBalance();
         if (latestVlrm < 1000) {
-          // TODO: Add swap token popup
-
           toast.error('You need at least 1000 VLRM to launch a vault.');
+          setIsSubmitting(false);
+          setIsVisibleSwipe(true);
           return;
         } else {
           toast.success(`You have ${latestVlrm} VLRM available.`);
@@ -124,7 +128,6 @@ export const CreateVaultForm = ({ vault }) => {
       }
 
       try {
-        setIsSubmitting(true);
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
         const formattedData = formatVaultData(vaultData);
@@ -329,6 +332,17 @@ export const CreateVaultForm = ({ vault }) => {
       </div>
       <div>{renderStepContent(currentStep)}</div>
       <div>{renderButtons()}</div>
+      <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
+        <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
+          <SwapComponent
+            config={{
+              // Only allow VLRM token
+              defaultToken: '63efb704b7396890e4d9539d030c0e667739043add65c00f96c586c056616c6f72756d',
+              supportedTokens: ['63efb704b7396890e4d9539d030c0e667739043add65c00f96c586c056616c6f72756d'],
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
