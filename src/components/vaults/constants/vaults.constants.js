@@ -1,5 +1,8 @@
 import * as yup from 'yup';
 
+export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 24 hours in ms
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 86400000; // 24 hours in ms
+
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
   PRIVATE: 'private',
@@ -107,13 +110,18 @@ export const vaultSchema = yup.object({
       otherwise: schema => schema.nullable(),
     }),
   assetsWhitelist: yup.array().default([]).required('Assets whitelist is required'),
-  contributionDuration: yup.number().typeError('Duration is required').required('Duration is required'),
+  contributionDuration: yup
+    .number()
+    .typeError('Duration is required')
+    .required('Duration is required')
+    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 24 hours'),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
-    .required('Acquire window duration is required'),
+    .required('Acquire window duration is required')
+    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 24 hours'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
   tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
@@ -129,7 +137,7 @@ export const vaultSchema = yup.object({
     .typeError('Token supply is required')
     .required('Token supply is required')
     .integer('Must be an integer')
-    .min(100000000, 'Must be greater than 1,000,000')
+    .min(100000000, 'Must be greater than 100,000,000')
     .max(100000000, 'Must be less than or equal to 100,000,000'),
   ftTokenImg: yup.string().required('Token image is required'),
   terminationType: yup.string().required('Termination type is required'),
@@ -194,7 +202,7 @@ export const initialVaultState = {
   liquidityPoolContribution: null,
 
   // Step 4: Governance
-  ftTokenSupply: 1000000,
+  ftTokenSupply: 100000000,
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields

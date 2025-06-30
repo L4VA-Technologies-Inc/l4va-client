@@ -2,7 +2,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
+import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const Public = ({ data, errors = {}, updateField }) => (
   <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
@@ -70,6 +70,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
           <LavaIntervalPicker
             value={data.contributionDuration}
             onChange={value => updateField('contributionDuration', value)}
+            minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
           />
           {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
         </div>

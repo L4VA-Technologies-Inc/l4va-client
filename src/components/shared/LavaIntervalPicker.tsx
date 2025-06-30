@@ -28,17 +28,19 @@ type LavaIntervalPickerProps = {
   onChange?: (value: number) => void;
   hint?: string;
   className?: string;
-  variant?: keyof typeof variants;
+  variant?: 'default' | 'steel';
+  minDays?: number; // Minimum time in milliseconds
 };
 
 export const LavaIntervalPicker = ({
   label,
   hint,
   className,
-  required = false,
   value = 0,
-  onChange = () => {},
+  minDays = 0,
   variant = 'default',
+  required = false,
+  onChange = () => {},
 }: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
@@ -47,11 +49,11 @@ export const LavaIntervalPicker = ({
     setIntervalValue(msToInterval(value));
   }, [value]);
 
-  const days = Array.from({ length: 31 }, (_, i) => i);
+  const days = Array.from({ length: 31 - minDays }, (_, i) => i + minDays);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
-  const handleIntervalChange = (type: string, val: string) => {
+  const handleIntervalChange = (type: keyof typeof interval, val: string) => {
     const newInterval = {
       ...interval,
       [type]: Number.parseInt(val, 10),
@@ -113,7 +115,7 @@ export const LavaIntervalPicker = ({
                           key={day}
                           className="w-12 h-12"
                           size="icon"
-                          variant={interval.days === day ? 'default' : 'ghost'}
+                          variant={interval.days + minDays === day ? 'default' : 'ghost'}
                           onClick={() => handleIntervalChange('days', day.toString())}
                         >
                           {day}
