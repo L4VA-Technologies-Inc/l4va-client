@@ -17,7 +17,7 @@ const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
 export const ContributeModal = ({ vault, onClose }) => {
-  const { vaultName, recipientAddress } = vault;
+  const { vaultName, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -25,6 +25,10 @@ export const ContributeModal = ({ vault, onClose }) => {
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
   const { sendTransaction, status, error } = useTransaction();
   const [selectedAmount, setSelectedAmount] = useState({});
+
+  const whitelistedPolicies = useMemo(() => {
+    return new Set(assetsWhitelist?.map(item => item.policyId) || []);
+  }, [assetsWhitelist]);
 
   const contributionDetails = useMemo(() => {
     const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
@@ -48,7 +52,10 @@ export const ContributeModal = ({ vault, onClose }) => {
       const changeAddress = await wallet.handler.getChangeAddressBech32();
       const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
 
+      const formattedAssets = [];
+
       // Add ADA as a fungible token
+      // Maybe we will remove this in the future
       const adaAsset = {
         id: 'lovelace',
         name: 'ADA',
@@ -60,11 +67,17 @@ export const ContributeModal = ({ vault, onClose }) => {
         image: '/assets/icons/ada.png',
       };
 
-      const formattedAssets = [adaAsset];
+      if (whitelistedPolicies.size === 0 || whitelistedPolicies.has(adaAsset.policyId)) {
+        formattedAssets.push(adaAsset);
+      }
 
       if (data?.assets) {
         const otherAssets = data.assets
           .map(asset => {
+            const isWhitelisted = whitelistedPolicies.size === 0 || whitelistedPolicies.has(asset.metadata?.policyId);
+
+            if (!isWhitelisted) return null;
+
             if (asset.isNft) {
               return {
                 id: asset.tokenId,
