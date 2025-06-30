@@ -1,5 +1,8 @@
 import * as yup from 'yup';
 
+export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 24 hours in ms
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 86400000; // 24 hours in ms
+
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
   PRIVATE: 'private',
@@ -111,14 +114,14 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Duration is required')
     .required('Duration is required')
-    .min(24, 'Duration must be at least 24 hours'),
+    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 24 hours'),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
     .required('Acquire window duration is required')
-    .min(24, 'Must be at least 24 hours'),
+    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 24 hours'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
   tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
@@ -199,7 +202,7 @@ export const initialVaultState = {
   liquidityPoolContribution: null,
 
   // Step 4: Governance
-  ftTokenSupply: 1000000,
+  ftTokenSupply: 100000000,
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields

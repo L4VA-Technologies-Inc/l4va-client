@@ -10,6 +10,7 @@ import {
   VAULT_PRIVACY_TYPES,
   RESERVE_HINT,
   LIQUIDITY_POOL_CONTRIBUTION_HINT,
+  MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const AcquireWindow = ({ data, errors = {}, updateField }) => {
@@ -65,6 +66,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             <LavaIntervalPicker
               value={data.acquireWindowDuration}
               onChange={date => updateField('acquireWindowDuration', date)}
+              minDays={Math.floor(MIN_ACQUIRE_WINDOW_DURATION_MS / (1000 * 60 * 60 * 24))}
             />
             {errors.acquireWindowDuration && <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>}
           </div>
