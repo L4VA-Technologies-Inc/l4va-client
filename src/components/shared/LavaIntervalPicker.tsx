@@ -21,15 +21,25 @@ const variants = {
   },
 };
 
+type LavaIntervalPickerProps = {
+  label?: string;
+  required?: boolean;
+  value?: number;
+  onChange?: (value: number) => void;
+  hint?: string;
+  className?: string;
+  variant?: keyof typeof variants;
+};
+
 export const LavaIntervalPicker = ({
   label,
+  hint,
+  className,
   required = false,
   value = 0,
   onChange = () => {},
-  hint,
-  className,
   variant = 'default',
-}) => {
+}: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
 
@@ -41,7 +51,7 @@ export const LavaIntervalPicker = ({
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
-  const handleIntervalChange = (type, val) => {
+  const handleIntervalChange = (type: string, val: string) => {
     const newInterval = {
       ...interval,
       [type]: Number.parseInt(val, 10),
