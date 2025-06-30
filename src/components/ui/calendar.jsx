@@ -19,7 +19,6 @@ function Calendar({
   components,
   ...props
 }) {
-  // Test
   const defaultClassNames = getDefaultClassNames()
 
   return (
