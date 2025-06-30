@@ -107,13 +107,18 @@ export const vaultSchema = yup.object({
       otherwise: schema => schema.nullable(),
     }),
   assetsWhitelist: yup.array().default([]).required('Assets whitelist is required'),
-  contributionDuration: yup.number().typeError('Duration is required').required('Duration is required'),
+  contributionDuration: yup
+    .number()
+    .typeError('Duration is required')
+    .required('Duration is required')
+    .min(24, 'Duration must be at least 24 hours'),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
-    .required('Acquire window duration is required'),
+    .required('Acquire window duration is required')
+    .min(24, 'Must be at least 24 hours'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
   tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
@@ -129,7 +134,7 @@ export const vaultSchema = yup.object({
     .typeError('Token supply is required')
     .required('Token supply is required')
     .integer('Must be an integer')
-    .min(100000000, 'Must be greater than 1,000,000')
+    .min(100000000, 'Must be greater than 100,000,000')
     .max(100000000, 'Must be less than or equal to 100,000,000'),
   ftTokenImg: yup.string().required('Token image is required'),
   terminationType: yup.string().required('Termination type is required'),
