@@ -50,8 +50,6 @@ export const LavaIntervalPicker = ({
   }, [value]);
 
   const days = Array.from({ length: 31 - minDays }, (_, i) => i + minDays);
-  console.log('days', days);
-
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
 
