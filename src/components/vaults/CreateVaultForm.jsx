@@ -119,9 +119,6 @@ export const CreateVaultForm = ({ vault }) => {
           setIsSubmitting(false);
           setIsVisibleSwipe(true);
           return;
-        } else {
-          toast.success(`You have ${latestVlrm} VLRM available.`);
-          return;
         }
       } catch (err) {
         toast.error('Failed to fetch VLRM balance');
