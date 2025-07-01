@@ -189,12 +189,12 @@ export const initialVaultState = {
   valueMethod: 'lbe',
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
-  contributionDuration: null,
+  contributionDuration: MIN_CONTRIBUTION_DURATION_MS,
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
 
   // Step 3: Acquire Window
-  acquireWindowDuration: null,
+  acquireWindowDuration: MIN_ACQUIRE_WINDOW_DURATION_MS,
   acquireOpenWindowType: 'upon-asset-window-closing',
   acquireOpenWindowTime: null,
   tokensForAcquires: null,

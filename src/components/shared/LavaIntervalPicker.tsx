@@ -106,16 +106,16 @@ export const LavaIntervalPicker = ({
             </PopoverTrigger>
             <PopoverContent className={cn('w-auto p-0', styles.popover)}>
               <div className="flex">
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn('sm:w-auto ', styles.scrollArea)}>
                   <div className="p-4">
                     <div className="text-sm font-medium mb-2 text-center">Days</div>
-                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                    <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
                       {days.map(day => (
                         <Button
                           key={day}
                           className="w-12 h-12"
                           size="icon"
-                          variant={interval.days + minDays === day ? 'default' : 'ghost'}
+                          variant={interval.days === day ? 'default' : 'ghost'}
                           onClick={() => handleIntervalChange('days', day.toString())}
                         >
                           {day}
@@ -125,10 +125,10 @@ export const LavaIntervalPicker = ({
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
                 </ScrollArea>
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn(' sm:w-auto ', styles.scrollArea)}>
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Hours</div>
-                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                    <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
                       {hours.map(hour => (
                         <Button
                           key={hour}
@@ -144,10 +144,10 @@ export const LavaIntervalPicker = ({
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
                 </ScrollArea>
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn('sm:w-auto', styles.scrollArea)}>
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Minutes</div>
-                    <div className="grid gap-1 max-h-64 overflow-y-auto pr-1">
+                    <div className="grid gap-1 max-h-64 w-fit overflow-y-auto pr-1">
                       {minutes.map(minute => (
                         <Button
                           key={minute}
