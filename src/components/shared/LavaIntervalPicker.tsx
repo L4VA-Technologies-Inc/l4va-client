@@ -115,7 +115,7 @@ export const LavaIntervalPicker = ({
                           key={day}
                           className="w-12 h-12"
                           size="icon"
-                          variant={interval.days + minDays === day ? 'default' : 'ghost'}
+                          variant={interval.days === day ? 'default' : 'ghost'}
                           onClick={() => handleIntervalChange('days', day.toString())}
                         >
                           {day}
