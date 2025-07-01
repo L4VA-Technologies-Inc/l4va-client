@@ -106,7 +106,7 @@ export const LavaIntervalPicker = ({
             </PopoverTrigger>
             <PopoverContent className={cn('w-auto p-0', styles.popover)}>
               <div className="flex">
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn('w-64 sm:w-auto max-w-fit', styles.scrollArea)}>
                   <div className="p-4">
                     <div className="text-sm font-medium mb-2 text-center">Days</div>
                     <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
@@ -125,7 +125,7 @@ export const LavaIntervalPicker = ({
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
                 </ScrollArea>
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn('w-64 sm:w-auto max-w-fit', styles.scrollArea)}>
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Hours</div>
                     <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
@@ -144,7 +144,7 @@ export const LavaIntervalPicker = ({
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
                 </ScrollArea>
-                <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
+                <ScrollArea className={cn('w-64 sm:w-auto max-w-fit', styles.scrollArea)}>
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Minutes</div>
                     <div className="grid gap-1 max-h-64 w-fit overflow-y-auto pr-1">
