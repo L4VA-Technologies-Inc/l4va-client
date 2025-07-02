@@ -139,6 +139,10 @@ export const ContributeModal = ({ vault, onClose }) => {
 
     if (!isValid) return;
 
+    if (Number(amount) >= ft.quantity) {
+      amount = Number(ft.quantity).toFixed(2); // Ensure we don't exceed available quantity
+    }
+
     setSelectedAmount(prev => ({
       ...prev,
       [ft.id]: amount,
