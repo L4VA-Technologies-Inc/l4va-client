@@ -11,6 +11,7 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Spinner } from '@/components/Spinner';
 import { useTransaction } from '@/hooks/useTransaction';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatNum } from '@/utils/core.utils';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
@@ -138,6 +139,10 @@ export const ContributeModal = ({ vault, onClose }) => {
     const isValid = amount === '' || /^\d+(\.\d{0,2})?$/.test(amount);
 
     if (!isValid) return;
+
+    if (Number(amount) >= ft.quantity) {
+      amount = Number(ft.quantity).toFixed(2); // Ensure we don't exceed available quantity
+    }
 
     setSelectedAmount(prev => ({
       ...prev,
