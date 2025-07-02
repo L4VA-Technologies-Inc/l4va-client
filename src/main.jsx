@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { routeTree } from './routeTree.gen';
 
+
 import { AuthProvider } from '@/lib/auth/auth.context';
 import { ModalProvider } from '@/lib/modals/modal.context';
 
