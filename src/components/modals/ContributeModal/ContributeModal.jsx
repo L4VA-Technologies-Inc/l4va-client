@@ -11,7 +11,6 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Spinner } from '@/components/Spinner';
 import { useTransaction } from '@/hooks/useTransaction';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { formatNum } from '@/utils/core.utils';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
