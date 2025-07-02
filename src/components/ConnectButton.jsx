@@ -1,6 +1,6 @@
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { getAvatarLetter, getDisplayName } from '@/utils/core.utils';
 import WalletIcon from '@/icons/wallet.svg?react';
@@ -20,6 +20,7 @@ export const ConnectButton = () => {
         ) : (
           <PrimaryButton size="md" onClick={() => openModal('ProfileModal')}>
             <Avatar className="h-8 w-8 bg-steel-950 cursor-pointer">
+              {user?.profileImage && <AvatarImage alt="Profile" className="object-cover" src={user.profileImage} />}
               <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
             {getDisplayName(user)}
@@ -35,6 +36,7 @@ export const ConnectButton = () => {
         ) : (
           <button type="button" onClick={() => openModal('ProfileModal')}>
             <Avatar className="h-8 w-8 bg-orange-gradient cursor-pointer">
+              {user?.profileImage && <AvatarImage alt="Profile" className="object-cover" src={user.profileImage} />}
               <AvatarFallback className="text-slate-950 font-medium">{getAvatarLetter(user)}</AvatarFallback>
             </Avatar>
           </button>
