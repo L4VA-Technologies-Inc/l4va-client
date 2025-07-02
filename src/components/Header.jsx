@@ -73,7 +73,7 @@ export const Header = () => {
                 <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
               ))}
             </div>
-            <div className="flex-1"></div>
+            <div className="flex-1" />
             <ConnectButton />
           </div>
           <div className="md:hidden ml-auto">
