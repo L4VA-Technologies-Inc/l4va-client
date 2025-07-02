@@ -230,9 +230,11 @@ export const CreateVaultForm = ({ vault }) => {
   const renderButtons = () => {
     if (currentStep === 5) {
       return (
-        <PrimaryButton className="uppercase" disabled={isSubmitting} onClick={onSubmit}>
-          {isSubmitting ? 'Launching...' : 'Confirm & launch'}
-        </PrimaryButton>
+        <div className="flex justify-center gap-4 py-8">
+          <PrimaryButton className="uppercase" disabled={isSubmitting} onClick={onSubmit}>
+            {isSubmitting ? 'Launching...' : 'Confirm & launch'}
+          </PrimaryButton>
+        </div>
       );
     }
     return (
@@ -328,8 +330,8 @@ export const CreateVaultForm = ({ vault }) => {
           </div>
         ))}
       </div>
-      <div>{renderStepContent(currentStep)}</div>
-      <div>{renderButtons()}</div>
+      <>{renderStepContent(currentStep)}</>
+      <>{renderButtons()}</>
       <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
         <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
           <SwapComponent
