@@ -48,10 +48,11 @@ export const VaultSettings = ({ vault }) => (
         <InfoRow label="Acquire Reserve" value={vault.acquireReserve} />
         <InfoRow label="% Liquidity Pool Contribution" value={vault.liquidityPoolContribution} />
         <InfoRow label="Termination Type" value={vault.terminationType} />
-        <InfoRow label="Proposal Creation Threshold %" value={vault.proposalCreationThreshold} />
-        <InfoRow label="Vote Start Threshold %" value={vault.voteStartThreshold} />
-        <InfoRow label="Proposal Execution Threshold %" value={vault.proposalExecutionThreshold} />
-        <InfoRow label="Proposal Cosigning Threshold %" value={vault.proposalCosigningThreshold} />
+        <InfoRow label="Proposal Creation Threshold %" value={vault.creationThreshold} />
+        <InfoRow label="Proposal Cosigning Threshold %" value={vault.cosigningThreshold} />
+        <InfoRow label="Vote Start Threshold %" value={vault.startThreshold} />
+        <InfoRow label="Minimum Participation Threshold %" value={vault.voteThreshold} />
+        <InfoRow label="Proposal Execution Threshold %" value={vault.executionThreshold} />
       </div>
     </div>
   </>
