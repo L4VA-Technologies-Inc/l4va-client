@@ -124,6 +124,20 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           <div>
             <LavaInput
               required
+              error={errors.cosigningThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
+              label="COSIGNING THRESHOLD (%)"
+              name="cosigningThreshold"
+              placeholder="XX.XX"
+              suffix="%"
+              value={data.cosigningThreshold || ''}
+              onChange={handleNumChange}
+            />
+          </div>
+          <div>
+            <LavaInput
+              required
               error={errors.startThreshold}
               icon={<Info color="white" size={16} />}
               hint="Minimum FT as % of total FT supply co-signed to start voting phase"
@@ -160,20 +174,6 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               placeholder="XX.XX"
               suffix="%"
               value={data.executionThreshold || ''}
-              onChange={handleNumChange}
-            />
-          </div>
-          <div>
-            <LavaInput
-              required
-              error={errors.cosigningThreshold}
-              icon={<Info color="white" size={16} />}
-              hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
-              label="COSIGNING THRESHOLD (%)"
-              name="cosigningThreshold"
-              placeholder="XX.XX"
-              suffix="%"
-              value={data.cosigningThreshold || ''}
               onChange={handleNumChange}
             />
           </div>
