@@ -17,7 +17,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
 
   const acquireVaults = useVaults('acquire');
   const contributeVaults = useVaults('contribution');
-  const upcomingVaults = useVaults();
+  const upcomingVaults = useVaults('published');
   const pastVaults = useVaults('locked');
 
   const getVaultsData = () => {
