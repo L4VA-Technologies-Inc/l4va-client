@@ -12,51 +12,25 @@ const VAULT_TABS = {
 
 const TABS = Object.values(VAULT_TABS);
 
+// Map tab names to API filter values
+const TAB_TO_FILTER = {
+  [VAULT_TABS.ACQUIRE]: 'acquire',
+  [VAULT_TABS.CONTRIBUTE]: 'contribution',
+  [VAULT_TABS.UPCOMING]: 'published',
+  [VAULT_TABS.PAST]: 'locked',
+};
+
 export const CommunityVaultsList = ({ className = '' }) => {
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
-  const acquireVaults = useVaults('acquire');
-  const contributeVaults = useVaults('contribution');
-  const upcomingVaults = useVaults('published');
-  const pastVaults = useVaults('locked');
+  const { data, isLoading, error } = useVaults(TAB_TO_FILTER[activeTab]);
 
-  const getVaultsData = () => {
-    switch (activeTab) {
-      case VAULT_TABS.ACQUIRE:
-        return {
-          data: acquireVaults.data?.data?.items || [],
-          isLoading: acquireVaults.isLoading,
-          error: acquireVaults.error?.message,
-        };
-      case VAULT_TABS.CONTRIBUTE:
-        return {
-          data: contributeVaults.data?.data?.items || [],
-          isLoading: contributeVaults.isLoading,
-          error: contributeVaults.error?.message,
-        };
-      case VAULT_TABS.UPCOMING:
-        return {
-          data: upcomingVaults.data?.data?.items || [],
-          isLoading: upcomingVaults.isLoading,
-          error: upcomingVaults.error?.message,
-        };
-      case VAULT_TABS.PAST:
-        return {
-          data: pastVaults.data?.data?.items || [],
-          isLoading: pastVaults.isLoading,
-          error: pastVaults.error?.message,
-        };
-      default:
-        return { data: [], isLoading: false, error: null };
-    }
-  };
-
-  const { data: vaults, isLoading, error } = getVaultsData();
+  const vaults = data?.data?.items || [];
 
   return (
     <VaultList
       className={className}
-      error={error}
+      error={error?.message}
       isLoading={isLoading}
       tabs={TABS}
       title="Community Vaults"

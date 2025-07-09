@@ -15,7 +15,7 @@ export const LavaCheckbox = ({
       <div className="relative mr-2 mt-1">
         <input checked={checked} className="peer sr-only" id={name} name={name} type="checkbox" onChange={onChange} />
         <div
-          className={`w-8 h-8 flex items-center justify-center border ${error ? 'border-red-600' : 'border-steel-750'} bg-steel-850 rounded-lg`}
+          className={`w-6 h-6 flex items-center justify-center border ${error ? 'border-red-600' : 'border-steel-750'} bg-steel-850 rounded-lg`}
         >
           {checked && <Check size={20} strokeWidth={2} />}
         </div>
