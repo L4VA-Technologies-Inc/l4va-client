@@ -1,7 +1,7 @@
 import { X, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { LavaInput } from '@/components/shared/LavaInput';
 
 export const LavaWhitelistWithCaps = ({
   required = false,
@@ -55,8 +55,7 @@ export const LavaWhitelistWithCaps = ({
         {whitelist.map(asset => (
           <div key={asset.id || asset.uniqueId} className="space-y-2">
             <div className="relative">
-              <Input
-                className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
+              <LavaInput
                 placeholder={itemPlaceholder}
                 style={{ fontSize: '20px' }}
                 value={asset.policyId}
@@ -73,8 +72,7 @@ export const LavaWhitelistWithCaps = ({
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
-                <Input
-                  className="rounded-[10px] py-4 pl-5 bg-input-bg border-steel-850 h-[60px]"
+                <LavaInput
                   type="number"
                   min="0"
                   placeholder="Min asset cap"
@@ -90,8 +88,7 @@ export const LavaWhitelistWithCaps = ({
                 />
               </div>
               <div className="flex-1">
-                <Input
-                  className="rounded-[10px] py-4 pl-5 bg-input-bg border-steel-850 h-[60px]"
+                <LavaInput
                   type="number"
                   min="0"
                   placeholder="Max asset cap"

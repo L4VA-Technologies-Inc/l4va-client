@@ -4,7 +4,7 @@ import { formatNum } from '@/utils/core.utils';
 import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchGovernance = ({ data, setCurrentStep }) => (
-  <section className="space-y-12">
+  <section>
     <div className="rounded-t-lg py-4 px-4 md:px-8 flex justify-between bg-white/5 gap-4">
       <p className="font-bold text-xl md:text-2xl">Governance</p>
       <button

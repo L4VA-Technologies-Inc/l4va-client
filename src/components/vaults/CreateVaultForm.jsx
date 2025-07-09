@@ -121,6 +121,7 @@ export const CreateVaultForm = ({ vault }) => {
           return;
         }
       } catch (err) {
+        console.log('Error fetching VLRM balance', err);
         toast.error('Failed to fetch VLRM balance');
         setIsSubmitting(false);
       }
@@ -168,6 +169,7 @@ export const CreateVaultForm = ({ vault }) => {
       const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
       return vlrmToken ? vlrmToken.quantity : 0;
     } catch (err) {
+      console.log('Error fetching VLRM balance', err);
       return 0;
     }
   };
