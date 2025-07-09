@@ -11,8 +11,10 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { formatCompactNumber, getCountdownName, getCountdownTime } from '@/utils/core.utils';
 import EyeIcon from '@/icons/eye.svg?react';
+import { useAuth } from '@/lib/auth/auth';
 
 export const VaultProfileView = ({ vault }) => {
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('Assets');
   const { openModal } = useModalControls();
 
@@ -44,7 +46,11 @@ export const VaultProfileView = ({ vault }) => {
     if (!config) return null;
 
     return (
-      <PrimaryButton disabled={!config.available} className="uppercase" onClick={config.handleClick}>
+      <PrimaryButton
+        disabled={!config.available || !isAuthenticated}
+        className="uppercase"
+        onClick={config.handleClick}
+      >
         {config.text}
       </PrimaryButton>
     );
