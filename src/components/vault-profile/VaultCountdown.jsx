@@ -20,7 +20,7 @@ export const VaultCountdown = ({ endTime, isLocked }) => {
     : `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m ${formatNumber(timeLeft.seconds)}s`;
 
   return (
-    <div className="countdown-banner min-h-[45px] md:min-h-[65px]">
+    <div className="countdown-banner min-h-[45px] md:min-h-[65px]" role="timer">
       <div className="countdown-stripe" />
       <div className="relative z-[1] font-mono md:text-xl font-bold text-white">{countdownText}</div>
     </div>

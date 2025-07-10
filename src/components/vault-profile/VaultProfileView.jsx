@@ -73,7 +73,7 @@ export const VaultProfileView = ({ vault }) => {
   );
 
   const renderSidebar = () => (
-    <div className="col-span-12 md:col-span-4 gap-4 md:max-w-[379px]">
+    <div className="col-span-12 md:col-span-4 md:max-w-[379px]">
       <div className="bg-steel-950 rounded-xl p-6">
         <img
           alt={vault.name}
