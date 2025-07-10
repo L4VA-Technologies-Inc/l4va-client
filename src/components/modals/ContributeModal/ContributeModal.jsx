@@ -17,7 +17,7 @@ const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
 export const ContributeModal = ({ vault, onClose }) => {
-  const { vaultName, recipientAddress, assetsWhitelist } = vault;
+  const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -221,7 +221,7 @@ export const ContributeModal = ({ vault, onClose }) => {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-6xl p-0 bg-steel-950 text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">Contribute to {vaultName}</DialogTitle>
+          <DialogTitle className="text-2xl text-center font-medium">Contribute to {name}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col md:flex-row gap-4 p-4">
           <div className="w-full md:w-1/2 space-y-4">

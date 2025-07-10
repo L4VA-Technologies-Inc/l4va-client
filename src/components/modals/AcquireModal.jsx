@@ -9,7 +9,7 @@ import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@
 import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
-  const { vaultName } = vault;
+  const { name } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
@@ -109,7 +109,7 @@ export const AcquireModal = ({ vault, onClose }) => {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">Acquire {vaultName}</DialogTitle>
+          <DialogTitle className="text-2xl text-center font-medium">Acquire {name}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col p-6 space-y-6 md:space-y-0 md:flex-row">
           <div className="md:w-1/2 pr-0 md:pr-6 space-y-6">
