@@ -1,23 +1,57 @@
 import { Link } from '@tanstack/react-router';
+import { useMemo } from 'react';
+
+import { VaultCountdown } from '../vault-profile/VaultCountdown';
 
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import { VaultShortResponse } from '@/utils/types';
 
-const progress = 75;
+type VaultCardProps = {
+  vault: VaultShortResponse;
+};
+
 const raised = 750000;
 const goal = 1000000;
-const tvl = 150000;
-const baseAllo = 10000;
 const image = '/assets/vaults/space-man.webp';
+const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 
-export const VaultCard = props => {
-  const { id, name, description, privacy, vaultImage, socialLinks = [] } = props;
+export const VaultCard = ({ vault }: VaultCardProps) => {
+  const { id, name, description, privacy, vaultImage, socialLinks = [] } = vault;
+
+  const progress = 100;
+
+  const shouldShowCountdown = useMemo(() => {
+    if (!vault?.phaseEndTime) return false;
+
+    // First condition: time must be less than 1 day
+    const isLessThanOneDay = vault?.timeRemaining <= ONE_DAY_MS;
+
+    // Second condition: time must be less than 10% of total duration
+    let isLessThanTenPercent = false;
+    if (vault.timeRemaining !== undefined) {
+      const totalDuration = vault.timeRemaining;
+      isLessThanTenPercent = vault?.timeRemaining <= totalDuration * 0.1;
+    }
+
+    return isLessThanOneDay && isLessThanTenPercent;
+  }, [vault.phaseEndTime, vault.timeRemaining]);
 
   return (
     <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
       <Link className="block" to={`/vaults/${id}`}>
-        <div className="h-48">
+        <div className="relative h-52">
           <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage || image} />
+          {shouldShowCountdown && (
+            <div className="absolute bottom-0 left-0 w-3/4 ">
+              <VaultCountdown
+                className="text-base font-normal"
+                color="yellow"
+                endTime={new Date(vault?.phaseEndTime || '').getTime().toString()}
+                isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
+              />
+            </div>
+          )}
         </div>
         <div className="p-6">
           <div className="flex gap-4 mb-6">
@@ -29,10 +63,10 @@ export const VaultCard = props => {
           </div>
           <div className="mb-6 text-sm font-russo">
             <div className="mb-2 flex justify-between ">
-              <span className="font-bold">
-                Total Raised: <span className="text-main-yellow">{progress}%</span>
+              <span>
+                Total Raised: <span className="text-gradient-orange">{progress}%</span>
               </span>
-              <span className="text-main-yellow">
+              <span className="text-gradient-orange">
                 ${formatNum(raised)} / ${formatNum(goal)}
               </span>
             </div>
@@ -47,7 +81,7 @@ export const VaultCard = props => {
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
-              <p className="font-bold ">{formatCompactNumber(tvl)}</p>
+              <p className="font-bold ">{formatCompactNumber(vault.tvl)}</p>
             </div>
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
@@ -55,7 +89,7 @@ export const VaultCard = props => {
             </div>
             <div>
               <p className="text-sm text-dark-100">Base allo</p>
-              <p className="font-bold ">{formatCompactNumber(baseAllo)}</p>
+              <p className="font-bold ">{formatCompactNumber(vault.baseAllocation)}</p>
             </div>
           </div>
         </div>
@@ -65,7 +99,7 @@ export const VaultCard = props => {
         {socialLinks.length > 0 ? (
           socialLinks.map((social, index) => (
             <a key={index} href={social.url} rel="noopener noreferrer" target="_blank">
-              <SocialPlatformIcon className="text-white" platformId={social.name} size={20} />
+              <SocialPlatformIcon className="text-white" platformId={social.name} />
             </a>
           ))
         ) : (

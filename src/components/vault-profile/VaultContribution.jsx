@@ -5,7 +5,6 @@ import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
 
 export const VaultContribution = ({ vault, phase }) => {
   const progress = (vault.assetsCount / vault.maxContributeAssets) * 100;
-  console.log(vault);
   return (
     <div className="space-y-4">
       <div>

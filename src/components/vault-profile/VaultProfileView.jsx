@@ -72,11 +72,12 @@ export const VaultProfileView = ({ vault }) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl p-4">
         <div className="overflow-hidden rounded-lg">
-          <img src={vault.vaultImage} alt={vault.name} className="w-full object-cover" />
+          <img src={vault.vaultImage} alt={vault.name} className="w-full object-cover max-w-[450px]" />
         </div>
         <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
         <div className="mb-6">
           <VaultCountdown
+            className="h-[65px]"
             endTime={getCountdownTime(vault)}
             isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
           />

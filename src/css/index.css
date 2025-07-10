@@ -133,7 +133,24 @@ button {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: right;
-  min-height: 65px;
+  min-height: 45px;
+}
+
+.vault-countdown-banner-yellow {
+  background-image: url('/src/icons/time-banner-yellow.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: right;
+  min-height: 45px;
+  color: #B13200;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(85.54deg, #FF842C -10.84%, #FFD012 169.75%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
 }
 
 @utility fixed-center {
