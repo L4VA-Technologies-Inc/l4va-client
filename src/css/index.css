@@ -131,61 +131,23 @@ button {
 .countdown-banner {
   position: relative;
   width: 100%;
+  height: 65px;
   display: flex;
   align-items: center;
   padding-left: 16px;
   overflow: hidden;
+  background-image: url('/src/icons/time-banner.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.countdown-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #dc2626; 
-  clip-path: polygon(
-    0 0,                   
-    100% 0,                
-    calc(100% - 30px) 100%,
-    0 100%                 
-  );
-  z-index: 0;
-}
-
-.countdown-stripe::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 30px;
-  width: 42px;
-  height: 100%;
-  background-color: var(--color-steel-950);
-  clip-path: polygon(
-    75% 0,     
-    100% 0,    
-    30% 100%,  
-    0% 100%    
-  );
-  z-index: 0;
-}
-
-.countdown-stripe::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 10px;
-  width: 42px;
-  height: 100%;
-  background-color: var(--color-steel-950);
-  clip-path: polygon(
-    75% 0,     
-    100% 0,    
-    30% 100%,  
-    0% 100%    
-  );
-  z-index: 0;
+.vault-countdown-banner {
+  background-image: url('/src/icons/time-banner.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: right;
+  min-height: 65px;
 }
 
 @utility fixed-center {
