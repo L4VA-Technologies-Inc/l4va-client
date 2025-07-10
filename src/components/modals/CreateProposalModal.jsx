@@ -10,7 +10,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmationModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export const CreateProposalModal = ({ onClose, vaultName }) => {
+export const CreateProposalModal = ({ onClose, name }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [options, setOptions] = useState([]);
@@ -86,7 +86,7 @@ export const CreateProposalModal = ({ onClose, vaultName }) => {
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 border-none max-h-[90vh] flex flex-col">
           <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-            <DialogTitle className="text-2xl text-center font-medium">Proposal for {vaultName}</DialogTitle>
+            <DialogTitle className="text-2xl text-center font-medium">Proposal for {name}</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto">
             <div className="p-4 flex flex-col gap-8">
