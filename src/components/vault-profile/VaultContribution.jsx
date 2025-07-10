@@ -5,6 +5,7 @@ import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
 
 export const VaultContribution = ({ vault, phase }) => {
   const progress = (vault.assetsCount / vault.maxContributeAssets) * 100;
+  console.log(vault);
   return (
     <div className="space-y-4">
       <div>
@@ -13,7 +14,9 @@ export const VaultContribution = ({ vault, phase }) => {
           <span className="text-dark-100">
             Total Raised: <span className="text-[#F97316]">{vault.assetsCount}</span>
           </span>
-          <span className="text-dark-100">max {vault.maxContributeAssets}</span>
+          <span className="text-dark-100">
+            min {vault.minContributeAssets || 0} / max {vault.maxContributeAssets}
+          </span>
         </div>
         <div className="h-2 rounded-full bg-steel-750 mb-4">
           <div

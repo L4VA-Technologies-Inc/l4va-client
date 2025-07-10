@@ -172,18 +172,18 @@ export const formatDateTime = dt => {
 
 export const getCountdownName = vault => {
   if (vault.vaultStatus === 'created') {
-    return 'Contribution starts in';
+    return 'Contribution starts in:';
   }
   if (vault.vaultStatus === 'contribution') {
-    return 'Contribution ends in';
+    return 'Contribution ends in:';
   }
   if (vault.vaultStatus === 'acquire') {
-    return 'Acquire ends in';
+    return 'Acquire ends in:';
   }
   if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance') {
     return '';
   }
-  return 'Contribution starts in';
+  return 'Contribution starts in:';
 };
 
 export const getCountdownTime = vault => {
