@@ -6,21 +6,15 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import XIcon from '@/icons/x.svg?react';
-import TelegramIcon from '@/icons/telegram.svg?react';
 import MediumIcon from '@/icons/medium.svg?react';
 import DiscordIcon from '@/icons/discord.svg?react';
-import LinkedInIcon from '@/icons/linkedin.svg?react';
-import InstagramIcon from '@/icons/instagram.svg?react';
-import FacebookIcon from '@/icons/facebook.svg?react';
+import YouTubeIcon from '@/icons/youtube.svg?react';
 
 const socialLinks = [
-  { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com' },
-  { name: 'Telegram', icon: TelegramIcon, url: 'https://telegram.org' },
-  { name: 'Medium', icon: MediumIcon, url: 'https://medium.com' },
-  { name: 'Discord', icon: DiscordIcon, url: 'https://discord.com' },
-  { name: 'LinkedIn', icon: LinkedInIcon, url: 'https://linkedin.com' },
-  { name: 'Instagram', icon: InstagramIcon, url: 'https://instagram.com' },
-  { name: 'Facebook', icon: FacebookIcon, url: 'https://facebook.com' },
+  { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com/lava_protocol' },
+  { name: 'Medium', icon: MediumIcon, url: 'https://l4va.medium.com' },
+  { name: 'Discord', icon: DiscordIcon, url: 'https://discord.com/invite/mBbTUfAzuS' },
+  { name: 'YouTube', icon: YouTubeIcon, url: 'https://www.youtube.com/@_L4VA_' },
 ];
 
 const navLinks = [
