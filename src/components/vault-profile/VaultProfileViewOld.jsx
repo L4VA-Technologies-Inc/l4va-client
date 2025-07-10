@@ -1,16 +1,17 @@
-import { EyeIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
-import PrimaryButton from '@/components/shared/PrimaryButton';
-import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
-import { VaultContribution } from '@/components/vault-profile/VaultContribution';
-import { VaultStats } from '@/components/vault-profile/VaultStats';
-import { VaultTabs } from '@/components/vault-profile/VaultTabs';
-import { useAuth } from '@/lib/auth/auth';
-import { useModalControls } from '@/lib/modals/modal.context';
+import { VAULT_STATUSES } from '../vaults/constants/vaults.constants';
+
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
+import { VaultContribution } from '@/components/vault-profile/VaultContribution';
+import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
+import { VaultTabs } from '@/components/vault-profile/VaultTabs';
+import { VaultStats } from '@/components/vault-profile/VaultStats';
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import { useModalControls } from '@/lib/modals/modal.context';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
+import { useAuth } from '@/lib/auth/auth';
+import EyeIcon from '@/icons/eye.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
   const { isAuthenticated } = useAuth();
@@ -54,12 +55,14 @@ export const VaultProfileView = ({ vault }) => {
       </PrimaryButton>
     );
   };
+
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start mb-6">
       <div>
-        <h1 className="text-2xl font-bold mb-2">{vault.name}</h1>
+        <h1 className="text-4xl font-bold mb-2">{vault.name}</h1>
         <p className="text-dark-100 text-sm">VAULT ID: {vault.id}</p>
       </div>
+
       <div className="flex gap-2">
         <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
           <EyeIcon className="w-4 h-4 text-orange-500" />
@@ -68,12 +71,15 @@ export const VaultProfileView = ({ vault }) => {
       </div>
     </div>
   );
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl p-4">
-        <div className="overflow-hidden rounded-lg">
-          <img src={vault.vaultImage} alt={vault.name} className="w-full object-cover" />
-        </div>
+
+  const renderSidebar = () => (
+    <div className="col-span-12 md:col-span-4 md:max-w-[379px]">
+      <div className="bg-steel-950 rounded-xl p-6">
+        <img
+          alt={vault.name}
+          className="w-full aspect-square rounded-xl object-cover mb-6 md:max-w-none max-w-[120px]"
+          src={vault.vaultImage || '/assets/vaults/space-man.webp'}
+        />
         <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
         <div className="mb-6">
           <VaultCountdown
@@ -83,24 +89,25 @@ export const VaultProfileView = ({ vault }) => {
         </div>
         <VaultContribution vault={vault} />
       </div>
-      <div className="col-span-1 lg:col-span-2 space-y-6">
-        <div className="bg-steel-950 rounded-xl p-4">
-          {renderVaultInfo()}
-          <div className="mb-6">
-            <p className="font-medium">Description</p>
-            <p className="text-dark-100 text-sm">{vault.description || 'No description'}</p>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {renderSidebar()}
+          <div className="col-span-12 md:col-span-8 space-y-4">
+            <div className="bg-steel-950 rounded-xl p-6">
+              {renderVaultInfo()}
+              {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
+              <div className="mb-6">
+                <VaultStats acquired={0} requireReservedCostUsd={vault.requireReservedCostUsd} />
+              </div>
+              <div className="flex justify-center mb-6">{renderActionButton()}</div>
+              <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
+            </div>
           </div>
-          <div className="mb-6">
-            <VaultStats
-              assetValue={vault.assetValueUsd || 0}
-              ftGains={vault.ftGains || 'N/A'}
-              fdv={vault.fdv || 'N/A'}
-              fdvTvl={vault.fdvTvl || 'N/A'}
-              tvl={vault.tvl || 'N/A'}
-            />
-          </div>
-          <div className="flex justify-center mb-6">{renderActionButton()}</div>
-          <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />
         </div>
       </div>
     </div>
