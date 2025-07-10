@@ -9,8 +9,7 @@ import { VaultTabs } from '@/components/vault-profile/VaultTabs';
 import { VaultStats } from '@/components/vault-profile/VaultStats';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { formatCompactNumber, getCountdownName, getCountdownTime } from '@/utils/core.utils';
-import EyeIcon from '@/icons/eye.svg?react';
+import { getCountdownName, getCountdownTime } from '@/utils/core.utils';
 import { useAuth } from '@/lib/auth/auth';
 
 export const VaultProfileView = ({ vault }) => {
@@ -62,21 +61,23 @@ export const VaultProfileView = ({ vault }) => {
         <h1 className="text-4xl font-bold mb-2">{vault.name}</h1>
         <p className="text-dark-100 text-sm">VAULT ID: {vault.id}</p>
       </div>
+      {/* 
+      Hide the view count for now
       <div className="flex gap-2">
         <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
           <EyeIcon className="w-4 h-4 text-orange-500" />
           <span>{formatCompactNumber(200)}</span>
         </span>
-      </div>
+      </div> */}
     </div>
   );
 
   const renderSidebar = () => (
-    <div className="col-span-4 flex flex-col gap-4">
+    <div className="col-span-12 md:col-span-4 gap-4 md:max-w-[379px]">
       <div className="bg-steel-950 rounded-xl p-6">
         <img
           alt={vault.name}
-          className="w-full aspect-square rounded-xl object-cover mb-6"
+          className="w-full aspect-square rounded-xl object-cover mb-6 md:max-w-none max-w-[120px]"
           src={vault.vaultImage || '/assets/vaults/space-man.webp'}
         />
         <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
@@ -94,9 +95,9 @@ export const VaultProfileView = ({ vault }) => {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto">
-        <div className="grid grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           {renderSidebar()}
-          <div className="col-span-8 space-y-4">
+          <div className="col-span-12 md:col-span-8 space-y-4">
             <div className="bg-steel-950 rounded-xl p-6">
               {renderVaultInfo()}
               {vault.description ? <p className="text-dark-100 mb-6">{vault.description}</p> : null}
