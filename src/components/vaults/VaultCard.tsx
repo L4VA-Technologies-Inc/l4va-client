@@ -25,7 +25,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
     if (!vault?.phaseEndTime) return false;
 
     // First condition: time must be less than 1 day
-    const isLessThanOneDay = vault?.timeRemaining <= ONE_DAY_MS;
+    const isLessThanOneDay = vault?.timeRemaining <= ONE_DAY_MS && vault?.timeRemaining > 0;
 
     // Second condition: time must be less than 10% of total duration
     let isLessThanTenPercent = false;
