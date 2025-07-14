@@ -13,7 +13,7 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 
 export const Private = ({ data, errors = {}, updateField }) => {
-  const { valuationType, privacy: vaultPrivacy } = data;
+  const { valueMethod, privacy: vaultPrivacy } = data;
 
   const valueMethodOptions =
     vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE
@@ -38,12 +38,12 @@ export const Private = ({ data, errors = {}, updateField }) => {
             name="valueMethod"
             options={valueMethodOptions}
             value={data.valueMethod || ''}
-            onChange={value => updateField('valueMethod', value)}
+            onChange={value => console.log(value) || updateField('valueMethod', value)}
             hint={VALUE_METHOD_HINT}
           />
           {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
         </div>
-        {valuationType === 'fixed' && (
+        {valueMethod === 'fixed' && (
           <>
             <div>
               <LavaSelect
@@ -118,7 +118,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
             </div>
           )}
         </div>
-        {valuationType === 'lbe' ? (
+        {valueMethod === 'lbe' ? (
           <div>
             <LavaWhitelist
               required

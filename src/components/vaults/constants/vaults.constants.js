@@ -63,6 +63,35 @@ export const VAULT_PRIVACY_OPTIONS = [
   { name: 'semi-private', label: 'Semi-Private Vault' },
 ];
 
+export const VAULT_TAGS_OPTIONS = [
+  { value: 'nft', label: 'NFT' },
+  { value: 'ft', label: 'FT' },
+  { value: 'rwa', label: 'RWA' },
+  { value: 'real-estate', label: 'Real Estate' },
+  { value: 'insurance', label: 'Insurance' },
+  { value: 'commodity', label: 'Commodity' },
+  { value: 'synthetic', label: 'Synthetic' },
+  { value: 'exotic', label: 'Exotic' },
+  { value: 'precious-metal', label: 'Precious Metal' },
+  { value: 'gem', label: 'Gem' },
+  { value: 'defi', label: 'DeFi' },
+  { value: 'pfp', label: 'PFP' },
+  { value: 'staking', label: 'Staking' },
+  { value: 'depin', label: 'DePin' },
+  { value: 'stablecoin', label: 'Stablecoin' },
+  { value: 'governance', label: 'Governance' },
+  { value: 'dex', label: 'DEX' },
+  { value: 'gaming', label: 'Gaming' },
+  { value: 'music', label: 'Music' },
+  { value: 'art', label: 'Art' },
+  { value: 'metaverse', label: 'Metaverse' },
+  { value: 'utility', label: 'Utility' },
+  { value: 'collectible', label: 'Collectible' },
+  { value: 'protocol', label: 'Protocol' },
+  { value: 'lp-token', label: 'LP Token' },
+  { value: 'wrapped', label: 'Wrapped' },
+];
+
 export const VAULT_VALUE_METHOD_OPTIONS = [
   { name: 'lbe', label: 'Market / Floor Price' },
   { name: 'fixed', label: 'Fixed' },
@@ -94,6 +123,7 @@ export const vaultSchema = yup.object({
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
   vaultImage: yup.string().required('Vault image is required'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
+  tags: yup.array().of(yup.string()).default([]),
 
   // Step 2: Asset Contribution
   valueMethod: yup.string().required('Vault value method is required'),
@@ -184,6 +214,7 @@ export const initialVaultState = {
   description: '',
   vaultImage: '',
   socialLinks: [],
+  tags: [],
 
   // Step 2: Asset Contribution
   valueMethod: 'lbe',
@@ -217,8 +248,8 @@ export const initialVaultState = {
 };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks'],
-  2: ['valuationType', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
+  1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks', 'tags'],
+  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
   3: [
     'acquireWindowDuration',
     'acquireOpenWindowType',

@@ -45,12 +45,11 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div className="uppercase font-bold">SOCIAL LINKS</div>
+        <div className="uppercase font-bold">Social Links</div>
         <button className="border-2 border-white/20 rounded-[10px] p-2" type="button" onClick={addNewLink}>
           <Plus className="h-4 w-4" />
         </button>
       </div>
-
       <div className="space-y-4">
         {socialLinks.map((link, index) => (
           <div key={link.id} className="flex flex-col rounded-lg bg-input-bg border border-steel-850">

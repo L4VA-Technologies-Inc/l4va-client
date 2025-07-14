@@ -78,7 +78,7 @@ export const Footer = () => {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                <IconComponent className="w-8 h-8" />
+                <IconComponent className="w-6 h-6" />
               </a>
             );
           })}
