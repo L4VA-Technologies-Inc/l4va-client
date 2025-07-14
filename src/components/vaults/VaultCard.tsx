@@ -6,14 +6,12 @@ import { VaultCountdown } from '../vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
-
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 type VaultCardProps = {
   vault: VaultShortResponse;
 };
 
-const image = '/assets/vaults/space-man.webp';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
@@ -36,7 +34,13 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
     <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
       <Link className="block" to={`/vaults/${id}`}>
         <div className="relative h-52">
-          <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage || image} />
+          {vaultImage ? (
+            <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} />
+          ) : (
+            <div className="h-full w-full bg-steel-850 flex items-center justify-center">
+              <L4vaIcon className="h-8 w-8 text-white" />
+            </div>
+          )}
           {shouldShowCountdown && (
             <div className="absolute bottom-0 left-0 w-3/4 ">
               <VaultCountdown
