@@ -4,6 +4,7 @@ import { X, ChevronDown } from 'lucide-react';
 import { VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
+import { Chip } from '@/components/shared/Chip';
 
 export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
@@ -66,21 +67,14 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   const renderOptions = (options, activeValue, onClick, isMultiple = false) => (
     <div className="flex flex-wrap gap-2">
       {options.map(option => (
-        <button
+        <Chip
           key={option}
-          onClick={() => (isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option))}
-          className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
-            isMultiple
-              ? filters[activeValue].includes(option)
-                ? 'bg-orange-500 border-orange-500 text-white'
-                : 'bg-steel-850 border-steel-750 text-gray-400 hover:bg-steel-800'
-              : filters[activeValue] === option
-                ? 'bg-orange-500 border-orange-500 text-white'
-                : 'bg-steel-850 border-steel-750 text-gray-400 hover:bg-steel-800'
-          }`}
-        >
-          {option}
-        </button>
+          label={option}
+          value={option}
+          selected={isMultiple ? filters[activeValue].includes(option) : filters[activeValue] === option}
+          onSelect={() => (isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option))}
+          size="lg"
+        />
       ))}
     </div>
   );
@@ -133,17 +127,13 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
             <h3 className="text-lg font-medium mb-3">Vault Tags</h3>
             <div className="flex flex-wrap gap-2">
               {VAULT_TAGS_OPTIONS.map(tag => (
-                <button
+                <Chip
                   key={tag.value}
-                  onClick={() => toggleArrayFilter('tags', tag.value)}
-                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                    filters.tags.includes(tag.value)
-                      ? 'bg-orange-500 border-orange-500 text-white'
-                      : 'bg-steel-850 border-steel-750 text-gray-400 hover:bg-steel-800'
-                  }`}
-                >
-                  {tag.label}
-                </button>
+                  label={tag.label}
+                  value={tag.value}
+                  selected={filters.tags.includes(tag.value)}
+                  onSelect={() => toggleArrayFilter('tags', tag.value)}
+                />
               ))}
             </div>
           </div>

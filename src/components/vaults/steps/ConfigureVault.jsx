@@ -4,6 +4,7 @@ import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSelect } from '@/components/shared/LavaSelect';
+import { Chip } from '@/components/shared/Chip';
 import {
   VAULT_TYPE_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
@@ -129,19 +130,13 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
               {data.tags.map(tag => {
                 const tagOption = VAULT_TAGS_OPTIONS.find(option => option.value === tag);
                 return (
-                  <span
+                  <Chip
                     key={tag}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-steel-850 text-white border border-steel-750"
-                  >
-                    {tagOption?.label || tag}
-                    <button
-                      type="button"
-                      onClick={() => handleTagRemove(tag)}
-                      className="ml-2 text-steel-400 hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </span>
+                    label={tagOption?.label || tag}
+                    value={tag}
+                    variant="removable"
+                    onRemove={handleTagRemove}
+                  />
                 );
               })}
             </div>
