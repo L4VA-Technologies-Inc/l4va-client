@@ -30,9 +30,9 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
         <div className="space-y-12">
           <div>
             <p className="uppercase font-semibold text-dark-100">Valuation type</p>
-            <p>{VAULT_VALUE_METHOD_OPTIONS.find(option => option.name === data.valuationType)?.label}</p>
+            <p>{VAULT_VALUE_METHOD_OPTIONS.find(option => option.name === data.valueMethod)?.label}</p>
           </div>
-          {data.valuationType === 'fixed' && (
+          {data.valueMethod === 'fixed' && (
             <>
               <div>
                 <p className="uppercase font-semibold text-dark-100">Valuation Currency</p>

@@ -3,9 +3,11 @@ import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
+import { LavaSelect } from '@/components/shared/LavaSelect';
 import {
   VAULT_TYPE_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
+  VAULT_TAGS_OPTIONS,
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
@@ -13,6 +15,21 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
   const handleChange = e => {
     const { name, value } = e.target;
     updateField(name, value);
+  };
+
+  const handleTagAdd = tagValue => {
+    const currentTags = data.tags || [];
+    if (!currentTags.includes(tagValue)) {
+      updateField('tags', [...currentTags, tagValue]);
+    }
+  };
+
+  const handleTagRemove = tagToRemove => {
+    const currentTags = data.tags || [];
+    updateField(
+      'tags',
+      currentTags.filter(tag => tag !== tagToRemove)
+    );
   };
 
   return (
@@ -97,6 +114,38 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             setSocialLinks={links => updateField('socialLinks', links)}
             socialLinks={data.socialLinks || []}
           />
+        </div>
+        <div>
+          <LavaSelect
+            label="Add vault tags"
+            options={VAULT_TAGS_OPTIONS}
+            value=""
+            onChange={handleTagAdd}
+            placeholder="Select tags for your vault"
+            error={errors.tags}
+          />
+          {data.tags && data.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {data.tags.map(tag => {
+                const tagOption = VAULT_TAGS_OPTIONS.find(option => option.value === tag);
+                return (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-steel-850 text-white border border-steel-750"
+                  >
+                    {tagOption?.label || tag}
+                    <button
+                      type="button"
+                      onClick={() => handleTagRemove(tag)}
+                      className="ml-2 text-steel-400 hover:text-white"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

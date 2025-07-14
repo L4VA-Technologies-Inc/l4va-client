@@ -9,7 +9,7 @@ export const LavaTabs = ({
   activeTabClassName = '',
   inactiveTabClassName = '',
 }) => (
-  <div className={clsx('inline-flex rounded-lg p-1', className)}>
+  <div className={clsx('inline-flex rounded-lg', className)}>
     {tabs.map(tab => (
       <button
         key={tab}

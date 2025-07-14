@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useMyDraftVaults, useMyOpenVaults, useMyLockedVaults } from '@/services/api/queries';
 

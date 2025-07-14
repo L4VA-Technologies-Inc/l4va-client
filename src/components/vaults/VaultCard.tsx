@@ -7,15 +7,17 @@ import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 
+import L4vaIcon from '@/icons/l4va.svg?react';
+
 type VaultCardProps = {
   vault: VaultShortResponse;
 };
 
 const image = '/assets/vaults/space-man.webp';
-const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
-  const { id, name, description, privacy, vaultImage, invested, socialLinks = [] } = vault;
+  const { id, name, description, privacy, vaultImage, ftTokenImg, invested, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -47,8 +49,14 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
           )}
         </div>
         <div className="p-6">
-          <div className="flex gap-4 mb-6">
-            <img alt="icon" className="h-16 w-16 rounded-xl" src="/assets/vault-logo.png" />
+          <div className="flex items-center gap-4 mb-6">
+            {ftTokenImg ? (
+              <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} />
+            ) : (
+              <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center">
+                <L4vaIcon className="h-8 w-8 text-white" />
+              </div>
+            )}
             <div>
               <h2 className="font-bold ">{name || 'No name'}</h2>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>

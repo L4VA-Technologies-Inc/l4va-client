@@ -256,15 +256,15 @@ export const CreateVaultForm = ({ vault }) => {
     );
   };
 
-  const updateValuationType = useCallback(value => {
-    setVaultData(prevData => ({ ...prevData, valuationType: value }));
+  const updateValueMethod = useCallback(value => {
+    setVaultData(prevData => ({ ...prevData, valueMethod: value }));
   }, []);
 
   useEffect(() => {
     if (vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
-      updateValuationType('lbe');
+      updateValueMethod('lbe');
     }
-  }, [vaultData.privacy, updateValuationType]);
+  }, [vaultData.privacy, updateValueMethod]);
 
   const stepOptions = steps.map(step => ({
     value: step.id.toString(),

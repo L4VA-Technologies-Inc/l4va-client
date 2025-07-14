@@ -14,37 +14,41 @@ export const LavaSelect = ({
   required = false,
   className,
 }) => (
-  <div className="w-full">
-    {label && (
-      <div className="text-dark-100 font-medium mb-2">
-        {required && '*'}
-        {label}
+  <>
+    {label ? (
+      <div className="font-bold flex items-center gap-2">
+        <span className="uppercase">
+          {required ? '*' : ''}
+          {label}
+        </span>
       </div>
-    )}
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className={`
-            bg-input-bg py-4 pl-5 pr-5 font-medium border border-steel-850 h-[60px] 
-            focus:ring-0 focus:ring-offset-0 mt-4
-            ${className}
-          `}
-      >
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent className="bg-input-bg border border-steel-850">
-        {options.map(option => (
-          <SelectItem
-            key={option.id || option.value}
-            className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
-            value={option.id || option.value}
-          >
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    {error && <p className="text-red-600 mt-1">{error}</p>}
-  </div>
+    ) : null}
+    <div className="mt-4">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          className={`
+              bg-input-bg py-4 pl-5 pr-5 font-medium border border-steel-850 h-[60px] 
+              focus:ring-0 focus:ring-offset-0
+              ${className}
+            `}
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="bg-input-bg border border-steel-850">
+          {options.map(option => (
+            <SelectItem
+              key={option.id || option.value}
+              className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
+              value={option.id || option.value}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-red-600 mt-1">{error}</p>}
+    </div>
+  </>
 );
 
 export const LavaSteelSelect = ({ options = [], value, onChange, placeholder = 'Select an option', className }) => {
