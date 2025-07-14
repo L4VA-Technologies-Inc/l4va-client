@@ -60,6 +60,27 @@ export const VaultList = ({
 
   const handleOpenFilters = () => openModal('VaultFiltersModal');
 
+  const renderVaultsView = () => {
+    if (viewType === 'grid') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {vaults.map(vault => (
+            <VaultCard key={vault.id} vault={vault} />
+          ))}
+        </div>
+      );
+    }
+    if (viewType === 'table') {
+      return (
+        <div className="flex flex-col gap-6 mt-6">
+          {vaults.map(vault => (
+            <VaultListItem key={vault.id} vault={vault} />
+          ))}
+        </div>
+      );
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col gap-6 md:gap-8">
@@ -89,18 +110,8 @@ export const VaultList = ({
           <div className="text-center text-red-600 py-8">{error}</div>
         ) : vaults.length === 0 ? (
           renderEmptyState()
-        ) : viewType === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vaults.map(vault => (
-              <VaultCard key={vault.id} vault={vault} />
-            ))}
-          </div>
         ) : (
-          <div className="flex flex-col gap-6 mt-6">
-            {vaults.map(vault => (
-              <VaultListItem key={vault.id} vault={vault} />
-            ))}
-          </div>
+          renderVaultsView()
         )}
       </div>
     </div>

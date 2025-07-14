@@ -5,20 +5,36 @@ import { VaultSocialLinks } from '../vault-profile/VaultSocialLinks';
 
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
-import { calculateTimeLeft, formatCompactNumber } from '@/utils/core.utils';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 const VaultListItem = ({ vault }: { vault: VaultShortResponse }) => {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(vault.timeRemaining));
+  const [timeLeft, setTimeLeft] = useState({
+    days: Math.floor(vault.timeRemaining / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((vault.timeRemaining / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((vault.timeRemaining / 1000 / 60) % 60),
+    ms: vault.timeRemaining,
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft(vault.timeRemaining));
-    }, 1000);
+      setTimeLeft(prevTime => {
+        const totalMS = Math.max(0, prevTime.ms - 60000);
+        return {
+          days: Math.floor(totalMS / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((totalMS / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((totalMS / 1000 / 60) % 60),
+          ms: totalMS,
+        };
+      });
+    }, 60000);
     return () => clearInterval(timer);
   }, [vault.timeRemaining]);
 
   const formatNumber = (num: number) => String(num);
-  const countdownText = `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m ${formatNumber(timeLeft.seconds)}s`;
+  const countdownText =
+    timeLeft.ms > 0
+      ? `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m`
+      : 'Ended';
 
   return (
     <div className="relative mb-6">
