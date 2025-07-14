@@ -169,6 +169,7 @@ export interface VaultShortResponse {
   total?: number;
   invested?: number;
   privacy: VaultPrivacy;
+  phaseStartTime: string | null;
   phaseEndTime: string | null;
   timeRemaining: number;
   vaultImage?: string;

@@ -18,20 +18,17 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, privacy, vaultImage, invested, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
-    if (!vault?.phaseEndTime) return false;
+    if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
 
-    // First condition: time must be less than 1 day
-    const isLessThanOneDay = vault?.timeRemaining <= ONE_DAY_MS && vault?.timeRemaining > 0;
+    const phaseStart = new Date(vault.phaseStartTime).getTime();
+    const phaseEnd = new Date(vault.phaseEndTime).getTime();
+    const tenPercentThreshold = (phaseEnd - phaseStart) * 0.1;
 
-    // Second condition: time must be less than 10% of total duration
-    let isLessThanTenPercent = false;
-    if (vault.timeRemaining !== undefined) {
-      const totalDuration = vault.timeRemaining;
-      isLessThanTenPercent = vault?.timeRemaining <= totalDuration * 0.1;
-    }
+    const isLessThanOneDay = vault.timeRemaining <= ONE_DAY_MS && vault.timeRemaining > 0;
+    const isLessThanTenPercent = vault.timeRemaining <= tenPercentThreshold && vault.timeRemaining > 0;
 
     return isLessThanOneDay && isLessThanTenPercent;
-  }, [vault.phaseEndTime, vault.timeRemaining]);
+  }, [vault.phaseStartTime, vault.phaseEndTime, vault.timeRemaining]);
 
   return (
     <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
@@ -43,7 +40,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <VaultCountdown
                 className="text-base font-normal"
                 color="yellow"
-                endTime={new Date(vault?.phaseEndTime || '').getTime().toString()}
+                endTime={vault.phaseEndTime || ''}
                 isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
               />
             </div>
