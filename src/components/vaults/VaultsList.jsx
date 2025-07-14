@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
-import { Filter } from 'lucide-react';
+import { Filter, GridIcon, ListIcon } from 'lucide-react';
+
+import VaultListItem from './VaultListItem';
 
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaTabs } from '@/components/shared/LavaTabs';
@@ -13,6 +15,17 @@ import { useModalControls } from '@/lib/modals/modal.context';
 const LoadingState = () => (
   <div className="py-8 flex items-center justify-center">
     <Spinner />
+  </div>
+);
+
+const ViewToggle = ({ activeView, onViewChange }) => (
+  <div className="flex items-center space-x-2">
+    <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('grid')} aria-label="Grid view">
+      <GridIcon className="h-[18px]" color={activeView === 'grid' ? '#979BB0' : '#2D3049'} />
+    </button>
+    <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('table')} aria-label="Table view">
+      <ListIcon className="h-[18px]" color={activeView === 'table' ? '#979BB0' : '#2D3049'} />
+    </button>
   </div>
 );
 
@@ -37,6 +50,7 @@ export const VaultList = ({
   renderEmptyState = EmptyState,
 }) => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
+  const [viewType, setViewType] = useState('grid'); // grid or table
   const { openModal } = useModalControls();
 
   const handleTabChange = tab => {
@@ -51,14 +65,22 @@ export const VaultList = ({
       <div className="flex flex-col gap-6 md:gap-8">
         <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2>
         {tabs.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
             <div className="flex-1 w-full sm:w-auto">
-              <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />
+              <LavaTabs
+                className="overflow-x-auto text-sm md:text-base w-full"
+                activeTab={activeTab}
+                tabs={tabs}
+                onTabChange={handleTabChange}
+              />
             </div>
-            <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
-              <Filter className="w-4 h-4" />
-              Filters
-            </SecondaryButton>
+            <div className="flex items-center w-full sm:w-auto">
+              <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
+                <Filter className="w-4 h-4" />
+                Filters
+              </SecondaryButton>
+              <ViewToggle activeView={viewType} onViewChange={setViewType} />
+            </div>
           </div>
         )}
         {isLoading ? (
@@ -67,10 +89,16 @@ export const VaultList = ({
           <div className="text-center text-red-600 py-8">{error}</div>
         ) : vaults.length === 0 ? (
           renderEmptyState()
-        ) : (
+        ) : viewType === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vaults.map(vault => (
               <VaultCard key={vault.id} vault={vault} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 mt-6">
+            {vaults.map(vault => (
+              <VaultListItem key={vault.id} vault={vault} />
             ))}
           </div>
         )}

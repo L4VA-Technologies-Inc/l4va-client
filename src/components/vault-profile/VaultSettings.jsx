@@ -1,28 +1,4 @@
-import { Copy } from 'lucide-react';
-
-import { formatNum } from '@/utils/core.utils';
-
-const InfoRow = ({ label, value, copyable }) => {
-  const formattedValue = typeof value === 'number' ? formatNum(value) : value;
-
-  return (
-    <div className="flex justify-between items-center py-2">
-      <span className="text-dark-100">{label}</span>
-      <div className="flex items-center gap-2">
-        <span>{formattedValue}</span>
-        {copyable && (
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            type="button"
-            onClick={() => navigator.clipboard.writeText(value)}
-          >
-            <Copy className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
+import { InfoRow } from '../ui/InfoRow';
 
 export const VaultSettings = ({ vault }) => (
   <>
