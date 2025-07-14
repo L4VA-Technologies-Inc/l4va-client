@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 
 import { calculateTimeLeft } from '@/utils/core.utils';
+import { cn } from '@/lib/utils';
 
-export const VaultCountdown = ({ endTime, isLocked }) => {
+type VaultCountdownProps = {
+  className?: string;
+  color?: 'red' | 'yellow';
+  endTime: string;
+  isLocked?: boolean;
+};
+
+export const VaultCountdown = ({ endTime, isLocked, className = '', color = 'red' }: VaultCountdownProps) => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
 
   useEffect(() => {
@@ -13,7 +21,7 @@ export const VaultCountdown = ({ endTime, isLocked }) => {
     return () => clearInterval(timer);
   }, [endTime]);
 
-  const formatNumber = num => String(num);
+  const formatNumber = (num: number) => String(num);
 
   const countdownText = isLocked
     ? 'LOCKED'
@@ -21,7 +29,13 @@ export const VaultCountdown = ({ endTime, isLocked }) => {
 
   return (
     <div className="flex flex-col items-center relative" role="timer">
-      <div className="vault-countdown-banner flex items-center justify-start w-full font-russo text-2xl font-bold text-white pointer-events-none px-4">
+      <div
+        className={cn(
+          'flex items-center justify-start w-full font-russo text-2xl font-bold text-white pointer-events-none px-4',
+          color === 'red' || isLocked ? 'vault-countdown-banner' : 'vault-countdown-banner-yellow',
+          className
+        )}
+      >
         {countdownText}
       </div>
     </div>
