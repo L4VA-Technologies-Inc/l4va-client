@@ -1,37 +1,37 @@
-enum VaultType {
+export enum VaultType {
   SINGLE = 'single',
   MULTI = 'multi',
   CTN = 'ctn',
   CNT = 'cnt',
 }
 
-enum VaultPrivacy {
+export enum VaultPrivacy {
   PUBLIC = 'public',
   PRIVATE = 'private',
   SEMI_PRIVATE = 'semi-private',
 }
 
-enum ValueMethod {
+export enum ValueMethod {
   LBE = 'lbe',
   FIXED = 'fixed',
 }
 
-enum ContributionWindowType {
+export enum ContributionWindowType {
   CUSTOM = 'custom',
   UPON_VAULT_LAUNCH = 'upon-vault-launch',
 }
 
-enum InvestmentWindowType {
+export enum InvestmentWindowType {
   CUSTOM = 'custom',
   UPON_ASSET_WINDOW_CLOSING = 'upon-asset-window-closing',
 }
 
-enum TerminationType {
+export enum TerminationType {
   DAO = 'dao',
   PROGRAMMED = 'programmed',
 }
 
-enum VaultStatus {
+export enum VaultStatus {
   DRAFT = 'draft',
   CREATED = 'created',
   PUBLISHED = 'published',
@@ -43,7 +43,7 @@ enum VaultStatus {
   FAILED = 'failed',
 }
 
-enum ClaimStatus {
+export enum ClaimStatus {
   AVAILABLE = 'available',
   PENDING = 'pending',
   CLAIMED = 'claimed',

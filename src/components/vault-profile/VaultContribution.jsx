@@ -92,7 +92,7 @@ export const VaultContribution = ({ vault }) => {
                         segments={[
                           {
                             progress: assetProgress,
-                            gradient: 'linear-gradient(90deg, #F97316 0%, #FFD012 100%)',
+                            className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
                           },
                         ]}
                       />
