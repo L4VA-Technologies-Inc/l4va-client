@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import { InfoRow } from '../ui/InfoRow';
 import { VaultSocialLinks } from '../vault-profile/VaultSocialLinks';
 
+import { InfoRow } from '@/components/ui/InfoRow';
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { formatCompactNumber } from '@/utils/core.utils';
@@ -56,7 +56,7 @@ const VaultListItem = ({ vault }: { vault: VaultShortResponse }) => {
       </div>
 
       {/* Vault Stats */}
-      <div className="grid grid-cols-4 md:grid-cols-5 gap-4 py-4 text-center border-[#2D3049] border rounded-2xl bg-[#181A2A] md:pl-[110px]">
+      <div className="grid grid-cols-4 md:grid-cols-5 gap-4 py-4 text-center border-[var(--color-steel-750)] border rounded-2xl bg-[var(--color-steel-950)] md:pl-[110px]">
         <div>
           <p className="text-sm text-dark-100">TVL</p>
           <p className="font-bold">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>

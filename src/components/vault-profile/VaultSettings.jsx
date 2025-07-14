@@ -1,4 +1,4 @@
-import { InfoRow } from '../ui/InfoRow';
+import { InfoRow } from '@/components/ui/InfoRow';
 
 export const VaultSettings = ({ vault }) => (
   <>

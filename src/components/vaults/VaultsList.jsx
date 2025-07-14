@@ -3,8 +3,7 @@ import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 import { Filter, GridIcon, ListIcon } from 'lucide-react';
 
-import VaultListItem from './VaultListItem';
-
+import VaultListItem from '@/components/vaults/VaultListItem';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultCard } from '@/components/vaults/VaultCard';
@@ -21,10 +20,16 @@ const LoadingState = () => (
 const ViewToggle = ({ activeView, onViewChange }) => (
   <div className="flex items-center space-x-2">
     <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('grid')} aria-label="Grid view">
-      <GridIcon className="h-[18px]" color={activeView === 'grid' ? '#979BB0' : '#2D3049'} />
+      <GridIcon
+        className="w-4 h-4"
+        color={activeView === 'grid' ? 'var(--color-dark-100)' : 'var(--color-steel-750)'}
+      />
     </button>
     <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('table')} aria-label="Table view">
-      <ListIcon className="h-[18px]" color={activeView === 'table' ? '#979BB0' : '#2D3049'} />
+      <ListIcon
+        className="w-4 h-4"
+        color={activeView === 'table' ? 'var(--color-dark-100)' : 'var(--color-steel-750)'}
+      />
     </button>
   </div>
 );
