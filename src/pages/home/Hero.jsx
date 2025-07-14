@@ -28,7 +28,7 @@ const Hero = () => {
           <h1
             className="
               uppercase leading-tight text-3xl lg:text-6xl xl:text-7xl tracking-wide lg:tracking-wider
-              bg-gradient-to-r from-[#FF842C] to-[#FFD012] bg-clip-text text-transparent
+              bg-gradient-to-r from-[var(--color-orange-500)] to-[#FFD012] bg-clip-text text-transparent
             "
           >
             Dream big
