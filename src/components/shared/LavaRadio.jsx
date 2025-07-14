@@ -37,12 +37,12 @@ export const LavaRadio = ({ name, value, label, options, onChange, error, hint }
               onChange={() => onChange(option.name)}
             />
             <div
-              className={`w-5 h-5 rounded-full border-2 ${error ? 'border-red-600' : 'border-white/20'} peer-checked:border-[#FF842C]`}
+              className={`w-5 h-5 rounded-full border-2 ${error ? 'border-red-600' : 'border-white/20'} peer-checked:border-[var(--color-orange-500)]`}
             />
             <div
               className="w-2.5 h-2.5 m-[5px] absolute inset-0 rounded-full scale-0 peer-checked:scale-100 transition-transform"
               style={{
-                background: 'linear-gradient(to bottom, #FF842C, #FFD012)',
+                background: 'linear-gradient(to bottom, var(--color-orange-500), #FFD012)',
               }}
             />
           </div>
