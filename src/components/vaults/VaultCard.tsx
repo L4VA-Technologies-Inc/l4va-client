@@ -11,15 +11,11 @@ type VaultCardProps = {
   vault: VaultShortResponse;
 };
 
-const raised = 750000;
-const goal = 1000000;
 const image = '/assets/vaults/space-man.webp';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
-  const { id, name, description, privacy, vaultImage, socialLinks = [] } = vault;
-
-  const progress = 100;
+  const { id, name, description, privacy, vaultImage, invested, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime) return false;
@@ -63,25 +59,15 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
           </div>
           <div className="mb-6 text-sm font-russo">
             <div className="mb-2 flex justify-between ">
-              <span>
-                Total Raised: <span className="text-gradient-orange">{progress}%</span>
-              </span>
-              <span className="text-gradient-orange">
-                ${formatNum(raised)} / ${formatNum(goal)}
-              </span>
-            </div>
-            <div className="h-3 rounded-full bg-slate-800/50">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-yellow-950 via-yellow-500 to-yellow-400"
-                style={{ width: `${progress}%` }}
-              />
+              <span>Total Raised:</span>
+              <span className="text-gradient-orange">${formatNum(invested)}</span>
             </div>
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
-              <p className="font-bold ">{formatCompactNumber(vault.tvl)}</p>
+              <p className="font-bold ">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
             </div>
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
@@ -89,7 +75,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             </div>
             <div>
               <p className="text-sm text-dark-100">Base allo</p>
-              <p className="font-bold ">{formatCompactNumber(vault.baseAllocation)}</p>
+              <p className="font-bold ">{vault.baseAllocation ? formatCompactNumber(vault.baseAllocation) : 'N/A'}</p>
             </div>
           </div>
         </div>
