@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
@@ -7,7 +5,6 @@ import clsx from 'clsx';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 
-// Updated mock data with clearer status values
 const mockClaims = [
   {
     id: 1,
@@ -154,18 +151,60 @@ export const Claims = () => {
     );
   };
 
+  // Mobile card layout for claims
+  const ClaimCard = ({ claim }) => (
+    <div
+      className={clsx(
+        'flex flex-col gap-3 rounded-xl p-4 mb-4',
+        selectedClaims.includes(claim.id)
+          ? 'bg-steel-750'
+          : claim.status === 'claimed'
+            ? 'bg-steel-850 opacity-75'
+            : 'bg-steel-850',
+        'shadow border border-steel-750'
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SelectionCheckbox claim={claim} />
+          <span className="font-medium text-white text-lg">{claim.vault}</span>
+        </div>
+        <span className="text-steel-300 text-sm">{claim.date}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <img
+          alt={`${claim.vault} preview`}
+          className="w-14 h-14 rounded-lg object-cover"
+          src={claim.image || '/placeholder.svg'}
+        />
+        <div className="flex-1">
+          <div className="flex flex-col gap-1">
+            <a
+              href={claim.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-orange-400 hover:text-orange-300 text-sm"
+            >
+              {claim.link}
+            </a>
+            <span className="font-medium text-white text-base">{claim.reward}</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <ClaimStatusIndicator claim={claim} />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">My Claims</h2>
-
-      {/* Tabs */}
       <div>
         <LavaTabs tabs={tabOptions} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-
-      {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <PrimaryButton
             size="md"
             className="min-w-[140px]"
@@ -185,7 +224,7 @@ export const Claims = () => {
             </PrimaryButton>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {filterOptions.map(option => (
             <button
               key={option.value}
@@ -202,7 +241,8 @@ export const Claims = () => {
           ))}
         </div>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-steel-750">
+      {/* Desktop Table (hidden on mobile) */}
+      <div className="overflow-x-auto rounded-2xl border border-steel-750 hidden md:block">
         <table className="w-full">
           <thead>
             <tr className="text-dark-100 text-sm border-b border-steel-750">
@@ -271,7 +311,12 @@ export const Claims = () => {
           </tbody>
         </table>
       </div>
-
+      {/* Mobile Card List (only on mobile) */}
+      <div className="block md:hidden">
+        {filteredClaims.map(claim => (
+          <ClaimCard key={claim.id} claim={claim} />
+        ))}
+      </div>
       {filteredClaims.length === 0 && (
         <div className="text-center py-12 text-steel-400">
           <p>No claims found for the selected filter.</p>
