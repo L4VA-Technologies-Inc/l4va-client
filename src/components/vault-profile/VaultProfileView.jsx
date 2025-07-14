@@ -1,7 +1,7 @@
 import { EyeIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
+import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
@@ -63,9 +63,11 @@ export const VaultProfileView = ({ vault }) => {
         <p className="text-dark-100 text-sm mb-2">VAULT ID: {vault.id}</p>
         {vault.tags && vault.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {vault.tags.map(tag => (
-              <Chip key={tag} label={tag} size="sm" className="bg-steel-850 text-white border-steel-750" />
-            ))}
+            {vault.tags.map(tag => {
+              const tagOption = VAULT_TAGS_OPTIONS.find(option => option.value === tag);
+              const tagLabel = tagOption ? tagOption.label : tag;
+              return <Chip key={tag} label={tagLabel} size="sm" className="bg-steel-850 text-white border-steel-750" />;
+            })}
           </div>
         )}
       </div>
