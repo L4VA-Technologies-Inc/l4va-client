@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 const progress = 75;
 const raised = 750000;
@@ -11,7 +12,7 @@ const baseAllo = 10000;
 const image = '/assets/vaults/space-man.webp';
 
 export const VaultCard = props => {
-  const { id, name, description, privacy, vaultImage, socialLinks = [] } = props;
+  const { id, name, description, privacy, vaultImage, ftTokenImg, socialLinks = [] } = props;
 
   return (
     <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
@@ -20,8 +21,14 @@ export const VaultCard = props => {
           <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage || image} />
         </div>
         <div className="p-6">
-          <div className="flex gap-4 mb-6">
-            <img alt="icon" className="h-16 w-16 rounded-xl" src="/assets/vault-logo.png" />
+          <div className="flex items-center gap-4 mb-6">
+            {ftTokenImg ? (
+              <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} />
+            ) : (
+              <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center">
+                <L4vaIcon className="h-8 w-8 text-white" />
+              </div>
+            )}
             <div>
               <h2 className="font-bold ">{name || 'No name'}</h2>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>

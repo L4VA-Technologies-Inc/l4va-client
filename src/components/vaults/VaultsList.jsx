@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+import { Filter } from 'lucide-react';
 
+import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
+import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const LoadingState = () => (
   <div className="py-8 flex items-center justify-center">
@@ -13,11 +17,13 @@ const LoadingState = () => (
 );
 
 const EmptyState = () => (
-  <div className="py-8 flex flex-col items-center justify-center">
-    <p className="text-xl">No vaults found</p>
-    <Link className={clsx('mt-2 transition-all')} to="/create">
-      <span className="text-orange-500 hover:underline">Create</span> your first vault to get started
-    </Link>
+  <div className="py-8">
+    <NoDataPlaceholder message="No vaults found" iconBgColor="bg-orange-500/15" iconInnerBgColor="bg-orange-500/30" />
+    <div className="mt-4 text-center">
+      <Link className={clsx('transition-all')} to="/create">
+        <span className="text-orange-500 hover:underline">Create</span> your first vault to get started
+      </Link>
+    </div>
   </div>
 );
 
@@ -31,17 +37,30 @@ export const VaultList = ({
   renderEmptyState = EmptyState,
 }) => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
+  const { openModal } = useModalControls();
 
   const handleTabChange = tab => {
     setActiveTab(tab);
     onTabChange?.(tab);
   };
 
+  const handleOpenFilters = () => openModal('VaultFiltersModal');
+
   return (
     <div>
-      <div className="flex flex-col gap-8">
-        <h2 className="font-russo text-4xl uppercase">{title}</h2>
-        {tabs.length > 0 && <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />}
+      <div className="flex flex-col gap-6 md:gap-8">
+        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2>
+        {tabs.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1 w-full sm:w-auto">
+              <LavaTabs activeTab={activeTab} tabs={tabs} onTabChange={handleTabChange} />
+            </div>
+            <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
+              <Filter className="w-4 h-4" />
+              Filters
+            </SecondaryButton>
+          </div>
+        )}
         {isLoading ? (
           <LoadingState />
         ) : error ? (

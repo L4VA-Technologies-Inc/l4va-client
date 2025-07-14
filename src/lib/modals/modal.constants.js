@@ -4,6 +4,7 @@ import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmat
 import { CreateProposalModal } from '@/components/modals/CreateProposalModal';
 import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
 import { ProfileModal } from '@/components/modals/ProfileModal';
+import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 
 export const MODAL_ENTRIES = [
   {
@@ -29,5 +30,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'ContributeModal',
     Component: ContributeModal,
+  },
+  {
+    name: 'VaultFiltersModal',
+    Component: VaultFiltersModal,
   },
 ];
