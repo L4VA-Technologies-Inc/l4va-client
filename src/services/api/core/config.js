@@ -31,3 +31,13 @@ export class CoreConfigProvider {
     return `/api/v1/contribute/transaction/${txId}/hash`;
   }
 }
+
+export class NotificationsConfigProvider {
+  static getNotifications() {
+    return '/api/v1/notifications';
+  }
+
+  static deleteNotification(id) {
+    return `/api/v1/notifications/${id}`;
+  }
+}

@@ -1,4 +1,4 @@
-import { CoreConfigProvider } from '@/services/api/core/config';
+import { CoreConfigProvider, NotificationsConfigProvider } from '@/services/api/core/config';
 import { axiosInstance } from '@/services/api';
 
 export class CoreApiProvider {
@@ -61,6 +61,11 @@ export class CoreApiProvider {
     const response = await axiosInstance.patch(CoreConfigProvider.updateTransactionHash(txId), {
       txHash,
     });
+    return response;
+  }
+
+  static async getNotifications() {
+    const response = await axiosInstance.get(NotificationsConfigProvider.getNotifications());
     return response;
   }
 }

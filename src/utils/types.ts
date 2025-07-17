@@ -221,3 +221,35 @@ export interface CreateVaultFormData {
   assetsWhitelist: IAssetsWhitelist[];
   contributorWhitelist?: IContributorWhitelist[];
 }
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  action_url: string | null;
+  is_read: boolean;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export type NotificationType =
+  | 'vault_launch'
+  | 'contribution_complete'
+  | 'vault_success'
+  | 'vault_failed'
+  | 'favorite_vault_launched'
+  | 'vault_whitelist_added'
+  | 'vault_reserve_met'
+  | 'vault_time_running_out'
+  | 'governance_proposal_created'
+  | 'new_governance_proposal'
+  | 'governance_vote_complete'
+  | 'governance_vote_time_running_out'
+  | 'distribution_claim_available'
+  | 'vault_termination'
+  | 'milestone_tvl_reached'
+  | 'milestone_market_cap_reached';

@@ -141,6 +141,20 @@ export const useCreateAcquireTx = () => {
   });
 };
 
+export const useNotifications = () => {
+  return useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => CoreApiProvider.getNotifications(),
+    refetchInterval: 60000000,
+  });
+};
+
+export const useDeleteNotification = () => {
+  return useMutation({
+    mutationFn: id => CoreApiProvider.deleteNotification(id),
+  });
+};
+
 export const useWalletSummary = address => {
   return useQuery({
     queryKey: ['wallet-summary', address],
