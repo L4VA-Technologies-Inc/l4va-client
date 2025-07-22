@@ -29,8 +29,8 @@ export const VaultContribution = ({ vault }) => {
   );
 
   const acquireProgress = useMemo(
-    () => calculateProgress(vault.assetsCount, vault.acquireReserve),
-    [vault.assetsCount, vault.acquireReserve]
+    () => calculateProgress(vault.invested, vault.requireReservedCostUsd),
+    [vault.invested, vault.requireReservedCostUsd]
   );
 
   const contributionProgress = useMemo(
@@ -58,6 +58,7 @@ export const VaultContribution = ({ vault }) => {
             segments={[
               {
                 progress: contributionProgress,
+                className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
               },
             ]}
           />
@@ -118,7 +119,7 @@ export const VaultContribution = ({ vault }) => {
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-dark-100">Reserve</span>
-              <span className="text-dark-100">${formatNum(50000)}</span>
+              <span className="text-dark-100">${formatNum(vault.requireReservedCostUsd)}</span>
             </div>
             <LavaProgressBar
               className="h-2 rounded-full bg-steel-750 mb-4"
