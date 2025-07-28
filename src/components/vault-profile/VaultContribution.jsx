@@ -108,6 +108,7 @@ export const VaultContribution = ({ vault }) => {
           )}
           {(vault.vaultStatus === VAULT_STATUSES.ACQUIRE ||
             vault.vaultStatus === VAULT_STATUSES.GOVERNANCE ||
+            vault.vaultStatus === VAULT_STATUSES.READY_FOR_GOVERNANCE ||
             vault.vaultStatus === VAULT_STATUSES.LOCKED) && (
             <div className="absolute bg-[#181A2A] opacity-70 w-full h-full top-0 left-0 flex items-center justify-center">
               <LockIcon className="h-[20px]" />
@@ -118,6 +119,7 @@ export const VaultContribution = ({ vault }) => {
       <div className="relative">
         {(vault.vaultStatus === VAULT_STATUSES.ACQUIRE ||
           vault.vaultStatus === VAULT_STATUSES.GOVERNANCE ||
+          vault.vaultStatus === VAULT_STATUSES.READY_FOR_GOVERNANCE ||
           vault.vaultStatus === VAULT_STATUSES.LOCKED) && (
           <div>
             <h2 className="font-medium mb-2">Acquire:</h2>
@@ -147,7 +149,7 @@ export const VaultContribution = ({ vault }) => {
           </div>
         )}
 
-        {vault.vaultStatus === VAULT_STATUSES.LOCKED && (
+        {(vault.vaultStatus === VAULT_STATUSES.LOCKED || vault.vaultStatus === VAULT_STATUSES.READY_FOR_GOVERNANCE) && (
           <div className="absolute bg-[#181A2A] opacity-70 w-full h-full top-0 left-0 flex items-center justify-center">
             <LockIcon className="h-[20px]" />
           </div>

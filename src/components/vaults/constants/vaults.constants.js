@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
-export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 24 hours in ms
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 86400000; // 24 hours in ms
+export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 min in ms
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 min in ms
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
@@ -16,6 +16,7 @@ export const VAULT_STATUSES = {
   CONTRIBUTION: 'contribution',
   ACQUIRE: 'acquire',
   LOCKED: 'locked',
+  READY_FOR_GOVERNANCE: 'ready-for-governance',
   GOVERNANCE: 'governance',
   FAILED: 'failed',
 };
