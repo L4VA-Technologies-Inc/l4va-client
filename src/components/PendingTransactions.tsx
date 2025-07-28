@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
-import { useNavigate } from '@tanstack/react-router';
 
 import {
-  useMyWaitingTransactions,
+  useMyPendingTransactions,
   useGenerateUpdateTransaction,
   useSubmitSignedTransaction,
 } from '@/services/api/queries';
@@ -35,13 +34,12 @@ type Transaction = {
   user_id: string;
 };
 
-export const WaitingTransactions = () => {
+export const PendingTransactions = () => {
   const [status, setStatus] = useState<'idle' | 'building' | 'signing' | 'submitting'>('idle');
 
-  const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
 
-  const { data, isLoading, error, refetch } = useMyWaitingTransactions();
+  const { data, isLoading, error, refetch } = useMyPendingTransactions();
   const generateUpdateTx = useGenerateUpdateTransaction();
   const submitSignedTx = useSubmitSignedTransaction();
 
@@ -92,11 +90,6 @@ export const WaitingTransactions = () => {
 
       // Refresh the list of transactions
       refetch();
-
-      // Navigate to the vault page
-      if (tx.vault_id) {
-        navigate({ to: `/vaults/${tx.vault_id}` });
-      }
     } catch (err: any) {
       console.error('Transaction signing error:', err);
       toast.error(err.message || 'Failed to sign transaction', { id: 'tx-toast' });

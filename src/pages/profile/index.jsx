@@ -3,6 +3,7 @@ import { Stats } from '@/pages/profile/Stats';
 import { ProfileSocialLinks } from '@/pages/profile/ProfileSocialLinks';
 import { MyVaultsList } from '@/components/vaults/MyVaultsList';
 import { Claims } from '@/pages/profile/Claims';
+import { PendingTransactions } from '@/components/PendingTransactions';
 
 export const Profile = () => (
   <div className="min-h-screen">
@@ -12,6 +13,7 @@ export const Profile = () => (
       <ProfileSocialLinks />
       <MyVaultsList />
       <Claims />
+      <PendingTransactions />
     </div>
   </div>
 );

@@ -89,7 +89,7 @@ export const useSubmitTransaction = () => {
   });
 };
 
-export const useMyWaitingTransactions = () => {
+export const useMyPendingTransactions = () => {
   return useQuery({
     queryKey: ['waiting-owner-transactions'],
     queryFn: () => TransactionsApiProvider.getWaitingOwnerTransactions(),
