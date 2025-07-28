@@ -89,6 +89,25 @@ export const useSubmitTransaction = () => {
   });
 };
 
+export const useMyWaitingTransactions = () => {
+  return useQuery({
+    queryKey: ['waiting-owner-transactions'],
+    queryFn: () => TransactionsApiProvider.getWaitingOwnerTransactions(),
+  });
+};
+
+export const useGenerateUpdateTransaction = () => {
+  return useMutation({
+    mutationFn: txId => TransactionsApiProvider.generateUpdateTransaction(txId),
+  });
+};
+
+export const useSubmitSignedTransaction = () => {
+  return useMutation({
+    mutationFn: ({ txId, signedTx }) => TransactionsApiProvider.submitSignedTransaction(txId, signedTx),
+  });
+};
+
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({
