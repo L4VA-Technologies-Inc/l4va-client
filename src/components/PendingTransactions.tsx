@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
-import {
-  useMyPendingTransactions,
-  useGenerateUpdateTransaction,
-  useSubmitSignedTransaction,
-} from '@/services/api/queries';
+import { useMyPendingTransactions, useGenerateUpdateTransaction, useSubmitTransaction } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 
@@ -32,16 +28,20 @@ type Transaction = {
   };
   vault_id: string;
   user_id: string;
+  vault: {
+    name: string;
+  };
 };
 
 export const PendingTransactions = () => {
   const [status, setStatus] = useState<'idle' | 'building' | 'signing' | 'submitting'>('idle');
+  const [processingTxId, setProcessingTxId] = useState<string | null>(null);
 
   const wallet = useWallet('handler', 'isConnected');
 
   const { data, isLoading, error, refetch } = useMyPendingTransactions();
   const generateUpdateTx = useGenerateUpdateTransaction();
-  const submitSignedTx = useSubmitSignedTransaction();
+  const submitTransaction = useSubmitTransaction();
 
   const waitingTransactions: Transaction[] = data?.data || [];
 
@@ -53,20 +53,21 @@ export const PendingTransactions = () => {
       }
 
       setStatus('building');
+      setProcessingTxId(tx.id);
 
       // 1. Generate the transaction hex
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       const generateResult = await generateUpdateTx.mutateAsync(tx.id);
 
-      if (!generateResult?.data?.transactionHex) {
+      if (!generateResult?.data?.presignedTx) {
         throw new Error('Failed to generate transaction - no transaction hex returned');
       }
 
       setStatus('signing');
 
       // 2. Sign the transaction
-      const signedTx = await wallet.handler.signTx(generateResult.data.transactionHex, true);
+      const signedTx = await wallet.handler.signTx(generateResult.data.presignedTx, true);
 
       if (!signedTx) {
         throw new Error('Transaction signing was cancelled');
@@ -77,9 +78,11 @@ export const PendingTransactions = () => {
       // 3. Submit the signed transaction
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      const submitResult = await submitSignedTx.mutateAsync({
+      const submitResult = await submitTransaction.mutateAsync({
+        transaction: generateResult.data.presignedTx,
+        vaultId: tx.vault_id,
         txId: tx.id,
-        signedTx,
+        signatures: [signedTx],
       });
 
       if (submitResult?.data?.txHash) {
@@ -94,6 +97,7 @@ export const PendingTransactions = () => {
       console.error('Transaction signing error:', err);
       toast.error(err.message || 'Failed to sign transaction', { id: 'tx-toast' });
     } finally {
+      setProcessingTxId(null);
       setStatus('idle');
     }
   };
@@ -121,15 +125,13 @@ export const PendingTransactions = () => {
         <div key={tx.id} className="bg-steel-850 p-4 rounded-lg">
           <div className="flex justify-between items-center flex-wrap">
             <div className="w-full md:w-3/4">
-              <h3 className="font-medium">Vault: {tx.fee || 'Unknown'}</h3>
+              <h3 className="font-medium">Vault: {tx.vault.name || 'Unknown'}</h3>
               <p className="text-dark-100 text-sm">Type: {tx.type}</p>
 
               {/* Показати деталі транзакції */}
               <div className="mt-2 text-sm">
                 <p>Transaction details:</p>
                 <ul className="list-disc list-inside pl-4">
-                  <li>Vault ID: {tx.vault_id}</li>
-                  {tx.metadata?.contractType && <li>Contract Type: {tx.metadata.contractType}</li>}
                   {tx.metadata?.vaultName && (
                     <li>
                       Vault Name: {tx.metadata.vaultName.substring(0, 10)}...
@@ -149,10 +151,10 @@ export const PendingTransactions = () => {
             <div className="w-full md:w-1/4 flex justify-end mt-4 md:mt-0">
               <PrimaryButton
                 onClick={() => handleSignTransaction(tx)}
-                disabled={status !== 'idle'}
+                disabled={status !== 'idle' || processingTxId !== null}
                 className="w-full md:w-auto"
               >
-                {status === 'idle' ? 'Submit' : status.toUpperCase()}
+                {processingTxId === tx.id ? status.toUpperCase() : 'Submit'}
               </PrimaryButton>
             </div>
           </div>

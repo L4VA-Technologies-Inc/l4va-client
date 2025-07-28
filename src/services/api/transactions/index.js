@@ -21,9 +21,4 @@ export class TransactionsApiProvider {
     const response = await axiosInstance.post(TransactionsConfigProvider.generateUpdateTransaction(txId));
     return response;
   }
-
-  static async submitSignedTransaction(txId, signedTx) {
-    const response = await axiosInstance.post(TransactionsConfigProvider.submitSignedTransaction(txId), { signedTx });
-    return response;
-  }
 }

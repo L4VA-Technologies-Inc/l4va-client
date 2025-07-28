@@ -14,8 +14,4 @@ export class TransactionsConfigProvider {
   static generateUpdateTransaction(txId) {
     return `/api/v1/blockchain/transactions/generate-update/${txId}`;
   }
-
-  static submitSignedTransaction(txId) {
-    return `/api/v1/blockchain/transactions/submit/${txId}`;
-  }
 }

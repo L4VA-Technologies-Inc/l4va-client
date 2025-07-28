@@ -102,12 +102,6 @@ export const useGenerateUpdateTransaction = () => {
   });
 };
 
-export const useSubmitSignedTransaction = () => {
-  return useMutation({
-    mutationFn: ({ txId, signedTx }) => TransactionsApiProvider.submitSignedTransaction(txId, signedTx),
-  });
-};
-
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({
