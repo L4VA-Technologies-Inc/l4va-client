@@ -4,13 +4,15 @@ import toast from 'react-hot-toast';
 
 import { NFTItem } from './NFTItem';
 import { FTItem } from './FTItem';
-import { ContributionDetails } from './ContributionDetails';
 import { SelectedAssetItem } from './SelectedAssetItem';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Spinner } from '@/components/Spinner';
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import SecondaryButton from '@/components/shared/SecondaryButton';
+import MetricCard from '@/components/shared/MetricCard';
+import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
@@ -218,8 +220,35 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     ));
   };
 
+  const renderFooter = () => (
+    <div className="flex justify-between items-center">
+      <div className="text-sm text-gray-400">
+        {selectedNFTs.length} asset{selectedNFTs.length !== 1 ? 's' : ''} selected
+      </div>
+      <div className="flex gap-2">
+        <SecondaryButton onClick={onClose} size="sm">
+          Close
+        </SecondaryButton>
+        <PrimaryButton
+          disabled={contributionDetails.totalAssets === 0 || status !== 'idle'}
+          onClick={handleContribute}
+          size="sm"
+          className="capitalize"
+        >
+          {status === 'idle' ? 'Contribute' : status}
+        </PrimaryButton>
+      </div>
+    </div>
+  );
+
   return (
-    <ModalWrapper isOpen={isOpen} onClose={onClose} title={`Contribute to ${name}`} maxHeight="90vh">
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Contribute to ${name}`}
+      maxHeight="90vh"
+      footer={renderFooter()}
+    >
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
@@ -255,13 +284,20 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             )}
           </div>
         </div>
-
-        {/* Contribution Details */}
-        <ContributionDetails
-          contributionDetails={contributionDetails}
-          status={status}
-          onContribute={handleContribute}
-        />
+        <div className="space-y-6">
+          <h2 className="text-xl font-medium">Contribution Summary</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard label="Total Assets Selected" value={contributionDetails.totalAssets} />
+            <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard label="Estimated Value" value={`$${contributionDetails.estimatedValue.toLocaleString()}`} />
+            <MetricCard
+              label="Estimated TICKER VAL ($VAL)"
+              value={contributionDetails.estimatedTickerVal.toLocaleString()}
+            />
+          </div>
+        </div>
       </div>
     </ModalWrapper>
   );

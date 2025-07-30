@@ -1,10 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
-import { VaultCountdown } from '../vault-profile/VaultCountdown';
-
+import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
@@ -15,7 +14,7 @@ type VaultCardProps = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
-  const { id, name, description, privacy, vaultImage, ftTokenImg, invested, socialLinks = [] } = vault;
+  const { id, name, description, privacy, vaultImage, ftTokenImg, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
