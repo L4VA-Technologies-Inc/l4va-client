@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Check, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
+import { useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
+import { ClaimsApiProvider } from '@/services/api/claims';
 
 // const mockClaims = [
 //   {
@@ -80,6 +83,7 @@ export const Claims = () => {
   const [activeTab, setActiveTab] = useState(tabOptions[0]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedClaims, setSelectedClaims] = useState([]);
+  const wallet = useWallet('handler', 'isConnected');
 
   const { data, isLoading, error } = useClaims();
   const claims = data?.data || [];
@@ -126,6 +130,22 @@ export const Claims = () => {
   //   console.log('Claiming selected items:', selectedClaims);
   // };
 
+  const handleClaimNow = async claimId => {
+    try {
+      const { data } = await ClaimsApiProvider.receiveClaim(claimId);
+
+      const signature = await wallet.handler.signTx(data.presignedTx, true);
+
+      await ClaimsApiProvider.submitClaim(data.transactionId, {
+        signedTx: signature,
+      });
+      toast.success('Claim successful! Your item has been claimed.');
+      setSelectedClaims(prev => [...prev, claimId]); // Add to selected claims after claiming
+    } catch (error) {
+      toast.error('Failed to claim item. Please try again.');
+    }
+  };
+
   // Reusable class combinations
   const getCardClasses = claim =>
     clsx('flex flex-col gap-3 rounded-xl p-4 mb-4 shadow border border-steel-750', {
@@ -166,7 +186,7 @@ export const Claims = () => {
       );
     }
     return (
-      <PrimaryButton size="sm" onClick={() => console.log('Claim individual item:', claim.id)}>
+      <PrimaryButton size="sm" onClick={() => handleClaimNow(claim.id)}>
         Claim Now
       </PrimaryButton>
     );
