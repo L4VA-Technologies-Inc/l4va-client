@@ -32,6 +32,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.19.1",
+    "lightweight-charts": "^5.0.8",
     "lucide-react": "^0.522.0",
     "react": "^19.1.0",
     "react-day-picker": "^9.7.0",

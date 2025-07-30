@@ -166,7 +166,7 @@ export const LoginModal = () => {
   );
 
   return (
-    <ModalWrapper title="Connect Wallet" modalName="LoginModal">
+    <ModalWrapper isOpen title="Connect Wallet" onClose={closeModal} size="md">
       {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
     </ModalWrapper>
   );

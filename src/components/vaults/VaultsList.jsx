@@ -55,7 +55,7 @@ export const VaultList = ({
   renderEmptyState = EmptyState,
 }) => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
-  const [viewType, setViewType] = useState('grid'); // grid or table
+  const [viewType, setViewType] = useState('grid');
   const { openModal } = useModalControls();
 
   const handleTabChange = tab => {
@@ -100,7 +100,7 @@ export const VaultList = ({
                 onTabChange={handleTabChange}
               />
             </div>
-            <div className="flex items-center w-full sm:w-auto">
+            <div className="flex items-center w-full sm:w-auto gap-2">
               <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
                 <Filter className="w-4 h-4" />
                 Filters

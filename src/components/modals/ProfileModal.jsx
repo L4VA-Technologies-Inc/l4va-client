@@ -55,7 +55,7 @@ export const ProfileModal = () => {
   };
 
   return (
-    <ModalWrapper title="Wallet" modalName="ProfileModal" position="top-right">
+    <ModalWrapper isOpen title="Profile" onClose={closeModal} size="md">
       <UserAvatar user={user} />
       <div className="flex justify-between items-center mt-4 p-3 bg-steel-850 rounded-lg">
         <span className="text-dark-100">$VLRM</span>
