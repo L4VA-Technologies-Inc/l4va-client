@@ -32,7 +32,6 @@ const mockNotifications = [
   },
 ];
 
-// Memoized NavLink for performance
 const NavLink = React.memo(({ to, label, onClick }) => (
   <Link
     activeProps={{ className: 'text-orange-500' }}
@@ -76,13 +75,16 @@ export const Header = () => {
             <L4vaIcon className="flex-shrink-0" height={24} width={24} />
             <span className="hidden md:block text-2xl font-bold uppercase">L4VA</span>
           </Link>
-          <button
-            className={cn('md:hidden p-2 ml-2 rounded-full hover:bg-steel-850 transition-colors')}
-            aria-label="Toggle mobile menu"
-            onClick={toggleMobileMenu}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <ConnectButton />
+            <button
+              className={cn('p-2 rounded-full hover:bg-steel-850 transition-colors')}
+              aria-label="Toggle mobile menu"
+              onClick={toggleMobileMenu}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
           <div className="hidden md:flex items-center flex-1">
             <div className="flex items-center gap-8 ml-[56px]">
               {navLinks.map(link => (
