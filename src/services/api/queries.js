@@ -1,5 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 
+import { ClaimsApiProvider } from './claims';
+
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
@@ -159,5 +161,13 @@ export const useWalletSummary = address => {
     queryKey: ['wallet-summary', address],
     queryFn: () => TapToolsApiProvider.getWalletSummary(address),
     enabled: !!address,
+  });
+};
+
+// Claims Queries
+export const useClaims = () => {
+  return useQuery({
+    queryKey: ['vault-claims'],
+    queryFn: () => ClaimsApiProvider.getClaims(),
   });
 };

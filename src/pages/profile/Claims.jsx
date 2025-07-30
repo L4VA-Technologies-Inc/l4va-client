@@ -1,87 +1,110 @@
 import { useState } from 'react';
-import { Check, ExternalLink } from 'lucide-react';
+import { Check, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { useClaims } from '@/services/api/queries';
 
-const mockClaims = [
-  {
-    id: 1,
-    vault: 'Vault 1',
-    image: '/assets/vaults/space-man-1.webp',
-    link: 'https://vault.link',
-    date: '5/12/25',
-    reward: '1658 ADA',
-    status: 'claimed', // Already claimed
-  },
-  {
-    id: 2,
-    vault: 'Vault 2',
-    image: '/assets/vaults/space-man-2.webp',
-    link: 'https://vault.link',
-    date: '3/22/25',
-    reward: '40000 SNEK',
-    status: 'pending', // Available to claim
-  },
-  {
-    id: 3,
-    vault: 'Vault 3',
-    image: '/assets/vaults/space-man.webp',
-    link: 'https://vault.link',
-    date: '12/9/24',
-    reward: '12000 L4VA',
-    status: 'pending', // Available to claim
-  },
-  {
-    id: 4,
-    vault: 'Vault 4',
-    image: '/assets/vaults/space-man-1.webp',
-    link: 'https://vault.link',
-    date: '6/2/25',
-    reward: '435 ADA',
-    status: 'claimed', // Already claimed
-  },
-  {
-    id: 5,
-    vault: 'Vault 5',
-    image: '/assets/vaults/space-man-2.webp',
-    link: 'https://vault.link',
-    date: '2/16/25',
-    reward: '282 L4VA',
-    status: 'pending', // Available to claim
-  },
-  {
-    id: 6,
-    vault: 'Vault 6',
-    image: '/assets/vaults/space-man.webp',
-    link: 'https://vault.link',
-    date: '4/4/25',
-    reward: '435 ADA',
-    status: 'claimed', // Already claimed
-  },
-];
+// const mockClaims = [
+//   {
+//     id: 1,
+//     vault: 'Vault 1',
+//     image: '/assets/vaults/space-man-1.webp',
+//     link: 'https://vault.link',
+//     date: '5/12/25',
+//     reward: '1658 ADA',
+//     status: 'claimed', // Already claimed
+//   },
+//   {
+//     id: 2,
+//     vault: 'Vault 2',
+//     image: '/assets/vaults/space-man-2.webp',
+//     link: 'https://vault.link',
+//     date: '3/22/25',
+//     reward: '40000 SNEK',
+//     status: 'pending', // Available to claim
+//   },
+//   {
+//     id: 3,
+//     vault: 'Vault 3',
+//     image: '/assets/vaults/space-man.webp',
+//     link: 'https://vault.link',
+//     date: '12/9/24',
+//     reward: '12000 L4VA',
+//     status: 'pending', // Available to claim
+//   },
+//   {
+//     id: 4,
+//     vault: 'Vault 4',
+//     image: '/assets/vaults/space-man-1.webp',
+//     link: 'https://vault.link',
+//     date: '6/2/25',
+//     reward: '435 ADA',
+//     status: 'claimed', // Already claimed
+//   },
+//   {
+//     id: 5,
+//     vault: 'Vault 5',
+//     image: '/assets/vaults/space-man-2.webp',
+//     link: 'https://vault.link',
+//     date: '2/16/25',
+//     reward: '282 L4VA',
+//     status: 'pending', // Available to claim
+//   },
+//   {
+//     id: 6,
+//     vault: 'Vault 6',
+//     image: '/assets/vaults/space-man.webp',
+//     link: 'https://vault.link',
+//     date: '4/4/25',
+//     reward: '435 ADA',
+//     status: 'claimed', // Already claimed
+//   },
+// ];
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
 const filterOptions = [
   { value: 'all', label: 'All Claims' },
-  { value: 'pending', label: 'Available to Claim' },
+  { value: 'available', label: 'Available to Claim' },
   { value: 'claimed', label: 'Already Claimed' },
 ];
+
+const ASSET_TYPE_LABELS = {
+  contributor: 'Contributor Reward',
+  acquirer: 'Acquirer Reward',
+  owner: 'Owner Reward',
+};
 
 export const Claims = () => {
   const [activeTab, setActiveTab] = useState(tabOptions[0]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedClaims, setSelectedClaims] = useState([]);
 
+  const { data, isLoading, error } = useClaims();
+  const claims = data?.data || [];
+
+  const formattedClaims = claims.map(claim => ({
+    id: claim.id,
+    vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
+    image: claim.vault?.image || '/placeholder.svg',
+    link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
+    date: new Date(claim.created_at).toLocaleDateString(),
+    reward: `${parseInt(claim.amount).toLocaleString()} VT`,
+    status: claim.status || 'available',
+    rawData: claim, // Keep the original data
+  }));
+
+  console.log(selectedClaims);
+
   // Filter claims based on selected filter
-  const filteredClaims = mockClaims.filter(claim => {
+  const filteredClaims = formattedClaims.filter(claim => {
     if (activeFilter === 'all') return true;
     return claim.status === activeFilter;
   });
 
   // Get only pending (claimable) items from filtered results
-  const pendingClaims = filteredClaims.filter(claim => claim.status === 'pending');
+  const pendingClaims = filteredClaims.filter(claim => claim.status === 'available');
   const pendingClaimIds = pendingClaims.map(claim => claim.id);
 
   // Check if all pending claims are selected
@@ -153,7 +176,7 @@ export const Claims = () => {
 
   const SelectionCheckbox = ({ claim }) => {
     const isSelected = selectedClaims.includes(claim.id);
-    const isPending = claim.status === 'pending';
+    const isPending = claim.status === 'available';
 
     return (
       <div
@@ -242,70 +265,90 @@ export const Claims = () => {
           ))}
         </div>
       </div>
-      {/* Desktop Table (hidden on mobile) */}
-      <div className="overflow-x-auto rounded-2xl border border-steel-750 hidden md:block">
-        <table className="w-full">
-          <thead>
-            <tr className="text-dark-100 text-sm border-b border-steel-750">
-              <th className="px-4 py-3 text-left w-12">
-                <div
-                  className={getCheckboxClasses(allPendingSelected, pendingClaimIds.length > 0)}
-                  onClick={pendingClaimIds.length > 0 ? handleSelectAllPending : undefined}
-                  role="checkbox"
-                  aria-checked={allPendingSelected}
-                  tabIndex={pendingClaimIds.length > 0 ? 0 : undefined}
-                >
-                  {allPendingSelected && pendingClaimIds.length > 0 && <Check className="w-4 h-4 text-white m-0.5" />}
-                </div>
-              </th>
-              <th className="px-4 py-3 text-left">Vault</th>
-              <th className="px-4 py-3 text-left">Preview</th>
-              <th className="px-4 py-3 text-left">Link</th>
-              <th className="px-4 py-3 text-left">Date</th>
-              <th className="px-4 py-3 text-left">Reward</th>
-              <th className="px-4 py-3 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredClaims.map(claim => (
-              <tr key={claim.id} className={getTableRowClasses(claim)}>
-                <td className="px-4 py-3">
-                  <SelectionCheckbox claim={claim} />
-                </td>
-                <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
-                <td className="px-4 py-3">
-                  <img
-                    alt={`${claim.vault} preview`}
-                    className="w-12 h-12 rounded-lg object-cover"
-                    src={claim.image || '/placeholder.svg'}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <a href={claim.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
-                    View Vault
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </td>
-                <td className="px-4 py-3 text-steel-300">{claim.date}</td>
-                <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
-                <td className="px-4 py-3">
-                  <ClaimStatusIndicator claim={claim} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Mobile Card List (only on mobile) */}
-      <div className="block md:hidden">
-        {filteredClaims.map(claim => (
-          <ClaimCard key={claim.id} claim={claim} />
-        ))}
-      </div>
-      {filteredClaims.length === 0 && (
-        <div className="text-center py-12 text-steel-400">
-          <p>No claims found for the selected filter.</p>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          <span className="ml-2 text-steel-300">Loading your claims...</span>
         </div>
+      ) : error ? (
+        <div className="text-center py-12 text-red-400">
+          <p>Error loading claims: {error.message}</p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop Table (hidden on mobile) */}
+          <div className="overflow-x-auto rounded-2xl border border-steel-750 hidden md:block">
+            <table className="w-full">
+              <thead>
+                <tr className="text-dark-100 text-sm border-b border-steel-750">
+                  <th className="px-4 py-3 text-left w-12">
+                    <div
+                      className={getCheckboxClasses(allPendingSelected, pendingClaimIds.length > 0)}
+                      onClick={pendingClaimIds.length > 0 ? handleSelectAllPending : undefined}
+                      role="checkbox"
+                      aria-checked={allPendingSelected}
+                      tabIndex={pendingClaimIds.length > 0 ? 0 : undefined}
+                    >
+                      {allPendingSelected && pendingClaimIds.length > 0 && (
+                        <Check className="w-4 h-4 text-white m-0.5" />
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-left">Vault</th>
+                  <th className="px-4 py-3 text-left">Preview</th>
+                  <th className="px-4 py-3 text-left">Link</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Reward</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredClaims.map(claim => (
+                  <tr key={claim.id} className={getTableRowClasses(claim)}>
+                    <td className="px-4 py-3">
+                      <SelectionCheckbox claim={claim} />
+                    </td>
+                    <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
+                    <td className="px-4 py-3">
+                      <img
+                        alt={`${claim.vault} preview`}
+                        className="w-12 h-12 rounded-lg object-cover"
+                        src={claim.image}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={claim.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1"
+                      >
+                        View Vault
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-steel-300">{claim.date}</td>
+                    <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
+                    <td className="px-4 py-3">
+                      <ClaimStatusIndicator claim={claim} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile Card List (only on mobile) */}
+          <div className="block md:hidden">
+            {filteredClaims.map(claim => (
+              <ClaimCard key={claim.id} claim={claim} />
+            ))}
+          </div>
+          {filteredClaims.length === 0 && (
+            <div className="text-center py-12 text-steel-400">
+              <p>No claims found for the selected filter.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
