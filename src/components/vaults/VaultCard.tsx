@@ -42,7 +42,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             </div>
           )}
           {shouldShowCountdown && (
-            <div className="absolute bottom-0 left-0 w-3/4 ">
+            <div className="absolute bottom-0 left-0 w-3/4">
               <VaultCountdown
                 className="text-base font-normal"
                 color="yellow"
@@ -62,29 +62,22 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               </div>
             )}
             <div>
-              <h2 className="font-bold ">{name || 'No name'}</h2>
+              <h2 className="font-bold">{name || 'No name'}</h2>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>
           </div>
-          <div className="mb-6 text-sm font-russo">
-            <div className="mb-2 flex justify-between ">
-              <span>Total Raised:</span>
-              <span className="text-gradient-orange">${formatNum(invested)}</span>
-            </div>
-          </div>
-
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
-              <p className="font-bold ">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
+              <p className="font-bold">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
             </div>
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
-              <p className="font-bold ">{privacy}</p>
+              <p className="capitalize font-bold">{privacy}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-100">Base allo</p>
-              <p className="font-bold ">{vault.baseAllocation ? formatCompactNumber(vault.baseAllocation) : 'N/A'}</p>
+              <p className="text-sm text-dark-100">Stage</p>
+              <p className="capitalize font-bold">{vault.vaultStatus}</p>
             </div>
           </div>
         </div>
