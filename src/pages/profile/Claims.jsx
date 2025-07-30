@@ -95,8 +95,6 @@ export const Claims = () => {
     rawData: claim, // Keep the original data
   }));
 
-  console.log(selectedClaims);
-
   // Filter claims based on selected filter
   const filteredClaims = formattedClaims.filter(claim => {
     if (activeFilter === 'all') return true;
