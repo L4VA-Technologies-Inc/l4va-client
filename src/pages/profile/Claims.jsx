@@ -102,29 +102,29 @@ export const Claims = () => {
   });
 
   // Get only pending (claimable) items from filtered results
-  const pendingClaims = filteredClaims.filter(claim => claim.status === 'available');
-  const pendingClaimIds = pendingClaims.map(claim => claim.id);
+  // const pendingClaims = filteredClaims.filter(claim => claim.status === 'available');
+  // const pendingClaimIds = pendingClaims.map(claim => claim.id);
 
   // Check if all pending claims are selected
-  const allPendingSelected = pendingClaimIds.length > 0 && pendingClaimIds.every(id => selectedClaims.includes(id));
+  // const allPendingSelected = pendingClaimIds.length > 0 && pendingClaimIds.every(id => selectedClaims.includes(id));
 
-  const toggleClaimSelection = claimId => {
-    setSelectedClaims(prev => (prev.includes(claimId) ? prev.filter(id => id !== claimId) : [...prev, claimId]));
-  };
+  // const toggleClaimSelection = claimId => {
+  //   setSelectedClaims(prev => (prev.includes(claimId) ? prev.filter(id => id !== claimId) : [...prev, claimId]));
+  // };
 
-  const handleSelectAllPending = () => {
-    if (allPendingSelected) {
-      // Deselect all pending claims
-      setSelectedClaims(prev => prev.filter(id => !pendingClaimIds.includes(id)));
-    } else {
-      // Select all pending claims
-      setSelectedClaims(prev => [...new Set([...prev, ...pendingClaimIds])]);
-    }
-  };
+  // const handleSelectAllPending = () => {
+  //   if (allPendingSelected) {
+  //     // Deselect all pending claims
+  //     setSelectedClaims(prev => prev.filter(id => !pendingClaimIds.includes(id)));
+  //   } else {
+  //     // Select all pending claims
+  //     setSelectedClaims(prev => [...new Set([...prev, ...pendingClaimIds])]);
+  //   }
+  // };
 
-  const handleClaimSelected = () => {
-    console.log('Claiming selected items:', selectedClaims);
-  };
+  // const handleClaimSelected = () => {
+  //   console.log('Claiming selected items:', selectedClaims);
+  // };
 
   // Reusable class combinations
   const getCardClasses = claim =>
@@ -145,14 +145,14 @@ export const Claims = () => {
       'text-steel-300 hover:text-orange-400 hover:bg-steel-800': activeFilter !== value,
     });
 
-  const getCheckboxClasses = (isSelected, isPending = true) =>
-    clsx('w-6 h-6 rounded-full border-2 transition-all', {
-      'bg-orange-500 border-orange-500': isSelected && isPending,
-      'border-steel-600 hover:border-orange-400': !isSelected && isPending,
-      'bg-green-500': !isPending,
-      'cursor-pointer': isPending,
-      'cursor-not-allowed opacity-50': !isPending,
-    });
+  // const getCheckboxClasses = (isSelected, isPending = true) =>
+  //   clsx('w-6 h-6 rounded-full border-2 transition-all', {
+  //     'bg-orange-500 border-orange-500': isSelected && isPending,
+  //     'border-steel-600 hover:border-orange-400': !isSelected && isPending,
+  //     'bg-green-500': !isPending,
+  //     'cursor-pointer': isPending,
+  //     'cursor-not-allowed opacity-50': !isPending,
+  //   });
 
   const ClaimStatusIndicator = ({ claim }) => {
     if (claim.status === 'claimed') {
@@ -172,32 +172,32 @@ export const Claims = () => {
     );
   };
 
-  const SelectionCheckbox = ({ claim }) => {
-    const isSelected = selectedClaims.includes(claim.id);
-    const isPending = claim.status === 'available';
+  // const SelectionCheckbox = ({ claim }) => {
+  //   const isSelected = selectedClaims.includes(claim.id);
+  //   const isPending = claim.status === 'available';
 
-    return (
-      <div
-        className={getCheckboxClasses(isSelected, isPending)}
-        onClick={isPending ? () => toggleClaimSelection(claim.id) : undefined}
-        role="checkbox"
-        aria-checked={isSelected}
-        tabIndex={isPending ? 0 : undefined}
-      >
-        {(isSelected || !isPending) && <Check className="w-4 h-4 text-white m-0.5" />}
-      </div>
-    );
-  };
+  //   return (
+  //     <div
+  //       className={getCheckboxClasses(isSelected, isPending)}
+  //       onClick={isPending ? () => toggleClaimSelection(claim.id) : undefined}
+  //       role="checkbox"
+  //       aria-checked={isSelected}
+  //       tabIndex={isPending ? 0 : undefined}
+  //     >
+  //       {(isSelected || !isPending) && <Check className="w-4 h-4 text-white m-0.5" />}
+  //     </div>
+  //   );
+  // };
 
   const ClaimCard = ({ claim }) => (
     <div className={getCardClasses(claim)}>
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <SelectionCheckbox claim={claim} />
           <span className="font-medium text-white text-lg">{claim.vault}</span>
         </div>
         <span className="text-steel-300 text-sm">{claim.date}</span>
-      </div>
+      </div> */}
       <div className="flex items-center gap-3">
         <img
           alt={`${claim.vault} preview`}
@@ -231,7 +231,7 @@ export const Claims = () => {
         <LavaTabs tabs={tabOptions} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+        {/* <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <PrimaryButton
             size="md"
             className="min-w-[140px]"
@@ -250,7 +250,7 @@ export const Claims = () => {
               Claim {selectedClaims.length} Selected
             </PrimaryButton>
           )}
-        </div>
+        </div> */}
         <div className="flex gap-2 flex-wrap">
           {filterOptions.map(option => (
             <button
@@ -279,7 +279,7 @@ export const Claims = () => {
             <table className="w-full">
               <thead>
                 <tr className="text-dark-100 text-sm border-b border-steel-750">
-                  <th className="px-4 py-3 text-left w-12">
+                  {/* <th className="px-4 py-3 text-left w-12">
                     <div
                       className={getCheckboxClasses(allPendingSelected, pendingClaimIds.length > 0)}
                       onClick={pendingClaimIds.length > 0 ? handleSelectAllPending : undefined}
@@ -291,7 +291,7 @@ export const Claims = () => {
                         <Check className="w-4 h-4 text-white m-0.5" />
                       )}
                     </div>
-                  </th>
+                  </th> */}
                   <th className="px-4 py-3 text-left">Vault</th>
                   <th className="px-4 py-3 text-left">Preview</th>
                   <th className="px-4 py-3 text-left">Link</th>
@@ -303,9 +303,9 @@ export const Claims = () => {
               <tbody>
                 {filteredClaims.map(claim => (
                   <tr key={claim.id} className={getTableRowClasses(claim)}>
-                    <td className="px-4 py-3">
+                    {/* <td className="px-4 py-3">
                       <SelectionCheckbox claim={claim} />
-                    </td>
+                    </td> */}
                     <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
                     <td className="px-4 py-3">
                       <img
