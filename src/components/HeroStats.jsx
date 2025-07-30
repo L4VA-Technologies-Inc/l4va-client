@@ -13,7 +13,7 @@ const HeroStats = () => {
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row gap-8">
+    <div className="flex flex-col md:flex-row gap-8">
       {stats.map(stat => (
         <div key={stat.label} className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
           <p>{stat.label}</p>
