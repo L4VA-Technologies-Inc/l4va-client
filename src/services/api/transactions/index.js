@@ -11,14 +11,4 @@ export class TransactionsApiProvider {
     const response = await axiosInstance.post(TransactionsConfigProvider.submitTransaction(), params);
     return response;
   }
-
-  static async getWaitingOwnerTransactions() {
-    const response = await axiosInstance.get(TransactionsConfigProvider.waitingOwnerTransactions());
-    return response;
-  }
-
-  static async generateUpdateTransaction(txId) {
-    const response = await axiosInstance.post(TransactionsConfigProvider.generateUpdateTransaction(txId));
-    return response;
-  }
 }

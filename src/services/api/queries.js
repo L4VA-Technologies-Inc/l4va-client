@@ -91,19 +91,6 @@ export const useSubmitTransaction = () => {
   });
 };
 
-export const useMyPendingTransactions = () => {
-  return useQuery({
-    queryKey: ['waiting-owner-transactions'],
-    queryFn: () => TransactionsApiProvider.getWaitingOwnerTransactions(),
-  });
-};
-
-export const useGenerateUpdateTransaction = () => {
-  return useMutation({
-    mutationFn: txId => TransactionsApiProvider.generateUpdateTransaction(txId),
-  });
-};
-
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({

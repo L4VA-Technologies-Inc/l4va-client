@@ -183,9 +183,6 @@ export const getCountdownName = vault => {
   if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance') {
     return '';
   }
-  if (vault.vaultStatus === 'ready-for-governance') {
-    return 'Ready for governance. Waiting for owner to start governance phase.';
-  }
 
   return 'Contribution starts in:';
 };
