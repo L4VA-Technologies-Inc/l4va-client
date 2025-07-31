@@ -16,8 +16,6 @@ export const VAULT_STATUSES = {
   CONTRIBUTION: 'contribution',
   ACQUIRE: 'acquire',
   LOCKED: 'locked',
-  READY_FOR_GOVERNANCE: 'ready-for-governance',
-  GOVERNANCE: 'governance',
   FAILED: 'failed',
 };
 
