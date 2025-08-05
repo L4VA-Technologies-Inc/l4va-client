@@ -2,11 +2,10 @@ import { LockIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { VAULT_STATUSES } from '../vaults/constants/vaults.constants';
-import LavaProgressBar from '../shared/LavaProgressBar';
-
-import { formatNum } from '@/utils/core.utils';
+import LavaProgressBar from '@/components/shared/LavaProgressBar';
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
+import { formatNum } from '@/utils/core.utils';
 
 const calculateProgress = (current, target) => {
   if (!target || target <= 0) return 0;
@@ -30,10 +29,7 @@ export const VaultContribution = ({ vault }) => {
 
   const acquireProgress = useMemo(
     () =>
-      !vault.invested ||
-      vault.invested <= 0 ||
-      !vault.requireReservedCostUsd ||
-      vault.requireReservedCostUsd <= 0
+      !vault.invested || vault.invested <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
         ? 0
         : (vault.invested / vault.requireReservedCostUsd) * 100,
     [vault.invested, vault.requireReservedCostUsd]
@@ -130,16 +126,15 @@ export const VaultContribution = ({ vault }) => {
             <LavaProgressBar
               className="h-2 rounded-full bg-steel-750 mb-4"
               segments={[
-                // Pre-threshold segment (orange gradient)
                 {
                   progress: Math.min(acquireProgress, 100),
-                        progress: Math.max(0, acquireProgress - 100), // Ensure progress is never negative
-                        className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
+                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                },
                 // Post-threshold segment (red gradient) - only show if threshold is met
                 ...(reserveThresholdMet
                   ? [
                       {
-                        progress: acquireProgress - 100, // This would be the progress past reserve threshold
+                        progress: Math.max(0, acquireProgress - 100),
                         className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
                       },
                     ]
