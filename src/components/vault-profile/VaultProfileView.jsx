@@ -14,6 +14,8 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
 
+const BUTTON_DISABLE_THRESHOLD_MS = 5 * 60 * 1000;
+
 export const VaultProfileView = ({ vault }) => {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('Assets');
@@ -24,16 +26,23 @@ export const VaultProfileView = ({ vault }) => {
   const handleTabChange = tab => setActiveTab(tab);
 
   const renderActionButton = () => {
+    // Disable Contribute and Acquire buttons if time less than 5 min
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
         handleClick: () => openModal('ContributeModal', { vault }),
-        available: vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION,
+        available:
+          vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
+          new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
       },
       Acquire: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
-        available: vault.vaultStatus === VAULT_STATUSES.ACQUIRE,
+        available:
+          vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
+          new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
       },
       Governance: {
         text: 'Create Proposal',
@@ -111,11 +120,13 @@ export const VaultProfileView = ({ vault }) => {
           </div>
           <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
           <div className="mb-6">
-            <VaultCountdown
-              className="h-[65px]"
-              endTime={getCountdownTime(vault)}
-              isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
-            />
+            {vault.vaultStatus !== 'ready-for-governance' && (
+              <VaultCountdown
+                className="h-[65px]"
+                endTime={getCountdownTime(vault)}
+                isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
+              />
+            )}
           </div>
           <VaultContribution vault={vault} />
         </div>

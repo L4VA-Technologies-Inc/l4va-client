@@ -1,5 +1,4 @@
 import { TransactionsConfigProvider } from '@/services/api/transactions/config';
-
 import { axiosInstance } from '@/services/api';
 
 export class TransactionsApiProvider {

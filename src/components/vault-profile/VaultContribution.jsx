@@ -29,7 +29,13 @@ export const VaultContribution = ({ vault }) => {
   );
 
   const acquireProgress = useMemo(
-    () => calculateProgress(vault.invested, vault.requireReservedCostUsd),
+    () =>
+      !vault.invested ||
+      vault.invested <= 0 ||
+      !vault.requireReservedCostUsd ||
+      vault.requireReservedCostUsd <= 0
+        ? 0
+        : (vault.invested / vault.requireReservedCostUsd) * 100,
     [vault.invested, vault.requireReservedCostUsd]
   );
 
@@ -106,7 +112,7 @@ export const VaultContribution = ({ vault }) => {
           {vault.assetsWhitelist?.length > 0 && (
             <button onClick={() => setShowMoreInfo(!showMoreInfo)}>{showMoreInfo ? 'Less' : 'More'} info</button>
           )}
-          {vault.vaultStatus === VAULT_STATUSES.ACQUIRE && (
+          {(vault.vaultStatus === VAULT_STATUSES.ACQUIRE || vault.vaultStatus === VAULT_STATUSES.LOCKED) && (
             <div className="absolute bg-[#181A2A] opacity-70 w-full h-full top-0 left-0 flex items-center justify-center">
               <LockIcon className="h-[20px]" />
             </div>
@@ -114,7 +120,7 @@ export const VaultContribution = ({ vault }) => {
         </div>
       </div>
       <div className="relative">
-        {vault.vaultStatus === VAULT_STATUSES.ACQUIRE && (
+        {(vault.vaultStatus === VAULT_STATUSES.ACQUIRE || vault.vaultStatus === VAULT_STATUSES.LOCKED) && (
           <div>
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
@@ -127,13 +133,13 @@ export const VaultContribution = ({ vault }) => {
                 // Pre-threshold segment (orange gradient)
                 {
                   progress: Math.min(acquireProgress, 100),
-                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
-                },
+                        progress: Math.max(0, acquireProgress - 100), // Ensure progress is never negative
+                        className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
                 // Post-threshold segment (red gradient) - only show if threshold is met
                 ...(reserveThresholdMet
                   ? [
                       {
-                        progress: 0, // This would be the progress past reserve threshold
+                        progress: acquireProgress - 100, // This would be the progress past reserve threshold
                         className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
                       },
                     ]

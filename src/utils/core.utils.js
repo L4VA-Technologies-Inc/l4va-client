@@ -183,6 +183,7 @@ export const getCountdownName = vault => {
   if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance') {
     return '';
   }
+
   return 'Contribution starts in:';
 };
 
