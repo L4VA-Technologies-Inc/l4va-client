@@ -9,69 +9,18 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
 import { ClaimsApiProvider } from '@/services/api/claims';
 
-// const mockClaims = [
-//   {
-//     id: 1,
-//     vault: 'Vault 1',
-//     image: '/assets/vaults/space-man-1.webp',
-//     link: 'https://vault.link',
-//     date: '5/12/25',
-//     reward: '1658 ADA',
-//     status: 'claimed', // Already claimed
-//   },
-//   {
-//     id: 2,
-//     vault: 'Vault 2',
-//     image: '/assets/vaults/space-man-2.webp',
-//     link: 'https://vault.link',
-//     date: '3/22/25',
-//     reward: '40000 SNEK',
-//     status: 'pending', // Available to claim
-//   },
-//   {
-//     id: 3,
-//     vault: 'Vault 3',
-//     image: '/assets/vaults/space-man.webp',
-//     link: 'https://vault.link',
-//     date: '12/9/24',
-//     reward: '12000 L4VA',
-//     status: 'pending', // Available to claim
-//   },
-//   {
-//     id: 4,
-//     vault: 'Vault 4',
-//     image: '/assets/vaults/space-man-1.webp',
-//     link: 'https://vault.link',
-//     date: '6/2/25',
-//     reward: '435 ADA',
-//     status: 'claimed', // Already claimed
-//   },
-//   {
-//     id: 5,
-//     vault: 'Vault 5',
-//     image: '/assets/vaults/space-man-2.webp',
-//     link: 'https://vault.link',
-//     date: '2/16/25',
-//     reward: '282 L4VA',
-//     status: 'pending', // Available to claim
-//   },
-//   {
-//     id: 6,
-//     vault: 'Vault 6',
-//     image: '/assets/vaults/space-man.webp',
-//     link: 'https://vault.link',
-//     date: '4/4/25',
-//     reward: '435 ADA',
-//     status: 'claimed', // Already claimed
-//   },
-// ];
-
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
 const filterOptions = [
   { value: 'all', label: 'All Claims' },
   { value: 'available', label: 'Available to Claim' },
   { value: 'claimed', label: 'Already Claimed' },
 ];
+
+const TAB_TO_CLAIM_TYPES = {
+  Distribution: ['contributor', 'acquirer'],
+  'Distribution to Terminate': ['final_distribution'],
+  $L4VA: ['l4va'],
+};
 
 const ASSET_TYPE_LABELS = {
   contributor: 'Contributor Reward',
@@ -96,11 +45,19 @@ export const Claims = () => {
     date: new Date(claim.created_at).toLocaleDateString(),
     reward: `${parseInt(claim.amount).toLocaleString()} VT`,
     status: claim.status || 'available',
+    type: claim.type,
     rawData: claim, // Keep the original data
   }));
 
   // Filter claims based on selected filter
   const filteredClaims = formattedClaims.filter(claim => {
+    // Filter by active tab first
+    const allowedTypes = TAB_TO_CLAIM_TYPES[activeTab];
+    if (!allowedTypes.includes(claim.type)) {
+      return false;
+    }
+
+    // Then filter by status
     if (activeFilter === 'all') return true;
     return claim.status === activeFilter;
   });
