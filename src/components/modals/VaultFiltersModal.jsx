@@ -188,6 +188,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         <div>
           <h3 className="text-lg font-medium mb-3">Verified</h3>
           {renderOptions(OPTIONS.verified, 'verified', toggleArrayFilter, true)}
+          
         </div> */}
       </div>
     </ModalWrapper>
