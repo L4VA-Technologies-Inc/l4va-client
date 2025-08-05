@@ -12,7 +12,7 @@ export const ProposalConfirmationModal = ({ onClose, proposalData, onConfirm }) 
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 border-none max-h-[90vh] flex flex-col">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">Confirm Proposal</DialogTitle>
+          <DialogTitle className="text-2xl text-center font-medium">Confirm</DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 flex flex-col gap-8">
