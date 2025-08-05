@@ -27,7 +27,6 @@ export const ConnectButton = () => {
           </PrimaryButton>
         )}
       </div>
-
       <div className="flex sm:hidden">
         {!isAuthenticated ? (
           <button className="p-2 rounded-md bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>

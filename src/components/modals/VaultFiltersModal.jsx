@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 import { VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
+import { ModalWrapper } from '@/components/shared/ModalWrapper';
 
 export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
@@ -62,8 +63,6 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     onClose();
   };
 
-  if (!isOpen) return null;
-
   const renderOptions = (options, activeValue, onClick, isMultiple = false) => (
     <div className="flex flex-wrap gap-2">
       {options.map(option => (
@@ -114,74 +113,13 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-steel-950 border border-steel-850 rounded-lg w-full max-w-xl h-[90vh] flex flex-col text-white">
-        <div className="flex items-center justify-between p-4 border-b border-steel-850">
-          <h2 className="text-xl font-semibold">Vault Filters</h2>
-          <button onClick={onClose} className="p-2 hover:bg-steel-850 rounded-lg">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 text-sm">
-          <div>
-            <h3 className="text-lg font-medium mb-3">Vault Tags</h3>
-            <div className="flex flex-wrap gap-2">
-              {VAULT_TAGS_OPTIONS.map(tag => (
-                <Chip
-                  key={tag.value}
-                  label={tag.label}
-                  value={tag.value}
-                  selected={filters.tags.includes(tag.value)}
-                  onSelect={() => toggleArrayFilter('tags', tag.value)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium mb-3">Reserve Met</h3>
-            {renderOptions(OPTIONS.reserve, 'reserveMet', setSingleFilter)}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium mb-3">Vault Stage</h3>
-            {renderOptions(OPTIONS.vaultStages, 'vaultStage', setSingleFilter)}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium mb-3">Initial % Vault Offered</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="number"
-                placeholder="Min %"
-                value={filters.initialVaultPercentage.min}
-                onChange={e => handleRangeChange('initialVaultPercentage', 'min', e.target.value)}
-                className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              />
-              <input
-                type="number"
-                placeholder="Max %"
-                value={filters.initialVaultPercentage.max}
-                onChange={e => handleRangeChange('initialVaultPercentage', 'max', e.target.value)}
-                className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              />
-            </div>
-          </div>
-
-          {renderRangeField('TVL', 'tvl')}
-          {renderRangeField('Market Cap', 'marketCap')}
-
-          <div>
-            <h3 className="text-lg font-medium mb-3">Governance</h3>
-            {renderOptions(OPTIONS.governance, 'governance', setSingleFilter)}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium mb-3">Verified</h3>
-            {renderOptions(OPTIONS.verified, 'verified', toggleArrayFilter, true)}
-          </div>
-        </div>
-        <div className="flex justify-between items-center p-4 border-t border-steel-850 bg-steel-950">
+    <ModalWrapper
+      isOpen={isOpen}
+      title="Vault Filters"
+      modalName="VaultFiltersModal"
+      onClose={onClose}
+      footer={
+        <div className="flex justify-between items-center border-t border-steel-850">
           <button onClick={clearFilters} className="text-gray-400 hover:text-white">
             Clear All
           </button>
@@ -194,7 +132,64 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
             </PrimaryButton>
           </div>
         </div>
+      }
+    >
+      <div className="flex-1 overflow-y-auto space-y-6 text-sm">
+        <div>
+          <h3 className="text-lg font-medium mb-3">Vault Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {VAULT_TAGS_OPTIONS.map(tag => (
+              <Chip
+                key={tag.value}
+                label={tag.label}
+                value={tag.value}
+                selected={filters.tags.includes(tag.value)}
+                onSelect={() => toggleArrayFilter('tags', tag.value)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Reserve Met</h3>
+          {renderOptions(OPTIONS.reserve, 'reserveMet', setSingleFilter)}
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Vault Stage</h3>
+          {renderOptions(OPTIONS.vaultStages, 'vaultStage', setSingleFilter)}
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Initial % Vault Offered</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="number"
+              placeholder="Min %"
+              value={filters.initialVaultPercentage.min}
+              onChange={e => handleRangeChange('initialVaultPercentage', 'min', e.target.value)}
+              className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+            />
+            <input
+              type="number"
+              placeholder="Max %"
+              value={filters.initialVaultPercentage.max}
+              onChange={e => handleRangeChange('initialVaultPercentage', 'max', e.target.value)}
+              className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+            />
+          </div>
+        </div>
+        {renderRangeField('TVL', 'tvl')}
+        {renderRangeField('Market Cap', 'marketCap')}
+        <div>
+          <h3 className="text-lg font-medium mb-3">Governance</h3>
+          {renderOptions(OPTIONS.governance, 'governance', setSingleFilter)}
+        </div>
+        <div>
+          <h3 className="text-lg font-medium mb-3">Verified</h3>
+          {renderOptions(OPTIONS.verified, 'verified', toggleArrayFilter, true)}
+        </div>
       </div>
-    </div>
+    </ModalWrapper>
   );
 };

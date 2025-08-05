@@ -1,10 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
-import { VaultCountdown } from '../vault-profile/VaultCountdown';
-
+import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-import { formatCompactNumber, formatNum } from '@/utils/core.utils';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
@@ -15,7 +14,7 @@ type VaultCardProps = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
-  const { id, name, description, privacy, vaultImage, ftTokenImg, invested, socialLinks = [] } = vault;
+  const { id, name, description, privacy, vaultImage, ftTokenImg, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -42,7 +41,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             </div>
           )}
           {shouldShowCountdown && (
-            <div className="absolute bottom-0 left-0 w-3/4 ">
+            <div className="absolute bottom-0 left-0 w-3/4">
               <VaultCountdown
                 className="text-base font-normal"
                 color="yellow"
@@ -62,29 +61,22 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               </div>
             )}
             <div>
-              <h2 className="font-bold ">{name || 'No name'}</h2>
+              <h2 className="font-bold">{name || 'No name'}</h2>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>
           </div>
-          <div className="mb-6 text-sm font-russo">
-            <div className="mb-2 flex justify-between ">
-              <span>Total Raised:</span>
-              <span className="text-gradient-orange">${formatNum(invested)}</span>
-            </div>
-          </div>
-
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
-              <p className="font-bold ">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
+              <p className="font-bold">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
             </div>
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
-              <p className="font-bold ">{privacy}</p>
+              <p className="capitalize font-bold">{privacy}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-100">Base allo</p>
-              <p className="font-bold ">{vault.baseAllocation ? formatCompactNumber(vault.baseAllocation) : 'N/A'}</p>
+              <p className="text-sm text-dark-100">Stage</p>
+              <p className="capitalize font-bold">{vault.vaultStatus}</p>
             </div>
           </div>
         </div>

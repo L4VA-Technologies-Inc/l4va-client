@@ -4,19 +4,22 @@ import toast from 'react-hot-toast';
 
 import { NFTItem } from './NFTItem';
 import { FTItem } from './FTItem';
-import { ContributionDetails } from './ContributionDetails';
+import { SelectedAssetItem } from './SelectedAssetItem';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import { TapToolsApiProvider } from '@/services/api/taptools';
+import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { Spinner } from '@/components/Spinner';
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import SecondaryButton from '@/components/shared/SecondaryButton';
+import MetricCard from '@/components/shared/MetricCard';
+import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
 const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
-export const ContributeModal = ({ vault, onClose }) => {
+export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [assets, setAssets] = useState([]);
@@ -217,48 +220,85 @@ export const ContributeModal = ({ vault, onClose }) => {
     ));
   };
 
+  const renderFooter = () => (
+    <div className="flex justify-between items-center">
+      <div className="text-sm text-gray-400">
+        {selectedNFTs.length} asset{selectedNFTs.length !== 1 ? 's' : ''} selected
+      </div>
+      <div className="flex gap-2">
+        <SecondaryButton onClick={onClose} size="sm">
+          Close
+        </SecondaryButton>
+        <PrimaryButton
+          disabled={contributionDetails.totalAssets === 0 || status !== 'idle'}
+          onClick={handleContribute}
+          size="sm"
+          className="capitalize"
+        >
+          {status === 'idle' ? 'Contribute' : status}
+        </PrimaryButton>
+      </div>
+    </div>
+  );
+
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-6xl p-0 bg-steel-950 text-white border-none">
-        <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
-          <DialogTitle className="text-2xl text-center font-medium">Contribute to {name}</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col md:flex-row gap-4 p-4">
-          <div className="w-full md:w-1/2 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-medium">Available Assets</h2>
-              <LavaTabs
-                activeTab={activeTab}
-                className="bg-steel-850"
-                tabs={['NFT', 'FT']}
-                onTabChange={setActiveTab}
-              />
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Contribute to ${name}`}
+      maxHeight="90vh"
+      footer={renderFooter()}
+    >
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-medium">Available Assets</h2>
+            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={['NFT', 'FT']} onTabChange={setActiveTab} />
+          </div>
+          <div className="space-y-1 h-full flex flex-col">
+            <div className="flex justify-between text-dark-100 text-sm px-2">
+              <span>Asset</span>
+              <span>Policy ID</span>
             </div>
-            <div className="space-y-1 h-full flex flex-col">
-              <div className="flex justify-between text-dark-100 text-sm px-2">
-                <span>Asset</span>
-                <span>Policy ID</span>
-              </div>
-              <div className="space-y-2 flex-1 overflow-y-auto pr-2">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Spinner />
-                  </div>
-                ) : (
-                  renderAssetList()
-                )}
-              </div>
+            <div className="space-y-2 flex-1 overflow-y-auto pr-2 max-h-64">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Spinner />
+                </div>
+              ) : (
+                renderAssetList()
+              )}
             </div>
           </div>
-          <ContributionDetails
-            contributionDetails={contributionDetails}
-            selectedNFTs={selectedNFTs}
-            status={status}
-            onContribute={handleContribute}
-            onRemove={removeNFT}
-          />
         </div>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-3">
+          <h3 className="text-lg font-medium">Selected Assets ({selectedNFTs.length})</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+            {selectedNFTs.length > 0 ? (
+              selectedNFTs.map(asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />)
+            ) : (
+              <div className="text-center py-6 text-dark-100 bg-steel-900/50 rounded-lg border border-steel-800/50">
+                <p className="mb-2">No assets selected</p>
+                <p className="text-sm">Select assets from above to contribute</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="space-y-6">
+          <h2 className="text-xl font-medium">Contribution Summary</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard label="Total Assets Selected" value={contributionDetails.totalAssets} />
+            <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard label="Estimated Value" value={`$${contributionDetails.estimatedValue.toLocaleString()}`} />
+            <MetricCard
+              label="Estimated TICKER VAL ($VAL)"
+              value={contributionDetails.estimatedTickerVal.toLocaleString()}
+            />
+          </div>
+        </div>
+      </div>
+    </ModalWrapper>
   );
 };

@@ -26,6 +26,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const { data, isLoading, error } = useVaults(TAB_TO_FILTER[activeTab]);
 
   const vaults = data?.data?.items || [];
+  //Test
 
   return (
     <VaultList
