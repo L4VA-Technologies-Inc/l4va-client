@@ -8,6 +8,7 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
 import { ClaimsApiProvider } from '@/services/api/claims';
+import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
 const filterOptions = [
@@ -99,6 +100,7 @@ export const Claims = () => {
       toast.success('Claim successful! Your item has been claimed.');
       setSelectedClaims(prev => [...prev, claimId]); // Add to selected claims after claiming
     } catch (error) {
+      console.error(error);
       toast.error('Failed to claim item. Please try again.');
     }
   };
@@ -318,11 +320,7 @@ export const Claims = () => {
               <ClaimCard key={claim.id} claim={claim} />
             ))}
           </div>
-          {filteredClaims.length === 0 && (
-            <div className="text-center py-12 text-steel-400">
-              <p>No claims found for the selected filter.</p>
-            </div>
-          )}
+          {filteredClaims.length === 0 && <NoDataPlaceholder message="No claims found" />}
         </>
       )}
     </div>
