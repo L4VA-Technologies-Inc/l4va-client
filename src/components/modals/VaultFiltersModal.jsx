@@ -180,15 +180,15 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
           </div>
         </div>
         {renderRangeField('TVL', 'tvl')}
-        {renderRangeField('Market Cap', 'marketCap')}
-        <div>
+        {/* {renderRangeField('Market Cap', 'marketCap')} */}
+        {/* <div>
           <h3 className="text-lg font-medium mb-3">Governance</h3>
           {renderOptions(OPTIONS.governance, 'governance', setSingleFilter)}
         </div>
         <div>
           <h3 className="text-lg font-medium mb-3">Verified</h3>
           {renderOptions(OPTIONS.verified, 'verified', toggleArrayFilter, true)}
-        </div>
+        </div> */}
       </div>
     </ModalWrapper>
   );
