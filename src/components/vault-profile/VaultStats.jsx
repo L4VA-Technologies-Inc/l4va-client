@@ -7,7 +7,7 @@ export const VaultStats = ({ assetValue = 0, ftGains = 'N/A', fdv = 'N/A', fdvTv
       value: assetValue ? `$${formatNum(assetValue)}` : 'N/A',
     },
     {
-      label: 'FT GAINS',
+      label: 'VT GAINS',
       value: ftGains,
     },
     {
