@@ -19,14 +19,14 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
     <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
       <div className="space-y-12">
         <div>
-          <p className="uppercase font-semibold text-dark-100">FT TOKEN SUPPLY</p>
+          <p className="uppercase font-semibold text-dark-100">VT TOKEN SUPPLY</p>
           <p>{data.ftTokenSupply ? formatNum(data.ftTokenSupply) : 'Not set'}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">FT Token image</p>
+          <p className="uppercase font-semibold text-dark-100">VT Token image</p>
           {data.ftTokenImg ? (
             <div className="mt-2 relative w-full h-32 overflow-hidden rounded-lg">
-              <img alt="FT Token Image" className="w-full md:w-1/2 h-full object-cover" src={data.ftTokenImg} />
+              <img alt="VT Token Image" className="w-full md:w-1/2 h-full object-cover" src={data.ftTokenImg} />
             </div>
           ) : (
             <p>No image</p>

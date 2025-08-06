@@ -31,7 +31,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <p>{VAULT_PRIVACY_OPTIONS.find(option => option.name === data.privacy)?.label}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">FT Token Ticker</p>
+          <p className="uppercase font-semibold text-dark-100">VT Token Ticker</p>
           <p>{data.vaultTokenTicker || 'Not set'}</p>
         </div>
         <div>

@@ -20,14 +20,13 @@ import { transformYupErrors } from '@/utils/core.utils';
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,
+  MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-
-const MIN_VLRM_REQUIRED = 1000;
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);

@@ -2,6 +2,7 @@ import * as yup from 'yup';
 
 export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 min in ms
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 min in ms
+export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
@@ -140,7 +141,12 @@ export const vaultSchema = yup.object({
       then: schema => schema.required('Time is required for custom window type'),
       otherwise: schema => schema.nullable(),
     }),
-  assetsWhitelist: yup.array().default([]).required('Assets whitelist is required'),
+  assetsWhitelist: yup
+    .array()
+    .default([])
+    .min(1, 'Assets whitelist must have at least 1 item')
+    .max(10, 'Assets whitelist can have a maximum of 10 items')
+    .required('Assets whitelist is required'),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')

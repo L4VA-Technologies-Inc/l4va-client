@@ -30,10 +30,7 @@ export const VaultContribution = ({ vault }) => {
 
   const acquireProgress = useMemo(
     () =>
-      !vault.invested ||
-      vault.invested <= 0 ||
-      !vault.requireReservedCostUsd ||
-      vault.requireReservedCostUsd <= 0
+      !vault.invested || vault.invested <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
         ? 0
         : (vault.invested / vault.requireReservedCostUsd) * 100,
     [vault.invested, vault.requireReservedCostUsd]
@@ -133,8 +130,8 @@ export const VaultContribution = ({ vault }) => {
                 // Pre-threshold segment (orange gradient)
                 {
                   progress: Math.min(acquireProgress, 100),
-                        progress: Math.max(0, acquireProgress - 100), // Ensure progress is never negative
-                        className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
+                  className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
+                },
                 // Post-threshold segment (red gradient) - only show if threshold is met
                 ...(reserveThresholdMet
                   ? [

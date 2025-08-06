@@ -36,18 +36,19 @@ export const Faq = () => {
       number: 2,
       title: 'Contribute',
       description:
-        'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault FT.',
+        'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault Tokens.',
     },
     {
       number: 3,
       title: 'Acquire',
       description:
-        'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault FT.',
+        'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault Tokens.',
     },
     {
       number: 4,
       title: 'Govern',
-      description: 'Once successfully locked the Vault FT holders now control the fate of the vault and its assets.',
+      description:
+        'Once successfully locked the Vault Tokens holders now control the fate of the vault and its assets.',
     },
   ];
 

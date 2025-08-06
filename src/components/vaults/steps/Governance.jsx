@@ -46,7 +46,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
         <div>
           <LavaInput
             error={errors.ftTokenSupply}
-            label="FT TOKEN SUPPLY"
+            label="VT TOKEN SUPPLY"
             name="ftTokenSupply"
             placeholder="XXX,XXX,XXX"
             value={data.ftTokenSupply || ''}
@@ -57,7 +57,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           <UploadZone
             required
             image={data.ftTokenImg}
-            label="FT Token Image"
+            label="VT Token Image"
             setImage={image => updateField('ftTokenImg', image)}
           />
           {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
@@ -112,7 +112,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.creationThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum FT as % of total FT supply required to create a proposal"
+              hint="Minimum VT as % of total VT supply required to create a proposal"
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
               placeholder="XX.XX"
@@ -126,7 +126,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.cosigningThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum amount of FT that must be present in a stake for it to be able to cosign a transaction"
+              hint="Minimum amount of VT that must be present in a stake for it to be able to cosign a transaction"
               label="COSIGNING THRESHOLD (%)"
               name="cosigningThreshold"
               placeholder="XX.XX"
@@ -140,7 +140,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.startThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum FT as % of total FT supply co-signed to start voting phase"
+              hint="Minimum VT as % of total VT supply co-signed to start voting phase"
               label="START THRESHOLD (%)"
               name="startThreshold"
               placeholder="XX.XX"
@@ -154,7 +154,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum FT as % of total staked FT for vote to be valid"
+              hint="Minimum VT as % of total staked VT for vote to be valid"
               label="VOTE THRESHOLD (%)"
               name="voteThreshold"
               placeholder="XX.XX"
@@ -168,7 +168,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum FT as % of total FT voted, for the largest vote tallied for proposal to win"
+              hint="Minimum VT as % of total VT voted, for the largest vote tallied for proposal to win"
               label="EXECUTION THRESHOLD (%)"
               name="executionThreshold"
               placeholder="XX.XX"
