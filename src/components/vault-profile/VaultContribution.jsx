@@ -2,11 +2,10 @@ import { LockIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { VAULT_STATUSES } from '../vaults/constants/vaults.constants';
-import LavaProgressBar from '../shared/LavaProgressBar';
-
-import { formatNum } from '@/utils/core.utils';
+import LavaProgressBar from '@/components/shared/LavaProgressBar';
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
+import { formatNum } from '@/utils/core.utils';
 
 const calculateProgress = (current, target) => {
   if (!target || target <= 0) return 0;
