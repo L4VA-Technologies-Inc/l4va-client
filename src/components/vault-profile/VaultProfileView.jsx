@@ -142,7 +142,7 @@ export const VaultProfileView = ({ vault }) => {
                 ftGains={vault.ftGains || 'N/A'}
                 fdv={vault.fdv || 'N/A'}
                 fdvTvl={vault.fdvTvl || 'N/A'}
-                tvl={vault.tvl || 'N/A'}
+                tvl={vault.assetsPrices.totalValueUsd ? `${vault.assetsPrices.totalValueUsd}$` : 'N/A'}
               />
             </div>
             <div className="flex justify-center mb-6">{renderActionButton()}</div>

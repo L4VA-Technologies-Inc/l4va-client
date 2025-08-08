@@ -29,10 +29,10 @@ export const VaultContribution = ({ vault }) => {
 
   const acquireProgress = useMemo(
     () =>
-      !vault.invested || vault.invested <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
+      vault.assetsPrices.totalValueUsd <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
         ? 0
-        : (vault.invested / vault.requireReservedCostUsd) * 100,
-    [vault.invested, vault.requireReservedCostUsd]
+        : (vault.assetsPrices.totalValueUsd / vault.requireReservedCostUsd) * 100,
+    [vault.assetsPrices.totalValueUsd, vault.requireReservedCostUsd]
   );
 
   const contributionProgress = useMemo(
