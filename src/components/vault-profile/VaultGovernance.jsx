@@ -2,11 +2,22 @@ import { useState } from 'react';
 import { CheckCircle, XCircle, ArrowRight, Check } from 'lucide-react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
+import { LavaSelect } from '@/components/shared/LavaSelect';
 import { formatDate } from '@/utils/core.utils';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
   const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
+
+  const tabOptions = PROPOSAL_TABS.map(tab => ({
+    value: tab,
+    label: tab,
+  }));
+
+  const handleTabSelect = selectedTab => {
+    setActiveTab(selectedTab);
+  };
 
   const proposals = [
     {
@@ -59,23 +70,37 @@ export const VaultGovernance = ({ vault }) => {
   return (
     <div className="bg-gray-900 text-white min-h-screen p-6">
       <div className="flex flex-col items-center mb-6">
-        <img
-          alt={vault.name}
-          className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
-          src={vault.imageUrl || '/assets/vaults/space-man.webp'}
-        />
+        {vault.imageUrl ? (
+          <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.imageUrl} />
+        ) : (
+          <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
+            <L4vaIcon className="h-8 w-8 text-white" />
+          </div>
+        )}
         <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
       <div className="mb-6">
-        <LavaTabs
-          activeTab={activeTab}
-          activeTabClassName="text-primary"
-          className="w-full bg-gray-800"
-          inactiveTabClassName="text-dark-100"
-          tabClassName="flex-1 text-center"
-          tabs={PROPOSAL_TABS}
-          onTabChange={setActiveTab}
-        />
+        <div className="md:hidden mb-4">
+          <LavaSelect
+            label="Select Tab"
+            options={tabOptions}
+            value={activeTab}
+            onChange={handleTabSelect}
+            placeholder="Select a tab"
+          />
+        </div>
+
+        <div className="hidden md:block">
+          <LavaTabs
+            activeTab={activeTab}
+            activeTabClassName="text-primary"
+            className="w-full bg-gray-800"
+            inactiveTabClassName="text-dark-100"
+            tabClassName="flex-1 text-center"
+            tabs={PROPOSAL_TABS}
+            onTabChange={setActiveTab}
+          />
+        </div>
       </div>
       <div className="space-y-6">
         {filteredProposals.map((proposal, index) => (

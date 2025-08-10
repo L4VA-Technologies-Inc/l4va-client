@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 const BUTTON_DISABLE_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -30,7 +31,7 @@ export const VaultProfileView = ({ vault }) => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        handleClick: () => openModal('ContributeModal', { vault }),
+        handleClick: () => openModal('CreateProposalModal', { vault }),
         available:
           vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
           new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
@@ -46,6 +47,7 @@ export const VaultProfileView = ({ vault }) => {
       },
       Governance: {
         text: 'Create Proposal',
+        available: true,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,
@@ -116,7 +118,13 @@ export const VaultProfileView = ({ vault }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl p-4">
           <div className="overflow-hidden rounded-lg">
-            <img src={vault.vaultImage} alt={vault.name} className="object-cover w-full h-auto max-h-[380px]" />
+            {vault.vaultImage ? (
+              <img src={vault.vaultImage} alt={vault.name} className="object-cover w-full h-auto max-h-[380px]" />
+            ) : (
+              <div className="w-full h-[380px] bg-steel-850 flex items-center justify-center">
+                <L4vaIcon className="h-16 w-16 text-white" />
+              </div>
+            )}
           </div>
           <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
           <div className="mb-6">

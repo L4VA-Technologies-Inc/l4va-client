@@ -1,13 +1,16 @@
 import { InfoRow } from '@/components/ui/InfoRow';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 export const VaultSettings = ({ vault }) => (
   <>
     <div className="flex flex-col items-center mb-6">
-      <img
-        alt={vault.name}
-        className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
-        src={vault.vaultImage || '/assets/vaults/space-man.webp'}
-      />
+      {vault.vaultImage ? (
+        <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.vaultImage} />
+      ) : (
+        <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
+          <L4vaIcon className="h-8 w-8 text-white" />
+        </div>
+      )}
       <h1 className="text-3xl font-bold">{vault.name}</h1>
     </div>
     <div className="bg-steel-750 rounded-lg p-4">
