@@ -1,4 +1,5 @@
 import { VaultList } from './VaultsList';
+
 import { useMyDraftVaults } from '@/services/api/queries';
 
 export const FeaturedVaultsList = ({ className = '' }) => {

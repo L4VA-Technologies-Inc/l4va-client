@@ -18,6 +18,11 @@ import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformYupErrors } from '@/utils/core.utils';
 import {
+  updateStepsCompletionStatus,
+  updateStepErrorIndicators as updateStepErrors,
+} from '@/components/vaults/utils/stepCompletion';
+import { isStepFullyComplete } from '@/utils/stepValidation';
+import {
   CREATE_VAULT_STEPS,
   initialVaultState,
   MIN_VLRM_REQUIRED,
@@ -58,49 +63,28 @@ export const CreateVaultForm = ({ vault }) => {
     scrollToTop();
   }, [currentStep]);
 
+  useEffect(() => {
+    setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, currentStep));
+  }, [vaultData, currentStep]);
+
   const handleNextStep = () => {
-    const nextStep = currentStep + 1;
-    setCurrentStep(nextStep);
-    setSteps(prevSteps =>
-      prevSteps.map(step => {
-        if (step.id === currentStep) {
-          return { ...step, status: 'completed' };
-        }
-        if (step.id === nextStep) {
-          return { ...step, status: 'in progress' };
-        }
-        return step;
-      })
-    );
+    if (currentStep < steps.length) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, nextStep));
+    }
   };
 
   const handlePreviousStep = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      setSteps(prevSteps =>
-        prevSteps.map(step => {
-          if (step.id === currentStep) {
-            return { ...step, status: 'pending' };
-          }
-          if (step.id === prevStep) {
-            return { ...step, status: 'in progress' };
-          }
-          return step;
-        })
-      );
+      setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, prevStep));
     }
   };
 
   const updateStepErrorIndicators = currentErrors => {
-    const errorFields = Object.keys(currentErrors);
-
-    setSteps(prevSteps =>
-      prevSteps.map(step => ({
-        ...step,
-        hasErrors: errorFields.some(field => stepFields[step.id].includes(field)),
-      }))
-    );
+    setSteps(prevSteps => updateStepErrors(prevSteps, currentErrors, stepFields));
   };
 
   const updateField = (fieldName, value) => setVaultData(prev => ({ ...prev, [fieldName]: value }));
@@ -175,25 +159,10 @@ export const CreateVaultForm = ({ vault }) => {
 
   const handleStepClick = stepId => {
     if (stepId === currentStep) return;
+
     setCurrentStep(stepId);
     scrollToTop();
-    setSteps(prevSteps =>
-      prevSteps.map(step => {
-        if (step.id === currentStep) {
-          return {
-            ...step,
-            status: step.status === 'in progress' ? 'pending' : step.status,
-          };
-        }
-        if (step.id === stepId) {
-          return {
-            ...step,
-            status: 'in progress',
-          };
-        }
-        return step;
-      })
-    );
+    setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, stepId));
   };
 
   const saveDraft = async () => {
@@ -289,7 +258,7 @@ export const CreateVaultForm = ({ vault }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-dark-100 uppercase font-russo">
-                {steps.find(step => step.id === currentStep)?.status || 'pending'}
+                {isStepFullyComplete(currentStep, vaultData) ? 'completed' : 'in progress'}
               </p>
               <p className="text-lg font-bold text-white">{steps.find(step => step.id === currentStep)?.title || ''}</p>
             </div>
@@ -337,7 +306,6 @@ export const CreateVaultForm = ({ vault }) => {
         <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
           <SwapComponent
             config={{
-              // Only allow VLRM token
               defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
               supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
             }}

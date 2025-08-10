@@ -1,7 +1,7 @@
 import CheckmarkIcon from '@/icons/checkmark-vault.svg?react';
 
 type LavaStepCircleProps = {
-  status: 'active' | 'completed' | 'inactive';
+  status: 'in progress' | 'completed' | 'pending';
   number: number;
   isActive?: boolean;
 };
