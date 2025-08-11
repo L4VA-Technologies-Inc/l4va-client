@@ -94,8 +94,15 @@ export const Claims = () => {
 
       const signature = await wallet.handler.signTx(data.presignedTx, true);
 
+      if (!signature) {
+        throw new Error('Transaction signing was cancelled');
+      }
+
       await ClaimsApiProvider.submitClaim(data.transactionId, {
-        signedTx: signature,
+        transaction: data.presignedTx,
+        txId: data.txId,
+        signatures: [signature],
+        claimId,
       });
       toast.success('Claim successful! Your item has been claimed.');
       setSelectedClaims(prev => [...prev, claimId]); // Add to selected claims after claiming
