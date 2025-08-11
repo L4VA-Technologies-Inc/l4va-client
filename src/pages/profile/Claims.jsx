@@ -32,6 +32,8 @@ const ASSET_TYPE_LABELS = {
 export const Claims = () => {
   const [activeTab, setActiveTab] = useState(tabOptions[0]);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [status, setStatus] = useState('idle');
+  const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
   const wallet = useWallet('handler', 'isConnected');
 
@@ -90,13 +92,19 @@ export const Claims = () => {
 
   const handleClaimNow = async claimId => {
     try {
+      setProcessedClaim(claimId);
+      setStatus('building');
+
       const { data } = await ClaimsApiProvider.receiveClaim(claimId);
+
+      setStatus('signing');
 
       const signature = await wallet.handler.signTx(data.presignedTx, true);
 
       if (!signature) {
         throw new Error('Transaction signing was cancelled');
       }
+      setStatus('submitting');
 
       await ClaimsApiProvider.submitClaim(data.transactionId, {
         transaction: data.presignedTx,
@@ -109,6 +117,9 @@ export const Claims = () => {
     } catch (error) {
       console.error(error);
       toast.error('Failed to claim item. Please try again.');
+    } finally {
+      setStatus('idle');
+      setProcessedClaim(null);
     }
   };
 
@@ -151,8 +162,17 @@ export const Claims = () => {
         </div>
       );
     }
+
+    if (processedClaim === claim.id && status !== 'idle') {
+      return (
+        <PrimaryButton size="sm" disabled>
+          {status.toUpperCase()}
+        </PrimaryButton>
+      );
+    }
+
     return (
-      <PrimaryButton size="sm" onClick={() => handleClaimNow(claim.id)}>
+      <PrimaryButton size="sm" disabled={status !== 'idle'} onClick={() => handleClaimNow(claim.id)}>
         Claim Now
       </PrimaryButton>
     );

@@ -140,7 +140,7 @@ export const VaultProfileView = ({ vault }) => {
               <VaultStats
                 assetValue={vault.assetValueUsd || 0}
                 ftGains={vault.ftGains || 'N/A'}
-                fdv={vault.fdv || 'N/A'}
+                fdv={vault.fdv ? `${vault.fdv}$` : 'N/A'}
                 fdvTvl={vault.fdvTvl || 'N/A'}
                 tvl={vault.assetsPrices.totalValueUsd ? `${vault.assetsPrices.totalValueUsd}$` : 'N/A'}
               />
