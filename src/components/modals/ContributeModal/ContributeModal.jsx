@@ -37,8 +37,14 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     const totalAssets = nftCount + ftCount;
     const estimatedValue = totalAssets * ASSET_VALUE_USD;
     const vaultTokenPrice = vault.assetsPrices.totalValueUsd / vault.ftTokenSupply;
+    let estimatedTickerVal;
 
-    const estimatedTickerVal = estimatedValue / vaultTokenPrice;
+    if (vaultTokenPrice > 0) {
+      estimatedTickerVal = estimatedValue / vaultTokenPrice;
+    } else {
+      estimatedTickerVal = vault.ftTokenSupply;
+    }
+
     const vaultAllocation =
       totalAssets > 0 ? ((estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) * 100).toFixed(2) : 0;
 
