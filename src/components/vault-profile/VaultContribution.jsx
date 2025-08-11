@@ -29,10 +29,10 @@ export const VaultContribution = ({ vault }) => {
 
   const acquireProgress = useMemo(
     () =>
-      vault.assetsPrices.totalValueUsd <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
+      vault.assetsPrices.totalAcquiredUsd <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
         ? 0
-        : (vault.assetsPrices.totalValueUsd / vault.requireReservedCostUsd) * 100,
-    [vault.assetsPrices.totalValueUsd, vault.requireReservedCostUsd]
+        : (vault.assetsPrices.totalAcquiredUsd / vault.requireReservedCostUsd) * 100,
+    [vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd]
   );
 
   const contributionProgress = useMemo(
@@ -129,7 +129,7 @@ export const VaultContribution = ({ vault }) => {
                 // Pre-threshold segment (orange gradient)
                 {
                   progress: Math.min(acquireProgress, 100),
-                  className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
+                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
                 },
                 // Post-threshold segment (red gradient) - only show if threshold is met
                 ...(reserveThresholdMet
