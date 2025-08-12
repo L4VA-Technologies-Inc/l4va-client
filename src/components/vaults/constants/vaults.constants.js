@@ -256,7 +256,7 @@ export const initialVaultState = {
 
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks', 'tags'],
-  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime'],
+  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'contributionOpenWindowTime', 'assetsWhitelist'],
   3: [
     'acquireWindowDuration',
     'acquireOpenWindowType',
