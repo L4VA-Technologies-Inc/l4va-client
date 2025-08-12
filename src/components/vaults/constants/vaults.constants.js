@@ -144,9 +144,27 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .default([])
-    .min(1, 'Assets whitelist must have at least 1 item')
-    .max(10, 'Assets whitelist can have a maximum of 10 items')
-    .required('Assets whitelist is required'),
+    .when('privacy', {
+      is: 'semi-private',
+      then: schema => schema.test(
+        'semi-private-whitelist-required',
+        'Please select at least one item in the Contribute or Acquire step.',
+        function(value) {
+          const { acquirerWhitelist } = this.parent;
+          const hasContributorsWhitelist = value && value.length > 0;
+          const hasAcquirersWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
+          return hasContributorsWhitelist || hasAcquirersWhitelist;
+        }
+      ).max(10, 'Assets whitelist can have a maximum of 10 items'),
+      otherwise: schema => schema.when('privacy', {
+        is: 'private',
+        then: schema => schema
+          .min(1, 'Assets whitelist must have at least 1 item')
+          .max(10, 'Assets whitelist can have a maximum of 10 items')
+          .required('Assets whitelist is required'),
+        otherwise: schema => schema.nullable(),
+      }),
+    }),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')
@@ -161,6 +179,30 @@ export const vaultSchema = yup.object({
     .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 24 hours'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
+  acquirerWhitelist: yup
+    .array()
+    .default([])
+    .when('privacy', {
+      is: 'semi-private',
+      then: schema => schema.test(
+        'semi-private-whitelist-required',
+        'Please select at least one item in the Contribute or Acquire step.',
+        function(value) {
+          const { assetsWhitelist } = this.parent;
+          const hasContributorsWhitelist = assetsWhitelist && assetsWhitelist.length > 0;
+          const hasAcquirersWhitelist = value && value.length > 0;
+          return hasContributorsWhitelist || hasAcquirersWhitelist;
+        }
+      ).max(100, 'Acquirer whitelist can have a maximum of 100 items'),
+      otherwise: schema => schema.when('privacy', {
+        is: 'private',
+        then: schema => schema
+          .min(1, 'Acquirer whitelist must have at least 1 item')
+          .max(100, 'Acquirer whitelist can have a maximum of 100 items')
+          .required('Acquirer whitelist is required'),
+        otherwise: schema => schema.nullable(),
+      }),
+    }),
   tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
   acquireReserve: yup.number().typeError('Acquire reserve is required').required('Acquire reserve is required'),
   liquidityPoolContribution: yup
@@ -235,6 +277,7 @@ export const initialVaultState = {
   acquireWindowDuration: MIN_ACQUIRE_WINDOW_DURATION_MS,
   acquireOpenWindowType: 'upon-asset-window-closing',
   acquireOpenWindowTime: null,
+  acquirerWhitelist: [],
   tokensForAcquires: null,
   acquireReserve: null,
   liquidityPoolContribution: null,
@@ -261,6 +304,7 @@ export const stepFields = {
     'acquireWindowDuration',
     'acquireOpenWindowType',
     'acquireOpenWindowTime',
+    'acquirerWhitelist',
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',

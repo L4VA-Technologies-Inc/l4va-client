@@ -1,4 +1,6 @@
 // Define mandatory fields for each step
+import {VAULT_PRIVACY_TYPES} from "@/components/vaults/constants/vaults.constants.js";
+
 export const mandatoryStepFields = {
   1: ['name', 'type', 'privacy', 'vaultImage'], // vaultTokenTicker is nullable, description is optional
   2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist'], // contributionOpenWindowTime is conditional
@@ -8,6 +10,7 @@ export const mandatoryStepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
+    'acquirerWhitelist',
   ], // acquireOpenWindowTime is nullable
   4: [
     'ftTokenSupply',
@@ -30,6 +33,33 @@ export const isStepComplete = (stepId, vaultData) => {
   }
 
   return mandatoryFields.every(field => {
+    if (field === 'assetsWhitelist') {
+      if (vaultData.privacy === VAULT_PRIVACY_TYPES.PUBLIC) {
+        return true; 
+      }
+      if (vaultData.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) {
+        const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
+        const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
+        return hasContributorsWhitelist || hasAcquirersWhitelist;
+      }
+    }
+    if (field === 'acquirerWhitelist') {
+      if (vaultData.privacy === VAULT_PRIVACY_TYPES.PUBLIC) {
+        return true;
+      }
+      if (vaultData.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) {
+
+        const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
+        const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
+        
+        if (!hasContributorsWhitelist && !hasAcquirersWhitelist) {
+          return false;
+        }
+      
+        return true;
+      }
+    }
+
     const value = vaultData[field];
 
     // Handle different field types
