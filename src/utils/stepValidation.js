@@ -8,6 +8,7 @@ export const mandatoryStepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
+    'acquirerWhitelist',
   ], // acquireOpenWindowTime is nullable
   4: [
     'ftTokenSupply',
@@ -30,6 +31,33 @@ export const isStepComplete = (stepId, vaultData) => {
   }
 
   return mandatoryFields.every(field => {
+    if (field === 'assetsWhitelist') {
+      if (vaultData.privacy === 'public') {
+        return true; 
+      }
+      if (vaultData.privacy === 'semi-private') {
+        const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
+        const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
+        return hasContributorsWhitelist || hasAcquirersWhitelist;
+      }
+    }
+    if (field === 'acquirerWhitelist') {
+      if (vaultData.privacy === 'public') {
+        return true;
+      }
+      if (vaultData.privacy === 'semi-private') {
+
+        const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
+        const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
+        
+        if (!hasContributorsWhitelist && !hasAcquirersWhitelist) {
+          return false;
+        }
+      
+        return true;
+      }
+    }
+
     const value = vaultData[field];
 
     // Handle different field types
