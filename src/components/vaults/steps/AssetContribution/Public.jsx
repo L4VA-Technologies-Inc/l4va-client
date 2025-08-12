@@ -58,6 +58,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
       <div>
         <LavaWhitelistWithCaps
           required
+          error={errors.assetsWhitelist}
           label="Asset Whitelist"
           setWhitelist={assets => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}
@@ -69,6 +70,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
         <div className="mt-4">
           <LavaIntervalPicker
             value={data.contributionDuration}
+            error={errors.contributionDuration}
             onChange={value => updateField('contributionDuration', value)}
             minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
           />
