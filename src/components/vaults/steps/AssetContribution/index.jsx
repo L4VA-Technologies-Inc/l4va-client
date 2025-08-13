@@ -24,5 +24,4 @@ export const AssetContribution = ({ data, errors = {}, updateField }) => {
     return <SemiPrivate {...props} />;
   }
   
-  return <Public {...props} />;
 };

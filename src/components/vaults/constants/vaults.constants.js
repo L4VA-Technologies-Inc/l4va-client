@@ -109,6 +109,16 @@ const socialLinkSchema = yup.object({
   url: yup.string().url('Invalid URL').required('URL is required'),
 });
 
+const assetWhitelistItemSchema = yup.object({
+  policyId: yup.string().required('Policy ID is required'),
+  countCapMin: yup.number().typeError('Min asset cap is required'),
+  countCapMax: yup.number().typeError('Max asset cap is required'),
+});
+
+const acquirerWhitelistItemSchema = yup.object({
+  walletAddress: yup.string().required('Wallet address is required'),
+});
+
 export const vaultSchema = yup.object({
   // Step 1: Configure Vault
   name: yup
@@ -143,19 +153,20 @@ export const vaultSchema = yup.object({
     }),
   assetsWhitelist: yup
     .array()
+    .of(assetWhitelistItemSchema)
     .default([])
     .when('privacy', {
-      is: 'semi-private',
-      then: schema => schema.test(
-        'semi-private-whitelist-required',
-        'Please select at least one item in the Contribute or Acquire step.',
-        function(value) {
-          const { acquirerWhitelist } = this.parent;
-          const hasContributorsWhitelist = value && value.length > 0;
-          const hasAcquirersWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
-          return hasContributorsWhitelist || hasAcquirersWhitelist;
-        }
-      ).max(10, 'Assets whitelist can have a maximum of 10 items'),
+        is: 'semi-private',
+        then: schema => schema.test(
+          'semi-private-whitelist-required',
+          'Please select at least one item in the Contribute or Acquire step.',
+          function(value) {
+            const { acquirerWhitelist } = this.parent;
+            const hasContributorsWhitelist = value && value.length > 0;
+            const hasAcquirersWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
+            return hasContributorsWhitelist || hasAcquirersWhitelist;
+          }
+        ).max(10, 'Assets whitelist can have a maximum of 10 items'),
       otherwise: schema => schema.when('privacy', {
         is: 'private',
         then: schema => schema
@@ -181,6 +192,7 @@ export const vaultSchema = yup.object({
   acquireOpenWindowTime: yup.mixed().nullable(),
   acquirerWhitelist: yup
     .array()
+    .of(acquirerWhitelistItemSchema)
     .default([])
     .when('privacy', {
       is: 'semi-private',

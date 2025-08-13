@@ -11,12 +11,14 @@ export const LavaWhitelist = ({
   label = 'Asset whitelist',
   itemPlaceholder = 'Enter Policy ID',
   itemFieldName = 'policyId',
+  whitelistFieldName = 'assetsWhitelist',
   whitelist = [],
   setWhitelist,
   maxItems = 10,
   allowCsv = false,
   csvData,
   setCsvData,
+  errors = {},
 }) => {
   const [csvName, setCsvName] = useState(csvData?.fileName || '');
   const addNewAsset = () => {
@@ -107,25 +109,36 @@ export const LavaWhitelist = ({
         </div>
       )}
       <div className="space-y-4">
-        {whitelist.map(asset => (
-          <div key={asset.id} className="relative">
-            <Input
-              className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
-              placeholder={itemPlaceholder}
-              style={{ fontSize: '20px' }}
-              value={asset[itemFieldName]}
-              onChange={e => updateAsset(asset.id, e.target.value)}
-            />
-            <Button
-              className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
-              size="icon"
-              variant="ghost"
-              onClick={() => removeAsset(asset.id)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+        {whitelist.map(asset => {
+          const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+          const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
+          return (
+            <div key={asset.id} className="space-y-2">
+              <div className="relative">
+                <Input
+                  className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
+                  placeholder={itemPlaceholder}
+                  style={{ fontSize: '20px' }}
+                  value={asset[itemFieldName]}
+                  onChange={e => updateAsset(asset.id, e.target.value)}
+                />
+                <Button
+                  className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removeAsset(asset.id)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              {fieldError && (
+                <p className="text-red-600 text-sm mt-1">
+                  {fieldError}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
       {whitelist.length === 0 && !csvData && (
         <div className="text-dark-100 text-base my-4">

@@ -2,8 +2,8 @@
 import {VAULT_PRIVACY_TYPES} from "@/components/vaults/constants/vaults.constants.js";
 
 export const mandatoryStepFields = {
-  1: ['name', 'type', 'privacy', 'vaultImage'], // vaultTokenTicker is nullable, description is optional
-  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist'], // contributionOpenWindowTime is conditional
+  1: ['name', 'type', 'privacy', 'vaultImage'],
+  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist'], 
   3: [
     'acquireWindowDuration',
     'acquireOpenWindowType',
@@ -11,7 +11,7 @@ export const mandatoryStepFields = {
     'acquireReserve',
     'liquidityPoolContribution',
     'acquirerWhitelist',
-  ], // acquireOpenWindowTime is nullable
+  ], 
   4: [
     'ftTokenSupply',
     'ftTokenImg',
@@ -21,7 +21,7 @@ export const mandatoryStepFields = {
     'voteThreshold',
     'executionThreshold',
     'cosigningThreshold',
-  ], // timeElapsedIsEqualToTime and vaultAppreciation are conditional
+  ], 
   5: [],
 };
 

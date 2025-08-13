@@ -58,10 +58,10 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
       <div className="space-y-12">
       <div>
         <LavaWhitelistWithCaps
-          error={errors.assetsWhitelist}
           label="Asset Whitelist"
           setWhitelist={assets => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}
+          errors={errors}
         />
         {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
       </div>

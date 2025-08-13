@@ -51,9 +51,11 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
               label="Acquirer whitelist"
+              whitelistFieldName="acquirerWhitelist"
               setCsvData={csvData => updateField('acquirerWhitelistCsv', csvData)}
               setWhitelist={assets => updateField('acquirerWhitelist', assets)}
               whitelist={data.acquirerWhitelist || []}
+              errors={errors}
             />
             {errors.acquirerWhitelist && <p className="text-red-600 mt-1">{errors.acquirerWhitelist}</p>}
           </div>

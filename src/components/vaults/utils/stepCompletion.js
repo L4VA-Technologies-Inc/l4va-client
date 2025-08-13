@@ -18,9 +18,10 @@ export const updateStepsCompletionStatus = (steps, vaultData, currentStep) => {
         hasErrors: step.hasErrors, // Preserve existing error state
       };
     } else if (step.id < currentStep) {
+      const status = (isComplete && !step.hasErrors) ? 'completed' : 'pending';
       return {
         ...step,
-        status: isComplete ? 'completed' : 'pending',
+        status,
         hasErrors: step.hasErrors, // Preserve existing error state
       };
     } else {
@@ -93,8 +94,20 @@ export const getPreviousAccessibleStep = currentStepId => {
 export const updateStepErrorIndicators = (steps, errors, stepFields) => {
   const errorFields = Object.keys(errors);
 
-  return steps.map(step => ({
-    ...step,
-    hasErrors: errorFields.some(field => stepFields[step.id]?.includes(field)),
-  }));
+  return steps.map(step => {
+    const stepFieldNames = stepFields[step.id] || [];
+    
+    const hasErrors = errorFields.some(errorField => {
+      return stepFieldNames.some(stepField => {
+        return errorField === stepField ||
+               errorField.startsWith(`${stepField}.`) || 
+               errorField.startsWith(`${stepField}[`);
+      });
+    });
+
+    return {
+      ...step,
+      hasErrors,
+    };
+  });
 };
