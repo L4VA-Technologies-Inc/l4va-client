@@ -35,7 +35,7 @@ export const isStepComplete = (stepId, vaultData) => {
   return mandatoryFields.every(field => {
     if (field === 'assetsWhitelist') {
       if (vaultData.privacy === VAULT_PRIVACY_TYPES.PUBLIC) {
-        return true; 
+        return true;
       }
       if (vaultData.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) {
         const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
@@ -51,11 +51,11 @@ export const isStepComplete = (stepId, vaultData) => {
 
         const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
         const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
-        
+
         if (!hasContributorsWhitelist && !hasAcquirersWhitelist) {
           return false;
         }
-      
+
         return true;
       }
     }
