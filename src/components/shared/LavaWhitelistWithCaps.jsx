@@ -10,6 +10,7 @@ export const LavaWhitelistWithCaps = ({
   whitelist = [],
   setWhitelist,
   maxItems = 10,
+  errors = {},
 }) => {
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
@@ -70,6 +71,14 @@ export const LavaWhitelistWithCaps = ({
                 <X className="h-4 w-4" />
               </Button>
             </div>
+            {(() => {
+              const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+              return (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors[`assetsWhitelist[${index}].policyId`]} 
+                </p>
+              );
+            })()}
             <div className="flex gap-4">
               <div className="flex-1">
                 <LavaInput
@@ -86,7 +95,16 @@ export const LavaWhitelistWithCaps = ({
                     )
                   }
                 />
+                {(() => {
+                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  return (
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors[`assetsWhitelist[${index}].countCapMin`]}
+                    </p>
+                  );
+                })()}
               </div>
+              
               <div className="flex-1">
                 <LavaInput
                   type="number"
@@ -102,6 +120,14 @@ export const LavaWhitelistWithCaps = ({
                     )
                   }
                 />
+                {(() => {
+                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  return (
+                    <p className="text-red-600 text-sm mt-1">
+                      {errors[`assetsWhitelist[${index}].countCapMax`]}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
           </div>

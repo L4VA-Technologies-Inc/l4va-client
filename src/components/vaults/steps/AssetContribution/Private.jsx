@@ -138,6 +138,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
             label="Asset Whitelist"
             setWhitelist={assets => updateField('assetsWhitelist', assets)}
             whitelist={data.assetsWhitelist || []}
+            errors={errors}
           />
           {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
         </div>

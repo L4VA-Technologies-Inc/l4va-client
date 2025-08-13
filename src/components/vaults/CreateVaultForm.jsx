@@ -40,6 +40,7 @@ export const CreateVaultForm = ({ vault }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
+  const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
@@ -67,9 +68,40 @@ export const CreateVaultForm = ({ vault }) => {
     setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, currentStep));
   }, [vaultData, currentStep]);
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (currentStep < steps.length) {
       const nextStep = currentStep + 1;
+
+      setVisitedSteps(prev => new Set([...prev, nextStep]));
+
+      try {
+        await vaultSchema.validate(vaultData, { abortEarly: false });
+        setErrors({});
+      } catch (err) {
+        const formattedErrors = transformYupErrors(err);
+        
+        const filteredErrors = {};
+        const previousSteps = [...visitedSteps].filter(stepId => stepId < nextStep);
+        
+        Object.keys(formattedErrors).forEach(errorKey => {
+          const belongsToPreviousStep = previousSteps.some(stepId => {
+            const stepFieldNames = stepFields[stepId] || [];
+            return stepFieldNames.some(stepField => {
+              return errorKey === stepField || 
+                     errorKey.startsWith(`${stepField}.`) || 
+                     errorKey.startsWith(`${stepField}[`);
+            });
+          });
+          
+          if (belongsToPreviousStep) {
+            filteredErrors[errorKey] = formattedErrors[errorKey];
+          }
+        });
+        
+        setErrors(filteredErrors);
+        updateStepErrorIndicators(filteredErrors);
+      }
+      
       setCurrentStep(nextStep);
       setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, nextStep));
     }
@@ -160,6 +192,7 @@ export const CreateVaultForm = ({ vault }) => {
   const handleStepClick = stepId => {
     if (stepId === currentStep) return;
 
+    setVisitedSteps(prev => new Set([...prev, stepId]));
     setCurrentStep(stepId);
     scrollToTop();
     setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, stepId));
