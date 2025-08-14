@@ -38,7 +38,7 @@ export const Claims = () => {
   const [selectedClaims, setSelectedClaims] = useState([]);
   const wallet = useWallet('handler', 'isConnected');
 
-  const { data, isLoading, error } = useClaims();
+  const { data, isLoading, error, refetch } = useClaims();
   const claims = data?.data || [];
 
   const formattedClaims = claims.map(claim => ({
@@ -115,11 +115,8 @@ export const Claims = () => {
       });
       toast.success('Claim successful! Your item has been claimed.');
       setSelectedClaims([]);
-      formattedClaims.forEach(claim => {
-        if (claim.id === claimId) {
-          claim.status = 'claimed';
-        }
-      });
+
+      await refetch();
     } catch (error) {
       console.error(error);
       toast.error('Failed to claim item. Please try again.');

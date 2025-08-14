@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 
+const ADA_TO_USD_RATE = 0.45; // TODO: Replace with live price feed if available
+
 export const AcquireModal = ({ vault, onClose }) => {
   const { name } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
@@ -22,7 +24,7 @@ export const AcquireModal = ({ vault, onClose }) => {
   const acquisitionDetails = useMemo(() => {
     const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-    const estimatedValue = acquireAmountNum * 0.45; // USD value of ADA
+    const estimatedValue = acquireAmountNum * ADA_TO_USD_RATE; // USD value of ADA
     const vaultTokenPrice = vault.assetsPrices?.totalValueUsd / vault.ftTokenSupply;
 
     let estimatedTickerVal;
@@ -43,6 +45,7 @@ export const AcquireModal = ({ vault, onClose }) => {
       vaultAllocation,
       estimatedValue,
       estimatedTickerVal,
+      totalAcquired: vault.assetsPrices?.totalAcquiredAda || 0,
     };
   }, [acquireAmount, vault.assetsPrices, vault.ftTokenSupply, vault.tokensForAcquires]);
 
