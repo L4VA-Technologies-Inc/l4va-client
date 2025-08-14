@@ -154,28 +154,10 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .of(assetWhitelistItemSchema)
-    .default([])
-    .when('privacy', {
-        is: 'semi-private',
-        then: schema => schema.test(
-          'semi-private-whitelist-required',
-          'Please select at least one item in the Contribute or Acquire step.',
-          function(value) {
-            const { acquirerWhitelist } = this.parent;
-            const hasContributorsWhitelist = value && value.length > 0;
-            const hasAcquirersWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
-            return hasContributorsWhitelist || hasAcquirersWhitelist;
-          }
-        ).max(10, 'Assets whitelist can have a maximum of 10 items'),
-      otherwise: schema => schema.when('privacy', {
-        is: 'private',
-        then: schema => schema
-          .min(1, 'Assets whitelist must have at least 1 item')
-          .max(10, 'Assets whitelist can have a maximum of 10 items')
-          .required('Assets whitelist is required'),
-        otherwise: schema => schema.nullable(),
-      }),
-    }),
+    .required('Assets whitelist is required')
+    .min(1, 'Assets whitelist must have at least 1 item')
+    .max(10, 'Assets whitelist can have a maximum of 10 items')
+    .default([]),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')
@@ -196,23 +178,17 @@ export const vaultSchema = yup.object({
     .default([])
     .when('privacy', {
       is: 'semi-private',
-      then: schema => schema.test(
-        'semi-private-whitelist-required',
-        'Please select at least one item in the Contribute or Acquire step.',
-        function(value) {
-          const { assetsWhitelist } = this.parent;
-          const hasContributorsWhitelist = assetsWhitelist && assetsWhitelist.length > 0;
-          const hasAcquirersWhitelist = value && value.length > 0;
-          return hasContributorsWhitelist || hasAcquirersWhitelist;
-        }
-      ).max(100, 'Acquirer whitelist can have a maximum of 100 items'),
+      then: schema => schema
+        .min(1, 'Acquirer whitelist must have at least 1 item')
+        .max(100, 'Acquirer whitelist can have a maximum of 100 items')
+        .required('Acquirer whitelist is required'),
       otherwise: schema => schema.when('privacy', {
         is: 'private',
         then: schema => schema
           .min(1, 'Acquirer whitelist must have at least 1 item')
           .max(100, 'Acquirer whitelist can have a maximum of 100 items')
           .required('Acquirer whitelist is required'),
-        otherwise: schema => schema.nullable(),
+        otherwise: schema => schema.notRequired(),
       }),
     }),
   tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),

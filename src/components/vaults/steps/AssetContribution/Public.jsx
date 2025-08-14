@@ -6,7 +6,7 @@ import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/va
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
 export const Public = ({ data, errors = {}, updateField }) => (
-    <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+  <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
     <div className="space-y-12">
       <div>
         <LavaRadio
@@ -53,6 +53,18 @@ export const Public = ({ data, errors = {}, updateField }) => (
             )}
           </div>
         )}
+      </div>
+    </div>
+    <div className="space-y-12">
+      <div>
+        <LavaWhitelistWithCaps
+          required
+          label="Asset Whitelist"
+          setWhitelist={assets => updateField('assetsWhitelist', assets)}
+          whitelist={data.assetsWhitelist || []}
+          errors={errors}
+        />
+        {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
       </div>
     </div>
     <div className="space-y-12">
