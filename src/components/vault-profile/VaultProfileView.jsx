@@ -31,7 +31,7 @@ export const VaultProfileView = ({ vault }) => {
     const buttonConfig = {
       Assets: {
         text: 'Contribute',
-        handleClick: () => openModal('CreateProposalModal', { vault }),
+        handleClick: () => openModal('ContributeModal', { vault }),
         available:
           vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
           new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
