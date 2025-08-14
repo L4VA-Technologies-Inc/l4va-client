@@ -56,7 +56,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             {ftTokenImg ? (
               <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} />
             ) : (
-              <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center">
+              <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center flex-shrink-0">
                 <L4vaIcon className="h-8 w-8 text-white" />
               </div>
             )}

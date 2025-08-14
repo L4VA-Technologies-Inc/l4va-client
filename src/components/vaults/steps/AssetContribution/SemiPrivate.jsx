@@ -3,9 +3,9 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
-import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
-export const Public = ({ data, errors = {}, updateField }) => (
+
+export const SemiPrivate = ({ data, errors = {}, updateField }) => (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
     <div className="space-y-12">
       <div>
@@ -55,7 +55,16 @@ export const Public = ({ data, errors = {}, updateField }) => (
         )}
       </div>
     </div>
-    <div className="space-y-12">
+      <div className="space-y-12">
+      <div>
+        <LavaWhitelistWithCaps
+          label="Asset Whitelist"
+          setWhitelist={assets => updateField('assetsWhitelist', assets)}
+          whitelist={data.assetsWhitelist || []}
+          errors={errors}
+        />
+        {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
+      </div>
       <div>
         <div className="uppercase font-bold">*Contribution duration</div>
         <div className="mt-4">

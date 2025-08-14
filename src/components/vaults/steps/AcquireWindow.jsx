@@ -42,22 +42,24 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   return (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
       <div className="space-y-12">
-        {vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC ? null : (
+        {vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE || vaultPrivacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE ? (
           <div>
             <LavaWhitelist
-              required
+              required={vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE}
               allowCsv
               csvData={data.acquirerWhitelistCsv}
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
               label="Acquirer whitelist"
+              whitelistFieldName="acquirerWhitelist"
               setCsvData={csvData => updateField('acquirerWhitelistCsv', csvData)}
               setWhitelist={assets => updateField('acquirerWhitelist', assets)}
               whitelist={data.acquirerWhitelist || []}
+              errors={errors}
             />
             {errors.acquirerWhitelist && <p className="text-red-600 mt-1">{errors.acquirerWhitelist}</p>}
           </div>
-        )}
+        ) : null}
         <div>
           <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">
             *ACQUIRE WINDOW DURATION
