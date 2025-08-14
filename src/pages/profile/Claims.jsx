@@ -9,6 +9,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
 const filterOptions = [
@@ -43,7 +44,7 @@ export const Claims = () => {
   const formattedClaims = claims.map(claim => ({
     id: claim.id,
     vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
-    image: claim.vault?.image || '/placeholder.svg',
+    image: claim.vault?.image,
     link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
     date: new Date(claim.created_at).toLocaleDateString(),
     reward: `${parseInt(claim.amount).toLocaleString()} VT`,
@@ -113,7 +114,12 @@ export const Claims = () => {
         claimId,
       });
       toast.success('Claim successful! Your item has been claimed.');
-      setSelectedClaims(prev => [...prev, claimId]); // Add to selected claims after claiming
+      setSelectedClaims([]);
+      formattedClaims.forEach(claim => {
+        if (claim.id === claimId) {
+          claim.status = 'claimed';
+        }
+      });
     } catch (error) {
       console.error(error);
       toast.error('Failed to claim item. Please try again.');
@@ -314,11 +320,15 @@ export const Claims = () => {
                     </td> */}
                     <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
                     <td className="px-4 py-3">
-                      <img
-                        alt={`${claim.vault} preview`}
-                        className="w-12 h-12 rounded-lg object-cover"
-                        src={claim.image}
-                      />
+                      {claim.image ? (
+                        <img
+                          alt={`${claim.vault} preview`}
+                          className="w-12 h-12 rounded-lg object-cover"
+                          src={claim.image}
+                        />
+                      ) : (
+                        <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <a
