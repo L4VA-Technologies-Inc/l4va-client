@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -12,7 +13,6 @@ const VAULT_TABS = {
 
 const TABS = Object.values(VAULT_TABS);
 
-// Map tab names to API filter values
 const TAB_TO_FILTER = {
   [VAULT_TABS.ACQUIRE]: 'acquire',
   [VAULT_TABS.CONTRIBUTE]: 'contribution',
@@ -20,13 +20,35 @@ const TAB_TO_FILTER = {
   [VAULT_TABS.PAST]: 'locked',
 };
 
+const FILTER_TO_TAB = Object.entries(TAB_TO_FILTER).reduce((acc, [key, value]) => {
+  acc[value] = key;
+  return acc;
+}, {});
+
 export const CommunityVaultsList = ({ className = '' }) => {
-  const [activeTab, setActiveTab] = useState(TABS[0]);
+  const search = useSearch({ from: '/vaults/' });
+  const router = useRouter();
+
+  const tabParam = search?.tab || 'contribution';
+  const initialTab = FILTER_TO_TAB[tabParam] || VAULT_TABS.CONTRIBUTE;
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [tabParam]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+
+    router.navigate({
+      to: '/vaults',
+      search: { tab: TAB_TO_FILTER[tab] },
+    });
+  };
 
   const { data, isLoading, error } = useVaults(TAB_TO_FILTER[activeTab]);
-
   const vaults = data?.data?.items || [];
-  //Test
 
   return (
     <VaultList
@@ -36,7 +58,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
       tabs={TABS}
       title="Community Vaults"
       vaults={vaults}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
+      activeTab={activeTab}
     />
   );
 };

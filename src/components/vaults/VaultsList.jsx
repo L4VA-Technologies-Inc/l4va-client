@@ -53,14 +53,20 @@ export const VaultList = ({
   error = null,
   onTabChange,
   renderEmptyState = EmptyState,
+  activeTab: externalActiveTab,
 }) => {
-  const [activeTab, setActiveTab] = useState(tabs[0]);
+  const [internalActiveTab, setInternalActiveTab] = useState(tabs[0]);
   const [viewType, setViewType] = useState('grid');
   const { openModal } = useModalControls();
 
+  const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
+
   const handleTabChange = tab => {
-    setActiveTab(tab);
-    onTabChange?.(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    } else {
+      setInternalActiveTab(tab);
+    }
   };
 
   const handleOpenFilters = () => openModal('VaultFiltersModal');
