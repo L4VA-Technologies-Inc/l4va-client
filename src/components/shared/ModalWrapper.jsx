@@ -12,7 +12,7 @@ export const ModalWrapper = ({
   maxHeight = '80vh',
   allowBodyScroll = false,
   size = 'responsive',
-  header = true
+  header = true,
 }) => {
   useEffect(() => {
     if (isOpen && !allowBodyScroll) {
@@ -84,10 +84,8 @@ export const ModalWrapper = ({
         aria-labelledby="modal-title"
       >
         {header ? (
-          <div
-            className="flex items-center justify-between px-4 py-3 bg-white/5 flex-shrink-0 md:rounded-t-lg max-md:rounded-t-xl">
-            <div
-              className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full md:hidden" />
+          <div className="flex items-center justify-between px-4 py-3 bg-white/5 flex-shrink-0 md:rounded-t-lg max-md:rounded-t-xl">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full md:hidden" />
             <h2
               id="modal-title"
               className="font-bold text-2xl max-md:text-xl max-md:text-center max-md:flex-1 max-md:mt-2"

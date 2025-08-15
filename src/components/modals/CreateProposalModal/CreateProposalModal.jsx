@@ -94,12 +94,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           <div className="space-y-4">
             {selectedOption === 'staking' && <Staking />}
             {selectedOption === 'distributing' && <Distributing />}
-            {selectedOption === 'terminating' && (
-              <Terminating onClose={() => setSelectedOption('staking')} />
-            )}
-            {selectedOption === 'burning' && (
-              <Burning onClose={() => setSelectedOption('staking')} />
-            )}
+            {selectedOption === 'terminating' && <Terminating onClose={() => setSelectedOption('staking')} />}
+            {selectedOption === 'burning' && <Burning onClose={() => setSelectedOption('staking')} />}
           </div>
         </div>
       </ModalWrapper>

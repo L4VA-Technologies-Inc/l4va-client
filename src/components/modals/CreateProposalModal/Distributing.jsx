@@ -23,8 +23,7 @@ export default function Distributing({ onDataChange }) {
   const [proposalStart, setProposalStart] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
 
-
-  const formatTimeInput = (value) => {
+  const formatTimeInput = value => {
     const numbers = value.replace(/\D/g, '');
 
     const limited = numbers.slice(0, 6);
@@ -40,23 +39,21 @@ export default function Distributing({ onDataChange }) {
     return formatted;
   };
 
-  const handleProposalStartChange = (value) => {
+  const handleProposalStartChange = value => {
     const formatted = formatTimeInput(value);
     setProposalStart(formatted);
   };
-
 
   useEffect(() => {
     if (onDataChange) {
       onDataChange({
         distributionAssets: distributionAssets.filter(asset => asset.asset && asset.amount),
-        proposalStart
+        proposalStart,
       });
     }
-    const selectedAssets = distributionAssets.map((a) => a.asset).filter(Boolean);
+    const selectedAssets = distributionAssets.map(a => a.asset).filter(Boolean);
     const allAssetsSelected =
-      selectedAssets.length === availableAssets.length &&
-      availableAssets.every((a) => selectedAssets.includes(a.value));
+      selectedAssets.length === availableAssets.length && availableAssets.every(a => selectedAssets.includes(a.value));
 
     if (distributeAll !== allAssetsSelected) {
       setDistributeAll(allAssetsSelected);
@@ -71,13 +68,9 @@ export default function Distributing({ onDataChange }) {
     }
   }, [distributeAll]);
 
-
   const addAsset = () => {
     const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
-    setDistributionAssets(prev => [
-      ...prev,
-      { id: newId, asset: '', amount: '', isMax: false }
-    ]);
+    setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
   };
 
   const distributeAllAssets = () => {
@@ -85,26 +78,21 @@ export default function Distributing({ onDataChange }) {
       id: index + 1,
       asset: a.value,
       amount: a.available.toString(),
-      isMax: true
+      isMax: true,
     }));
 
     setDistributionAssets(newAssets);
   };
 
-
-  const removeAsset = (id) => {
+  const removeAsset = id => {
     setDistributionAssets(prev => prev.filter(a => a.id !== id));
   };
 
   const updateAsset = (id, field, value) => {
-    setDistributionAssets(prev => 
-      prev.map(asset => 
-        asset.id === id ? { ...asset, [field]: value } : asset
-      )
-    );
+    setDistributionAssets(prev => prev.map(asset => (asset.id === id ? { ...asset, [field]: value } : asset)));
   };
 
-  const setMaxAmount = (id) => {
+  const setMaxAmount = id => {
     const asset = distributionAssets.find(a => a.id === id);
     if (asset && asset.asset) {
       const availableAsset = availableAssets.find(a => a.value === asset.asset);
@@ -115,7 +103,7 @@ export default function Distributing({ onDataChange }) {
     }
   };
 
-  const getAvailableAmount = (assetValue) => {
+  const getAvailableAmount = assetValue => {
     const asset = availableAssets.find(a => a.value === assetValue);
     return asset ? asset.available : 0;
   };
@@ -146,15 +134,14 @@ export default function Distributing({ onDataChange }) {
             type="button"
             className="px-4 py-2 bg-steel-600 hover:bg-steel-500 text-white text-sm rounded-lg"
             checked={distributeAll}
-            onChange={(e) => setDistributeAll(e.target.checked)}
+            onChange={e => setDistributeAll(e.target.checked)}
             description="Distribute All Assets"
-          >
-          </LavaCheckbox>
+          ></LavaCheckbox>
         </div>
       </div>
 
       <div className="space-y-4">
-        {distributionAssets.map((asset) => {
+        {distributionAssets.map(asset => {
           const availableAmount = getAvailableAmount(asset.asset);
           const progressPercentage = getProgressPercentage(asset.amount, asset.asset);
           const isOverLimit = parseFloat(asset.amount) > availableAmount;
@@ -163,19 +150,17 @@ export default function Distributing({ onDataChange }) {
             <div key={asset.id} className="bg-steel-800 rounded-lg p-4 space-y-4">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm text-white/60 w-12">
-                    Asset
-                  </div>
+                  <div className="text-sm text-white/60 w-12">Asset</div>
                   <div className="w-48">
                     <LavaSteelSelect
-                      options={availableAssets.filter(a =>
-                        !distributionAssets.some(
-                          (selectedAsset) =>
-                            selectedAsset.asset === a.value && selectedAsset.id !== asset.id
-                        )
+                      options={availableAssets.filter(
+                        a =>
+                          !distributionAssets.some(
+                            selectedAsset => selectedAsset.asset === a.value && selectedAsset.id !== asset.id
+                          )
                       )}
                       value={asset.asset}
-                      onChange={(value) => {
+                      onChange={value => {
                         updateAsset(asset.id, 'asset', value);
                         if (asset.isMax) {
                           setMaxAmount(asset.id);
@@ -187,15 +172,13 @@ export default function Distributing({ onDataChange }) {
                 </div>
 
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm text-white/60 w-16">
-                    Quantity
-                  </div>
+                  <div className="text-sm text-white/60 w-16">Quantity</div>
                   <div className="flex items-center gap-2 flex-1">
                     <LavaSteelInput
                       type="number"
                       placeholder="0.00"
                       value={asset.amount}
-                      onChange={(value) => {
+                      onChange={value => {
                         updateAsset(asset.id, 'amount', value);
                         updateAsset(asset.id, 'isMax', false);
                       }}
@@ -205,7 +188,7 @@ export default function Distributing({ onDataChange }) {
                       <input
                         type="checkbox"
                         checked={asset.isMax}
-                        onChange={(e) => {
+                        onChange={e => {
                           if (e.target.checked) {
                             setMaxAmount(asset.id);
                           } else {
@@ -245,20 +228,17 @@ export default function Distributing({ onDataChange }) {
       </div>
 
       {distributionAssets.length === 0 && (
-        <div className="text-center py-8 text-white/60">
-          No assets added. Click "Add Asset" to start distributing.
-        </div>
+        <div className="text-center py-8 text-white/60">No assets added. Click "Add Asset" to start distributing.</div>
       )}
-
 
       <div className="mt-8">
         <h4 className="text-white font-medium mb-4">Proposal Start</h4>
         <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <LavaIntervalPicker
-                value={proposalStart}
-                onChange={setProposalStart}
-                minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+              value={proposalStart}
+              onChange={setProposalStart}
+              minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
             />
           </div>
         </div>

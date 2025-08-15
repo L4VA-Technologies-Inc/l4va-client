@@ -82,7 +82,7 @@ export default function Staking() {
         <h3 className="text-lg font-medium text-white">Assets to Stake</h3>
       </div>
       <div className="rounded-xl border border-steel-750 bg-steel-850">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-steel-750">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-steel-750">
           <div className="flex items-center gap-3">
             <div className="text-sm font-medium text-white">FTs</div>
             <label className="inline-flex items-center gap-2 text-xs text-white/60">

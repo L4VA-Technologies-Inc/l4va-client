@@ -12,10 +12,7 @@ export const ConfirmModal = ({ onClose, isOpen, onConfirm }) => {
           <VisuallyHidden>
             <DialogTitle>Do you want to create this proposal?</DialogTitle>
           </VisuallyHidden>
-          <div className="text-center text-white/80 mb-6">
-            Do you want to create this proposal?
-          </div>
-
+          <div className="text-center text-white/80 mb-6">Do you want to create this proposal?</div>
           <div className="flex justify-center gap-4">
             <SecondaryButton onClick={onClose} className="px-6">
               Cancel

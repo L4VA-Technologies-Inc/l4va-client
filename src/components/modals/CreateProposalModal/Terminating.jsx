@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
@@ -40,7 +41,6 @@ export default function Terminating({ onClose }) {
     },
   ];
 
-
   useEffect(() => {
     setIsModalOpen(true);
   }, []);
@@ -61,10 +61,10 @@ export default function Terminating({ onClose }) {
         isOpen={isModalOpen}
         onClose={handleClose}
         onConfirm={handleConfirm}
-        title='You cannot proceed with the Termination flow if you have NFTs in this Vault.'
-        understanding='I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ADA. This action will permanently burn these NFTs and cannot be undone.'
-        confirming='By selecting this checkbox and continuing, you confirm that you want to include burning all NFTs in this vault as part of the termination process. I agree to proceed with termination and burning all NFTs.'
-        description='If you wish to proceed with a Burn and Terminate flow, you must select the box below indicating that you understand how the NFT burn process works.'
+        title="You cannot proceed with the Termination flow if you have NFTs in this Vault."
+        understanding="I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ADA. This action will permanently burn these NFTs and cannot be undone."
+        confirming="By selecting this checkbox and continuing, you confirm that you want to include burning all NFTs in this vault as part of the termination process. I agree to proceed with termination and burning all NFTs."
+        description="If you wish to proceed with a Burn and Terminate flow, you must select the box below indicating that you understand how the NFT burn process works."
       />
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function Terminating({ onClose }) {
         </div>
 
         <div className="space-y-4">
-          {TerminatingAssets.map((asset) => {
+          {TerminatingAssets.map(asset => {
             return (
               <div className="bg-steel-800 rounded-lg p-4 space-y-4">
                 <div className="flex gap-4">
@@ -83,7 +83,6 @@ export default function Terminating({ onClose }) {
                       </div>
                       <div>
                         <span style={{ fontSize: '12px' }}>{asset.note}</span>
-
                       </div>
                     </div>
                     <div>
@@ -91,15 +90,14 @@ export default function Terminating({ onClose }) {
                     </div>
                     <div>
                       <div>
-                        {asset.assets.map((item) => {
-                            return (
-                              <div className="flex gap-2 text-white">
-                                <span>{item.collection}</span>
-                                <span>{item.value}</span>
-                              </div>
-                            );
-                          },
-                        )}
+                        {asset.assets.map(item => {
+                          return (
+                            <div className="flex gap-2 text-white">
+                              <span>{item.collection}</span>
+                              <span>{item.value}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -108,7 +106,6 @@ export default function Terminating({ onClose }) {
             );
           })}
         </div>
-
 
         <div className="mt-8">
           <h4 className="text-white font-medium mb-4">Proposal Start</h4>
