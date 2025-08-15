@@ -12,6 +12,7 @@ export const ModalWrapper = ({
   maxHeight = '80vh',
   allowBodyScroll = false,
   size = 'responsive',
+  header = true
 }) => {
   useEffect(() => {
     if (isOpen && !allowBodyScroll) {
@@ -82,25 +83,29 @@ export const ModalWrapper = ({
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div className="flex items-center justify-between px-4 py-3 bg-white/5 flex-shrink-0 md:rounded-t-lg max-md:rounded-t-xl">
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full md:hidden" />
-          <h2
-            id="modal-title"
-            className="font-bold text-2xl max-md:text-xl max-md:text-center max-md:flex-1 max-md:mt-2"
-          >
-            {title}
-          </h2>
-          {showCloseButton && (
-            <button
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors max-md:absolute max-md:right-4 max-md:top-3"
-              type="button"
-              onClick={onClose}
-              aria-label="Close modal"
+        {header ? (
+          <div
+            className="flex items-center justify-between px-4 py-3 bg-white/5 flex-shrink-0 md:rounded-t-lg max-md:rounded-t-xl">
+            <div
+              className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full md:hidden" />
+            <h2
+              id="modal-title"
+              className="font-bold text-2xl max-md:text-xl max-md:text-center max-md:flex-1 max-md:mt-2"
             >
-              <X className="w-4 h-4" size={20} />
-            </button>
-          )}
-        </div>
+              {title}
+            </h2>
+            {showCloseButton && (
+              <button
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors max-md:absolute max-md:right-4 max-md:top-3"
+                type="button"
+                onClick={onClose}
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" size={20} />
+              </button>
+            )}
+          </div>
+        ) : null}
         <div
           className="flex-1 overflow-y-auto p-4 md:p-6"
           style={{
