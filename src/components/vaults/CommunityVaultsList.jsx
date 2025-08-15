@@ -4,50 +4,41 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 
-const VAULT_TABS = {
-  CONTRIBUTE: 'Contribute',
-  ACQUIRE: 'Acquire',
-  UPCOMING: 'Upcoming',
-  PAST: 'Past',
-};
+const VAULT_TABS = [
+  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
+  { id: 'acquire', label: 'Acquire', filter: 'acquire' },
+  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
+  { id: 'past', label: 'Past', filter: 'locked' },
+];
 
-const TABS = Object.values(VAULT_TABS);
-
-const TAB_TO_FILTER = {
-  [VAULT_TABS.ACQUIRE]: 'acquire',
-  [VAULT_TABS.CONTRIBUTE]: 'contribution',
-  [VAULT_TABS.UPCOMING]: 'published',
-  [VAULT_TABS.PAST]: 'locked',
-};
-
-const FILTER_TO_TAB = Object.entries(TAB_TO_FILTER).reduce((acc, [key, value]) => {
-  acc[value] = key;
-  return acc;
-}, {});
+const DEFAULT_TAB = 'contribution';
 
 export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
 
-  const tabParam = search?.tab || 'contribution';
-  const initialTab = FILTER_TO_TAB[tabParam] || VAULT_TABS.CONTRIBUTE;
+  const tabParam = search?.tab || DEFAULT_TAB;
+  const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+    setActiveTab(newTab);
   }, [tabParam]);
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-
-    router.navigate({
-      to: '/vaults',
-      search: { tab: TAB_TO_FILTER[tab] },
-    });
+  const handleTabChange = tab => {
+    const selectedTab = VAULT_TABS.find(t => t.label === tab);
+    if (selectedTab) {
+      setActiveTab(selectedTab);
+      router.navigate({
+        to: '/vaults',
+        search: { tab: selectedTab.id },
+      });
+    }
   };
 
-  const { data, isLoading, error } = useVaults(TAB_TO_FILTER[activeTab]);
+  const { data, isLoading, error } = useVaults(activeTab.filter);
   const vaults = data?.data?.items || [];
 
   return (
@@ -55,11 +46,11 @@ export const CommunityVaultsList = ({ className = '' }) => {
       className={className}
       error={error?.message}
       isLoading={isLoading}
-      tabs={TABS}
+      tabs={VAULT_TABS.map(tab => tab.label)}
       title="Community Vaults"
       vaults={vaults}
       onTabChange={handleTabChange}
-      activeTab={activeTab}
+      activeTab={activeTab.label}
     />
   );
 };
