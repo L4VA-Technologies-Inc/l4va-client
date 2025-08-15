@@ -3,6 +3,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
+import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 
 const defaultFTs = [
   { id: 'ada', symbol: 'ADA', available: 10004.76463, selected: true, amount: '' },
@@ -31,13 +33,13 @@ export default function Staking() {
   const [nfts, setNfts] = useState(defaultNFTs);
   const [ftsAll, setFtsAll] = useState(true);
   const [nftsAll, setNftsAll] = useState(true);
+  const [proposalStart, setProposalStart] = useState('');
 
   const ftSelected = useMemo(() => fts.filter(f => f.selected), [fts]);
   const nftSelected = useMemo(() => nfts.filter(n => n.selected), [nfts]);
 
   const invalidFT = useMemo(() => fts.some(f => f.selected && f.amount && Number(f.amount) > f.available), [fts]);
 
-  // Keep "all" state in sync with individual selections
   useEffect(() => {
     const allSelected = fts.length > 0 && fts.every(f => f.selected);
     setFtsAll(allSelected);
@@ -76,6 +78,9 @@ export default function Staking() {
 
   return (
     <div className="space-y-5">
+      <div>
+        <h3 className="text-lg font-medium text-white">Assets to Stake</h3>
+      </div>
       <div className="rounded-xl border border-steel-750 bg-steel-850">
         <div className="flex items-center justify-between px-4 py-3 border-b border-steel-750">
           <div className="flex items-center gap-3">
@@ -140,7 +145,6 @@ export default function Staking() {
         )}
       </div>
 
-      {/* NFTs */}
       <div className="rounded-xl border border-steel-750 bg-steel-850">
         <div className="flex items-center justify-between px-4 py-3 border-b border-steel-750">
           <div className="flex items-center gap-3">
@@ -188,6 +192,18 @@ export default function Staking() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="mt-8">
+        <h4 className="text-white font-medium mb-4">Proposal Start</h4>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 relative">
+            <LavaIntervalPicker
+              value={proposalStart}
+              onChange={setProposalStart}
+              minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+            />
+          </div>
         </div>
       </div>
     </div>
