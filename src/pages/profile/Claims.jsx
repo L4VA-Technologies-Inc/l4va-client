@@ -9,6 +9,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import L4vaIcon from '@/icons/l4va.svg?react';
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
 const filterOptions = [
@@ -32,16 +33,18 @@ const ASSET_TYPE_LABELS = {
 export const Claims = () => {
   const [activeTab, setActiveTab] = useState(tabOptions[0]);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [status, setStatus] = useState('idle');
+  const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
   const wallet = useWallet('handler', 'isConnected');
 
-  const { data, isLoading, error } = useClaims();
+  const { data, isLoading, error, refetch } = useClaims();
   const claims = data?.data || [];
 
   const formattedClaims = claims.map(claim => ({
     id: claim.id,
     vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
-    image: claim.vault?.image || '/placeholder.svg',
+    image: claim.vault?.image,
     link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
     date: new Date(claim.created_at).toLocaleDateString(),
     reward: `${parseInt(claim.amount).toLocaleString()} VT`,
@@ -90,18 +93,36 @@ export const Claims = () => {
 
   const handleClaimNow = async claimId => {
     try {
+      setProcessedClaim(claimId);
+      setStatus('building');
+
       const { data } = await ClaimsApiProvider.receiveClaim(claimId);
+
+      setStatus('signing');
 
       const signature = await wallet.handler.signTx(data.presignedTx, true);
 
+      if (!signature) {
+        throw new Error('Transaction signing was cancelled');
+      }
+      setStatus('submitting');
+
       await ClaimsApiProvider.submitClaim(data.transactionId, {
-        signedTx: signature,
+        transaction: data.presignedTx,
+        txId: data.txId,
+        signatures: [signature],
+        claimId,
       });
       toast.success('Claim successful! Your item has been claimed.');
-      setSelectedClaims(prev => [...prev, claimId]); // Add to selected claims after claiming
+      setSelectedClaims([]);
+
+      await refetch();
     } catch (error) {
       console.error(error);
       toast.error('Failed to claim item. Please try again.');
+    } finally {
+      setStatus('idle');
+      setProcessedClaim(null);
     }
   };
 
@@ -144,8 +165,17 @@ export const Claims = () => {
         </div>
       );
     }
+
+    if (processedClaim === claim.id && status !== 'idle') {
+      return (
+        <PrimaryButton size="sm" disabled>
+          {status.toUpperCase()}
+        </PrimaryButton>
+      );
+    }
+
     return (
-      <PrimaryButton size="sm" onClick={() => handleClaimNow(claim.id)}>
+      <PrimaryButton size="sm" disabled={status !== 'idle'} onClick={() => handleClaimNow(claim.id)}>
         Claim Now
       </PrimaryButton>
     );
@@ -287,11 +317,15 @@ export const Claims = () => {
                     </td> */}
                     <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
                     <td className="px-4 py-3">
-                      <img
-                        alt={`${claim.vault} preview`}
-                        className="w-12 h-12 rounded-lg object-cover"
-                        src={claim.image}
-                      />
+                      {claim.image ? (
+                        <img
+                          alt={`${claim.vault} preview`}
+                          className="w-12 h-12 rounded-lg object-cover"
+                          src={claim.image}
+                        />
+                      ) : (
+                        <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <a

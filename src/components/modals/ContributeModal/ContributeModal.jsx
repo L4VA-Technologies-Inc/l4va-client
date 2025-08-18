@@ -16,8 +16,6 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
-const TICKER_VAL_RATE = 1751.67; // TICKER VAL rate per asset
-const VAULT_ALLOCATION_PERCENTAGE = 11; // Fixed allocation percentage
 
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { name, recipientAddress, assetsWhitelist } = vault;
@@ -37,10 +35,18 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
     const ftCount = selectedNFTs.filter(asset => asset.type === 'FT').length;
     const totalAssets = nftCount + ftCount;
-
     const estimatedValue = totalAssets * ASSET_VALUE_USD;
-    const estimatedTickerVal = totalAssets * TICKER_VAL_RATE;
-    const vaultAllocation = totalAssets > 0 ? VAULT_ALLOCATION_PERCENTAGE : 0;
+    const vaultTokenPrice = vault.assetsPrices.totalValueUsd / vault.ftTokenSupply;
+    let estimatedTickerVal;
+
+    if (vaultTokenPrice > 0) {
+      estimatedTickerVal = estimatedValue / vaultTokenPrice;
+    } else {
+      estimatedTickerVal = vault.ftTokenSupply;
+    }
+
+    const vaultAllocation =
+      totalAssets > 0 ? ((estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) * 100).toFixed(2) : 0;
 
     return {
       totalAssets,
@@ -48,7 +54,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       estimatedValue,
       estimatedTickerVal,
     };
-  }, [selectedNFTs]);
+  }, [selectedNFTs, vault.assetsPrices.totalValueUsd, vault.ftTokenSupply]);
 
   const fetchAndFormatWalletAssets = async () => {
     try {
