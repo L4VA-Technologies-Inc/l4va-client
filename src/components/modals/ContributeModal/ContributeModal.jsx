@@ -42,7 +42,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     if (vaultTokenPrice > 0) {
       estimatedTickerVal = estimatedValue / vaultTokenPrice;
     } else {
-      estimatedTickerVal = vault.ftTokenSupply;
+      estimatedTickerVal = Math.floor(vault.ftTokenSupply * (vault.tokensForAcquires * 0.01));
     }
 
     const vaultAllocation =
@@ -54,7 +54,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       estimatedValue,
       estimatedTickerVal,
     };
-  }, [selectedNFTs, vault.assetsPrices.totalValueUsd, vault.ftTokenSupply]);
+  }, [selectedNFTs, vault.assetsPrices.totalValueUsd, vault.ftTokenSupply, vault.tokensForAcquires]);
 
   const fetchAndFormatWalletAssets = async () => {
     try {
