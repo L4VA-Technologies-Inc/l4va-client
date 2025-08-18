@@ -276,7 +276,7 @@ export const initialVaultState = {
   liquidityPoolContribution: null,
 
   // Step 4: Governance
-  ftTokenSupply: 100000000,
+  ftTokenSupply: MIN_SUPPLY,
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
