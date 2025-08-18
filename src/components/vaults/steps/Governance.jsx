@@ -5,7 +5,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import { MAX_SUPPLY, TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
 export const Governance = ({ data, errors = {}, updateField }) => {
   const handlePercentageChange = value => {
@@ -33,7 +33,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     const numericValue = value.replace(/[^0-9]/g, '');
 
     const numValue = parseInt(numericValue, 10);
-    if (numValue <= 0 || numValue > 100000000) {
+    if (numValue <= 0 || numValue > MAX_SUPPLY) {
       return;
     }
 
