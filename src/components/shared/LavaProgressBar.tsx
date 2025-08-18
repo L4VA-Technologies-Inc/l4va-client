@@ -52,7 +52,7 @@ const LavaProgressBar = ({
           {normalizedSegments.map((segment, index) => (
             <div
               key={index}
-              className={cn('h-full rounded-full', segment.className)}
+              className={cn('h-full rounded-full transition-all', segment.className)}
               style={{
                 width: `${segment.progress}%`,
               }}
