@@ -51,7 +51,12 @@ const Investments = () => {
         key={index}
         className="text-steel-100 text-sm bg-steel-800/50 rounded-xl hover:bg-steel-800/70 transition-colors"
       >
-        <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">{acquire.name}</td>
+        <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">
+          <div className="w-6 flex items-center">
+            {acquire.imgUrl ? (<img className="w-6 bg-steel-0" src={acquire.imgUrl} />) : null}
+            {acquire.name}
+          </div>
+        </td>
         <td className="px-4 py-4 text-right text-xl bg-steel-950">{Number(acquire.total_assets_cost_ada).toFixed(2)}</td>
         <td className="px-4 py-4 text-right text-xl bg-steel-950">-</td>
         <td className="px-4 py-4 text-right text-xl bg-steel-950">{Number(acquire.total_assets_cost_ada).toFixed(2)}</td>
