@@ -1,6 +1,10 @@
 import Hero from '@/pages/home/Hero';
 import HeroStats from '@/components/HeroStats';
 import Features from '@/components/Features';
+import { Faq } from './Faq';
+import { VaultsFilters } from './VaultsFilters';
+import { Stats } from './Stats';
+import Investments from './Investments';
 
 export const Home = () => {
   return (
@@ -17,6 +21,10 @@ export const Home = () => {
         </div>
         <HeroStats />
         <Features />
+        <VaultsFilters />
+        <Investments />
+        <Stats />
+        <Faq />
       </div>
     </>
   );

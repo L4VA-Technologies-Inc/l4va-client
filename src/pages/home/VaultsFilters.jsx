@@ -1,39 +1,55 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useVaults } from '@/services/api/queries.js';
+import { VaultList } from '@/components/vaults/VaultsList.jsx';
 
-export const VaultsFilters = () => {
-  const [activeFilter, setActiveFilter] = useState('OPEN');
-  const filters = ['OPEN', 'UPCOMING', 'LOCKED'];
+
+const VAULT_TABS = [
+  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
+  { id: 'acquire', label: 'Acquire', filter: 'acquire' },
+  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
+  { id: 'past', label: 'Past', filter: 'locked' },
+];
+
+const DEFAULT_TAB = 'contribution';
+
+
+export const VaultsFilters = ({ className = '' }) => {
+
+  const tabParam = DEFAULT_TAB;
+  const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+    setActiveTab(newTab);
+  }, [tabParam]);
+
+  const handleTabChange = tab => {
+    const selectedTab = VAULT_TABS.find(t => t.label === tab);
+    if (selectedTab) {
+      setActiveTab(selectedTab);
+      router.navigate({
+        to: '/vaults',
+        search: { tab: selectedTab.id },
+      });
+    }
+  };
+
+  const { data, isLoading, error } = useVaults(activeTab.filter);
+  const vaults = data?.data?.items || [];
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0 mb-4 md:mb-8">
-      <p className="uppercase font-russo text-2xl md:text-4xl">Vaults</p>
-      <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-8">
-        {filters.map(filter => (
-          <button
-            key={filter}
-            className={`
-            cursor-pointer w-full md:w-44 h-12 md:h-[60px] rounded-lg
-            transition-all duration-200 text-base md:text-xl font-semibold
-            ${
-              activeFilter === filter
-                ? 'bg-red-600  border-transparent'
-                : `
-                bg-transparent backdrop-blur-sm
-                border-2 border-white/5
-                text-dark-100
-                hover:bg-white/10
-                hover:border-white/30
-              `
-            }
-            hover:opacity-90
-            `}
-            type="button"
-            onClick={() => setActiveFilter(filter)}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-    </div>
+    <VaultList
+      className={className}
+      error={error?.message}
+      isLoading={isLoading}
+      tabs={VAULT_TABS.map(tab => tab.label)}
+      vaults={vaults}
+      onTabChange={handleTabChange}
+      activeTab={activeTab.label}
+    />
   );
 };
+
+

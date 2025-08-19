@@ -13,6 +13,11 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async getAcquire() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getAcquire());
+    return response;
+  }
+
   static async getMyDraftVaults() {
     const response = await axiosInstance.get(VaultsConfigProvider.getMyDraftVaults());
     return response;
