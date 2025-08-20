@@ -103,7 +103,7 @@ export const VAULT_VALUE_METHOD_OPTIONS = [
 
 export const TERMINATION_TYPE_OPTIONS = [
   { name: 'dao', label: 'DAO' },
-  { name: 'programmed', label: 'Programmed' },
+  // { name: 'programmed', label: 'Programmed' },
 ];
 
 const socialLinkSchema = yup.object({
