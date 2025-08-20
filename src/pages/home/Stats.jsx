@@ -65,7 +65,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
   );
 };
 
-export const Stats = () => {
+const Stats = () => {
   const totalAmount = 25000000; // 25 million ADA
 
   const stats = [
@@ -104,3 +104,5 @@ export const Stats = () => {
     </div>
   );
 };
+
+export default Stats;

@@ -13,7 +13,7 @@ const VAULT_TABS = [
 const DEFAULT_TAB = 'contribution';
 
 
-export const VaultsFilters = ({ className = '' }) => {
+const VaultsFilters = ({ className = '' }) => {
 
   const tabParam = DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -51,5 +51,7 @@ export const VaultsFilters = ({ className = '' }) => {
     />
   );
 };
+
+export default VaultsFilters;
 
 
