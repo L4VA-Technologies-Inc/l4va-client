@@ -2,7 +2,7 @@ import L4vaIcon from '@/icons/l4va.svg';
 import { ExternalLink } from 'lucide-react';
 import { useAcquire } from '@/services/api/queries.js';
 
-const Investments = () => {
+const Acquire = () => {
 
   // const { data, isLoading, error } = useVaults('contribution');
   // const vaults = data?.data?.items || [];
@@ -53,7 +53,7 @@ const Investments = () => {
       >
         <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">
           <div className="w-6 flex items-center">
-            {acquire.imgUrl ? (<img className="w-6 bg-steel-0" src={acquire.imgUrl} />) : null}
+            {acquire.vault_image?.file_url ? (<img className="w-6 bg-steel-0" src={acquire.vault_image?.file_url} />) : null}
             {acquire.name}
           </div>
         </td>
@@ -73,4 +73,4 @@ const Investments = () => {
   );
 };
 
-export default Investments;
+export default Acquire;

@@ -4,7 +4,7 @@ import Features from '@/components/Features';
 import { Faq } from './Faq';
 import { VaultsFilters } from './VaultsFilters';
 import { Stats } from './Stats';
-import Investments from './Investments';
+import Acquire from './Acquire.jsx';
 
 export const Home = () => {
   return (
@@ -22,7 +22,7 @@ export const Home = () => {
         <HeroStats />
         <Features />
         <VaultsFilters />
-        <Investments />
+        <Acquire />
         <Stats />
         <Faq />
       </div>
