@@ -27,7 +27,12 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
       return;
     }
 
-    updateField(name, sanitizedValue === '' ? '' : +sanitizedValue);
+    if (sanitizedValue !== '') {
+      const limitedValue = Math.min(+sanitizedValue, 100);
+      updateField(name, limitedValue);
+    } else {
+      updateField(name, '');
+    }
   };
 
   const getMinAcquireDate = () => {
@@ -115,7 +120,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             error={errors.tokensForAcquires}
             label="TOKENS FOR ACQUIRES (%)"
             name="tokensForAcquires"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.tokensForAcquires || ''}
@@ -129,7 +134,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             error={errors.acquireReserve}
             label="RESERVE (%)"
             name="acquireReserve"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.acquireReserve || ''}
@@ -143,7 +148,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             error={errors.liquidityPoolContribution}
             label="LIQUIDITY POOL (LP) CONTRIBUTION (%)"
             name="liquidityPoolContribution"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.liquidityPoolContribution || ''}

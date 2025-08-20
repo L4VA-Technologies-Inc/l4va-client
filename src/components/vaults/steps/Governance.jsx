@@ -24,7 +24,8 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);
     if (sanitizedValue !== null) {
-      updateField(name, +sanitizedValue);
+      const limitedValue = Math.min(sanitizedValue, 100);
+      updateField(name, +limitedValue);
     }
   };
 
@@ -98,7 +99,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
                 name="vaultAppreciation"
-                placeholder="XX.XX"
+                placeholder="XX"
                 suffix="%"
                 value={data.vaultAppreciation || ''}
                 onChange={handleNumChange}
@@ -115,7 +116,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               hint="Minimum VT as % of total VT supply required to create a proposal"
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.creationThreshold || ''}
               onChange={handleNumChange}
@@ -129,7 +130,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               hint="Minimum amount of VT that must be present in a stake for it to be able to cosign a transaction"
               label="COSIGNING THRESHOLD (%)"
               name="cosigningThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.cosigningThreshold || ''}
               onChange={handleNumChange}
@@ -143,7 +144,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               hint="Minimum VT as % of total VT supply co-signed to start voting phase"
               label="START THRESHOLD (%)"
               name="startThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.startThreshold || ''}
               onChange={handleNumChange}
@@ -157,7 +158,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               hint="Minimum VT as % of total staked VT for vote to be valid"
               label="VOTE THRESHOLD (%)"
               name="voteThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.voteThreshold || ''}
               onChange={handleNumChange}
@@ -171,7 +172,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               hint="Minimum VT as % of total VT voted, for the largest vote tallied for proposal to win"
               label="EXECUTION THRESHOLD (%)"
               name="executionThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.executionThreshold || ''}
               onChange={handleNumChange}
