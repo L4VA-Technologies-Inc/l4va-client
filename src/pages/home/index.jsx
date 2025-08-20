@@ -1,6 +1,10 @@
 import Hero from '@/pages/home/Hero';
 import HeroStats from '@/components/HeroStats';
 import Features from '@/components/Features';
+import Faq from '@/pages/home/Faq';
+import VaultsFilters from '@/pages/home/VaultsFilters';
+import Stats from '@/pages/home/Stats';
+import Acquire from '@/pages/home/Acquire';
 
 export const Home = () => {
   return (
@@ -17,6 +21,10 @@ export const Home = () => {
         </div>
         <HeroStats />
         <Features />
+        <VaultsFilters />
+        <Acquire />
+        <Stats />
+        <Faq />
       </div>
     </>
   );

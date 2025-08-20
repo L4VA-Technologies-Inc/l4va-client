@@ -24,7 +24,7 @@ const FaqItem = ({ question, answer, index }) => (
   </AccordionItem>
 );
 
-export const Faq = () => {
+const Faq = () => {
   const steps = [
     {
       number: 1,
@@ -127,3 +127,5 @@ export const Faq = () => {
     </div>
   );
 };
+
+export default Faq;

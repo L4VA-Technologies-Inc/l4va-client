@@ -14,6 +14,13 @@ export const useVaults = tab => {
   });
 };
 
+export const useAcquire = () => {
+  return useQuery({
+    queryKey: ['acquire'],
+    queryFn: () => VaultsApiProvider.getAcquire(),
+  });
+};
+
 export const useMyDraftVaults = () => {
   return useQuery({
     queryKey: ['vaults', 'draft'],
