@@ -209,8 +209,8 @@ export const vaultSchema = yup.object({
     .typeError('Token supply is required')
     .required('Token supply is required')
     .integer('Must be an integer')
-    .min(MIN_SUPPLY, 'Must be greater than 100,000,000,000,000')
-    .max(MAX_SUPPLY, 'Must be less than or equal to 10,000,000,000,000,000'),
+    .min(MIN_SUPPLY, 'Must be greater than 1,000,000,000,000')
+    .max(MAX_SUPPLY, 'Must be less than or equal to 1,000,000,000,000,000,000'),
   ftTokenImg: yup.string().required('Token image is required'),
   terminationType: yup.string().required('Termination type is required'),
   creationThreshold: yup
