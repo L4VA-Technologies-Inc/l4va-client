@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
@@ -14,6 +14,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import MetricCard from '@/components/shared/MetricCard';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
+import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 
@@ -291,7 +292,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           </div>
         </div>
         <div className="space-y-6">
-          <h2 className="text-xl font-medium">Contribution Summary</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-medium">Contribution Summary</h2>
+            <HoverHelp hint='Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information.' />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <MetricCard label="Total Assets Selected" value={contributionDetails.totalAssets} />
             <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
@@ -299,7 +303,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           <div className="grid grid-cols-2 gap-3">
             <MetricCard label="Estimated Value" value={`$${contributionDetails.estimatedValue.toLocaleString()}`} />
             <MetricCard
-              label="Estimated TICKER VAL ($VAL)"
+              label="Estimated Vault Token Received"
               value={contributionDetails.estimatedTickerVal.toLocaleString()}
             />
           </div>
