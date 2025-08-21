@@ -73,18 +73,7 @@ export const LavaIntervalPicker = ({
             {label}
           </span>
           {hint && (
-            <div className="group relative inline-flex">
-              <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div
-                className="
-                  absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg 
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 
-                  whitespace-pre-wrap break-words text-left pointer-events-none
-                "
-              >
-                {hint}
-              </div>
-            </div>
+            <HoverHelp hint={hint} />
           )}
         </div>
       ) : null}
