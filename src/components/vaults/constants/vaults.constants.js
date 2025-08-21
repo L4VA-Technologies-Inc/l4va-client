@@ -217,16 +217,16 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required'),
-  startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
+  // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
   voteThreshold: yup.number().typeError('Vote threshold is required').required('Vote threshold is required'),
   executionThreshold: yup
     .number()
     .typeError('Execution threshold is required')
     .required('Execution threshold is required'),
-  cosigningThreshold: yup
-    .number()
-    .typeError('Cosigning threshold is required')
-    .required('Cosigning threshold is required'),
+  // cosigningThreshold: yup
+  //   .number()
+  //   .typeError('Cosigning threshold is required')
+  //   .required('Cosigning threshold is required'),
 
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup
@@ -281,10 +281,10 @@ export const initialVaultState = {
   terminationType: 'dao',
   // DAO specific fields
   creationThreshold: null,
-  startThreshold: null,
+  // startThreshold: null,
   voteThreshold: null,
   executionThreshold: null,
-  cosigningThreshold: null,
+  // cosigningThreshold: null,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,
@@ -313,10 +313,8 @@ export const stepFields = {
     'ftTokenImg',
     'terminationType',
     'creationThreshold',
-    'startThreshold',
     'voteThreshold',
     'executionThreshold',
-    'cosigningThreshold',
     'timeElapsedIsEqualToTime',
     'vaultAppreciation',
   ],

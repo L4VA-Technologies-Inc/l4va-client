@@ -17,11 +17,9 @@ export const mandatoryStepFields = {
     'ftTokenImg',
     'terminationType',
     'creationThreshold',
-    'startThreshold',
     'voteThreshold',
     'executionThreshold',
-    'cosigningThreshold',
-  ], 
+  ],
   5: [],
 };
 

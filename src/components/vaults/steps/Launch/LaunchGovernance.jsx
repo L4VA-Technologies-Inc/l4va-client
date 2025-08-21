@@ -57,10 +57,10 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
               <p className="uppercase font-semibold text-dark-100">Creation Threshold %</p>
               <p>{data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}</p>
             </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">Start Threshold %</p>
-              <p>{data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}</p>
-            </div>
+            {/*<div>*/}
+            {/*  <p className="uppercase font-semibold text-dark-100">Start Threshold %</p>*/}
+            {/*  <p>{data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}</p>*/}
+            {/*</div>*/}
             <div>
               <p className="uppercase font-semibold text-dark-100">Vote Threshold %</p>
               <p>{data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}</p>
@@ -69,10 +69,10 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
               <p className="uppercase font-semibold text-dark-100">Execution Threshold %</p>
               <p>{data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}</p>
             </div>
-            <div>
-              <p className="uppercase font-semibold text-dark-100">Cosigning Threshold %</p>
-              <p>{data.cosigningThreshold ? `${formatNum(data.cosigningThreshold)}%` : 'Not set'}</p>
-            </div>
+            {/*<div>*/}
+            {/*  <p className="uppercase font-semibold text-dark-100">Cosigning Threshold %</p>*/}
+            {/*  <p>{data.cosigningThreshold ? `${formatNum(data.cosigningThreshold)}%` : 'Not set'}</p>*/}
+            {/*</div>*/}
           </div>
         </div>
       </div>
