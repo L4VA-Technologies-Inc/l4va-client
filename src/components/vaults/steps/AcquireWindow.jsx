@@ -118,7 +118,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           <LavaInput
             required
             error={errors.tokensForAcquires}
-            label="TOKENS FOR ACQUIRES (%)"
+            label="TOKENS FOR ACQUIRERS (%)"
             name="tokensForAcquires"
             placeholder="XX"
             suffix="%"
