@@ -125,7 +125,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             type="text"
             value={data.tokensForAcquires || ''}
             onChange={handleChange}
-            hint="The percentage (%) of total tokens minted which will be received by Acquirers when Vault locks; while asset Contributors will receive 100% minus this amount."
+            hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
         </div>
         <div>
