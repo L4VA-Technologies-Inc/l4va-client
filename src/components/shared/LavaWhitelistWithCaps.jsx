@@ -82,8 +82,6 @@ export const LavaWhitelistWithCaps = ({
             <div className="flex gap-4">
               <div className="flex-1">
                 <LavaInput
-                  type="number"
-                  min="0"
                   placeholder="Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
@@ -107,8 +105,6 @@ export const LavaWhitelistWithCaps = ({
               
               <div className="flex-1">
                 <LavaInput
-                  type="number"
-                  min="0"
                   placeholder="Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
@@ -133,7 +129,7 @@ export const LavaWhitelistWithCaps = ({
           </div>
         ))}
       </div>
-      {whitelist.length === 0 && (
+      {!whitelist.length && (
         <div className="text-dark-100 text-base my-4">No items. Click the + button to add one.</div>
       )}
       {whitelist.length >= maxItems && (
