@@ -12,7 +12,7 @@ export const AcquireModal = ({ vault, onClose }) => {
   const { name } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
   const [status, setStatus] = useState('idle');
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
@@ -194,11 +194,11 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="flex justify-center mt-8">
                 <PrimaryButton
                   className="uppercase"
-                  disabled={status !== 'idle'}
+                  disabled={status !== 'idle' || wallet.isUpdatingUtxos}
                   onClick={handleAcquire}
                   icon={status !== 'idle' ? Spinner : null}
                 >
-                  {status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
+                  {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
                 </PrimaryButton>
               </div>
             </div>
