@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { NovuProvider } from '@novu/react';
 
 import { routeTree } from './routeTree.gen';
 
@@ -32,13 +33,15 @@ const router = createRouter({
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <WeldProvider>
-        <AuthProvider>
-          <ModalProvider>
-            <RouterProvider router={router} />
-          </ModalProvider>
-        </AuthProvider>
-      </WeldProvider>
+      <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId="68ad74bcd8e299ea20802270">
+        <WeldProvider>
+          <AuthProvider>
+            <ModalProvider>
+              <RouterProvider router={router} />
+            </ModalProvider>
+          </AuthProvider>
+        </WeldProvider>
+      </NovuProvider>
     </QueryClientProvider>
   </StrictMode>
 );
