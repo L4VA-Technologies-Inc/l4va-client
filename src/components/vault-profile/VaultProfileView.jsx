@@ -47,7 +47,7 @@ export const VaultProfileView = ({ vault }) => {
       },
       Governance: {
         text: 'Create Proposal',
-        available: true,
+        available: vault.vaultStatus === VAULT_STATUSES.LOCKED,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,
