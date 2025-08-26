@@ -1,47 +1,27 @@
-import { WeldProvider } from '@ada-anvil/weld/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { NovuProvider } from '@novu/react';
 
-import { routeTree } from './routeTree.gen';
-
+import { AppCore } from '@/AppCore';
 import { AuthProvider } from '@/lib/auth/auth.context';
-import { ModalProvider } from '@/lib/modals/modal.context';
 
 import '@/css/index.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
       retry: 1,
     },
   },
 });
 
-const router = createRouter({
-  routeTree,
-  context: {},
-  defaultPreload: 'intent',
-  scrollRestoration: true,
-  defaultStructuralSharing: true,
-  defaultPreloadStaleTime: 0,
-});
-
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId="68ad74bcd8e299ea20802270">
-        <WeldProvider>
-          <AuthProvider>
-            <ModalProvider>
-              <RouterProvider router={router} />
-            </ModalProvider>
-          </AuthProvider>
-        </WeldProvider>
-      </NovuProvider>
+      <AuthProvider>
+        <AppCore />
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>
 );
