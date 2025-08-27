@@ -6,6 +6,9 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
+import { LavaSelect, LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
+import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 
 export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
@@ -17,6 +20,11 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     marketCap: initialFilters.marketCap || { min: '', max: '', currency: 'ADA' },
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
+    assetWhitelist: initialFilters.assetWhitelist || '',
+    contributionOpening: initialFilters.contributionOpening || '',
+    contributionClosing: initialFilters.contributionClosing || '',
+    acquireOpening: initialFilters.acquireOpening || '',
+    acquireClosing: initialFilters.acquireClosing || '',
   });
 
   const OPTIONS = {
@@ -24,6 +32,13 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
+    assetWhitelist: [
+      { name: 'EarthNode', policyId: 'b97859c71e4e73af3ae83c30a3172c434c43041f6ff19c297fb76094' },
+      { name: '$C4 Player Pass', policyId: '167248c765f731a1535d60acef2fef06cfdf6a4d085917903fc8e820' },
+      { name: 'Jellycubes', policyId: '5c1c91a65bedac56f245b8184b5820ced3d2f1540e521dc1060fa683' },
+      { name: 'SpaceBudz', policyId: '4523c5e21d409b81c95b45b0aea275b8ea1406e6cafea5583b9f8a5f' },
+      { name: 'Baby Crocs Club', policyId: 'bb3ce45d5272654e58ad076f114d8f683ae4553e3c9455b18facfea1' },
+    ],
   };
 
   const toggleArrayFilter = (key, value) => {
@@ -106,7 +121,8 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
             <option value="ADA">ADA</option>
             <option value="USD">USD</option>
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <ChevronDown
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
       </div>
     </div>
@@ -179,6 +195,60 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
             />
           </div>
         </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Asset Whitelist</h3>
+          <div>
+            <LavaSteelSelect
+              options={OPTIONS.assetWhitelist.map(w => ({
+                label: w.name,
+                value: w.policyId,
+              }))}
+              value={filters.assetWhitelist}
+              onChange={(val) => setSingleFilter('assetWhitelist', val)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Contribution Window</h3>
+          <div className="flex flex-col gap-2">
+            <LavaDatePicker
+              label="Opening in:"
+              value={filters.contributionOpening}
+              onChange={date => setSingleFilter('contributionOpening', date)}
+            />
+            <LavaDatePicker
+              label="Closing in:"
+              value={filters.contributionClosing}
+              onChange={date => setSingleFilter('contributionClosing', date)}
+            />
+          </div>
+
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Acquire Window</h3>
+          <div className="flex flex-col gap-2">
+            <LavaDatePicker
+              label="Opening in:"
+              value={filters.acquireOpening}
+              onChange={date => setSingleFilter('acquireOpening', date)}
+            />
+            <LavaDatePicker
+              label="Closing in:"
+              value={filters.acquireClosing}
+              onChange={date => setSingleFilter('acquireClosing', date)}
+            />
+          </div>
+
+        </div>
+
+        {/*<div>*/}
+        {/*  <h3 className="text-lg font-medium mb-3">Whitelisted</h3>*/}
+        {/*  <div></div>*/}
+
+        {/*</div>*/}
         {renderRangeField('TVL', 'tvl')}
         {/* {renderRangeField('Market Cap', 'marketCap')} */}
         {/* <div>

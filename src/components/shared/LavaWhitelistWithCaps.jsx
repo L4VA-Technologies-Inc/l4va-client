@@ -6,7 +6,7 @@ import { LavaInput } from '@/components/shared/LavaInput';
 export const LavaWhitelistWithCaps = ({
   required = false,
   label = 'Asset whitelist',
-  itemPlaceholder = 'Enter Policy ID',
+  itemPlaceholder = '*Enter Policy ID',
   whitelist = [],
   setWhitelist,
   maxItems = 10,
@@ -82,7 +82,7 @@ export const LavaWhitelistWithCaps = ({
             <div className="flex gap-4">
               <div className="flex-1">
                 <LavaInput
-                  placeholder="Min asset cap"
+                  placeholder="*Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
                   onChange={e =>
@@ -105,7 +105,7 @@ export const LavaWhitelistWithCaps = ({
               
               <div className="flex-1">
                 <LavaInput
-                  placeholder="Max asset cap"
+                  placeholder="*Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
                   onChange={e =>

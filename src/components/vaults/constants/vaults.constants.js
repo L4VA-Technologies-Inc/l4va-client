@@ -113,7 +113,7 @@ const socialLinkSchema = yup.object({
 
 const assetWhitelistItemSchema = yup.object({
   policyId: yup.string().required('Policy ID is required'),
-  countCapMin: yup.number().typeError('Min asset cap is required'),
+  countCapMin: yup.number().typeError('Min must be at least 1 for each whitelisted policy ID'),
   countCapMax: yup.number().typeError('Max asset cap is required'),
 });
 
