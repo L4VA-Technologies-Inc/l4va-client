@@ -7,7 +7,7 @@ const getBackgroundColor = index => {
 
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-red-600 text-3xl lg:text-6xl xl:text-7xl font-bold mb-2">{value}</p>
+    <p className="font-russo text-red-600 text-3xl lg:text-6xl xl:text-4xl font-bold mb-2">{value}</p>
     <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
   </div>
 );
@@ -22,7 +22,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 
   return (
     <div className="mb-16">
-      <h2 className="text-2xl lg:text-5xl xl:text-6xl font-extrabold text-red-600 mb-8">{title}</h2>
+      <h2 className="text-2xl lg:text-5xl xl:text-4xl font-extrabold text-red-600 mb-8">{title}</h2>
       <div className="space-y-8">
         <div className="grid gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -65,7 +65,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
   );
 };
 
-export const Stats = () => {
+const Stats = () => {
   const totalAmount = 25000000; // 25 million ADA
 
   const stats = [
@@ -91,7 +91,7 @@ export const Stats = () => {
 
   return (
     <div className="container mx-auto py-12 sm:py-16">
-      <h1 className="font-russo font-bold text-3xl lg:text-6xl xl:text-7xl mb-8">QUICK STATS</h1>
+      <h1 className="font-russo font-bold text-3xl lg:text-6xl xl:text-4xl mb-8">QUICK STATS</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         {stats.map(stat => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} />
@@ -104,3 +104,5 @@ export const Stats = () => {
     </div>
   );
 };
+
+export default Stats;

@@ -3,6 +3,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults';
   }
 
+  static getAcquire() {
+    return '/api/v1/vaults/acquire';
+  }
+
   static getVaults(filter) {
     if (filter) {
       return `/api/v1/vaults?filter=${filter}`;
