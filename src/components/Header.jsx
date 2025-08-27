@@ -15,7 +15,7 @@ const navLinks = [
   { to: '/create', label: 'Create' },
   { to: '/vaults?tab=contribute', label: 'Contribute' },
   { to: '/vaults?tab=acquire', label: 'Acquire' },
-  { to: '/vaults?tab=govern', label: 'Govern' },
+  { to: '/vaults?tab=past', label: 'Govern' },
 ];
 
 const NavLink = React.memo(({ to, label, onClick }) => (
