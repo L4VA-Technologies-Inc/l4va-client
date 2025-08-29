@@ -71,7 +71,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         policyId: 'lovelace',
         quantity: wallet.balanceAda || 0,
         decimals: 6,
-        type: 'FT',
+        type: 'ada',
         assetName: 'lovelace',
         image: '/assets/icons/ada.png',
       };
