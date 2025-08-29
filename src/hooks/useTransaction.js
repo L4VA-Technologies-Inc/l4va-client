@@ -28,6 +28,7 @@ export const useTransaction = () => {
           vaultId,
           assets: selectedNFTs.map(nft => ({
             policyId: nft.policyId,
+            type: nft.type.toLowerCase(),
             assetName: nft.assetName,
             quantity: nft.quantity,
             metadata: nft.metadata,
