@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, ArrowRight, Check } from 'lucide-react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { useGovernanceProposals } from '@/services/api/queries';
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
+  const [proposals, setProposals] = useState([]);
   const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({
@@ -15,49 +17,11 @@ export const VaultGovernance = ({ vault }) => {
     label: tab,
   }));
 
+  const { data, isLoading } = useGovernanceProposals(vault.id);
+
   const handleTabSelect = selectedTab => {
     setActiveTab(selectedTab);
   };
-
-  const proposals = [
-    {
-      title: 'Vault Open Sale',
-      description:
-        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
-      status: 'Closed',
-      endDate: '2024-12-22T02:00:00Z',
-      votes: {
-        yes: 77,
-        no: 23,
-      },
-    },
-    {
-      title: 'Vault Proposal',
-      description:
-        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
-      status: 'Open',
-      endDate: '2025-01-22T02:00:00Z',
-      votes: {
-        yes: 54,
-        no: 46,
-      },
-    },
-    {
-      title: 'Distribution of Assets',
-      description:
-        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
-      status: 'Upcoming',
-      endDate: '2025-01-22T02:00:00Z',
-    },
-    {
-      title: 'Distribution of Assets',
-      description:
-        'Sed gravida feugiat diam. Duis pretium mollis nisl, non scelerisque velit vehicula vel. Praesent pulvinar tortor enim, vitae consectetur ex posuere id. Curabitur vehicula pellentesque viverra.',
-      status: 'Closed',
-      approved: true,
-      endDate: '2025-01-22T02:00:00Z',
-    },
-  ];
 
   const filteredProposals = proposals.filter(proposal => {
     if (activeTab === 'All') return true;
@@ -66,6 +30,12 @@ export const VaultGovernance = ({ vault }) => {
     if (activeTab === 'Upcoming') return proposal.status === 'Upcoming';
     return false;
   });
+
+  useEffect(() => {
+    if (data?.data && !isLoading) {
+      setProposals(data.data);
+    }
+  }, [data, isLoading]);
 
   return (
     <div className="bg-gray-900 text-white min-h-screen p-6">

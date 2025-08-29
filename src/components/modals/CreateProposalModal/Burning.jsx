@@ -5,7 +5,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 
-export default function Burning({ onClose }) {
+export default function Burning({ onClose, vaultId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proposalStart, setProposalStart] = useState('');
   const [selectedAll, setSelectedAll] = useState(false);

@@ -5,22 +5,7 @@ import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
-
-const defaultFTs = [
-  { id: 'ada', symbol: 'ADA', available: 10004.76463, selected: true, amount: '' },
-  { id: 'snek', symbol: 'SNEK', available: 3255.99994483, selected: true, amount: '' },
-];
-
-const defaultNFTs = [
-  { id: 'sb-2383', project: 'SpaceBudz', tokenLabel: 'SpaceBud #2383', selected: true, market: 'm1' },
-  {
-    id: 'mk-11435',
-    project: 'Chilled Kongs - Magic Kongs',
-    tokenLabel: 'MagicKong#11435',
-    selected: true,
-    market: 'm2',
-  },
-];
+import { useAssetsToStake } from '@/services/api/queries';
 
 const marketOptions = [
   { value: 'm1', label: 'Market 1' },
@@ -28,12 +13,14 @@ const marketOptions = [
   { value: 'm3', label: 'Market 3' },
 ];
 
-export default function Staking() {
-  const [fts, setFts] = useState(defaultFTs);
-  const [nfts, setNfts] = useState(defaultNFTs);
+export default function Staking({ vaultId, onDataChange }) {
+  const [fts, setFts] = useState([]);
+  const [nfts, setNfts] = useState([]);
   const [ftsAll, setFtsAll] = useState(true);
   const [nftsAll, setNftsAll] = useState(true);
   const [proposalStart, setProposalStart] = useState('');
+
+  const { data, isLoading } = useAssetsToStake(vaultId);
 
   const ftSelected = useMemo(() => fts.filter(f => f.selected), [fts]);
   const nftSelected = useMemo(() => nfts.filter(n => n.selected), [nfts]);
@@ -75,6 +62,53 @@ export default function Staking() {
     setNftsAll(newValue);
     setNfts(prev => prev.map(n => ({ ...n, selected: newValue })));
   }
+
+  useEffect(() => {
+    if (data?.data?.length > 0 && !isLoading) {
+      // Filter and map FTs (CNTs)
+      const ftAssets = data.data
+        .filter(asset => asset.type === 'cnt')
+        .map(asset => ({
+          id: asset.id,
+          symbol: asset.asset_id === 'lovelace' ? 'ADA' : asset.asset_id,
+          available: parseFloat(asset.quantity),
+          selected: true,
+          amount: '',
+        }));
+
+      // Filter and map NFTs
+      const nftAssets = data.data
+        .filter(asset => asset.type === 'nft')
+        .map(asset => ({
+          id: asset.id,
+          project: asset.metadata?.onchainMetadata?.name || 'Unknown Project',
+          tokenLabel: asset.metadata?.onchainMetadata?.name || 'Unknown Token',
+          selected: true,
+          market: 'm1',
+        }));
+
+      setFts(ftAssets);
+      setNfts(nftAssets);
+    }
+  }, [isLoading, data]);
+
+  useEffect(() => {
+    if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0 || proposalStart)) {
+      const stakingData = {
+        fts: ftSelected.map(ft => ({
+          id: ft.id,
+          amount: ft.amount ? parseFloat(ft.amount) : ft.available,
+        })),
+        nfts: nftSelected.map(nft => ({
+          id: nft.id,
+          market: nft.market,
+        })),
+        proposalStart: proposalStart || undefined,
+      };
+
+      onDataChange(stakingData);
+    }
+  }, [fts, nfts, proposalStart, ftSelected, nftSelected, onDataChange]);
 
   return (
     <div className="space-y-5">

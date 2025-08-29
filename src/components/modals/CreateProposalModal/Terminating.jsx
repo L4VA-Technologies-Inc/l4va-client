@@ -4,7 +4,7 @@ import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/Asse
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
 
-export default function Terminating({ onClose }) {
+export default function Terminating({ onClose, vaultId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proposalStart, setProposalStart] = useState('');
 
@@ -72,9 +72,9 @@ export default function Terminating({ onClose }) {
         </div>
 
         <div className="space-y-4">
-          {TerminatingAssets.map(asset => {
+          {TerminatingAssets.map((asset, i) => {
             return (
-              <div className="bg-steel-800 rounded-lg p-4 space-y-4">
+              <div className="bg-steel-800 rounded-lg p-4 space-y-4" key={i}>
                 <div className="flex gap-4">
                   <div className="text-sm text-white/60 flex gap-8 w-full">
                     <div className="flex w-auto flex-col">
@@ -90,9 +90,9 @@ export default function Terminating({ onClose }) {
                     </div>
                     <div>
                       <div>
-                        {asset.assets.map(item => {
+                        {asset.assets.map((item, j) => {
                           return (
-                            <div className="flex gap-2 text-white">
+                            <div className="flex gap-2 text-white" key={j}>
                               <span>{item.collection}</span>
                               <span>{item.value}</span>
                             </div>
