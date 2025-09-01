@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import toast from 'react-hot-toast';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -11,17 +12,21 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
+import { useCreateProposal } from '@/services/api/queries';
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState('staking');
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [proposalData, setProposalData] = useState({});
+
+  const createProposalMutation = useCreateProposal();
 
   const executionOptions = [
     { value: 'staking', label: 'Staking' },
-    { value: 'distributing', label: 'Distributing' },
-    { value: 'terminating', label: 'Terminating' },
+    { value: 'distribution', label: 'Distributing' },
+    { value: 'termination', label: 'Terminating' },
     { value: 'burning', label: 'Burning' },
   ];
 
@@ -31,17 +36,67 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const handleConfirmCreate = async () => {
     try {
-      console.log('Creating proposal:', {
+      // Build the base proposal data
+      const proposalPayload = {
         title: proposalTitle,
         description: proposalDescription,
-        executionType: selectedOption,
-        vaultName: vault.name,
+        type: selectedOption, // Backend expects UPPERCASE enum values
+      };
+
+      // Handle different proposal types
+      if (selectedOption === 'staking') {
+        // Add FTs and NFTs directly to the payload for staking
+        proposalPayload.fts = proposalData.fungibleTokens || [];
+        proposalPayload.nfts = proposalData.nonFungibleTokens || [];
+
+        // Add start date if provided
+        if (proposalData.proposalStart) {
+          proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
+        }
+      } else if (selectedOption === 'distribution') {
+        // Add distribution assets directly to the payload
+        proposalPayload.distributionAssets = proposalData.distributionAssets || [];
+
+        // Add start date if provided
+        if (proposalData.proposalStart) {
+          proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
+        }
+      } else if (selectedOption === 'termination') {
+        // For termination, add as metadata
+        proposalPayload.metadata = {
+          reason: proposalData.reason || '',
+          terminationDate: proposalData.terminationDate || null,
+        };
+      } else if (selectedOption === 'burning') {
+        // For burning, add as metadata
+        proposalPayload.metadata = {
+          burnAssets: proposalData.burnAssets || [],
+        };
+      }
+
+      const response = await createProposalMutation.mutateAsync({
+        vaultId: vault.id,
+        proposalData: proposalPayload,
       });
+
+      console.log('Proposal created successfully:', response);
+
+      toast.success('Proposal created successfully!');
       setShowConfirmation(false);
       onClose();
     } catch (error) {
       console.error('Failed to create proposal:', error);
+      toast.error('Failed to create proposal. Please try again.');
     }
+  };
+
+  const handleDataChange = useCallback(data => {
+    setProposalData(prev => ({ ...prev, ...data }));
+  }, []);
+
+  const handleChangeExecutionOption = value => {
+    setProposalData({});
+    setSelectedOption(value);
   };
 
   const renderFooter = () => (
@@ -87,15 +142,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               options={executionOptions}
               placeholder="Select execution type"
               value={selectedOption}
-              onChange={value => setSelectedOption(value)}
+              onChange={handleChangeExecutionOption}
             />
           </div>
 
           <div className="space-y-4">
-            {selectedOption === 'staking' && <Staking />}
-            {selectedOption === 'distributing' && <Distributing />}
-            {selectedOption === 'terminating' && <Terminating onClose={() => setSelectedOption('staking')} />}
-            {selectedOption === 'burning' && <Burning onClose={() => setSelectedOption('staking')} />}
+            {selectedOption === 'staking' && <Staking vaultId={vault?.id} onDataChange={handleDataChange} />}
+            {selectedOption === 'distribution' && <Distributing vaultId={vault?.id} onDataChange={handleDataChange} />}
+            {selectedOption === 'termination' && (
+              <Terminating vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
+            )}
+            {selectedOption === 'burning' && (
+              <Burning vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
+            )}
           </div>
         </div>
       </ModalWrapper>

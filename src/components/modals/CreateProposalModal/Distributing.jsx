@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -7,21 +7,14 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { Button } from '@/components/ui/button';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
+import { useAssetsToDistribute } from '@/services/api/queries';
 
-const availableAssets = [
-  { value: 'ada', label: 'ADA', available: 10004.76463 },
-  { value: 'snek', label: 'SNEK', available: 3255.99994483 },
-  { value: 'sundae', label: 'SUNDAE', available: 1500.25 },
-  { value: 'min', label: 'MIN', available: 5000.0 },
-];
-
-export default function Distributing({ onDataChange }) {
-  const [distributionAssets, setDistributionAssets] = useState([
-    { id: 1, asset: 'snek', amount: '3255.99994483', isMax: true },
-    { id: 2, asset: 'ada', amount: '2500', isMax: false },
-  ]);
+export default function Distributing({ onDataChange, vaultId }) {
+  const [distributionAssets, setDistributionAssets] = useState([]);
   const [proposalStart, setProposalStart] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
+  const [availableAssets, setAvailableAssets] = useState([]);
+  const { data, isLoading } = useAssetsToDistribute(vaultId);
 
   const formatTimeInput = value => {
     const numbers = value.replace(/\D/g, '');
@@ -37,51 +30,6 @@ export default function Distributing({ onDataChange }) {
     }
 
     return formatted;
-  };
-
-  const handleProposalStartChange = value => {
-    const formatted = formatTimeInput(value);
-    setProposalStart(formatted);
-  };
-
-  useEffect(() => {
-    if (onDataChange) {
-      onDataChange({
-        distributionAssets: distributionAssets.filter(asset => asset.asset && asset.amount),
-        proposalStart,
-      });
-    }
-    const selectedAssets = distributionAssets.map(a => a.asset).filter(Boolean);
-    const allAssetsSelected =
-      selectedAssets.length === availableAssets.length && availableAssets.every(a => selectedAssets.includes(a.value));
-
-    if (distributeAll !== allAssetsSelected) {
-      setDistributeAll(allAssetsSelected);
-    }
-  }, [distributionAssets, proposalStart, onDataChange]);
-
-  useEffect(() => {
-    if (distributeAll) {
-      distributeAllAssets();
-    } else {
-      setDistributionAssets([]);
-    }
-  }, [distributeAll]);
-
-  const addAsset = () => {
-    const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
-    setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
-  };
-
-  const distributeAllAssets = () => {
-    const newAssets = availableAssets.map((a, index) => ({
-      id: index + 1,
-      asset: a.value,
-      amount: a.available.toString(),
-      isMax: true,
-    }));
-
-    setDistributionAssets(newAssets);
   };
 
   const removeAsset = id => {
@@ -113,6 +61,99 @@ export default function Distributing({ onDataChange }) {
     if (!available || !amount) return 0;
     return Math.min((parseFloat(amount) / available) * 100, 100);
   };
+
+  const addAsset = () => {
+    const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
+    setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
+  };
+
+  const handleProposalStartChange = value => {
+    const formatted = formatTimeInput(value);
+    setProposalStart(formatted);
+  };
+
+  const distributeAllAssets = useCallback(() => {
+    if (availableAssets) {
+      const newAssets = availableAssets.map((a, index) => ({
+        id: index + 1,
+        asset: a.value,
+        amount: a.available.toString(),
+        isMax: true,
+      }));
+
+      setDistributionAssets(newAssets);
+    }
+  }, [availableAssets]);
+
+  useEffect(() => {
+    if (distributeAll) {
+      distributeAllAssets();
+    } else {
+      setDistributionAssets([]);
+    }
+  }, [distributeAll, distributeAllAssets]);
+
+  useEffect(() => {
+    if (data?.data && !isLoading) {
+      const formattedAssets = data.data.map(asset => {
+        let label = asset.asset_id;
+        // Special case for lovelace - show as ADA
+        if (asset.asset_id === 'lovelace') {
+          label = 'ADA';
+        } else if (asset.type === 'nft' && asset.metadata?.onchainMetadata?.name) {
+          // Use NFT name if available
+          label = asset.metadata.onchainMetadata.name;
+        }
+
+        return {
+          value: asset.id,
+          label: label,
+          available: parseFloat(asset.quantity),
+          type: asset.type,
+          policy_id: asset.policy_id,
+          asset_id: asset.asset_id,
+        };
+      });
+
+      setAvailableAssets(formattedAssets);
+    }
+  }, [data, isLoading]);
+
+  useEffect(() => {
+    if (onDataChange) {
+      const formattedAssets = distributionAssets
+        .filter(asset => asset.asset && asset.amount)
+        .map(asset => {
+          const selectedAsset = availableAssets.find(a => a.value === asset.asset);
+          return {
+            id: asset.asset,
+            amount: parseFloat(asset.amount),
+            policyId: selectedAsset?.policy_id,
+            assetId: selectedAsset?.asset_id,
+            type: selectedAsset?.type,
+          };
+        });
+
+      onDataChange({
+        distributionAssets: formattedAssets,
+        proposalStart,
+      });
+    }
+  }, [distributionAssets, proposalStart, onDataChange, availableAssets]);
+
+  useEffect(() => {
+    if (!distributeAll) {
+      const selectedAssets = distributionAssets.map(a => a.asset).filter(Boolean);
+      const allAssetsSelected =
+        availableAssets.length > 0 &&
+        selectedAssets.length === availableAssets.length &&
+        availableAssets.every(a => selectedAssets.includes(a.value));
+
+      if (allAssetsSelected) {
+        setDistributeAll(true);
+      }
+    }
+  }, [distributionAssets, availableAssets, distributeAll]);
 
   return (
     <div className="space-y-4">
@@ -237,7 +278,7 @@ export default function Distributing({ onDataChange }) {
           <div className="flex-1 relative">
             <LavaIntervalPicker
               value={proposalStart}
-              onChange={setProposalStart}
+              onChange={handleProposalStartChange}
               minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
             />
           </div>

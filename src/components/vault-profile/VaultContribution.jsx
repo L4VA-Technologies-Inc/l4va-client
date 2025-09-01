@@ -19,6 +19,12 @@ const findMinValue = (array, property) => {
   return min === Infinity ? 0 : min;
 };
 
+const getAssetCountByPolicy = (assets, policyId) => {
+  if (!assets || !assets.length) return 0;
+  const asset = assets.find(asset => asset.policyId === policyId);
+  return asset ? (asset.isNft ? 1 : asset.quantity) : 0;
+};
+
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
 
@@ -77,8 +83,8 @@ export const VaultContribution = ({ vault }) => {
                 }}
               >
                 {vault.assetsWhitelist.map(asset => {
-                  // Calculate progress for each whitelisted asset
-                  const assetProgress = asset.countCapMax > 0 ? (vault.assetsCount / asset.countCapMax) * 100 : 0;
+                  const assetCount = getAssetCountByPolicy(vault.assetsPrices.assets, asset.policyId);
+                  const assetProgress = asset.countCapMax > 0 ? (assetCount / asset.countCapMax) * 100 : 0;
 
                   return (
                     <div key={asset.id}>

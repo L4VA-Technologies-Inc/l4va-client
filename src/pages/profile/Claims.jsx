@@ -36,7 +36,7 @@ export const Claims = () => {
   const [status, setStatus] = useState('idle');
   const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
-  const wallet = useWallet('handler', 'isConnected');
+  const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
 
   const { data, isLoading, error, refetch } = useClaims();
   const claims = data?.data || [];
@@ -100,7 +100,7 @@ export const Claims = () => {
 
       setStatus('signing');
 
-      const signature = await wallet.handler.signTx(data.presignedTx, true);
+      const signature = await wallet?.handler?.signTx(data.presignedTx, true);
 
       if (!signature) {
         throw new Error('Transaction signing was cancelled');
@@ -175,8 +175,12 @@ export const Claims = () => {
     }
 
     return (
-      <PrimaryButton size="sm" disabled={status !== 'idle'} onClick={() => handleClaimNow(claim.id)}>
-        Claim Now
+      <PrimaryButton
+        size="sm"
+        disabled={status !== 'idle' || wallet.isUpdatingUtxos}
+        onClick={() => handleClaimNow(claim.id)}
+      >
+        {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : 'Claim Now'}
       </PrimaryButton>
     );
   };
