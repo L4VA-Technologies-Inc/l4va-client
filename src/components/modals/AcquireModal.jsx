@@ -97,7 +97,7 @@ export const AcquireModal = ({ vault, onClose }) => {
         signatures: [signature],
       });
 
-      if (submitResult.data?.hash) {
+      if (submitResult.data?.transaction) {
         toast.success('Acquisition completed successfully');
         onClose();
       }
