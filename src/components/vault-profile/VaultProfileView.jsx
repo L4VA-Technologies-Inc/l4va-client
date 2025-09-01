@@ -14,6 +14,8 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { useNavigate } from '@tanstack/react-router';
+
 
 const BUTTON_DISABLE_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -21,6 +23,8 @@ export const VaultProfileView = ({ vault }) => {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('Assets');
   const { openModal } = useModalControls();
+
+  const navigate = useNavigate();
 
   useVaultStatusTracker(vault?.id);
 
@@ -107,6 +111,7 @@ export const VaultProfileView = ({ vault }) => {
           <p className="text-sm text-gray-300 text-center">
             Your vault is being registered on the blockchain. This process may take a few moments.
           </p>
+          <PrimaryButton onClick={() => navigate({ to: '/vaults' })}>Go back</PrimaryButton>
         </div>
       </div>
     );
