@@ -57,6 +57,7 @@ export const AcquireModal = ({ vault, onClose }) => {
           {
             assetName: 'lovelace',
             policyId: 'lovelace',
+            type: 'ADA',
             quantity: Number(acquireAmount),
           },
         ],
