@@ -4,8 +4,8 @@ import clsx from 'clsx';
 import { Filter, GridIcon, ListIcon } from 'lucide-react';
 
 import VaultListItem from '@/components/vaults/VaultListItem';
-import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaTabs } from '@/components/shared/LavaTabs';
+import VaultFilter from '@/components/shared/VaultFilter';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
@@ -17,22 +17,7 @@ const LoadingState = () => (
   </div>
 );
 
-const ViewToggle = ({ activeView, onViewChange }) => (
-  <div className="flex items-center space-x-2">
-    <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('grid')} aria-label="Grid view">
-      <GridIcon
-        className="w-4 h-4"
-        color={activeView === 'grid' ? 'var(--color-dark-100)' : 'var(--color-steel-750)'}
-      />
-    </button>
-    <button className="p-2 hover:bg-steel-800" onClick={() => onViewChange('table')} aria-label="Table view">
-      <ListIcon
-        className="w-4 h-4"
-        color={activeView === 'table' ? 'var(--color-dark-100)' : 'var(--color-steel-750)'}
-      />
-    </button>
-  </div>
-);
+
 
 const EmptyState = () => (
   <div className="py-8">
@@ -95,7 +80,7 @@ export const VaultList = ({
   return (
     <div>
       <div className="flex flex-col gap-6 md:gap-8">
-        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2>
+        {title ? (<h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2>) : null}
         {tabs.length > 0 && (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
             <div className="flex-1 w-full sm:w-auto">
@@ -106,13 +91,11 @@ export const VaultList = ({
                 onTabChange={handleTabChange}
               />
             </div>
-            <div className="flex items-center w-full sm:w-auto gap-2">
-              <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
-                <Filter className="w-4 h-4" />
-                Filters
-              </SecondaryButton>
-              <ViewToggle activeView={viewType} onViewChange={setViewType} />
-            </div>
+            <VaultFilter
+              handleOpenFilters={handleOpenFilters}
+              viewType={viewType}
+              setViewType={setViewType}
+            />
           </div>
         )}
         {isLoading ? (

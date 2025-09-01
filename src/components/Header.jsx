@@ -1,6 +1,7 @@
-import { Link } from '@tanstack/react-router';
-import React, { useCallback, useState } from 'react';
+import { Link, useRouter } from '@tanstack/react-router';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Menu, Bell } from 'lucide-react';
+import { useCounts, useNotifications } from '@novu/react';
 
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { ConnectButton } from '@/components/ConnectButton';
@@ -14,22 +15,7 @@ const navLinks = [
   { to: '/create', label: 'Create' },
   { to: '/vaults?tab=contribute', label: 'Contribute' },
   { to: '/vaults?tab=acquire', label: 'Acquire' },
-  { to: '/vaults?tab=govern', label: 'Govern' },
-];
-
-const mockNotifications = [
-  {
-    id: 1,
-    title: 'Trade Chat #47a10c06 | trade84 | 01',
-    message: 'Message text',
-    time: '2 minutes',
-  },
-  {
-    id: 2,
-    title: 'Trade Chat #4djd06 | trade84 | 02',
-    message: 'Message text',
-    time: '23 minutes',
-  },
+  { to: '/vaults?tab=past', label: 'Govern' },
 ];
 
 const NavLink = React.memo(({ to, label, onClick }) => (
@@ -48,6 +34,34 @@ export const Header = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const { notifications, fetching, readAll, hasMore, isLoading, fetchMore } = useNotifications();
+  const observerTarget = useRef(null);
+  const router = useRouter();
+
+  const { counts } = useCounts({
+    filters: [{ read: false }],
+  });
+
+  const unreadCount = counts?.[0]?.count ?? 0;
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          fetchMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, fetchMore]);
 
   const handleNavClick = useCallback(
     (to, e) => {
@@ -59,8 +73,14 @@ export const Header = () => {
     [isAuthenticated, openModal]
   );
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const handleNotificationClick = (vaultId) => {
+    if (vaultId) {
+      router.navigate({ to: `/vaults/${vaultId}` });
+      setIsNotificationsOpen(false);
+    }
+  };
 
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
@@ -93,27 +113,47 @@ export const Header = () => {
             </div>
             <div className="flex-1" />
             {isAuthenticated && (
-              <DropdownMenu>
+              <DropdownMenu
+                open={isNotificationsOpen}
+                onOpenChange={() => {
+                  setIsNotificationsOpen(!isNotificationsOpen);
+                  readAll();
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <button
                     className="p-2 rounded-full hover:bg-steel-850 transition-colors relative mr-2"
                     aria-label="Show notifications"
-                    type="button"
                   >
                     <Bell className="w-6 h-6" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
+                    {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2">
+                <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[500px] overflow-y-auto">
                   <h3 className="font-bold mb-4">Notifications</h3>
                   <div className="flex flex-col gap-2">
-                    {mockNotifications.map(n => (
-                      <div key={n.id} className="rounded-xl p-4">
-                        <div className="font-medium text-white">{n.title}</div>
-                        <div className="text-base text-dark-100">{n.message}</div>
-                        <div className="text-sm mt-1 text-dark-100 opacity-70">{n.time}</div>
+                    {fetching && notifications?.length === 0 && <div className="text-dark-100">Loading...</div>}
+                    {notifications?.map(n => (
+                      <div
+                        key={n.id}
+                        className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
+                        onClick={() => handleNotificationClick(n.data?.vaultId)}
+                      >
+                        <div className="font-medium text-white">{n.subject || 'No subject'}</div>
+                        <div className="text-base text-dark-100">{n.body || 'No message'}</div>
+                        <div className="text-sm mt-1 text-dark-100 opacity-70">
+                          {new Date(n.createdAt).toLocaleString()}
+                        </div>
                       </div>
                     ))}
+                    {!fetching && notifications?.length === 0 && (
+                      <div className="text-dark-100">No notifications yet</div>
+                    )}
+                    {hasMore && (
+                      <div ref={observerTarget} className="h-10 flex items-center justify-center">
+                        {isLoading && <div className="text-dark-100">Loading more...</div>}
+                      </div>
+                    )}
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>

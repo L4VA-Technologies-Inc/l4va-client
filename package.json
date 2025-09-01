@@ -12,6 +12,7 @@
   "dependencies": {
     "@ada-anvil/weld": "^0.5.1",
     "@dexhunterio/swaps": "^0.0.192",
+    "@novu/react": "^3.8.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",

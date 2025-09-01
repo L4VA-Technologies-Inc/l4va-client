@@ -24,7 +24,8 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);
     if (sanitizedValue !== null) {
-      updateField(name, +sanitizedValue);
+      const limitedValue = Math.min(sanitizedValue, 100);
+      updateField(name, +limitedValue);
     }
   };
 
@@ -98,7 +99,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
                 name="vaultAppreciation"
-                placeholder="XX.XX"
+                placeholder="XX"
                 suffix="%"
                 value={data.vaultAppreciation || ''}
                 onChange={handleNumChange}
@@ -112,52 +113,52 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.creationThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT as % of total VT supply required to create a proposal"
+              hint="Minimum VT held by user (as % of total supply) required to create a proposal"
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.creationThreshold || ''}
               onChange={handleNumChange}
             />
           </div>
-          <div>
-            <LavaInput
-              required
-              error={errors.cosigningThreshold}
-              icon={<Info color="white" size={16} />}
-              hint="Minimum amount of VT that must be present in a stake for it to be able to cosign a transaction"
-              label="COSIGNING THRESHOLD (%)"
-              name="cosigningThreshold"
-              placeholder="XX.XX"
-              suffix="%"
-              value={data.cosigningThreshold || ''}
-              onChange={handleNumChange}
-            />
-          </div>
-          <div>
-            <LavaInput
-              required
-              error={errors.startThreshold}
-              icon={<Info color="white" size={16} />}
-              hint="Minimum VT as % of total VT supply co-signed to start voting phase"
-              label="START THRESHOLD (%)"
-              name="startThreshold"
-              placeholder="XX.XX"
-              suffix="%"
-              value={data.startThreshold || ''}
-              onChange={handleNumChange}
-            />
-          </div>
+          {/*<div>*/}
+          {/*  <LavaInput*/}
+          {/*    required*/}
+          {/*    error={errors.cosigningThreshold}*/}
+          {/*    icon={<Info color="white" size={16} />}*/}
+          {/*    hint="Minimum amount of VT that must be present in a stake for it to be able to cosign a transaction"*/}
+          {/*    label="COSIGNING THRESHOLD (%)"*/}
+          {/*    name="cosigningThreshold"*/}
+          {/*    placeholder="XX"*/}
+          {/*    suffix="%"*/}
+          {/*    value={data.cosigningThreshold || ''}*/}
+          {/*    onChange={handleNumChange}*/}
+          {/*  />*/}
+          {/*</div>*/}
+          {/*<div>*/}
+          {/*  <LavaInput*/}
+          {/*    required*/}
+          {/*    error={errors.startThreshold}*/}
+          {/*    icon={<Info color="white" size={16} />}*/}
+          {/*    hint="Minimum VT as % of total VT supply co-signed to start voting phase"*/}
+          {/*    label="START THRESHOLD (%)"*/}
+          {/*    name="startThreshold"*/}
+          {/*    placeholder="XX"*/}
+          {/*    suffix="%"*/}
+          {/*    value={data.startThreshold || ''}*/}
+          {/*    onChange={handleNumChange}*/}
+          {/*  />*/}
+          {/*</div>*/}
           <div>
             <LavaInput
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT as % of total staked VT for vote to be valid"
+              hint="Minimum VT used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails."
               label="VOTE THRESHOLD (%)"
               name="voteThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.voteThreshold || ''}
               onChange={handleNumChange}
@@ -168,10 +169,10 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT as % of total VT voted, for the largest vote tallied for proposal to win"
+              hint="Minimum VT votes for a given proposal option (as % of total votes) for a proposal to be approved."
               label="EXECUTION THRESHOLD (%)"
               name="executionThreshold"
-              placeholder="XX.XX"
+              placeholder="XX"
               suffix="%"
               value={data.executionThreshold || ''}
               onChange={handleNumChange}

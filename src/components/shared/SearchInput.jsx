@@ -2,7 +2,7 @@ import { Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 
-export const SearchInput = () => (
+const SearchInput = ({ placeholder = 'Search' }) => (
   <div className="relative w-[370px]">
     <Input
       className="
@@ -17,7 +17,7 @@ export const SearchInput = () => (
         focus:shadow-[0_0_10px_rgba(0,102,255,0.2)]
         transition-all duration-200
       "
-      placeholder="Search"
+      placeholder={placeholder}
       type="text"
     />
     <Search
@@ -29,3 +29,5 @@ export const SearchInput = () => (
     />
   </div>
 );
+
+export default SearchInput;

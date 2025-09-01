@@ -3,6 +3,10 @@ export class CoreConfigProvider {
     return '/api/v1/auth/login';
   }
 
+  static sendNotification() {
+    return '/api/v1/send-notification';
+  }
+
   static getProfile() {
     return '/api/v1/users/profile';
   }

@@ -120,7 +120,6 @@ export const CreateVaultForm = ({ vault }) => {
   };
 
   const updateField = (fieldName, value) => setVaultData(prev => ({ ...prev, [fieldName]: value }));
-
   const onSubmit = async () => {
     if (currentStep < steps.length) {
       handleNextStep();
@@ -165,7 +164,6 @@ export const CreateVaultForm = ({ vault }) => {
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
-        console.log(err);
         const formattedErrors = transformYupErrors(err);
         setErrors(formattedErrors);
         updateStepErrorIndicators(formattedErrors);

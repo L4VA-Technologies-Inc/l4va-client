@@ -27,7 +27,12 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
       return;
     }
 
-    updateField(name, sanitizedValue === '' ? '' : +sanitizedValue);
+    if (sanitizedValue !== '') {
+      const limitedValue = Math.min(+sanitizedValue, 100);
+      updateField(name, limitedValue);
+    } else {
+      updateField(name, '');
+    }
   };
 
   const getMinAcquireDate = () => {
@@ -113,14 +118,14 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           <LavaInput
             required
             error={errors.tokensForAcquires}
-            label="TOKENS FOR ACQUIRES (%)"
+            label="TOKENS FOR ACQUIRERS (%)"
             name="tokensForAcquires"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.tokensForAcquires || ''}
             onChange={handleChange}
-            hint="The percentage (%) of total tokens minted which will be received by Acquirers when Vault locks; while asset Contributors will receive 100% minus this amount."
+            hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
         </div>
         <div>
@@ -129,7 +134,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             error={errors.acquireReserve}
             label="RESERVE (%)"
             name="acquireReserve"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.acquireReserve || ''}
@@ -143,7 +148,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             error={errors.liquidityPoolContribution}
             label="LIQUIDITY POOL (LP) CONTRIBUTION (%)"
             name="liquidityPoolContribution"
-            placeholder="XX.XX"
+            placeholder="XX"
             suffix="%"
             type="text"
             value={data.liquidityPoolContribution || ''}
