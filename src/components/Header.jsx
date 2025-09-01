@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Menu, Bell } from 'lucide-react';
 import { useCounts, useNotifications } from '@novu/react';
@@ -38,6 +38,7 @@ export const Header = () => {
 
   const { notifications, fetching, readAll, hasMore, isLoading, fetchMore } = useNotifications();
   const observerTarget = useRef(null);
+  const router = useRouter();
 
   const { counts } = useCounts({
     filters: [{ read: false }],
@@ -71,6 +72,13 @@ export const Header = () => {
     },
     [isAuthenticated, openModal]
   );
+
+  const handleNotificationClick = (vaultId) => {
+    if (vaultId) {
+      router.navigate({ to: `/vaults/${vaultId}` });
+      setIsNotificationsOpen(false);
+    }
+  };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -129,6 +137,7 @@ export const Header = () => {
                       <div
                         key={n.id}
                         className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
+                        onClick={() => handleNotificationClick(n.data?.vaultId)}
                       >
                         <div className="font-medium text-white">{n.subject || 'No subject'}</div>
                         <div className="text-base text-dark-100">{n.body || 'No message'}</div>
