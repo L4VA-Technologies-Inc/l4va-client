@@ -24,7 +24,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
   const [isLoading, setIsLoading] = useState(true);
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
   const { sendTransaction, status, error } = useTransaction();
   const [selectedAmount, setSelectedAmount] = useState({});
 
@@ -72,7 +72,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         policyId: 'lovelace',
         quantity: wallet.balanceAda || 0,
         decimals: 6,
-        type: 'FT',
+        type: 'ada',
         assetName: 'lovelace',
         image: '/assets/icons/ada.png',
       };
@@ -237,12 +237,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           Close
         </SecondaryButton>
         <PrimaryButton
-          disabled={contributionDetails.totalAssets === 0 || status !== 'idle'}
+          disabled={contributionDetails.totalAssets === 0 || status !== 'idle' || wallet.isUpdatingUtxos}
           onClick={handleContribute}
           size="sm"
           className="capitalize"
         >
-          {status === 'idle' ? 'Contribute' : status}
+          {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'Contribute' : status}
         </PrimaryButton>
       </div>
     </div>
