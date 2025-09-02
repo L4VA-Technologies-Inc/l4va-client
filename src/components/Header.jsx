@@ -10,6 +10,8 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const navLinks = [
   { to: '/create', label: 'Create' },
@@ -35,6 +37,12 @@ export const Header = () => {
   const { openModal } = useModalControls();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { currency: selectedCurrency, updateCurrency } = useCurrency();
+
+  const currencyOptions = [
+    { label: 'ADA', value: 'ada' },
+    { label: 'USD', value: 'usdt' },
+  ];
 
   const { notifications, fetching, readAll, hasMore, isLoading, fetchMore } = useNotifications();
   const observerTarget = useRef(null);
@@ -73,7 +81,7 @@ export const Header = () => {
     [isAuthenticated, openModal]
   );
 
-  const handleNotificationClick = (vaultId) => {
+  const handleNotificationClick = vaultId => {
     if (vaultId) {
       router.navigate({ to: `/vaults/${vaultId}` });
       setIsNotificationsOpen(false);
@@ -107,6 +115,15 @@ export const Header = () => {
           </div>
           <div className="hidden md:flex items-center flex-1">
             <div className="flex items-center gap-8 ml-[56px]">
+              <div>
+                <LavaSteelSelect
+                  options={currencyOptions}
+                  value={selectedCurrency}
+                  onChange={val => {
+                    updateCurrency(val);
+                  }}
+                />
+              </div>
               {navLinks.map(link => (
                 <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
               ))}

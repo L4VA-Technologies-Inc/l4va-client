@@ -6,6 +6,7 @@ import LavaProgressBar from '@/components/shared/LavaProgressBar';
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
 import { formatNum } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const calculateProgress = (current, target) => {
   if (!target || target <= 0) return 0;
@@ -30,6 +31,7 @@ const getAssetCountByPolicy = (assets, policyId) => {
 
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
+  const { currency } = useCurrency();
 
   const minContributeAssets = useMemo(
     () => findMinValue(vault.assetsWhitelist, 'countCapMin'),
@@ -130,7 +132,7 @@ export const VaultContribution = ({ vault }) => {
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-dark-100">Reserve</span>
-              <span className="text-dark-100">${formatNum(vault.requireReservedCostUsd)}</span>
+              <span className="text-dark-100">{currency === 'ada' ? `₳${formatNum(vault.requireReservedCostAda)}` : `$${formatNum(vault.requireReservedCostUsd)}`}</span>
             </div>
             <LavaProgressBar
               className="h-2 rounded-full bg-steel-750 mb-4"

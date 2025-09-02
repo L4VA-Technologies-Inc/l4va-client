@@ -1,7 +1,7 @@
 import { EyeIcon, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-
+import { useCurrency } from '@/hooks/useCurrency';
 import {
   BUTTON_DISABLE_THRESHOLD_MS,
   VAULT_STATUSES,
@@ -26,6 +26,9 @@ export const VaultProfileView = ({ vault }) => {
   const { openModal } = useModalControls();
 
   const navigate = useNavigate();
+
+  const { currency } = useCurrency();
+
 
   useVaultStatusTracker(vault?.id);
 
@@ -156,7 +159,13 @@ export const VaultProfileView = ({ vault }) => {
                 ftGains={vault.ftGains || 'N/A'}
                 fdv={vault.fdv ? `${vault.fdv}$` : 'N/A'}
                 fdvTvl={vault.fdvTvl || 'N/A'}
-                tvl={vault.assetsPrices.totalValueUsd ? `${vault.assetsPrices.totalValueUsd}$` : 'N/A'}
+                tvl={(() => {
+                  if (currency === 'ada') {
+                    return vault.assetsPrices?.totalValueAda ? `₳${vault.assetsPrices?.totalValueAda}` : 'N/A';
+                  } else {
+                    return vault.assetsPrices?.totalValueUsd ? `$${vault.assetsPrices?.totalValueUsd}` : 'N/A';
+                  }
+                })()}
               />
             </div>
             <div className="flex justify-center mb-6">{renderActionButton()}</div>
