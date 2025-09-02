@@ -21,12 +21,12 @@ export const VaultSettings = ({ vault }) => {
           <InfoRow label="Token Symbol" value={vault.vaultTokenTicker} />
           <InfoRow copyable label="Token Policy" value={vault.policyId} />
           <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
-          <InfoRow label="Vault Lock Date & Time" value={vault.acquireWindow} />
-          <InfoRow label="TOKENS FOR ACQUIRERS (%)" value={vault.tokensForAcquires} />
+          <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
+          <InfoRow label="TOKENS FOR ACQUIRERS (%)" symbol="%" value={vault.tokensForAcquires} />
           <InfoRow label="Asset Value @ Lock" symbol="%" value={vault.assetsPrices.totalValueUsd} />
-          <InfoRow label="Acquire Amount @ Lock" value={vault.acquireAmount} />
+          <InfoRow label="Acquire Amount @ Lock" symbol="ADA" value={vault.assetsPrices.totalAcquiredAda} />
           <InfoRow label="Implied Vault Valuation @ Lock" value={vault.valuationAmount} />
-          <InfoRow label="Acquire Reserve" value={vault.acquireReserve} />
+          <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
           <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />
           <InfoRow label="Termination Type" value={vault.terminationType} />
           <InfoRow label="Proposal Creation Threshold %" symbol="%" value={vault.creationThreshold} />
