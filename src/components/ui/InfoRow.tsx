@@ -2,6 +2,7 @@ import { Copy } from 'lucide-react';
 
 import { formatNum } from '@/utils/core.utils';
 import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 type InfoRowProps = {
     label: string;
@@ -15,6 +16,17 @@ type InfoRowProps = {
 export const InfoRow = ({ label, value, symbol = '', copyable, labelClassName='', hideValue = false }: InfoRowProps) => {
   const formattedValue = typeof value === 'number' ? formatNum(value) : value;
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value.toString())
+      .then(() => {
+        toast.success(`${label} copied to clipboard`);
+      })
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        toast.error('Failed to copy to clipboard');
+      });
+  };
+
   return (
     <div className="flex justify-between items-center py-2">
       <span className={cn("text-dark-100", labelClassName)}>{label}</span>
@@ -24,7 +36,7 @@ export const InfoRow = ({ label, value, symbol = '', copyable, labelClassName=''
           <button
             className="text-gray-500 hover:text-gray-700"
             type="button"
-            onClick={() => navigator.clipboard.writeText(value.toString())}
+            onClick={handleCopy}
           >
             <Copy className="h-5 w-5" />
           </button>

@@ -22,8 +22,11 @@ const findMinValue = (array, property) => {
 
 const getAssetCountByPolicy = (assets, policyId) => {
   if (!assets || !assets.length) return 0;
-  const asset = assets.find(asset => asset.policyId === policyId);
-  return asset ? (asset.isNft ? 1 : asset.quantity) : 0;
+  const matchingAssets = assets.filter(asset => asset.policyId === policyId);
+  if (matchingAssets.length === 0) return 0;
+  return matchingAssets.reduce((total, asset) => {
+    return total + asset.quantity;
+  }, 0);
 };
 
 export const VaultContribution = ({ vault }) => {
