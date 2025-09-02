@@ -25,12 +25,10 @@ import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,
-  MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
-import { TapToolsApiProvider } from '@/services/api/taptools';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export const CreateVaultForm = ({ vault }) => {
@@ -79,29 +77,29 @@ export const CreateVaultForm = ({ vault }) => {
         setErrors({});
       } catch (err) {
         const formattedErrors = transformYupErrors(err);
-        
+
         const filteredErrors = {};
         const previousSteps = [...visitedSteps].filter(stepId => stepId < nextStep);
-        
+
         Object.keys(formattedErrors).forEach(errorKey => {
           const belongsToPreviousStep = previousSteps.some(stepId => {
             const stepFieldNames = stepFields[stepId] || [];
             return stepFieldNames.some(stepField => {
-              return errorKey === stepField || 
-                     errorKey.startsWith(`${stepField}.`) || 
-                     errorKey.startsWith(`${stepField}[`);
+              return (
+                errorKey === stepField || errorKey.startsWith(`${stepField}.`) || errorKey.startsWith(`${stepField}[`)
+              );
             });
           });
-          
+
           if (belongsToPreviousStep) {
             filteredErrors[errorKey] = formattedErrors[errorKey];
           }
         });
-        
+
         setErrors(filteredErrors);
         updateStepErrorIndicators(filteredErrors);
       }
-      
+
       setCurrentStep(nextStep);
       setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, nextStep));
     }
@@ -127,13 +125,13 @@ export const CreateVaultForm = ({ vault }) => {
       try {
         setIsSubmitting(true);
 
-        const latestVlrm = await fetchVlrmBalance();
-        if (latestVlrm < MIN_VLRM_REQUIRED) {
-          toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
-          setIsSubmitting(false);
-          setIsVisibleSwipe(true);
-          return;
-        }
+        // const latestVlrm = await fetchVlrmBalance();
+        // if (latestVlrm < MIN_VLRM_REQUIRED) {
+        //   toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
+        //   setIsSubmitting(false);
+        //   setIsVisibleSwipe(true);
+        //   return;
+        // }
       } catch (err) {
         console.log('Error fetching VLRM balance', err);
         toast.error('Failed to fetch VLRM balance');
@@ -174,18 +172,18 @@ export const CreateVaultForm = ({ vault }) => {
     }
   };
 
-  const fetchVlrmBalance = async () => {
-    try {
-      if (!wallet.handler) return;
-      const changeAddress = await wallet.handler.getChangeAddressBech32();
-      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-      const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
-      return vlrmToken ? vlrmToken.quantity : 0;
-    } catch (err) {
-      console.log('Error fetching VLRM balance', err);
-      return 0;
-    }
-  };
+  // const fetchVlrmBalance = async () => {
+  //   try {
+  //     if (!wallet.handler) return;
+  //     const changeAddress = await wallet.handler.getChangeAddressBech32();
+  //     const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
+  //     const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
+  //     return vlrmToken ? vlrmToken.quantity : 0;
+  //   } catch (err) {
+  //     console.log('Error fetching VLRM balance', err);
+  //     return 0;
+  //   }
+  // };
 
   const handleStepClick = stepId => {
     if (stepId === currentStep) return;
