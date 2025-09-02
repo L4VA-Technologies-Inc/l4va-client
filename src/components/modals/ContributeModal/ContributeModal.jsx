@@ -15,6 +15,7 @@ import MetricCard from '@/components/shared/MetricCard';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
+import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 
@@ -237,7 +238,13 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           Close
         </SecondaryButton>
         <PrimaryButton
-          disabled={contributionDetails.totalAssets === 0 || status !== 'idle' || wallet.isUpdatingUtxos}
+          disabled={
+            contributionDetails.totalAssets === 0 ||
+            status !== 'idle' ||
+            wallet.isUpdatingUtxos ||
+            new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
+              Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+          }
           onClick={handleContribute}
           size="sm"
           className="capitalize"
@@ -294,7 +301,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-medium">Contribution Summary</h2>
-            <HoverHelp hint='Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information.' />
+            <HoverHelp hint="Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information." />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <MetricCard label="Total Assets Selected" value={contributionDetails.totalAssets} />

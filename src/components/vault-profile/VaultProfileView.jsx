@@ -1,7 +1,12 @@
 import { EyeIcon, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
-import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import {
+  BUTTON_DISABLE_THRESHOLD_MS,
+  VAULT_STATUSES,
+  VAULT_TAGS_OPTIONS,
+} from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
@@ -14,10 +19,6 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
-import { useNavigate } from '@tanstack/react-router';
-
-
-const BUTTON_DISABLE_THRESHOLD_MS = 5 * 60 * 1000;
 
 export const VaultProfileView = ({ vault }) => {
   const { isAuthenticated } = useAuth();

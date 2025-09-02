@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
+import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
+
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { formatNum, formatCompactNumber } from '@/utils/core.utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -97,7 +99,7 @@ export const AcquireModal = ({ vault, onClose }) => {
         signatures: [signature],
       });
 
-      if (submitResult.data?.transaction) {
+      if (submitResult.data?.txHash) {
         toast.success('Acquisition completed successfully');
         onClose();
       }
@@ -195,7 +197,12 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="flex justify-center mt-8">
                 <PrimaryButton
                   className="uppercase"
-                  disabled={status !== 'idle' || wallet.isUpdatingUtxos}
+                  disabled={
+                    status !== 'idle' ||
+                    wallet.isUpdatingUtxos ||
+                    new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
+                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                  }
                   onClick={handleAcquire}
                   icon={status !== 'idle' ? Spinner : null}
                 >

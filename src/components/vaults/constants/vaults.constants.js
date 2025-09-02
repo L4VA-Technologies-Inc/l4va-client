@@ -5,6 +5,7 @@ export const MAX_SUPPLY = 1000000000000000000; // 10^18
 export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 min in ms
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 min in ms
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
+export const BUTTON_DISABLE_THRESHOLD_MS = 300000; // Min 5 min before button is enabled
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
