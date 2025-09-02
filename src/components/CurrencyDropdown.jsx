@@ -8,15 +8,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const CurrencyDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState('ADA');
+  const { currency, updateCurrency } = useCurrency();
+
 
   const options = [
-    { value: 'ADA', icon: '/assets/icons/ada.png', label: 'ADA' },
-    { value: 'USD', icon: '/assets/icons/usa-flag.png', label: 'USD' },
+    { value: 'ada', label: 'ADA' },
+    { value: 'usdt', label: 'USD' },
   ];
+
+  const selectedOption = options.find(option => option.value === currency) || options[0];
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -30,7 +34,7 @@ export const CurrencyDropdown = () => {
           type="button"
         >
           <div className="flex items-center justify-between">
-            <span>{options.find(option => option.value === selected)?.label}</span>
+            <span>{selectedOption.label}</span>
             {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </div>
         </button>
@@ -41,12 +45,11 @@ export const CurrencyDropdown = () => {
             key={option.value}
             className="px-6 py-4 cursor-pointer hover:bg-slate-950 focus:bg-slate-950"
             onClick={() => {
-              setSelected(option.value);
+              updateCurrency(option.value);
               setIsOpen(false);
             }}
           >
             <div className="flex items-center gap-2">
-              <img alt={option.value} className="h-6 w-6" src={option.icon} />
               <span className="text-[20px]">{option.label}</span>
             </div>
           </DropdownMenuItem>

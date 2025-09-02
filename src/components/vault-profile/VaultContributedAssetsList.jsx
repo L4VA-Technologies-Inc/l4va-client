@@ -4,11 +4,13 @@ import toast from 'react-hot-toast';
 
 import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { data, isLoading, error } = useVaultAssets(vault?.id);
   const assets = data?.data?.items || [];
+  const { currency } = useCurrency();
 
   if (isLoading) {
     return (
@@ -34,8 +36,10 @@ export const VaultContributedAssetsList = ({ vault }) => {
             <th className="px-4 py-3 text-left">Image</th>
             <th className="px-4 py-3 text-left">Name</th>
             <th className="px-4 py-3 text-left">Type</th>
+            {/* <th className="px-4 py-3 text-left">Value</th> */}
             <th className="px-4 py-3 text-left">Status</th>
             <th className="px-4 py-3 text-left">Quantity</th>
+            {/* <th className="px-4 py-3 text-left">Contribute</th> */}
             <th className="px-4 py-3"></th>
           </tr>
         </thead>
@@ -64,8 +68,10 @@ export const VaultContributedAssetsList = ({ vault }) => {
                     (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
                 </td>
                 <td className="px-4 py-3 capitalize">{asset.type}</td>
+                {/* <td className="px-4 py-3">{currency}</td> */}
                 <td className="px-4 py-3 capitalize">{asset.status}</td>
                 <td className="px-4 py-3">{asset.quantity}</td>
+                {/* <td className="px-4 py-3">{currency}</td> */}
                 <td className="px-4 py-3 text-center">
                   <button
                     className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"

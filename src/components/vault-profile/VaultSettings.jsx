@@ -2,8 +2,6 @@ import { InfoRow } from '@/components/ui/InfoRow';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 export const VaultSettings = ({ vault }) => {
-  console.log(vault)
-
   return (<>
     <div className="flex flex-col items-center mb-6">
       {vault.vaultImage ? (

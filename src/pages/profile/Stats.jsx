@@ -1,13 +1,19 @@
 import { useAuth } from '@/lib/auth/auth';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const Stats = () => {
   const { user } = useAuth();
+
+  const { currency } = useCurrency();
+
+  console.log(user) 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">TVL</p>
-        <p className="text-2xl font-medium">{user?.tvl} ADA</p>
+        
+        <p className="text-2xl font-medium">{ currency === 'ada' ? `₳${user?.totalValueAda}` : `$${user?.totalValueUsd}` }</p>
       </div>
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">Total Vaults</p>
