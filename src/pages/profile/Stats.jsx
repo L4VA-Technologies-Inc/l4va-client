@@ -6,14 +6,14 @@ export const Stats = () => {
 
   const { currency } = useCurrency();
 
-  console.log(user) 
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">TVL</p>
-        
-        <p className="text-2xl font-medium">{ currency === 'ada' ? `₳${user?.totalValueAda}` : `$${user?.totalValueUsd}` }</p>
+
+        <p className="text-2xl font-medium">
+          {currency === 'ada' ? `₳${user?.totalValueAda}` : `$${user?.totalValueUsd}`}
+        </p>
       </div>
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">Total Vaults</p>

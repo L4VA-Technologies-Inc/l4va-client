@@ -41,9 +41,7 @@ export const LavaInput = ({
             {required ? '*' : ''}
             {label}
           </span>
-          {hint && (
-            <HoverHelp hint={hint} />
-          )}
+          {hint && <HoverHelp hint={hint} />}
         </div>
       ) : null}
       <div className="mt-4">
@@ -67,7 +65,6 @@ export const LavaInput = ({
         {error && <p className="text-red-600 mt-1">{error}</p>}
       </div>
     </>
-
   );
 };
 
@@ -95,8 +92,7 @@ export const LavaSteelInput = ({
           {hint && (
             <div className="group relative">
               <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div
-                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                 {hint}
               </div>
             </div>
