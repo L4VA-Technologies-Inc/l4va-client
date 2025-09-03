@@ -21,7 +21,7 @@ const Acquire = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-russo text-4xl uppercase text-white">Investments</h2>
+      <h2 className="font-russo text-4xl uppercase text-white">Acquire</h2>
       <div className="bg-steel-0">
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-y-3">
@@ -45,10 +45,12 @@ const Acquire = () => {
                 <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">
                   <div className="w-6 flex items-center">
                     {acquire.vault_image?.file_url ? (
-                      <img className="w-6 bg-steel-0" src={acquire.vault_image?.file_url} />) : null}
-                    {acquire.name}
+                      <div className="w-14 bg-steel-0">
+                        <img src={acquire.vault_image?.file_url} />
+                      </div>) : null}
+                    <div>{acquire.name}</div>
                   </div>
-                </td>
+                </td> 
                 <td
                   className="px-4 py-4 text-right text-xl bg-steel-950">{Number(acquire.total_assets_cost_ada).toFixed(2)}</td>
                 <td className="px-4 py-4 text-right text-xl bg-steel-950">-</td>

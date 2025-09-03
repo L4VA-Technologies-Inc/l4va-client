@@ -1,7 +1,11 @@
 import { InfoRow } from '@/components/ui/InfoRow';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const VaultSettings = ({ vault }) => {
+
+  const { currency } = useCurrency();
+
   return (
     <>
       <div className="flex flex-col items-center mb-6">
@@ -24,7 +28,11 @@ export const VaultSettings = ({ vault }) => {
           <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
           <InfoRow label="TOKENS FOR ACQUIRERS (%)" symbol="%" value={vault.tokensForAcquires} />
           <InfoRow label="Asset Value @ Lock" symbol="%" value={vault.assetsPrices.totalValueUsd} />
-          <InfoRow label="Acquire Amount @ Lock" symbol="ADA" value={vault.assetsPrices.totalAcquiredAda} />
+          <InfoRow
+            label="Acquire Amount @ Lock"
+            symbol={currency === 'ada' ? 'ADA' : 'USD'}
+            value={currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd}
+          />
           <InfoRow label="Implied Vault Valuation @ Lock" value={vault.valuationAmount} />
           <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
           <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />
