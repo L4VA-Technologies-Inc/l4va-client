@@ -1,12 +1,6 @@
 import { TapToolsApiProvider } from '../services/api/taptools';
 import toast from 'react-hot-toast';
 
-/**
- * Fetches and formats wallet assets from TapTools API
- * @param {Object} wallet - Wallet instance with handler and balanceAda
- * @param {Set} whitelistedPolicies - Set of whitelisted policy IDs (empty Set means all allowed)
- * @returns {Promise<Array>} Array of formatted assets
- */
 export const fetchAndFormatWalletAssets = async (wallet, whitelistedPolicies = new Set()) => {
   try {
     const changeAddress = await wallet.handler.getChangeAddressBech32();
@@ -14,8 +8,6 @@ export const fetchAndFormatWalletAssets = async (wallet, whitelistedPolicies = n
 
     const formattedAssets = [];
 
-    // Add ADA as a fungible token
-    // Maybe we will remove this in the future
     const adaAsset = {
       id: 'lovelace',
       name: 'ADA',
@@ -77,12 +69,6 @@ export const fetchAndFormatWalletAssets = async (wallet, whitelistedPolicies = n
   }
 };
 
-/**
- * Fetches and formats wallet assets without ADA (for whitelist purposes)
- * @param {Object} wallet - Wallet instance with handler and balanceAda
- * @param {Set} whitelistedPolicies - Set of whitelisted policy IDs (empty Set means all allowed)
- * @returns {Promise<Array>} Array of formatted assets without ADA
- */
 export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies = new Set()) => {
   try {
     const changeAddress = await wallet.handler.getChangeAddressBech32();
@@ -136,11 +122,6 @@ export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies 
   }
 };
 
-/**
- * Extracts unique policy IDs from wallet assets
- * @param {Array} assets - Array of formatted assets
- * @returns {Array} Array of unique policy IDs with asset names
- */
 export const extractPolicyIds = (assets) => {
   const policyMap = new Map();
   

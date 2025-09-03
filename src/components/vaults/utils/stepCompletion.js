@@ -7,9 +7,10 @@ import { isStepFullyComplete } from '@/utils/stepValidation';
  * @param {number} currentStep - Current active step
  * @returns {Array} Updated steps array with correct completion status
  */
-export const updateStepsCompletionStatus = (steps, vaultData, currentStep) => {
+export const updateStepsCompletionStatus = (steps, vaultData, currentStep, visitedSteps = new Set()) => {
   return steps.map(step => {
     const isComplete = isStepFullyComplete(step.id, vaultData);
+    const wasVisited = visitedSteps.has(step.id);
 
     if (step.id === currentStep) {
       return {
@@ -17,7 +18,7 @@ export const updateStepsCompletionStatus = (steps, vaultData, currentStep) => {
         status: 'in progress',
         hasErrors: step.hasErrors, // Preserve existing error state
       };
-    } else if (step.id < currentStep) {
+    } else if (step.id < currentStep && wasVisited) {
       const status = (isComplete && !step.hasErrors) ? 'completed' : 'pending';
       return {
         ...step,
