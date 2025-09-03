@@ -25,19 +25,53 @@ const VaultsFilters = ({ className = '' }) => {
     setActiveTab(newTab);
   }, [tabParam]);
 
+  const [appliedFilters, setAppliedFilters] = useState({
+    page: 1,
+    limit: 12,
+    filter: initialTab.filter,
+    isOwner: false
+  });
+
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
     if (selectedTab) {
       setActiveTab(selectedTab);
+      setAppliedFilters(prevFilters => ({
+        ...prevFilters,
+        page: 1,
+        filter: selectedTab.filter
+      }));
       router.navigate({
         to: '/vaults',
         search: { tab: selectedTab.id },
       });
     }
   };
-
-  const { data, isLoading, error } = useVaults(activeTab.filter);
+  const { data, isLoading, error } = useVaults(activeTab.filter, appliedFilters);
   const vaults = data?.data?.items || [];
+
+  const pagination = data?.data ? {
+    currentPage: data.data.page,
+    totalPages: data.data.totalPages,
+    totalItems: data.data.total,
+    limit: data.data.limit
+  } : null;
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(prevFilters => ({
+      page: 1,
+      limit: prevFilters.limit || 12,
+      filter: prevFilters.filter || 'contribution',
+      ...filters
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: page
+    }));
+  };
 
   return (
     <VaultList
@@ -48,6 +82,10 @@ const VaultsFilters = ({ className = '' }) => {
       vaults={vaults}
       onTabChange={handleTabChange}
       activeTab={activeTab.label}
+      appliedFilters={appliedFilters}
+      onApplyFilters={handleApplyFilters}
+      pagination={pagination}
+      onPageChange={handlePageChange}
     />
   );
 };

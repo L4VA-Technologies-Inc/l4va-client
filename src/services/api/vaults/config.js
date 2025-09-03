@@ -7,11 +7,8 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/acquire';
   }
 
-  static getVaults(filter) {
-    if (filter) {
-      return `/api/v1/vaults?filter=${filter}`;
-    }
-    return '/api/v1/vaults';
+  static getVaults(tab) {
+    return '/api/v1/vaults/search';
   }
 
   static getMyDraftVaults() {

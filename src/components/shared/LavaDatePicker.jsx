@@ -51,8 +51,9 @@ export const LavaDatePicker = ({
   const handleDateSelect = selectedDate => {
     if (selectedDate) {
       if (dateValue) {
-        selectedDate.setHours(dateValue.getHours());
-        selectedDate.setMinutes(dateValue.getMinutes());
+        const currentDate = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+        selectedDate.setHours(currentDate.getHours());
+        selectedDate.setMinutes(currentDate.getMinutes());
       }
       onChange(selectedDate.getTime());
     }
@@ -170,7 +171,7 @@ export const LavaDatePicker = ({
                           key={hour}
                           className="sm:w-full shrink-0 aspect-square"
                           size="icon"
-                          variant={dateValue && dateValue.getHours() % 12 === hour % 12 ? 'default' : 'ghost'}
+                          variant={dateValue && (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() % 12 === hour % 12 ? 'default' : 'ghost'}
                           onClick={() => handleTimeChange('hour', hour.toString())}
                         >
                           {hour}
@@ -186,7 +187,7 @@ export const LavaDatePicker = ({
                           key={minute}
                           className="sm:w-full shrink-0 aspect-square"
                           size="icon"
-                          variant={dateValue && dateValue.getMinutes() === minute ? 'default' : 'ghost'}
+                          variant={dateValue && (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getMinutes() === minute ? 'default' : 'ghost'}
                           onClick={() => handleTimeChange('minute', minute.toString())}
                         >
                           {minute}
@@ -204,8 +205,8 @@ export const LavaDatePicker = ({
                           size="icon"
                           variant={
                             dateValue &&
-                            ((ampm === 'AM' && dateValue.getHours() < 12) ||
-                              (ampm === 'PM' && dateValue.getHours() >= 12))
+                            ((ampm === 'AM' && (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() < 12) ||
+                              (ampm === 'PM' && (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() >= 12))
                               ? 'default'
                               : 'ghost'
                           }

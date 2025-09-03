@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
-import { Filter, GridIcon, ListIcon } from 'lucide-react';
-
 import VaultListItem from '@/components/vaults/VaultListItem';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import VaultFilter from '@/components/shared/VaultFilter';
@@ -10,6 +8,7 @@ import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { Pagination } from '@/components/shared/Pagination';
 
 const LoadingState = () => (
   <div className="py-8 flex items-center justify-center">
@@ -38,7 +37,11 @@ export const VaultList = ({
   error = null,
   onTabChange,
   renderEmptyState = EmptyState,
+  appliedFilters = {},
+  onApplyFilters,
   activeTab: externalActiveTab,
+  pagination,
+  onPageChange,
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState(tabs[0]);
   const [viewType, setViewType] = useState('grid');
@@ -54,7 +57,10 @@ export const VaultList = ({
     }
   };
 
-  const handleOpenFilters = () => openModal('VaultFiltersModal');
+  const handleOpenFilters = () => openModal('VaultFiltersModal', {
+    onApplyFilters: onApplyFilters,
+    initialFilters: appliedFilters
+  });
 
   const renderVaultsView = () => {
     if (viewType === 'grid') {
@@ -105,7 +111,19 @@ export const VaultList = ({
         ) : vaults.length === 0 ? (
           renderEmptyState()
         ) : (
-          renderVaultsView()
+          <>
+            {renderVaultsView()}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={pagination.currentPage || 1}
+                  totalPages={pagination.totalPages}
+                  onPageChange={onPageChange}
+                  className="justify-center"
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

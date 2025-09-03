@@ -21,16 +21,32 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [appliedFilters, setAppliedFilters] = useState({
+    page: 1,
+    limit: 12,
+    filter: initialTab.filter,
+    isOwner: false
+  });
 
   useEffect(() => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
     setActiveTab(newTab);
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: 1,
+      filter: newTab.filter
+    }));
   }, [tabParam]);
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
     if (selectedTab) {
       setActiveTab(selectedTab);
+      setAppliedFilters(prevFilters => ({
+        ...prevFilters,
+        page: 1,
+        filter: selectedTab.filter
+      }));
       router.navigate({
         to: '/vaults',
         search: { tab: selectedTab.id },
@@ -38,8 +54,31 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(activeTab.filter);
+  const { data, isLoading, error } = useVaults(activeTab.filter, appliedFilters);
   const vaults = data?.data?.items || [];
+  
+  const pagination = data?.data ? {
+    currentPage: data.data.page,
+    totalPages: data.data.totalPages,
+    totalItems: data.data.total,
+    limit: data.data.limit
+  } : null;
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(prevFilters => ({
+      page: 1,
+      limit: prevFilters.limit || 12,
+      filter: prevFilters.filter || 'contribution',
+      ...filters
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: page
+    }));
+  };
 
   return (
     <VaultList
@@ -51,6 +90,10 @@ export const CommunityVaultsList = ({ className = '' }) => {
       vaults={vaults}
       onTabChange={handleTabChange}
       activeTab={activeTab.label}
+      appliedFilters={appliedFilters}
+      onApplyFilters={handleApplyFilters}
+      pagination={pagination}
+      onPageChange={handlePageChange}
     />
   );
 };
