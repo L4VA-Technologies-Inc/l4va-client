@@ -161,10 +161,12 @@ export const formatDate = date => {
 export const formatDateTime = dt => {
   if (!dt) return null;
 
-  const date = dt.toLocaleDateString();
-  const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const dateObj = typeof dt === 'string' ? new Date(dt) : dt;
+  
+  const date = dateObj.toLocaleDateString();
+  const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const timezoneOffset = formatISO(dt).slice(19, 25);
+  const timezoneOffset = formatISO(dateObj).slice(19, 25);
   const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
   return `${date} ${time} (${timezoneString})`;

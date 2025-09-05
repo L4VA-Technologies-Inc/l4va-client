@@ -1,7 +1,6 @@
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
 import { VaultList } from '@/components/vaults/VaultsList';
-import { useMyDraftVaults, useMyOpenVaults, useMyLockedVaults } from '@/services/api/queries';
+import { useVaults } from '@/services/api/queries';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -13,47 +12,70 @@ const TABS = Object.values(VAULT_TABS);
 
 export const MyVaultsList = ({ className = '' }) => {
   const [activeTab, setActiveTab] = useState(TABS[0]);
+  const [appliedFilters, setAppliedFilters] = useState({
+    page: 1,
+    limit: 12,
+    filter: activeTab.toLowerCase(),
+    isOwner: true
+  });
 
-  const draftVaults = useMyDraftVaults();
-  const openVaults = useMyOpenVaults();
-  const lockedVaults = useMyLockedVaults();
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: 1,
+      filter: activeTab.toLowerCase()
+    }));
+  }, [activeTab]);
 
-  const getVaultsData = () => {
-    switch (activeTab) {
-      case VAULT_TABS.DRAFT:
-        return {
-          data: draftVaults.data?.data?.items || [],
-          isLoading: draftVaults.isLoading,
-          error: draftVaults.error?.message,
-        };
-      case VAULT_TABS.OPEN:
-        return {
-          data: openVaults.data?.data?.items || [],
-          isLoading: openVaults.isLoading,
-          error: openVaults.error?.message,
-        };
-      case VAULT_TABS.LOCKED:
-        return {
-          data: lockedVaults.data?.data?.items || [],
-          isLoading: lockedVaults.isLoading,
-          error: lockedVaults.error?.message,
-        };
-      default:
-        return { data: [], isLoading: false, error: null };
-    }
+  const handleTabChange = tab => {
+    setActiveTab(tab);
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: 1,
+      filter: tab.toLowerCase()
+    }));
   };
 
-  const { data: vaults, isLoading, error } = getVaultsData();
+  const { data, isLoading, error } = useVaults(activeTab.toLowerCase(), appliedFilters);
+  const vaults = data?.data?.items || [];
+
+  const pagination = data?.data ? {
+    currentPage: data.data.page,
+    totalPages: data.data.totalPages,
+    totalItems: data.data.total,
+    limit: data.data.limit
+  } : null;
+
+  const handleApplyFilters = (filters) => {
+    setAppliedFilters(prevFilters => ({
+      page: 1,
+      limit: prevFilters.limit || 12,
+      filter: prevFilters.filter || 'contribution',
+      ...filters
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: page
+    }));
+  };
 
   return (
     <VaultList
       className={className}
-      error={error}
+      error={error?.message}
       isLoading={isLoading}
       tabs={TABS}
       title="My Vaults"
       vaults={vaults}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
+      activeTab={activeTab}
+      appliedFilters={appliedFilters}
+      onApplyFilters={handleApplyFilters}
+      pagination={pagination}
+      onPageChange={handlePageChange}
     />
   );
 };

@@ -8,9 +8,8 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getVaults(tab) {
-    const response = await axiosInstance.get(VaultsConfigProvider.getVaults(tab));
-    return response;
+  static async getVaults(tab, filters) {
+    return await axiosInstance.post(VaultsConfigProvider.getVaults(tab), filters);
   }
 
   static async getAcquire() {
