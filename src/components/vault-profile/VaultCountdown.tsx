@@ -8,9 +8,10 @@ type VaultCountdownProps = {
   color?: 'red' | 'yellow';
   endTime: string;
   isLocked?: boolean;
+  isFailed?: boolean;
 };
 
-export const VaultCountdown = ({ endTime, isLocked, className = '', color = 'red' }: VaultCountdownProps) => {
+export const VaultCountdown = ({ endTime, isLocked, isFailed, className = '', color = 'red' }: VaultCountdownProps) => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
 
   useEffect(() => {
@@ -25,7 +26,9 @@ export const VaultCountdown = ({ endTime, isLocked, className = '', color = 'red
 
   const countdownText = isLocked
     ? 'LOCKED'
-    : `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m ${formatNumber(timeLeft.seconds)}s`;
+    : isFailed
+      ? 'FAILED'
+      : `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m ${formatNumber(timeLeft.seconds)}s`;
 
   return (
     <div className="flex flex-col items-center relative" role="timer">

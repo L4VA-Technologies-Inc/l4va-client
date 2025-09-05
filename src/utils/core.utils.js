@@ -162,7 +162,7 @@ export const formatDateTime = dt => {
   if (!dt) return null;
 
   const dateObj = typeof dt === 'string' ? new Date(dt) : dt;
-  
+
   const date = dateObj.toLocaleDateString();
   const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -182,7 +182,7 @@ export const getCountdownName = vault => {
   if (vault.vaultStatus === 'acquire') {
     return 'Acquire ends in:';
   }
-  if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance') {
+  if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'failed') {
     return '';
   }
 
