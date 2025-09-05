@@ -12,10 +12,10 @@ import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import MetricCard from '@/components/shared/MetricCard';
-import { TapToolsApiProvider } from '@/services/api/taptools';
 import { useTransaction } from '@/hooks/useTransaction';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
+import { fetchAndFormatWalletAssets } from '@/utils/walletAssets';
 
 const ASSET_VALUE_USD = 152; // Value per asset in USD
 
@@ -58,81 +58,18 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     };
   }, [selectedNFTs, vault.assetsPrices.totalValueUsd, vault.ftTokenSupply, vault.tokensForAcquires]);
 
-  const fetchAndFormatWalletAssets = async () => {
-    try {
-      const changeAddress = await wallet.handler.getChangeAddressBech32();
-      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-
-      const formattedAssets = [];
-
-      // Add ADA as a fungible token
-      // Maybe we will remove this in the future
-      const adaAsset = {
-        id: 'lovelace',
-        name: 'ADA',
-        policyId: 'lovelace',
-        quantity: wallet.balanceAda || 0,
-        decimals: 6,
-        type: 'ada',
-        assetName: 'lovelace',
-        image: '/assets/icons/ada.png',
-      };
-
-      if (whitelistedPolicies.size === 0 || whitelistedPolicies.has(adaAsset.policyId)) {
-        formattedAssets.push(adaAsset);
-      }
-
-      if (data?.assets) {
-        const otherAssets = data.assets
-          .map(asset => {
-            const isWhitelisted = whitelistedPolicies.size === 0 || whitelistedPolicies.has(asset.metadata?.policyId);
-
-            if (!isWhitelisted) return null;
-
-            if (asset.isNft) {
-              return {
-                id: asset.tokenId,
-                name: asset.displayName || asset.name,
-                policyId: asset.metadata.policyId,
-                image: asset.metadata.image?.replace('ipfs://', 'https://ipfs.io/ipfs/') || '/placeholder.svg',
-                description: asset.metadata.description,
-                quantity: asset.quantity,
-                type: 'NFT',
-                assetName: asset.metadata.assetName,
-                metadata: asset.metadata,
-              };
-            }
-            if (asset.isFungibleToken) {
-              return {
-                id: asset.tokenId,
-                name: asset.displayName || asset.name,
-                policyId: asset.metadata.policyId,
-                quantity: asset.quantity,
-                decimals: asset.metadata.decimals,
-                type: 'FT',
-                assetName: asset.metadata.assetName,
-                metadata: asset.metadata,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean);
-        formattedAssets.push(...otherAssets);
-      }
-      setAssets(formattedAssets);
-    } catch (err) {
-      console.error('Error fetching wallet summary:', err);
-      toast.error('Failed to load assets');
-    }
+  const loadWalletAssets = async () => {
+    const formattedAssets = await fetchAndFormatWalletAssets(wallet, whitelistedPolicies);
+    setAssets(formattedAssets);
   };
 
   useEffect(() => {
-    const loadWalletAssets = async () => {
+    const loadAssets = async () => {
       setIsLoading(true);
-      await fetchAndFormatWalletAssets();
+      await loadWalletAssets();
       setIsLoading(false);
     };
-    loadWalletAssets();
+    loadAssets();
   }, [wallet.handler]);
 
   const toggleNFT = asset => {
@@ -199,7 +136,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       });
       setSelectedNFTs([]);
       setSelectedAmount({});
-      await fetchAndFormatWalletAssets();
+      await loadWalletAssets();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
     }
