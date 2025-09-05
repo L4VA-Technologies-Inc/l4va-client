@@ -91,19 +91,19 @@ const Faq = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[70px]">
             <div className="space-y-4 text-dark-100 lg:pr-[135px]">
               <h2 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
-                HOW TO PARTICIPATE
+                How it Works
               </h2>
+              <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">Unlock liquidity, access, and governance for any asset on Cardano.</h4>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent congue malesuada turpis ut lacinia.
-                Aenean vel rhoncus nisl, nec molestie ligula.
+              Create a vault, customize settings, and invite contributors to add assets, then acquirers send 
+              ADA in exchange for governance tokens -- fractional asset tokens with real decision making power.
               </p>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Vivamus ut porta mi. Integer sodales porta nunc, commodo nunc. Morbi nec feugiat diam. Vivamus pretium
-                pulvinar tortor enim.
+              Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) 
+              and vault tokens retained. Token holders have the power to manage the future of assets in the vault.
               </p>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Curabitur mollis scelerisque mi id pulvinar. Mauris mollis libero est, at facilisis nisl vulputat vitae.
-                Donec ut nibh nec massa pulvinar elementum. Nunc sagittis.
+              Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital assets.
               </p>
             </div>
             <div className="space-y-4 sm:space-y-6">
