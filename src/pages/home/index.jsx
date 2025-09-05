@@ -22,7 +22,7 @@ export const Home = () => {
         <HeroStats />
         <Features />
         <VaultsFilters />
-        <Acquire />
+        {/* <Acquire /> */}
         <Stats />
         <Faq />
       </div>
