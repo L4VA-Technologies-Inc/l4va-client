@@ -1,6 +1,7 @@
 import { EyeIcon, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+
 import { useCurrency } from '@/hooks/useCurrency';
 import {
   BUTTON_DISABLE_THRESHOLD_MS,
@@ -28,7 +29,6 @@ export const VaultProfileView = ({ vault }) => {
   const navigate = useNavigate();
 
   const { currency } = useCurrency();
-
 
   useVaultStatusTracker(vault?.id);
 
@@ -137,13 +137,12 @@ export const VaultProfileView = ({ vault }) => {
           </div>
           <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
           <div className="mb-6">
-            {vault.vaultStatus !== 'ready-for-governance' && (
-              <VaultCountdown
-                className="h-[65px]"
-                endTime={getCountdownTime(vault)}
-                isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
-              />
-            )}
+            <VaultCountdown
+              className="h-[65px]"
+              endTime={getCountdownTime(vault)}
+              isLocked={vault.vaultStatus === 'locked'}
+              isFailed={vault.vaultStatus === 'failed'}
+            />
           </div>
           <VaultContribution vault={vault} />
         </div>

@@ -132,7 +132,11 @@ export const VaultContribution = ({ vault }) => {
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-dark-100">Reserve</span>
-              <span className="text-dark-100">{currency === 'ada' ? `₳${formatNum(vault.requireReservedCostAda)}` : `$${formatNum(vault.requireReservedCostUsd)}`}</span>
+              <span className="text-dark-100">
+                {currency === 'ada'
+                  ? `₳${formatNum(vault.requireReservedCostAda)}`
+                  : `$${formatNum(vault.requireReservedCostUsd)}`}
+              </span>
             </div>
             <LavaProgressBar
               className="h-2 rounded-full bg-steel-750 mb-4"
