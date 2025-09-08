@@ -2,6 +2,8 @@ import { Edit } from 'lucide-react';
 
 import { formatInterval, formatNum, formatDateTime, substringAddress } from '@/utils/core.utils';
 import { VAULT_VALUE_METHOD_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import { HoverHelp } from '@/components/shared/HoverHelp';
+import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = (type, time) => {
@@ -29,13 +31,18 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
       <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
         <div className="space-y-12">
           <div>
-            <p className="uppercase font-semibold text-dark-100">Valuation type</p>
+            <div className="flex items-center gap-2">
+              <p className="uppercase font-semibold text-dark-100">Valuation type</p>
+              <HoverHelp hint={VALUE_METHOD_HINT} />
+            </div>
+
             <p>{VAULT_VALUE_METHOD_OPTIONS.find(option => option.name === data.valueMethod)?.label}</p>
           </div>
           {data.valueMethod === 'fixed' && (
             <>
               <div>
                 <p className="uppercase font-semibold text-dark-100">Valuation Currency</p>
+                
                 <p>{data.valuationCurrency || 'Not set'}</p>
               </div>
               <div>
