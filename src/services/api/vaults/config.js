@@ -7,6 +7,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/acquire';
   }
 
+  static getStatistics() {
+    return '/api/v1/vaults/statistics';
+  }
+
   static getVaults(tab) {
     return '/api/v1/vaults/search';
   }

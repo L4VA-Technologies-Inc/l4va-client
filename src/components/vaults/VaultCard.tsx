@@ -5,6 +5,7 @@ import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
+import { useCurrency } from '@/hooks/useCurrency';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 type VaultCardProps = {
@@ -15,6 +16,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, privacy, vaultImage, ftTokenImg, socialLinks = [] } = vault;
+  const { currency } = useCurrency();
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -68,7 +70,15 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
-              <p className="font-bold">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
+              <p className="font-bold">
+                {vault.totalValueAda && vault.totalValueUsd ? (
+                  currency === 'ada' 
+                    ? `₳${formatCompactNumber(vault.totalValueAda)}`
+                    : `$${formatCompactNumber(vault.totalValueUsd)}`
+                ) : (
+                  'N/A'
+                )}
+              </p>
             </div>
             <div className="border-x border-slate-800">
               <p className="text-sm text-dark-100">Privacy</p>
