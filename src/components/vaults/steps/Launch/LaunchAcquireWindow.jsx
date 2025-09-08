@@ -1,6 +1,8 @@
 import { Edit } from 'lucide-react';
 
 import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
+import { HoverHelp } from '@/components/shared/HoverHelp';
+import { LIQUIDITY_POOL_CONTRIBUTION_HINT, RESERVE_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
   const formatTime = (type, time) => {
@@ -73,15 +75,24 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
         </div>
         <div className="space-y-12">
           <div>
-            <p className="uppercase font-semibold text-dark-100">Assets Fractionalized (%)</p>
+            <div className="flex items-center gap-2">
+              <p className="uppercase font-semibold text-dark-100">Tokens for Acquirers (%)</p>
+              <HoverHelp hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks." />
+            </div>
             <p>{data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}</p>
           </div>
           <div>
-            <p className="uppercase font-semibold text-dark-100">Reserve (%)</p>
+            <div className="flex items-center gap-2">
+              <p className="uppercase font-semibold text-dark-100">Reserve (%)</p>
+              <HoverHelp hint={RESERVE_HINT} />
+            </div>
             <p>{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
           </div>
           <div>
-            <p className="uppercase font-semibold text-dark-100">Liquidity Pool (LP) Contribution (%)</p>
+            <div className="flex items-center gap-2">
+              <p className="uppercase font-semibold text-dark-100">Liquidity Pool (LP) Contribution (%)</p>
+              <HoverHelp hint={LIQUIDITY_POOL_CONTRIBUTION_HINT} />
+            </div>
             <p>{data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}</p>
           </div>
         </div>
