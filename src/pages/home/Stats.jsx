@@ -1,4 +1,6 @@
 import { formatNum } from '@/utils/core.utils.js';
+import { useStatistics } from '@/services/api/queries';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const getBackgroundColor = index => {
   const colors = ['bg-red-900', 'bg-red-800', 'bg-red-700', 'bg-red-600', 'bg-red-500'];
@@ -12,13 +14,16 @@ const StatCard = ({ value, label }) => (
   </div>
 );
 
-const ProgressBar = ({ items, title, totalAmount }) => {
+const ProgressBar = ({ items, title, totalAmount, currency }) => {
+  
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
   const itemsWithValues = items.map(item => ({
     ...item,
-    actualValue: Math.round((item.percentage / total) * totalAmount),
+    actualValue: currency === 'ada' ? item.valueAda : item.valueUsd,
   }));
+
+  const currencySymbol = currency === 'ada' ? '₳' : '$';
 
   return (
     <div className="mb-16">
@@ -32,7 +37,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
                 <div>
                   <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>
                   <div className="text-base lg:text-lg xl:text-xl font-semibold">{item.percentage.toFixed(2)}%</div>
-                  <div className="text-dark-100 text-sm lg:text-base">{formatNum(item.actualValue)} ADA</div>
+                  <div className="text-dark-100 text-sm lg:text-base">{currencySymbol}{formatNum(item.actualValue)}</div>
                 </div>
               </div>
             ))}
@@ -52,7 +57,7 @@ const ProgressBar = ({ items, title, totalAmount }) => {
                   }}
                 >
                   <div className="bg-steel-950 text-sm py-1 px-2 rounded whitespace-nowrap shadow-lg">
-                    {item.label}: {formatNum(item.actualValue)} ADA
+                    {item.label}: {currencySymbol}{formatNum(item.actualValue)}
                     <div className="absolute left-1/2 top-full -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-steel-850" />
                   </div>
                 </div>
@@ -66,28 +71,52 @@ const ProgressBar = ({ items, title, totalAmount }) => {
 };
 
 const Stats = () => {
-  const totalAmount = 25000000; // 25 million ADA
+  const { data } = useStatistics();
+  const statistics = data?.data;
+  const { currency } = useCurrency();
 
-  const stats = [
-    { label: 'MyVaults', value: '158' },
-    { label: 'Assets', value: '486' },
-    { label: 'Acquired', value: '$9M+' },
-    { label: 'TVL All MyVaults', value: '$18M+' },
+  const formatCurrency = (adaValue, usdValue) => {
+    if (currency === 'ada') {
+      return `₳${formatNum(adaValue)}`;
+    } else {
+      return `$${formatNum(usdValue)}`;
+    }
+  };
+
+  const getTotalValue = (adaValue, usdValue) => {
+    return currency === 'ada' ? adaValue : usdValue;
+  };
+
+  const stats = statistics ? [
+    { label: 'Total Vaults', value: statistics.totalVaults?.toString() || '0' },
+    { label: 'Assets', value: statistics.totalAssets?.toString() || '0' },
+    { label: 'Acquired', value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd) },
+    { label: 'TVL', value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd) },
+  ] : [
+    { label: 'Total Vaults', value: '0' },
+    { label: 'Assets', value: '0' },
+    { label: 'Acquired', value: '₳0' },
+    { label: 'TVL', value: '₳0' },
   ];
 
-  const statusData = [
-    { label: 'Draft', percentage: 10.0 },
-    { label: 'Contribution', percentage: 22.0 },
-    { label: 'Acquire', percentage: 16.33 },
-    { label: 'Locked', percentage: 18.0 },
-    { label: 'Terminated', percentage: 33.67 },
-  ];
+  const statusData = statistics?.vaultsByStage ? Object.entries(statistics.vaultsByStage).map(([key, value]) => ({
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    percentage: value.percentage,
+    valueAda: value.valueAda,
+    valueUsd: value.valueUsd
+  })) : [];
 
-  const typesData = [
-    { label: 'Private', percentage: 30.33 },
-    { label: 'Semi-Private', percentage: 26.0 },
-    { label: 'Public', percentage: 43.67 },
-  ];
+  const typesData = statistics?.vaultsByType ? Object.entries(statistics.vaultsByType).map(([key, value]) => ({
+    label: key === 'semiPrivate' ? 'Semi-Private' : key.charAt(0).toUpperCase() + key.slice(1),
+    percentage: value.percentage,
+    valueAda: value.valueAda,
+    valueUsd: value.valueUsd
+  })) : [];
+
+  const totalAmount = statistics ? getTotalValue(
+    Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueAda, 0),
+    Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueUsd, 0)
+  ) : 0;
 
   return (
     <div className="container mx-auto py-12 sm:py-16">
@@ -98,8 +127,8 @@ const Stats = () => {
         ))}
       </div>
       <div className="space-y-16">
-        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} />
-        <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} />
+        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} currency={currency} />
+        <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} currency={currency} />
       </div>
     </div>
   );

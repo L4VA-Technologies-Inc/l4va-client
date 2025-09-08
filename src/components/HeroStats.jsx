@@ -1,29 +1,59 @@
 import { useCountAnimation } from '@/hooks/useCountAnimation';
+import { useStatistics } from '@/services/api/queries';
+import { useCurrency } from '@/hooks/useCurrency';
+import { formatNum } from '@/utils/core.utils.js';
 
-const Counter = ({ value }) => {
+const Counter = ({ value, prefix = '' }) => {
   const animatedValue = useCountAnimation(value);
-  return <span>{animatedValue}</span>;
+  return <span>{prefix}{animatedValue}</span>;
 };
 
 const HeroStats = () => {
-  const stats = [
-    { label: 'Active Vaults', value: '132' },
-    { label: 'TVL', value: '$38.60' },
-    { label: 'Total Contributed', value: '$160.48' },
-  ];
+  const { data } = useStatistics();
+  const stats = data?.data;
+  const { currency } = useCurrency();
+  const currencySymbol = currency === 'ada' ? '₳' : '$';
+
+  const formatCurrencyValue = (adaValue, usdValue) => {
+    const value = currency === 'ada' ? adaValue : usdValue;
+    return formatNum(value || 0);
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
-      {stats.map(stat => (
-        <div key={stat.label} className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
-          <p>{stat.label}</p>
+      <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
+        <div>
+          <p>Active Vaults</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
-            <Counter value={stat.value} />
+            <Counter value={stats?.activeVaults || 0} />
           </p>
         </div>
-      ))}
+      </div>
+      <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
+        <div>
+          <p>TVL</p>
+          <p className="text-orange-500 text-2xl sm:text-4xl">
+            <Counter 
+              value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd)} 
+              prefix={currencySymbol}
+            />
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
+        <div>
+          <p>Assets Contributed</p>
+          <p className="text-orange-500 text-2xl sm:text-4xl">
+            <Counter 
+              value={formatCurrencyValue(stats?.totalContributedAda, stats?.totalContributedUsd)} 
+              prefix={currencySymbol}
+            />
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
+
 
 export default HeroStats;
