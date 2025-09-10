@@ -7,8 +7,11 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/acquire';
   }
 
-  static getVaults(tab) {
-    return '/api/v1/vaults/search';
+  static getVaults(isPublicOnly) {
+    if (isPublicOnly) {
+      return `/api/v1/vaults/search/public`;
+    }
+    return `/api/v1/vaults/search`;
   }
 
   static getMyDraftVaults() {
