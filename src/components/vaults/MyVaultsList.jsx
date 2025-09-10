@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
-import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -14,8 +13,6 @@ const VAULT_TABS = {
 const TABS = Object.values(VAULT_TABS);
 
 export const MyVaultsList = ({ className = '' }) => {
-  const { isAuthenticated } = useAuth();
-
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -41,7 +38,7 @@ export const MyVaultsList = ({ className = '' }) => {
     }));
   };
 
-  const { data, isLoading, error } = useVaults(!isAuthenticated, appliedFilters);
+  const { data, isLoading, error } = useVaults(false, appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
