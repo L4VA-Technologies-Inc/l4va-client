@@ -3,6 +3,7 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
+import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
@@ -16,6 +17,7 @@ const DEFAULT_TAB = 'contribution';
 export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -25,7 +27,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
-    isOwner: false
+    isOwner: false,
   });
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       page: 1,
-      filter: newTab.filter
+      filter: newTab.filter,
     }));
   }, [tabParam]);
 
@@ -45,7 +47,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
       setAppliedFilters(prevFilters => ({
         ...prevFilters,
         page: 1,
-        filter: selectedTab.filter
+        filter: selectedTab.filter,
       }));
       router.navigate({
         to: '/vaults',
@@ -54,29 +56,31 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(activeTab.filter, appliedFilters);
+  const { data, isLoading, error } = useVaults(!isAuthenticated, appliedFilters);
   const vaults = data?.data?.items || [];
-  
-  const pagination = data?.data ? {
-    currentPage: data.data.page,
-    totalPages: data.data.totalPages,
-    totalItems: data.data.total,
-    limit: data.data.limit
-  } : null;
 
-  const handleApplyFilters = (filters) => {
+  const pagination = data?.data
+    ? {
+        currentPage: data.data.page,
+        totalPages: data.data.totalPages,
+        totalItems: data.data.total,
+        limit: data.data.limit,
+      }
+    : null;
+
+  const handleApplyFilters = filters => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
-      ...filters
+      ...filters,
     }));
   };
 
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
-      page: page
+      page: page,
     }));
   };
 

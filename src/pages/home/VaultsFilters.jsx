@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
+
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
-
+import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
@@ -12,13 +14,13 @@ const VAULT_TABS = [
 
 const DEFAULT_TAB = 'contribution';
 
-
 const VaultsFilters = ({ className = '' }) => {
-
   const tabParam = DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -29,7 +31,7 @@ const VaultsFilters = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
-    isOwner: false
+    isOwner: false,
   });
 
   const handleTabChange = tab => {
@@ -39,7 +41,7 @@ const VaultsFilters = ({ className = '' }) => {
       setAppliedFilters(prevFilters => ({
         ...prevFilters,
         page: 1,
-        filter: selectedTab.filter
+        filter: selectedTab.filter,
       }));
       router.navigate({
         to: '/vaults',
@@ -47,29 +49,31 @@ const VaultsFilters = ({ className = '' }) => {
       });
     }
   };
-  const { data, isLoading, error } = useVaults(activeTab.filter, appliedFilters);
+  const { data, isLoading, error } = useVaults(!isAuthenticated, appliedFilters);
   const vaults = data?.data?.items || [];
 
-  const pagination = data?.data ? {
-    currentPage: data.data.page,
-    totalPages: data.data.totalPages,
-    totalItems: data.data.total,
-    limit: data.data.limit
-  } : null;
+  const pagination = data?.data
+    ? {
+        currentPage: data.data.page,
+        totalPages: data.data.totalPages,
+        totalItems: data.data.total,
+        limit: data.data.limit,
+      }
+    : null;
 
-  const handleApplyFilters = (filters) => {
+  const handleApplyFilters = filters => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
-      ...filters
+      ...filters,
     }));
   };
 
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
-      page: page
+      page: page,
     }));
   };
 
@@ -91,5 +95,3 @@ const VaultsFilters = ({ className = '' }) => {
 };
 
 export default VaultsFilters;
-
-

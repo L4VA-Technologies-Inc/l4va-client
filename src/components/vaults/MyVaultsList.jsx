@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 
@@ -6,6 +7,7 @@ const VAULT_TABS = {
   DRAFT: 'Draft',
   OPEN: 'Open',
   LOCKED: 'Locked',
+  FAILED: 'Failed',
 };
 
 const TABS = Object.values(VAULT_TABS);
@@ -16,14 +18,14 @@ export const MyVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: activeTab.toLowerCase(),
-    isOwner: true
+    isOwner: true,
   });
 
   useEffect(() => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       page: 1,
-      filter: activeTab.toLowerCase()
+      filter: activeTab.toLowerCase(),
     }));
   }, [activeTab]);
 
@@ -32,33 +34,35 @@ export const MyVaultsList = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       page: 1,
-      filter: tab.toLowerCase()
+      filter: tab.toLowerCase(),
     }));
   };
 
-  const { data, isLoading, error } = useVaults(activeTab.toLowerCase(), appliedFilters);
+  const { data, isLoading, error } = useVaults(false, appliedFilters);
   const vaults = data?.data?.items || [];
 
-  const pagination = data?.data ? {
-    currentPage: data.data.page,
-    totalPages: data.data.totalPages,
-    totalItems: data.data.total,
-    limit: data.data.limit
-  } : null;
+  const pagination = data?.data
+    ? {
+        currentPage: data.data.page,
+        totalPages: data.data.totalPages,
+        totalItems: data.data.total,
+        limit: data.data.limit,
+      }
+    : null;
 
-  const handleApplyFilters = (filters) => {
+  const handleApplyFilters = filters => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
-      ...filters
+      ...filters,
     }));
   };
 
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
-      page: page
+      page: page,
     }));
   };
 

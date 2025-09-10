@@ -8,8 +8,8 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getVaults(tab, filters) {
-    return await axiosInstance.post(VaultsConfigProvider.getVaults(tab), filters);
+  static async getVaults(isPublicOnly, filters) {
+    return await axiosInstance.post(VaultsConfigProvider.getVaults(isPublicOnly), filters);
   }
 
   static async getAcquire() {
