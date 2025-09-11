@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Plus } from 'lucide-react';
+
+import { BuyingSelling } from './BuyingSelling';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -14,21 +17,22 @@ import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import { useCreateProposal } from '@/services/api/queries';
 
+const executionOptions = [
+  { value: 'staking', label: 'Staking' },
+  { value: 'distribution', label: 'Distributing' },
+  { value: 'termination', label: 'Terminating' },
+  { value: 'burning', label: 'Burning' },
+  { value: 'buying-selling', label: 'Buying/Selling' },
+];
+
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('staking');
+  const [selectedOption, setSelectedOption] = useState('buying-selling');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState({});
 
   const createProposalMutation = useCreateProposal();
-
-  const executionOptions = [
-    { value: 'staking', label: 'Staking' },
-    { value: 'distribution', label: 'Distributing' },
-    { value: 'termination', label: 'Terminating' },
-    { value: 'burning', label: 'Burning' },
-  ];
 
   const handleCreateProposal = () => {
     setShowConfirmation(true);
@@ -36,50 +40,44 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const handleConfirmCreate = async () => {
     try {
-      // Build the base proposal data
       const proposalPayload = {
         title: proposalTitle,
         description: proposalDescription,
         type: selectedOption, // Backend expects UPPERCASE enum values
       };
 
-      // Handle different proposal types
       if (selectedOption === 'staking') {
-        // Add FTs and NFTs directly to the payload for staking
         proposalPayload.fts = proposalData.fungibleTokens || [];
         proposalPayload.nfts = proposalData.nonFungibleTokens || [];
-
-        // Add start date if provided
         if (proposalData.proposalStart) {
           proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
         }
       } else if (selectedOption === 'distribution') {
-        // Add distribution assets directly to the payload
         proposalPayload.distributionAssets = proposalData.distributionAssets || [];
 
-        // Add start date if provided
         if (proposalData.proposalStart) {
           proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
         }
       } else if (selectedOption === 'termination') {
-        // For termination, add as metadata
         proposalPayload.metadata = {
           reason: proposalData.reason || '',
           terminationDate: proposalData.terminationDate || null,
         };
       } else if (selectedOption === 'burning') {
-        // For burning, add as metadata
         proposalPayload.metadata = {
           burnAssets: proposalData.burnAssets || [],
         };
+      } else if (selectedOption === 'buying-selling') {
+        proposalPayload.metadata = {
+          options: proposalData.buyingSellingOptions || [],
+          hasDoNothing: proposalData.hasDoNothing || true,
+        };
       }
 
-      const response = await createProposalMutation.mutateAsync({
+      await createProposalMutation.mutateAsync({
         vaultId: vault.id,
         proposalData: proposalPayload,
       });
-
-      console.log('Proposal created successfully:', response);
 
       toast.success('Proposal created successfully!');
       setShowConfirmation(false);
@@ -116,7 +114,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   return (
     <>
       <ModalWrapper
-        size="2xl"
+        size="3xl"
         isOpen={isOpen}
         onClose={onClose}
         title={`Create Proposal for ${vault.name}`}
@@ -154,6 +152,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'burning' && (
               <Burning vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
+            )}
+            {selectedOption === 'buying-selling' && (
+              <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />
             )}
           </div>
         </div>

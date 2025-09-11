@@ -5,7 +5,7 @@ import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
-import { useAssetsToStake } from '@/services/api/queries';
+import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 const marketOptions = [
   { value: 'm1', label: 'Market 1' },
@@ -20,7 +20,7 @@ export default function Staking({ vaultId, onDataChange }) {
   const [nftsAll, setNftsAll] = useState(true);
   const [proposalStart, setProposalStart] = useState('');
 
-  const { data, isLoading } = useAssetsToStake(vaultId);
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'stake');
 
   const ftSelected = useMemo(() => fts.filter(f => f.selected), [fts]);
   const nftSelected = useMemo(() => nfts.filter(n => n.selected), [nfts]);
@@ -156,7 +156,7 @@ export default function Staking({ vaultId, onDataChange }) {
                       placeholder="0.00"
                       value={row.amount}
                       onChange={v => setFTAmount(row.id, v)}
-                      inputClassName={`text-right sm:text-left ${
+                      className={`text-right sm:text-left ${
                         row.amount && Number(row.amount) > row.available ? 'border-red-500/60' : ''
                       }`}
                     />

@@ -19,20 +19,7 @@ export class GovernanceConfigProvider {
     return `/api/v1/governance/vaults/${vaultId}/voting-power`;
   }
 
-  // endpoints for assets
-  static getAssetsToTerminate(vaultId) {
-    return `/api/v1/governance/vaults/${vaultId}/assets/terminate`;
-  }
-
-  static getAssetsToStake(vaultId) {
-    return `/api/v1/governance/vaults/${vaultId}/assets/stake`;
-  }
-
-  static getAssetsToDistribute(vaultId) {
-    return `/api/v1/governance/vaults/${vaultId}/assets/distribute`;
-  }
-
-  static getAssetsToBurn(vaultId) {
-    return `/api/v1/governance/vaults/${vaultId}/assets/burn`;
+  static getAssets(vaultId, type) {
+    return `/api/v1/governance/vaults/${vaultId}/assets/${type}`;
   }
 }
