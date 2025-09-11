@@ -18,8 +18,8 @@ export const LavaWhitelistWithCaps = ({
       ...whitelist,
       {
         policyId: '',
-        countCapMin: '',
-        countCapMax: '',
+        countCapMin: 1,
+        countCapMax: 1000,
         uniqueId: Date.now(),
       },
     ];
@@ -89,7 +89,7 @@ export const LavaWhitelistWithCaps = ({
                     updateAsset(
                       asset.uniqueId,
                       'countCapMin',
-                      e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value))
+                      e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value) || 1)
                     )
                   }
                 />
@@ -112,7 +112,7 @@ export const LavaWhitelistWithCaps = ({
                     updateAsset(
                       asset.uniqueId,
                       'countCapMax',
-                      e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value))
+                      e.target.value === '' ? 1000 : Math.max(1, parseInt(e.target.value) || 1000)
                     )
                   }
                 />

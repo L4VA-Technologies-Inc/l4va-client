@@ -2,6 +2,7 @@ import { Edit } from 'lucide-react';
 
 import { formatNum } from '@/utils/core.utils';
 import { TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import { HoverHelp } from '@/components/shared/HoverHelp';
 
 export const LaunchGovernance = ({ data, setCurrentStep }) => (
   <section>
@@ -54,7 +55,10 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
           <p className="uppercase font-semibold text-dark-100 text-lg mb-6">Governance Proposal Rules</p>
           <div className="space-y-6">
             <div>
-              <p className="uppercase font-semibold text-dark-100">Creation Threshold %</p>
+              <div className="flex items-center gap-2">
+                <p className="uppercase font-semibold text-dark-100">Creation Threshold %</p>
+                <HoverHelp hint="Minimum VT held by user (as % of total supply) required to create a proposal" />
+              </div>
               <p>{data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}</p>
             </div>
             {/*<div>*/}
@@ -62,11 +66,17 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             {/*  <p>{data.startThreshold ? `${formatNum(data.startThreshold)}%` : 'Not set'}</p>*/}
             {/*</div>*/}
             <div>
-              <p className="uppercase font-semibold text-dark-100">Vote Threshold %</p>
+              <div className="flex items-center gap-2">
+                <p className="uppercase font-semibold text-dark-100">Vote Threshold %</p>
+                <HoverHelp hint="Minimum VT used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails." />
+              </div>
               <p>{data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}</p>
             </div>
             <div>
-              <p className="uppercase font-semibold text-dark-100">Execution Threshold %</p>
+              <div className="flex items-center gap-2">
+                <p className="uppercase font-semibold text-dark-100">Execution Threshold %</p>
+                <HoverHelp hint="Minimum VT votes for a given proposal option (as % of total votes) for a proposal to be approved." />
+              </div>
               <p>{data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}</p>
             </div>
             {/*<div>*/}

@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
-export const MIN_SUPPLY = 1000000000000; // 10^12
-export const MAX_SUPPLY = 1000000000000000000; // 10^18
+export const MIN_SUPPLY = 1000000; // 10^6
+export const MAX_SUPPLY = 1000000000000; // 10^12
 export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 min in ms
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 min in ms
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
@@ -114,8 +114,8 @@ const socialLinkSchema = yup.object({
 
 const assetWhitelistItemSchema = yup.object({
   policyId: yup.string().required('Policy ID is required'),
-  countCapMin: yup.number().typeError('Min must be at least 1 for each whitelisted policy ID'),
-  countCapMax: yup.number().typeError('Max asset cap is required'),
+  countCapMin: yup.mixed().default(1),
+  countCapMax: yup.mixed().default(1000),
 });
 
 const acquirerWhitelistItemSchema = yup.object({

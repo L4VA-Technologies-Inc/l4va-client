@@ -8,14 +8,14 @@ import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 
-export const useVaults = (tab, filters) => {
+export const useVaults = (isPublicOnly, filters) => {
   return useQuery({
-    queryKey: ['vaults', tab, filters?.page, filters?.limit, filters?.filter, filters?.isOwner],
+    queryKey: ['vaults', isPublicOnly, filters?.page, filters?.limit, filters?.filter, filters?.isOwner],
     queryFn: () => {
-      return VaultsApiProvider.getVaults(tab, filters);
+      return VaultsApiProvider.getVaults(isPublicOnly, filters);
     },
-    staleTime: 0, 
-    cacheTime: 0, 
+    staleTime: 0,
+    cacheTime: 0,
   });
 };
 

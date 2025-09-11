@@ -2,6 +2,8 @@ import { Edit } from 'lucide-react';
 
 import { LavaSocialLinksPreview } from '@/components/shared/LavaSocialLinks';
 import { VAULT_TYPE_OPTIONS, VAULT_PRIVACY_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import { HoverHelp } from '@/components/shared/HoverHelp';
+import { PRIVACY_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
   <section>
@@ -23,15 +25,24 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <p>{data.name || 'No name'}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">Vault type</p>
+          <div className="flex items-center gap-2">
+            <p className="uppercase font-semibold text-dark-100">Vault type</p>
+            <HoverHelp hint="Type of assets that can be contributed to the Vault." />
+          </div>
           <p>{VAULT_TYPE_OPTIONS.find(option => option.name === data.type)?.label}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">Vault privacy</p>
+          <div className="flex items-center gap-2">
+            <p className="uppercase font-semibold text-dark-100">Vault privacy</p>
+            <HoverHelp hint={PRIVACY_HINT} />
+          </div>
           <p>{VAULT_PRIVACY_OPTIONS.find(option => option.name === data.privacy)?.label}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">VT Token Ticker</p>
+          <div className="flex items-center gap-2">
+            <p className="uppercase font-semibold text-dark-100">VT Token Ticker</p>
+            <HoverHelp hint="This is the ticker that the Governance Token will have when minted." />
+          </div>
           <p>{data.vaultTokenTicker || 'Not set'}</p>
         </div>
         <div>
@@ -45,7 +56,10 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
       </div>
       <div className="space-y-12">
         <div>
-          <p className="uppercase font-semibold text-dark-100">Vault image</p>
+          <div className="flex items-center gap-2">
+            <p className="uppercase font-semibold text-dark-100">Vault image</p>
+            <HoverHelp hint="This is the image that will live on the Vault Profile page." />
+          </div>
           {data.vaultImage ? (
             <div className="mt-2 relative w-full md:w-64 h-32 overflow-hidden rounded-lg">
               <img alt="Vault Image" className="w-full h-full object-cover" src={data.vaultImage} />
