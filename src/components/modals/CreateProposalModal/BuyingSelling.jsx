@@ -41,6 +41,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
       const formattedAssets = assetsData.data.map(asset => ({
         value: asset.name,
         label: asset.name,
+        id: asset.id,
       }));
 
       setAssetOptions(formattedAssets);
@@ -57,7 +58,22 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
   }, [options, onDataChange, proposalStart, abstain]);
 
   const handleOptionChange = (id, field, value) => {
-    setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
+    if (field === 'assetName') {
+      const selectedAsset = assetOptions.find(option => option.value === value);
+      setOptions(
+        options.map(option =>
+          option.id === id
+            ? {
+                ...option,
+                [field]: value,
+                assetId: selectedAsset?.id || null,
+              }
+            : option
+        )
+      );
+    } else {
+      setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
+    }
   };
 
   const setFTMax = id => {
@@ -93,7 +109,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
   };
 
   const handleAddOption = () => {
-    if (options.length >= 10 || options.length >= remainingAssets.length) return;
+    if (options.length >= 10 || remainingAssets.length === 0) return;
 
     setOptions([
       ...options,
@@ -121,7 +137,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
         <button
           className="flex items-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors"
           type="button"
-          disabled={options.length >= 10 || options.length >= remainingAssets.length}
+          disabled={options.length >= 10 || remainingAssets.length === 0}
           onClick={handleAddOption}
         >
           Add Option
@@ -153,7 +169,9 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
                       <LavaSteelSelect
-                        options={assetOptions}
+                        options={assetOptions.filter(
+                          opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value)
+                        )}
                         placeholder={isLoading ? 'Loading assets...' : 'Select asset'}
                         value={option.assetName}
                         onChange={value => handleOptionChange(option.id, 'assetName', value)}

@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus } from 'lucide-react';
 
 import { BuyingSelling } from './BuyingSelling';
 
@@ -22,13 +21,13 @@ const executionOptions = [
   { value: 'distribution', label: 'Distributing' },
   { value: 'termination', label: 'Terminating' },
   { value: 'burning', label: 'Burning' },
-  { value: 'buying-selling', label: 'Buying/Selling' },
+  { value: 'buy_sell', label: 'Buying/Selling' },
 ];
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('buying-selling');
+  const [selectedOption, setSelectedOption] = useState('buy_sell');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState({});
 
@@ -67,11 +66,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.metadata = {
           burnAssets: proposalData.burnAssets || [],
         };
-      } else if (selectedOption === 'buying-selling') {
-        proposalPayload.metadata = {
-          options: proposalData.buyingSellingOptions || [],
-          hasDoNothing: proposalData.hasDoNothing || true,
-        };
+      } else if (selectedOption === 'buy_sell') {
+        proposalPayload.metadata = proposalData;
       }
 
       await createProposalMutation.mutateAsync({
@@ -153,9 +149,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'burning' && (
               <Burning vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
             )}
-            {selectedOption === 'buying-selling' && (
-              <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />
-            )}
+            {selectedOption === 'buy_sell' && <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />}
           </div>
         </div>
       </ModalWrapper>
