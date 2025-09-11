@@ -11,10 +11,6 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/statistics';
   }
 
-  static getStatistics() {
-    return '/api/v1/vaults/statistics';
-  }
-
   static getVaults(isPublicOnly) {
     if (isPublicOnly) {
       return `/api/v1/vaults/search/public`;
