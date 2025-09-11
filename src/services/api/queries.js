@@ -26,6 +26,13 @@ export const useAcquire = () => {
   });
 };
 
+export const useStatistics = () => {
+  return useQuery({
+    queryKey: ['statistics'],
+    queryFn: () => VaultsApiProvider.getStatistics(),
+  });
+};
+
 export const useMyDraftVaults = () => {
   return useQuery({
     queryKey: ['vaults', 'draft'],
