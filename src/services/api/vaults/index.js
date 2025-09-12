@@ -48,6 +48,11 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async launchVaultBlueprints(vaultData) {
+    const response = await axiosInstance.post(VaultsConfigProvider.launchVaultBlueprints(), vaultData);
+    return response;
+  }
+
   static async getVault(id) {
     const response = await axiosInstance.get(VaultsConfigProvider.getVault(id));
     return response;
