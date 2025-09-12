@@ -34,11 +34,19 @@ export const AcquireModal = ({ vault, onClose }) => {
       estimatedTickerVal = acquireAmountNum * (vault.tokensForAcquires / 100); // Fallback calculation
     }
 
-    // Calculate allocation percentage
-    const vaultAllocation =
-      acquireAmountNum > 0
-        ? ((estimatedValue / (vault.assetsPrices?.totalValueUsd + estimatedValue)) * 100).toFixed(2)
-        : 0;
+    const totalAcquiredValueWithCurrent = vault.assetsPrices?.totalAcquiredAda + acquireAmountNum;
+    const maxAllocationPercentage = vault.tokensForAcquires;
+
+    let vaultAllocation = 0;
+    if (acquireAmountNum > 0) {
+      const userPercentOfAcquired = acquireAmountNum / totalAcquiredValueWithCurrent;
+
+      vaultAllocation = (userPercentOfAcquired * maxAllocationPercentage).toFixed(2);
+
+      if (parseFloat(vaultAllocation) > maxAllocationPercentage) {
+        vaultAllocation = maxAllocationPercentage.toFixed(2);
+      }
+    }
 
     return {
       acquireAmountNum,
@@ -47,7 +55,14 @@ export const AcquireModal = ({ vault, onClose }) => {
       estimatedTickerVal,
       totalAcquired: vault.assetsPrices?.totalAcquiredAda || 0,
     };
-  }, [acquireAmount, vault.assetsPrices, vault.ftTokenSupply, vault.tokensForAcquires]);
+  }, [
+    acquireAmount,
+    vault.assetsPrices?.adaPrice,
+    vault.assetsPrices?.totalAcquiredAda,
+    vault.assetsPrices?.totalValueUsd,
+    vault.ftTokenSupply,
+    vault.tokensForAcquires,
+  ]);
 
   const handleAcquire = async () => {
     try {
