@@ -22,7 +22,7 @@ export const NFTItem = ({ nft, isSelected, onToggle }) => (
         </div>
         <span className="font-medium">{nft.name}</span>
       </div>
-      <span className="text-dark-100 hover:underline text-sm">{nft.policyId.substring(0, 8)}...</span>
+      <span className="text-dark-100 hover:underline text-sm">{nft.policyId.substring(0, 6)}...{nft.policyId.substring(nft.policyId.length - 6)}</span>
     </div>
   </div>
 );

@@ -22,7 +22,7 @@ export const FTItem = ({ ft, amount, onAmountChange }) => (
         />
       </div>
       <span className="text-dark-100 hover:underline text-sm">
-        {ft.policyId ? `${ft.policyId.substring(0, 8)}...` : ''}
+        {ft.policyId ? `${ft.policyId.substring(0, 6)}...${ft.policyId.substring(ft.policyId.length - 6)}` : ''}
       </span>
     </div>
   </div>
