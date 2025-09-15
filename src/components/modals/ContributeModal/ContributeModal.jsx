@@ -238,6 +238,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       setSelectedNFTs([]);
       setSelectedAmount({});
       await fetchAndFormatWalletAssets();
+      onClose();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
     }
