@@ -3,7 +3,6 @@ import L4vaIcon from '@/icons/l4va.svg?react';
 import { useCurrency } from '@/hooks/useCurrency';
 
 export const VaultSettings = ({ vault }) => {
-
   const { currency } = useCurrency();
 
   return (
@@ -27,7 +26,11 @@ export const VaultSettings = ({ vault }) => {
           <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
           <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
           <InfoRow label="TOKENS FOR ACQUIRERS (%)" symbol="%" value={vault.tokensForAcquires} />
-          <InfoRow label="Asset Value @ Lock" symbol="%" value={vault.assetsPrices.totalValueUsd} />
+          <InfoRow
+            label="Asset Value @ Lock"
+            symbol={currency === 'ada' ? 'ADA' : 'USD'}
+            value={currency === 'ada' ? vault.assetsPrices.totalValueAda : vault.assetsPrices.totalValueUsd}
+          />
           <InfoRow
             label="Acquire Amount @ Lock"
             symbol={currency === 'ada' ? 'ADA' : 'USD'}
