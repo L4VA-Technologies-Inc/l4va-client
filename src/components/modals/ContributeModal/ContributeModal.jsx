@@ -334,7 +334,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard label="Estimated Value" value={`$${contributionDetails.estimatedValue.toLocaleString()}`} />
+            <MetricCard label="Estimated Value" value={`₳${contributionDetails.estimatedValue.toLocaleString()}`} />
             <MetricCard
               label="Estimated Vault Token Received"
               value={contributionDetails.estimatedTickerVal.toLocaleString()}
