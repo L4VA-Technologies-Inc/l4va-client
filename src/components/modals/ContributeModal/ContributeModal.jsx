@@ -74,7 +74,13 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     }
 
     const vaultAllocation =
-      totalAssets > 0 ? ((estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) * 100).toFixed(2) : 0;
+      totalAssets > 0
+        ? (
+            (estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) * 100 -
+            vault.tokensForAcquires -
+            vault.liquidityPoolContribution
+          ).toFixed(2)
+        : 0;
 
     return {
       totalAssets,
@@ -82,7 +88,13 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       estimatedValue,
       estimatedTickerVal,
     };
-  }, [selectedNFTs, vault.assetsPrices.totalValueUsd, vault.ftTokenSupply, vault.tokensForAcquires]);
+  }, [
+    selectedNFTs,
+    vault.assetsPrices.totalValueUsd,
+    vault.ftTokenSupply,
+    vault.liquidityPoolContribution,
+    vault.tokensForAcquires,
+  ]);
 
   const fetchAndFormatWalletAssets = async () => {
     try {
