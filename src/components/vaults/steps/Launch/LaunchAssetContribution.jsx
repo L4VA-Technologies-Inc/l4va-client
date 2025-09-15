@@ -64,12 +64,24 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
           <div>
             <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>
             {data.assetsWhitelist?.length ? (
-              <div className="space-y-2">
+              <div className="space-y-6">
                 {data.assetsWhitelist.slice(0, 5).map((asset, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span>{substringAddress(asset.policyId)}</span>
-                  </div>
+                  <div className="space-y-4"> 
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <span>{substringAddress(asset.policyId)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="uppercase font-semibold text-dark-100">Min asset cap</p>
+                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMin) : 'Not set'}</p>
+                      </div>
+                      <div>
+                        <p className="uppercase font-semibold text-dark-100">Max asset cap</p>
+                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
+                      </div>
+                    </div>
+                  </div> 
                 ))}
                 {data.assetsWhitelist.length > 5 && (
                   <p className="text-dark-100 mt-2">+{formatNum(data.assetsWhitelist.length - 5)} more assets</p>
