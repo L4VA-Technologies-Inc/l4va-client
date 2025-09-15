@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Check, Edit, Plus, X, Trash } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth/auth';
 import { updateUserProfile } from '@/api/user.api';
 import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
 
@@ -41,19 +40,19 @@ export const ProfileSocialLinks = () => {
   };
 
   const debouncedValidateUrl = useCallback(
-    debounce((url) => {
+    debounce(url => {
       const validation = validateUrlRealTime(url);
       setRealTimeError(validation.isEmpty ? '' : validation.error);
     }, 300),
     []
   );
 
-  const handleUrlChange = (url) => {
+  const handleUrlChange = url => {
     setEditingLink({ ...editingLink, url });
     debouncedValidateUrl(url);
   };
 
-  const handleUrlBlur = (url) => {
+  const handleUrlBlur = url => {
     if (url && url.trim() && !url.startsWith('http')) {
       const formattedUrl = autoFormatUrl(url);
       setEditingLink({ ...editingLink, url: formattedUrl });
@@ -189,9 +188,7 @@ export const ProfileSocialLinks = () => {
                 </button>
               </div>
             </div>
-            {realTimeError && (
-              <div className="px-3 pb-2 text-red-600 text-sm">{realTimeError}</div>
-            )}
+            {realTimeError && <div className="px-3 pb-2 text-red-600 text-sm">{realTimeError}</div>}
           </div>
         </div>
       )}
