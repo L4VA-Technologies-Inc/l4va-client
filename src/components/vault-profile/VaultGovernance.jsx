@@ -7,10 +7,11 @@ import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useGovernanceProposals } from '@/services/api/queries';
 
+const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
+
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
   const [proposals, setProposals] = useState([]);
-  const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({
     value: tab,
@@ -73,8 +74,8 @@ export const VaultGovernance = ({ vault }) => {
         </div>
       </div>
       <div className="space-y-6">
-        {filteredProposals.map((proposal, index) => (
-          <div key={index} className="bg-gray-800 rounded-lg p-6">
+        {filteredProposals.map(proposal => (
+          <div key={proposal.id} className="bg-gray-800 rounded-lg p-6">
             <div className="flex justify-between mb-1">
               <h3 className="text-lg font-medium">{proposal.title}</h3>
               <div className="flex items-center">
@@ -93,7 +94,7 @@ export const VaultGovernance = ({ vault }) => {
                         : 'bg-yellow-800 text-yellow-400'
                   }`}
                 >
-                  {proposal.status}
+                  {proposal.status?.toLocaleUpperCase()}
                 </span>
               </div>
             </div>
@@ -105,7 +106,7 @@ export const VaultGovernance = ({ vault }) => {
 
             <p className="text-dark-100 mb-6 text-sm">{proposal.description}</p>
 
-            {proposal.votes && (
+            {proposal.votes ? (
               <div className="space-y-3 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">
@@ -133,9 +134,7 @@ export const VaultGovernance = ({ vault }) => {
                   </div>
                 </div>
               </div>
-            )}
-
-            {!proposal.votes && (
+            ) : (
               <div className="space-y-3 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ClockIcon, HelpCircle } from 'lucide-react';
+import { ClockIcon } from 'lucide-react';
+
+import { HoverHelp } from './HoverHelp';
 
 import { cn } from '@/lib/utils';
 import { msToInterval, intervalToMs, formatInterval } from '@/utils/core.utils';
@@ -28,6 +30,7 @@ type LavaIntervalPickerProps = {
   onChange?: (value: number) => void;
   hint?: string;
   className?: string;
+  placeholder?: string;
   variant?: 'default' | 'steel';
   minDays?: number; // Minimum time in milliseconds
 };
@@ -38,6 +41,7 @@ export const LavaIntervalPicker = ({
   className,
   value = 0,
   minDays = 0,
+  placeholder = 'Select interval',
   variant = 'default',
   required = false,
   onChange = () => {},
@@ -72,9 +76,7 @@ export const LavaIntervalPicker = ({
             {required ? '*' : ''}
             {label}
           </span>
-          {hint && (
-            <HoverHelp hint={hint} />
-          )}
+          {hint && <HoverHelp hint={hint} />}
         </div>
       ) : null}
       <div className="mt-4">
@@ -89,7 +91,7 @@ export const LavaIntervalPicker = ({
                 {value ? (
                   <span className={variant === 'steel' ? 'text-base' : ''}>{formatInterval(value)}</span>
                 ) : (
-                  <span className={cn(variant === 'steel' ? 'text-base' : '')}>Select interval</span>
+                  <span className={cn(variant === 'steel' ? 'text-base' : '')}>{placeholder}</span>
                 )}
               </Button>
             </PopoverTrigger>

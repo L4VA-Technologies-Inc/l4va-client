@@ -27,23 +27,8 @@ export class GovernanceApiProvider {
     return response;
   }
 
-  static async getAssetsToTerminate(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToTerminate(vaultId));
-    return response;
-  }
-
-  static async getAssetsToStake(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToStake(vaultId));
-    return response;
-  }
-
-  static async getAssetsToDistribute(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToDistribute(vaultId));
-    return response;
-  }
-
-  static async getAssetsToBurn(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToBurn(vaultId));
+  static async getAssets(vaultId, type) {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getAssets(vaultId, type));
     return response;
   }
 }

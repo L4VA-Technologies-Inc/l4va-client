@@ -202,47 +202,20 @@ export const useVotingPower = vaultId => {
   });
 };
 
-// New queries for assets
-export const useAssetsToTerminate = vaultId => {
+export const useVaultAssetsForProposalByType = (vaultId, type) => {
   return useQuery({
-    queryKey: ['assets-to-terminate', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToTerminate(vaultId),
-    enabled: !!vaultId,
+    queryKey: ['vault-assets', vaultId, type],
+    queryFn: () => GovernanceApiProvider.getAssets(vaultId, type),
+    enabled: !!vaultId && !!type,
   });
 };
 
-export const useAssetsToStake = vaultId => {
-  return useQuery({
-    queryKey: ['assets-to-stake', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToStake(vaultId),
-    enabled: !!vaultId,
-  });
-};
-
-export const useAssetsToDistribute = vaultId => {
-  return useQuery({
-    queryKey: ['assets-to-distribute', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToDistribute(vaultId),
-    enabled: !!vaultId,
-  });
-};
-
-export const useAssetsToBurn = vaultId => {
-  return useQuery({
-    queryKey: ['assets-to-burn', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToBurn(vaultId),
-    enabled: !!vaultId,
-  });
-};
-
-// Mutation for creating proposals
 export const useCreateProposal = () => {
   return useMutation({
     mutationFn: ({ vaultId, proposalData }) => GovernanceApiProvider.createProposal(vaultId, proposalData),
   });
 };
 
-// Mutation for voting on proposals
 export const useVoteOnProposal = () => {
   return useMutation({
     mutationFn: ({ proposalId, voteData }) => GovernanceApiProvider.voteOnProposal(proposalId, voteData),

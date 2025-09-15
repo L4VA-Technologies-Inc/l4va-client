@@ -7,14 +7,14 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { Button } from '@/components/ui/button';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
-import { useAssetsToDistribute } from '@/services/api/queries';
+import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 export default function Distributing({ onDataChange, vaultId }) {
   const [distributionAssets, setDistributionAssets] = useState([]);
   const [proposalStart, setProposalStart] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
   const [availableAssets, setAvailableAssets] = useState([]);
-  const { data, isLoading } = useAssetsToDistribute(vaultId);
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
 
   const formatTimeInput = value => {
     const numbers = value.replace(/\D/g, '');
@@ -223,7 +223,7 @@ export default function Distributing({ onDataChange, vaultId }) {
                         updateAsset(asset.id, 'amount', value);
                         updateAsset(asset.id, 'isMax', false);
                       }}
-                      inputClassName={isOverLimit ? 'border-red-500/60' : ''}
+                      className={isOverLimit ? 'border-red-500/60' : ''}
                     />
                     <label className="flex items-center gap-2 text-sm text-white/60 whitespace-nowrap">
                       <input
