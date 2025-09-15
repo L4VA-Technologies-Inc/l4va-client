@@ -1,6 +1,7 @@
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
+import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
@@ -56,6 +57,20 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
       </div>
     </div>
       <div className="space-y-12">
+      <div>
+        <LavaWhitelist
+          required={false}
+          label="Contributor Whitelist"
+          itemPlaceholder="Enter Wallet Address"
+          itemFieldName="policyId"
+          whitelistFieldName="contributorWhitelist"
+          setWhitelist={contributors => updateField('contributorWhitelist', contributors)}
+          whitelist={data.contributorWhitelist || []}
+          maxItems={100}
+          errors={errors}
+        />
+        {errors.contributorWhitelist && <p className="text-red-600 mt-1">{errors.contributorWhitelist}</p>}
+      </div>
       <div>
         <LavaWhitelistWithCaps
           label="Asset Whitelist"
