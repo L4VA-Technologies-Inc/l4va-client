@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { updateUserProfile } from '@/api/user.api';
 import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
@@ -15,7 +14,6 @@ const MAX_LINKS = 5;
 
 export const ProfileSocialLinks = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [socialLinks, setSocialLinks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,12 +63,10 @@ export const ProfileSocialLinks = () => {
 
   const handleSave = async () => {
     if (!editingLink.url.trim()) {
-      toast.error('URL cannot be empty');
       return;
     }
 
     if (realTimeError) {
-      toast.error(realTimeError);
       return;
     }
 
@@ -88,9 +84,7 @@ export const ProfileSocialLinks = () => {
       await updateUserProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
       resetEditState();
-      toast.success(editingId ? 'Social link updated successfully' : 'Social link added successfully');
     } catch (error) {
-      toast.error('Failed to save social link');
     } finally {
       setIsLoading(false);
     }
@@ -109,9 +103,7 @@ export const ProfileSocialLinks = () => {
       const newLinks = socialLinks.filter(link => link.id !== id);
       await updateUserProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
-      toast.success('Social link removed successfully');
     } catch (error) {
-      toast.error('Failed to remove social link');
     } finally {
       setIsLoading(false);
     }
