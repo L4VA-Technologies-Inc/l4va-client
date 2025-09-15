@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
-import { Plus, X, Edit, Check, Trash } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState, useCallback, useEffect } from 'react';
+import { Check, Edit, Plus, X, Trash } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { CoreApiProvider } from '@/services/api/core';
-import { useAuth } from '@/lib/auth/auth';
+import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
+import { updateUserProfile } from '@/api/user.api';
+import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
 
 const MAX_LINKS = 5;
 
 export const ProfileSocialLinks = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [socialLinks, setSocialLinks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +24,7 @@ export const ProfileSocialLinks = () => {
     url: '',
   });
   const [editingId, setEditingId] = useState(null);
+  const [realTimeError, setRealTimeError] = useState('');
 
   useEffect(() => {
     if (user && Array.isArray(user.socialLinks)) {
@@ -35,11 +39,38 @@ export const ProfileSocialLinks = () => {
       name: SOCIAL_PLATFORMS.FACEBOOK,
       url: '',
     });
+    setRealTimeError('');
+  };
+
+  const debouncedValidateUrl = useCallback(
+    debounce((url) => {
+      const validation = validateUrlRealTime(url);
+      setRealTimeError(validation.isEmpty ? '' : validation.error);
+    }, 300),
+    []
+  );
+
+  const handleUrlChange = (url) => {
+    setEditingLink({ ...editingLink, url });
+    debouncedValidateUrl(url);
+  };
+
+  const handleUrlBlur = (url) => {
+    if (url && url.trim() && !url.startsWith('http')) {
+      const formattedUrl = autoFormatUrl(url);
+      setEditingLink({ ...editingLink, url: formattedUrl });
+      debouncedValidateUrl(formattedUrl);
+    }
   };
 
   const handleSave = async () => {
     if (!editingLink.url.trim()) {
       toast.error('URL cannot be empty');
+      return;
+    }
+
+    if (realTimeError) {
+      toast.error(realTimeError);
       return;
     }
 
@@ -54,12 +85,11 @@ export const ProfileSocialLinks = () => {
         newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
       }
 
-      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
+      await updateUserProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
       resetEditState();
       toast.success(editingId ? 'Social link updated successfully' : 'Social link added successfully');
     } catch (error) {
-      console.error('Update error:', error);
       toast.error('Failed to save social link');
     } finally {
       setIsLoading(false);
@@ -77,11 +107,10 @@ export const ProfileSocialLinks = () => {
 
     try {
       const newLinks = socialLinks.filter(link => link.id !== id);
-      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
+      await updateUserProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
       toast.success('Social link removed successfully');
     } catch (error) {
-      console.error('Delete error:', error);
       toast.error('Failed to remove social link');
     } finally {
       setIsLoading(false);
@@ -138,12 +167,13 @@ export const ProfileSocialLinks = () => {
             </Select>
             <div className="flex-1 relative">
               <Input
-                className={`py-4 pl-5 pr-24 bg-transparent border-none shadow-none ${!editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
+                className={`py-4 pl-5 pr-24 bg-transparent border-none shadow-none ${realTimeError || !editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
                 disabled={isLoading}
                 placeholder={getPlaceholderForPlatform(editingLink.name)}
                 style={{ fontSize: '20px' }}
                 value={editingLink.url}
-                onChange={e => setEditingLink({ ...editingLink, url: e.target.value })}
+                onChange={e => handleUrlChange(e.target.value)}
+                onBlur={e => handleUrlBlur(e.target.value)}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
                 <button
@@ -153,7 +183,7 @@ export const ProfileSocialLinks = () => {
                         ? 'text-gray-600 cursor-not-allowed'
                         : 'text-dark-100 hover:bg-white/10'
                     }`}
-                  disabled={!editingLink.url.trim() || isLoading}
+                  disabled={!editingLink.url.trim() || isLoading || realTimeError}
                   onClick={handleSave}
                 >
                   <Check className="h-4 w-4" />
@@ -167,6 +197,9 @@ export const ProfileSocialLinks = () => {
                 </button>
               </div>
             </div>
+            {realTimeError && (
+              <div className="px-3 pb-2 text-red-600 text-sm">{realTimeError}</div>
+            )}
           </div>
         </div>
       )}

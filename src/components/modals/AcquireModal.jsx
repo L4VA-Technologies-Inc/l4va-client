@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
 
@@ -129,6 +130,8 @@ export const AcquireModal = ({ vault, onClose }) => {
   const handleAmountChange = e => {
     let value = e.target.value;
 
+    value = value.replace(/[^0-9.]/g, '');
+
     const parts = value.split('.');
     if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
 
@@ -137,7 +140,6 @@ export const AcquireModal = ({ vault, onClose }) => {
       value = int + '.' + dec.slice(0, 2);
     }
 
-    // Clamp to maxValue
     if (Number(value) > maxValue) {
       value = maxValue.toFixed(2);
     }
@@ -162,11 +164,32 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="flex items-center gap-4">
                 <input
                   className="bg-transparent text-4xl w-full outline-none font-bold"
-                  type="number"
-                  min="0"
+                  type="text"
                   value={acquireAmount}
                   onChange={handleAmountChange}
                 />
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newValue = Math.min(parseFloat(acquireAmount || 0) + 1, maxValue);
+                      setAcquireAmount(newValue.toString());
+                    }}
+                    className="p-1 hover:bg-steel-700 rounded transition-colors"
+                  >
+                    <ChevronUp className="transition-transform duration-200" size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newValue = Math.max(parseFloat(acquireAmount || 0) - 1, 0);
+                      setAcquireAmount(newValue.toString());
+                    }}
+                    className="p-1 hover:bg-steel-700 rounded transition-colors"
+                  >
+                    <ChevronDown className="transition-transform duration-200" size={20} />
+                  </button>
+                </div>
                 <span className="text-2xl font-bold">ADA</span>
               </div>
             </div>

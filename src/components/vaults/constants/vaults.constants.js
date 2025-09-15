@@ -122,6 +122,10 @@ const acquirerWhitelistItemSchema = yup.object({
   walletAddress: yup.string().required('Wallet address is required'),
 });
 
+const contributorWhitelistItemSchema = yup.object({
+  policyId: yup.string().required('Wallet address is required'),
+});
+
 export const vaultSchema = yup.object({
   // Step 1: Configure Vault
   name: yup
@@ -141,6 +145,36 @@ export const vaultSchema = yup.object({
   tags: yup.array().of(yup.string()).default([]),
 
   // Step 2: Asset Contribution
+  contributorWhitelist: yup
+    .array()
+    .of(contributorWhitelistItemSchema)
+    .default([])
+    .when('privacy', {
+      is: 'semi-private',
+      then: schema =>
+        schema
+          .max(100, 'Contributor whitelist can have a maximum of 100 items')
+          .test(
+            'semi-private-contributor-whitelist',
+            'For Semi-private vaults, either Contributor Whitelist or Acquirer Whitelist must have at least 1 item, or change vault type to Public',
+            function (value) {
+              const { acquirerWhitelist } = this.parent;
+              const hasContributorWhitelist = value && value.length > 0;
+              const hasAcquirerWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
+              return hasContributorWhitelist || hasAcquirerWhitelist;
+            }
+          ),
+      otherwise: schema =>
+        schema.when('privacy', {
+          is: 'private',
+          then: schema =>
+            schema
+              .min(1, 'Contributor whitelist must have at least 1 item')
+              .max(100, 'Contributor whitelist can have a maximum of 100 items')
+              .required('Contributor whitelist is required'),
+          otherwise: schema => schema.notRequired(),
+        }),
+    }),
   valueMethod: yup.string().required('Vault value method is required'),
   contributionOpenWindowType: yup
     .string()
@@ -183,9 +217,17 @@ export const vaultSchema = yup.object({
       is: 'semi-private',
       then: schema =>
         schema
-          .min(1, 'Acquirer whitelist must have at least 1 item')
           .max(100, 'Acquirer whitelist can have a maximum of 100 items')
-          .required('Acquirer whitelist is required'),
+          .test(
+            'semi-private-acquirer-whitelist',
+            'For Semi-private vaults, either Contributor Whitelist or Acquirer Whitelist must have at least 1 item, or change vault type to Public',
+            function (value) {
+              const { contributorWhitelist } = this.parent;
+              const hasContributorWhitelist = contributorWhitelist && contributorWhitelist.length > 0;
+              const hasAcquirerWhitelist = value && value.length > 0;
+              return hasContributorWhitelist || hasAcquirerWhitelist;
+            }
+          ),
       otherwise: schema =>
         schema.when('privacy', {
           is: 'private',
@@ -260,6 +302,7 @@ export const initialVaultState = {
   tags: [],
 
   // Step 2: Asset Contribution
+  contributorWhitelist: [],
   valueMethod: 'lbe',
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
@@ -294,6 +337,7 @@ export const initialVaultState = {
 export const stepFields = {
   1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks', 'tags'],
   2: [
+    'contributorWhitelist',
     'valueMethod',
     'contributionDuration',
     'contributionOpenWindowType',

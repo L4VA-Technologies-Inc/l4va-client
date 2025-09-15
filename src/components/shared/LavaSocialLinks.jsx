@@ -1,12 +1,16 @@
 import { X, Plus } from 'lucide-react';
+import { useState, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
+import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
 
 export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} }) => {
+  const [realTimeErrors, setRealTimeErrors] = useState({});
+
   const addNewLink = () => {
     if (socialLinks.length >= 10) {
       return;
@@ -27,6 +31,30 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
     setSocialLinks(updatedLinks);
   };
 
+  const debouncedValidateUrl = useCallback(
+    debounce((linkId, url) => {
+      const validation = validateUrlRealTime(url);
+      setRealTimeErrors(prev => ({
+        ...prev,
+        [linkId]: validation.isEmpty ? null : validation.error
+      }));
+    }, 300),
+    []
+  );
+
+  const handleUrlChange = (linkId, url) => {
+    updateLink(linkId, 'url', url);
+    debouncedValidateUrl(linkId, url);
+  };
+
+  const handleUrlBlur = (linkId, url) => {
+    if (url && url.trim() && !url.startsWith('http')) {
+      const formattedUrl = autoFormatUrl(url);
+      updateLink(linkId, 'url', formattedUrl);
+      debouncedValidateUrl(linkId, formattedUrl);
+    }
+  };
+
   const removeLink = id => {
     const filteredLinks = socialLinks.filter(link => link.id !== id);
     setSocialLinks(filteredLinks);
@@ -37,9 +65,12 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
     return platform ? platform.placeholder : '';
   };
 
-  const getErrorForLink = (index, field) => {
+  const getErrorForLink = (index, field, linkId) => {
     const errorKey = `socialLinks[${index}].${field}`;
-    return errors[errorKey];
+    const formError = errors[errorKey];
+    const realTimeError = realTimeErrors[linkId];
+    
+    return realTimeError || formError;
   };
 
   return (
@@ -70,18 +101,19 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
                 </SelectContent>
               </Select>
               <Input
-                className={`py-4 pl-5 border-none shadow-none ${getErrorForLink(index, 'url') ? 'focus-visible:ring-red-600' : ''}`}
+                className={`py-4 pl-5 border-none shadow-none ${getErrorForLink(index, 'url', link.id) ? 'focus-visible:ring-red-600' : ''}`}
                 placeholder={getPlaceholderForPlatform(link.name)}
                 style={{ fontSize: '20px' }}
                 value={link.url}
-                onChange={e => updateLink(link.id, 'url', e.target.value)}
+                onChange={e => handleUrlChange(link.id, e.target.value)}
+                onBlur={e => handleUrlBlur(link.id, e.target.value)}
               />
               <Button className="h-8 w-8 rounded-full" size="icon" variant="ghost" onClick={() => removeLink(link.id)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            {getErrorForLink(index, 'url') && (
-              <div className="px-3 pb-2 text-red-600 text-sm">{getErrorForLink(index, 'url')}</div>
+            {getErrorForLink(index, 'url', link.id) && (
+              <div className="px-3 pb-2 text-red-600 text-sm">{getErrorForLink(index, 'url', link.id)}</div>
             )}
           </div>
         ))}
