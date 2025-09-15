@@ -40,12 +40,18 @@ export const VaultProfileView = ({ vault }) => {
       Assets: {
         text: 'Contribute',
         handleClick: () => openModal('ContributeModal', { vault }),
-        available: true,
+        available:
+          vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
+          new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
       },
       Acquire: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
-        available: true,
+        available:
+          vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
+          new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
       },
       Governance: {
         text: 'Create Proposal',
