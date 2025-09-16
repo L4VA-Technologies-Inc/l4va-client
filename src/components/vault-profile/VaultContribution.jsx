@@ -131,7 +131,7 @@ export const VaultContribution = ({ vault }) => {
           <div>
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-dark-100">Reserve</span>
+              <span className="text-dark-100">Reserve: {Math.round(acquireProgress)}%</span>
               <span className="text-dark-100">
                 {currency === 'ada'
                   ? `₳${formatNum(vault.requireReservedCostAda)}`
