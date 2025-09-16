@@ -165,8 +165,8 @@ export const vaultSchema = yup.object({
             }
           ),
       otherwise: schema =>
-        schema.when('privacy', {
-          is: 'private',
+        schema.when(['privacy', 'valueMethod'], {
+          is: (privacy, valueMethod) => privacy === 'private' && valueMethod === 'lbe',
           then: schema =>
             schema
               .min(1, 'Contributor whitelist must have at least 1 item')
