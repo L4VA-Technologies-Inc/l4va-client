@@ -353,16 +353,7 @@ export const stepFields = {
     'acquireReserve',
     'liquidityPoolContribution',
   ],
-  4: [
-    'ftTokenSupply',
-    'ftTokenImg',
-    'terminationType',
-    'creationThreshold',
-    'voteThreshold',
-    'executionThreshold',
-    'timeElapsedIsEqualToTime',
-    'vaultAppreciation',
-  ],
+  4: ['ftTokenSupply', 'ftTokenImg', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
   5: [],
 };
 
