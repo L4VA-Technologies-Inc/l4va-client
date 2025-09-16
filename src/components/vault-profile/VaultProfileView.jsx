@@ -106,7 +106,13 @@ export const VaultProfileView = ({ vault }) => {
   );
 
   const renderPublishedOverlay = () => {
-    if (vault.vaultStatus !== VAULT_STATUSES.PUBLISHED) return null;
+    if (
+      vault.vaultStatus !== VAULT_STATUSES.PUBLISHED ||
+      (vault.contributionOpenWindowType === 'custom' &&
+        new Date(vault.contributionOpenWindowTime).getTime() <= Date.now())
+    ) {
+      return null;
+    }
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div className="bg-steel-950 rounded-xl p-8 flex flex-col items-center space-y-4 max-w-md mx-4">
