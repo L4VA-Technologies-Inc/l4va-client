@@ -109,7 +109,7 @@ export const VaultProfileView = ({ vault }) => {
     if (
       vault.vaultStatus !== VAULT_STATUSES.PUBLISHED ||
       (vault.contributionOpenWindowType === 'custom' &&
-        new Date(vault.contributionOpenWindowTime).getTime() <= Date.now())
+        new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0)
     ) {
       return null;
     }
