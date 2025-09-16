@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
 import { useAuth } from '@/lib/auth/auth';
-import { updateUserProfile } from '@/api/user.api';
+import { CoreApiProvider } from '@/services/api/core';
 import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
 
 const MAX_LINKS = 5;
@@ -80,7 +80,7 @@ export const ProfileSocialLinks = () => {
         newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
       }
 
-      await updateUserProfile({ socialLinks: newLinks });
+      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
       resetEditState();
     } catch (error) {
@@ -100,7 +100,7 @@ export const ProfileSocialLinks = () => {
 
     try {
       const newLinks = socialLinks.filter(link => link.id !== id);
-      await updateUserProfile({ socialLinks: newLinks });
+      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
     } catch (error) {
     } finally {
