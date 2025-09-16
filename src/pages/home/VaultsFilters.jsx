@@ -43,10 +43,6 @@ const VaultsFilters = ({ className = '' }) => {
         page: 1,
         filter: selectedTab.filter,
       }));
-      router.navigate({
-        to: '/vaults',
-        search: { tab: selectedTab.id },
-      });
     }
   };
   const { data, isLoading, error } = useVaults(appliedFilters);
