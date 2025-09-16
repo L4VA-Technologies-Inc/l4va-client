@@ -31,7 +31,7 @@ const VaultsFilters = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
-    isOwner: false,
+    isOwner: isAuthenticated,
   });
 
   const handleTabChange = tab => {
@@ -49,7 +49,7 @@ const VaultsFilters = ({ className = '' }) => {
       });
     }
   };
-  const { data, isLoading, error } = useVaults(!isAuthenticated, appliedFilters);
+  const { data, isLoading, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -76,6 +76,13 @@ const VaultsFilters = ({ className = '' }) => {
       page: page,
     }));
   };
+
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      isOwner: isAuthenticated,
+    }));
+  }, [isAuthenticated]);
 
   return (
     <VaultList

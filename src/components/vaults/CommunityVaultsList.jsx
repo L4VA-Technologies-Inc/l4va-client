@@ -3,7 +3,6 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
-import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
@@ -17,7 +16,6 @@ const DEFAULT_TAB = 'contribution';
 export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -56,7 +54,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(!isAuthenticated, appliedFilters);
+  const { data, isLoading, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data

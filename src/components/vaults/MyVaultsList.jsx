@@ -38,7 +38,7 @@ export const MyVaultsList = ({ className = '' }) => {
     }));
   };
 
-  const { data, isLoading, error } = useVaults(false, appliedFilters);
+  const { data, isLoading, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
