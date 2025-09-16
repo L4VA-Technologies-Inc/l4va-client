@@ -24,8 +24,12 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     const { name, value } = e.target;
     const sanitizedValue = handlePercentageChange(value);
     if (sanitizedValue !== null) {
-      const limitedValue = Math.min(sanitizedValue, 100);
-      updateField(name, +limitedValue);
+      if (sanitizedValue === '') {
+        updateField(name, null);
+      } else {
+        const limitedValue = Math.min(sanitizedValue, 100);
+        updateField(name, +limitedValue);
+      }
     }
   };
 
