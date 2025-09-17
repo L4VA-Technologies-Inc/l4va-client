@@ -64,29 +64,11 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       }
     });
 
-    const vaultTokenPrice = vault.assetsPrices.totalValueAda / vault.ftTokenSupply;
-    let estimatedTickerVal;
-
-    if (vaultTokenPrice > 0) {
-      estimatedTickerVal = estimatedValue / vaultTokenPrice;
-    } else {
-      estimatedTickerVal = Math.floor(vault.ftTokenSupply * (vault.tokensForAcquires * 0.01));
-    }
-
-    const vaultAllocation =
-      totalAssets > 0
-        ? (
-            (estimatedValue / (vault.assetsPrices.totalValueAda + estimatedValue)) *
-            (100 - vault.tokensForAcquires - vault.liquidityPoolContribution)
-          ).toFixed(2)
-        : 0;
-
-    console.log('=== Vault Allocation Debug ===');
-    console.log('Total Vault Value:', vault.assetsPrices.totalValueAda);
-    console.log('Contribution Value:', estimatedValue);
-    console.log('Tokens For Acquirers:', vault.tokensForAcquires, '%');
-    console.log('Liquidity Pool Contribution:', vault.liquidityPoolContribution, '%');
-    console.log('Remaining for Contributors:', 100 - vault.tokensForAcquires - vault.liquidityPoolContribution, '%');
+    const contributionPercentage = estimatedValue / (vault.assetsPrices.totalValueAda + estimatedValue);
+    const remainingPercentage = 100 - vault.tokensForAcquires - vault.liquidityPoolContribution;
+    const contributorTokens = vault.ftTokenSupply * (remainingPercentage / 100);
+    const vaultAllocation = totalAssets > 0 ? Math.max(0, contributionPercentage * remainingPercentage).toFixed(2) : 0;
+    const estimatedTickerVal = totalAssets > 0 ? Math.floor(contributorTokens * contributionPercentage) : 0;
 
     return {
       totalAssets,
