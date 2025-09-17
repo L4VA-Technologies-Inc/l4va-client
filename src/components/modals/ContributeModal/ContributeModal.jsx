@@ -17,7 +17,7 @@ import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
 import { fetchAndFormatWalletAssets } from '@/utils/walletAssets';
 
-const DEFAULT_ASSET_VALUE_USD = 152;
+const DEFAULT_ASSET_VALUE_ADA = 152;
 
 const testnetPrices = {
   f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: 0.00526,
@@ -55,7 +55,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     let estimatedValue = 0;
 
     selectedNFTs.forEach(asset => {
-      const assetPrice = testnetPrices[asset.policyId] || DEFAULT_ASSET_VALUE_USD;
+      const assetPrice = testnetPrices[asset.policyId] || DEFAULT_ASSET_VALUE_ADA;
 
       if (asset.type === 'FT' && asset.amount) {
         estimatedValue += assetPrice * Number(asset.amount);
@@ -64,7 +64,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       }
     });
 
-    const vaultTokenPrice = vault.assetsPrices.totalValueUsd / vault.ftTokenSupply;
+    const vaultTokenPrice = vault.assetsPrices.totalValueAda / vault.ftTokenSupply;
     let estimatedTickerVal;
 
     if (vaultTokenPrice > 0) {
@@ -76,10 +76,17 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     const vaultAllocation =
       totalAssets > 0
         ? (
-            (estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) *
+            (estimatedValue / (vault.assetsPrices.totalValueAda + estimatedValue)) *
             (100 - vault.tokensForAcquires - vault.liquidityPoolContribution)
           ).toFixed(2)
         : 0;
+
+    console.log('=== Vault Allocation Debug ===');
+    console.log('Total Vault Value:', vault.assetsPrices.totalValueAda);
+    console.log('Contribution Value:', estimatedValue);
+    console.log('Tokens For Acquirers:', vault.tokensForAcquires, '%');
+    console.log('Liquidity Pool Contribution:', vault.liquidityPoolContribution, '%');
+    console.log('Remaining for Contributors:', 100 - vault.tokensForAcquires - vault.liquidityPoolContribution, '%');
 
     return {
       totalAssets,
@@ -89,7 +96,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     };
   }, [
     selectedNFTs,
-    vault.assetsPrices.totalValueUsd,
+    vault.assetsPrices.totalValueAda,
     vault.ftTokenSupply,
     vault.liquidityPoolContribution,
     vault.tokensForAcquires,
