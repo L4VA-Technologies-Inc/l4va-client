@@ -25,7 +25,7 @@ export const VaultSettings = ({ vault }) => {
           <InfoRow copyable label="Token Policy" value={vault.policyId} />
           <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
           <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
-          <InfoRow label="TOKENS FOR ACQUIRERS (%)" symbol="%" value={vault.tokensForAcquires} />
+          <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
           <InfoRow
             label="Asset Value @ Lock"
             symbol={currency === 'ada' ? 'ADA' : 'USD'}
