@@ -76,9 +76,8 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     const vaultAllocation =
       totalAssets > 0
         ? (
-            (estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) * 100 -
-            vault.tokensForAcquires -
-            vault.liquidityPoolContribution
+            (estimatedValue / (vault.assetsPrices.totalValueUsd + estimatedValue)) *
+            (100 - vault.tokensForAcquires - vault.liquidityPoolContribution)
           ).toFixed(2)
         : 0;
 
