@@ -239,12 +239,25 @@ export const vaultSchema = yup.object({
           otherwise: schema => schema.notRequired(),
         }),
     }),
-  tokensForAcquires: yup.number().typeError('Assets offered is required').required('Assets offered is required'),
+  tokensForAcquires: yup
+    .number()
+    .typeError('Assets offered is required')
+    .required('Assets offered is required')
+    .max(100, 'Cannot exceed 100%'),
   acquireReserve: yup.number().typeError('Acquire reserve is required').required('Acquire reserve is required'),
   liquidityPoolContribution: yup
     .number()
     .typeError('Liquidity pool contribution is required')
-    .required('Liquidity pool contribution is required'),
+    .required('Liquidity pool contribution is required')
+    .max(100, 'Cannot exceed 100%')
+    .test(
+      'lp-not-exceed-100%',
+      'Liquidity pool contribution + Tokens for Acquirers must be less than or equal to 100%',
+      function (value) {
+        const { tokensForAcquires } = this.parent;
+        return value + tokensForAcquires <= 100;
+      }
+    ),
 
   // Step 4: Governance
   ftTokenSupply: yup
