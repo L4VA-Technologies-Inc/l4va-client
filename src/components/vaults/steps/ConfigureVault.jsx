@@ -77,7 +77,7 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             required
             error={errors.vaultTokenTicker}
             label="Vault Token Ticker"
-            maxLength={6}
+            maxLength={10}
             name="vaultTokenTicker"
             placeholder="Add ticker"
             value={data.vaultTokenTicker || ''}

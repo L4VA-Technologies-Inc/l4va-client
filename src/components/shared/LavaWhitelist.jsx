@@ -118,7 +118,7 @@ export const LavaWhitelist = ({
                 <Input
                   className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
                   placeholder={itemPlaceholder}
-                  style={{ fontSize: '20px' }}
+                  style={{ fontSize: '18px' }}
                   value={asset[itemFieldName]}
                   onChange={e => updateAsset(asset.id, e.target.value)}
                 />
