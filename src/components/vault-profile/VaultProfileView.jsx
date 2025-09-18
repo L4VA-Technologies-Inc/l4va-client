@@ -19,6 +19,8 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
+import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
+import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
@@ -32,18 +34,24 @@ export const VaultProfileView = ({ vault }) => {
 
   useVaultStatusTracker(vault?.id);
 
+  const { data: vaultAssetsData } = useVaultAssets(vault?.id);
+  const contributedAssets = vaultAssetsData?.data?.items || [];
+
   const handleTabChange = tab => setActiveTab(tab);
 
   const renderActionButton = () => {
-    // Disable Contribute and Acquire buttons if time less than 5 min
+    const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets);
+
     const buttonConfig = {
       Assets: {
-        text: 'Contribute',
+        text: allAssetsAtMaxCapacity ? 'Contribution Limit Reached' : 'Contribute',
         handleClick: () => openModal('ContributeModal', { vault }),
         available:
           vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
           new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
-            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
+          !allAssetsAtMaxCapacity,
+        disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
       },
       Acquire: {
         text: 'Acquire',
