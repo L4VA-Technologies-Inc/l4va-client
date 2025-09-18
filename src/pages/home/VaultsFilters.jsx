@@ -22,11 +22,11 @@ const VaultsFilters = ({ className = '' }) => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
     setActiveTab(newTab);
   }, [tabParam]);
-
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
     limit: 12,
     filter: initialTab.filter,
+    isOwner: false,
   });
 
   const handleTabChange = tab => {
@@ -36,6 +36,7 @@ const VaultsFilters = ({ className = '' }) => {
       setAppliedFilters(prevFilters => ({
         ...prevFilters,
         page: 1,
+        isOwner: false,
         filter: selectedTab.filter,
       }));
     }
@@ -56,6 +57,7 @@ const VaultsFilters = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
+      isOwner: false,
       filter: prevFilters.filter || 'contribution',
       ...filters,
     }));
