@@ -12,7 +12,7 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilters = {} }) => {
   const [filters, setFilters] = useState({
     page: 1,
-    limit: 20,
+    limit: 12,
     tags: initialFilters.tags || [],
     reserveMet: initialFilters.reserveMet || false,
     minInitialVaultOffered: initialFilters.minInitialVaultOffered || 0,
@@ -25,12 +25,14 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     verified: initialFilters.verified || [],
     assetWhitelist: initialFilters.assetWhitelist || '',
     contributionWindow: {
-      from: initialFilters.contributionWindow?.from ? new Date(initialFilters.contributionWindow.from).toISOString() : '',
-      to: initialFilters.contributionWindow?.to ? new Date(initialFilters.contributionWindow.to).toISOString() : ''
+      from: initialFilters.contributionWindow?.from
+        ? new Date(initialFilters.contributionWindow.from).toISOString()
+        : '',
+      to: initialFilters.contributionWindow?.to ? new Date(initialFilters.contributionWindow.to).toISOString() : '',
     },
     acquireWindow: {
       from: initialFilters.acquireWindow?.from ? new Date(initialFilters.acquireWindow.from).toISOString() : '',
-      to: initialFilters.acquireWindow?.to ? new Date(initialFilters.acquireWindow.to).toISOString() : ''
+      to: initialFilters.acquireWindow?.to ? new Date(initialFilters.acquireWindow.to).toISOString() : '',
     },
   });
 
@@ -50,7 +52,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
       { name: 'GOLD', policyId: '436ca2e51fa2887fa306e8f6aa0c8bda313dd5882202e21ae2972ac8' },
       { name: 'SLVR', policyId: '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a' },
       { name: 'Insurance Asset', policyId: '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646' },
-      { name: 'Real Estate Equity', policyId: '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601' }
+      { name: 'Real Estate Equity', policyId: '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601' },
     ],
   };
 
@@ -64,16 +66,17 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   const setSingleFilter = (key, value) => {
     if (key.includes('.')) {
       const [parentKey, childKey] = key.split('.');
-      const processedValue = (parentKey === 'contributionWindow' || parentKey === 'acquireWindow') && value
-        ? new Date(value).toISOString() 
-        : value;
-      
+      const processedValue =
+        (parentKey === 'contributionWindow' || parentKey === 'acquireWindow') && value
+          ? new Date(value).toISOString()
+          : value;
+
       setFilters(prev => ({
         ...prev,
         [parentKey]: {
           ...prev[parentKey],
-          [childKey]: processedValue
-        }
+          [childKey]: processedValue,
+        },
       }));
     } else {
       setFilters(prev => ({ ...prev, [key]: value }));
@@ -89,9 +92,14 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   };
 
   const clearFilters = () => {
+    const clearedFilters = {
+      page: filters.page || 1,
+      limit: filters.limit || 12,
+      _clearTimestamp: Date.now(),
+    };
     setFilters({
-      page: 1,
-      limit: 20,
+      page: clearedFilters.page,
+      limit: clearedFilters.limit,
       tags: [],
       reserveMet: false,
       minInitialVaultOffered: 0,
@@ -99,30 +107,33 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
       minTvl: 0,
       maxTvl: 0,
       tvlCurrency: 'ADA',
+      vaultStage: '',
       governance: '',
       verified: [],
       assetWhitelist: '',
       contributionWindow: {
         from: '',
-        to: ''
+        to: '',
       },
       acquireWindow: {
         from: '',
-        to: ''
+        to: '',
       },
     });
+    onApplyFilters(clearedFilters);
+    onClose();
   };
 
-  const getActiveFilters = (filters) => {
+  const getActiveFilters = filters => {
     const filterRules = {
-      tags: (value) => Array.isArray(value) && value.length > 0,
-      reserveMet: (value) => value !== false,
-      vaultStage: (value) => value !== '',
-      minInitialVaultOffered: (value) => Number(value) > 0,
-      maxInitialVaultOffered: (value) => Number(value) > 0,
-      minTvl: (value) => Number(value) > 0,
-      maxTvl: (value) => Number(value) > 0,
-      assetWhitelist: (value) => value !== '',
+      tags: value => Array.isArray(value) && value.length > 0,
+      reserveMet: value => value !== false,
+      vaultStage: value => value !== '',
+      minInitialVaultOffered: value => Number(value) > 0,
+      maxInitialVaultOffered: value => Number(value) > 0,
+      minTvl: value => Number(value) > 0,
+      maxTvl: value => Number(value) > 0,
+      assetWhitelist: value => value !== '',
     };
 
     const activeFilters = {};
@@ -133,9 +144,9 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
       }
     });
 
-    const hasTvlFilters = (Number(filters.minTvl) > 0) || (Number(filters.maxTvl) > 0);
+    const hasTvlFilters = Number(filters.minTvl) > 0 || Number(filters.maxTvl) > 0;
     const currencyChanged = filters.tvlCurrency !== 'ADA';
-    
+
     if (hasTvlFilters) {
       activeFilters.tvlCurrency = filters.tvlCurrency;
     } else if (currencyChanged) {
@@ -203,8 +214,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
             <option value="ADA">ADA</option>
             <option value="USD">USD</option>
           </select>
-          <ChevronDown
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
       </div>
     </div>
@@ -287,7 +297,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
                 value: w.policyId,
               }))}
               value={filters.assetWhitelist}
-              onChange={(val) => setSingleFilter('assetWhitelist', val)}
+              onChange={val => setSingleFilter('assetWhitelist', val)}
             />
           </div>
         </div>
@@ -306,7 +316,6 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
               onChange={date => setSingleFilter('contributionWindow.to', date)}
             />
           </div>
-
         </div>
 
         <div>
@@ -323,7 +332,6 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
               onChange={date => setSingleFilter('acquireWindow.to', date)}
             />
           </div>
-
         </div>
 
         {/*<div>*/}
@@ -358,8 +366,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
                 <option value="ADA">ADA</option>
                 <option value="USD">USD</option>
               </select>
-              <ChevronDown
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>
