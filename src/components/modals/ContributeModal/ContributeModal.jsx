@@ -16,6 +16,8 @@ import { useTransaction } from '@/hooks/useTransaction';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
 import { fetchAndFormatWalletAssets } from '@/utils/walletAssets';
+import { getContributionStatus } from '@/utils/vaultContributionLimits';
+import { useVaultAssets } from '@/services/api/queries';
 
 const DEFAULT_ASSET_VALUE_ADA = 152;
 
@@ -43,9 +45,21 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { sendTransaction, status, error } = useTransaction();
   const [selectedAmount, setSelectedAmount] = useState({});
 
+  const { data: vaultAssetsData } = useVaultAssets(vault?.id);
+
   const whitelistedPolicies = useMemo(() => {
-    return new Set(assetsWhitelist?.map(item => item.policyId) || []);
-  }, [assetsWhitelist]);
+    if (!assetsWhitelist?.length) return new Set();
+
+    const contributedAssets = vaultAssetsData?.data?.items || [];
+
+    const contributionStatus = getContributionStatus(assetsWhitelist, contributedAssets);
+
+    const availablePolicyIds = contributionStatus
+      .filter(status => !status.isAtMaxCapacity)
+      .map(status => status.policyId);
+
+    return new Set(availablePolicyIds);
+  }, [assetsWhitelist, vaultAssetsData]);
 
   const contributionDetails = useMemo(() => {
     const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
