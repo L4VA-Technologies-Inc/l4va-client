@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
+import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
@@ -22,11 +23,12 @@ const VaultsFilters = ({ className = '' }) => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
     setActiveTab(newTab);
   }, [tabParam]);
-
+  const { isAuthenticated } = useAuth();
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
     limit: 12,
     filter: initialTab.filter,
+    isOwner: isAuthenticated,
   });
 
   const handleTabChange = tab => {
@@ -36,6 +38,7 @@ const VaultsFilters = ({ className = '' }) => {
       setAppliedFilters(prevFilters => ({
         ...prevFilters,
         page: 1,
+        isOwner: isAuthenticated,
         filter: selectedTab.filter,
       }));
     }
@@ -56,6 +59,7 @@ const VaultsFilters = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
+      isOwner: isAuthenticated,
       filter: prevFilters.filter || 'contribution',
       ...filters,
     }));

@@ -10,7 +10,7 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 
 export const useVaults = filters => {
   return useQuery({
-    queryKey: ['vaults', filters?.page, filters?.limit, filters?.filter, filters?.isOwner],
+    queryKey: ['vaults', filters],
     queryFn: () => {
       return VaultsApiProvider.getVaults(filters);
     },
