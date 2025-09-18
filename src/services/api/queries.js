@@ -199,6 +199,7 @@ export const useVotingPower = vaultId => {
     queryKey: ['voting-power', vaultId],
     queryFn: () => GovernanceApiProvider.getVotingPower(vaultId),
     enabled: !!vaultId,
+    retry: false,
   });
 };
 
