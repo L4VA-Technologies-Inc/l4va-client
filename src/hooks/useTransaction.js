@@ -81,10 +81,9 @@ export const useTransaction = () => {
         setStatus('idle');
         return hash;
       } catch (err) {
-        console.error('Transaction error:', err);
-        const errorMessage = err.message || 'Transaction failed';
+        const errorMessage = err.response?.data?.message || err.message || 'Transaction failed';
         setError(errorMessage);
-        toast.error(errorMessage);
+        toast.error(errorMessage, { className: '!max-w-[700px] ', duration: 10000 });
         setStatus('idle');
         return null;
       }
