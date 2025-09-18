@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from '@tanstack/react-router';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
-import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
@@ -17,10 +15,8 @@ const DEFAULT_TAB = 'contribution';
 const VaultsFilters = ({ className = '' }) => {
   const tabParam = DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
-  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState(initialTab);
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -31,7 +27,6 @@ const VaultsFilters = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
-    isOwner: isAuthenticated,
   });
 
   const handleTabChange = tab => {
@@ -72,13 +67,6 @@ const VaultsFilters = ({ className = '' }) => {
       page: page,
     }));
   };
-
-  useEffect(() => {
-    setAppliedFilters(prevFilters => ({
-      ...prevFilters,
-      isOwner: isAuthenticated,
-    }));
-  }, [isAuthenticated]);
 
   return (
     <VaultList
