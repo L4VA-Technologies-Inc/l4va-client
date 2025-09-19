@@ -38,12 +38,12 @@ export const VaultProfileView = ({ vault }) => {
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
   const viewVaultMutation = useViewVault();
-  const viewedVaultRef = useRef(null);
+  const viewedVaultsRef = useRef(new Set());
 
   useEffect(() => {
-    if (vault?.id && viewedVaultRef.current !== vault.id) {
-      viewedVaultRef.current = vault.id;
+    if (vault?.id && !viewedVaultsRef.current.has(vault.id)) {
       viewVaultMutation.mutate(vault.id);
+      viewedVaultsRef.current.add(vault.id);
     }
   }, [vault?.id]);
 
