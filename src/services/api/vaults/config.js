@@ -46,4 +46,8 @@ export class VaultsConfigProvider {
   static getVaultAcquiredAssets(id) {
     return `/api/v1/assets/acquired/${id}`;
   }
+
+  static viewVault() {
+    return '/api/v1/vaults/view';
+  }
 }
