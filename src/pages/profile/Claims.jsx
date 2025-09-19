@@ -44,10 +44,10 @@ export const Claims = () => {
   const formattedClaims = claims.map(claim => ({
     id: claim.id,
     vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
-    image: claim.vault?.image,
+    image: claim.vault?.vaultImage,
     link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
     date: new Date(claim.created_at).toLocaleDateString(),
-    reward: `${parseInt(claim.amount).toLocaleString()} VT`,
+    reward: `${parseInt(claim.amount).toLocaleString()} ${claim.vault?.vaultTokenTicker}`,
     status: claim.status || 'available',
     type: claim.type,
     rawData: claim, // Keep the original data
@@ -118,8 +118,7 @@ export const Claims = () => {
 
       await refetch();
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to claim item. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to claim item. Please try again.');
     } finally {
       setStatus('idle');
       setProcessedClaim(null);
