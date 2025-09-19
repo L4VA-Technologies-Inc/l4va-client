@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
+
 import VaultListItem from '@/components/vaults/VaultListItem';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import VaultFilter from '@/components/shared/VaultFilter';
@@ -15,8 +16,6 @@ const LoadingState = () => (
     <Spinner />
   </div>
 );
-
-
 
 const EmptyState = () => (
   <div className="py-8">
@@ -46,6 +45,7 @@ export const VaultList = ({
   const [internalActiveTab, setInternalActiveTab] = useState(tabs[0]);
   const [viewType, setViewType] = useState('grid');
   const { openModal } = useModalControls();
+  const vaultsListRef = useRef(null);
 
   const activeTab = externalActiveTab !== undefined ? externalActiveTab : internalActiveTab;
 
@@ -57,10 +57,20 @@ export const VaultList = ({
     }
   };
 
-  const handleOpenFilters = () => openModal('VaultFiltersModal', {
-    onApplyFilters: onApplyFilters,
-    initialFilters: appliedFilters
-  });
+  const handleOpenFilters = () =>
+    openModal('VaultFiltersModal', {
+      onApplyFilters: onApplyFilters,
+      initialFilters: appliedFilters,
+    });
+
+  useEffect(() => {
+    if (pagination?.currentPage && vaultsListRef.current) {
+      vaultsListRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, [pagination?.currentPage]);
 
   const renderVaultsView = () => {
     if (viewType === 'grid') {
@@ -84,9 +94,9 @@ export const VaultList = ({
   };
 
   return (
-    <div>
+    <div ref={vaultsListRef}>
       <div className="flex flex-col gap-6 md:gap-8">
-        {title ? (<h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2>) : null}
+        {title ? <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2> : null}
         {tabs.length > 0 && (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
             <div className="flex-1 w-full sm:w-auto">
@@ -97,11 +107,7 @@ export const VaultList = ({
                 onTabChange={handleTabChange}
               />
             </div>
-            <VaultFilter
-              handleOpenFilters={handleOpenFilters}
-              viewType={viewType}
-              setViewType={setViewType}
-            />
+            <VaultFilter handleOpenFilters={handleOpenFilters} viewType={viewType} setViewType={setViewType} />
           </div>
         )}
         {isLoading ? (
