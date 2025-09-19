@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -21,6 +21,7 @@ export const MyVaultsList = ({ className = '' }) => {
     filter: activeTab.toLowerCase(),
     isOwner: true,
   });
+  const myVaultsListRef = useRef(null);
 
   useEffect(() => {
     setAppliedFilters(prevFilters => ({
@@ -68,22 +69,31 @@ export const MyVaultsList = ({ className = '' }) => {
       ...prevFilters,
       page: page,
     }));
+
+    if (myVaultsListRef.current) {
+      myVaultsListRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
   };
 
   return (
-    <VaultList
-      className={className}
-      error={error?.message}
-      isLoading={isLoading}
-      tabs={TABS}
-      title="My Vaults"
-      vaults={vaults}
-      onTabChange={handleTabChange}
-      activeTab={activeTab}
-      appliedFilters={appliedFilters}
-      onApplyFilters={handleApplyFilters}
-      pagination={pagination}
-      onPageChange={handlePageChange}
-    />
+    <div ref={myVaultsListRef}>
+      <VaultList
+        className={className}
+        error={error?.message}
+        isLoading={isLoading}
+        tabs={TABS}
+        title="My Vaults"
+        vaults={vaults}
+        onTabChange={handleTabChange}
+        activeTab={activeTab}
+        appliedFilters={appliedFilters}
+        onApplyFilters={handleApplyFilters}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+      />
+    </div>
   );
 };
