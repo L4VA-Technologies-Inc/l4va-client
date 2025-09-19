@@ -64,7 +64,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             )}
             <div>
               <h2 className="font-bold">{name || 'No name'}</h2>
-              <p className="text-sm text-dark-100">{description || 'No description'}</p>
+              <p className="text-sm text-dark-100 line-clamp-3">{description || 'No description'}</p>
             </div>
           </div>
           <div className="mb-6 grid grid-cols-3 gap-4 text-center">
