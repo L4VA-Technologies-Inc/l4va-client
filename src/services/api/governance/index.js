@@ -23,8 +23,13 @@ export class GovernanceApiProvider {
   }
 
   static async getVotingPower(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getVotingPower(vaultId));
-    return response;
+    try {
+      const response = await axiosInstance.get(GovernanceConfigProvider.getVotingPower(vaultId));
+      return response;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Unknown error occurred';
+      throw new Error(errorMessage);
+    }
   }
 
   static async getAssets(vaultId, type) {
