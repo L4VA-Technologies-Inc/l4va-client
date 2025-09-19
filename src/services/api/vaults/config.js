@@ -35,6 +35,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/publish';
   }
 
+  static launchVaultBlueprints() {
+    return '/api/v1/vaults/publish-blueprints';
+  }
+
   static getVault(id) {
     return `/api/v1/vaults/${id}`;
   }
