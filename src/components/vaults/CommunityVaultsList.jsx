@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
@@ -16,6 +16,7 @@ const DEFAULT_TAB = 'contribution';
 export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
+  const communityVaultsListRef = useRef(null);
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -80,22 +81,31 @@ export const CommunityVaultsList = ({ className = '' }) => {
       ...prevFilters,
       page: page,
     }));
+
+    if (communityVaultsListRef.current) {
+      communityVaultsListRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
   };
 
   return (
-    <VaultList
-      className={className}
-      error={error?.message}
-      isLoading={isLoading}
-      tabs={VAULT_TABS.map(tab => tab.label)}
-      title="Community Vaults"
-      vaults={vaults}
-      onTabChange={handleTabChange}
-      activeTab={activeTab.label}
-      appliedFilters={appliedFilters}
-      onApplyFilters={handleApplyFilters}
-      pagination={pagination}
-      onPageChange={handlePageChange}
-    />
+    <div ref={communityVaultsListRef}>
+      <VaultList
+        className={className}
+        error={error?.message}
+        isLoading={isLoading}
+        tabs={VAULT_TABS.map(tab => tab.label)}
+        title="Community Vaults"
+        vaults={vaults}
+        onTabChange={handleTabChange}
+        activeTab={activeTab.label}
+        appliedFilters={appliedFilters}
+        onApplyFilters={handleApplyFilters}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+      />
+    </div>
   );
 };
