@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
-import { useAuth } from '@/lib/auth/auth';
 
 const VAULT_TABS = {
   DRAFT: 'Draft',
@@ -19,7 +18,7 @@ export const MyVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: activeTab.toLowerCase(),
-    isOwner: true,
+    myVaults: true,
   });
   const myVaultsListRef = useRef(null);
 
@@ -30,8 +29,6 @@ export const MyVaultsList = ({ className = '' }) => {
       filter: activeTab.toLowerCase(),
     }));
   }, [activeTab]);
-
-  const { isAuthenticated } = useAuth();
 
   const handleTabChange = tab => {
     setActiveTab(tab);
@@ -58,7 +55,7 @@ export const MyVaultsList = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
-      isOwner: isAuthenticated,
+      myVaults: true,
       filter: prevFilters.filter || 'contribution',
       ...filters,
     }));

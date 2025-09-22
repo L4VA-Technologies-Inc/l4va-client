@@ -26,7 +26,6 @@ export const CommunityVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
-    isOwner: false,
   });
 
   useEffect(() => {
