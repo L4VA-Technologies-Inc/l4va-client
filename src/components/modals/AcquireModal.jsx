@@ -120,8 +120,7 @@ export const AcquireModal = ({ vault, onClose }) => {
         onClose();
       }
     } catch (err) {
-      console.error('Acquisition error:', err);
-      toast.error(err.message || 'Acquisition failed');
+      toast.error(err.response?.data?.message || 'Acquisition failed');
     } finally {
       setStatus('idle');
     }
