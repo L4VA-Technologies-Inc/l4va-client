@@ -222,3 +222,9 @@ export const useVoteOnProposal = () => {
     mutationFn: ({ proposalId, voteData }) => GovernanceApiProvider.voteOnProposal(proposalId, voteData),
   });
 };
+
+export const useViewVault = () => {
+  return useMutation({
+    mutationFn: vaultId => VaultsApiProvider.viewVault(vaultId),
+  });
+};

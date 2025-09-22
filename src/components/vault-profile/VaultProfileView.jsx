@@ -1,5 +1,5 @@
 import { EyeIcon, BarChart3 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { useCurrency } from '@/hooks/useCurrency';
@@ -20,7 +20,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
 import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
-import { useVaultAssets } from '@/services/api/queries';
+import { useVaultAssets, useViewVault } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 export const VaultProfileView = ({ vault }) => {
@@ -36,6 +36,16 @@ export const VaultProfileView = ({ vault }) => {
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
+
+  const viewVaultMutation = useViewVault();
+  const viewedVaultsRef = useRef(new Set());
+
+  useEffect(() => {
+    if (vault?.id && !viewedVaultsRef.current.has(vault.id)) {
+      viewVaultMutation.mutate(vault.id);
+      viewedVaultsRef.current.add(vault.id);
+    }
+  }, [vault?.id]);
 
   const handleTabChange = tab => setActiveTab(tab);
 
@@ -107,7 +117,7 @@ export const VaultProfileView = ({ vault }) => {
         </button>
         <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
           <EyeIcon className="w-4 h-4 text-orange-500" />
-          <span>{formatCompactNumber(200)}</span>
+          <span>{formatCompactNumber(vault.countView)}</span>
         </span>
       </div>
     </div>
