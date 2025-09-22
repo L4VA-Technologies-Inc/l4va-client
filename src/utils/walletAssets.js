@@ -65,7 +65,7 @@ export const fetchAndFormatWalletAssets = async (wallet, whitelistedPolicies = n
   }
 };
 
-export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies = new Set()) => {
+export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies = new Set(), vaultType = null) => {
   try {
     const changeAddress = await wallet.handler.getChangeAddressBech32();
     const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
@@ -75,6 +75,13 @@ export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies 
         .map(asset => {
           const isWhitelisted = whitelistedPolicies.size === 0 || whitelistedPolicies.has(asset.metadata?.policyId);
           if (!isWhitelisted) return null;
+
+          if (vaultType) {
+            if (vaultType === 'single' || vaultType === 'multi') {
+              if (!asset.isNft) return null;
+            }
+          }
+
           if (asset.isNft) {
             return {
               id: asset.tokenId,
