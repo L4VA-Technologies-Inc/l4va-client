@@ -41,8 +41,8 @@ export const VaultGovernance = ({ vault }) => {
   return (
     <div className="bg-gray-900 text-white min-h-screen p-6">
       <div className="flex flex-col items-center mb-6">
-        {vault.imageUrl ? (
-          <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.imageUrl} />
+        {vault.vaultImage ? (
+          <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.vaultImage} />
         ) : (
           <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
             <L4vaIcon className="h-8 w-8 text-white" />
