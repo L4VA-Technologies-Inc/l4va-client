@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Check, Edit, Plus, X, Trash } from 'lucide-react';
+import { Edit, Plus, X, Trash } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -60,7 +60,7 @@ export const ProfileSocialLinks = () => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (shouldAddNew = false) => {
     if (!editingLink.url.trim()) {
       return;
     }
@@ -82,7 +82,18 @@ export const ProfileSocialLinks = () => {
 
       await CoreApiProvider.updateProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
-      resetEditState();
+
+      if (shouldAddNew && newLinks.length < MAX_LINKS) {
+        setEditingId(null);
+        setEditingLink({
+          name: SOCIAL_PLATFORMS.FACEBOOK,
+          url: '',
+        });
+        setRealTimeError('');
+        setIsAdding(true);
+      } else {
+        resetEditState();
+      }
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -158,27 +169,35 @@ export const ProfileSocialLinks = () => {
             </Select>
             <div className="flex-1 relative">
               <Input
-                className={`py-4 pl-5 pr-24 bg-transparent border-none shadow-none ${realTimeError || !editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
+                className={`py-4 pl-5 pr-12 bg-transparent border-none shadow-none ${realTimeError || !editingLink.url.trim() ? 'focus:ring-red-500' : ''}`}
                 disabled={isLoading}
                 placeholder={getPlaceholderForPlatform(editingLink.name)}
                 style={{ fontSize: '20px' }}
                 value={editingLink.url}
                 onChange={e => handleUrlChange(e.target.value)}
-                onBlur={e => handleUrlBlur(e.target.value)}
+                onBlur={e => {
+                  handleUrlBlur(e.target.value);
+                  if (editingLink.url.trim()) {
+                    const validation = validateUrlRealTime(editingLink.url);
+                    if (!validation.error) {
+                      handleSave();
+                    } else {
+                      setRealTimeError(validation.error);
+                    }
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && editingLink.url.trim()) {
+                    const validation = validateUrlRealTime(editingLink.url);
+                    if (!validation.error) {
+                      handleSave(true);
+                    } else {
+                      setRealTimeError(validation.error);
+                    }
+                  }
+                }}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
-                <button
-                  className={`p-2 rounded-full transition-colors
-                    ${
-                      !editingLink.url.trim() || isLoading
-                        ? 'text-gray-600 cursor-not-allowed'
-                        : 'text-dark-100 hover:bg-white/10'
-                    }`}
-                  disabled={!editingLink.url.trim() || isLoading || realTimeError}
-                  onClick={handleSave}
-                >
-                  <Check className="h-4 w-4" />
-                </button>
                 <button
                   className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                   disabled={isLoading}
