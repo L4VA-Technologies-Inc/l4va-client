@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 import { VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -42,6 +42,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
     assetWhitelist: [
+      { name: 'None', policyId: null },
       { name: 'Snake', policyId: 'f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a' },
       { name: 'Chaddy', policyId: 'ed8145e0a4b8b54967e8f7700a5ee660196533ded8a55db620cc6a37' },
       { name: 'Pxlz', policyId: '755457ffd6fffe7b20b384d002be85b54a0b3820181f19c5f9032c2e' },
@@ -79,16 +80,9 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         },
       }));
     } else {
-      setFilters(prev => ({ ...prev, [key]: value }));
+      setFilters(prev => (prev[key] === value ? { ...prev, [key]: null } : { ...prev, [key]: value }));
+      console.log(filters.reserveMet);
     }
-  };
-
-  const handleRangeChange = (field, type, value) => {
-    setFilters(prev => ({ ...prev, [field]: { ...prev[field], [type]: value } }));
-  };
-
-  const handleCurrencyChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: { ...prev[field], currency: value } }));
   };
 
   const clearFilters = () => {
@@ -186,40 +180,6 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     </div>
   );
 
-  const renderRangeField = (label, field) => (
-    <div>
-      <h3 className="text-lg font-medium mb-3">{label}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <input
-          type="number"
-          placeholder="Min"
-          className="col-span-1 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-          value={filters[field].min}
-          onChange={e => handleRangeChange(field, 'min', e.target.value)}
-        />
-        <div className="hidden sm:flex items-center justify-center">to</div>
-        <input
-          type="number"
-          placeholder="Max"
-          className="col-span-1 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-          value={filters[field].max}
-          onChange={e => handleRangeChange(field, 'max', e.target.value)}
-        />
-        <div className="relative">
-          <select
-            value={filters[field].currency}
-            onChange={e => handleCurrencyChange(field, e.target.value)}
-            className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white appearance-none cursor-pointer"
-          >
-            <option value="ADA">ADA</option>
-            <option value="USD">USD</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <ModalWrapper
       isOpen={isOpen}
@@ -271,20 +231,72 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         <div>
           <h3 className="text-lg font-medium mb-3">Initial % Vault Offered</h3>
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="number"
-              placeholder="Min %"
-              value={filters.minInitialVaultOffered}
-              onChange={e => setSingleFilter('minInitialVaultOffered', e.target.value)}
-              className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-            />
-            <input
-              type="number"
-              placeholder="Max %"
-              value={filters.maxInitialVaultOffered}
-              onChange={e => setSingleFilter('maxInitialVaultOffered', e.target.value)}
-              className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Min %"
+                value={filters.minInitialVaultOffered}
+                onChange={e => setSingleFilter('minInitialVaultOffered', e.target.value)}
+                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+              />
+              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.minInitialVaultOffered) || 0;
+                    setSingleFilter('minInitialVaultOffered', (currentValue + 1).toString());
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.minInitialVaultOffered) || 0;
+                    if (currentValue > 0) {
+                      setSingleFilter('minInitialVaultOffered', (currentValue - 1).toString());
+                    }
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Max %"
+                value={filters.maxInitialVaultOffered}
+                onChange={e => setSingleFilter('maxInitialVaultOffered', e.target.value)}
+                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+              />
+              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.maxInitialVaultOffered) || 0;
+                    setSingleFilter('maxInitialVaultOffered', (currentValue + 1).toString());
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.maxInitialVaultOffered) || 0;
+                    if (currentValue > 0) {
+                      setSingleFilter('maxInitialVaultOffered', (currentValue - 1).toString());
+                    }
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -342,21 +354,73 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         <div>
           <h3 className="text-lg font-medium mb-3">TVL</h3>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <input
-              type="number"
-              placeholder="Min"
-              className="col-span-1 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              value={filters.minTvl}
-              onChange={e => setSingleFilter('minTvl', e.target.value)}
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Min"
+                value={filters.minTvl}
+                onChange={e => setSingleFilter('minTvl', e.target.value)}
+                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+              />
+              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.minTvl) || 0;
+                    setSingleFilter('minTvl', (currentValue + 1).toString());
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.minTvl) || 0;
+                    if (currentValue > 0) {
+                      setSingleFilter('minTvl', (currentValue - 1).toString());
+                    }
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
             <div className="hidden sm:flex items-center justify-center">to</div>
-            <input
-              type="number"
-              placeholder="Max"
-              className="col-span-1 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              value={filters.maxTvl}
-              onChange={e => setSingleFilter('maxTvl', e.target.value)}
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Max"
+                value={filters.maxTvl}
+                onChange={e => setSingleFilter('maxTvl', e.target.value)}
+                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
+              />
+              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.maxTvl) || 0;
+                    setSingleFilter('maxTvl', (currentValue + 1).toString());
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentValue = Number(filters.maxTvl) || 0;
+                    if (currentValue > 0) {
+                      setSingleFilter('maxTvl', (currentValue - 1).toString());
+                    }
+                  }}
+                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
             <div className="relative">
               <select
                 value={filters.tvlCurrency}
