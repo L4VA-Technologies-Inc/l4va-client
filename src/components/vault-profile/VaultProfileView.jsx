@@ -72,8 +72,9 @@ export const VaultProfileView = ({ vault }) => {
             Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
       },
       Governance: {
-        text: 'Create Proposal',
-        available: vault.vaultStatus === VAULT_STATUSES.LOCKED,
+        text:
+          vault.isWhitelistedAcquirer && vault.isWhitelistedContributor ? 'Create Proposal' : 'You are not whitelisted',
+        available: vault.vaultStatus === VAULT_STATUSES.LOCKED && vault.canCreateProposal,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,

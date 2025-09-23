@@ -48,7 +48,6 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
     }
   }, [assetsData, isLoading]);
 
-  // Pass data up to parent component whenever options change
   useEffect(() => {
     onDataChange({
       buyingSellingOptions: options,

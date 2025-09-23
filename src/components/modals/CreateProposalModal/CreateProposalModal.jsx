@@ -42,7 +42,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       const proposalPayload = {
         title: proposalTitle,
         description: proposalDescription,
-        type: selectedOption, // Backend expects UPPERCASE enum values
+        type: selectedOption,
       };
 
       if (selectedOption === 'staking') {

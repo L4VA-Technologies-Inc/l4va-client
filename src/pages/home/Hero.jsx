@@ -4,7 +4,6 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { useStatistics } from '@/services/api/queries';
 
 const Hero = () => {
   const navigate = useNavigate();
