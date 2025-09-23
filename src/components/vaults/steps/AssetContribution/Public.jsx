@@ -24,6 +24,18 @@ export const Public = ({ data, errors = {}, updateField }) => (
         {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
       </div>
       <div>
+        <div className="uppercase font-bold">*Contribution duration</div>
+        <div className="mt-4">
+          <LavaIntervalPicker
+            value={data.contributionDuration}
+            error={errors.contributionDuration}
+            onChange={value => updateField('contributionDuration', value)}
+            minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+          />
+          {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
+        </div>
+      </div>
+      <div>
         <LavaRadio
           label="*Contribution window open type"
           name="contributionOpenWindowType"
@@ -65,20 +77,6 @@ export const Public = ({ data, errors = {}, updateField }) => (
           vaultType={data.type}
         />
         {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
-      </div>
-    </div>
-    <div className="space-y-12">
-      <div>
-        <div className="uppercase font-bold">*Contribution duration</div>
-        <div className="mt-4">
-          <LavaIntervalPicker
-            value={data.contributionDuration}
-            error={errors.contributionDuration}
-            onChange={value => updateField('contributionDuration', value)}
-            minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
-          />
-          {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
-        </div>
       </div>
     </div>
   </div>
