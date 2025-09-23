@@ -144,10 +144,18 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'staking' && <Staking vaultId={vault?.id} onDataChange={handleDataChange} />}
             {selectedOption === 'distribution' && <Distributing vaultId={vault?.id} onDataChange={handleDataChange} />}
             {selectedOption === 'termination' && (
-              <Terminating vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
+              <Terminating
+                vaultId={vault?.id}
+                onClose={() => setSelectedOption('staking')}
+                onDataChange={handleDataChange}
+              />
             )}
             {selectedOption === 'burning' && (
-              <Burning vaultId={vault?.id} onClose={() => setSelectedOption('staking')} />
+              <Burning
+                vaultId={vault?.id}
+                onClose={() => setSelectedOption('staking')}
+                onDataChange={handleDataChange}
+              />
             )}
             {selectedOption === 'buy_sell' && <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />}
           </div>

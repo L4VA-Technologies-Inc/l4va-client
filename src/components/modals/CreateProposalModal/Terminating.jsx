@@ -3,10 +3,13 @@ import { useState, useEffect } from 'react';
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
+import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
-export default function Terminating({ onClose, vaultId }) {
+export default function Terminating({ onClose, vaultId, onDataChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proposalStart, setProposalStart] = useState('');
+
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'terminate');
 
   const TerminatingAssets = [
     {
