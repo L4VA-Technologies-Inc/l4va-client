@@ -5,9 +5,8 @@ import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
-
 export const SemiPrivate = ({ data, errors = {}, updateField }) => (
-    <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+  <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
     <div className="space-y-12">
       <div>
         <LavaRadio
@@ -56,7 +55,7 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
         )}
       </div>
     </div>
-      <div className="space-y-12">
+    <div className="space-y-12">
       <div>
         <LavaWhitelist
           required={false}
@@ -77,6 +76,7 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
           setWhitelist={assets => updateField('assetsWhitelist', assets)}
           whitelist={data.assetsWhitelist || []}
           errors={errors}
+          vaultType={data.type}
         />
         {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
       </div>
