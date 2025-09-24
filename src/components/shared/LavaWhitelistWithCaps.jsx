@@ -14,6 +14,7 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
+  vaultType = null,
 }) => {
   const [walletPolicyIds, setWalletPolicyIds] = useState([]);
   const [showDropdown, setShowDropdown] = useState({});
@@ -24,7 +25,7 @@ export const LavaWhitelistWithCaps = ({
     const loadWalletPolicyIds = async () => {
       if (wallet.isConnected && wallet.handler) {
         try {
-          const assets = await fetchWalletAssetsForWhitelist(wallet, new Set());
+          const assets = await fetchWalletAssetsForWhitelist(wallet, new Set(), vaultType);
           const policyIds = extractPolicyIds(assets);
           setWalletPolicyIds(policyIds);
         } catch (error) {
@@ -33,7 +34,7 @@ export const LavaWhitelistWithCaps = ({
       }
     };
     loadWalletPolicyIds();
-  }, [wallet.isConnected, wallet.handler]);
+  }, [wallet, vaultType]);
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -110,11 +111,6 @@ export const LavaWhitelistWithCaps = ({
   const updateAsset = (uniqueId, field, val) => {
     const updatedAssets = whitelist.map(asset => (asset.uniqueId === uniqueId ? { ...asset, [field]: val } : asset));
     setWhitelist(updatedAssets);
-  };
-
-  const removeAsset = uniqueId => {
-    const filteredAssets = whitelist.filter(asset => asset.uniqueId !== uniqueId);
-    setWhitelist(filteredAssets);
   };
 
   return (
