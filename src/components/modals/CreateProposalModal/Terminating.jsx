@@ -70,10 +70,9 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
   }, [onDataChange]);
 
   useEffect(() => {
-    if (!isLoading && assetsData.data?.length > 0) {
-      const idsarray = assetsData?.data?.map(asset => asset.id);
+    if (!isLoading && assetsData.data) {
       onDataChange({
-        terminateAssets: idsarray,
+        terminateAssets: assetsData.data.length > 0 ? assetsData.data.map(asset => asset.id) : [],
         proposalStart,
       });
     }

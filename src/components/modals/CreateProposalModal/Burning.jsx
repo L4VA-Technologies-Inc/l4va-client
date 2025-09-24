@@ -90,7 +90,7 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
           <div className="space-y-4">
             <div className="bg-steel-800 rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-3 gap-4 font-bold">
-                <p className="text-dark-100 text-sm mt-1 col-span-2">Asset</p>
+                <p className="text-dark-100 text-sm mt-1 col-span-2">Asset Name</p>
                 <p className="text-dark-100 text-sm mt-1">ID</p>
               </div>
 
