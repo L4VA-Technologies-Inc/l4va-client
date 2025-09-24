@@ -8,6 +8,7 @@ import { LavaSelect } from '@/components/shared/LavaSelect';
 import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useGovernanceProposals } from '@/services/api/queries';
+import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 
 const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
 
@@ -99,124 +100,132 @@ export const VaultGovernance = ({ vault }) => {
               />
             </div>
           </div>
-          <div className="space-y-6">
-            {filteredProposals.map(proposal => (
-              <div key={proposal.id} className="bg-gray-800 rounded-lg p-6">
-                <div className="flex justify-between mb-1">
-                  <h3 className="text-lg font-medium">{proposal.title}</h3>
-                  <div className="flex items-center">
-                    {proposal.approved && (
-                      <span className="inline-flex items-center mr-2 text-green-500 text-sm">
-                        <Check className="w-4 h-4 mr-1" />
-                        Approved
+          {filteredProposals.length ? (
+            <div className="space-y-6">
+              {filteredProposals.map(proposal => (
+                <div key={proposal.id} className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex justify-between mb-1">
+                    <h3 className="text-lg font-medium">{proposal.title}</h3>
+                    <div className="flex items-center">
+                      {proposal.approved && (
+                        <span className="inline-flex items-center mr-2 text-green-500 text-sm">
+                          <Check className="w-4 h-4 mr-1" />
+                          Approved
+                        </span>
+                      )}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs ${
+                          proposal.status === 'Closed'
+                            ? 'bg-red-900 text-red-600'
+                            : proposal.status === 'Open'
+                              ? 'bg-green-900 text-green-500'
+                              : 'bg-yellow-800 text-yellow-400'
+                        }`}
+                      >
+                        {proposal.status?.toLocaleUpperCase()}
                       </span>
-                    )}
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        proposal.status === 'Closed'
-                          ? 'bg-red-900 text-red-600'
-                          : proposal.status === 'Open'
-                            ? 'bg-green-900 text-green-500'
-                            : 'bg-yellow-800 text-yellow-400'
-                      }`}
-                    >
-                      {proposal.status?.toLocaleUpperCase()}
-                    </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="text-dark-100 text-sm mb-3">
-                  {proposal.status === 'Closed' ? 'Ended ' : 'Ends '}
-                  {formatDate(proposal.endDate)}
-                </div>
+                  <div className="text-dark-100 text-sm mb-3">
+                    {proposal.status === 'Closed' ? 'Ended ' : 'Ends '}
+                    {formatDate(proposal.endDate)}
+                  </div>
 
-                <p className="text-dark-100 mb-6 text-sm">{proposal.description}</p>
+                  <p className="text-dark-100 mb-6 text-sm">{proposal.description}</p>
 
-                {proposal.votes ? (
-                  <div className="space-y-3 mb-6">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-green-500 text-sm flex items-center">
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Yes, pass this Proposal
-                        </span>
-                        <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
-                      </div>
-                      <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${proposal.votes.yes}%` }} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-red-600 text-sm flex items-center">
-                          <XCircle className="w-4 h-4 mr-1" />
-                          No, do not pass this Proposal
-                        </span>
-                        <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
-                      </div>
-                      <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                        <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
-                      </div>
-                    </div>
-                    {proposal.abstain ? (
+                  {proposal.votes ? (
+                    <div className="space-y-3 mb-6">
                       <div>
                         <div className="flex justify-between mb-1">
-                          <span className="text-gray-600 text-sm flex items-center">
-                            <Ellipsis className="w-4 h-4 mr-1" />
-                            Do nothing
+                          <span className="text-green-500 text-sm flex items-center">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Yes, pass this Proposal
                           </span>
-                          <span className="text-gray-600 text-sm">{proposal.abstain || 0}%</span>
+                          <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
                         </div>
-                        <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
-                          <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${proposal.abstain}%` }} />
+                        <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: `${proposal.votes.yes}%` }} />
                         </div>
                       </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="space-y-3 mb-6">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-green-500 text-sm flex items-center">
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Yes, pass this Proposal
-                        </span>
-                        <span className="text-dark-100 text-sm">-</span>
+
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-red-600 text-sm flex items-center">
+                            <XCircle className="w-4 h-4 mr-1" />
+                            No, do not pass this Proposal
+                          </span>
+                          <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
+                        </div>
+                        <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
+                          <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
+                        </div>
                       </div>
-                      <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '0%' }} />
+                      {proposal?.abstain ? (
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-600 text-sm flex items-center">
+                              <Ellipsis className="w-4 h-4 mr-1" />
+                              Do nothing
+                            </span>
+                            <span className="text-gray-600 text-sm">{proposal.abstain || 0}%</span>
+                          </div>
+                          <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
+                            <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${proposal.abstain}%` }} />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 mb-6">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-green-500 text-sm flex items-center">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Yes, pass this Proposal
+                          </span>
+                          <span className="text-dark-100 text-sm">-</span>
+                        </div>
+                        <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: '0%' }} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-red-600 text-sm flex items-center">
+                            <XCircle className="w-4 h-4 mr-1" />
+                            No, do not pass this Proposal
+                          </span>
+                          <span className="text-dark-100 text-sm">-</span>
+                        </div>
+                        <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
+                          <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }} />
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-red-600 text-sm flex items-center">
-                          <XCircle className="w-4 h-4 mr-1" />
-                          No, do not pass this Proposal
-                        </span>
-                        <span className="text-dark-100 text-sm">-</span>
-                      </div>
-                      <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                        <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }} />
-                      </div>
-                    </div>
+                  <div className="flex justify-end">
+                    <button
+                      className="flex items-center text-dark-100 hover:text-white transition-colors"
+                      type="button"
+                      onClick={() => handleOpenProposalInfo(proposal)}
+                    >
+                      More Info
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
                   </div>
-                )}
-
-                <div className="flex justify-end">
-                  <button
-                    className="flex items-center text-dark-100 hover:text-white transition-colors"
-                    type="button"
-                    onClick={() => handleOpenProposalInfo(proposal)}
-                  >
-                    More Info
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <NoDataPlaceholder
+              message="No proposal found"
+              iconBgColor="bg-orange-500/15"
+              iconInnerBgColor="bg-orange-500/30"
+            />
+          )}
         </>
       )}
     </div>

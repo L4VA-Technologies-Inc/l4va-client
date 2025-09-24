@@ -52,32 +52,40 @@ export const ProposalInfo = ({ proposal }) => {
           <div className="space-y-4">
             <div
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-              onClick={() => handleVote(proposalInfo.id, 'yes')}
+              onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'yes') : null)}
               style={{
-                background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049',
+                background: proposalInfo?.canVote
+                  ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049'
+                  : 'background-color: #a0aec0;',
               }}
+              disabled={!proposalInfo?.canVote}
             >
               <CheckCircle className="text-green-500 w-4 h-4 mr-1" />
               <span className="text-white-500 text-2md flex items-center">Yes, pass this Proposal</span>
             </div>
             <div
-              onClick={() => handleVote(proposalInfo.id, 'no')}
+              onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'no') : null)}
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
               style={{
-                background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049',
+                background: proposalInfo?.canVote
+                  ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
+                  : 'background-color: #a0aec0;',
               }}
+              disabled={!proposalInfo?.canVote}
             >
               <XCircle className="text-red-500 w-4 h-4 mr-1" />
               <span className="text-white-500 text-2md flex items-center">No, do not pass this Proposal</span>
             </div>
             {proposalInfo?.abstain ? (
               <div
-                onClick={() => handleVote(proposalInfo.id, 'abstain')}
+                onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'abstain') : null)}
                 className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
                 style={{
-                  background:
-                    'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049',
+                  background: proposalInfo?.canVote
+                    ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
+                    : 'background-color: #2D3049; text-color: #2D3049; ',
                 }}
+                disabled={!proposalInfo?.canVote}
               >
                 <Ellipsis className="text-gray-500 w-4 h-4 mr-1" />
                 <span className="text-white-500 text-2md flex items-center">Do nothing</span>
@@ -141,7 +149,7 @@ export const ProposalInfo = ({ proposal }) => {
                   <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
                 </div>
               </div>
-              {proposalInfo.abstain ? (
+              {proposalInfo?.abstain ? (
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-gray-600 text-sm flex items-center">
