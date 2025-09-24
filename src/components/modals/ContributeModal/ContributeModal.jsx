@@ -8,7 +8,6 @@ import { SelectedAssetItem } from './SelectedAssetItem';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { VirtualizedList } from '@/components/shared/VirtualizedList';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -34,6 +33,70 @@ const testnetPrices = {
   '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': 188.57,
   '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': 100000.0,
   '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': 250000.0,
+};
+
+const VirtualizedList = ({ items, height, itemHeight, renderItem }) => {
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const containerHeight = height || 256;
+  const visibleStart = Math.floor(scrollTop / itemHeight);
+  const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight) + 1, items.length);
+
+  const totalHeight = items.length * itemHeight;
+  const visibleItems = items.slice(visibleStart, visibleEnd);
+
+  return (
+    <div style={{ height: containerHeight, overflow: 'auto' }} onScroll={e => setScrollTop(e.target.scrollTop)}>
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        {visibleItems.map((item, index) => (
+          <div
+            key={item.id || index}
+            style={{
+              position: 'absolute',
+              top: (visibleStart + index) * itemHeight,
+              left: 0,
+              right: 0,
+              height: itemHeight,
+            }}
+          >
+            {renderItem(item, visibleStart + index)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// IPFS URL resolver
+const getIPFSUrl = src => {
+  if (!src) return src;
+
+  // Handle IPFS URLs
+  if (src.startsWith('ipfs://')) {
+    const hash = src.replace('ipfs://', '');
+    return `https://ipfs.io/ipfs/${hash}`;
+  }
+
+  return src;
+};
+
+// Enhanced NFT/FT items with IPFS support
+const EnhancedNFTItem = ({ nft, isSelected, onToggle }) => {
+  const enhancedNft = {
+    ...nft,
+    src: getIPFSUrl(nft.src),
+  };
+
+  return <NFTItem isSelected={isSelected} nft={enhancedNft} onToggle={onToggle} />;
+};
+
+const EnhancedFTItem = ({ ft, amount, onAmountChange }) => {
+  const enhancedFt = {
+    ...ft,
+    src: getIPFSUrl(ft.src),
+  };
+
+  return <FTItem amount={amount} ft={enhancedFt} onAmountChange={onAmountChange} />;
 };
 
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
@@ -99,31 +162,34 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     vault.tokensForAcquires,
   ]);
 
-  const loadAssets = useCallback(async () => {
+  const loadAssets = async () => {
     const formattedAssets = await fetchAndFormatWalletAssets(wallet, whitelistedPolicies);
     setAssets(formattedAssets);
-  }, [wallet, whitelistedPolicies]);
+  };
 
   useEffect(() => {
     const loadWalletAssets = async () => {
+      if (!isOpen) return; // Only load when modal is open
       setIsLoading(true);
       await loadAssets();
       setIsLoading(false);
     };
     loadWalletAssets();
-  }, [wallet.handler, loadAssets]);
+  }, [wallet.handler, isOpen]);
 
-  const toggleNFT = asset => {
+  const toggleNFT = useCallback(asset => {
     if (asset.type === 'FT') return; // Ignore toggle for FT tokens
 
-    if (selectedNFTs.some(nft => nft.id === asset.id)) {
-      setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== asset.id));
-    } else {
-      setSelectedNFTs([...selectedNFTs, asset]);
-    }
-  };
+    setSelectedNFTs(prevSelected => {
+      if (prevSelected.some(nft => nft.id === asset.id)) {
+        return prevSelected.filter(nft => nft.id !== asset.id);
+      } else {
+        return [...prevSelected, asset];
+      }
+    });
+  }, []);
 
-  const handleFTAmountChange = (ft, amount) => {
+  const handleFTAmountChange = useCallback((ft, amount) => {
     const isValid = amount === '' || /^\d+(\.\d{0,2})?$/.test(amount);
 
     if (!isValid) return;
@@ -138,20 +204,23 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     }));
 
     // Update selected NFTs based on amount
-    const existingIndex = selectedNFTs.findIndex(nft => nft.id === ft.id);
+    setSelectedNFTs(prevSelected => {
+      const existingIndex = prevSelected.findIndex(nft => nft.id === ft.id);
 
-    if (amount && amount !== '0') {
-      if (existingIndex >= 0) {
-        setSelectedNFTs(prev => prev.map(item => (item.id === ft.id ? { ...item, amount } : item)));
+      if (amount && amount !== '0') {
+        if (existingIndex >= 0) {
+          return prevSelected.map(item => (item.id === ft.id ? { ...item, amount } : item));
+        } else {
+          return [...prevSelected, { ...ft, amount }];
+        }
       } else {
-        setSelectedNFTs([...selectedNFTs, { ...ft, amount }]);
+        if (existingIndex >= 0) {
+          return prevSelected.filter(item => item.id !== ft.id);
+        }
+        return prevSelected;
       }
-    } else {
-      if (existingIndex >= 0) {
-        setSelectedNFTs(prev => prev.filter(item => item.id !== ft.id));
-      }
-    }
-  };
+    });
+  }, []);
 
   const removeNFT = id => setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== id));
 
@@ -186,37 +255,46 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
 
   const filteredAssets = useMemo(() => assets.filter(asset => asset.type === activeTab), [assets, activeTab]);
 
-  const renderAssetItem = asset => {
-    if (activeTab === 'NFT') {
-      return (
-        <NFTItem
-          key={asset.id}
-          isSelected={selectedNFTs.some(selected => selected.id === asset.id)}
-          nft={asset}
-          onToggle={toggleNFT}
-        />
-      );
-    }
-
-    return (
-      <FTItem key={asset.id} amount={selectedAmount[asset.id] || ''} ft={asset} onAmountChange={handleFTAmountChange} />
-    );
-  };
+  const renderAssetItem = useCallback(
+    item => {
+      if (activeTab === 'NFT') {
+        return (
+          <EnhancedNFTItem
+            nft={item}
+            isSelected={selectedNFTs.some(selected => selected.id === item.id)}
+            onToggle={toggleNFT}
+          />
+        );
+      } else {
+        return (
+          <EnhancedFTItem ft={item} amount={selectedAmount[item.id] || ''} onAmountChange={handleFTAmountChange} />
+        );
+      }
+    },
+    [activeTab, selectedNFTs, selectedAmount, toggleNFT, handleFTAmountChange]
+  );
 
   const renderAssetList = () => {
     if (filteredAssets.length === 0) {
       return <div className="flex items-center justify-center h-32 text-dark-100">No {activeTab}s available</div>;
     }
 
+    // Use virtualization for large lists (>50 items)
+    if (filteredAssets.length > 50) {
+      return (
+        <div className="pr-2">
+          <VirtualizedList items={filteredAssets} height={256} itemHeight={80} renderItem={renderAssetItem} />
+        </div>
+      );
+    }
+
+    // Render normally for smaller lists
     return (
-      <VirtualizedList
-        items={filteredAssets}
-        itemHeight={60}
-        containerHeight={256}
-        renderItem={renderAssetItem}
-        className="pr-2"
-        overscan={3}
-      />
+      <div className="space-y-2 flex-1 overflow-y-auto pr-2 max-h-64">
+        {filteredAssets.map(item => (
+          <div key={item.id}>{renderAssetItem(item)}</div>
+        ))}
+      </div>
     );
   };
 
@@ -266,29 +344,20 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
               <span>Asset</span>
               <span>Policy ID</span>
             </div>
-            <div className="flex-1">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <Spinner />
-                </div>
-              ) : (
-                renderAssetList()
-              )}
-            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <Spinner />
+              </div>
+            ) : (
+              renderAssetList()
+            )}
           </div>
         </div>
         <div className="space-y-3">
           <h3 className="text-lg font-medium">Selected Assets ({selectedNFTs.length})</h3>
-          <div className="h-48">
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
             {selectedNFTs.length > 0 ? (
-              <VirtualizedList
-                items={selectedNFTs}
-                itemHeight={60}
-                containerHeight={192}
-                renderItem={asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />}
-                className="pr-2"
-                overscan={2}
-              />
+              selectedNFTs.map(asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />)
             ) : (
               <div className="text-center py-6 text-dark-100 bg-steel-900/50 rounded-lg border border-steel-800/50">
                 <p className="mb-2">No assets selected</p>
