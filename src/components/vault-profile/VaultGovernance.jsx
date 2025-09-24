@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Ellipsis, ArrowRight, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { ProposalInfo } from './ProposalInfo';
 
@@ -9,6 +10,8 @@ import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
 
@@ -16,6 +19,8 @@ export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
   const [proposals, setProposals] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const { user } = useAuth();
+  const { openModal } = useModalControls();
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({
     value: tab,
@@ -43,6 +48,10 @@ export const VaultGovernance = ({ vault }) => {
   }, [data, isLoading]);
 
   const handleOpenProposalInfo = proposal => {
+    if (!user) {
+      openModal('LoginModal');
+      return;
+    }
     setSelectedProposal(proposal);
   };
 
@@ -130,7 +139,7 @@ export const VaultGovernance = ({ vault }) => {
                     {formatDate(proposal.endDate)}
                   </div>
 
-                  <p className="text-dark-100 mb-6 text-sm">{proposal.description}</p>
+                  <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
 
                   {proposal.votes ? (
                     <div className="space-y-3 mb-6">

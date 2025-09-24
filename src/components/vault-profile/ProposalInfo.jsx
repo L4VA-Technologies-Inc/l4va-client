@@ -1,18 +1,25 @@
 import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import PrimaryButton from '../shared/PrimaryButton';
 
 import { formatDate } from '@/utils/core.utils';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 export const ProposalInfo = ({ proposal }) => {
   const { user } = useAuth();
+  const { openModal } = useModalControls();
   const { data: response } = useGovernanceProposal(proposal.id);
 
+  console.log(response);
   const proposalInfo = response?.data?.proposal;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
+  console.log(canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
+  const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
 
   const informationItems = [
     { label: 'Proposer', value: proposalInfo?.proposer },
@@ -25,6 +32,10 @@ export const ProposalInfo = ({ proposal }) => {
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
   const handleVote = async (proposalId, voteType) => {
+    if (!user) {
+      openModal('LoginModal');
+      return;
+    }
     try {
       console.log(proposalId, voteType, user.address);
       await voteOnProposal.mutateAsync({
@@ -35,10 +46,20 @@ export const ProposalInfo = ({ proposal }) => {
         },
       });
       setCanVote(false);
+      setSelectedVote(voteType);
     } catch (error) {
       console.error('Error voting on proposal:', error);
     }
   };
+
+  useEffect(() => {
+    if (response?.data?.canVote !== undefined) {
+      setCanVote(response.data.canVote);
+    }
+    if (response?.data?.selectedVote !== undefined) {
+      setSelectedVote(response.data.selectedVote);
+    }
+  }, [response?.data?.canVote, response?.data?.selectedVote]);
 
   return (
     <div>
@@ -49,30 +70,32 @@ export const ProposalInfo = ({ proposal }) => {
               <h3 className="text-1xl font-bold">Vault Open Sale</h3>
             </div>
             <div className="text-dark-100 text-md mb-3">Ended {formatDate(proposalInfo?.endDate)}</div>
-            <div>{proposalInfo?.description}</div>
+            <div className="break-words">{proposalInfo?.description}</div>
           </div>
           <div className="space-y-4">
             <div
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-              onClick={() => (canVote ? handleVote(proposalInfo.id, 'yes') : null)}
+              onClick={() => (canVote ? setSelectedVote('yes') : null)}
               style={{
                 background: canVote
                   ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049'
                   : '#2D3049',
                 color: canVote ? 'white' : '#4b7488',
+                border: selectedVote === 'yes' ? '1px solid green' : '1px solid #2D3049',
               }}
             >
               <CheckCircle className="text-green-500 w-4 h-4 mr-1" />
               <span className="text-white-500 text-2md flex items-center">Yes, pass this Proposal</span>
             </div>
             <div
-              onClick={() => (canVote ? handleVote(proposalInfo.id, 'no') : null)}
+              onClick={() => (canVote ? setSelectedVote('no') : null)}
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
               style={{
                 background: canVote
                   ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
                   : '#2D3049',
                 color: canVote ? 'white' : '#4b7488',
+                border: selectedVote === 'no' ? '1px solid green' : '1px solid #2D3049',
               }}
             >
               <XCircle className="text-red-500 w-4 h-4 mr-1" />
@@ -80,21 +103,33 @@ export const ProposalInfo = ({ proposal }) => {
             </div>
             {proposalInfo?.abstain ? (
               <div
-                onClick={() => (canVote ? handleVote(proposalInfo.id, 'abstain') : null)}
+                onClick={() => (canVote ? setSelectedVote('abstain') : null)}
                 className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
                 style={{
                   background: canVote
                     ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
                     : '#2D3049',
                   color: canVote ? 'white' : '#4b7488',
+                  border: selectedVote === 'abstain' ? '1px solid green' : '1px solid #2D3049',
                 }}
               >
                 <Ellipsis className="text-gray-500 w-4 h-4 mr-1" />
                 <span className="text-white-500 text-2md flex items-center">Do nothing</span>
               </div>
             ) : null}
+
+            <div className="flex justify-center">
+              <PrimaryButton
+                className="w-60 rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
+                onClick={() => (canVote && selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
+                disabled={!canVote || !selectedVote}
+              >
+                <span className="text-white-500 text-2md flex items-center">Vote</span>
+              </PrimaryButton>
+            </div>
           </div>
         </div>
+
         <div className="arow-span-2 col-start-1 row-start-4 bg-gray-800 rounded-lg p-6">
           <div className="flex justify-between">
             <h3 className="text-1xl font-bold">Votes</h3>
@@ -115,7 +150,7 @@ export const ProposalInfo = ({ proposal }) => {
         </div>
         <div className="col-start-2 row-start-4 bg-gray-800 rounded-lg p-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-1xl font-bold ">Information</h3>
+            <h3 className="text-1xl font-bold">Information</h3>
             {informationItems.map((item, index) => (
               <div key={index} className="flex justify-between">
                 <div className="text-gray-400">{item.label}</div>
@@ -124,7 +159,7 @@ export const ProposalInfo = ({ proposal }) => {
             ))}
           </div>
           <div className="space-y-2">
-            <h3>Results</h3>
+            <h3 className="text-1xl font-bold">Results</h3>
             <div className="space-y-3 mb-6">
               <div>
                 <div className="flex justify-between mb-1">
