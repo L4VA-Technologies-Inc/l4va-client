@@ -243,9 +243,6 @@ export const ProfileSocialLinks = () => {
           </div>
         ))}
         {socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
-        {socialLinks.length >= MAX_LINKS && (
-          <div className="text-red-600 text-base mb-2">Maximum number of links ({MAX_LINKS}) reached.</div>
-        )}
       </div>
     </div>
   );
