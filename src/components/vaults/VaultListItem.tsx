@@ -15,7 +15,7 @@ type VaultListItemProps = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 const VaultListItem = ({ vault }: VaultListItemProps) => {
-  const { id, name, description, privacy, vaultImage, socialLinks = [] } = vault;
+  const { id, name, description, vaultImage, socialLinks = [] } = vault;
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -58,8 +58,8 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
           </div>
 
           <div className="border-x border-slate-800">
-            <p className="text-sm text-dark-100">Privacy</p>
-            <p className="font-bold capitalize">{privacy}</p>
+            <p className="text-sm text-dark-100">Ticker</p>
+            <p className="font-bold capitalize">{vault.vaultTokenTicker || 'N/A'}</p>
           </div>
 
           <div className="hidden md:block">

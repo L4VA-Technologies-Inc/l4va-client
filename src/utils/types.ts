@@ -179,6 +179,7 @@ export interface VaultShortResponse {
   vaultStatus: VaultStatus;
   socialLinks?: ILink[];
   ftTokenImg?: string;
+  vaultTokenTicker?: string;
 }
 
 export interface PaginatedResponse<T> {

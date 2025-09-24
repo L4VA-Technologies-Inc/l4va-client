@@ -7,7 +7,8 @@ const VAULT_TABS = [
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
   { id: 'acquire', label: 'Acquire', filter: 'acquire' },
   { id: 'upcoming', label: 'Upcoming', filter: 'published' },
-  { id: 'past', label: 'Past', filter: 'locked' },
+  { id: 'past', label: 'Locked', filter: 'locked' },
+  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
 ];
 
 const DEFAULT_TAB = 'contribution';

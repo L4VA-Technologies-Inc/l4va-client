@@ -15,7 +15,7 @@ type VaultCardProps = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
-  const { id, name, description, privacy, vaultImage, ftTokenImg, socialLinks = [] } = vault;
+  const { id, name, description, vaultImage, ftTokenImg, socialLinks = [] } = vault;
   const { currency } = useCurrency();
 
   const shouldShowCountdown = useMemo(() => {
@@ -71,18 +71,16 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             <div>
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
-                {vault.totalValueAda && vault.totalValueUsd ? (
-                  currency === 'ada' 
+                {vault.totalValueAda && vault.totalValueUsd
+                  ? currency === 'ada'
                     ? `₳${formatCompactNumber(vault.totalValueAda)}`
                     : `$${formatCompactNumber(vault.totalValueUsd)}`
-                ) : (
-                  'N/A'
-                )}
+                  : 'N/A'}
               </p>
             </div>
             <div className="border-x border-slate-800">
-              <p className="text-sm text-dark-100">Privacy</p>
-              <p className="capitalize font-bold">{privacy}</p>
+              <p className="text-sm text-dark-100">Ticker</p>
+              <p className="capitalize font-bold">${vault.vaultTokenTicker || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm text-dark-100">Stage</p>

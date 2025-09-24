@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
@@ -8,6 +8,7 @@ import { SelectedAssetItem } from './SelectedAssetItem';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
+import { VirtualizedList } from '@/components/shared/VirtualizedList';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -98,10 +99,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     vault.tokensForAcquires,
   ]);
 
-  const loadAssets = async () => {
+  const loadAssets = useCallback(async () => {
     const formattedAssets = await fetchAndFormatWalletAssets(wallet, whitelistedPolicies);
     setAssets(formattedAssets);
-  };
+  }, [wallet, whitelistedPolicies]);
 
   useEffect(() => {
     const loadWalletAssets = async () => {
@@ -110,7 +111,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       setIsLoading(false);
     };
     loadWalletAssets();
-  }, [wallet.handler]);
+  }, [wallet.handler, loadAssets]);
 
   const toggleNFT = asset => {
     if (asset.type === 'FT') return; // Ignore toggle for FT tokens
@@ -185,25 +186,38 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
 
   const filteredAssets = useMemo(() => assets.filter(asset => asset.type === activeTab), [assets, activeTab]);
 
+  const renderAssetItem = asset => {
+    if (activeTab === 'NFT') {
+      return (
+        <NFTItem
+          key={asset.id}
+          isSelected={selectedNFTs.some(selected => selected.id === asset.id)}
+          nft={asset}
+          onToggle={toggleNFT}
+        />
+      );
+    }
+
+    return (
+      <FTItem key={asset.id} amount={selectedAmount[asset.id] || ''} ft={asset} onAmountChange={handleFTAmountChange} />
+    );
+  };
+
   const renderAssetList = () => {
     if (filteredAssets.length === 0) {
       return <div className="flex items-center justify-center h-32 text-dark-100">No {activeTab}s available</div>;
     }
 
-    if (activeTab === 'NFT') {
-      return filteredAssets.map(nft => (
-        <NFTItem
-          key={nft.id}
-          isSelected={selectedNFTs.some(selected => selected.id === nft.id)}
-          nft={nft}
-          onToggle={toggleNFT}
-        />
-      ));
-    }
-
-    return filteredAssets.map(ft => (
-      <FTItem key={ft.id} amount={selectedAmount[ft.id] || ''} ft={ft} onAmountChange={handleFTAmountChange} />
-    ));
+    return (
+      <VirtualizedList
+        items={filteredAssets}
+        itemHeight={60}
+        containerHeight={256}
+        renderItem={renderAssetItem}
+        className="pr-2"
+        overscan={3}
+      />
+    );
   };
 
   const renderFooter = () => (
@@ -252,7 +266,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
               <span>Asset</span>
               <span>Policy ID</span>
             </div>
-            <div className="space-y-2 flex-1 overflow-y-auto pr-2 max-h-64">
+            <div className="flex-1">
               {isLoading ? (
                 <div className="flex items-center justify-center h-32">
                   <Spinner />
@@ -265,9 +279,16 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         </div>
         <div className="space-y-3">
           <h3 className="text-lg font-medium">Selected Assets ({selectedNFTs.length})</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+          <div className="h-48">
             {selectedNFTs.length > 0 ? (
-              selectedNFTs.map(asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />)
+              <VirtualizedList
+                items={selectedNFTs}
+                itemHeight={60}
+                containerHeight={192}
+                renderItem={asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />}
+                className="pr-2"
+                overscan={2}
+              />
             ) : (
               <div className="text-center py-6 text-dark-100 bg-steel-900/50 rounded-lg border border-steel-800/50">
                 <p className="mb-2">No assets selected</p>

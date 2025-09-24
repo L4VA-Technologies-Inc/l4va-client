@@ -8,6 +8,7 @@ const VAULT_TABS = {
   OPEN: 'Open',
   LOCKED: 'Locked',
   FAILED: 'Failed',
+  TERMINATED: 'Terminated',
 };
 
 const TABS = Object.values(VAULT_TABS);

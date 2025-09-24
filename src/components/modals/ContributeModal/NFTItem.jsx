@@ -1,4 +1,5 @@
 import CheckmarkIcon from '@/icons/checkmark.svg?react';
+import { LazyImage } from '@/components/shared/LazyImage';
 
 export const NFTItem = ({ nft, isSelected, onToggle }) => (
   <div className="flex items-center gap-3 cursor-pointer" onClick={() => onToggle(nft)}>
@@ -17,12 +18,19 @@ export const NFTItem = ({ nft, isSelected, onToggle }) => (
     </div>
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
       <div className="flex items-center gap-3">
-        <div className="relative w-8 h-8 overflow-hidden rounded-full">
-          <img alt={nft.name} className="w-full h-full object-cover" src={nft.image} loading="lazy" />
-        </div>
-        <span className="font-medium">{nft.name}</span>
+        <LazyImage
+          src={nft.image}
+          alt={nft.name}
+          className="rounded-full"
+          width={32}
+          height={32}
+          fallbackSrc="/assets/icons/ada.png"
+        />
+        <span className="font-medium truncate">{nft.name}</span>
       </div>
-      <span className="text-dark-100 hover:underline text-sm">{nft.policyId.substring(0, 6)}...{nft.policyId.substring(nft.policyId.length - 6)}</span>
+      <span className="text-dark-100 hover:underline text-sm">
+        {nft.policyId.substring(0, 6)}...{nft.policyId.substring(nft.policyId.length - 6)}
+      </span>
     </div>
   </div>
 );

@@ -28,7 +28,6 @@ const navLinks = [
   { to: '/privacy-policy', label: 'Privacy Policy' },
 ];
 
-// Memoized NavLink for performance - matching Header pattern
 const NavLink = React.memo(({ to, label, onClick }) => (
   <Link
     activeProps={{ className: 'text-orange-500' }}

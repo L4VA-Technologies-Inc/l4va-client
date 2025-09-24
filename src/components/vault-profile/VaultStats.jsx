@@ -3,7 +3,7 @@ import { formatNum } from '@/utils/core.utils';
 export const VaultStats = ({ assetValue = 0, ftGains = 'N/A', fdv = 'N/A', fdvTvl = 'N/A', tvl = 'N/A' }) => {
   const stats = [
     {
-      label: 'ASSET VALUE',
+      label: 'VAULT STAGE',
       value: assetValue ? `$${formatNum(assetValue)}` : 'N/A',
     },
     {

@@ -1,6 +1,7 @@
-import { EyeIcon, BarChart3 } from 'lucide-react';
+import { EyeIcon, BarChart3, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import toast from 'react-hot-toast';
 
 import { useCurrency } from '@/hooks/useCurrency';
 import {
@@ -18,7 +19,7 @@ import { Spinner } from '@/components/Spinner';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
-import { getCountdownName, getCountdownTime, formatCompactNumber } from '@/utils/core.utils';
+import { getCountdownName, getCountdownTime, formatCompactNumber, substringAddress } from '@/utils/core.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
@@ -84,11 +85,50 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       </PrimaryButton>
     );
   };
+
+  const handleCopyPolicyId = e => {
+    e.preventDefault();
+    navigator.clipboard.writeText(vault.policyId);
+    toast.success('Address copied to clipboard');
+  };
+
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start mb-6">
       <div>
-        <h1 className="text-2xl font-bold mb-2">{vault.name}</h1>
-        <p className="text-dark-100 text-sm mb-2">VAULT ID: {vault.id}</p>
+        <h1 className="text-2xl font-bold mb-3">{vault.name}</h1>
+
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-sm text-dark-100">
+            <span className="font-medium">ID:</span>
+            <span>{vault.id}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-dark-100">
+            <span className="font-medium">Wallet:</span>
+            <a
+              href={`https://pool.pm/pool/${vault.contractAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline hover:text-orange-500 transition-colors"
+            >
+              {substringAddress(vault.contractAddress)}
+            </a>
+          </div>
+
+          {vault.policyId && (
+            <div className="flex items-center gap-2 text-sm text-dark-100">
+              <span className="font-medium">Policy ID:</span>
+              <button
+                onClick={handleCopyPolicyId}
+                className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+              >
+                {substringAddress(vault.policyId)}
+                <Copy size={16} className="hover:text-orange-500" />
+              </button>
+            </div>
+          )}
+        </div>
+
         {vault.tags && vault.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {vault.tags.map(tag => {
