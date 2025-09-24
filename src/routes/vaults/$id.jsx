@@ -1,4 +1,4 @@
-import { createFileRoute, useParams, Navigate } from '@tanstack/react-router';
+import { createFileRoute, useParams, Navigate, useSearch } from '@tanstack/react-router';
 
 import { EditVault } from '@/components/vaults/EditVault';
 import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';
@@ -11,6 +11,8 @@ function VaultComponent() {
     from: '/vaults/$id',
     select: params => params.id,
   });
+
+  const { tab } = useSearch({ from: '/vaults/$id' });
 
   const { data, isLoading, error } = useVault(id);
   const vault = data?.data;
@@ -35,9 +37,12 @@ function VaultComponent() {
     return <EditVault vault={vault} />;
   }
 
-  return <VaultProfileView vault={vault} />;
+  return <VaultProfileView vault={vault} activeTab={tab} />;
 }
 
 export const Route = createFileRoute('/vaults/$id')({
   component: VaultComponent,
+  validateSearch: search => ({
+    tab: search.tab || 'Assets',
+  }),
 });
