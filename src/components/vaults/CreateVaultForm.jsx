@@ -101,7 +101,6 @@ export const CreateVaultForm = ({ vault }) => {
       }
 
       setCurrentStep(nextStep);
-      console.log(vaultData);
       setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, nextStep));
     }
   };
