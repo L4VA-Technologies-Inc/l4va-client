@@ -36,8 +36,6 @@ export const VaultGovernance = ({ vault }) => {
     return false;
   });
 
-  console.log(filteredProposals);
-
   useEffect(() => {
     if (data?.data && !isLoading) {
       setProposals(data.data);

@@ -1,4 +1,5 @@
 import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
+import { useState } from 'react';
 
 import { formatDate } from '@/utils/core.utils';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
@@ -9,7 +10,7 @@ export const ProposalInfo = ({ proposal }) => {
   const { data: response } = useGovernanceProposal(proposal.id);
 
   const proposalInfo = response?.data?.proposal;
-  console.log(response);
+  const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
 
@@ -33,6 +34,7 @@ export const ProposalInfo = ({ proposal }) => {
           voterAddress: user.address,
         },
       });
+      setCanVote(false);
     } catch (error) {
       console.error('Error voting on proposal:', error);
     }
@@ -52,40 +54,40 @@ export const ProposalInfo = ({ proposal }) => {
           <div className="space-y-4">
             <div
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-              onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'yes') : null)}
+              onClick={() => (canVote ? handleVote(proposalInfo.id, 'yes') : null)}
               style={{
-                background: proposalInfo?.canVote
+                background: canVote
                   ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049'
-                  : 'background-color: #a0aec0;',
+                  : '#2D3049',
+                color: canVote ? 'white' : '#4b7488',
               }}
-              disabled={!proposalInfo?.canVote}
             >
               <CheckCircle className="text-green-500 w-4 h-4 mr-1" />
               <span className="text-white-500 text-2md flex items-center">Yes, pass this Proposal</span>
             </div>
             <div
-              onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'no') : null)}
+              onClick={() => (canVote ? handleVote(proposalInfo.id, 'no') : null)}
               className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
               style={{
-                background: proposalInfo?.canVote
+                background: canVote
                   ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
-                  : 'background-color: #a0aec0;',
+                  : '#2D3049',
+                color: canVote ? 'white' : '#4b7488',
               }}
-              disabled={!proposalInfo?.canVote}
             >
               <XCircle className="text-red-500 w-4 h-4 mr-1" />
               <span className="text-white-500 text-2md flex items-center">No, do not pass this Proposal</span>
             </div>
             {proposalInfo?.abstain ? (
               <div
-                onClick={() => (proposalInfo?.canVote ? handleVote(proposalInfo.id, 'abstain') : null)}
+                onClick={() => (canVote ? handleVote(proposalInfo.id, 'abstain') : null)}
                 className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
                 style={{
-                  background: proposalInfo?.canVote
+                  background: canVote
                     ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
-                    : 'background-color: #2D3049; text-color: #2D3049; ',
+                    : '#2D3049',
+                  color: canVote ? 'white' : '#4b7488',
                 }}
-                disabled={!proposalInfo?.canVote}
               >
                 <Ellipsis className="text-gray-500 w-4 h-4 mr-1" />
                 <span className="text-white-500 text-2md flex items-center">Do nothing</span>
