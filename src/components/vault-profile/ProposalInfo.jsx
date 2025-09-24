@@ -13,10 +13,8 @@ export const ProposalInfo = ({ proposal }) => {
   const { openModal } = useModalControls();
   const { data: response } = useGovernanceProposal(proposal.id);
 
-  console.log(response);
   const proposalInfo = response?.data?.proposal;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
-  console.log(canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
@@ -37,7 +35,6 @@ export const ProposalInfo = ({ proposal }) => {
       return;
     }
     try {
-      console.log(proposalId, voteType, user.address);
       await voteOnProposal.mutateAsync({
         proposalId,
         voteData: {
@@ -47,6 +44,7 @@ export const ProposalInfo = ({ proposal }) => {
       });
       setCanVote(false);
       setSelectedVote(voteType);
+      window.location.reload();
     } catch (error) {
       console.error('Error voting on proposal:', error);
     }

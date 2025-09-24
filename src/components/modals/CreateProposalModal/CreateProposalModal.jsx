@@ -78,6 +78,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       toast.success('Proposal created successfully!');
       setShowConfirmation(false);
       onClose();
+      window.location.reload();
     } catch (error) {
       console.error('Failed to create proposal:', error);
       toast.error('Failed to create proposal. Please try again.');

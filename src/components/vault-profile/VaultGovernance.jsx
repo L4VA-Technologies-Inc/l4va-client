@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Ellipsis, ArrowRight, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 import { ProposalInfo } from './ProposalInfo';
 

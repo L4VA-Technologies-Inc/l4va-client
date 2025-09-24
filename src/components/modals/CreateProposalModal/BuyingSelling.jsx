@@ -131,10 +131,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">Transaction Options</h3>
         <button
-          className="flex items-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto"
           type="button"
           disabled={options.length >= 10 || remainingAssets.length === 0}
           onClick={handleAddOption}
@@ -152,10 +152,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
             const isOverLimit = parseFloat(option.quantity) > getAvailableAmount(option.id);
             return (
               <div key={option.id}>
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                   <p className="font-medium">Option {index + 1}</p>
                   <button
-                    className="bg-red-600/10 hover:bg-red-600/20 text-red-600 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors"
+                    className="bg-red-600/10 hover:bg-red-600/20 text-red-600 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors self-start sm:self-auto"
                     type="button"
                     onClick={() => handleRemoveOption(option.id)}
                   >
@@ -164,7 +164,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                   </button>
                 </div>
                 <div className="relative bg-steel-800 p-4 rounded-[10px]">
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
                       <LavaSteelSelect
@@ -189,7 +189,6 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                     <div>
                       <div className="flex justify-between gap-2 mb-2">
                         <p className="text-sm text-gray-400 ">Quantity</p>
-
                         <label className="flex items-center gap-2 text-sm text-gray-400 whitespace-nowrap">
                           max: {getAvailableAmount(option.id)}{' '}
                           <input
@@ -208,7 +207,6 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                         className={isOverLimit ? '!border-red-500/60' : ''}
                       />
                     </div>
-
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Sell Type</p>
                       <LavaSteelSelect
@@ -219,7 +217,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-4 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Method</p>
                       <LavaSteelSelect
@@ -264,7 +262,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
           })}
           {abstain && (
             <div>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <p className="font-medium">Option {options.length + 1}</p>
               </div>
               <div className="relative bg-steel-800 p-4 rounded-[10px]">
@@ -282,7 +280,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
       />
       <div className="mt-8">
         <h4 className="text-white font-medium mb-4">Proposal Start</h4>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 relative">
             <LavaIntervalPicker value={proposalStart} onChange={setProposalStart} />
           </div>

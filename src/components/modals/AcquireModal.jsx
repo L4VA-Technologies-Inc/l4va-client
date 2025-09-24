@@ -195,15 +195,15 @@ export const AcquireModal = ({ vault, onClose }) => {
 
             <div className="grid grid-cols-3 gap-4 border-t border-[#2f324c] pt-6">
               <div className="text-center">
-                <p className="text-dark-100 text-sm">Total ADA Acquired</p>
+                <p className="text-dark-100 text-sm">Total ADA Sent</p>
                 <p className="text-xl font-medium">{formatNum(vault.assetsPrices.totalAcquiredAda)}</p>
               </div>
               <div className="text-center">
-                <p className="text-dark-100 text-sm">% Assets Offered</p>
+                <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
                 <p className="text-xl font-medium">{vault.tokensForAcquires}%</p>
               </div>
               <div className="text-center">
-                <p className="text-dark-100 text-sm">Current Vault TVL</p>
+                <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
                 <p className="text-xl font-medium">{formatCompactNumber(vault.assetsPrices.totalValueUsd)}</p>
               </div>
             </div>
