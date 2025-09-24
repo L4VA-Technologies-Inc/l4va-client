@@ -59,8 +59,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         }
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
-          reason: proposalData.reason || '',
-          terminationDate: proposalData.terminationDate || null,
+          proposalStart: proposalData.proposalStart || null,
+          terminateAssets: proposalData.terminateAssets || [],
         };
       } else if (selectedOption === 'burning') {
         proposalPayload.metadata = {
