@@ -27,7 +27,7 @@ export const VaultCountdown = ({ endTime, className = '', color = 'red' }: Vault
       <div className="flex flex-col items-center relative" role="status">
         <div
           className={cn(
-            'flex items-center justify-center w-full font-russo text-2xl font-bold text-white px-4',
+            'flex items-center justify-start w-full font-russo text-2xl font-bold text-white pointer-events-none px-4',
             color === 'red' ? 'vault-countdown-banner' : 'vault-countdown-banner-yellow',
             className
           )}
