@@ -61,7 +61,7 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
           required={false}
           label="Contributor Whitelist"
           itemPlaceholder="Enter Wallet Address"
-          itemFieldName="policyId"
+          itemFieldName="walletAddress"
           whitelistFieldName="contributorWhitelist"
           setWhitelist={contributors => updateField('contributorWhitelist', contributors)}
           whitelist={data.contributorWhitelist || []}

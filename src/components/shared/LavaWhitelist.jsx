@@ -23,11 +23,12 @@ export const LavaWhitelist = ({
   const [csvName, setCsvName] = useState(csvData?.fileName || '');
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
+    const newId = Date.now();
     const newAssets = [
       ...whitelist,
       {
         [itemFieldName]: '',
-        id: Date.now(),
+        id: newId,
       },
     ];
     setWhitelist(newAssets);
@@ -109,8 +110,7 @@ export const LavaWhitelist = ({
         </div>
       )}
       <div className="space-y-4">
-        {whitelist.map(asset => {
-          const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+        {whitelist.map((asset, index) => {
           const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
           return (
             <div key={asset.id} className="space-y-2">
