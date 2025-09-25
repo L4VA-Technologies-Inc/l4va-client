@@ -195,8 +195,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <VaultCountdown
               className="h-[65px]"
               endTime={getCountdownTime(vault)}
-              isLocked={vault.vaultStatus === 'locked'}
-              isFailed={vault.vaultStatus === 'failed'}
+              color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
           </div>
           <VaultContribution vault={vault} />

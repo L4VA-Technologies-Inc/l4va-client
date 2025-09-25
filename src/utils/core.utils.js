@@ -172,34 +172,61 @@ export const formatDateTime = dt => {
   return `${date} ${time} (${timezoneString})`;
 };
 
-export const getCountdownName = vault => {
-  if (vault.vaultStatus === 'created') {
-    return 'Contribution starts in:';
-  }
-  if (vault.vaultStatus === 'contribution') {
-    return 'Contribution ends in:';
-  }
-  if (vault.vaultStatus === 'acquire') {
-    return 'Acquire ends in:';
-  }
-  if (vault.vaultStatus === 'locked' || vault.vaultStatus === 'failed') {
-    return '';
-  }
+const VAULT_STATUS_CONFIG = {
+  published: {
+    countdownName: 'Contribution starts in:',
+    getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
+    buttonText: 'View',
+    isCountdownActive: true,
+  },
+  contribution: {
+    countdownName: 'Contribution ends in:',
+    getCountdownTime: vault => new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration,
+    buttonText: 'Contribute',
+    isCountdownActive: true,
+  },
+  acquire: {
+    countdownName: 'Acquire ends in:',
+    getCountdownTime: vault => new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration,
+    buttonText: 'Acquire',
+    isCountdownActive: true,
+  },
+  burned: {
+    countdownName: '',
+    getCountdownTime: () => 'Burned',
+    buttonText: '',
+    isCountdownActive: false,
+  },
+  failed: {
+    countdownName: '',
+    getCountdownTime: () => 'Failed',
+    buttonText: '',
+    isCountdownActive: false,
+  },
+  locked: {
+    countdownName: '',
+    getCountdownTime: () => 'Locked',
+    buttonText: 'Create Proposal',
+    isCountdownActive: false,
+  },
+  created: {
+    countdownName: 'Contribution starts in:',
+    getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
+    buttonText: '',
+    isCountdownActive: true,
+  },
+};
 
-  return 'Contribution starts in:';
+export const getCountdownName = vault => {
+  const status = vault?.vaultStatus?.toLowerCase() || 'created';
+  return VAULT_STATUS_CONFIG[status]?.countdownName || 'Contribution starts in:';
 };
 
 export const getCountdownTime = vault => {
   if (!vault) return null;
 
-  if (vault.vaultStatus === 'published') {
-    return new Date(vault.contributionOpenWindowTime).getTime();
-  }
-  if (vault.vaultStatus === 'contribution') {
-    return new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
-  }
-  if (vault.vaultStatus === 'acquire') {
-    return new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration;
-  }
-  return null;
+  const status = vault.vaultStatus?.toLowerCase();
+  if (!status || !VAULT_STATUS_CONFIG[status]) return null;
+
+  return VAULT_STATUS_CONFIG[status].getCountdownTime(vault);
 };
