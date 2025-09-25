@@ -123,7 +123,7 @@ const acquirerWhitelistItemSchema = yup.object({
 });
 
 const contributorWhitelistItemSchema = yup.object({
-  policyId: yup.string().required('Wallet address is required'),
+  walletAddress: yup.string().required('Wallet address is required'),
 });
 
 export const vaultSchema = yup.object({
