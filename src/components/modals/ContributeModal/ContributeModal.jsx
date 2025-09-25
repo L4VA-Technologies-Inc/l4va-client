@@ -283,7 +283,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     if (filteredAssets.length > 50) {
       return (
         <div className="pr-2">
-          <VirtualizedList items={filteredAssets} height={256} itemHeight={80} renderItem={renderAssetItem} />
+          <VirtualizedList items={filteredAssets} height={256} itemHeight={60} renderItem={renderAssetItem} />
         </div>
       );
     }
