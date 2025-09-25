@@ -38,7 +38,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
             name="valueMethod"
             options={valueMethodOptions}
             value={data.valueMethod || ''}
-            onChange={value => console.log(value) || updateField('valueMethod', value)}
+            onChange={value => updateField('valueMethod', value)}
             hint={VALUE_METHOD_HINT}
           />
           {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
@@ -124,8 +124,12 @@ export const Private = ({ data, errors = {}, updateField }) => {
               required
               itemPlaceholder="Enter Wallet Address"
               label="Contributor Whitelist"
+              itemFieldName="walletAddress"
+              whitelistFieldName="contributorWhitelist"
               setWhitelist={assets => updateField('contributorWhitelist', assets)}
               whitelist={data.contributorWhitelist || []}
+              maxItems={100}
+              errors={errors}
             />
             {errors.contributorWhitelist && <p className="text-red-600 mt-1">{errors.contributorWhitelist}</p>}
           </div>
