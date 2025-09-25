@@ -3,6 +3,12 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
+import { 
+  saveVaultFormCache, 
+  loadVaultFormCache, 
+  clearVaultFormCache, 
+  debouncedSaveVaultFormCache
+} from '@/utils/vaultFormCache';
 
 import { SwapComponent } from '@/components/swap/Swap';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -55,6 +61,11 @@ export const CreateVaultForm = ({ vault }) => {
   useEffect(() => {
     if (vault) {
       setVaultData(vault);
+    } else {
+      const cachedFormData = loadVaultFormCache();
+      if (cachedFormData) {
+        setVaultData(cachedFormData);
+      }
     }
   }, [vault]);
 
@@ -65,6 +76,13 @@ export const CreateVaultForm = ({ vault }) => {
   useEffect(() => {
     setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, currentStep));
   }, [vaultData, currentStep]);
+
+  useEffect(() => {
+    if (vault || JSON.stringify(vaultData) === JSON.stringify(initialVaultState)) {
+      return;
+    }
+    debouncedSaveVaultFormCache(vaultData);
+  }, [vaultData, vault]);
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
@@ -154,8 +172,7 @@ export const CreateVaultForm = ({ vault }) => {
           signatures: [signature],
         });
         toast.success('Vault launched successfully');
-
-        // Redirect to the created vault and reset form
+        clearVaultFormCache();
         navigate({ to: `/vaults/${data.vaultId}` });
         setVaultData(initialVaultState);
         setCurrentStep(1);
