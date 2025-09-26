@@ -148,10 +148,18 @@ export const CreateVaultForm = ({ vault }) => {
 
         const signature = await wallet.handler.signTx(data.presignedTx, true);
 
-        await VaultsApiProvider.launchVault({
+        const { data: launchData } = await VaultsApiProvider.launchVault({
           vaultId: data.vaultId,
           transaction: data.presignedTx,
           signatures: [signature],
+        });
+
+        const blueprintSignature = await wallet.handler.signTx(launchData.presignedTx, true);
+
+        await VaultsApiProvider.launchVaultBlueprints({
+          vaultId: data.vaultId,
+          transaction: launchData.presignedTx,
+          signatures: [blueprintSignature],
         });
         toast.success('Vault launched successfully');
 
