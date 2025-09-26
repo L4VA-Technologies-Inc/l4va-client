@@ -27,11 +27,6 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async launchVaultBlueprints(vaultData) {
-    const response = await axiosInstance.post(VaultsConfigProvider.launchVaultBlueprints(), vaultData);
-    return response;
-  }
-
   static async getMyOpenVaults() {
     const response = await axiosInstance.get(VaultsConfigProvider.getMyOpenVaults());
     return response;
