@@ -381,7 +381,5 @@ Fixed: Vault value for reserve % purposes set as fixed amount.
 
 export const RESERVE_HINT = `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ADA sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ADA, and ADA sent by Acquirers is = 7,999 ADA at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
 
-export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `HH: This setting determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool on VyFi. The % entered will be multiplied by the vault value at the end of the Acquire Window to calculate the ADA and Vault Tokens sent. \n
-Note: LP Contribution % cannot be larger than the % of Tokens for Acquirers. \n
-
-Warning: If the LP Contribution % is equal to the % of Tokens for Acquirers, then 100% of ADA received from Acquirers will go to the initial Liquidity Pool and Asset Contributors will receive 0% of ADA sent to the vault.`;
+export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `Input determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool.  
+Note: The net tokens and ADA received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ADA are sent.`;
