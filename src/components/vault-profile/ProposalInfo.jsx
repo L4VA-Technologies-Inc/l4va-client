@@ -61,8 +61,8 @@ export const ProposalInfo = ({ proposal }) => {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 row-span-3 bg-gray-800 rounded-lg p-6 space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-gray-800 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
             <div>
               <h3 className="text-1xl font-bold">Vault Open Sale</h3>
@@ -128,7 +128,7 @@ export const ProposalInfo = ({ proposal }) => {
           </div>
         </div>
 
-        <div className="arow-span-2 col-start-1 row-start-4 bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex justify-between">
             <h3 className="text-1xl font-bold">Votes</h3>
             <h3 className="text-orange-500 text-1xl font-bold">{totalVotes}</h3>
@@ -146,7 +146,7 @@ export const ProposalInfo = ({ proposal }) => {
             )}
           </div>
         </div>
-        <div className="col-start-2 row-start-4 bg-gray-800 rounded-lg p-6 space-y-6">
+        <div className="bg-gray-800 rounded-lg p-6 space-y-6">
           <div className="space-y-3">
             <h3 className="text-1xl font-bold">Information</h3>
             {informationItems.map((item, index) => (

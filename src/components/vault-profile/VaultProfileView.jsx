@@ -140,12 +140,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         )}
       </div>
       <div className="flex gap-2">
-        <button
+        {/* Statistic */}
+        {/* <button
           onClick={() => openModal('ChartModal', { vault })}
           className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
         >
           <BarChart3 className="w-4 h-4 text-orange-500" />
-        </button>
+        </button> */}
         <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
           <EyeIcon className="w-4 h-4 text-orange-500" />
           <span>{formatCompactNumber(vault.countView)}</span>
