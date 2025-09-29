@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 
+import { Spinner } from '@/components/Spinner';
 import { SwapComponent } from '@/components/swap/Swap';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -39,6 +40,7 @@ export const CreateVaultForm = ({ vault }) => {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
@@ -212,15 +214,29 @@ export const CreateVaultForm = ({ vault }) => {
   const renderStepContent = step => {
     switch (step) {
       case 1:
-        return <ConfigureVault data={vaultData} errors={errors} setData={setVaultData} updateField={updateField} />;
+        return (
+          <ConfigureVault
+            data={vaultData}
+            errors={errors}
+            updateField={updateField}
+            onImageUploadingChange={setIsImageUploading}
+          />
+        );
       case 2:
-        return <AssetContribution data={vaultData} errors={errors} setData={setVaultData} updateField={updateField} />;
+        return <AssetContribution data={vaultData} errors={errors} updateField={updateField} />;
       case 3:
         return <AcquireWindow data={vaultData} errors={errors} updateField={updateField} />;
       case 4:
-        return <Governance data={vaultData} errors={errors} updateField={updateField} />;
+        return (
+          <Governance
+            data={vaultData}
+            errors={errors}
+            updateField={updateField}
+            onImageUploadingChange={setIsImageUploading}
+          />
+        );
       case 5:
-        return <Launch data={vaultData} setCurrentStep={setCurrentStep} />;
+        return <Launch data={vaultData} errors={errors} updateField={updateField} />;
       default:
         return null;
     }
@@ -246,8 +262,14 @@ export const CreateVaultForm = ({ vault }) => {
         <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>
           Save for later
         </SecondaryButton>
-        <PrimaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleNextStep}>
-          <ChevronRight size={24} />
+        <PrimaryButton size="lg" disabled={isSubmitting || isSavingDraft || isImageUploading} onClick={handleNextStep}>
+          {isImageUploading ? (
+            <div className="flex items-center gap-2">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <ChevronRight size={24} />
+          )}
         </PrimaryButton>
       </div>
     );
