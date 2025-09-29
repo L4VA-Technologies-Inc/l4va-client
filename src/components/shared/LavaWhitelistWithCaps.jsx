@@ -68,14 +68,15 @@ export const LavaWhitelistWithCaps = ({
   };
 
   const handleInputChange = (uniqueId, value) => {
-    updateAsset(uniqueId, 'policyId', value);
+    updateAsset(uniqueId, 'policyId', value, 'N/A');
     if (value && getFilteredPolicyIds(value, uniqueId).length > 0) {
       setShowDropdown(prev => ({ ...prev, [uniqueId]: true }));
     }
   };
 
-  const selectPolicyId = (uniqueId, policyId) => {
-    updateAsset(uniqueId, 'policyId', policyId);
+  const selectPolicyId = (uniqueId, policyId, policyName) => {
+    const id = uniqueId;
+    updateAsset(id, 'policyId', policyId, policyName);
     setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
   };
 
@@ -101,6 +102,7 @@ export const LavaWhitelistWithCaps = ({
       {
         policyId: '',
         countCapMin: 1,
+        policyName: 'N/A',
         countCapMax: 1000,
         uniqueId: Date.now(),
       },
@@ -108,8 +110,10 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(newAssets);
   };
 
-  const updateAsset = (uniqueId, field, val) => {
-    const updatedAssets = whitelist.map(asset => (asset.uniqueId === uniqueId ? { ...asset, [field]: val } : asset));
+  const updateAsset = (uniqueId, field, val, policyName) => {
+    const updatedAssets = whitelist.map(asset =>
+      asset.uniqueId === uniqueId ? { ...asset, [field]: val, policyName: policyName } : asset
+    );
     setWhitelist(updatedAssets);
   };
 
@@ -196,7 +200,7 @@ export const LavaWhitelistWithCaps = ({
                               key={index}
                               type="button"
                               className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
-                              onClick={() => selectPolicyId(asset.uniqueId, policy.policyId)}
+                              onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name)}
                             >
                               {policy.image && (
                                 <img

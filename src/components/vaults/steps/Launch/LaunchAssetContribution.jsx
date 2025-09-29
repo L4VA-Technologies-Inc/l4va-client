@@ -1,9 +1,8 @@
 import { Edit } from 'lucide-react';
 
 import { formatInterval, formatNum, formatDateTime, substringAddress } from '@/utils/core.utils';
-import { VAULT_VALUE_METHOD_OPTIONS } from '@/components/vaults/constants/vaults.constants';
+import { VAULT_VALUE_METHOD_OPTIONS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 import { HoverHelp } from '@/components/shared/HoverHelp';
-import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
   const formatTime = (type, time) => {
@@ -42,7 +41,7 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             <>
               <div>
                 <p className="uppercase font-semibold text-dark-100">Valuation Currency</p>
-                
+
                 <p>{data.valuationCurrency || 'Not set'}</p>
               </div>
               <div>
@@ -65,24 +64,29 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
             <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>
             {data.assetsWhitelist?.length ? (
               <div className="space-y-6">
-                {data.assetsWhitelist.slice(0, 5).map((asset, index) => (
-                  <div className="space-y-4"> 
-                    <div key={index} className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span>{substringAddress(asset.policyId)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="uppercase font-semibold text-dark-100">Min asset cap</p>
-                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMin) : 'Not set'}</p>
+                {data.assetsWhitelist.slice(0, 5).map((asset, index) => {
+                  return (
+                    <div className="space-y-4">
+                      <div key={index} className="flex items-center gap-10">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                          <span>{substringAddress(asset.policyId)}</span>
+                        </div>
+                        <span>{asset.policyName}</span>
                       </div>
-                      <div>
-                        <p className="uppercase font-semibold text-dark-100">Max asset cap</p>
-                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="uppercase font-semibold text-dark-100">Min asset cap</p>
+                          <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMin) : 'Not set'}</p>
+                        </div>
+                        <div>
+                          <p className="uppercase font-semibold text-dark-100">Max asset cap</p>
+                          <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
+                        </div>
                       </div>
                     </div>
-                  </div> 
-                ))}
+                  );
+                })}
                 {data.assetsWhitelist.length > 5 && (
                   <p className="text-dark-100 mt-2">+{formatNum(data.assetsWhitelist.length - 5)} more assets</p>
                 )}
