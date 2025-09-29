@@ -1,10 +1,8 @@
-import { formatNum } from '@/utils/core.utils';
-
-export const VaultStats = ({ assetValue = 0, ftGains = 'N/A', fdv = 'N/A', fdvTvl = 'N/A', tvl = 'N/A' }) => {
+export const VaultStats = ({ assetValue, ftGains = 'N/A', fdv = 'N/A', fdvTvl = 'N/A', tvl = 'N/A' }) => {
   const stats = [
     {
       label: 'VAULT STAGE',
-      value: assetValue ? `$${formatNum(assetValue)}` : 'N/A',
+      value: assetValue ? assetValue.toUpperCase() : 'N/A',
     },
     {
       label: 'VT GAINS',

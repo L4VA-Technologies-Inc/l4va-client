@@ -209,7 +209,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             </div>
             <div className="mb-6">
               <VaultStats
-                assetValue={vault.assetValueUsd || 0}
+                assetValue={vault.vaultStatus}
                 ftGains={vault.ftGains || 'N/A'}
                 fdv={vault.fdv ? `${vault.fdv}$` : 'N/A'}
                 fdvTvl={vault.fdvTvl || 'N/A'}
