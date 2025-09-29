@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, HelpCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { CoreApiProvider } from '@/services/api/core';
@@ -14,6 +14,7 @@ export const UploadZone = ({
   accept = 'image/*',
   maxSizeMB = 5,
   hint,
+  onUploadingChange,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -68,9 +69,11 @@ export const UploadZone = ({
 
   const uploadFileToServer = async file => {
     setUploadStatus('uploading');
+    onUploadingChange?.(true);
 
     if (!validateFile(file)) {
       setUploadStatus('error');
+      onUploadingChange?.(false);
       return;
     }
 
@@ -84,11 +87,12 @@ export const UploadZone = ({
         size: file.size,
         type: file.type,
       });
-
+      onUploadingChange?.(false);
       toast.success('File uploaded successfully');
     } catch (err) {
       console.error('Upload error:', err);
       setUploadStatus('error');
+      onUploadingChange?.(false);
       toast.error('Failed to upload file');
     }
   };
@@ -154,14 +158,10 @@ export const UploadZone = ({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <div className="font-bold flex items-center gap-2">
-          <span className="uppercase">
-            {required && <span className="mr-1">*</span>}
-            {label}
-          </span>
-          {hint && (
-            <HoverHelp hint={hint} />
-          )}
+        <div className="flex items-center gap-1">
+          <p className="text-sm font-medium text-dark-100">{label}</p>
+          {required && <span className="text-red-600">*</span>}
+          {hint && <HoverHelp className="ml-1" hint={hint} />}
         </div>
         {uploadStatus === 'uploading' && <div className="text-yellow-500 text-sm">Uploading...</div>}
       </div>
