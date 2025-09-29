@@ -86,49 +86,53 @@ export const LoginModal = () => {
     }
   };
 
-  const renderWalletsList = () => (
-    <>
-      <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-        {SUPPORTED_WALLETS.map(wallet => (
-          <button
-            key={wallet.key}
-            className="
+  const renderWalletsList = () => {
+    const excludedWallets = ['MetaMask', 'Lace', 'Tokeo', 'Flint'];
+    const filteredWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.displayName));
+    return (
+      <>
+        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
+          {filteredWallets.map(wallet => (
+            <button
+              key={wallet.key}
+              className="
               flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
               transition-colors disabled:opacity-50 hover:bg-steel-750
             "
-            disabled={wallet.isConnectingTo === wallet.key || !isChecked}
-            type="button"
-            onClick={() => handleConnect(wallet.key)}
-          >
-            <div className="flex items-center gap-2">
-              <img alt="wallet" className="w-6 h-6" src={wallet.icon} />
-              <span className="font-bold text-sm">{wallet.displayName}</span>
-            </div>
-            {wallet.isConnectingTo === wallet.key && <Spinner />}
-            {!installed.has(wallet.key) && (
-              <a
-                className="text-sm text-dark-100 p-1"
-                href={wallet.website}
-                rel="noopener noreferrer"
-                target="_blank"
-                onClick={e => e.stopPropagation()}
-              >
-                <Download className="w-4 h-4" size={14} />
-              </a>
-            )}
-          </button>
-        ))}
-      </div>
-      <div className="mt-4 md:mt-6">
-        <LavaCheckbox
-          checked={isChecked}
-          description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
-          name="terms"
-          onChange={handleTermsAcceptance}
-        />
-      </div>
-    </>
-  );
+              disabled={wallet.isConnectingTo === wallet.key || !isChecked}
+              type="button"
+              onClick={() => handleConnect(wallet.key)}
+            >
+              <div className="flex items-center gap-2">
+                <img alt="wallet" className="w-6 h-6" src={wallet.icon} />
+                <span className="font-bold text-sm">{wallet.displayName}</span>
+              </div>
+              {wallet.isConnectingTo === wallet.key && <Spinner />}
+              {!installed.has(wallet.key) && (
+                <a
+                  className="text-sm text-dark-100 p-1"
+                  href={wallet.website}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <Download className="w-4 h-4" size={14} />
+                </a>
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 md:mt-6">
+          <LavaCheckbox
+            checked={isChecked}
+            description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
+            name="terms"
+            onChange={handleTermsAcceptance}
+          />
+        </div>
+      </>
+    );
+  };
 
   const renderSignMessage = () => (
     <div className="space-y-4 sm:space-y-6">
