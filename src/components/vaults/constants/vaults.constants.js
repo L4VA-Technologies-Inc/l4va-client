@@ -113,7 +113,10 @@ const socialLinkSchema = yup.object({
 });
 
 const assetWhitelistItemSchema = yup.object({
-  policyId: yup.string().required('Policy ID is required'),
+  policyId: yup
+    .string()
+    .required('Policy ID is required')
+    .matches(/^[0-9a-fA-F]{56}$/, 'Policy ID must be a 56-character hex string'),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
 });
