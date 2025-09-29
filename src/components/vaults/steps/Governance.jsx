@@ -7,7 +7,7 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MAX_SUPPLY, TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
-export const Governance = ({ data, errors = {}, updateField }) => {
+export const Governance = ({ data, errors = {}, updateField, onImageUploadingChange }) => {
   const handlePercentageChange = value => {
     const numericValue = value.replace(/[^0-9.]/g, '');
     const parts = numericValue.split('.');
@@ -64,6 +64,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
             image={data.ftTokenImg}
             label="VT Token Image"
             setImage={image => updateField('ftTokenImg', image)}
+            onUploadingChange={onImageUploadingChange}
           />
           {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
         </div>

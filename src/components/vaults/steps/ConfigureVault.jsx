@@ -12,7 +12,7 @@ import {
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const ConfigureVault = ({ data, errors = {}, updateField }) => {
+export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadingChange }) => {
   const handleChange = e => {
     const { name, value } = e.target;
     updateField(name, value);
@@ -106,6 +106,7 @@ export const ConfigureVault = ({ data, errors = {}, updateField }) => {
             label="Vault image"
             setImage={image => updateField('vaultImage', image)}
             hint="This is the image that will live on the Vault Profile page."
+            onUploadingChange={onImageUploadingChange}
           />
           {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
         </div>
