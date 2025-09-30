@@ -72,8 +72,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
               <VaultCountdown
                 className="text-base font-normal"
                 color="yellow"
-                endTime={vault.phaseEndTime || ''}
-                isLocked={vault.vaultStatus === 'locked' || vault.vaultStatus === 'governance'}
+                endTime={vault.phaseEndTime ? new Date(vault.phaseEndTime).getTime() : ''}
               />
             </div>
           )}
