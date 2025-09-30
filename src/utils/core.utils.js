@@ -218,8 +218,8 @@ const VAULT_STATUS_CONFIG = {
 };
 
 export const getCountdownName = vault => {
-  const status = vault?.vaultStatus?.toLowerCase() || 'created';
-  return VAULT_STATUS_CONFIG[status]?.countdownName || 'Contribution starts in:';
+  const status = vault?.vaultStatus?.toLowerCase();
+  return VAULT_STATUS_CONFIG[status]?.countdownName;
 };
 
 export const getCountdownTime = vault => {
