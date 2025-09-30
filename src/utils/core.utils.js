@@ -1,4 +1,5 @@
 import { formatISO } from 'date-fns';
+import { TruckElectric } from 'lucide-react';
 
 export const formatNum = (value, maximumFractionDigits = 2) =>
   value
@@ -191,6 +192,12 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Acquire',
     isCountdownActive: true,
   },
+  custom_acquire: {
+    countdownName: 'Acquire starts in:',
+    getCountdownTime: vault => vault.acquireOpenWindowTime,
+    buttonText: 'Acquire',
+    isCountdownActive: true,
+  },
   burned: {
     countdownName: '',
     getCountdownTime: () => 'Burned',
@@ -218,6 +225,16 @@ const VAULT_STATUS_CONFIG = {
 };
 
 export const getCountdownName = vault => {
+  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+
+  if (
+    vault.acquireOpenWindowType === 'custom' &&
+    contributionEnd < Date.now() &&
+    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
+  ) {
+    return VAULT_STATUS_CONFIG['custom_acquire']?.countdownName;
+  }
+
   const status = vault?.vaultStatus?.toLowerCase();
   return VAULT_STATUS_CONFIG[status]?.countdownName;
 };
@@ -227,6 +244,15 @@ export const getCountdownTime = vault => {
 
   const status = vault.vaultStatus?.toLowerCase();
   if (!status || !VAULT_STATUS_CONFIG[status]) return null;
+
+  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+  if (
+    vault.acquireOpenWindowType === 'custom' &&
+    contributionEnd < Date.now() &&
+    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
+  ) {
+    return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+  }
 
   return VAULT_STATUS_CONFIG[status].getCountdownTime(vault);
 };
