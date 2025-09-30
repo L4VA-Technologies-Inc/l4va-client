@@ -236,14 +236,17 @@ export const LavaWhitelistWithCaps = ({
             <div className="flex gap-4">
               <div className="flex-1">
                 <LavaInput
+                  type="text"
+                  pattern="[0-9]*"
                   placeholder="*Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
-                  onChange={e =>
+                  onChange={e => updateAsset(asset.uniqueId, 'countCapMin', e.target.value)}
+                  onBlur={e =>
                     updateAsset(
                       asset.uniqueId,
                       'countCapMin',
-                      e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value) || 1)
+                      e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
                     )
                   }
                 />
@@ -258,11 +261,12 @@ export const LavaWhitelistWithCaps = ({
                   placeholder="*Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
-                  onChange={e =>
+                  onChange={e => updateAsset(asset.uniqueId, 'countCapMax', e.target.value)}
+                  onBlur={e =>
                     updateAsset(
                       asset.uniqueId,
                       'countCapMax',
-                      e.target.value === '' ? 1000 : Math.max(1, parseInt(e.target.value) || 1000)
+                      e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''))
                     )
                   }
                 />
