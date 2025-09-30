@@ -117,7 +117,6 @@ export const Header = () => {
             <div className="flex items-center gap-8 ml-[56px]">
               <div>
                 <LavaSteelSelect
-                  transparent
                   options={currencyOptions}
                   value={selectedCurrency}
                   onChange={val => {
