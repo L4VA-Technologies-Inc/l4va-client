@@ -8,6 +8,7 @@ export const LavaInput = ({
   label,
   value,
   onChange,
+  onBlur,
   error,
   maxLength,
   suffix,
@@ -59,6 +60,7 @@ export const LavaInput = ({
             type={type}
             value={displayValue}
             onChange={handleChange}
+            onBlur={onBlur}
           />
           {suffix && <div className="absolute right-5 text-white/60 select-none">{suffix}</div>}
         </div>
