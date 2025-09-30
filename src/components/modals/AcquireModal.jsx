@@ -6,7 +6,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
-import { formatNum, formatCompactNumber } from '@/utils/core.utils';
+import { formatNum } from '@/utils/core.utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
@@ -25,44 +25,39 @@ export const AcquireModal = ({ vault, onClose }) => {
   const acquisitionDetails = useMemo(() => {
     const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-    const estimatedValue = acquireAmountNum * vault.assetsPrices?.adaPrice; // USD value of ADA
-    const vaultTokenPrice = vault.assetsPrices?.totalValueUsd / vault.ftTokenSupply;
+    // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
+    const estVaultTokenPercent = vault.tokensForAcquires * (1 - vault.liquidityPoolContribution / 100 / 2);
 
-    let estimatedTickerVal;
-    if (vaultTokenPrice > 0) {
-      estimatedTickerVal = estimatedValue / vaultTokenPrice;
-    } else {
-      estimatedTickerVal = acquireAmountNum * (vault.tokensForAcquires / 100); // Fallback calculation
-    }
+    // Est Vault Token Amount = Est Vault Token (%) x Token Supply
+    const estVaultTokenAmount = (estVaultTokenPercent / 100) * vault.ftTokenSupply;
 
-    const totalAcquiredValueWithCurrent = vault.assetsPrices?.totalAcquiredAda + acquireAmountNum;
-    const maxAllocationPercentage = vault.tokensForAcquires;
+    // Reserve ADA Amount calculation (based on vault's required reserve)
+    const reserveAdaAmount = vault.requireReservedCostAda || 0;
 
+    // Vault Allocation = Est Vault Token (%) above x [ADA Amount / Reserve ADA Amount]
     let vaultAllocation = 0;
-    if (acquireAmountNum > 0) {
-      const userPercentOfAcquired = acquireAmountNum / totalAcquiredValueWithCurrent;
-
-      vaultAllocation = (userPercentOfAcquired * maxAllocationPercentage).toFixed(2);
-
-      if (parseFloat(vaultAllocation) > maxAllocationPercentage) {
-        vaultAllocation = maxAllocationPercentage.toFixed(2);
-      }
+    if (reserveAdaAmount > 0 && acquireAmountNum > 0) {
+      vaultAllocation = estVaultTokenPercent * (acquireAmountNum / reserveAdaAmount);
     }
+
+    // Est. Vault Token Acquired = Vault Allocation x Token Supply
+    const estimatedTickerVal = (vaultAllocation / 100) * vault.ftTokenSupply;
 
     return {
       acquireAmountNum,
-      vaultAllocation,
-      estimatedValue,
-      estimatedTickerVal,
+      estVaultToken: estVaultTokenPercent.toFixed(2),
+      estVaultTokenAmount: Math.floor(estVaultTokenAmount),
+      estTickerVal: Math.floor(estimatedTickerVal),
+      vaultAllocation: vaultAllocation.toFixed(2),
       totalAcquired: vault.assetsPrices?.totalAcquiredAda || 0,
     };
   }, [
     acquireAmount,
-    vault.assetsPrices?.adaPrice,
     vault.assetsPrices?.totalAcquiredAda,
-    vault.assetsPrices?.totalValueUsd,
     vault.ftTokenSupply,
+    vault.liquidityPoolContribution,
     vault.tokensForAcquires,
+    vault.requireReservedCostAda,
   ]);
 
   const handleAcquire = async () => {
@@ -195,16 +190,19 @@ export const AcquireModal = ({ vault, onClose }) => {
 
             <div className="grid grid-cols-3 gap-4 border-t border-[#2f324c] pt-6">
               <div className="text-center">
+                {/* Total ADA Sent by Vault Token Acquirers up until now */}
                 <p className="text-dark-100 text-sm">Total ADA Sent</p>
                 <p className="text-xl font-medium">{formatNum(vault.assetsPrices.totalAcquiredAda)}</p>
               </div>
               <div className="text-center">
+                {/* Total Vault Token % of supply available to Acquirers */}
                 <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
-                <p className="text-xl font-medium">{vault.tokensForAcquires}%</p>
+                <p className="text-xl font-medium">{acquisitionDetails.estVaultToken}%</p>
               </div>
               <div className="text-center">
+                {/* Total Vault Token quantity available to Acquirers */}
                 <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
-                <p className="text-xl font-medium">{formatCompactNumber(vault.assetsPrices.totalValueUsd)}</p>
+                <p className="text-xl font-medium">{acquisitionDetails.estVaultTokenAmount}</p>
               </div>
             </div>
           </div>
@@ -214,20 +212,25 @@ export const AcquireModal = ({ vault, onClose }) => {
               <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-1 text-center">
-                  <p className="text-dark-100 text-sm">Total ADA Acquired</p>
-                  <p className="text-2xl font-medium">{formatNum(acquisitionDetails.totalAcquired)}</p>
+                  {/* ADA Amount to send to acquire Vault Tokens */}
+                  <p className="text-dark-100 text-sm">ADA Amount</p>
+                  <p className="text-2xl font-medium">{formatNum(acquisitionDetails.acquireAmountNum)}</p>
                 </div>
                 <div className="space-y-1 text-center ">
-                  <p className="text-dark-100 text-sm">Vault Allocation</p>
+                  {/* 
+                    Estimated % of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.
+                    Note: If more than the reserve amount is sent, the % of vault token received will reduce.
+                  */}
+                  <p className="text-dark-100 text-sm">Est. Vault Token Allocation (%)</p>
                   <p className="text-2xl font-medium">{acquisitionDetails.vaultAllocation}%</p>
                 </div>
                 <div className="space-y-1 text-center">
-                  <p className="text-dark-100 text-sm">Estimated Value</p>
-                  <p className="text-2xl font-medium truncate">${formatNum(acquisitionDetails.estimatedValue)}</p>
-                </div>
-                <div className="space-y-1 text-center">
-                  <p className="text-dark-100 text-sm">Estimated TICKER VAL ($VLRM)</p>
-                  <p className="text-2xl font-medium truncate">{formatNum(acquisitionDetails.estimatedTickerVal)}</p>
+                  {/* 
+                    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.
+                    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.
+                 */}
+                  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>
+                  <p className="text-2xl font-medium truncate">{formatNum(acquisitionDetails.estVaultTokenAcquired)}</p>
                 </div>
               </div>
 

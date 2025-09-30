@@ -126,10 +126,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   }, [assetsWhitelist, vaultAssetsData]);
 
   const contributionDetails = useMemo(() => {
-    const nftCount = selectedNFTs.filter(asset => asset.type === 'NFT').length;
-    const ftCount = selectedNFTs.filter(asset => asset.type === 'FT').length;
-    const totalAssets = nftCount + ftCount;
-
     let estimatedValue = 0;
 
     selectedNFTs.forEach(asset => {
@@ -142,25 +138,26 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       }
     });
 
-    const contributionPercentage = estimatedValue / (vault.assetsPrices.totalValueAda + estimatedValue);
-    const remainingPercentage = 100 - vault.tokensForAcquires - vault.liquidityPoolContribution;
-    const contributorTokens = vault.ftTokenSupply * (remainingPercentage / 100);
-    const vaultAllocation = totalAssets > 0 ? Math.max(0, contributionPercentage * remainingPercentage).toFixed(2) : 0;
-    const estimatedTickerVal = totalAssets > 0 ? Math.floor(contributorTokens * contributionPercentage) : 0;
+    // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
+    const tokensForAcqPercent = vault.tokensForAcquires / 100;
+    const lpContributionPercent = vault.liquidityPoolContribution / 100;
+
+    const vaultAllocation = (1 - tokensForAcqPercent) * (1 - lpContributionPercent / 2);
+    const vaultAllocationPercent = vaultAllocation * 100; // Convert back to percentage for display
+
+    // Estimated Vault Token Amount = Vault Token Allocation % × Vault Token Supply
+    const estimatedTickerVal = vaultAllocation * vault.ftTokenSupply;
+
+    // Estimated ADA to Receive = (1 - Vault Allocation %) × Estimated Value
+    const estimatedAdaReceived = (1 - vaultAllocation) * estimatedValue;
 
     return {
-      totalAssets,
-      vaultAllocation,
+      vaultAllocation: vaultAllocationPercent.toFixed(2),
       estimatedValue,
-      estimatedTickerVal,
+      estimatedTickerVal: Math.floor(estimatedTickerVal),
+      estimatedAdaReceived: estimatedAdaReceived.toFixed(2),
     };
-  }, [
-    selectedNFTs,
-    vault.assetsPrices.totalValueAda,
-    vault.ftTokenSupply,
-    vault.liquidityPoolContribution,
-    vault.tokensForAcquires,
-  ]);
+  }, [selectedNFTs, vault.ftTokenSupply, vault.liquidityPoolContribution, vault.tokensForAcquires]);
 
   const loadAssets = async () => {
     const formattedAssets = await fetchAndFormatWalletAssets(wallet, whitelistedPolicies);
@@ -372,14 +369,31 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             <HoverHelp hint="Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information." />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard label="Total Assets Selected" value={contributionDetails.totalAssets} />
+            {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
+            <MetricCard label="Estimated Value" value={`₳${contributionDetails.estimatedValue.toLocaleString()}`} />
+            {/* 
+                Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
+                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
+             */}
             <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard label="Estimated Value" value={`₳${contributionDetails.estimatedValue.toLocaleString()}`} />
+            {/* 
+                Estimated Vault Token received, based on assets contributed to date and current floor prices.
+                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
+            */}
             <MetricCard
               label="Estimated Vault Token Received"
               value={contributionDetails.estimatedTickerVal.toLocaleString()}
+            />
+
+            {/* 
+                Estimated ADA received, based on assets contributed to date and current floor prices.
+                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
+             */}
+            <MetricCard
+              label="Estimated ADA Received"
+              value={contributionDetails.estimatedAdaReceived.toLocaleString()}
             />
           </div>
         </div>

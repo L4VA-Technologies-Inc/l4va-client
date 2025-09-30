@@ -1,4 +1,4 @@
-import { EyeIcon, BarChart3, Copy } from 'lucide-react';
+import { EyeIcon, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
