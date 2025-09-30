@@ -55,30 +55,45 @@ const Faq = () => {
   const faqItems = [
     {
       question: 'What is L4VA?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      answer:
+        'L4VA is an open-source protocol on Cardano that lets anyone fractionalize digital assets into community-governed vaults. Instead of assets sitting idle, L4VA transforms them into liquid, tradable tokens with built-in governance. No custodians. Permissionless. Designed for transparent and decentralized ownership.',
     },
     {
       question: 'What can I do with a vault?',
       answer:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel leo non ante egestas tincidunt lacinia at urna. Vestibulum tempor, erat id vestibulum.',
+        `A vault is a customizable container for assets. Once created, you can:
+  - Fractionalize the assets into governance tokens
+  - Distribute tokens to contributors or buyers
+  - Enable token holders to govern how assets are managed, sold, or evolved
+  - Unlock liquidity and new utility for assets that otherwise sit dormant`,
     },
     {
       question: 'How do I create a vault?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      answer:
+        'To create a vault, you’ll also need to acquire and lock the required amount of $VLRM community tokens — this amount is dynamic and changes over time. Once set up, you choose your vault settings — such as governance rules, contribution requirements, and acquisition stages. After deployment, contributors can add assets and the vault becomes ready for fractionalization.',
     },
     {
       question: 'What can I put in a vault?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      answer:
+        'Vaults can hold a wide range of Cardano-native digital assets, such as NFTs, on-chain RWAs, and fungible tokens. As the protocol expands, more asset types and integrations will be supported.',
     },
     {
-      question: 'How do I acquire a vault?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      question: 'How do I acquire vault tokens?',
+      answer:
+        'During the acquire stage, ADA holders can send ADA into the vault in exchange for fractional governance tokens. These vault tokens represent ownership rights, governance power, and access to future rewards tied to the vault’s assets.',
     },
     {
       question: 'How do I contribute?',
-      answer: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      answer:
+        'If you hold eligible assets, you can send them directly into a vault during its contribution stage. Contributors receive governance tokens proportional to the value of their assets, and receive ADA for the percentage of tokens offered to new acquirers, giving them both liquidity and voting rights over the vault’s future.',
+    },
+    {
+      question: 'How do I earn $L4VA rewards?',
+      answer:
+        'Participants in L4VA can earn $L4VA incentives for engaging with the protocol. Creators, contributors, and acquirers all share in rewards, scaled by the vault’s total value locked (TVL) and token participation. The more valuable the vault at the initial successful lock, the greater the potential rewards distributed to its community of token holders.',
     },
   ];
+  
 
   return (
     <div className="relative py-8 sm:py-12 lg:py-16">
