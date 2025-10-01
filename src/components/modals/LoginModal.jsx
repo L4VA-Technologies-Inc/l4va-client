@@ -87,8 +87,8 @@ export const LoginModal = () => {
   };
 
   const renderWalletsList = () => {
-    const excludedWallets = ['MetaMask', 'Lace', 'Tokeo', 'Flint'];
-    const filteredWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.displayName));
+    const excludedWallets = ['metaMask', 'tokeo', 'flint'];
+    const filteredWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.key));
     return (
       <>
         <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
