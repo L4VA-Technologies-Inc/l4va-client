@@ -40,7 +40,7 @@ export const AssetsModalConfirm = ({ onClose, isOpen, onConfirm, title, descript
 
           <div className="flex justify-between">
             <SecondaryButton onClick={onClose} size="lg">
-              CANSEL
+              CANCEL
             </SecondaryButton>
             <PrimaryButton
               disabled={!understandBurn || !confirmBurn}
