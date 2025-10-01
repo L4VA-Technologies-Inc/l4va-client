@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { formatNum } from '@/utils/core.utils.js';
 
 export const useCountAnimation = (endValue, duration = 2000) => {
   const [count, setCount] = useState(0);
@@ -43,7 +44,7 @@ export const useCountAnimation = (endValue, duration = 2000) => {
         return `$${count.toFixed(2)} M`;
       }
     }
-    return Math.round(count).toString();
+    return formatNum(Math.round(count).toString());
   };
 
   return formatCount();
