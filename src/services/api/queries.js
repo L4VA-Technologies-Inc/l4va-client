@@ -62,10 +62,10 @@ export const useVault = id => {
   });
 };
 
-export const useVaultAssets = id => {
+export const useVaultAssets = (id, search = '', page = 1, limit = 10) => {
   return useQuery({
-    queryKey: ['vault-assets', id],
-    queryFn: () => VaultsApiProvider.getVaultAssets(id),
+    queryKey: ['vault-assets', id, search, page, limit],
+    queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit),
     enabled: !!id,
   });
 };

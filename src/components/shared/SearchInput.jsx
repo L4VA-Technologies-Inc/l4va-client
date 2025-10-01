@@ -2,8 +2,8 @@ import { Search } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 
-const SearchInput = ({ placeholder = 'Search' }) => (
-  <div className="relative w-[370px]">
+const SearchInput = ({ placeholder = 'Search', onChange }) => (
+  <div className="relative w-full">
     <Input
       className="
         h-[60px] pl-[20px] pr-12
@@ -19,6 +19,7 @@ const SearchInput = ({ placeholder = 'Search' }) => (
       "
       placeholder={placeholder}
       type="text"
+      onChange={e => onChange(e.target.value)}
     />
     <Search
       className="
