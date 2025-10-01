@@ -202,7 +202,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         </div>
       }
     >
-      <div className="flex-1 overflow-y-auto space-y-6 text-sm">
+      <div className="flex-1 space-y-6 text-sm">
         <div>
           <h3 className="text-lg font-medium mb-3">Vault Tags</h3>
           <div className="flex flex-wrap gap-2">
