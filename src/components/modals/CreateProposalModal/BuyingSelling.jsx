@@ -279,10 +279,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
         onChange={e => setAbstain(e.target.checked)}
       />
       <div className="mt-8">
-        <h4 className="text-white font-medium mb-4">Proposal Start</h4>
+        <h4 className="text-white font-medium mb-4">Voting Period</h4>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 relative">
-            <LavaIntervalPicker value={proposalStart} onChange={setProposalStart} />
+            <LavaIntervalPicker value={proposalStart} onChange={setProposalStart} placeholder="Set Voting Period" />
           </div>
         </div>
       </div>

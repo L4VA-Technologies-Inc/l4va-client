@@ -113,12 +113,13 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
           </div>
 
           <div className="mt-8">
-            <h4 className="text-white font-medium mb-4">Proposal Start</h4>
+            <h4 className="text-white font-medium mb-4">Voting Period</h4>
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <LavaIntervalPicker
                   value={proposalStart}
                   onChange={setProposalStart}
+                  placeholder="Set Voting Period"
                   minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
                 />
               </div>
