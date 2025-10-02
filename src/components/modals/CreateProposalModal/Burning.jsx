@@ -20,6 +20,7 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
     onDataChange?.({
       burnAssets: [],
       proposalStart: '',
+      isValid: selectedAssets.length > 0,
     });
   }, [onDataChange]);
 
@@ -27,6 +28,7 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
     onDataChange?.({
       burnAssets: selectedAssets,
       proposalStart,
+      isValid: selectedAssets.length > 0,
     });
   }, [selectedAssets, proposalStart, onDataChange]);
 

@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
-import { X, Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
+import { transactionOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
 
 const execOptions = [
   { value: 'SELL', label: 'SELL' },
@@ -21,6 +22,19 @@ const sellTypeOptions = [
   { value: 'List', label: 'List' },
   { value: 'Market', label: 'Market' },
 ];
+
+const validateOptions = (options) => {
+  if (options.length === 0) return true;
+
+  try {
+    options.forEach(option => {
+      transactionOptionSchema.validateSync(option);
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
 
 export const BuyingSelling = ({ vaultId, onDataChange }) => {
   const [options, setOptions] = useState([]);
@@ -53,6 +67,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
       buyingSellingOptions: options,
       proposalStart,
       abstain,
+      isValid: validateOptions(options),
     });
   }, [options, onDataChange, proposalStart, abstain]);
 
@@ -63,12 +78,12 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
         options.map(option =>
           option.id === id
             ? {
-                ...option,
-                [field]: value,
-                assetId: selectedAsset?.id || null,
-              }
-            : option
-        )
+              ...option,
+              [field]: value,
+              assetId: selectedAsset?.id || null,
+            }
+            : option,
+        ),
       );
     } else {
       setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
@@ -169,7 +184,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                       <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
                       <LavaSteelSelect
                         options={assetOptions.filter(
-                          opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value)
+                          opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value),
                         )}
                         placeholder={isLoading ? 'Loading assets...' : 'Select asset'}
                         value={option.assetName}
@@ -203,7 +218,11 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                         type="number"
                         placeholder="0.00"
                         value={option.quantity}
-                        onChange={value => handleOptionChange(option.id, 'quantity', value)}
+                        onChange={value => {
+                          if (value <= getAvailableAmount(option.id)) {
+                            handleOptionChange(option.id, 'quantity', value);
+                          }
+                        }}
                         className={isOverLimit ? '!border-red-500/60' : ''}
                       />
                     </div>

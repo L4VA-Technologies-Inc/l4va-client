@@ -24,12 +24,16 @@ const executionOptions = [
   { value: 'buy_sell', label: 'Buying/Selling' },
 ];
 
+const initialProposalData = {
+  isValid: true,
+};
+
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState('buy_sell');
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [proposalData, setProposalData] = useState({});
+  const [proposalData, setProposalData] = useState(initialProposalData);
 
   const createProposalMutation = useCreateProposal();
 
@@ -85,12 +89,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     }
   };
 
-  const handleDataChange = useCallback(data => {
+  const handleDataChange = useCallback((data) => {
     setProposalData(prev => ({ ...prev, ...data }));
   }, []);
 
   const handleChangeExecutionOption = value => {
-    setProposalData({});
+    setProposalData(initialProposalData);
     setSelectedOption(value);
   };
 
@@ -101,7 +105,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         <SecondaryButton onClick={onClose} size="sm">
           Cancel
         </SecondaryButton>
-        <PrimaryButton disabled={!proposalTitle.trim()} onClick={handleCreateProposal} size="sm" className="capitalize">
+        <PrimaryButton
+          disabled={!proposalTitle.trim() || !proposalData.isValid}
+          onClick={handleCreateProposal}
+          size="sm"
+          className="capitalize"
+        >
           Create
         </PrimaryButton>
       </div>
