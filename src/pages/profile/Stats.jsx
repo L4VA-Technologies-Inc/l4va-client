@@ -1,5 +1,6 @@
 import { useAuth } from '@/lib/auth/auth';
 import { useCurrency } from '@/hooks/useCurrency';
+import { formatNum } from '@/utils/core.utils.js';
 
 export const Stats = () => {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ export const Stats = () => {
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">TVL</p>
         <p className="text-2xl font-medium">
-          {currency === 'ada' ? `₳${user?.totalValueAda || 0}` : `$${user?.totalValueUsd || 0}`}
+          {currency === 'ada' ? `₳${formatNum(user?.totalValueAda) || 0}` : `$${formatNum(user?.totalValueUsd) || 0}`}
         </p>
       </div>
       <div className="bg-input-bg rounded-md p-6">
