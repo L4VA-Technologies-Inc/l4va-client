@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -11,23 +11,31 @@ import { useCurrency } from '@/hooks/useCurrency';
 export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-  const { data, isLoading, error } = useVaultAssets(vault?.id, searchValue, currentPage, limit);
+  const { data, isLoading, error } = useVaultAssets(vault?.id, debouncedSearchValue, currentPage, limit);
   const assets = data?.data?.items || [];
   const pagination = data?.data
     ? {
         page: data.data.page,
         totalPages: data.data.totalPages,
-        total: data.data.total,
         limit: data.data.limit,
       }
     : null;
   const { currency } = useCurrency();
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+      setCurrentPage(1);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
   const handleSearchChange = value => {
     setSearchValue(value);
-    setCurrentPage(1);
   };
 
   const handlePageChange = page => {
@@ -39,13 +47,13 @@ export const VaultContributedAssetsList = ({ vault }) => {
     return <div className="text-center p-8 text-red-500">{error.message}</div>;
   }
 
-  if (!assets.length && searchValue !== '' && !isLoading) {
+  if (!assets.length && debouncedSearchValue !== '' && !isLoading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="w-full">
           <SearchInput className="w-full" onChange={handleSearchChange} />
         </div>
-        <div className="text-center p-8 text-dark-100">No assets found for &quot;{searchValue}&quot;.</div>
+        <div className="text-center p-8 text-dark-100">No assets found for &quot;{debouncedSearchValue}&quot;.</div>
       </div>
     );
   }
