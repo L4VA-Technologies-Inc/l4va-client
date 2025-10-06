@@ -4,7 +4,6 @@ import Features from '@/components/Features';
 import Faq from '@/pages/home/Faq';
 import VaultsFilters from '@/pages/home/VaultsFilters';
 import Stats from '@/pages/home/Stats';
-import { FailedVaultsList } from '@/pages/home/FailedVaultsList.jsx';
 
 export const Home = () => {
   return (
@@ -22,7 +21,6 @@ export const Home = () => {
         <HeroStats />
         <Features />
         <VaultsFilters />
-        <FailedVaultsList />
         {/* <Acquire /> */}
         <Stats />
         <Faq />
