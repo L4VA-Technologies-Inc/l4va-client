@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -9,6 +9,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims } from '@/services/api/queries';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
@@ -36,10 +37,20 @@ export const Claims = () => {
   const [status, setStatus] = useState('idle');
   const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
 
-  const { data, isLoading, error, refetch } = useClaims();
-  const claims = data?.data || [];
+  const { data, isLoading, error, refetch } = useClaims(currentPage, 10);
+  const claims = data?.data?.items || [];
+  const pagination = data?.data || { page: 1, total: 0, limit: 10 };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, activeFilter]);
+
+  const handlePageChange = page => {
+    setCurrentPage(page);
+  };
 
   const formattedClaims = claims.map(claim => ({
     id: claim.id,
@@ -357,6 +368,18 @@ export const Claims = () => {
               <ClaimCard key={claim.id} claim={claim} />
             ))}
           </div>
+
+          {filteredClaims.length && Math.ceil(pagination.total / pagination.limit) > 1 ? (
+            <div className="mt-8">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(pagination.total / pagination.limit)}
+                onPageChange={handlePageChange}
+                className="justify-center"
+              />
+            </div>
+          ) : null}
+
           {filteredClaims.length === 0 && <NoDataPlaceholder message="No claims found" />}
         </>
       )}
