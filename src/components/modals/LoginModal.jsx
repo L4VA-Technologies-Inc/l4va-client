@@ -87,7 +87,7 @@ export const LoginModal = () => {
   };
 
   const renderWalletsList = () => {
-    const excludedWallets = ['metaMask', 'tokeo', 'flint'];
+    const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];
     const filteredWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.key));
     return (
       <>

@@ -4,12 +4,12 @@ import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 
 const VAULT_TABS = {
+  ALL: 'All',
   DRAFT: 'Draft',
   OPEN: 'Open',
   LOCKED: 'Locked',
   FAILED: 'Failed',
   TERMINATED: 'Terminated',
-  ALL: 'All',
 };
 
 const TABS = Object.values(VAULT_TABS);
