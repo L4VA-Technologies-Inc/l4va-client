@@ -14,7 +14,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
-import { useCreateProposal } from '@/services/api/queries';
+import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
 
 const executionOptions = [
   { value: 'staking', label: 'Staking' },
@@ -36,6 +36,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalData, setProposalData] = useState(initialProposalData);
 
   const createProposalMutation = useCreateProposal();
+
+  const { refetch } = useGovernanceProposals(vault.id);
 
   const handleCreateProposal = () => {
     setShowConfirmation(true);
@@ -74,22 +76,30 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.metadata = proposalData;
       }
 
-      await createProposalMutation.mutateAsync({
-        vaultId: vault.id,
-        proposalData: proposalPayload,
-      });
+      createProposalMutation
+        .mutateAsync({
+          vaultId: vault.id,
+          proposalData: proposalPayload,
+        })
+        .then(async res => {
+          if (res?.data) {
+            await refetch();
+          }
+        })
+        .catch(err => {
+          console.error('Failed to create proposal:', err);
+        });
 
       toast.success('Proposal created successfully!');
       setShowConfirmation(false);
       onClose();
-      window.location.reload();
     } catch (error) {
       console.error('Failed to create proposal:', error);
       toast.error('Failed to create proposal. Please try again.');
     }
   };
 
-  const handleDataChange = useCallback((data) => {
+  const handleDataChange = useCallback(data => {
     setProposalData(prev => ({ ...prev, ...data }));
   }, []);
 
