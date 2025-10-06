@@ -7,6 +7,7 @@ import { routeTree } from './routeTree.gen';
 import { ModalProvider } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
+import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
 
 const router = createRouter({
   routeTree,
@@ -16,6 +17,15 @@ const router = createRouter({
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
 });
+
+const AppWithInterceptor = () => {
+  useAuthInterceptor();
+  return (
+    <ModalProvider>
+      <RouterProvider router={router} />
+    </ModalProvider>
+  );
+};
 
 export function AppCore() {
   const { user, isLoading } = useAuth();
@@ -27,9 +37,7 @@ export function AppCore() {
   return (
     <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address}>
       <WeldProvider>
-        <ModalProvider>
-          <RouterProvider router={router} />
-        </ModalProvider>
+        <AppWithInterceptor />
       </WeldProvider>
     </NovuProvider>
   );
