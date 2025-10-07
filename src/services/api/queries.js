@@ -180,10 +180,12 @@ export const useWalletSummary = address => {
 };
 
 // Claims Queries
-export const useClaims = () => {
+export const useClaims = (page, limit) => {
   return useQuery({
-    queryKey: ['vault-claims'],
-    queryFn: () => ClaimsApiProvider.getClaims(),
+    queryKey: ['vault-claims', page, limit],
+    queryFn: () => {
+      return ClaimsApiProvider.getClaims({ page: page || 1, limit });
+    },
   });
 };
 
