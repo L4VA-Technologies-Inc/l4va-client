@@ -11,6 +11,10 @@ export class CoreConfigProvider {
     return '/api/v1/users/profile';
   }
 
+  static getPublicProfile(userId) {
+    return `/api/v1/users/profile/${userId}`;
+  }
+
   static updateProfile() {
     return '/api/v1/users/profile';
   }

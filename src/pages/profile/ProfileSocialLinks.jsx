@@ -1,18 +1,16 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Edit, Plus, X, Trash } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Edit, Plus, Trash, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { useAuth } from '@/lib/auth/auth';
 import { CoreApiProvider } from '@/services/api/core';
-import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
+import { autoFormatUrl, debounce, validateUrlRealTime } from '@/utils/urlValidation';
 
 const MAX_LINKS = 5;
 
-export const ProfileSocialLinks = () => {
-  const { user } = useAuth();
+export const ProfileSocialLinks = ({ user, isEditable = true }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [socialLinks, setSocialLinks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +42,7 @@ export const ProfileSocialLinks = () => {
       const validation = validateUrlRealTime(url);
       setRealTimeError(validation.isEmpty ? '' : validation.error);
     }, 300),
-    []
+    [],
   );
 
   const handleUrlChange = url => {
@@ -133,7 +131,7 @@ export const ProfileSocialLinks = () => {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h2 className="font-russo text-4xl uppercase">Socials</h2>
-        {socialLinks.length < MAX_LINKS && !isAdding && (
+        {isEditable && socialLinks.length < MAX_LINKS && !isAdding && (
           <button
             className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
             disabled={isLoading}
@@ -242,7 +240,8 @@ export const ProfileSocialLinks = () => {
             </div>
           </div>
         ))}
-        {socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
+        {isEditable && socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
+        {!isEditable && socialLinks.length === 0 && <div>The user has no social links.</div>}
       </div>
     </div>
   );

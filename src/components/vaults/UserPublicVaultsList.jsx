@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -13,14 +12,12 @@ const VAULT_TABS = [
   { id: 'terminated', label: 'Terminated', filter: 'terminated' },
 ];
 
-const DEFAULT_TAB = 'contribution';
+const DEFAULT_TAB = 'all';
 
-export const CommunityVaultsList = ({ className = '' }) => {
-  const search = useSearch({ from: '/vaults/' });
-  const router = useRouter();
+export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
   const communityVaultsListRef = useRef(null);
 
-  const tabParam = search?.tab || DEFAULT_TAB;
+  const tabParam = DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -28,6 +25,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
+    ownerId: ownerId,
   });
 
   useEffect(() => {
@@ -37,6 +35,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
       ...prevFilters,
       page: 1,
       filter: newTab.filter,
+      ownerId: ownerId,
     }));
   }, [tabParam]);
 
@@ -48,11 +47,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
         ...prevFilters,
         page: 1,
         filter: selectedTab.filter,
+        ownerId: ownerId,
       }));
-      router.navigate({
-        to: '/vaults',
-        search: { tab: selectedTab.id },
-      });
     }
   };
 
@@ -98,7 +94,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
         error={error?.message}
         isLoading={isLoading}
         tabs={VAULT_TABS.map(tab => tab.label)}
-        title="All Vaults"
+        title="User Public Vaults"
         vaults={vaults}
         onTabChange={handleTabChange}
         activeTab={activeTab.label}

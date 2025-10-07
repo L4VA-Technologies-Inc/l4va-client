@@ -1,61 +1,73 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Camera, Copy, Edit, Check, X, Plus } from 'lucide-react';
+import { Camera, Check, Copy, Edit, Plus, X } from 'lucide-react';
 
 import { CoreApiProvider } from '@/services/api/core';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth/auth';
-import { substringAddress, getAvatarLetter } from '@/utils/core.utils';
+import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
 
-const BackgroundSection = ({ bgImage, onClick }) => (
+const BackgroundSection = ({ bgImage, onClick, isEditable = true }) => (
   <div
-    className="relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group cursor-pointer"
-    onClick={onClick}
+    className={`relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group ${isEditable ? 'cursor-pointer' : 'cursor-default'}`}
+    onClick={isEditable ? onClick : null}
   >
     {bgImage ? (
       <>
         <img alt="Profile Background" className="w-full h-full object-cover" src={bgImage} />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-          <div className="flex items-center gap-2 text-white font-medium bg-black/60 px-4 py-2 rounded-full">
-            <Camera size={16} />
-            Change cover
+        {isEditable && (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-white font-medium bg-black/60 px-4 py-2 rounded-full">
+              <Camera size={16} />
+              Change cover
+            </div>
           </div>
-        </div>
+        )}
       </>
     ) : (
-      <div className="w-full h-full flex items-center justify-center bg-navy-800 group-hover:bg-navy-700 transition-colors duration-200">
-        <div className="flex items-center gap-2 text-gray-400 group-hover:text-white transition-colors duration-200">
-          <Plus size={20} />
-          Add cover photo
+      isEditable && (
+        <div className="w-full h-full flex items-center justify-center bg-navy-800 group-hover:bg-navy-700 transition-colors duration-200">
+          <div className="flex items-center gap-2 text-gray-400 group-hover:text-white transition-colors duration-200">
+            <Plus size={20} />
+            Add cover photo
+          </div>
         </div>
-      </div>
+      )
     )}
   </div>
 );
 
-const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange, user }) => (
+const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange, user, isEditable = true }) => (
   <>
-    <div className="relative -mt-16 ml-4 group cursor-pointer" onClick={onClick}>
+    <div
+      className={`relative -mt-16 ml-4 group ${isEditable ? 'cursor-pointer' : 'cursor-default'}`}
+      onClick={isEditable ? onClick : null}
+    >
       <Avatar className="h-32 w-32 border-4 border-slate-950 bg-navy-800">
         {avatar ? (
           <>
             <AvatarImage alt="Profile" src={avatar} className="object-cover" />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-full">
-              <div className="flex items-center gap-1 text-white text-sm font-medium">
-                <Edit size={18} />
+            {isEditable && (
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-full">
+                <div className="flex items-center gap-1 text-white text-sm font-medium">
+                  <Edit size={18} />
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
-          <AvatarFallback className="bg-orange-gradient hover:opacity-90 transition-opacity duration-200 flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg relative group">
+          <AvatarFallback
+            className={`bg-orange-gradient ${isEditable ? 'hover:opacity-90' : 'hover:opacity-100'} transition-opacity duration-200 flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg relative group`}
+          >
             {getAvatarLetter(user)}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-full">
-              <div className="flex items-center gap-1 text-white text-sm font-medium">
-                <Edit size={18} />
+            {isEditable && (
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-full">
+                <div className="flex items-center gap-1 text-white text-sm font-medium">
+                  <Edit size={18} />
+                </div>
               </div>
-            </div>
+            )}
           </AvatarFallback>
         )}
       </Avatar>
@@ -64,9 +76,20 @@ const ProfileAvatar = ({ avatar, onClick, inputRef, onAvatarChange, user }) => (
   </>
 );
 
-const ProfileName = ({ isEditing, name, onEdit, onSave, onCancel, onChange, onKeyDown, inputRef, isUpdating }) => (
+const ProfileName = ({
+  isEditing,
+  name,
+  onEdit,
+  onSave,
+  onCancel,
+  onChange,
+  onKeyDown,
+  inputRef,
+  isUpdating,
+  isEditable = true,
+}) => (
   <div className="flex items-center gap-3 mt-3">
-    {isEditing ? (
+    {isEditing && isEditable ? (
       <div className="flex items-center gap-2 w-full">
         <Input
           ref={inputRef}
@@ -98,14 +121,16 @@ const ProfileName = ({ isEditing, name, onEdit, onSave, onCancel, onChange, onKe
     ) : (
       <>
         <h1 className="text-xl font-bold text-white">{name || 'Anonymous User'}</h1>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
-          onClick={onEdit}
-        >
-          <Edit size={16} />
-        </Button>
+        {isEditable && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
+            onClick={onEdit}
+          >
+            <Edit size={16} />
+          </Button>
+        )}
       </>
     )}
   </div>
@@ -125,8 +150,7 @@ const AddressDisplay = ({ address, onCopy }) => (
   </div>
 );
 
-const ProfileHero = () => {
-  const { user } = useAuth();
+const ProfileHero = ({ user, isEditable = true }) => {
   const [avatar, setAvatar] = useState(user?.profileImage || null);
   const [bgImage, setBgImage] = useState(user?.bannerImage || null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -207,7 +231,7 @@ const ProfileHero = () => {
   return (
     <div>
       <div className="rounded-xl overflow-hidden">
-        <BackgroundSection bgImage={bgImage} onClick={() => bgInputRef.current?.click()} />
+        <BackgroundSection bgImage={bgImage} onClick={() => bgInputRef.current?.click()} isEditable={isEditable} />
         <input ref={bgInputRef} accept="image/*" className="hidden" type="file" onChange={handleFileChange('banner')} />
 
         <div className="px-4 pb-6">
@@ -218,6 +242,7 @@ const ProfileHero = () => {
               onAvatarChange={handleFileChange('avatar')}
               onClick={() => avatarInputRef.current?.click()}
               user={user}
+              isEditable={isEditable}
             />
           </div>
 
@@ -232,6 +257,7 @@ const ProfileHero = () => {
               onKeyDown={handleKeyDown}
               onSave={handleNameSave}
               isUpdating={isUpdating}
+              isEditable={isEditable}
             />
 
             {user?.address && <AddressDisplay address={user.address} onCopy={handleCopyAddress} />}

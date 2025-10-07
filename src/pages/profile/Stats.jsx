@@ -2,9 +2,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useCurrency } from '@/hooks/useCurrency';
 import { formatNum } from '@/utils/core.utils.js';
 
-export const Stats = () => {
-  const { user } = useAuth();
-
+export const Stats = ({ user }) => {
   const { currency } = useCurrency();
 
   return (
