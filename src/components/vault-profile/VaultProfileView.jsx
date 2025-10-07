@@ -94,6 +94,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     toast.success('Address copied to clipboard');
   };
 
+  const handleCopyWalletAddress = e => {
+    e.preventDefault();
+    navigator.clipboard.writeText(vault.contractAddress);
+    toast.success('Address copied to clipboard');
+  };
+
   const handleOwnerClick = ownerId => {
     if (ownerId) {
       router.navigate({ to: `/profile/${ownerId}` });
@@ -121,6 +127,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             >
               {substringAddress(vault.contractAddress)}
             </a>
+            <button
+              onClick={handleCopyWalletAddress}
+              className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+            >
+              <Copy size={16} className="hover:text-orange-500" />
+            </button>
           </div>
 
           {vault.policyId && (
