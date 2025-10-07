@@ -132,6 +132,14 @@ export const useProfile = () => {
   });
 };
 
+export const usePublicProfile = userId => {
+  return useQuery({
+    queryKey: ['profile', userId],
+    queryFn: () => CoreApiProvider.getPublicProfile(userId),
+    enabled: !!userId,
+  });
+};
+
 // Core Mutations
 export const useLogin = () => {
   return useMutation({

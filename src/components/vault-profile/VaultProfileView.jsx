@@ -1,6 +1,6 @@
-import { EyeIcon, Copy } from 'lucide-react';
+import { Copy, EyeIcon, User } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
 import { useCurrency } from '@/hooks/useCurrency';
@@ -19,7 +19,7 @@ import { Spinner } from '@/components/Spinner';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
-import { getCountdownName, getCountdownTime, formatCompactNumber, substringAddress } from '@/utils/core.utils';
+import { formatCompactNumber, getCountdownName, getCountdownTime, substringAddress } from '@/utils/core.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
@@ -28,6 +28,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const { openModal } = useModalControls();
+
+  const router = useRouter();
 
   const navigate = useNavigate();
 
@@ -92,6 +94,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     toast.success('Address copied to clipboard');
   };
 
+  const handleOwnerClick = ownerId => {
+    if (ownerId) {
+      router.navigate({ to: `/profile/${ownerId}` });
+    }
+  };
+
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start mb-6">
       <div>
@@ -140,6 +148,14 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         )}
       </div>
       <div className="flex gap-2">
+        {isAuthenticated && (
+          <button
+            onClick={() => handleOwnerClick(vault.owner.id)}
+            className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
+          >
+            <User className="w-4 h-4 text-orange-500" />
+          </button>
+        )}
         {/* Statistic */}
         {/* <button
           onClick={() => openModal('ChartModal', { vault })}

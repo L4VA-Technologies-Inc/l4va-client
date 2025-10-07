@@ -21,6 +21,10 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async getPublicProfile(userId) {
+    return await axiosInstance.get(CoreConfigProvider.getPublicProfile(userId));
+  }
+
   static async updateProfile(profileData) {
     const response = await axiosInstance.patch(CoreConfigProvider.updateProfile(), profileData);
     return response;

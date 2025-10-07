@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 
-import { Profile } from '@/pages/profile';
-import { useAuth } from '@/lib/auth/auth';
+import { Profile } from '@/pages/profile/index.jsx';
+import { useAuth } from '@/lib/auth/auth.js';
 
 const ProfileComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,6 +17,6 @@ const ProfileComponent = () => {
   return <Profile />;
 };
 
-export const Route = createFileRoute('/profile')({
+export const Route = createFileRoute('/profile/')({
   component: ProfileComponent,
 });
