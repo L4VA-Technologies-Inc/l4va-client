@@ -128,6 +128,7 @@ export const useProfile = () => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: () => CoreApiProvider.getProfile(),
+    enabled: !!localStorage.getItem('jwt'),
   });
 };
 

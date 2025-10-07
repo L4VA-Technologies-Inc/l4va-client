@@ -13,7 +13,7 @@ const VAULT_TABS = [
   { id: 'failed', label: 'Failed', filter: 'failed' },
 ];
 
-const DEFAULT_TAB = 'contribution';
+const DEFAULT_TAB = 'all';
 
 const VaultsFilters = ({ className = '' }) => {
   const tabParam = DEFAULT_TAB;

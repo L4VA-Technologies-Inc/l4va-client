@@ -35,7 +35,7 @@ export function AppCore() {
   }
 
   return (
-    <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address}>
+    <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address || 'guest'}>
       <WeldProvider>
         <AppWithInterceptor />
       </WeldProvider>
