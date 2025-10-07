@@ -16,9 +16,10 @@ const marketOptions = [
 export default function Staking({ vaultId, onDataChange }) {
   const [fts, setFts] = useState([]);
   const [nfts, setNfts] = useState([]);
-  const [ftsAll, setFtsAll] = useState(true);
-  const [nftsAll, setNftsAll] = useState(true);
+  const [ftsAll, setFtsAll] = useState(false);
+  const [nftsAll, setNftsAll] = useState(false);
   const [proposalStart, setProposalStart] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'stake');
 
@@ -64,7 +65,7 @@ export default function Staking({ vaultId, onDataChange }) {
   }
 
   useEffect(() => {
-    if (data?.data?.length > 0 && !isLoading) {
+    if (data?.data?.length > 0 && !isLoading && !isInitialized) {
       // Filter and map FTs (CNTs)
       const ftAssets = data.data
         .filter(asset => asset.type === 'cnt')
@@ -72,7 +73,7 @@ export default function Staking({ vaultId, onDataChange }) {
           id: asset.id,
           symbol: asset.asset_id === 'lovelace' ? 'ADA' : asset.asset_id,
           available: parseFloat(asset.quantity),
-          selected: true,
+          selected: false,
           amount: '',
         }));
 
@@ -83,14 +84,15 @@ export default function Staking({ vaultId, onDataChange }) {
           id: asset.id,
           project: asset.metadata?.onchainMetadata?.name || 'Unknown Project',
           tokenLabel: asset.metadata?.onchainMetadata?.name || 'Unknown Token',
-          selected: true,
+          selected: false,
           market: 'm1',
         }));
 
       setFts(ftAssets);
       setNfts(nftAssets);
+      setIsInitialized(true);
     }
-  }, [isLoading, data]);
+  }, [isLoading, data, isInitialized]);
 
   useEffect(() => {
     if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0 || proposalStart)) {

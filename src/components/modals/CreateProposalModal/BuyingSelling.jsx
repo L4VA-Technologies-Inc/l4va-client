@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
@@ -214,17 +214,45 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                           />
                         </label>
                       </div>
-                      <LavaSteelInput
-                        type="number"
-                        placeholder="0.00"
-                        value={option.quantity}
-                        onChange={value => {
-                          if (value <= getAvailableAmount(option.id)) {
-                            handleOptionChange(option.id, 'quantity', value);
-                          }
-                        }}
-                        className={isOverLimit ? '!border-red-500/60' : ''}
-                      />
+                      <div className="relative">
+                        <LavaSteelInput
+                          type="number"
+                          min="0"
+                          placeholder="0.00"
+                          value={option.quantity}
+                          onChange={value => {
+                            const numValue = parseFloat(value);
+                            if (value === '' || (numValue >= 0 && numValue <= getAvailableAmount(option.id))) {
+                              handleOptionChange(option.id, 'quantity', value);
+                            }
+                          }}
+                          className={`${isOverLimit ? '!border-red-500/60' : ''} [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]`}
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = (parseFloat(option.quantity) || 0) + 1;
+                              if (newValue <= getAvailableAmount(option.id)) {
+                                handleOptionChange(option.id, 'quantity', newValue.toString());
+                              }
+                            }}
+                            className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+                          >
+                            <ChevronUp className="w-3 h-3 text-gray-400" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = Math.max(0, (parseFloat(option.quantity) || 0) - 1);
+                              handleOptionChange(option.id, 'quantity', newValue.toString());
+                            }}
+                            className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+                          >
+                            <ChevronDown className="w-3 h-3 text-gray-400" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Sell Type</p>
@@ -266,13 +294,38 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-400 mb-2">Price</p>
-                      <LavaSteelInput
-                        type="number"
-                        min="0"
-                        placeholder="0.00"
-                        value={option.price}
-                        onChange={value => handleAmountChange(option.id, 'price', value)}
-                      />
+                      <div className="relative">
+                        <LavaSteelInput
+                          type="number"
+                          min="0"
+                          placeholder="0.00"
+                          value={option.price}
+                          onChange={value => handleAmountChange(option.id, 'price', value)}
+                          className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = (parseFloat(option.price) || 0) + 0.1;
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                            className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+                          >
+                            <ChevronUp className="w-3 h-3 text-gray-400" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = Math.max(0, (parseFloat(option.price) || 0) - 0.1);
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                            className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+                          >
+                            <ChevronDown className="w-3 h-3 text-gray-400" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
