@@ -14,7 +14,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     page: 1,
     limit: 12,
     tags: initialFilters.tags || [],
-    reserveMet: initialFilters.reserveMet || false,
+    reserveMet: initialFilters.reserveMet ?? null,
     minInitialVaultOffered: initialFilters.minInitialVaultOffered || 0,
     maxInitialVaultOffered: initialFilters.maxInitialVaultOffered || 0,
     minTvl: initialFilters.minTvl || 0,
@@ -80,8 +80,17 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         },
       }));
     } else {
-      setFilters(prev => (prev[key] === value ? { ...prev, [key]: null } : { ...prev, [key]: value }));
-      console.log(filters.reserveMet);
+      let processedValue = value;
+      if (key === 'reserveMet') {
+        processedValue = value === 'Yes' ? true : value === 'No' ? false : value;
+      } else if (key === 'vaultStage') {
+        processedValue = value ? value.toLowerCase() : value;
+      }
+
+      setFilters(prev => {
+        const newValue = prev[key] === processedValue ? null : processedValue;
+        return { ...prev, [key]: newValue };
+      });
     }
   };
 
@@ -95,7 +104,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
       page: clearedFilters.page,
       limit: clearedFilters.limit,
       tags: [],
-      reserveMet: false,
+      reserveMet: null,
       minInitialVaultOffered: 0,
       maxInitialVaultOffered: 0,
       minTvl: 0,
@@ -121,7 +130,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   const getActiveFilters = filters => {
     const filterRules = {
       tags: value => Array.isArray(value) && value.length > 0,
-      reserveMet: value => value !== false,
+      reserveMet: value => typeof value === 'boolean',
       vaultStage: value => value !== '',
       minInitialVaultOffered: value => Number(value) > 0,
       maxInitialVaultOffered: value => Number(value) > 0,
@@ -133,7 +142,11 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     const activeFilters = {};
 
     Object.entries(filterRules).forEach(([key, isValid]) => {
-      if (filters[key] && isValid(filters[key])) {
+      if (key === 'reserveMet') {
+        if (typeof filters[key] === 'boolean') {
+          activeFilters[key] = filters[key];
+        }
+      } else if (filters[key] && isValid(filters[key])) {
         activeFilters[key] = filters[key];
       }
     });
@@ -167,16 +180,29 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
 
   const renderOptions = (options, activeValue, onClick, isMultiple = false) => (
     <div className="flex flex-wrap gap-2">
-      {options.map(option => (
-        <Chip
-          key={option}
-          label={option}
-          value={option}
-          selected={isMultiple ? filters[activeValue].includes(option) : filters[activeValue] === option}
-          onSelect={() => (isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option))}
-          size="lg"
-        />
-      ))}
+      {options.map(option => {
+        let isSelected;
+        if (isMultiple) {
+          isSelected = filters[activeValue].includes(option);
+        } else if (activeValue === 'reserveMet') {
+          isSelected = (option === 'Yes' && filters[activeValue] === true) || (option === 'No' && filters[activeValue] === false);
+        } else if (activeValue === 'vaultStage') {
+          isSelected = filters[activeValue] === option.toLowerCase();
+        } else {
+          isSelected = filters[activeValue] === option;
+        }
+        
+        return (
+          <Chip
+            key={option}
+            label={option}
+            value={option}
+            selected={isSelected}
+            onSelect={() => (isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option))}
+            size="lg"
+          />
+        );
+      })}
     </div>
   );
 
