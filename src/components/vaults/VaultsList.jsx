@@ -63,14 +63,14 @@ export const VaultList = ({
       initialFilters: appliedFilters,
     });
 
-  useEffect(() => {
+  const scrollUp = () => {
     if (pagination?.currentPage && vaultsListRef.current) {
       vaultsListRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });
     }
-  }, [pagination?.currentPage]);
+  };
 
   const renderVaultsView = () => {
     if (viewType === 'grid') {
@@ -124,7 +124,10 @@ export const VaultList = ({
                 <Pagination
                   currentPage={pagination.currentPage || 1}
                   totalPages={pagination.totalPages}
-                  onPageChange={onPageChange}
+                  onPageChange={page => {
+                    onPageChange(page);
+                    scrollUp();
+                  }}
                   className="justify-center"
                 />
               </div>
