@@ -102,7 +102,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleOwnerClick = ownerId => {
     if (ownerId) {
-      router.navigate({ to: `/profile/${ownerId}` });
+      router.navigate({
+        to: '/profile/$id',
+        params: { id: ownerId },
+      });
     }
   };
 
