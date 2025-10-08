@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SandboxRouteImport } from './routes/sandbox'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
@@ -18,9 +20,19 @@ import { Route as VaultsMyRouteImport } from './routes/vaults/my'
 import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SandboxRoute = SandboxRouteImport.update({
   id: '/sandbox',
   path: '/sandbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -62,7 +74,9 @@ const ProfileIdRoute = ProfileIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/sandbox': typeof SandboxRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -72,7 +86,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/sandbox': typeof SandboxRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -83,7 +99,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/sandbox': typeof SandboxRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -95,7 +113,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/create'
+    | '/privacy-policy'
     | '/sandbox'
+    | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -105,7 +125,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/create'
+    | '/privacy-policy'
     | '/sandbox'
+    | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -115,7 +137,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/create'
+    | '/privacy-policy'
     | '/sandbox'
+    | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -126,7 +150,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SandboxRoute: typeof SandboxRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   ProfileIdRoute: typeof ProfileIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
   VaultsMyRoute: typeof VaultsMyRoute
@@ -136,11 +162,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sandbox': {
       id: '/sandbox'
       path: '/sandbox'
       fullPath: '/sandbox'
       preLoaderRoute: typeof SandboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -198,7 +238,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   SandboxRoute: SandboxRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   ProfileIdRoute: ProfileIdRoute,
   VaultsIdRoute: VaultsIdRoute,
   VaultsMyRoute: VaultsMyRoute,

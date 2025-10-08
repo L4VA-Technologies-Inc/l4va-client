@@ -11,11 +11,28 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
+const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
 
 const messageHex = msg =>
   Array.from(msg)
     .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
     .join('');
+
+const TermsAgreementText = () => {
+  return (
+    <>
+      I have read and accepted the{' '}
+      <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+        Privacy Policy
+      </a>{' '}
+      and{' '}
+      <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+        Terms of Use
+      </a>
+      .
+    </>
+  );
+};
 
 export const LoginModal = () => {
   const { activeModalData } = useModal();
@@ -34,6 +51,11 @@ export const LoginModal = () => {
     return savedAcceptance === 'true';
   });
 
+  const [isCheckedService, setIsCheckedService] = useState(() => {
+    const savedAcceptanceService = localStorage.getItem(TERMS_ACCEPTANCE_SERVICE_KEY);
+    return savedAcceptanceService === 'true';
+  });
+
   useEffect(() => {
     if (wallet.isConnected) {
       setView('sign');
@@ -46,6 +68,12 @@ export const LoginModal = () => {
     const newValue = !isChecked;
     setIsChecked(newValue);
     localStorage.setItem(TERMS_ACCEPTANCE_KEY, newValue.toString());
+  };
+
+  const handleTermsAcceptanceService = () => {
+    const newValue = !isCheckedService;
+    setIsCheckedService(newValue);
+    localStorage.setItem(TERMS_ACCEPTANCE_SERVICE_KEY, newValue.toString());
   };
 
   const handleConnect = walletKey => {
@@ -99,7 +127,7 @@ export const LoginModal = () => {
               flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
               transition-colors disabled:opacity-50 hover:bg-steel-750
             "
-              disabled={wallet.isConnectingTo === wallet.key || !isChecked}
+              disabled={wallet.isConnectingTo === wallet.key || !isChecked || !isCheckedService}
               type="button"
               onClick={() => handleConnect(wallet.key)}
             >
@@ -128,6 +156,12 @@ export const LoginModal = () => {
             description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
             name="terms"
             onChange={handleTermsAcceptance}
+          />
+          <LavaCheckbox
+            checked={isCheckedService}
+            description={<TermsAgreementText />}
+            name="service-terms"
+            onChange={handleTermsAcceptanceService}
           />
         </div>
       </>
