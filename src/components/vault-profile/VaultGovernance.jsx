@@ -12,7 +12,7 @@ import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 
-const PROPOSAL_TABS = ['All', 'Active', 'Closed', 'Upcoming'];
+const PROPOSAL_TABS = ['All', 'Active', 'Passed', 'Upcoming'];
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
@@ -34,9 +34,9 @@ export const VaultGovernance = ({ vault }) => {
 
   const filteredProposals = proposals.filter(proposal => {
     if (activeTab === 'All') return true;
-    if (activeTab === 'Active') return proposal.status === 'Open';
-    if (activeTab === 'Closed') return proposal.status === 'Closed';
-    if (activeTab === 'Upcoming') return proposal.status === 'Upcoming';
+    if (activeTab === 'Active') return proposal.status === 'active';
+    if (activeTab === 'Passed') return proposal.status === 'passed';
+    if (activeTab === 'Upcoming') return proposal.status === 'upcoming';
     return false;
   });
 
@@ -139,9 +139,9 @@ export const VaultGovernance = ({ vault }) => {
                         )}
                         <span
                           className={`px-3 py-1 rounded-full text-xs ${
-                            proposal.status === 'Closed'
+                            proposal.status === 'passed'
                               ? 'bg-red-900 text-red-600'
-                              : proposal.status === 'Open'
+                              : proposal.status === 'active'
                                 ? 'bg-green-900 text-green-500'
                                 : 'bg-yellow-800 text-yellow-400'
                           }`}
