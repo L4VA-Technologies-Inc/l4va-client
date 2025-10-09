@@ -12,7 +12,7 @@ import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 
-const PROPOSAL_TABS = ['All', 'Active', 'Passed', 'Upcoming'];
+const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
@@ -34,9 +34,10 @@ export const VaultGovernance = ({ vault }) => {
 
   const filteredProposals = proposals.filter(proposal => {
     if (activeTab === 'All') return true;
-    if (activeTab === 'Active') return proposal.status === 'active';
-    if (activeTab === 'Passed') return proposal.status === 'passed';
     if (activeTab === 'Upcoming') return proposal.status === 'upcoming';
+    if (activeTab === 'Active') return proposal.status === 'active';
+    if (activeTab === 'Rejected') return proposal.status === 'rejected';
+    if (activeTab === 'Finished') return proposal.status === 'executed';
     return false;
   });
 
@@ -138,15 +139,17 @@ export const VaultGovernance = ({ vault }) => {
                           </span>
                         )}
                         <span
-                          className={`px-3 py-1 rounded-full text-xs ${
-                            proposal.status === 'passed'
-                              ? 'bg-red-900 text-red-600'
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            proposal.status === 'executed'
+                              ? 'bg-yellow-700 text-yellow-400'
                               : proposal.status === 'active'
                                 ? 'bg-green-900 text-green-500'
-                                : 'bg-yellow-800 text-yellow-400'
+                                : proposal.status === 'rejected'
+                                  ? 'bg-red-900 text-red-600'
+                                  : 'bg-steel-600 text-steel-400'
                           }`}
                         >
-                          {proposal.status?.toLocaleUpperCase()}
+                          {proposal.status === 'executed' ? 'FINISHED' : proposal.status?.toLocaleUpperCase()}
                         </span>
                       </div>
                     </div>
