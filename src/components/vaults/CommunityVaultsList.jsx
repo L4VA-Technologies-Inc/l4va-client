@@ -14,7 +14,7 @@ const VAULT_TABS = [
   { id: 'terminated', label: 'Terminated', filter: 'terminated' },
 ];
 
-const DEFAULT_TAB = 'contribution';
+const DEFAULT_TAB = 'all';
 
 export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });

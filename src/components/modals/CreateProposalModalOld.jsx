@@ -70,13 +70,6 @@ export const CreateProposalModal = ({ onClose, name }) => {
   const handlePropose = () => setShowConfirmation(true);
 
   const handleConfirmProposal = () => {
-    console.log('Creating proposal:', {
-      proposalTitle,
-      proposalDescription,
-      options,
-      abstain,
-      proposalEndDate,
-    });
     setShowConfirmation(false);
     onClose();
   };

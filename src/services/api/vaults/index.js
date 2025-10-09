@@ -67,4 +67,14 @@ export class VaultsApiProvider {
     const response = await axiosInstance.post(VaultsConfigProvider.viewVault(vaultId));
     return response;
   }
+
+  static async buildBurnTransaction(vaultId) {
+    const response = await axiosInstance.post(VaultsConfigProvider.buildBurnTransaction(vaultId));
+    return response;
+  }
+
+  static async publishBurnTransaction(vaultId, payload) {
+    const response = await axiosInstance.post(VaultsConfigProvider.publishBurnTransaction(vaultId), payload);
+    return response;
+  }
 }
