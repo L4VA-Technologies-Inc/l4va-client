@@ -9,6 +9,7 @@ const VAULT_TABS = [
   { id: 'acquire', label: 'Acquire', filter: 'acquire' },
   { id: 'upcoming', label: 'Upcoming', filter: 'published' },
   { id: 'past', label: 'Locked', filter: 'locked' },
+  { id: 'govern', label: 'Govern', filter: 'govern' },
   { id: 'terminated', label: 'Terminated', filter: 'terminated' },
   { id: 'failed', label: 'Failed', filter: 'failed' },
 ];

@@ -8,6 +8,7 @@ const VAULT_TABS = {
   DRAFT: 'Draft',
   OPEN: 'Open',
   LOCKED: 'Locked',
+  GOVERN: 'Govern',
   FAILED: 'Failed',
   TERMINATED: 'Terminated',
 };
