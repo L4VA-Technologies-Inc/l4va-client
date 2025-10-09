@@ -28,6 +28,8 @@
   --color-steel-850: #202233;
   --color-steel-800: #282B3F;
   --color-steel-750: #2D3049;
+  --color-steel-600: #314158;
+  --color-steel-400: #90A1B9;
   --color-gray-500: #6B7280;
   --color-gray-400: #979BB0;
   --color-green-800: #166534;
@@ -38,7 +40,9 @@
   --color-red-500: #EF4444;
   --color-red-400: #F87171;
   --color-yellow-800: #854D0E;
+  --color-yellow-700: #8F7200;
   --color-yellow-500: #EAB308;
+  --color-yellow-400: #FFD012;
   --color-yellow-300: #FDE047;
   --color-blue-500: #EAB308;
   --color-white: #FFFFFF;
@@ -70,6 +74,8 @@
   --color-steel-850: var(--color-steel-850);
   --color-steel-800: var(--color-steel-800);
   --color-steel-750: var(--color-steel-750);
+  --color-steel-600: var(--color-steel-600);
+  --color-steel-400: var(--color-steel-400);
   --color-gray-500: var(--color-gray-500);
   --color-gray-400: var(--color-gray-400);
   --color-green-800: var(--color-green-800);
@@ -80,7 +86,9 @@
   --color-red-500: var(--color-red-500);
   --color-red-400: var(--color-red-400);
   --color-yellow-800: var(--color-yellow-800);
+  --color-yellow-700: var(--color-yellow-700);
   --color-yellow-500: var(--color-yellow-500);
+  --color-yellow-400: var(--color-yellow-400);
   --color-yellow-300: var(--color-yellow-300);
   --color-blue-500: var(--color-blue-500);
   --color-white: var(--color-white);
