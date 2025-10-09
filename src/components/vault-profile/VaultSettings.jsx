@@ -1,13 +1,17 @@
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
+
 import { InfoRow } from '@/components/ui/InfoRow';
 import { Button } from '@/components/ui/Button';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
+import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
 
 export const VaultSettings = ({ vault }) => {
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { currency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
@@ -17,8 +21,6 @@ export const VaultSettings = ({ vault }) => {
       const { data } = await VaultsApiProvider.buildBurnTransaction(vaultId);
 
       const signature = await wallet?.handler?.signTx(data.presignedTx, true);
-      console.log(signature);
-      
 
       if (!signature) {
         throw new Error('Transaction signing was cancelled');
@@ -26,9 +28,10 @@ export const VaultSettings = ({ vault }) => {
       if (data) {
         const payload = {
           vaultId,
-          transaction: signature,
+          transaction: data.presignedTx,
           txId: data.txId,
-        }
+          signatures: [signature],
+        };
         await VaultsApiProvider.publishBurnTransaction(vaultId, payload);
       }
 
@@ -36,7 +39,7 @@ export const VaultSettings = ({ vault }) => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to burn vault. Please try again.');
     } finally {
-      // window.location.reload();
+      window.location.href = '/vaults';
     }
   };
 
@@ -95,12 +98,18 @@ export const VaultSettings = ({ vault }) => {
           <Button
             disabled={vault.vaultStatus !== 'failed' && user.id === vault.owner.id}
             className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
-            onClick={() => handleBurneVault(vault.id)}
+            onClick={() => setShowConfirmation(true)}
           >
             Burn ur vault
           </Button>
         </div>
       </div>
+
+      <ConfirmBurnModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={() => handleBurneVault(vault.id)}
+      />
     </>
   );
 };
