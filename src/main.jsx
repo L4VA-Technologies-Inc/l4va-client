@@ -15,7 +15,7 @@ const queryClient = new QueryClient({
     },
   },
 });
-
+// redepeloy
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
