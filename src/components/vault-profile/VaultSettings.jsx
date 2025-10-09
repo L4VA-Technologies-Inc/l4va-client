@@ -100,7 +100,7 @@ export const VaultSettings = ({ vault }) => {
             className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
             onClick={() => setShowConfirmation(true)}
           >
-            Burn ur vault
+            Burn Vault
           </Button>
         </div>
       </div>
