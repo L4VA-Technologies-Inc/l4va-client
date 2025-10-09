@@ -15,6 +15,9 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
+import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
+import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 
 const executionOptions = [
   { value: 'staking', label: 'Staking' },
@@ -34,6 +37,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [selectedOption, setSelectedOption] = useState('buy_sell');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
+  const [proposalStartDate, setProposalStartDate] = useState(null);
+  const [proposalDuration, setProposalDuration] = useState(null);
 
   const createProposalMutation = useCreateProposal();
 
@@ -43,26 +48,31 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     setShowConfirmation(true);
   };
 
+  const isValidProposal = () => {
+    return (
+      !proposalTitle.trim() ||
+      !proposalDescription.trim() ||
+      !proposalData.isValid ||
+      !proposalStartDate ||
+      !proposalDuration
+    );
+  };
+
   const handleConfirmCreate = async () => {
     try {
       const proposalPayload = {
         title: proposalTitle,
         description: proposalDescription,
         type: selectedOption,
+        startDate: proposalStartDate.toISOString(),
+        duration: proposalDuration,
       };
 
       if (selectedOption === 'staking') {
         proposalPayload.fts = proposalData.fungibleTokens || [];
         proposalPayload.nfts = proposalData.nonFungibleTokens || [];
-        if (proposalData.proposalStart) {
-          proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
-        }
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionAssets = proposalData.distributionAssets || [];
-
-        if (proposalData.proposalStart) {
-          proposalPayload.startDate = new Date(proposalData.proposalStart).toISOString();
-        }
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -84,15 +94,15 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         .then(async res => {
           if (res?.data) {
             await refetch();
+            toast.success('Proposal created successfully!');
+            onClose();
           }
         })
         .catch(err => {
           console.error('Failed to create proposal:', err);
+          toast.error(`Failed to create proposal: ${err.response.data.message}`);
         });
-
-      toast.success('Proposal created successfully!');
       setShowConfirmation(false);
-      onClose();
     } catch (error) {
       console.error('Failed to create proposal:', error);
       toast.error('Failed to create proposal. Please try again.');
@@ -115,12 +125,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         <SecondaryButton onClick={onClose} size="sm">
           Cancel
         </SecondaryButton>
-        <PrimaryButton
-          disabled={!proposalTitle.trim() || !proposalData.isValid}
-          onClick={handleCreateProposal}
-          size="sm"
-          className="capitalize"
-        >
+        <PrimaryButton disabled={isValidProposal()} onClick={handleCreateProposal} size="sm" className="capitalize">
           Create
         </PrimaryButton>
       </div>
@@ -178,6 +183,28 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               />
             )}
             {selectedOption === 'buy_sell' && <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />}
+
+            <div className="mt-8">
+              <h4 className="text-white font-medium mb-4">Voting Period</h4>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex-1 relative">
+                  <LavaDatePicker
+                    label={'Start:'}
+                    value={proposalStartDate}
+                    onChange={value => setProposalStartDate(new Date(value))}
+                  />
+                </div>
+                <div className="flex-1 relative">
+                  <LavaIntervalPicker
+                    label={'Duration:'}
+                    value={proposalDuration}
+                    onChange={value => setProposalDuration(value)}
+                    placeholder="Set Voting Period"
+                    minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </ModalWrapper>
