@@ -1,5 +1,5 @@
 import { Copy, EyeIcon, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
@@ -23,6 +23,7 @@ import { formatCompactNumber, getCountdownName, getCountdownTime, substringAddre
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { useViewVault } from '@/services/api/queries.js';
 
 export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { isAuthenticated } = useAuth();
@@ -36,6 +37,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { currency } = useCurrency();
 
   useVaultStatusTracker(vault?.id);
+  const viewVaultMutation = useViewVault();
+  const viewedVaultsRef = useRef(new Set());
+
+  useEffect(() => {
+    if (vault?.id && !viewedVaultsRef.current.has(vault.id)) {
+      viewVaultMutation.mutate(vault.id);
+      viewedVaultsRef.current.add(vault.id);
+    }
+  }, [vault?.id]);
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
