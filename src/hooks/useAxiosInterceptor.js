@@ -13,6 +13,7 @@ export const useAuthInterceptor = function () {
       },
       function (error) {
         if (error.response?.status === 401) {
+          localStorage.removeItem('jwt');
           disconnect();
           window.location.href = '/';
         }
