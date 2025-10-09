@@ -35,7 +35,7 @@ export const VaultSettings = ({ vault }) => {
         await VaultsApiProvider.publishBurnTransaction(vaultId, payload);
       }
 
-      toast.success('Vault burn successful! Your item has been claimed.');
+      toast.success('Vault burn successful!');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to burn vault. Please try again.');
     } finally {
