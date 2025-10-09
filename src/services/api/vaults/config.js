@@ -50,4 +50,12 @@ export class VaultsConfigProvider {
   static viewVault(id) {
     return `/api/v1/vaults/${id}/view`;
   }
+
+  static buildBurnTransaction(id) {
+    return `/api/v1/vaults/${id}/burn/build`;
+  }
+
+  static publishBurnTransaction(id) {
+    return `/api/v1/vaults/${id}/burn/publish`;
+  }
 }

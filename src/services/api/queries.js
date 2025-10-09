@@ -239,3 +239,15 @@ export const useViewVault = () => {
     mutationFn: vaultId => VaultsApiProvider.viewVault(vaultId),
   });
 };
+
+export const useBuildBurnTransaction = ({ id }) => {
+  return useMutation({
+    mutationFn: () => VaultsApiProvider.buildBurnTransaction(id),
+  });
+};
+
+export const usePublishBurnTransaction = ({ id, payload }) => {
+  return useMutation({
+    mutationFn: () => VaultsApiProvider.publishBurnTransaction(id, payload),
+  });
+};
