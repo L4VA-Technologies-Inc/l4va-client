@@ -2,7 +2,7 @@ import { X, Plus, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CoreApiProvider } from '@/services/api/core';
 

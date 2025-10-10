@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 
 import { InfoRow } from '@/components/infoRow';
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';

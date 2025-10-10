@@ -5,7 +5,7 @@ import { HoverHelp } from './HoverHelp';
 
 import { cn } from '@/lib/utils';
 import { msToInterval, intervalToMs, formatInterval } from '@/utils/core.utils';
-import { Button } from '@/components/button';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
