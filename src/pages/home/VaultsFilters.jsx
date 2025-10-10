@@ -5,9 +5,9 @@ import { VaultList } from '@/components/vaults/VaultsList.jsx';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
+  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
   { id: 'acquire', label: 'Acquire', filter: 'acquire' },
-  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
   { id: 'past', label: 'Locked', filter: 'locked' },
   { id: 'govern', label: 'Govern', filter: 'govern' },
   { id: 'terminated', label: 'Terminated', filter: 'terminated' },
