@@ -94,15 +94,17 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Proposal Execution Threshold %" symbol="%" value={vault.executionThreshold} />
           </div>
         </div>
-        <div className="flex justify-center">
-          <Button
-            disabled={vault.vaultStatus !== 'failed' && user.id === vault.owner.id}
-            className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
-            onClick={() => setShowConfirmation(true)}
-          >
-            Burn Vault
-          </Button>
-        </div>
+        {user?.id === vault.owner.id && (
+          <div className="flex justify-center">
+            <Button
+              disabled={vault.vaultStatus !== 'failed'}
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
+              onClick={() => setShowConfirmation(true)}
+            >
+              Burn Vault
+            </Button>
+          </div>
+        )}
       </div>
 
       <ConfirmBurnModal
