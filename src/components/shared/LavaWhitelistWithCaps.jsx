@@ -2,7 +2,7 @@ import { X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/button';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { fetchWalletAssetsForWhitelist, extractPolicyIds } from '@/utils/walletAssets';
 

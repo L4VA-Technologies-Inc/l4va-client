@@ -5,7 +5,7 @@ import { Camera, Check, Copy, Edit, Plus, X } from 'lucide-react';
 import { CoreApiProvider } from '@/services/api/core';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/button';
 import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
 
 const BackgroundSection = ({ bgImage, onClick, isEditable = true }) => (

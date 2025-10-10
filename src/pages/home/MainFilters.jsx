@@ -1,6 +1,6 @@
 import { SlidersHorizontal } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/button';
 
 export const MainFilters = () => (
   <Button

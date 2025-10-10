@@ -1,7 +1,7 @@
 import { X, Plus } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
