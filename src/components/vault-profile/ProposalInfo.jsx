@@ -71,60 +71,76 @@ export const ProposalInfo = ({ proposal }) => {
             <div className="break-words">{proposalInfo?.description}</div>
           </div>
           <div className="space-y-4">
-            <div
-              className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-              onClick={() => (canVote ? setSelectedVote('yes') : null)}
-              style={{
-                background: canVote
-                  ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049'
-                  : '#2D3049',
-                color: canVote ? 'white' : '#4b7488',
-                border: selectedVote === 'yes' ? '1px solid green' : '1px solid #2D3049',
-              }}
-            >
-              <CheckCircle className="text-green-500 w-4 h-4 mr-1" />
-              <span className="text-white-500 text-2md flex items-center">Yes, pass this Proposal</span>
-            </div>
-            <div
-              onClick={() => (canVote ? setSelectedVote('no') : null)}
-              className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-              style={{
-                background: canVote
-                  ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
-                  : '#2D3049',
-                color: canVote ? 'white' : '#4b7488',
-                border: selectedVote === 'no' ? '1px solid green' : '1px solid #2D3049',
-              }}
-            >
-              <XCircle className="text-red-500 w-4 h-4 mr-1" />
-              <span className="text-white-500 text-2md flex items-center">No, do not pass this Proposal</span>
-            </div>
-            {proposalInfo?.abstain ? (
-              <div
-                onClick={() => (canVote ? setSelectedVote('abstain') : null)}
-                className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-                style={{
-                  background: canVote
-                    ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
-                    : '#2D3049',
-                  color: canVote ? 'white' : '#4b7488',
-                  border: selectedVote === 'abstain' ? '1px solid green' : '1px solid #2D3049',
-                }}
-              >
-                <Ellipsis className="text-gray-500 w-4 h-4 mr-1" />
-                <span className="text-white-500 text-2md flex items-center">Do nothing</span>
-              </div>
-            ) : null}
+            {proposal.status === 'active' ? (
+              <>
+                <div
+                  className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
+                  onClick={() => (canVote ? setSelectedVote('yes') : null)}
+                  style={{
+                    background: canVote
+                      ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049'
+                      : '#2D3049',
+                    color: canVote ? 'white' : '#4b7488',
+                    border: selectedVote === 'yes' ? '1px solid green' : '1px solid #2D3049',
+                  }}
+                >
+                  <CheckCircle className="text-green-500 w-4 h-4 mr-1" />
+                  <span className="text-white-500 text-2md flex items-center">Yes, pass this Proposal</span>
+                </div>
+                <div
+                  onClick={() => (canVote ? setSelectedVote('no') : null)}
+                  className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
+                  style={{
+                    background: canVote
+                      ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
+                      : '#2D3049',
+                    color: canVote ? 'white' : '#4b7488',
+                    border: selectedVote === 'no' ? '1px solid green' : '1px solid #2D3049',
+                  }}
+                >
+                  <XCircle className="text-red-500 w-4 h-4 mr-1" />
+                  <span className="text-white-500 text-2md flex items-center">No, do not pass this Proposal</span>
+                </div>
+                {proposalInfo?.abstain ? (
+                  <div
+                    onClick={() => (canVote ? setSelectedVote('abstain') : null)}
+                    className="w-full rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
+                    style={{
+                      background: canVote
+                        ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049'
+                        : '#2D3049',
+                      color: canVote ? 'white' : '#4b7488',
+                      border: selectedVote === 'abstain' ? '1px solid green' : '1px solid #2D3049',
+                    }}
+                  >
+                    <Ellipsis className="text-gray-500 w-4 h-4 mr-1" />
+                    <span className="text-white-500 text-2md flex items-center">Do nothing</span>
+                  </div>
+                ) : null}
 
-            <div className="flex justify-center">
-              <PrimaryButton
-                className="w-60 rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-                onClick={() => (canVote && selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
-                disabled={!canVote || !selectedVote}
-              >
-                <span className="text-white-500 text-2md flex items-center">Vote</span>
-              </PrimaryButton>
-            </div>
+                <div className="flex justify-center">
+                  <PrimaryButton
+                    className="w-60 rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
+                    onClick={() => (canVote && selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
+                    disabled={!canVote || !selectedVote}
+                  >
+                    <span className="text-white-500 text-2md flex items-center">Vote</span>
+                  </PrimaryButton>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 space-y-4">
+                <div className="text-gray-400 text-lg">
+                  🗳️ Voting has ended
+                </div>
+                <div className="text-gray-300">
+                  This proposal voting period has concluded. You can view the final results below.
+                </div>
+                <div className="text-sm text-gray-500">
+                  Thank you for your participation in the governance process.
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
