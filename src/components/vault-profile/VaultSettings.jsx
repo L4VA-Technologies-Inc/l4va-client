@@ -2,7 +2,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
-import { InfoRow } from '@/components/infoRow';
+import { InfoRow } from '@/components/ui/infoRow';
 import { Button } from '@/components/ui/button';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useCurrency } from '@/hooks/useCurrency';
