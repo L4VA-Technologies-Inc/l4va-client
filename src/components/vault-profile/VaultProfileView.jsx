@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User } from 'lucide-react';
+import { Copy, EyeIcon, User, Share } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -110,6 +110,25 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     toast.success('Address copied to clipboard');
   };
 
+  const handleCopyVaultAddress = async e => {
+    e.preventDefault();
+    const link = `${import.meta.env.VITE_WEB_LINK}/vaults/${vault.id}?tab=${activeTab}`;
+
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+    try {
+      if (isMobile && navigator.share) {
+        await navigator.share({ url: link });
+        toast.success('Link shared successfully');
+      } else {
+        await navigator.clipboard.writeText(link);
+        toast.success('Link copied to clipboard');
+      }
+    } catch (err) {
+      console.error('Error coy link:', err);
+    }
+  };
+
   const handleOwnerClick = ownerId => {
     if (ownerId) {
       router.navigate({
@@ -192,6 +211,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <EyeIcon className="w-4 h-4 text-orange-500" />
           <span>{formatCompactNumber(vault.countView)}</span>
         </span>
+        <button
+          onClick={handleCopyVaultAddress}
+          className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
+        >
+          <Share className="w-4 h-4 text-orange-500" />
+        </button>
       </div>
     </div>
   );
