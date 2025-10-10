@@ -15,7 +15,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 
 const navLinks = [
   { to: '/create', label: 'Create' },
-  { to: '/vaults?tab=contribute', label: 'Contribute' },
+  { to: '/vaults?tab=contribution', label: 'Contribute' },
   { to: '/vaults?tab=acquire', label: 'Acquire' },
   { to: '/vaults?tab=govern', label: 'Govern' },
 ];
