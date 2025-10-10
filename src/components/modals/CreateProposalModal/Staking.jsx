@@ -18,7 +18,6 @@ export default function Staking({ vaultId, onDataChange }) {
   const [nfts, setNfts] = useState([]);
   const [ftsAll, setFtsAll] = useState(false);
   const [nftsAll, setNftsAll] = useState(false);
-  const [proposalStart, setProposalStart] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'stake');
@@ -95,7 +94,7 @@ export default function Staking({ vaultId, onDataChange }) {
   }, [isLoading, data, isInitialized]);
 
   useEffect(() => {
-    if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0 || proposalStart)) {
+    if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0)) {
       const stakingData = {
         fts: ftSelected.map(ft => ({
           id: ft.id,
@@ -105,12 +104,11 @@ export default function Staking({ vaultId, onDataChange }) {
           id: nft.id,
           market: nft.market,
         })),
-        proposalStart: proposalStart || undefined,
       };
 
       onDataChange(stakingData);
     }
-  }, [fts, nfts, proposalStart, ftSelected, nftSelected, onDataChange]);
+  }, [fts, nfts, ftSelected, nftSelected, onDataChange]);
 
   return (
     <div className="space-y-5">
@@ -228,19 +226,6 @@ export default function Staking({ vaultId, onDataChange }) {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-      <div className="mt-8">
-        <h4 className="text-white font-medium mb-4">Voting Period</h4>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <LavaIntervalPicker
-              value={proposalStart}
-              onChange={setProposalStart}
-              placeholder="Set Voting Period"
-              minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
-            />
-          </div>
         </div>
       </div>
     </div>

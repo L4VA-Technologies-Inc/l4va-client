@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
@@ -23,7 +23,7 @@ const sellTypeOptions = [
   { value: 'Market', label: 'Market' },
 ];
 
-const validateOptions = (options) => {
+const validateOptions = options => {
   if (options.length === 0) return true;
 
   try {
@@ -39,7 +39,6 @@ const validateOptions = (options) => {
 export const BuyingSelling = ({ vaultId, onDataChange }) => {
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
-  const [proposalStart, setProposalStart] = useState('');
   const [abstain, setAbstain] = useState(false);
 
   const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
@@ -65,11 +64,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
   useEffect(() => {
     onDataChange({
       buyingSellingOptions: options,
-      proposalStart,
       abstain,
       isValid: validateOptions(options),
     });
-  }, [options, onDataChange, proposalStart, abstain]);
+  }, [options, onDataChange, abstain]);
 
   const handleOptionChange = (id, field, value) => {
     if (field === 'assetName') {
@@ -78,12 +76,12 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
         options.map(option =>
           option.id === id
             ? {
-              ...option,
-              [field]: value,
-              assetId: selectedAsset?.id || null,
-            }
-            : option,
-        ),
+                ...option,
+                [field]: value,
+                assetId: selectedAsset?.id || null,
+              }
+            : option
+        )
       );
     } else {
       setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
@@ -184,7 +182,7 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
                       <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
                       <LavaSteelSelect
                         options={assetOptions.filter(
-                          opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value),
+                          opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value)
                         )}
                         placeholder={isLoading ? 'Loading assets...' : 'Select asset'}
                         value={option.assetName}
@@ -350,14 +348,6 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
         labelClassName="text-[20px]"
         onChange={e => setAbstain(e.target.checked)}
       />
-      <div className="mt-8">
-        <h4 className="text-white font-medium mb-4">Voting Period</h4>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex-1 relative">
-            <LavaIntervalPicker value={proposalStart} onChange={setProposalStart} placeholder="Set Voting Period" />
-          </div>
-        </div>
-      </div>
     </>
   );
 };

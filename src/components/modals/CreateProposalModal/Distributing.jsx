@@ -1,36 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
-import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { Button } from '@/components/ui/button';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 export default function Distributing({ onDataChange, vaultId }) {
   const [distributionAssets, setDistributionAssets] = useState([]);
-  const [proposalStart, setProposalStart] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
   const [availableAssets, setAvailableAssets] = useState([]);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
-
-  const formatTimeInput = value => {
-    const numbers = value.replace(/\D/g, '');
-
-    const limited = numbers.slice(0, 6);
-
-    let formatted = '';
-    for (let i = 0; i < limited.length; i++) {
-      if (i === 2 || i === 4) {
-        formatted += ':';
-      }
-      formatted += limited[i];
-    }
-
-    return formatted;
-  };
 
   const removeAsset = id => {
     setDistributionAssets(prev => prev.filter(a => a.id !== id));
@@ -65,11 +46,6 @@ export default function Distributing({ onDataChange, vaultId }) {
   const addAsset = () => {
     const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
     setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
-  };
-
-  const handleProposalStartChange = value => {
-    const formatted = formatTimeInput(value);
-    setProposalStart(formatted);
   };
 
   const distributeAllAssets = useCallback(() => {
@@ -134,10 +110,9 @@ export default function Distributing({ onDataChange, vaultId }) {
 
       onDataChange({
         distributionAssets: formattedAssets,
-        proposalStart,
       });
     }
-  }, [distributionAssets, proposalStart, onDataChange, availableAssets]);
+  }, [distributionAssets, onDataChange, availableAssets]);
 
   useEffect(() => {
     if (!distributeAll) {
@@ -269,20 +244,6 @@ export default function Distributing({ onDataChange, vaultId }) {
       {distributionAssets.length === 0 && (
         <div className="text-center py-8 text-white/60">No assets added. Click "Add Asset" to start distributing.</div>
       )}
-
-      <div className="mt-8">
-        <h4 className="text-white font-medium mb-4">Voting Period</h4>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <LavaIntervalPicker
-              value={proposalStart}
-              onChange={handleProposalStartChange}
-              placeholder="Set Voting Period"
-              minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

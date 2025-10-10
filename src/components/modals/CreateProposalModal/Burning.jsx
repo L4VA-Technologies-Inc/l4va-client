@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
-import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
-import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 export default function Burning({ onClose, vaultId, onDataChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [proposalStart, setProposalStart] = useState('');
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState([]);
 
@@ -19,7 +16,6 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
 
     onDataChange?.({
       burnAssets: [],
-      proposalStart: '',
       isValid: selectedAssets.length > 0,
     });
   }, [onDataChange]);
@@ -27,10 +23,9 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
   useEffect(() => {
     onDataChange?.({
       burnAssets: selectedAssets,
-      proposalStart,
       isValid: selectedAssets.length > 0,
     });
-  }, [selectedAssets, proposalStart, onDataChange]);
+  }, [selectedAssets, onDataChange]);
 
   const handleCheckboxChange = assetId => {
     setSelectedAssets(prevSelected => {
@@ -111,20 +106,6 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
                   </span>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h4 className="text-white font-medium mb-4">Voting Period</h4>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative">
-                <LavaIntervalPicker
-                  value={proposalStart}
-                  onChange={setProposalStart}
-                  placeholder="Set Voting Period"
-                  minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
-                />
-              </div>
             </div>
           </div>
         </div>
