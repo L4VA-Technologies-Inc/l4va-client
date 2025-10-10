@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-import { InfoRow } from '@/components/ui/InfoRow';
+import { InfoRow } from '@/components/ui/infoRow';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
