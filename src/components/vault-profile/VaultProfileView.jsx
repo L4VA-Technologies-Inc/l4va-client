@@ -25,6 +25,8 @@ import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
 
+const REGISTERING_CONTRACT_ADDRESS = 'addr_test1wqk7x4gmh4crm5pa27a569sz0femq5qewlwgxzy92gamres6cj45h';
+
 export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
@@ -222,24 +224,28 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const renderPublishedOverlay = () => {
     if (
-      vault.vaultStatus !== VAULT_STATUSES.PUBLISHED ||
-      (vault.contributionOpenWindowType === 'custom' &&
-        new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0)
+      vault.contractAddress === REGISTERING_CONTRACT_ADDRESS ||
+      (vault.vaultStatus === VAULT_STATUSES.PUBLISHED &&
+        !(
+          vault.contributionOpenWindowType === 'custom' &&
+          new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0
+        ))
     ) {
-      return null;
-    }
-    return (
-      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-        <div className="bg-steel-950 rounded-xl p-8 flex flex-col items-center space-y-4 max-w-md mx-4">
-          <Spinner />
-          <h3 className="text-xl font-semibold text-white">Registering on Blockchain</h3>
-          <p className="text-sm text-gray-300 text-center">
-            Your vault is being registered on the blockchain. This process may take a few moments.
-          </p>
-          <PrimaryButton onClick={() => navigate({ to: '/vaults' })}>Go back</PrimaryButton>
+      return (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-steel-950 rounded-xl p-8 flex flex-col items-center space-y-4 max-w-md mx-4">
+            <Spinner />
+            <h3 className="text-xl font-semibold text-white">Registering on Blockchain</h3>
+            <p className="text-sm text-gray-300 text-center">
+              Your vault is being registered on the blockchain. This process may take a few moments.
+            </p>
+            <PrimaryButton onClick={() => navigate({ to: '/vaults' })}>Go back</PrimaryButton>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    return null;
   };
 
   return (
