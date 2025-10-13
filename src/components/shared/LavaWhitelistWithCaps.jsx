@@ -20,6 +20,7 @@ export const LavaWhitelistWithCaps = ({
   const [showDropdown, setShowDropdown] = useState({});
   const wallet = useWallet('handler', 'isConnected', 'balanceAda');
   const dropdownRefs = useRef({});
+  const [scrollTop, setScrollTop] = useState(0);
 
   useEffect(() => {
     const loadWalletPolicyIds = async () => {
@@ -117,6 +118,102 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
+  const renderAssetItem = (asset, policy, index) => {
+    const searchText = asset.policyId.toLowerCase();
+    const highlightText = (text, search) => {
+      if (!search) return text;
+      const parts = text.split(new RegExp(`(${search})`, 'gi'));
+      return parts.map((part, i) =>
+        part.toLowerCase() === search.toLowerCase() ? (
+          <span key={i} className="bg-yellow-500 text-black">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      );
+    };
+
+    return (
+      <button
+        key={index}
+        type="button"
+        className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
+        onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name)}
+      >
+        {policy.image && (
+          <img
+            src={policy.image}
+            alt={policy.name}
+            className="w-6 h-6 rounded-full object-cover"
+            onError={e => {
+              e.target.style.display = 'none';
+            }}
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-white truncate">{highlightText(policy.name, searchText)}</div>
+          <div className="text-sm text-gray-400 truncate font-mono">{highlightText(policy.policyId, searchText)}</div>
+        </div>
+        <div className="text-xs text-gray-500 uppercase">{policy.type}</div>
+      </button>
+    );
+  };
+
+  const renderPolicyList = (filteredPolicies, asset, scrollTop = 0) => {
+
+    if (filteredPolicies.length === 0) {
+      return <div className="flex items-center justify-center h-32 text-dark-100">No policies available</div>;
+    }
+
+    if (filteredPolicies.length > 50) {
+      return (
+        <VirtualizedList
+          items={filteredPolicies}
+          itemHeight={60}
+          renderItem={(policy, index) => renderAssetItem(asset, policy, index)}
+          scrollTop={scrollTop}
+        />
+      );
+    }
+
+    return (
+      <div className="space-y-2 pr-2">
+        {filteredPolicies.map((policy, index) => (
+          <div key={policy.id}>{renderAssetItem(asset, policy, index)}</div>
+        ))}
+      </div>
+    );
+  };
+
+  const VirtualizedList = ({ items, height, itemHeight, renderItem, scrollTop = 0 }) => {
+    const containerHeight = height || 256;
+    const visibleStart = Math.floor(scrollTop / itemHeight);
+    const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight) + 1, items.length);
+
+    const totalHeight = items.length * itemHeight;
+    const visibleItems = items.slice(visibleStart, visibleEnd);
+
+    return (
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        {visibleItems.map((item, index) => (
+          <div
+            key={item.id || index}
+            style={{
+              position: 'absolute',
+              top: (visibleStart + index) * itemHeight,
+              left: 0,
+              right: 0,
+              height: itemHeight,
+            }}
+          >
+            {renderItem(item, visibleStart + index)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -144,6 +241,7 @@ export const LavaWhitelistWithCaps = ({
                 className="pr-20"
                 onChange={e => handleInputChange(asset.uniqueId, e.target.value)}
                 onFocus={() => {
+                  setScrollTop(0);
                   if (walletPolicyIds.length > 0) {
                     setShowDropdown(prev => ({ ...prev, [asset.uniqueId]: true }));
                   }
@@ -155,7 +253,12 @@ export const LavaWhitelistWithCaps = ({
                   className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
                   size="icon"
                   variant="ghost"
-                  onClick={() => toggleDropdown(asset.uniqueId)}
+                  onClick={() => {
+                    if (!showDropdown[asset.uniqueId]) {
+                      setScrollTop(0);
+                    }
+                    toggleDropdown(asset.uniqueId);
+                  }}
                 >
                   {showDropdown[asset.uniqueId] ? (
                     <ChevronUp className="h-4 w-4" />
@@ -178,52 +281,11 @@ export const LavaWhitelistWithCaps = ({
                   const filteredPolicies = getFilteredPolicyIds(asset.policyId, asset.uniqueId);
                   return (
                     filteredPolicies.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-steel-800 border border-steel-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {filteredPolicies.map((policy, index) => {
-                          const searchText = asset.policyId.toLowerCase();
-                          const highlightText = (text, search) => {
-                            if (!search) return text;
-                            const parts = text.split(new RegExp(`(${search})`, 'gi'));
-                            return parts.map((part, i) =>
-                              part.toLowerCase() === search.toLowerCase() ? (
-                                <span key={i} className="bg-yellow-500 text-black">
-                                  {part}
-                                </span>
-                              ) : (
-                                part
-                              )
-                            );
-                          };
-
-                          return (
-                            <button
-                              key={index}
-                              type="button"
-                              className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
-                              onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name)}
-                            >
-                              {policy.image && (
-                                <img
-                                  src={policy.image}
-                                  alt={policy.name}
-                                  className="w-6 h-6 rounded-full object-cover"
-                                  onError={e => {
-                                    e.target.style.display = 'none';
-                                  }}
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-white truncate">
-                                  {highlightText(policy.name, searchText)}
-                                </div>
-                                <div className="text-sm text-gray-400 truncate font-mono">
-                                  {highlightText(policy.policyId, searchText)}
-                                </div>
-                              </div>
-                              <div className="text-xs text-gray-500 uppercase">{policy.type}</div>
-                            </button>
-                          );
-                        })}
+                      <div
+                        className="absolute top-full left-0 right-0 z-50 mt-1 bg-steel-800 border border-steel-600 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                        onScroll={e => setScrollTop(e.target.scrollTop)}
+                      >
+                        {renderPolicyList(filteredPolicies, asset, scrollTop)}
                       </div>
                     )
                   );
