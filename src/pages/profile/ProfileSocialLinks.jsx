@@ -42,7 +42,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
       const validation = validateUrlRealTime(url);
       setRealTimeError(validation.isEmpty ? '' : validation.error);
     }, 300),
-    [],
+    []
   );
 
   const handleUrlChange = url => {
@@ -222,22 +222,24 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
             >
               {link.url}
             </a>
-            <div className="flex gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
-                disabled={isLoading || isAdding}
-                onClick={() => handleEdit(link)}
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button
-                className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
-                disabled={isLoading}
-                onClick={() => handleDelete(link.id)}
-              >
-                <Trash className="h-4 w-4" />
-              </button>
-            </div>
+            {isEditable && (
+              <div className="flex gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
+                  disabled={isLoading || isAdding}
+                  onClick={() => handleEdit(link)}
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
+                  disabled={isLoading}
+                  onClick={() => handleDelete(link.id)}
+                >
+                  <Trash className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
         {isEditable && socialLinks.length === 0 && <div>No social links added. Click the + button to add one.</div>}
