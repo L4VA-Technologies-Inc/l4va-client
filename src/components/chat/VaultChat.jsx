@@ -78,7 +78,7 @@ const darkThemeStyles = {
 
 const VaultChat = ({ vault, vaultId, apiKey }) => {
   const actualVaultId = vault?.id || vaultId;
-  const actualApiKey = apiKey || import.meta.env.VITE_STREAM_API_KEY;
+  const actualApiKey = apiKey || import.meta.env.STREAM_API_KEY;
   const vaultImage = vault?.image || vault?.avatar || null;
   const { user } = useAuth();
   const [client, setClient] = useState(null);
@@ -90,6 +90,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
   useEffect(() => {
     const initChat = async () => {
+      console.log(actualVaultId, actualApiKey);
       if (!actualVaultId || !actualApiKey) {
         setError('Missing required parameters: vaultId or apiKey');
         setLoading(false);
@@ -132,12 +133,6 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
         const tokenData = await tokenResponse.json();
         const { token } = tokenData;
-
-        try {
-          const chatClient = StreamChat.getInstance(actualApiKey);
-        } catch (clientError) {
-          throw new Error(`${clientError.message}`);
-        }
 
         const chatClient = StreamChat.getInstance(actualApiKey);
 
@@ -190,11 +185,9 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
     initChat();
 
     return () => {
-      if (client) {
-        client.disconnectUser();
-      }
+      // Cleanup will be handled by the component unmount
     };
-  }, [actualVaultId, userId, userName, actualApiKey, user, client, vault?.name, vault?.description, vaultImage]);
+  }, [actualVaultId, userId, userName, actualApiKey, user?.avatar, vault?.name, vault?.description, vaultImage]);
 
   if (loading) {
     return (
@@ -210,6 +203,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
       <div className="flex items-center justify-center h-96 bg-slate-950 border border-red-800 rounded-lg">
         <div className="text-center max-w-md">
           <div className="text-red-400 mb-2">⚠️ Something went wrong</div>
+          <div className="text-gray-400 text-sm">{error}</div>
         </div>
       </div>
     );
