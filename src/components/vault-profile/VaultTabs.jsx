@@ -1,7 +1,8 @@
 import { useRouter, useSearch } from '@tanstack/react-router';
 
-import { VaultAcquiredAssetsList } from '@/components/vault-profile/VaultAcquiredAssetsList';
+import { useAuth } from '@/lib/auth/auth.js';
 import { VaultContributedAssetsList } from '@/components/vault-profile/VaultContributedAssetsList';
+import { VaultAcquiredAssetsList } from '@/components/vault-profile/VaultAcquiredAssetsList';
 import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
@@ -9,13 +10,20 @@ import { LavaSelect } from '@/components/shared/LavaSelect';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
-  const tabContent = {
+  const { isAuthenticated } = useAuth();
+
+  const baseTabContent = {
     Assets: <VaultContributedAssetsList vault={vault} />,
     Acquire: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
     Settings: <VaultSettings vault={vault} />,
-    Chat: <VaultChatWrapper vault={vault} />,
   };
+
+  const tabContent = {
+    ...baseTabContent,
+    ...(vault?.canCreate && isAuthenticated ? { Chat: <VaultChatWrapper vault={vault} /> } : {}),
+  };
+
   const router = useRouter();
   const search = useSearch({ from: '/vaults/$id' });
   const activeTab = propActiveTab || search.tab || 'Assets';
