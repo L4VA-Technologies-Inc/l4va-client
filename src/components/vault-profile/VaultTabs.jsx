@@ -6,6 +6,7 @@ import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
+import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const tabContent = {
@@ -13,6 +14,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
     Acquire: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
     Settings: <VaultSettings vault={vault} />,
+    Chat: <VaultChatWrapper vault={vault} />,
   };
   const router = useRouter();
   const search = useSearch({ from: '/vaults/$id' });
