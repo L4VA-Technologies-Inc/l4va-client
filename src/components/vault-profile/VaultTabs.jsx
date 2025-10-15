@@ -21,7 +21,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
 
   const tabContent = {
     ...baseTabContent,
-    ...(vault?.canCreate && isAuthenticated ? { Chat: <VaultChatWrapper vault={vault} /> } : {}),
+    ...(isAuthenticated ? { Chat: <VaultChatWrapper vault={vault} /> } : {}),
   };
 
   const router = useRouter();
