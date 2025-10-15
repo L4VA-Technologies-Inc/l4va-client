@@ -2,6 +2,8 @@
 @import "tailwindcss";
 @import "./fonts.css";
 @import "./scrollbar.css";
+@import "stream-chat-react/dist/css/v2/index.css";
+@import "./stream-overrides.css";
 
 #nufi-widget {
   z-index: 10 !important;

@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 import { StreamChat } from 'stream-chat';
-import {
-  Chat,
-  Channel,
-  ChannelHeader,
-  MessageInput,
-  MessageList,
-  Thread,
-  Window,
-  LoadingIndicator,
-} from 'stream-chat-react';
+import { Channel, Chat, LoadingIndicator, MessageInput, MessageList, Thread, Window } from 'stream-chat-react';
+import { EmojiPicker } from 'stream-chat-react/emojis';
+
+import { useAuth } from '@/lib/auth/auth.js';
+import 'stream-chat-react/dist/css/v2/index.css';
 
 const VaultChannelHeader = ({ vault }) => {
   return (
-    <div
-      className="flex items-center px-4 py-3 border-b"
-      style={{
-        backgroundColor: '#2D3049',
-        borderBottomColor: '#40444b',
-      }}
-    >
+    <div className="flex items-center px-4 py-3 bg-steel-850">
       {vault?.image && <img src={vault.image} alt={vault.name || 'Vault'} className="w-6 h-6 rounded-full mr-3" />}
       <div className="flex items-center">
         <span className="text-white font-semibold text-base mr-2">#</span>
@@ -27,59 +16,6 @@ const VaultChannelHeader = ({ vault }) => {
       </div>
     </div>
   );
-};
-
-import { useAuth } from '@/lib/auth/auth.js';
-import 'stream-chat-react/dist/css/v2/index.css';
-import './dark-theme.css';
-
-const darkThemeStyles = {
-  '--str-chat__primary-color': '#2D3049',
-  '--str-chat__active-primary-color': '#2D3049',
-  '--str-chat__surface-color': '#2D3049',
-  '--str-chat__secondary-surface-color': '#2D3049',
-  '--str-chat__primary-surface-color': '#2D3049',
-  '--str-chat__primary-surface-color-low-emphasis': '#2D3049',
-
-  '--str-chat__background-color': '#2D3049',
-  '--str-chat__channel-header-background-color': '#2D3049',
-  '--str-chat__message-list-background-color': '#2D3049',
-  '--str-chat__message-input-background-color': '#2D3049',
-  '--str-chat__thread-background-color': '#2D3049',
-
-  '--str-chat__color-text-high-emphasis': '#ffffff',
-  '--str-chat__color-text-mid-emphasis': '#b9bbbe',
-  '--str-chat__color-text-low-emphasis': '#72767d',
-  '--str-chat__color-text-inverse': '#000000',
-
-  '--str-chat__message-background-color': 'transparent',
-  '--str-chat__message-background-color-hover': 'rgba(79, 84, 92, 0.16)',
-  '--str-chat__message-own-background-color': 'transparent',
-  '--str-chat__message-text-color': '#dcddde',
-
-  '--str-chat__color-bg-input': '#40444b',
-  '--str-chat__color-bg-input-hover': '#484c52',
-  '--str-chat__color-bg-input-focus': '#484c52',
-  '--str-chat__input-background-color': '#40444b',
-  '--str-chat__input-border-color': '#40444b',
-  '--str-chat__input-text-color': '#ffffff',
-  '--str-chat__input-placeholder-color': '#72767d',
-
-  '--str-chat__color-border': '#40444b',
-  '--str-chat__border-color': '#40444b',
-  '--str-chat__separator-color': '#40444b',
-
-  '--str-chat__color-bg-overlay': 'rgba(0, 0, 0, 0.85)',
-  '--str-chat__modal-background-color': '#2f3136',
-
-  '--str-chat__border-radius-circle': '50%',
-  '--str-chat__border-radius-sm': '4px',
-  '--str-chat__border-radius-md': '8px',
-  '--str-chat__border-radius-lg': '16px',
-
-  '--str-chat__avatar-background-color': '#5865f2',
-  '--str-chat__date-separator-color': '#72767d',
-  '--str-chat__quoted-message-background-color': '#32353b',
 };
 
 const VaultChat = ({ vault, vaultId, apiKey }) => {
@@ -224,46 +160,34 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
     };
   }, [actualVaultId, userId, userName, actualApiKey, user?.avatar, vault?.name, vault?.description, vaultImage]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[600px] bg-slate-950 text-white">
-        <LoadingIndicator size={40} />
-        <span className="ml-2">Loading chat...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-[600px] bg-slate-950 border border-red-800 rounded-lg">
-        <div className="text-center max-w-md">
+  return (
+    <div className="min-h-[600px] h-[600px] rounded-xl border border-steel-850 text-white flex items-center justify-center overflow-hidden">
+      {loading ? (
+        <>
+          <LoadingIndicator size={40} />
+          <span className="ml-2">Loading chat...</span>
+        </>
+      ) : error ? (
+        <div className="text-center max-w-md border border-red-800 rounded-lg p-4">
           <div className="text-red-400 mb-2">⚠️ Something went wrong</div>
           <div className="text-gray-400 text-sm">{error}</div>
         </div>
-      </div>
-    );
-  }
-
-  if (!client || !channel) {
-    return (
-      <div className="flex items-center justify-center h-[600px] bg-slate-950 text-white">
+      ) : !client || !channel ? (
         <div>Initializing chat...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-[600px] dark-theme" style={darkThemeStyles}>
-      <Chat client={client} theme="dark">
-        <Channel channel={channel}>
-          <Window>
-            <VaultChannelHeader vault={vault} />
-            <MessageList />
-            <MessageInput focus={true} grow={true} maxRows={4} />
-          </Window>
-          <Thread />
-        </Channel>
-      </Chat>
+      ) : (
+        <div className="w-full h-full">
+          <Chat client={client} className="w-full h-full">
+            <Channel channel={channel} EmojiPicker={EmojiPicker}>
+              <Window>
+                <VaultChannelHeader vault={vault} />
+                <MessageList />
+                <MessageInput grow={true} maxRows={4} />
+              </Window>
+              <Thread className="w-full h-full" />
+            </Channel>
+          </Chat>
+        </div>
+      )}
     </div>
   );
 };

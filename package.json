@@ -12,6 +12,8 @@
   "dependencies": {
     "@ada-anvil/weld": "^0.5.1",
     "@dexhunterio/swaps": "^0.0.192",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@novu/react": "^3.8.1",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -32,6 +34,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "emoji-mart": "^5.6.0",
     "framer-motion": "^12.19.1",
     "lightweight-charts": "^5.0.8",
     "lucide-react": "^0.522.0",
