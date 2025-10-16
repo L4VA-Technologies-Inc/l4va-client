@@ -73,7 +73,7 @@ export const useVlrmBalance = () => {
   }, []);
 
   useEffect(() => {
-    const loadFromCache = () => {
+    const loadFromCache = async () => {
       try {
         const cached = localStorage.getItem(VLRM_CACHE_KEY);
         if (cached) {
@@ -81,7 +81,7 @@ export const useVlrmBalance = () => {
           const isExpired = Date.now() - timestamp > CACHE_EXPIRY_MS;
 
           // Check if cache is for current wallet address
-          const currentAddress = wallet.handler?.getChangeAddressBech32?.();
+          const currentAddress = wallet.handler ? await wallet.handler.getChangeAddressBech32() : undefined;
 
           if (!isExpired && address === currentAddress) {
             setVlrmBalance(balance);
@@ -96,11 +96,13 @@ export const useVlrmBalance = () => {
       return false; // Cache miss
     };
 
-    const cacheHit = loadFromCache();
+    (async () => {
+      const cacheHit = await loadFromCache();
 
-    if (!cacheHit && wallet.handler) {
-      fetchVlrmBalance();
-    }
+      if (!cacheHit && wallet.handler) {
+        fetchVlrmBalance();
+      }
+    })();
   }, [fetchVlrmBalance, wallet.handler]);
 
   return {

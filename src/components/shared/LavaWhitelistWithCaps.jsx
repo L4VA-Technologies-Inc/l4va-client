@@ -106,7 +106,7 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
-  const renderAssetItem = (asset, policy, index) => {
+  const renderAssetItem = (asset, policy) => {
     const searchText = asset.policyId.toLowerCase();
     const highlightText = (text, search) => {
       if (!search) return text;
@@ -124,7 +124,7 @@ export const LavaWhitelistWithCaps = ({
 
     return (
       <button
-        key={`${policy.policyId}-${index}`}
+        key={`${policy.policyId}-${policy.name}`}
         type="button"
         className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
         onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name)}
@@ -147,7 +147,7 @@ export const LavaWhitelistWithCaps = ({
         <VirtualizedList
           items={filteredPolicies}
           itemHeight={60}
-          renderItem={(policy, index) => renderAssetItem(asset, policy, index)}
+          renderItem={policy => renderAssetItem(asset, policy)}
           scrollTop={scrollTop}
         />
       );
@@ -155,8 +155,8 @@ export const LavaWhitelistWithCaps = ({
 
     return (
       <div className="space-y-2 pr-2">
-        {filteredPolicies.map((policy, index) => (
-          <div key={policy.id}>{renderAssetItem(asset, policy, index)}</div>
+        {filteredPolicies.map(policy => (
+          <div key={policy.id}>{renderAssetItem(asset, policy)}</div>
         ))}
       </div>
     );
