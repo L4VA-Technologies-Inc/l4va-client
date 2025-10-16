@@ -171,11 +171,27 @@ export const useCreateAcquireTx = () => {
   });
 };
 
-export const useWalletSummary = address => {
+export const useWalletSummaryPaginated = ({ address, page = 1, limit = 20, filter = 'all', whitelistedPolicies }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address],
-    queryFn: () => TapToolsApiProvider.getWalletSummary(address),
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies],
+    queryFn: () => TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies }),
     enabled: !!address,
+  });
+};
+
+export const useWalletPolicyIds = address => {
+  return useQuery({
+    queryKey: ['wallet-policy-ids', address],
+    queryFn: () => TapToolsApiProvider.getWalletPolicyIds(address),
+    enabled: !!address,
+  });
+};
+
+export const useWalletAssetAmount = (assetId, address) => {
+  return useQuery({
+    queryKey: ['wallet-asset-amount', assetId, address],
+    queryFn: () => TapToolsApiProvider.getWalletAssetAmount(assetId, address),
+    enabled: !!assetId && !!address,
   });
 };
 

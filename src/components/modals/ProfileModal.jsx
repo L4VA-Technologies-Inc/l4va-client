@@ -1,8 +1,6 @@
-import { LogOut, User, FolderOpen, ArrowLeftRight } from 'lucide-react';
+import { LogOut, User, FolderOpen, ArrowLeftRight, RefreshCwIcon } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useWallet } from '@ada-anvil/weld/react';
-import { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -10,41 +8,20 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { formatNum } from '@/utils/core.utils';
-import { TapToolsApiProvider } from '@/services/api/taptools';
+import { useVlrmBalance } from '@/hooks/useVlrmBalance';
 
 export const ProfileModal = () => {
   const { closeModal } = useModalControls();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const disconnect = useWallet('disconnect');
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded');
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'disconnect');
 
-  const [vlrmBalance, setVlrmBalance] = useState(0);
-
-  const fetchAndFormatWalletAssets = async () => {
-    try {
-      const changeAddress = await wallet.handler.getChangeAddressBech32();
-      const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-      const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
-      setVlrmBalance(vlrmToken ? vlrmToken.quantity : 0);
-    } catch (err) {
-      console.error('Error fetching wallet summary:', err);
-      toast.error('Failed to load assets');
-      setVlrmBalance(0);
-    }
-  };
-
-  useEffect(() => {
-    const loadWalletAssets = async () => {
-      if (!wallet.handler) return;
-      await fetchAndFormatWalletAssets();
-    };
-    loadWalletAssets();
-  }, [wallet.handler]);
+  const { vlrmBalance, isLoading, lastUpdated, refreshBalance, clearCache } = useVlrmBalance();
 
   const handleDisconnect = () => {
-    disconnect();
+    wallet.disconnect();
+    clearCache();
     logout();
     closeModal();
   };
@@ -57,8 +34,18 @@ export const ProfileModal = () => {
   return (
     <ModalWrapper isOpen title="Profile" onClose={closeModal} size="md">
       <UserAvatar user={user} />
-      <div className="flex justify-between items-center mt-4 p-3 bg-steel-850 rounded-lg">
-        <span className="text-dark-100">$VLRM</span>
+      <div
+        className="flex justify-between items-center mt-4 p-3 bg-steel-850 rounded-lg"
+        title={`Last synced ${lastUpdated ? lastUpdated.toLocaleString() : 'N/A'}`}
+      >
+        <div className="flex items-center gap-2">
+          <RefreshCwIcon
+            className={`cursor-pointer text-dark-100 hover:text-white transition ${isLoading ? 'animate-spin' : ''}`}
+            size={18}
+            onClick={refreshBalance}
+          />
+          <span className="text-dark-100">$VLRM</span>
+        </div>
         <span className="font-bold">{formatNum(vlrmBalance)} VLRM</span>
       </div>
       <div className="flex justify-between items-center mt-2 p-3 bg-steel-850 rounded-lg">

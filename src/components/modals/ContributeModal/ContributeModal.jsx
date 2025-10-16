@@ -15,9 +15,10 @@ import MetricCard from '@/components/shared/MetricCard';
 import { useTransaction } from '@/hooks/useTransaction';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
-import { fetchAndFormatWalletAssets } from '@/utils/walletAssets';
 import { getContributionStatus } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
+import { InfiniteScrollList } from '@/components/shared/InfiniteScrollList';
+import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets';
 
 const DEFAULT_ASSET_VALUE_ADA = 152;
 
@@ -33,38 +34,6 @@ const testnetPrices = {
   '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': 188.57,
   '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': 100000.0,
   '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': 250000.0,
-};
-
-const VirtualizedList = ({ items, height, itemHeight, renderItem }) => {
-  const [scrollTop, setScrollTop] = useState(0);
-
-  const containerHeight = height || 256;
-  const visibleStart = Math.floor(scrollTop / itemHeight);
-  const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight) + 1, items.length);
-
-  const totalHeight = items.length * itemHeight;
-  const visibleItems = items.slice(visibleStart, visibleEnd);
-
-  return (
-    <div style={{ height: containerHeight, overflow: 'auto' }} onScroll={e => setScrollTop(e.target.scrollTop)}>
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        {visibleItems.map((item, index) => (
-          <div
-            key={item.id || index}
-            style={{
-              position: 'absolute',
-              top: (visibleStart + index) * itemHeight,
-              left: 0,
-              right: 0,
-              height: itemHeight,
-            }}
-          >
-            {renderItem(item, visibleStart + index)}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 };
 
 // IPFS URL resolver
@@ -84,7 +53,7 @@ const getIPFSUrl = src => {
 const EnhancedNFTItem = ({ nft, isSelected, onToggle }) => {
   const enhancedNft = {
     ...nft,
-    src: getIPFSUrl(nft.src),
+    src: getIPFSUrl(nft.metadata.image),
   };
 
   return <NFTItem isSelected={isSelected} nft={enhancedNft} onToggle={onToggle} />;
@@ -93,7 +62,7 @@ const EnhancedNFTItem = ({ nft, isSelected, onToggle }) => {
 const EnhancedFTItem = ({ ft, amount, onAmountChange }) => {
   const enhancedFt = {
     ...ft,
-    src: getIPFSUrl(ft.src),
+    src: getIPFSUrl(ft.metadata.image),
   };
 
   return <FTItem amount={amount} ft={enhancedFt} onAmountChange={onAmountChange} />;
@@ -102,36 +71,61 @@ const EnhancedFTItem = ({ ft, amount, onAmountChange }) => {
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
-  const [assets, setAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
-  const [isLoading, setIsLoading] = useState(true);
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
+  const wallet = useWallet(
+    'handler',
+    'isConnected',
+    'balanceAda',
+    'balanceDecoded',
+    'isUpdatingUtxos',
+    'changeAddressBech32'
+  );
   const { sendTransaction, status, error } = useTransaction();
   const [selectedAmount, setSelectedAmount] = useState({});
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
-    if (!assetsWhitelist?.length) return new Set();
+    if (!assetsWhitelist?.length) return [];
 
     const contributedAssets = vaultAssetsData?.data?.items || [];
-
     const contributionStatus = getContributionStatus(assetsWhitelist, contributedAssets);
-
     const availablePolicyIds = contributionStatus
       .filter(status => !status.isAtMaxCapacity)
       .map(status => status.policyId);
 
-    return new Set(availablePolicyIds);
+    return availablePolicyIds;
   }, [assetsWhitelist, vaultAssetsData]);
+
+  const {
+    assets: walletAssets,
+    isLoading,
+    isLoadingMore,
+    hasNextPage,
+    error: walletError,
+    loadMoreAssets,
+    refresh,
+  } = useInfiniteWalletAssets({
+    walletAddress: wallet?.changeAddressBech32,
+    whitelistedPolicies,
+    activeTab: 'ALL',
+  });
+
+  // Handle wallet errors
+  useEffect(() => {
+    if (walletError) {
+      console.error('Error loading wallet assets:', walletError);
+      toast.error('Failed to load wallet assets');
+    }
+  }, [walletError]);
 
   const contributionDetails = useMemo(() => {
     let estimatedValue = 0;
 
     selectedNFTs.forEach(asset => {
-      const assetPrice = testnetPrices[asset.policyId] || DEFAULT_ASSET_VALUE_ADA;
+      const assetPrice = testnetPrices[asset.metadata?.policyId] || DEFAULT_ASSET_VALUE_ADA;
 
-      if (asset.type === 'FT' && asset.amount) {
+      if (asset.isFungibleToken && asset.amount) {
         estimatedValue += assetPrice * Number(asset.amount);
       } else {
         estimatedValue += assetPrice;
@@ -159,27 +153,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     };
   }, [selectedNFTs, vault.ftTokenSupply, vault.liquidityPoolContribution, vault.tokensForAcquires]);
 
-  const loadAssets = async () => {
-    const formattedAssets = await fetchAndFormatWalletAssets(wallet, whitelistedPolicies);
-    setAssets(formattedAssets);
-  };
-
-  useEffect(() => {
-    const loadWalletAssets = async () => {
-      if (!isOpen) return; // Only load when modal is open
-      setIsLoading(true);
-      await loadAssets();
-      setIsLoading(false);
-    };
-    loadWalletAssets();
-  }, [wallet.handler, isOpen]);
-
   const toggleNFT = useCallback(asset => {
-    if (asset.type === 'FT') return; // Ignore toggle for FT tokens
+    if (asset.isFungibleToken) return; // Ignore toggle for FT tokens
 
     setSelectedNFTs(prevSelected => {
-      if (prevSelected.some(nft => nft.id === asset.id)) {
-        return prevSelected.filter(nft => nft.id !== asset.id);
+      if (prevSelected.some(nft => nft.tokenId === asset.tokenId)) {
+        return prevSelected.filter(nft => nft.tokenId !== asset.tokenId);
       } else {
         return [...prevSelected, asset];
       }
@@ -197,34 +176,34 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
 
     setSelectedAmount(prev => ({
       ...prev,
-      [ft.id]: amount,
+      [ft.tokenId]: amount,
     }));
 
     // Update selected NFTs based on amount
     setSelectedNFTs(prevSelected => {
-      const existingIndex = prevSelected.findIndex(nft => nft.id === ft.id);
+      const existingIndex = prevSelected.findIndex(nft => nft.tokenId === ft.tokenId);
 
       if (amount && amount !== '0') {
         if (existingIndex >= 0) {
-          return prevSelected.map(item => (item.id === ft.id ? { ...item, amount } : item));
+          return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount } : item));
         } else {
           return [...prevSelected, { ...ft, amount }];
         }
       } else {
         if (existingIndex >= 0) {
-          return prevSelected.filter(item => item.id !== ft.id);
+          return prevSelected.filter(item => item.tokenId !== ft.tokenId);
         }
         return prevSelected;
       }
     });
   }, []);
 
-  const removeNFT = id => setSelectedNFTs(selectedNFTs.filter(nft => nft.id !== id));
+  const removeNFT = tokenId => setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
 
   const handleContribute = async () => {
     try {
       const formattedAssets = selectedNFTs.map(asset => {
-        if (asset.type === 'FT') {
+        if (asset.isFungibleToken) {
           return {
             ...asset,
             quantity: Number(asset.amount),
@@ -243,14 +222,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       });
       setSelectedNFTs([]);
       setSelectedAmount({});
-      await loadAssets();
+      refresh(); // Refresh wallet assets after contribution
       onClose();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
     }
   };
-
-  const filteredAssets = useMemo(() => assets.filter(asset => asset.type === activeTab), [assets, activeTab]);
 
   const renderAssetItem = useCallback(
     item => {
@@ -258,42 +235,18 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         return (
           <EnhancedNFTItem
             nft={item}
-            isSelected={selectedNFTs.some(selected => selected.id === item.id)}
+            isSelected={selectedNFTs.some(selected => selected.tokenId === item.tokenId)}
             onToggle={toggleNFT}
           />
         );
       } else {
         return (
-          <EnhancedFTItem ft={item} amount={selectedAmount[item.id] || ''} onAmountChange={handleFTAmountChange} />
+          <EnhancedFTItem ft={item} amount={selectedAmount[item.tokenId] || ''} onAmountChange={handleFTAmountChange} />
         );
       }
     },
     [activeTab, selectedNFTs, selectedAmount, toggleNFT, handleFTAmountChange]
   );
-
-  const renderAssetList = () => {
-    if (filteredAssets.length === 0) {
-      return <div className="flex items-center justify-center h-32 text-dark-100">No {activeTab}s available</div>;
-    }
-
-    // Use virtualization for large lists (>50 items)
-    if (filteredAssets.length > 50) {
-      return (
-        <div className="pr-2">
-          <VirtualizedList items={filteredAssets} height={256} itemHeight={60} renderItem={renderAssetItem} />
-        </div>
-      );
-    }
-
-    // Render normally for smaller lists
-    return (
-      <div className="space-y-2 flex-1 overflow-y-auto pr-2 max-h-64">
-        {filteredAssets.map(item => (
-          <div key={item.id}>{renderAssetItem(item)}</div>
-        ))}
-      </div>
-    );
-  };
 
   const renderFooter = () => (
     <div className="flex justify-between items-center">
@@ -306,7 +259,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         </SecondaryButton>
         <PrimaryButton
           disabled={
-            contributionDetails.totalAssets === 0 ||
+            selectedNFTs.length === 0 ||
             status !== 'idle' ||
             wallet.isUpdatingUtxos ||
             new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
@@ -346,7 +299,16 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
                 <Spinner />
               </div>
             ) : (
-              renderAssetList()
+              <InfiniteScrollList
+                items={walletAssets}
+                renderItem={renderAssetItem}
+                isLoading={isLoading}
+                isLoadingMore={isLoadingMore}
+                hasNextPage={hasNextPage}
+                onLoadMore={loadMoreAssets}
+                className="pr-2 max-h-64"
+                loadThreshold={50}
+              />
             )}
           </div>
         </div>
@@ -354,7 +316,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           <h3 className="text-lg font-medium">Selected Assets ({selectedNFTs.length})</h3>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
             {selectedNFTs.length > 0 ? (
-              selectedNFTs.map(asset => <SelectedAssetItem key={asset.id} asset={asset} onRemove={removeNFT} />)
+              selectedNFTs.map(asset => <SelectedAssetItem key={asset.tokenId} asset={asset} onRemove={removeNFT} />)
             ) : (
               <div className="text-center py-6 text-dark-100 bg-steel-900/50 rounded-lg border border-steel-800/50">
                 <p className="mb-2">No assets selected</p>

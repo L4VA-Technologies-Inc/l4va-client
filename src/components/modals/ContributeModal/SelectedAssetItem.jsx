@@ -21,7 +21,8 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
       </div>
       <div className="flex items-center gap-3">
         <span className="text-dark-100 hover:underline text-sm">
-          {asset.policyId.substring(0, 6)}...{asset.policyId.substring(asset.policyId.length - 6)}
+          {asset.metadata?.policyId.substring(0, 6)}...
+          {asset.metadata?.policyId.substring(asset.metadata?.policyId.length - 6)}
         </span>
         <button
           className="text-dark-100 hover:text-white p-1 rounded-full hover:bg-steel-700 transition-colors"

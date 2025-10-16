@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('jwt');
+    localStorage.removeItem('vlrm_balance_cache');
     queryClient.setQueryData(['profile'], null);
   };
 
