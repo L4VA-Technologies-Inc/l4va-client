@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -15,15 +16,24 @@ const VAULT_TABS = {
 
 const TABS = Object.values(VAULT_TABS);
 
-export const MyVaultsList = ({ className = '' }) => {
-  const [activeTab, setActiveTab] = useState(TABS[0]);
-  const [appliedFilters, setAppliedFilters] = useState({
-    page: 1,
-    limit: 12,
-    filter: activeTab.toLowerCase(),
-    myVaults: true,
+export const MyVaultsList = ({ className = '', initialTab }) => {
+  const [activeTab, setActiveTab] = useState(() => {
+    if (initialTab && TABS.includes(initialTab)) {
+      return initialTab;
+    }
+    return TABS[0];
+  });
+  const [appliedFilters, setAppliedFilters] = useState(() => {
+    const initialActiveTab = initialTab && TABS.includes(initialTab) ? initialTab : TABS[0];
+    return {
+      page: 1,
+      limit: 12,
+      filter: initialActiveTab.toLowerCase(),
+      myVaults: true,
+    };
   });
   const myVaultsListRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     setAppliedFilters(prevFilters => ({
@@ -40,6 +50,10 @@ export const MyVaultsList = ({ className = '' }) => {
       page: 1,
       filter: tab.toLowerCase(),
     }));
+    router.navigate({
+      to: '/vaults/my',
+      search: { tab: tab },
+    });
   };
 
   const { data, isLoading, error } = useVaults(appliedFilters);
