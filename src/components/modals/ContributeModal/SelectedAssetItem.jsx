@@ -8,7 +8,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
       <div className="flex items-center gap-3">
         <LazyImage
-          src={asset.image}
+          src={asset.src}
           alt={asset.name}
           className="rounded-full"
           width={32}
