@@ -1,0 +1,49 @@
+@layer stream-overrides {
+    .str-chat {
+        --str-chat__background-color: var(--color-steel-950) !important;
+        --str-chat__primary-surface-color: var(--color-background-primary) !important;
+        --str-chat__secondary-surface-color: var(--color-steel-900) !important;
+        --str-chat__tertiary-surface-color: var(--color-steel-850) !important;
+        --str-chat__surface-color: var(--color-steel-900) !important;
+        --str-chat__app-background-color: var(--color-steel-950) !important;
+        --str-chat__secondary-background-color:var(--color-steel-950) !important;
+
+        --str-chat__thread-color: var(--color-white) !important;
+        --str-chat__thread-background-color: var(--color-steel-950) !important;
+
+        --str-chat__dialog-menu-color: var(--color-steel-900) !important;
+        --str-chat__dialog-menu-background-color: var(--color-steel-850) !important;
+
+        --str-chat__own-message-background-color: var(--color-steel-750) !important;
+        --str-chat__other-message-background-color: var(--color-steel-850) !important;
+        --str-chat__message-border-color: var(--color-steel-900) !important;
+        --str-chat__timestamp-color: var(--color-gray-400) !important;
+
+        --str-chat__text-color: var(--color-white) !important;
+        --str-chat__text-low-emphasis-color: var(--color-gray-400) !important;
+        --str-chat__link-color: var(--color-orange-500) !important;
+        --str-chat__muted-color: var(--color-gray-400) !important;
+
+        --str-chat__primary-color: var(--color-orange-500) !important;
+        --str-chat__active-primary-color: var(--color-yellow-400) !important;
+        --str-chat__accent-color: var(--color-orange-500) !important;
+
+        --str-chat__message-input-background-color: var(--color-steel-950) !important;
+        --str-chat__message-input-text-color: var(--color-white) !important;
+        --str-chat__message-input-border-color: var(--color-steel-400) !important;
+        --str-chat__message-textarea-border-radius: 12px !important;
+
+        --str-chat__avatar-background-color: var(--color-steel-850) !important;
+        --str-chat__avatar-text-color: var(--color-white) !important;
+
+        --str-chat__success-color: var(--color-green-500) !important;
+        --str-chat__error-color: var(--color-red-500) !important;
+        --str-chat__warning-color: var(--color-yellow-400) !important;
+
+        --str-chat__border-radius-xs: 8px;
+        --str-chat__border-radius-sm: 14px;
+        --str-chat__border-radius-md: 18px;
+        --str-chat__border-radius-lg: 20px;
+        --str-chat__border-radius-circle: 6px !important;
+    }
+}
