@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -40,13 +40,13 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
     }));
   }, [tabParam]);
 
-  const handleSearch = searchText => {
+  const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       search: searchText,
       page: 1,
     }));
-  };
+  }, []);
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
