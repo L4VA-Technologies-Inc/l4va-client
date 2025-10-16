@@ -1,5 +1,6 @@
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Search } from 'lucide-react';
 
+import { useEffect, useState } from 'react';
 import { formatNum } from '@/utils/core.utils';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 
@@ -113,6 +114,63 @@ export const LavaSteelInput = ({
         onChange={handleChange}
         {...props}
       />
+    </div>
+  );
+};
+
+export const LavaSearchInput = ({
+  name,
+  onChange,
+  onBlur,
+  maxLength,
+  className,
+  placeholder = 'Search',
+  type = 'text',
+  value: propValue = '',
+  debounceTime = 300,
+}) => {
+  const [value, setValue] = useState(propValue);
+
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, debounceTime);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, debounceTime]);
+
+  useEffect(() => {
+    if (onChange) onChange(debouncedValue);
+  }, [debouncedValue, onChange]);
+
+  const handleChange = e => {
+    setValue(e.target.value);
+  };
+
+  return (
+    <div className="relative flex items-center w-full">
+      <input
+        className={`
+              bg-input-bg h-10 px-4 py-2.5 rounded-lg
+              pr-12 font-medium w-full border border-steel-850
+              focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
+              ${className}
+            `}
+        maxLength={maxLength}
+        name={name}
+        placeholder={placeholder}
+        type={type}
+        onChange={event => handleChange(event)}
+        onBlur={onBlur}
+        value={value}
+      />
+      <div className="absolute right-3 text-white/60 select-none">
+        <Search />
+      </div>
     </div>
   );
 };
