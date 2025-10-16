@@ -61,7 +61,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       Assets: {
         text: allAssetsAtMaxCapacity ? 'Contribution Limit Reached' : 'Contribute',
         handleClick: () => openModal('ContributeModal', { vault }),
-        available: true,
+        available:
+          vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
+          new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
+            Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
+          !allAssetsAtMaxCapacity,
+        disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
       },
       Acquire: {
         text: 'Acquire',
