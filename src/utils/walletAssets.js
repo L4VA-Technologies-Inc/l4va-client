@@ -123,13 +123,23 @@ export const fetchWalletAssetsForWhitelist = async (wallet, whitelistedPolicies 
 export const extractPolicyIds = assets => {
   const policyMap = new Map();
 
+  const normalizeIpfs = url => {
+    if (!url) return null;
+    if (url.startsWith('ipfs://')) {
+      return url.replace('ipfs://', 'https://ipfs.io/ipfs/');
+    }
+    return url;
+  };
+
   assets.forEach(asset => {
     if (asset.policyId && !policyMap.has(asset.policyId)) {
+      const image = normalizeIpfs(asset.image) || normalizeIpfs(asset.metadata?.image);
+
       policyMap.set(asset.policyId, {
         policyId: asset.policyId,
         name: asset.name,
         type: asset.type,
-        image: asset.image,
+        image: image,
       });
     }
   });
