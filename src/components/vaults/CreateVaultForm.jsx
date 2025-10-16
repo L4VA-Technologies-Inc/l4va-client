@@ -3,6 +3,7 @@ import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Spinner } from '@/components/Spinner';
 import { SwapComponent } from '@/components/swap/Swap';
@@ -46,6 +47,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
+  const queryClient = useQueryClient();
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -200,9 +202,20 @@ export const CreateVaultForm = ({ vault }) => {
     try {
       setIsSavingDraft(true);
       const formattedData = formatVaultData(vaultData);
+      if (vaultData.id) {
+        formattedData.id = vaultData.id;
+      }
+
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
       updateField('id', data.id);
+      await queryClient.invalidateQueries({ queryKey: ['vault', data.id] });
+      await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+
       toast.success('Vault saved as a draft');
+      navigate({
+        to: '/vaults/my',
+        search: { tab: 'Draft' },
+      });
     } catch (e) {
       console.log(e);
       toast.error('Failed saving draft');
