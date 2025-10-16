@@ -19,11 +19,10 @@ const socialLinks = [
 
 const navLinks = [
   { to: '/create', label: 'Create' },
-  { to: '/vaults?tab=contribute', label: 'Contribute' },
+  { to: '/vaults?tab=contribution', label: 'Contribute' },
   { to: '/vaults?tab=acquire', label: 'Acquire' },
   { to: '/how-it-works', label: 'How it works' },
   { to: '/about-us', label: 'About us' },
-  { to: '/social-media', label: 'Social media' },
   { to: '/terms-of-service', label: 'Terms of Service' },
   { to: '/privacy-policy', label: 'Privacy Policy' },
 ];
