@@ -4,7 +4,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
-import { fetchWalletAssetsForWhitelist, extractPolicyIds } from '@/utils/walletAssets';
+import { useWalletPolicyIds } from '@/services/api/queries';
 
 export const LavaWhitelistWithCaps = ({
   required = false,
@@ -14,28 +14,16 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
-  vaultType = null,
+  vaultType,
 }) => {
-  const [walletPolicyIds, setWalletPolicyIds] = useState([]);
   const [showDropdown, setShowDropdown] = useState({});
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda');
-  const dropdownRefs = useRef({});
   const [scrollTop, setScrollTop] = useState(0);
+  const dropdownRefs = useRef({});
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  useEffect(() => {
-    const loadWalletPolicyIds = async () => {
-      if (wallet.isConnected && wallet.handler) {
-        try {
-          const assets = await fetchWalletAssetsForWhitelist(wallet, new Set(), vaultType);
-          const policyIds = extractPolicyIds(assets);
-          setWalletPolicyIds(policyIds);
-        } catch (error) {
-          console.error('Error loading wallet policy IDs:', error);
-        }
-      }
-    };
-    loadWalletPolicyIds();
-  }, [wallet, vaultType]);
+  const { data } = useWalletPolicyIds(wallet?.changeAddressBech32, vaultType !== 'cnt');
+
+  const walletPolicyIds = data?.data || [];
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -118,7 +106,7 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
-  const renderAssetItem = (asset, policy, index) => {
+  const renderAssetItem = (asset, policy) => {
     const searchText = asset.policyId.toLowerCase();
     const highlightText = (text, search) => {
       if (!search) return text;
@@ -136,32 +124,20 @@ export const LavaWhitelistWithCaps = ({
 
     return (
       <button
-        key={index}
+        key={`${policy.policyId}-${policy.name}`}
         type="button"
         className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
         onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name)}
       >
-        {policy.image && (
-          <img
-            src={policy.image}
-            alt={policy.name}
-            className="w-6 h-6 rounded-full object-cover"
-            onError={e => {
-              e.target.style.display = 'none';
-            }}
-          />
-        )}
         <div className="flex-1 min-w-0">
           <div className="font-medium text-white truncate">{highlightText(policy.name, searchText)}</div>
           <div className="text-sm text-gray-400 truncate font-mono">{highlightText(policy.policyId, searchText)}</div>
         </div>
-        <div className="text-xs text-gray-500 uppercase">{policy.type}</div>
       </button>
     );
   };
 
   const renderPolicyList = (filteredPolicies, asset, scrollTop = 0) => {
-
     if (filteredPolicies.length === 0) {
       return <div className="flex items-center justify-center h-32 text-dark-100">No policies available</div>;
     }
@@ -171,7 +147,7 @@ export const LavaWhitelistWithCaps = ({
         <VirtualizedList
           items={filteredPolicies}
           itemHeight={60}
-          renderItem={(policy, index) => renderAssetItem(asset, policy, index)}
+          renderItem={policy => renderAssetItem(asset, policy)}
           scrollTop={scrollTop}
         />
       );
@@ -179,8 +155,8 @@ export const LavaWhitelistWithCaps = ({
 
     return (
       <div className="space-y-2 pr-2">
-        {filteredPolicies.map((policy, index) => (
-          <div key={policy.id}>{renderAssetItem(asset, policy, index)}</div>
+        {filteredPolicies.map(policy => (
+          <div key={policy.id}>{renderAssetItem(asset, policy)}</div>
         ))}
       </div>
     );

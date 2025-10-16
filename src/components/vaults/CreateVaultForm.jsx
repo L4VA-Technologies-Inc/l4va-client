@@ -176,19 +176,6 @@ export const CreateVaultForm = ({ vault }) => {
     }
   };
 
-  // const fetchVlrmBalance = async () => {
-  //   try {
-  //     if (!wallet.handler) return;
-  //     const changeAddress = await wallet.handler.getChangeAddressBech32();
-  //     const { data } = await TapToolsApiProvider.getWalletSummary(changeAddress);
-  //     const vlrmToken = data.assets?.find(asset => asset.tokenId === import.meta.env.VITE_VLRM_TOKEN_ID);
-  //     return vlrmToken ? vlrmToken.quantity : 0;
-  //   } catch (err) {
-  //     console.log('Error fetching VLRM balance', err);
-  //     return 0;
-  //   }
-  // };
-
   const handleStepClick = stepId => {
     if (stepId === currentStep) return;
 

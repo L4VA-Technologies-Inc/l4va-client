@@ -7,7 +7,7 @@ export const FTItem = ({ ft, amount, onAmountChange }) => (
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
       <div className="flex items-center gap-3">
         <LazyImage
-          src={ft.image}
+          src={ft.src}
           alt={ft.name}
           className="rounded-full"
           width={32}
@@ -28,7 +28,9 @@ export const FTItem = ({ ft, amount, onAmountChange }) => (
         />
       </div>
       <span className="text-dark-100 hover:underline text-sm">
-        {ft.policyId ? `${ft.policyId.substring(0, 6)}...${ft.policyId.substring(ft.policyId.length - 6)}` : ''}
+        {ft.metadata?.policyId
+          ? `${ft.metadata.policyId.substring(0, 6)}...${ft.metadata.policyId.substring(ft.metadata.policyId.length - 6)}`
+          : ''}
       </span>
     </div>
   </div>
