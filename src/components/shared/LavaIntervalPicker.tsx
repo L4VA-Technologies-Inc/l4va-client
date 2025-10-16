@@ -32,7 +32,8 @@ type LavaIntervalPickerProps = {
   className?: string;
   placeholder?: string;
   variant?: 'default' | 'steel';
-  minDays?: number; // Minimum time in milliseconds
+  minDays?: number;
+  minMs?: number;
 };
 
 export const LavaIntervalPicker = ({
@@ -41,6 +42,7 @@ export const LavaIntervalPicker = ({
   className,
   value = 0,
   minDays = 0,
+  minMs = 0,
   placeholder = 'Select interval',
   variant = 'default',
   required = false,
@@ -53,17 +55,26 @@ export const LavaIntervalPicker = ({
     setIntervalValue(msToInterval(value));
   }, [value]);
 
-  const days = Array.from({ length: 31 - minDays }, (_, i) => i + minDays);
+  const minInterval = minMs > 0 ? msToInterval(minMs) : { days: minDays, hours: 0, minutes: 0 };
+
+  const days = Array.from({ length: 31 - minInterval.days }, (_, i) => i + minInterval.days);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+  const isValidSelection = (newInterval: { days: number; hours: number; minutes: number }) => {
+    const totalMs = intervalToMs(newInterval);
+    const minTotalMs = minMs > 0 ? minMs : intervalToMs(minInterval);
+    return totalMs >= minTotalMs;
+  };
 
   const handleIntervalChange = (type: keyof typeof interval, val: string) => {
     const newInterval = {
       ...interval,
       [type]: Number.parseInt(val, 10),
     };
-    setIntervalValue(newInterval);
-    onChange(intervalToMs(newInterval));
+    if (isValidSelection(newInterval)) {
+      setIntervalValue(newInterval);
+      onChange(intervalToMs(newInterval));
+    }
   };
 
   const styles = variants[variant];
@@ -120,17 +131,22 @@ export const LavaIntervalPicker = ({
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Hours</div>
                     <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
-                      {hours.map(hour => (
-                        <Button
-                          key={hour}
-                          className="w-12 h-12"
-                          size="icon"
-                          variant={interval.hours === hour ? 'default' : 'ghost'}
-                          onClick={() => handleIntervalChange('hours', hour.toString())}
-                        >
-                          {hour}
-                        </Button>
-                      ))}
+                      {hours.map(hour => {
+                        const testInterval = { ...interval, hours: hour };
+                        const isDisabled = !isValidSelection(testInterval);
+                        return (
+                          <Button
+                            key={hour}
+                            className="w-12 h-12"
+                            size="icon"
+                            variant={interval.hours === hour ? 'default' : 'ghost'}
+                            disabled={isDisabled}
+                            onClick={() => handleIntervalChange('hours', hour.toString())}
+                          >
+                            {hour}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
@@ -139,17 +155,22 @@ export const LavaIntervalPicker = ({
                   <div className="p-4 border-l border-steel-850">
                     <div className="text-sm font-medium mb-2 text-center">Minutes</div>
                     <div className="grid gap-1 max-h-64 w-fit overflow-y-auto pr-1">
-                      {minutes.map(minute => (
-                        <Button
-                          key={minute}
-                          className="w-12 h-12"
-                          size="icon"
-                          variant={interval.minutes === minute ? 'default' : 'ghost'}
-                          onClick={() => handleIntervalChange('minutes', minute.toString())}
-                        >
-                          {minute}
-                        </Button>
-                      ))}
+                      {minutes.map(minute => {
+                        const testInterval = { ...interval, minutes: minute };
+                        const isDisabled = !isValidSelection(testInterval);
+                        return (
+                          <Button
+                            key={minute}
+                            className="w-12 h-12"
+                            size="icon"
+                            variant={interval.minutes === minute ? 'default' : 'ghost'}
+                            disabled={isDisabled}
+                            onClick={() => handleIntervalChange('minutes', minute.toString())}
+                          >
+                            {minute}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />

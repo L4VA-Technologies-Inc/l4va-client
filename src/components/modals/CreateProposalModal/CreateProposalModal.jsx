@@ -200,7 +200,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                     value={proposalDuration}
                     onChange={value => setProposalDuration(value)}
                     placeholder="Set Voting Period"
-                    minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+                    minMs={MIN_CONTRIBUTION_DURATION_MS}
                   />
                 </div>
               </div>

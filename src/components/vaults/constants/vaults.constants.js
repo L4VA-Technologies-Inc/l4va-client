@@ -2,8 +2,8 @@ import * as yup from 'yup';
 
 export const MIN_SUPPLY = 1000000; // 10^6
 export const MAX_SUPPLY = 1000000000000; // 10^12
-export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 min in ms
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 min in ms
+export const MIN_CONTRIBUTION_DURATION_MS = 3600000; // 1 hour in ms
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 3600000; // 1 hour in ms
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
 export const BUTTON_DISABLE_THRESHOLD_MS = 300000; // Min 5 min before button is enabled
 
@@ -202,14 +202,14 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Duration is required')
     .required('Duration is required')
-    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 24 hours'),
+    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 1 hour'),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
     .required('Acquire window duration is required')
-    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 24 hours'),
+    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 1 hour'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
   acquirerWhitelist: yup

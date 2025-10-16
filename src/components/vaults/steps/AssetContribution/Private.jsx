@@ -81,7 +81,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
             <LavaIntervalPicker
               value={data.contributionDuration}
               onChange={value => updateField('contributionDuration', value)}
-              minDays={Math.floor(MIN_CONTRIBUTION_DURATION_MS / (1000 * 60 * 60 * 24))}
+              minMs={MIN_CONTRIBUTION_DURATION_MS}
             />
             {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
           </div>
