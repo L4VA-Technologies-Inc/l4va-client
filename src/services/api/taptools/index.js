@@ -6,8 +6,8 @@ export class TapToolsApiProvider {
     return await axiosInstance.get(TapToolsConfigProvider.getWalletAssetAmount(assetId, address));
   }
 
-  static async getWalletPolicyIds(address) {
-    return await axiosInstance.get(TapToolsConfigProvider.getWalletPolicyIds(address));
+  static async getWalletPolicyIds(address, excludeFts) {
+    return await axiosInstance.get(TapToolsConfigProvider.getWalletPolicyIds(address, excludeFts));
   }
 
   static async getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies }) {

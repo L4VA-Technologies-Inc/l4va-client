@@ -14,17 +14,16 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
-  vaultType = null,
+  vaultType,
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda');
-  const dropdownRefs = useRef({});
   const [scrollTop, setScrollTop] = useState(0);
+  const dropdownRefs = useRef({});
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  const { data: walletPolicyIds = [] } = useWalletPolicyIds(wallet?.address, {
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    retry: 2,
-  });
+  const { data } = useWalletPolicyIds(wallet?.changeAddressBech32, vaultType !== 'cnt');
+
+  const walletPolicyIds = data?.data || [];
 
   useEffect(() => {
     const handleClickOutside = event => {

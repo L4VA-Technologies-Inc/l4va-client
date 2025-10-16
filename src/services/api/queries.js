@@ -179,11 +179,13 @@ export const useWalletSummaryPaginated = ({ address, page = 1, limit = 20, filte
   });
 };
 
-export const useWalletPolicyIds = address => {
+export const useWalletPolicyIds = (address, excludeFts = false) => {
   return useQuery({
-    queryKey: ['wallet-policy-ids', address],
-    queryFn: () => TapToolsApiProvider.getWalletPolicyIds(address),
+    queryKey: ['wallet-policy-ids', address, excludeFts],
+    queryFn: () => TapToolsApiProvider.getWalletPolicyIds(address, excludeFts),
     enabled: !!address,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 };
 
