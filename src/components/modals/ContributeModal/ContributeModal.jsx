@@ -108,7 +108,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   } = useInfiniteWalletAssets({
     walletAddress: wallet?.changeAddressBech32,
     whitelistedPolicies,
-    activeTab: 'ALL',
+    activeTab,
   });
 
   // Handle wallet errors
