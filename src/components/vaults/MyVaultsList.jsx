@@ -16,7 +16,7 @@ const VAULT_TABS = {
 
 const TABS = Object.values(VAULT_TABS);
 
-export const MyVaultsList = ({ className = '' }) => {
+export const MyVaultsList = ({ className = '', initialTab }) => {
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTab && TABS.includes(initialTab)) {
       return initialTab;
