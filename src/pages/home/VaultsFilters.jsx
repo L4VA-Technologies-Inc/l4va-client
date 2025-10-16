@@ -30,7 +30,16 @@ const VaultsFilters = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
+    search: '',
   });
+
+  const handleSearch = searchText => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      search: searchText,
+      page: 1,
+    }));
+  };
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
@@ -84,6 +93,7 @@ const VaultsFilters = ({ className = '' }) => {
       onApplyFilters={handleApplyFilters}
       pagination={pagination}
       onPageChange={handlePageChange}
+      onSearch={handleSearch}
     />
   );
 };

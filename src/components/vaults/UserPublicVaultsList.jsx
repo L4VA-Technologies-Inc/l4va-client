@@ -26,6 +26,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
     limit: 12,
     filter: initialTab.filter,
     ownerId: ownerId,
+    search: '',
   });
 
   useEffect(() => {
@@ -38,6 +39,14 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
       ownerId: ownerId,
     }));
   }, [tabParam]);
+
+  const handleSearch = searchText => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      search: searchText,
+      page: 1,
+    }));
+  };
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
@@ -102,6 +111,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
         onApplyFilters={handleApplyFilters}
         pagination={pagination}
         onPageChange={handlePageChange}
+        onSearch={handleSearch}
       />
     </div>
   );

@@ -1,15 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 
 import VaultListItem from '@/components/vaults/VaultListItem';
-import { LavaTabs } from '@/components/shared/LavaTabs';
 import VaultFilter from '@/components/shared/VaultFilter';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { Spinner } from '@/components/Spinner';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { Pagination } from '@/components/shared/Pagination';
+import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
+import { LavaTabs } from '@/components/shared/LavaTabs.jsx';
 
 const LoadingState = () => (
   <div className="py-8 flex items-center justify-center">
@@ -41,6 +42,7 @@ export const VaultList = ({
   activeTab: externalActiveTab,
   pagination,
   onPageChange,
+  onSearch,
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState(tabs[0]);
   const [viewType, setViewType] = useState('grid');
@@ -98,7 +100,7 @@ export const VaultList = ({
       <div className="flex flex-col gap-6 md:gap-8">
         {title ? <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2> : null}
         {tabs.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
             <div className="flex-1 w-full sm:w-auto">
               <LavaTabs
                 className="overflow-x-auto text-sm md:text-base w-full"
@@ -107,7 +109,10 @@ export const VaultList = ({
                 onTabChange={handleTabChange}
               />
             </div>
-            <VaultFilter handleOpenFilters={handleOpenFilters} viewType={viewType} setViewType={setViewType} />
+            <div className="flex w-full flex-col sm:flex-row gap-4">
+              <LavaSearchInput name="name" placeholder="search by name by policy ID" onChange={onSearch} />
+              <VaultFilter handleOpenFilters={handleOpenFilters} viewType={viewType} setViewType={setViewType} />
+            </div>
           </div>
         )}
         {isLoading ? (

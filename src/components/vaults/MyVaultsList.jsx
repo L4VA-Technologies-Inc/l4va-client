@@ -16,13 +16,14 @@ const VAULT_TABS = {
 
 const TABS = Object.values(VAULT_TABS);
 
-export const MyVaultsList = ({ className = '', initialTab }) => {
+export const MyVaultsList = ({ className = '' }) => {
   const [activeTab, setActiveTab] = useState(() => {
     if (initialTab && TABS.includes(initialTab)) {
       return initialTab;
     }
     return TABS[0];
   });
+
   const [appliedFilters, setAppliedFilters] = useState(() => {
     const initialActiveTab = initialTab && TABS.includes(initialTab) ? initialTab : TABS[0];
     return {
@@ -30,8 +31,10 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
       limit: 12,
       filter: initialActiveTab.toLowerCase(),
       myVaults: true,
+      search: '',
     };
   });
+
   const myVaultsListRef = useRef(null);
   const router = useRouter();
 
@@ -42,6 +45,14 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
       filter: activeTab.toLowerCase(),
     }));
   }, [activeTab]);
+
+  const handleSearch = searchText => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      search: searchText,
+      page: 1,
+    }));
+  };
 
   const handleTabChange = tab => {
     setActiveTab(tab);
@@ -107,6 +118,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
         onApplyFilters={handleApplyFilters}
         pagination={pagination}
         onPageChange={handlePageChange}
+        onSearch={handleSearch}
       />
     </div>
   );

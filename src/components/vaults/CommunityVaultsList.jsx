@@ -29,6 +29,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     page: 1,
     limit: 12,
     filter: initialTab.filter,
+    search: '',
   });
 
   useEffect(() => {
@@ -40,6 +41,14 @@ export const CommunityVaultsList = ({ className = '' }) => {
       filter: newTab.filter,
     }));
   }, [tabParam]);
+
+  const handleSearch = searchText => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      search: searchText,
+      page: 1,
+    }));
+  };
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);
@@ -107,6 +116,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
         onApplyFilters={handleApplyFilters}
         pagination={pagination}
         onPageChange={handlePageChange}
+        onSearch={handleSearch}
       />
     </div>
   );
