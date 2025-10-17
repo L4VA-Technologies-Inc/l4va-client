@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle } from 'lucide-react';
+import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle, CircleCheck, CircleArrowUp } from 'lucide-react';
 
 import { ProposalInfo } from './ProposalInfo';
 
@@ -77,6 +77,44 @@ export const VaultGovernance = ({ vault }) => {
       </div>
     </div>
   );
+
+  const renderInactiveStatus = status => {
+    const proposalStatus = status === 'executed' ? 'finished' : status;
+
+    const statusIconColors = {
+      finished: {
+        text: 'text-green-500',
+        background: 'bg-green-500/20',
+      },
+      rejected: {
+        text: 'text-red-500',
+        background: 'bg-red-500/20',
+      },
+      upcoming: {
+        text: 'text-yellow-500',
+        background: 'bg-yellow-500/20',
+      },
+    };
+
+    return (
+      <div className="p-4 mb-6">
+        <div className="flex items-center justify-center text-center">
+          <div className={`flex flex-col items-center ${statusIconColors[proposalStatus].text}`}>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${statusIconColors[proposalStatus].background}`}
+            >
+              {proposalStatus === 'finished' && <CircleCheck className="w-6 h-6" />}
+              {proposalStatus === 'rejected' && <XCircle className="w-6 h-6" />}
+              {proposalStatus === 'upcoming' && <CircleArrowUp className="w-6 h-6" />}
+            </div>
+            <h4 className="text-lg font-semibold mb-2">Proposal {proposalStatus}</h4>
+            {proposalStatus !== 'upcoming' && <p className="text-sm">This proposal has been {proposalStatus}.</p>}
+            {proposalStatus === 'upcoming' && <p className="text-sm">This proposal will be available soon.</p>}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen p-6 rounded-2xl border border-gray-800 overflow-hidden">
@@ -164,17 +202,7 @@ export const VaultGovernance = ({ vault }) => {
                     <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
 
                     {proposal.status !== 'active' ? (
-                      <div className="p-4 mb-6">
-                        <div className="flex items-center justify-center text-center">
-                          <div className="flex flex-col items-center">
-                            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mb-3">
-                              <CheckCircle className="w-6 h-6 text-green-500" />
-                            </div>
-                            <h4 className="text-lg font-semibold text-green-400 mb-2">Proposal {proposal.status === 'executed' ? 'Finished' : 'Rejected'}</h4>
-                            <p className="text-sm text-green-300/80">This proposal has been successfully {proposal.status === 'executed' ? 'finished' : 'rejected'}.</p>
-                          </div>
-                        </div>
-                      </div>
+                      renderInactiveStatus(proposal.status)
                     ) : proposal.votes ? (
                       <div className="space-y-3 mb-6">
                         <div>
