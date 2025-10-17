@@ -27,9 +27,9 @@ export const useTransaction = () => {
         const { data } = await createContributionTx.mutateAsync({
           vaultId,
           assets: selectedNFTs.map(nft => ({
-            policyId: nft.policyId,
-            type: nft.type.toLowerCase(),
-            assetName: nft.assetName,
+            policyId: nft.metadata.policyId,
+            type: nft.isNft ? 'nft' : 'ft',
+            assetName: nft.metadata.assetName,
             quantity: nft.quantity,
             metadata: nft.metadata,
           })),
@@ -47,8 +47,8 @@ export const useTransaction = () => {
             {
               address: recipient,
               assets: selectedNFTs.map(nft => ({
-                policyId: nft.policyId,
-                assetName: nft.assetName,
+                policyId: nft.metadata.policyId,
+                assetName: nft.metadata.assetName,
                 quantity: nft.quantity,
                 metadata: nft.metadata,
               })),
