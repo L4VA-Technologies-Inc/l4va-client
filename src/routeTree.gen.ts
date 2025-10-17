@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
-import { Route as SandboxRouteImport } from './routes/sandbox'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CreateRouteImport } from './routes/create'
@@ -25,11 +24,6 @@ import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SandboxRoute = SandboxRouteImport.update({
-  id: '/sandbox',
-  path: '/sandbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -89,7 +83,6 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/sandbox': typeof SandboxRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -103,7 +96,6 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/sandbox': typeof SandboxRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -118,7 +110,6 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
-  '/sandbox': typeof SandboxRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -134,7 +125,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
-    | '/sandbox'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -148,7 +138,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
-    | '/sandbox'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -162,7 +151,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
-    | '/sandbox'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -177,7 +165,6 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
-  SandboxRoute: typeof SandboxRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ProfileIdRoute: typeof ProfileIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
@@ -193,13 +180,6 @@ declare module '@tanstack/react-router' {
       path: '/terms-of-service'
       fullPath: '/terms-of-service'
       preLoaderRoute: typeof TermsOfServiceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sandbox': {
-      id: '/sandbox'
-      path: '/sandbox'
-      fullPath: '/sandbox'
-      preLoaderRoute: typeof SandboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -281,7 +261,6 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   HowItWorksRoute: HowItWorksRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
-  SandboxRoute: SandboxRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   ProfileIdRoute: ProfileIdRoute,
   VaultsIdRoute: VaultsIdRoute,
