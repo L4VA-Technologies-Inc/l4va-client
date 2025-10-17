@@ -83,16 +83,16 @@ export const VaultGovernance = ({ vault }) => {
 
     const statusIconColors = {
       finished: {
-        text: 'text-green-500',
-        background: 'bg-green-500/20',
+        text: 'text-yellow-500',
+        background: 'bg-yellow-500/20',
       },
       rejected: {
         text: 'text-red-500',
         background: 'bg-red-500/20',
       },
       upcoming: {
-        text: 'text-yellow-500',
-        background: 'bg-yellow-500/20',
+        text: 'text-steel-400',
+        background: 'bg-steel-600',
       },
     };
 
