@@ -34,6 +34,7 @@ type LavaIntervalPickerProps = {
   variant?: 'default' | 'steel';
   minDays?: number;
   minMs?: number;
+  error?: boolean;
 };
 
 export const LavaIntervalPicker = ({
@@ -47,6 +48,7 @@ export const LavaIntervalPicker = ({
   variant = 'default',
   required = false,
   onChange = () => {},
+  error = false,
 }: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
@@ -95,7 +97,13 @@ export const LavaIntervalPicker = ({
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
-                className={cn(styles.button, 'justify-start text-left', !value && 'text-white/60', className)}
+                className={cn(
+                  styles.button,
+                  'justify-start text-left',
+                  !value && 'text-white/60',
+                  error ? 'border border-red-600' : 'border border-steel-750',
+                  className
+                )}
                 variant="outline"
               >
                 <ClockIcon className="mr-2 h-4 w-4" />
