@@ -30,27 +30,6 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
   const userId = user?.id || 'anonymous';
   const userName = user?.name || user?.username || 'Anonymous User';
 
-  const scrollToBottom = () => {
-    const messageList = document.querySelector('.str-chat__message-list-scroll');
-    if (messageList) {
-      messageList.scrollTop = messageList.scrollHeight;
-    }
-  };
-
-  useEffect(() => {
-    if (channel) {
-      const handleNewMessage = () => {
-        setTimeout(scrollToBottom, 100);
-      };
-
-      channel.on('message.new', handleNewMessage);
-
-      return () => {
-        channel.off('message.new', handleNewMessage);
-      };
-    }
-  }, [channel]);
-
   useEffect(() => {
     const initChat = async () => {
       if (!actualVaultId || !actualApiKey) {
@@ -71,9 +50,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
         const userResponse = await fetch(`/api/v1/chat/user/${userId}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: userName,
             image: user?.avatar || `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
@@ -87,7 +64,6 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
         }
 
         const tokenResponse = await fetch(`/api/v1/chat/token/${userId}`);
-
         if (!tokenResponse.ok) {
           const tokenError = await tokenResponse.text();
           throw new Error(`${tokenError}`);
@@ -104,20 +80,12 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
           image: user?.avatar || `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
         };
 
-        try {
-          await chatClient.connectUser(userData, token);
-        } catch (connectError) {
-          throw new Error(`${connectError.message}`);
-        }
+        await chatClient.connectUser(userData, token);
 
         const channelResponse = await fetch(`/api/v1/chat/vault/${actualVaultId}/channel`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            createdByUserId: userId,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ createdByUserId: userId }),
         });
 
         if (!channelResponse.ok) {
@@ -144,8 +112,6 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
         setClient(chatClient);
         setChannel(chatChannel);
-
-        setTimeout(scrollToBottom, 500);
       } catch (error) {
         setError(`${error}`);
       } finally {
@@ -154,11 +120,18 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
     };
 
     initChat();
-
-    return () => {
-      // Cleanup will be handled by the component unmount
-    };
   }, [actualVaultId, userId, userName, actualApiKey, user?.avatar, vault?.name, vault?.description, vaultImage]);
+
+  const validateAndSendMessage = async message => {
+    const urls = message.text.match(/https?:\/\/[^\s]+/g) || [];
+    const invalid = urls.find(url => !url.startsWith('https://testnet.l4va.org/'));
+
+    if (invalid) {
+      return;
+    }
+
+    await channel.sendMessage(message);
+  };
 
   return (
     <div className="min-h-[600px] h-[600px] rounded-xl border border-steel-850 text-white flex items-center justify-center overflow-hidden">
@@ -181,7 +154,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
               <Window>
                 <VaultChannelHeader vault={vault} />
                 <MessageList />
-                <MessageInput grow={true} maxRows={4} />
+                <MessageInput grow={true} maxRows={4} overrideSubmitHandler={validateAndSendMessage} />
               </Window>
               <Thread className="w-full h-full" />
             </Channel>
