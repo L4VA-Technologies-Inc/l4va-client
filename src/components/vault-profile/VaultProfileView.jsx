@@ -25,8 +25,6 @@ import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
 
-const REGISTERING_CONTRACT_ADDRESS = 'addr_test1wqk7x4gmh4crm5pa27a569sz0femq5qewlwgxzy92gamres6cj45h';
-
 export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
@@ -224,12 +222,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const renderPublishedOverlay = () => {
     if (
-      vault.contractAddress === REGISTERING_CONTRACT_ADDRESS ||
-      (vault.vaultStatus === VAULT_STATUSES.PUBLISHED &&
-        !(
-          vault.contributionOpenWindowType === 'custom' &&
-          new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0
-        ))
+      vault.vaultStatus === VAULT_STATUSES.PUBLISHED &&
+      !(
+        vault.contributionOpenWindowType === 'custom' &&
+        new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0
+      )
     ) {
       return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
