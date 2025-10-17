@@ -110,7 +110,7 @@ export const VaultList = ({
               />
             </div>
             <div className="flex w-full flex-col sm:flex-row gap-4">
-              <LavaSearchInput name="name" placeholder="search by name by policy ID" onChange={onSearch} />
+              <LavaSearchInput name="name" placeholder="Search by name" onChange={onSearch} />
               <VaultFilter handleOpenFilters={handleOpenFilters} viewType={viewType} setViewType={setViewType} />
             </div>
           </div>

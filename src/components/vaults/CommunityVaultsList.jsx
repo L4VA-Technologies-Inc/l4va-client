@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
@@ -42,13 +42,13 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }));
   }, [tabParam]);
 
-  const handleSearch = searchText => {
+  const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       search: searchText,
       page: 1,
     }));
-  };
+  }, []);
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);

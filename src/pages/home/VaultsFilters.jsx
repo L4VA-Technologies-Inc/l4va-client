@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
@@ -33,13 +33,13 @@ const VaultsFilters = ({ className = '' }) => {
     search: '',
   });
 
-  const handleSearch = searchText => {
+  const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       search: searchText,
       page: 1,
     }));
-  };
+  }, []);
 
   const handleTabChange = tab => {
     const selectedTab = VAULT_TABS.find(t => t.label === tab);

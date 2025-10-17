@@ -39,13 +39,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
   const [proposalDuration, setProposalDuration] = useState(null);
+  const [error, setError] = useState(false);
 
   const createProposalMutation = useCreateProposal();
 
   const { refetch } = useGovernanceProposals(vault.id);
 
   const handleCreateProposal = () => {
-    setShowConfirmation(true);
+    if (!isValidProposal()) {
+      setError(false);
+      setShowConfirmation(true);
+    } else {
+      setError(true);
+    }
   };
 
   const isValidProposal = () => {
@@ -125,7 +131,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         <SecondaryButton onClick={onClose} size="sm">
           Cancel
         </SecondaryButton>
-        <PrimaryButton disabled={isValidProposal()} onClick={handleCreateProposal} size="sm" className="capitalize">
+        <PrimaryButton onClick={handleCreateProposal} size="sm" className="capitalize">
           Create
         </PrimaryButton>
       </div>
@@ -145,16 +151,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         <div className="space-y-6">
           <div className="space-y-4">
             <LavaSteelInput
-              label="Proposal Title"
+              className="border border-red-600"
+              label="Proposal Title*"
               placeholder="Enter proposal title"
               value={proposalTitle}
               onChange={value => setProposalTitle(value)}
+              error={error && !proposalTitle}
             />
             <LavaSteelTextarea
-              label="Proposal Description"
+              label="Proposal Description*"
               placeholder="Enter proposal description"
               value={proposalDescription}
               onChange={value => setProposalDescription(value)}
+              error={error && !proposalDescription}
             />
             <h3 className="text-lg font-medium">Execution Options</h3>
             <LavaSteelSelect
@@ -180,27 +189,32 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 vaultId={vault?.id}
                 onClose={() => setSelectedOption('staking')}
                 onDataChange={handleDataChange}
+                error={error}
               />
             )}
-            {selectedOption === 'buy_sell' && <BuyingSelling vaultId={vault?.id} onDataChange={handleDataChange} />}
+            {selectedOption === 'buy_sell' && (
+              <BuyingSelling error={error} vaultId={vault?.id} onDataChange={handleDataChange} />
+            )}
 
             <div className="mt-8">
               <h4 className="text-white font-medium mb-4">Voting Period</h4>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="flex-1 relative">
                   <LavaDatePicker
-                    label={'Start:'}
+                    label={'Start: *'}
                     value={proposalStartDate}
                     onChange={value => setProposalStartDate(new Date(value))}
+                    error={error && !proposalStartDate}
                   />
                 </div>
                 <div className="flex-1 relative">
                   <LavaIntervalPicker
-                    label={'Duration:'}
+                    label={'Duration:*'}
                     value={proposalDuration}
                     onChange={value => setProposalDuration(value)}
                     placeholder="Set Voting Period"
                     minMs={MIN_CONTRIBUTION_DURATION_MS}
+                    error={error && !proposalDuration}
                   />
                 </div>
               </div>

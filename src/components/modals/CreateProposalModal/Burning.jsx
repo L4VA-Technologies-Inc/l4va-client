@@ -4,7 +4,7 @@ import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/Asse
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
-export default function Burning({ onClose, vaultId, onDataChange }) {
+export default function Burning({ onClose, vaultId, onDataChange, error }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState([]);
@@ -84,6 +84,7 @@ export default function Burning({ onClose, vaultId, onDataChange }) {
             <h3 className="text-lg font-medium text-white">Assets to Burn</h3>
             <LavaCheckbox checked={selectedAll} onChange={handleSelectAllChange} description="Select All" />
           </div>
+          {error && selectedAssets.length === 0 && <p className="text-red-600 font-bold">Select at least one asset!</p>}
           <div className="space-y-4">
             <div className="bg-steel-800 rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-3 gap-4 font-bold">

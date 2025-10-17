@@ -24,7 +24,7 @@ const sellTypeOptions = [
 ];
 
 const validateOptions = options => {
-  if (options.length === 0) return true;
+  if (options.length === 0) return false;
 
   try {
     options.forEach(option => {
@@ -36,7 +36,18 @@ const validateOptions = options => {
   }
 };
 
-export const BuyingSelling = ({ vaultId, onDataChange }) => {
+const validateOption = option => {
+  if (option) {
+    try {
+      transactionOptionSchema.validateSync(option);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+};
+
+export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
@@ -158,7 +169,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
       </div>
 
       {options.length === 0 ? (
-        <p className="text-center text-white/60 py-8">Start by clicking Add option</p>
+        <>
+          {error && <p className="text-center text-red-600 font-bold py-8">Add options!</p>}
+          {!error && <p className="text-center text-white/60 py-8">Start by clicking Add option</p>}
+        </>
       ) : (
         <div className="space-y-8">
           {options.map((option, index) => {
@@ -166,7 +180,10 @@ export const BuyingSelling = ({ vaultId, onDataChange }) => {
             return (
               <div key={option.id}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                  <p className="font-medium">Option {index + 1}</p>
+                  <p className="font-medium">
+                    Option {index + 1}{' '}
+                    {error && !validateOption(option) && <span className="text-red-600 ml-2">Fill in all inputs!</span>}
+                  </p>
                   <button
                     className="bg-red-600/10 hover:bg-red-600/20 text-red-600 text-sm px-3 py-1 rounded-md flex items-center gap-1.5 transition-colors self-start sm:self-auto"
                     type="button"
