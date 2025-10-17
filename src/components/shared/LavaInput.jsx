@@ -80,6 +80,7 @@ export const LavaSteelInput = ({
   className = '',
   required = false,
   placeholder = 'Lorem ipsum',
+  error = false,
   ...props
 }) => {
   const handleChange = e => {
@@ -105,8 +106,9 @@ export const LavaSteelInput = ({
       <input
         className={`
           w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
-          border border-steel-750
-          focus:outline-none focus:ring-2 focus:ring-steel-750 ${className}
+          ${error ? 'border border-red-600' : 'border border-steel-750'}
+          focus:outline-none focus:ring-2 focus:ring-steel-750
+          ${className}
         `}
         placeholder={placeholder}
         type={type}

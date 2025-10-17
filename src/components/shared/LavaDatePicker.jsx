@@ -33,6 +33,7 @@ export const LavaDatePicker = ({
   variant = 'default',
   onChange = () => {},
   hint,
+  error = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dateValue, setDateValue] = useState(null);
@@ -106,7 +107,13 @@ export const LavaDatePicker = ({
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
-                className={cn(styles.button, 'justify-start text-left', !dateValue && 'text-white/60', className)}
+                className={cn(
+                  styles.button,
+                  'justify-start text-left',
+                  !dateValue && 'text-white/60',
+                  error ? 'border border-red-600' : 'border border-steel-750',
+                  className
+                )}
                 variant="outline"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
