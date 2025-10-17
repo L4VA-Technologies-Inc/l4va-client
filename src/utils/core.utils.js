@@ -78,6 +78,18 @@ export const substringAddress = address => {
   return `${address?.substring(0, 4)}...${address?.substring(addressLength - 4)}`;
 };
 
+export const formatString = string => {
+  if (!string) return '';
+
+  const length = string.length;
+
+  if (length <= 6) {
+    return string;
+  }
+
+  return `${string.substring(0, 3)}...${string.substring(length - 3)}`;
+};
+
 export const getDisplayName = user => {
   const { name, address } = user;
   if (name) {
