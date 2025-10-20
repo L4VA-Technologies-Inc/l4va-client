@@ -18,7 +18,7 @@ export const updateStepsCompletionStatus = (steps, vaultData, currentStep) => {
         hasErrors: step.hasErrors, // Preserve existing error state
       };
     } else if (step.id < currentStep) {
-      const status = (isComplete && !step.hasErrors) ? 'completed' : 'pending';
+      const status = isComplete && !step.hasErrors ? 'completed' : 'pending';
       return {
         ...step,
         status,
