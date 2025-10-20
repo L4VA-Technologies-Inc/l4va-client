@@ -105,9 +105,18 @@ export const useInfiniteWalletAssets = ({
   }, [data, currentPage]);
 
   const loadMoreAssets = useCallback(() => {
-    if (hasNextPage && !isLoading) {
-      setCurrentPage(prev => prev + 1);
-    }
+    return new Promise<void>(resolve => {
+      if (hasNextPage && !isLoading) {
+        setCurrentPage(prev => {
+          const newPage = prev + 1;
+          // Resolve after state update
+          setTimeout(() => resolve(), 0);
+          return newPage;
+        });
+      } else {
+        resolve();
+      }
+    });
   }, [hasNextPage, isLoading]);
 
   const refresh = useCallback(() => {

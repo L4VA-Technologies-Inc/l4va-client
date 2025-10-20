@@ -63,7 +63,6 @@ export const InfiniteScrollList = ({
       {isLoadingMore && (
         <div className="flex items-center justify-center py-4">
           <Spinner size="sm" />
-          <span className="ml-2 text-sm text-dark-300">Loading more...</span>
         </div>
       )}
 
