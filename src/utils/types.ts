@@ -43,6 +43,22 @@ export enum VaultStatus {
   FAILED = 'failed',
 }
 
+export enum ProposalType {
+  STAKING = 'staking',
+  DISTRIBUTION = 'distribution',
+  TERMINATION = 'termination',
+  BURNING = 'burning',
+  BUY_SELL = 'buy_sell',
+}
+
+export const ProposalTypeLabels = {
+  [ProposalType.STAKING]: 'Staking',
+  [ProposalType.DISTRIBUTION]: 'Distribution',
+  [ProposalType.TERMINATION]: 'Termination',
+  [ProposalType.BURNING]: 'Burning',
+  [ProposalType.BUY_SELL]: 'Buy/Sell',
+};
+
 export enum ClaimStatus {
   AVAILABLE = 'available',
   PENDING = 'pending',
