@@ -1,9 +1,11 @@
 import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
 
 import PrimaryButton from '../shared/PrimaryButton';
 
 import { formatDate } from '@/utils/core.utils';
+import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
@@ -11,20 +13,66 @@ import { useModalControls } from '@/lib/modals/modal.context';
 export const ProposalInfo = ({ proposal }) => {
   const { user } = useAuth();
   const { openModal } = useModalControls();
+  const router = useRouter();
+
   const { data: response } = useGovernanceProposal(proposal.id);
 
   const proposalInfo = response?.data?.proposal;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
+  const proposer = response?.data?.proposer;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
 
   const informationItems = [
-    { label: 'Proposer', value: proposalInfo?.proposer },
-    { label: 'IPFS', value: proposalInfo?.ipfsHash },
-    { label: 'Voting system', value: 'Single choice' },
-    { label: 'Start at', value: formatDate(proposalInfo?.startDate) },
-    { label: 'End at', value: formatDate(proposalInfo?.endDate) },
+    {
+      label: 'Proposer',
+      value: proposer?.address
+        ? `${proposer.address.substring(0, 6)}...${proposer.address.substring(proposer.address.length - 6)}`
+        : 'N/A',
+      onClick: () => proposer && handleOwnerProposalClick(proposer?.id),
+    },
+    { label: 'IPFS', value: proposalInfo?.ipfsHash || 'N/A' },
+    { label: 'Voting system', value: 'Single choice' || 'N/A' },
+    { label: 'Start at', value: formatDate(proposalInfo?.startDate) || 'N/A' },
+    { label: 'End at', value: formatDate(proposalInfo?.endDate) || 'N/A' },
+  ];
+
+  const proposalBuyingSelling =
+    proposalInfo?.buyingSellingOptions?.length > 0
+      ? [
+          { label: 'Execution Options', value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A' },
+          { label: 'Asset Name', value: proposalInfo?.buyingSellingOptions[0]?.assetName || 'N/A' },
+          { label: 'Exec', value: proposalInfo?.buyingSellingOptions[0]?.exec || 'N/A' },
+          { label: 'Quantity', value: proposalInfo?.buyingSellingOptions[0]?.quantity || 'N/A' },
+          { label: 'Sell Type', value: proposalInfo?.buyingSellingOptions[0]?.sellType || 'N/A' },
+          { label: 'Method', value: proposalInfo?.buyingSellingOptions[0]?.method || 'N/A' },
+          { label: 'Duration', value: proposalInfo?.buyingSellingOptions[0]?.duration || 'N/A' },
+          { label: 'Market', value: proposalInfo?.buyingSellingOptions[0]?.market || 'N/A' },
+          { label: 'Price', value: proposalInfo?.buyingSellingOptions[0]?.price || 'N/A' },
+        ]
+      : [];
+
+  const proposalStaking = [
+    { label: 'Execution Options', value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A' },
+    { label: 'Fungible Tokens', value: proposalInfo?.fungibleTokens || 'N/A', type: 'list' },
+    { label: 'Non Fungible Tokens', value: proposalInfo?.nonFungibleTokens || 'N/A', type: 'list' },
+  ];
+
+  const proposalDistributing = [
+    { label: 'Execution Options', value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A' },
+    { label: 'Distribution Assets', value: proposalInfo?.distributionAssets || 'N/A', type: 'list' },
+  ];
+
+  const proposalTerminating = [
+    { label: 'Execution Options', value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A' },
+    { label: 'Termination Reason', value: proposalInfo?.terminationReason || 'N/A', type: 'list' },
+    { label: 'Termination Date', value: proposalInfo?.terminationDate || 'N/A', type: 'list' },
+  ];
+
+  const proposalBuring = [
+    { label: 'Execution Options', value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A' },
+    { label: 'Burn Assets', value: proposalInfo?.burnAssets || 'N/A', type: 'list' },
   ];
 
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
@@ -59,16 +107,143 @@ export const ProposalInfo = ({ proposal }) => {
     }
   }, [response?.data?.canVote, response?.data?.selectedVote]);
 
+  const handleOwnerProposalClick = id => {
+    router.navigate({
+      to: '/profile/$id',
+      params: { id },
+    });
+  };
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-gray-800 rounded-lg p-6 space-y-8">
+        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
-            <div>
-              <h3 className="text-1xl font-bold">Vault Open Sale</h3>
-            </div>
             <div className="text-dark-100 text-md mb-3">Ended {formatDate(proposalInfo?.endDate)}</div>
-            <div className="break-words">{proposalInfo?.description}</div>
+          </div>
+
+          <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6">
+            <div className="w-full space-y-2">
+              <div className="flex justify-between">
+                <h3 className="text-gray-400">Proposal title</h3>
+                <span className="text-white break-words">{proposalInfo?.title}</span>
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-gray-400">Proposal description</h3>
+                <span className="text-white break-words">{proposalInfo?.description}</span>
+              </div>
+            </div>
+            <div className="w-full">
+              <div className="space-y-3">
+                {proposalInfo &&
+                  (() => {
+                    switch (proposalInfo?.proposalType) {
+                      case 'staking':
+                        return proposalStaking.map((item, index) => (
+                          <div key={index} className="flex justify-between">
+                            <div className="text-gray-400">{item.label}</div>
+                            <div className="text-white">
+                              {item.type === 'list' && Array.isArray(item.value) ? (
+                                <div className="space-y-1">
+                                  {item.value.map((v, i) => (
+                                    <div key={i} className="text-sm">
+                                      {typeof v === 'object' ? (v.name ?? JSON.stringify(v)) : v}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                item.value
+                              )}
+                            </div>
+                          </div>
+                        ));
+
+                      case 'distribution':
+                        return proposalDistributing.map((item, index) => (
+                          <div key={index} className="flex justify-between">
+                            <div className="text-gray-400">{item.label}</div>
+                            <div className="text-white">
+                              {item.type === 'list' && Array.isArray(item.value) ? (
+                                <div className="space-y-1">
+                                  {item.value.map((v, i) => (
+                                    <div key={i} className="text-sm">
+                                      {typeof v === 'object' ? (v.name ?? JSON.stringify(v)) : v}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                item.value
+                              )}
+                            </div>
+                          </div>
+                        ));
+
+                      case 'termination':
+                        return proposalTerminating.map((item, index) => (
+                          <div key={index} className="flex justify-between">
+                            <div className="text-gray-400">{item.label}</div>
+                            <div className="text-white">
+                              {item.type === 'list' && Array.isArray(item.value) ? (
+                                <div className="space-y-1">
+                                  {item.value.map((v, i) => (
+                                    <div key={i} className="text-sm">
+                                      {typeof v === 'object' ? (v.name ?? JSON.stringify(v)) : v}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                item.value
+                              )}
+                            </div>
+                          </div>
+                        ));
+
+                      case 'burning':
+                        return proposalBuring.map((item, index) => (
+                          <div key={index} className="flex justify-between">
+                            <div className="text-gray-400">{item.label}</div>
+                            <div className="text-white">
+                              {item.type === 'list' && Array.isArray(item.value) ? (
+                                <div className="space-y-1">
+                                  {item.value.map((v, i) => (
+                                    <div key={i} className="text-sm">
+                                      {typeof v === 'object' ? (v.name ?? JSON.stringify(v)) : v}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                item.value
+                              )}
+                            </div>
+                          </div>
+                        ));
+
+                      case 'buy_sell':
+                        if (proposalBuyingSelling.length) {
+                          console.log('proposalBuyingSelling', proposalBuyingSelling);
+                          return proposalBuyingSelling.map((item, index) => (
+                            <div key={index} className="flex justify-between">
+                              <div className="text-gray-400">{item.label}</div>
+                              <div className="text-white">{item.value}</div>
+                            </div>
+                          ));
+                        }
+                        return <div></div>;
+                      default:
+                        return informationItems.map((item, index) => (
+                          <div key={index} className="flex justify-between">
+                            <div className="text-gray-400">{item.label}</div>
+                            <div
+                              className={`text-white ${item.onClick ? 'cursor-pointer hover:text-orange-500' : ''}`}
+                              onClick={item.onClick}
+                            >
+                              {item.value}
+                            </div>
+                          </div>
+                        ));
+                    }
+                  })()}
+              </div>
+            </div>
           </div>
           <div className="space-y-4">
             {proposal.status === 'active' ? (
@@ -130,21 +305,16 @@ export const ProposalInfo = ({ proposal }) => {
               </>
             ) : (
               <div className="text-center py-8 space-y-4">
-                <div className="text-gray-400 text-lg">
-                  🗳️ Voting has ended
-                </div>
                 <div className="text-gray-300">
                   This proposal voting period has concluded. You can view the final results below.
                 </div>
-                <div className="text-sm text-gray-500">
-                  Thank you for your participation in the governance process.
-                </div>
+                <div className="text-sm text-gray-500">Thank you for your participation in the governance process.</div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6">
           <div className="flex justify-between">
             <h3 className="text-1xl font-bold">Votes</h3>
             <h3 className="text-orange-500 text-1xl font-bold">{totalVotes}</h3>
@@ -162,13 +332,18 @@ export const ProposalInfo = ({ proposal }) => {
             )}
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-6 space-y-6">
+        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6">
           <div className="space-y-3">
             <h3 className="text-1xl font-bold">Information</h3>
             {informationItems.map((item, index) => (
               <div key={index} className="flex justify-between">
                 <div className="text-gray-400">{item.label}</div>
-                <div className="text-white">{item.value}</div>
+                <div
+                  className={`text-white ${item.onClick ? 'cursor-pointer hover:text-orange-500' : ''}`}
+                  onClick={item.onClick}
+                >
+                  {item.value}
+                </div>
               </div>
             ))}
           </div>

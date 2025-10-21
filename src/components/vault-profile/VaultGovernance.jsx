@@ -117,7 +117,7 @@ export const VaultGovernance = ({ vault }) => {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-6 rounded-2xl border border-gray-800 overflow-hidden">
+    <div className="text-white min-h-screen p-6 rounded-2xl overflow-hidden">
       <div className="flex flex-col items-center mb-6">
         {vault.vaultImage ? (
           <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.vaultImage} />
