@@ -121,7 +121,7 @@ export const ProposalInfo = ({ proposal }) => {
             <div className="text-dark-100 text-md mb-3">Ended {formatDate(proposalInfo?.endDate)}</div>
           </div>
 
-          <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6">
+          <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
             <div className="w-full space-y-2">
               <div className="flex justify-between">
                 <h3 className="text-gray-400">Proposal title</h3>
