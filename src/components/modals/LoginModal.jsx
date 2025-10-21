@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
@@ -84,7 +85,8 @@ export const LoginModal = () => {
           setIsLoading(false);
         },
         onError: error => {
-          console.error('Failed to connect to wallet:', error);
+          toast.error('Failed to connect to wallet');
+          console.error('Error connecting to wallet:', error);
           setIsLoading(false);
         },
       });
