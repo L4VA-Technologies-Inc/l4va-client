@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
-
-import { TapToolsApiProvider } from '@/services/api/taptools';
+import toast from 'react-hot-toast';
 
 const VLRM_CACHE_KEY = 'vlrm_balance_cache';
-const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hour
+const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000;
+
+const VLRM_TOKEN_ID = (import.meta as any).env.VITE_VLRM_TOKEN_ID;
+const VLRM_POLICY_ID = VLRM_TOKEN_ID.slice(0, 56);
+const VLRM_ASSET_NAME = VLRM_TOKEN_ID.slice(56);
 
 export const useVlrmBalance = () => {
   const [vlrmBalance, setVlrmBalance] = useState(0);
@@ -15,45 +17,27 @@ export const useVlrmBalance = () => {
 
   const fetchVlrmBalance = useCallback(
     async (showToast = false) => {
-      if (!wallet.handler) {
-        setVlrmBalance(0);
-        return;
-      }
+      if (!wallet.handler) return;
 
       setIsLoading(true);
-
       try {
         const changeAddress = await wallet.handler.getChangeAddressBech32();
-        const { data } = await TapToolsApiProvider.getWalletAssetAmount(
-          (import.meta as any).env.VITE_VLRM_TOKEN_ID,
-          changeAddress
-        );
+        const balanceHex = await wallet.handler.getBalance();
 
-        const balance = data || 0;
-        const timestamp = Date.now();
+        const balance = parseCborBalance(balanceHex, VLRM_POLICY_ID, VLRM_ASSET_NAME);
 
-        // Update state
         setVlrmBalance(balance);
-        setLastUpdated(new Date(timestamp));
+        setLastUpdated(new Date());
 
-        // Save to cache
         localStorage.setItem(
           VLRM_CACHE_KEY,
-          JSON.stringify({
-            balance,
-            timestamp,
-            address: changeAddress,
-          })
+          JSON.stringify({ balance, timestamp: Date.now(), address: changeAddress })
         );
 
-        if (showToast) {
-          toast.success('VLRM balance updated');
-        }
-      } catch (error) {
-        console.error('Error fetching VLRM balance:', error);
-        if (showToast) {
-          toast.error('Failed to update VLRM balance');
-        }
+        if (showToast) toast.success('VLRM balance updated');
+      } catch (err) {
+        console.error('Error fetching VLRM balance:', err);
+        if (showToast) toast.error('Failed to update VLRM balance');
         setVlrmBalance(0);
       } finally {
         setIsLoading(false);
@@ -62,9 +46,7 @@ export const useVlrmBalance = () => {
     [wallet.handler]
   );
 
-  const refreshBalance = useCallback(() => {
-    fetchVlrmBalance(true); // Show toast on manual refresh
-  }, [fetchVlrmBalance]);
+  const refreshBalance = useCallback(() => fetchVlrmBalance(true), [fetchVlrmBalance]);
 
   const clearCache = useCallback(() => {
     localStorage.removeItem(VLRM_CACHE_KEY);
@@ -73,44 +55,57 @@ export const useVlrmBalance = () => {
   }, []);
 
   useEffect(() => {
-    const loadFromCache = async () => {
+    const loadCache = async () => {
+      if (!wallet.handler) return false;
+
       try {
         const cached = localStorage.getItem(VLRM_CACHE_KEY);
-        if (cached) {
-          const { balance, timestamp, address } = JSON.parse(cached);
-          const isExpired = Date.now() - timestamp > CACHE_EXPIRY_MS;
+        if (!cached) return false;
 
-          // Check if cache is for current wallet address
-          const currentAddress = wallet.handler ? await wallet.handler.getChangeAddressBech32() : undefined;
+        const { balance, timestamp, address } = JSON.parse(cached);
+        const currentAddress = await wallet.handler.getChangeAddressBech32();
 
-          if (!isExpired && address === currentAddress) {
-            setVlrmBalance(balance);
-            setLastUpdated(new Date(timestamp));
-            return true; // Cache hit
-          }
+        if (Date.now() - timestamp < CACHE_EXPIRY_MS && address === currentAddress) {
+          setVlrmBalance(balance);
+          setLastUpdated(new Date(timestamp));
+          return true;
         }
-      } catch (error) {
-        console.warn('Failed to load VLRM balance from cache:', error);
+      } catch {
         localStorage.removeItem(VLRM_CACHE_KEY);
       }
-      return false; // Cache miss
+      return false;
     };
 
     (async () => {
-      const cacheHit = await loadFromCache();
-
-      if (!cacheHit && wallet.handler) {
-        fetchVlrmBalance();
-      }
+      const cacheHit = await loadCache();
+      if (!cacheHit) fetchVlrmBalance();
     })();
   }, [fetchVlrmBalance, wallet.handler]);
 
-  return {
-    vlrmBalance,
-    isLoading,
-    lastUpdated,
-    refreshBalance,
-    clearCache,
-    fetchVlrmBalance,
-  };
+  return { vlrmBalance, isLoading, lastUpdated, refreshBalance, clearCache, fetchVlrmBalance };
+};
+
+const parseCborBalance = (cborHex: string, policyId: string, assetName: string): number => {
+  try {
+    const policyIndex = cborHex.indexOf(policyId);
+    if (policyIndex === -1) return 0;
+
+    const afterPolicy = cborHex.slice(policyIndex + policyId.length);
+    const assetIndex = afterPolicy.indexOf(assetName);
+    if (assetIndex === -1) return 0;
+
+    const afterAsset = afterPolicy.slice(assetIndex + assetName.length);
+    const firstByte = afterAsset.slice(0, 2);
+    let quantity = 0;
+
+    if (parseInt(firstByte, 16) <= 23) quantity = parseInt(firstByte, 16);
+    else if (firstByte === '18') quantity = parseInt(afterAsset.slice(2, 4), 16);
+    else if (firstByte === '19') quantity = parseInt(afterAsset.slice(2, 6), 16);
+    else if (firstByte === '1a') quantity = parseInt(afterAsset.slice(2, 10), 16);
+    else if (firstByte === '1b') quantity = parseInt(afterAsset.slice(2, 18), 16);
+
+    return quantity;
+  } catch {
+    return 0;
+  }
 };
