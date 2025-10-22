@@ -28,10 +28,10 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
     }
 
     if (sanitizedValue !== '') {
-      const limitedValue = Math.min(+sanitizedValue, 100);
+      const limitedValue = Math.min(Number(sanitizedValue), 100);
       updateField(name, limitedValue);
     } else {
-      updateField(name, '');
+      updateField(name, null);
     }
   };
 
@@ -123,7 +123,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             placeholder="XX"
             suffix="%"
             type="text"
-            value={data.tokensForAcquires || ''}
+            value={data.tokensForAcquires === 0 ? '0' : data.tokensForAcquires ? String(data.tokensForAcquires) : ''}
             onChange={handleChange}
             hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
@@ -137,7 +137,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             placeholder="XX"
             suffix="%"
             type="text"
-            value={data.acquireReserve || ''}
+            value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
             hint={RESERVE_HINT}
           />
@@ -151,7 +151,13 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             placeholder="XX"
             suffix="%"
             type="text"
-            value={data.liquidityPoolContribution || ''}
+            value={
+              data.liquidityPoolContribution === 0
+                ? '0'
+                : data.liquidityPoolContribution
+                  ? String(data.liquidityPoolContribution)
+                  : ''
+            }
             onChange={handleChange}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
