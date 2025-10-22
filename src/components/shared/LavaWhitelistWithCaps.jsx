@@ -5,6 +5,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { useWalletPolicyIds } from '@/services/api/queries';
+import { useAssets } from '@/hooks/useAssets';
 
 export const LavaWhitelistWithCaps = ({
   required = false,
@@ -21,7 +22,7 @@ export const LavaWhitelistWithCaps = ({
   const dropdownRefs = useRef({});
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  const { data } = useWalletPolicyIds(wallet?.changeAddressBech32, vaultType !== 'cnt');
+  const { data } = useAssets();
 
   const walletPolicyIds = data?.data || [];
 
