@@ -35,11 +35,11 @@ const Hero = () => {
             Dream big
           </h1>
           <p className="uppercase leading-tight block text-2xl lg:text-5xl xl:text-6xl tracking-wide lg:tracking-wider">
-            Tokenize Bigger
+            FRACTIONALIZE BIGGER
           </p>
         </div>
         <p className="lg:text-2xl uppercase text-dark-100 font-bold tracking-wide lg:tracking-wider">
-          Creator Driven Asset Tokenization Protocol
+          DEFI ASSET FRACTIONALIZATION PROTOCOL
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-6 mb-12">
