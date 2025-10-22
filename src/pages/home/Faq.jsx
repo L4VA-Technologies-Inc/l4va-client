@@ -60,8 +60,7 @@ const Faq = () => {
     },
     {
       question: 'What can I do with a vault?',
-      answer:
-        `A vault is a customizable container for assets. Once created, you can:
+      answer: `A vault is a customizable container for assets. Once created, you can:
   - Fractionalize the assets into governance tokens
   - Distribute tokens to contributors or buyers
   - Enable token holders to govern how assets are managed, sold, or evolved
@@ -93,14 +92,9 @@ const Faq = () => {
         'Participants in L4VA can earn $L4VA incentives for engaging with the protocol. Creators, contributors, and acquirers all share in rewards, scaled by the vault’s total value locked (TVL) and token participation. The more valuable the vault at the initial successful lock, the greater the potential rewards distributed to its community of token holders.',
     },
   ];
-  
 
   return (
     <div className="relative py-8 sm:py-12 lg:py-16">
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-full lg:h-[1200px]"
-        style={{ backgroundImage: 'url(/assets/acquire-bg.png)' }}
-      />
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
         <section className="mb-8 sm:mb-12 lg:mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[70px]">
@@ -108,17 +102,20 @@ const Faq = () => {
               <h2 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
                 How it Works
               </h2>
-              <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">Unlock liquidity, access, and governance for any asset on Cardano.</h4>
+              <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
+                Unlock liquidity, access, and governance for any asset on Cardano.
+              </h4>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-              Create a vault, customize settings, and invite contributors to add assets, then acquirers send 
-              ADA in exchange for governance tokens -- fractional asset tokens with real decision making power.
+                Create a vault, customize settings, and invite contributors to add assets, then acquirers send ADA in
+                exchange for governance tokens -- fractional asset tokens with real decision making power.
               </p>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-              Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) 
-              and vault tokens retained. Token holders have the power to manage the future of assets in the vault.
+                Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault
+                tokens retained. Token holders have the power to manage the future of assets in the vault.
               </p>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-              Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital assets.
+                Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital
+                assets.
               </p>
             </div>
             <div className="space-y-4 sm:space-y-6">
