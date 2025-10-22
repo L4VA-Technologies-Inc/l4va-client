@@ -106,12 +106,11 @@ export const LoginModal = () => {
     try {
       const message = `account: ${wallet.stakeAddressBech32}`;
       const signature = await wallet.handler.signData(messageHex(message));
-      await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32).then(res => {
-        if (res && !res.user?.email) {
-          openModal('EmailModal');
-        }
-      });
+      const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
       closeModal();
+      if (!res.user?.email) {
+        openModal('EmailModal');
+      }
       return activeModalData?.props?.onSuccess && activeModalData.props.onSuccess();
     } catch (error) {
       return console.error('Authentication failed:', error);

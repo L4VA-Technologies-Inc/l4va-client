@@ -1,21 +1,37 @@
 import { CircleX, Send } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { useAuth } from '@/lib/auth/auth';
 import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import { LavaSteelInput } from '@/components/shared/LavaInput.jsx';
+import { CoreApiProvider } from '@/services/api/core';
 
 export const EmailModal = () => {
   const [email, setEmail] = useState('');
 
   const { closeModal } = useModalControls();
-  const { user } = useAuth();
 
-  const handleSaveEmail = () => {
-    console.log(user.id);
-    closeModal();
+  const handleSaveEmail = async () => {
+    if (!email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      await CoreApiProvider.updateProfile({ email });
+      toast.success('Email saved successfully!');
+      closeModal();
+    } catch {
+      toast.error('Failed to save email. Please try again.');
+    }
   };
 
   return (

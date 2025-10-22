@@ -136,6 +136,71 @@ const ProfileName = ({
   </div>
 );
 
+const ProfileEmail = ({
+  isEditable = true,
+  isEditing,
+  email,
+  onEdit,
+  onSave,
+  onCancel,
+  onChange,
+  onKeyDown,
+  inputRef,
+  isUpdating,
+}) => {
+  if (!isEditable) return null;
+
+  return (
+    <div className="flex items-center gap-3 mt-2">
+      {isEditing ? (
+        <div className="flex items-center gap-2 w-full max-w-md">
+          <Input
+            ref={inputRef}
+            className="bg-steel-850 border-steel-800 text-white placeholder:text-gray-400 focus:border-orange-500"
+            value={email}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            placeholder="Enter your email"
+            type="email"
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
+            onClick={onSave}
+            disabled={isUpdating}
+          >
+            <Check size={16} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
+            onClick={onCancel}
+            disabled={isUpdating}
+          >
+            <X size={16} />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-2 text-gray-300 text-sm">
+            <span className={email ? '' : 'italic text-gray-500'}>{email || 'Add your email'}</span>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
+            onClick={onEdit}
+          >
+            <Edit size={16} />
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
 const AddressDisplay = ({ address, onCopy }) => (
   <div className="flex items-center gap-2 mt-1">
     <span className="text-gray-400 text-sm font-mono">{substringAddress(address)}</span>
@@ -155,11 +220,14 @@ const ProfileHero = ({ user, isEditable = true }) => {
   const [bgImage, setBgImage] = useState(user?.bannerImage || null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(user?.name || '');
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [email, setEmail] = useState(user?.email || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
   const bgInputRef = useRef(null);
   const avatarInputRef = useRef(null);
   const nameInputRef = useRef(null);
+  const emailInputRef = useRef(null);
 
   const handleFileUpload = async (file, type) => {
     try {
@@ -216,9 +284,45 @@ const ProfileHero = ({ user, isEditable = true }) => {
     setIsEditingName(false);
   };
 
-  const handleKeyDown = e => {
+  const handleNameKeyDown = e => {
     if (e.key === 'Enter' && !isUpdating) handleNameSave();
     else if (e.key === 'Escape') handleNameCancel();
+  };
+
+  const handleEmailEdit = () => {
+    setIsEditingEmail(true);
+    setTimeout(() => emailInputRef.current?.focus(), 0);
+  };
+
+  const handleEmailSave = async () => {
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !/^[\w-.]+@[\w-]+\.[A-Za-z]{2,}$/i.test(trimmedEmail)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await CoreApiProvider.updateProfile({ email: trimmedEmail || null });
+      setEmail(trimmedEmail);
+      setIsEditingEmail(false);
+      toast.success('Email updated successfully');
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Failed to update email');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleEmailCancel = () => {
+    setEmail(user?.email || '');
+    setIsEditingEmail(false);
+  };
+
+  const handleEmailKeyDown = e => {
+    if (e.key === 'Enter' && !isUpdating) handleEmailSave();
+    else if (e.key === 'Escape') handleEmailCancel();
   };
 
   const handleCopyAddress = () => {
@@ -254,10 +358,23 @@ const ProfileHero = ({ user, isEditable = true }) => {
               onCancel={handleNameCancel}
               onChange={e => setName(e.target.value)}
               onEdit={handleNameEdit}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleNameKeyDown}
               onSave={handleNameSave}
               isUpdating={isUpdating}
               isEditable={isEditable}
+            />
+
+            <ProfileEmail
+              email={email}
+              inputRef={emailInputRef}
+              isEditing={isEditingEmail}
+              isEditable={isEditable}
+              isUpdating={isUpdating}
+              onCancel={handleEmailCancel}
+              onChange={e => setEmail(e.target.value)}
+              onEdit={handleEmailEdit}
+              onKeyDown={handleEmailKeyDown}
+              onSave={handleEmailSave}
             />
 
             {user?.address && <AddressDisplay address={user.address} onCopy={handleCopyAddress} />}
