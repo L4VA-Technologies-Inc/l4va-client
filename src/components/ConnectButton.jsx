@@ -5,7 +5,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { getAvatarLetter, getDisplayName } from '@/utils/core.utils';
 import WalletIcon from '@/icons/wallet.svg?react';
 
-export const ConnectButton = () => {
+export const ConnectButton = ({ isFull = false }) => {
   const { openModal } = useModalControls();
   const { isAuthenticated, user } = useAuth();
 
@@ -13,7 +13,7 @@ export const ConnectButton = () => {
     <>
       <div className="hidden sm:flex">
         {!isAuthenticated ? (
-          <PrimaryButton size="md" onClick={() => openModal('LoginModal')}>
+          <PrimaryButton className={isFull ? 'w-full' : ''} size="md" onClick={() => openModal('LoginModal')}>
             <WalletIcon />
             CONNECT
           </PrimaryButton>
@@ -29,9 +29,16 @@ export const ConnectButton = () => {
       </div>
       <div className="flex sm:hidden">
         {!isAuthenticated ? (
-          <button className="p-2 rounded-md bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>
-            <WalletIcon className="text-slate-950" height={24} width={24} />
-          </button>
+          isFull ? (
+            <PrimaryButton className={isFull ? 'w-full' : ''} size="md" onClick={() => openModal('LoginModal')}>
+              <WalletIcon />
+              CONNECT
+            </PrimaryButton>
+          ) : (
+            <button className="p-2 rounded-md bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>
+              <WalletIcon className="text-slate-950" height={24} width={24} />
+            </button>
+          )
         ) : (
           <button type="button" onClick={() => openModal('ProfileModal')}>
             <Avatar className="h-8 w-8 bg-orange-gradient cursor-pointer">
