@@ -157,7 +157,7 @@ export const VaultGovernance = ({ vault }) => {
                 <LavaTabs
                   activeTab={activeTab}
                   activeTabClassName="text-primary"
-                  className="w-full bg-gray-800"
+                  className="w-full bg-steel-850 overflow-x-auto text-sm md:text-base"
                   inactiveTabClassName="text-dark-100"
                   tabClassName="flex-1 text-center"
                   tabs={PROPOSAL_TABS}
@@ -168,7 +168,7 @@ export const VaultGovernance = ({ vault }) => {
             {filteredProposals.length ? (
               <div className="space-y-6">
                 {filteredProposals.map(proposal => (
-                  <div key={proposal.id} className="bg-gray-800 rounded-lg p-6">
+                  <div key={proposal.id} className="bg-steel-950 border border-steel-750 rounded-lg p-6">
                     <div className="flex justify-between mb-1">
                       <h3 className="text-lg font-medium">{proposal.title}</h3>
                       <div className="flex items-center">
