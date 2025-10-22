@@ -95,6 +95,7 @@ const Faq = () => {
 
   return (
     <div className="relative py-8 sm:py-12 lg:py-16">
+      <div className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat h-full lg:h-[1200px]" />
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
         <section className="mb-8 sm:mb-12 lg:mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[70px]">
