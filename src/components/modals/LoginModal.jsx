@@ -37,7 +37,7 @@ const TermsAgreementText = () => {
 
 export const LoginModal = () => {
   const { activeModalData } = useModal();
-  const { closeModal } = useModalControls();
+  const { openModal, closeModal } = useModalControls();
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
@@ -106,8 +106,11 @@ export const LoginModal = () => {
     try {
       const message = `account: ${wallet.stakeAddressBech32}`;
       const signature = await wallet.handler.signData(messageHex(message));
-      await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
+      const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
       closeModal();
+      if (!res.user?.email) {
+        openModal('EmailModal');
+      }
       return activeModalData?.props?.onSuccess && activeModalData.props.onSuccess();
     } catch (error) {
       return console.error('Authentication failed:', error);
