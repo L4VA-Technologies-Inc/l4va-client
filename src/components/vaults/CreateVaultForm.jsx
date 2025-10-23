@@ -236,7 +236,7 @@ export const CreateVaultForm = ({ vault }) => {
           />
         );
       case 5:
-        return <Launch data={vaultData} errors={errors} updateField={updateField} />;
+        return <Launch data={vaultData} setCurrentStep={setCurrentStep} errors={errors} updateField={updateField} />;
       default:
         return null;
     }
