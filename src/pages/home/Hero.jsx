@@ -10,7 +10,6 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
 
-
   const handleCreateVault = e => {
     if (!isAuthenticated) {
       e.preventDefault();
