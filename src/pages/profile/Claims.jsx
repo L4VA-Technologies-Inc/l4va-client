@@ -40,7 +40,7 @@ export const Claims = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
 
-  const { data, isLoading, error, refetch } = useClaims(currentPage, 10);
+  const { data, isLoading, error, refetch } = [];
   const claims = data?.data?.items || [];
   const pagination = data?.data || { page: 1, total: 0, limit: 10 };
 
