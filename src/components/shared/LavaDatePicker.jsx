@@ -102,7 +102,7 @@ export const LavaDatePicker = ({
           )}
         </div>
       ) : null}
-      <div className="mt-4">
+      <div className="mt-1">
         <div className="relative flex items-center">
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
