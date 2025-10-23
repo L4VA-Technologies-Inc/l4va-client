@@ -107,6 +107,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
                 value={link.url}
                 onChange={e => handleUrlChange(link.id, e.target.value)}
                 onBlur={e => handleUrlBlur(link.id, e.target.value)}
+                maxLength={200}
               />
               <Button className="h-8 w-8 rounded-full" size="icon" variant="ghost" onClick={() => removeLink(link.id)}>
                 <X className="h-4 w-4" />
