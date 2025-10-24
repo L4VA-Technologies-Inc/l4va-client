@@ -10,7 +10,7 @@ export const BannerModal = () => {
         <img className="w-14 h-14 rounded-lg" alt="ada-icon" src="/assets/icons/ada.svg" />
         <h1 className="text-2xl font-bold">SOON!</h1>
         <p className="text-dark-100 text-center m-0">
-          Stay turned for{' '}
+          Stay tuned for{' '}
           <a
             href="https://l4va.com"
             target="_blank"
