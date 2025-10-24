@@ -255,10 +255,10 @@ export const vaultSchema = yup.object({
     .max(100, 'Cannot exceed 100%')
     .test(
       'lp-not-exceed-100%',
-      'Liquidity pool contribution + Tokens for Acquirers must be less than or equal to 100%',
+      'Liquidity pool contribution + Tokens for Acquirers must be less than 100%',
       function (value) {
         const { tokensForAcquires } = this.parent;
-        return value + tokensForAcquires <= 100;
+        return value + tokensForAcquires < 100;
       }
     ),
 
