@@ -82,7 +82,7 @@ export const Footer = () => {
           })}
         </div>
       </div>
-      <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16">
+      <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16 text-center">
         {navLinks.map(link => (
           <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link, e)} />
         ))}
