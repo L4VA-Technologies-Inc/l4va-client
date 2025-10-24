@@ -11,7 +11,6 @@ import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
-const filterOptions = [{ value: 'all', label: 'All Claims' }];
 
 const TAB_TO_CLAIM_TYPES = {
   Distribution: ['contributor', 'acquirer'],
@@ -152,15 +151,6 @@ export const Claims = () => {
       <h2 className="font-russo text-4xl uppercase text-white">My Rewards</h2>
       <div>
         <LavaTabs tabs={tabOptions} activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 flex-wrap">
-          {filterOptions.map(option => (
-            <button key={option.value} className="px-4 py-2 rounded-lg text-sm font-medium bg-steel-750 text-white">
-              {option.label}
-            </button>
-          ))}
-        </div>
       </div>
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
