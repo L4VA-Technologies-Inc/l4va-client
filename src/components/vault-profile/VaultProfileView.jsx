@@ -279,7 +279,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <VaultStats
                 assetValue={vault.vaultStatus}
                 ftGains={vault.ftGains || 'N/A'}
-                fdv={vault.fdv ? `${vault.fdv}$` : 'N/A'}
+                fdv={(() => {
+                  if (currency === 'ada') {
+                    return vault?.fdvAda ? `₳${vault.fdvAda}` : 'N/A';
+                  } else {
+                    return vault?.fdv ? `$${vault.fdv}` : 'N/A';
+                  }
+                })()}
                 fdvTvl={vault.fdvTvl || 'N/A'}
                 tvl={(() => {
                   if (currency === 'ada') {
