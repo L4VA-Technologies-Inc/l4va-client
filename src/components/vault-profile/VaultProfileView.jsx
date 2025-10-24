@@ -19,7 +19,13 @@ import { Spinner } from '@/components/Spinner';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useVaultStatusTracker } from '@/hooks/useVaultStatusTracker';
-import { formatCompactNumber, getCountdownName, getCountdownTime, substringAddress } from '@/utils/core.utils';
+import {
+  formatCompactNumber,
+  formatNum,
+  getCountdownName,
+  getCountdownTime,
+  substringAddress,
+} from '@/utils/core.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
@@ -281,17 +287,21 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 ftGains={vault.ftGains || 'N/A'}
                 fdv={(() => {
                   if (currency === 'ada') {
-                    return vault?.fdvAda ? `₳${vault.fdvAda}` : 'N/A';
+                    return vault?.fdvAda ? `₳${formatNum(vault.fdvAda)}` : 'N/A';
                   } else {
-                    return vault?.fdv ? `$${vault.fdv}` : 'N/A';
+                    return vault?.fdv ? `$${formatNum(vault.fdv)}` : 'N/A';
                   }
                 })()}
                 fdvTvl={vault.fdvTvl || 'N/A'}
                 tvl={(() => {
                   if (currency === 'ada') {
-                    return vault.assetsPrices?.totalValueAda ? `₳${vault.assetsPrices?.totalValueAda}` : 'N/A';
+                    return vault.assetsPrices?.totalValueAda
+                      ? `₳${formatNum(vault.assetsPrices?.totalValueAda)}`
+                      : 'N/A';
                   } else {
-                    return vault.assetsPrices?.totalValueUsd ? `$${vault.assetsPrices?.totalValueUsd}` : 'N/A';
+                    return vault.assetsPrices?.totalValueUsd
+                      ? `$${formatNum(vault.assetsPrices?.totalValueUsd)}`
+                      : 'N/A';
                   }
                 })()}
               />
