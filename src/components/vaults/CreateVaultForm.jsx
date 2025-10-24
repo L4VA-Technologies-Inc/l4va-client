@@ -160,6 +160,10 @@ export const CreateVaultForm = ({ vault }) => {
         toast.success('Vault launched successfully');
 
         // Redirect to the created vault and reset form
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['vault', data.vaultId] }),
+          queryClient.invalidateQueries({ queryKey: ['vaults'] }),
+        ]);
         navigate({ to: `/vaults/${data.vaultId}` });
         setVaultData(initialVaultState);
         setCurrentStep(1);
