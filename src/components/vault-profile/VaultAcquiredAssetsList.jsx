@@ -146,11 +146,11 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
           </tbody>
         </table>
       </div>
-      {pagination && pagination.currentPage > 1 && (
+      {pagination && pagination.totalPages > 1 && (
         <div className="flex w-full justify-center mt-8">
           <Pagination
-            currentPage={pagination.currentPage || 1}
-            totalPages={pagination.currentPage}
+            currentPage={pagination.page || 1}
+            totalPages={pagination.totalPages}
             onPageChange={page => setCurrentPage(page)}
           />
         </div>
