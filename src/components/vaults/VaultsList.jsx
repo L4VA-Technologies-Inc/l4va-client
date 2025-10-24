@@ -118,7 +118,7 @@ export const VaultList = ({
         {isLoading ? (
           <LoadingState />
         ) : error ? (
-          <div className="text-center text-red-600 py-8">{error}</div>
+          <div className="text-center text-red-600 py-8">Something went wrong</div>
         ) : vaults.length === 0 ? (
           renderEmptyState()
         ) : (

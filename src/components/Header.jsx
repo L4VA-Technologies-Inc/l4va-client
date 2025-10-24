@@ -71,6 +71,16 @@ export const Header = () => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, fetchMore]);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const timer = setTimeout(() => {
+        openModal('BannerModal');
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const handleNavClick = useCallback(
     (to, e) => {
       if (!isAuthenticated) {

@@ -344,11 +344,13 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
           <h3 className="text-lg font-medium mb-3">Contribution Window</h3>
           <div className="flex flex-col gap-2">
             <LavaDatePicker
+              variant="steel"
               label="Opening in:"
               value={filters.contributionWindow.from}
               onChange={date => setSingleFilter('contributionWindow.from', date)}
             />
             <LavaDatePicker
+              variant="steel"
               label="Closing in:"
               value={filters.contributionWindow.to}
               onChange={date => setSingleFilter('contributionWindow.to', date)}
@@ -360,11 +362,13 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
           <h3 className="text-lg font-medium mb-3">Acquire Window</h3>
           <div className="flex flex-col gap-2">
             <LavaDatePicker
+              variant="steel"
               label="Opening in:"
               value={filters.acquireWindow.from}
               onChange={date => setSingleFilter('acquireWindow.from', date)}
             />
             <LavaDatePicker
+              variant="steel"
               label="Closing in:"
               value={filters.acquireWindow.to}
               onChange={date => setSingleFilter('acquireWindow.to', date)}

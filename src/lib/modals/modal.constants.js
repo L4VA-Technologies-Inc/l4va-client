@@ -6,6 +6,7 @@ import { ContributeModal } from '@/components/modals/ContributeModal/ContributeM
 import { ProfileModal } from '@/components/modals/ProfileModal';
 import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 import { ChartModal } from '@/components/modals/ChartModal';
+import { BannerModal } from '@/components/modals/BannerModal.jsx';
 import { EmailModal } from '@/components/modals/EmailModal.jsx';
 
 export const MODAL_ENTRIES = [
@@ -40,6 +41,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'ChartModal',
     Component: ChartModal,
+  },
+  {
+    name: 'BannerModal',
+    Component: BannerModal,
   },
   {
     name: 'EmailModal',
