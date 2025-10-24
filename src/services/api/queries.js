@@ -70,10 +70,10 @@ export const useVaultAssets = (id, search = '', page = 1, limit = 10) => {
   });
 };
 
-export const useVaultAcquiredAssets = id => {
+export const useVaultAcquiredAssets = (id, page = 1, limit = 10) => {
   return useQuery({
-    queryKey: ['vault-acquired-assets', id],
-    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id),
+    queryKey: ['vault-acquired-assets', id, page, limit],
+    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit),
     enabled: !!id,
   });
 };
