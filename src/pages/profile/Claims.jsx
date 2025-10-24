@@ -47,13 +47,20 @@ export const Claims = () => {
 
   const formattedClaims = claims.map(claim => {
     const date = claim.updated_at || claim.created_at;
+    const adaAmount = claim.metadata?.adaAmount;
+    let rewardText = '';
+    if (adaAmount && adaAmount > 0) {
+      rewardText = `${(adaAmount / 1e6).toLocaleString()} ADA`;
+    } else {
+      rewardText = `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault?.vaultTokenTicker || ''}`;
+    }
     return {
       id: claim.id,
       vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
       image: claim.vault?.vaultImage,
       link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
       date: date ? new Date(date).toLocaleDateString('en-US') : 'N/A',
-      reward: `${parseInt(claim.amount).toLocaleString()} ${claim.vault?.vaultTokenTicker}`,
+      reward: rewardText,
       status: claim.status || 'pending',
       type: claim.type,
       rawData: claim,
