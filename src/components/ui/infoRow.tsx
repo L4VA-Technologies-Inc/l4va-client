@@ -11,6 +11,7 @@ type InfoRowProps = {
   hideValue?: boolean;
   labelClassName?: string;
   symbol?: string;
+  customClassName?: string;
 };
 
 export const InfoRow = ({
@@ -20,6 +21,7 @@ export const InfoRow = ({
   copyable,
   labelClassName = '',
   hideValue = false,
+  customClassName,
 }: InfoRowProps) => {
   const formattedValue = typeof value === 'number' ? formatNum(value) : value;
 
@@ -36,7 +38,7 @@ export const InfoRow = ({
   };
 
   return (
-    <div className="flex justify-between items-center py-2">
+    <div className={cn('flex justify-between items-center py-2', customClassName)}>
       <span className={cn('text-dark-100', labelClassName)}>{label}</span>
       <div className="flex items-center gap-2">
         {!hideValue && (

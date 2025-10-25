@@ -1,6 +1,7 @@
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { Copy } from 'lucide-react';
 
 import { InfoRow } from '@/components/ui/infoRow';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
+import { ASSET_WHITE_LIST } from '@/components/vaults/constants/vaults.constants.js';
 
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -43,6 +45,71 @@ export const VaultSettings = ({ vault }) => {
     }
   };
 
+  const handleCopy = value => {
+    navigator.clipboard
+      .writeText(value.toString())
+      .then(() => {
+        toast.success(`Asset Policy ID copied to clipboard`);
+      })
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        toast.error('Failed to copy to clipboard');
+      });
+  };
+
+  const renderAssets = assetsWhitelist => {
+    return (
+      <div className="flex flex-col gap-4">
+        {assetsWhitelist.map((asset, index) => {
+          if (asset.policyId && ASSET_WHITE_LIST[asset.policyId]) {
+            const assetData = ASSET_WHITE_LIST[asset.policyId];
+            const shortPolicy =
+              asset.policyId.substring(0, 6) + '...' + asset.policyId.substring(asset.policyId.length - 6);
+
+            return (
+              <div key={index} className="flex w-full items-center justify-end gap-6">
+                <div className="flex items-center gap-2">
+                  <img src={assetData.imgUrl} alt={assetData.assetName} className="w-8 h-8 rounded-full" />
+                  <span>{assetData.assetName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>{shortPolicy}</span>
+                  <button
+                    className="text-gray-500 hover:text-gray-700"
+                    type="button"
+                    onClick={() => handleCopy(asset.policyId)}
+                  >
+                    <Copy className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          if (asset.policyId) {
+            const shortPolicy =
+              asset.policyId.substring(0, 6) + '...' + asset.policyId.substring(asset.policyId.length - 6);
+
+            return (
+              <div key={index} className="flex gap-2 w-full justify-end items-center">
+                <span>{shortPolicy}</span>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  type="button"
+                  onClick={() => handleCopy(asset.policyId)}
+                >
+                  <Copy className="h-5 w-5" />
+                </button>
+              </div>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex flex-col gap-4">
@@ -70,6 +137,7 @@ export const VaultSettings = ({ vault }) => {
               label="Token Policy"
               value={`${vault.policyId?.substring(0, 6)}...${vault.policyId?.substring(vault.policyId.length - 6)}`}
             />
+            <InfoRow customClassName="items-start" label="Token Assets" value={renderAssets(vault.assetsWhitelist)} />
             <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
             <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
