@@ -224,14 +224,14 @@ export const AcquireModal = ({ vault, onClose }) => {
                   <p className="text-dark-100 text-sm">Est. Vault Token Allocation (%)</p>
                   <p className="text-2xl font-medium">{acquisitionDetails.vaultAllocation}%</p>
                 </div>
-                <div className="space-y-1 text-center">
-                  {/* 
-                    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.
-                    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.
-                 */}
-                  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>
-                  <p className="text-2xl font-medium truncate">{formatNum(acquisitionDetails.estVaultTokenAcquired)}</p>
-                </div>
+                {/*<div className="space-y-1 text-center">*/}
+                {/*  /!* */}
+                {/*    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.*/}
+                {/*    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.*/}
+                {/* *!/*/}
+                {/*  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>*/}
+                {/*  <p className="text-2xl font-medium truncate">{formatNum(acquisitionDetails.estVaultTokenAcquired)}</p>*/}
+                {/*</div>*/}
               </div>
 
               <div className="flex justify-center mt-8">
