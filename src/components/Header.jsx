@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/compon
 import { ConnectButton } from '@/components/ConnectButton';
 import { MenuDrawer } from '@/components/MenuDrawer';
 import { useAuth } from '@/lib/auth/auth';
-import { useModalControls } from '@/lib/modals/modal.context';
+import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
@@ -35,6 +35,7 @@ NavLink.displayName = 'NavLink';
 export const Header = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
+  const { activeModalData } = useModal();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
@@ -71,15 +72,24 @@ export const Header = () => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, fetchMore]);
 
+  const hasBannerShownRef = useRef(false);
+
   useEffect(() => {
-    if (!isAuthenticated) {
-      const timer = setTimeout(() => {
+    let timer;
+    if (isAuthenticated && !activeModalData && !hasBannerShownRef.current) {
+      timer = setTimeout(() => {
+        hasBannerShownRef.current = true;
+
         openModal('BannerModal');
       }, 5000);
-
-      return () => clearTimeout(timer);
     }
-  }, []);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isAuthenticated, activeModalData, openModal]);
 
   const handleNavClick = useCallback(
     (to, e) => {

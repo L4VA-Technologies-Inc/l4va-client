@@ -31,7 +31,13 @@ export function ModalProvider({ children }: ModalProviderProps) {
   const [activeModalData, setActiveModalData] = useState<ModalData | null>(null);
 
   const openModal = useCallback((name: string, props?: any) => {
-    setActiveModalData({ name, props });
+    setActiveModalData(currentModal => {
+      if (currentModal) {
+        return currentModal;
+      }
+
+      return { name, props };
+    });
   }, []);
 
   const closeModal = useCallback(() => {

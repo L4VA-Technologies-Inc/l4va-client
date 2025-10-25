@@ -8,7 +8,7 @@ export const BannerModal = () => {
     <ModalWrapper isOpen title="Pre-sale Details" onClose={closeModal} size="md">
       <div className="flex flex-col gap-3 items-center justify-center w-full">
         <img className="w-14 h-14 rounded-lg" alt="ada-icon" src="/assets/icons/ada.svg" />
-        <h1 className="text-2xl font-bold">SOON!</h1>
+        <h1 className="text-2xl font-bold">Coming October 26-29!</h1>
         <p className="text-dark-100 text-center m-0">
           Stay tuned for{' '}
           <a
