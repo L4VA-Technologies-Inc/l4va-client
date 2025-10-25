@@ -388,3 +388,50 @@ export const RESERVE_HINT = `The percentage (%) threshold that must be surpassed
 
 export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `Input determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool.  
 Note: The net tokens and ADA received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ADA are sent.`;
+
+export const ASSET_WHITE_LIST = {
+  f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: {
+    imgUrl: '/assets/white-list/Snake.png',
+    assetName: 'Snake',
+  },
+  ed8145e0a4b8b54967e8f7700a5ee660196533ded8a55db620cc6a37: {
+    imgUrl: '/assets/white-list/Chaddy.png',
+    assetName: 'Chaddy',
+  },
+  fd948c7248ecef7654f77a0264a188dccc76bae5b73415fc51824cf3: {
+    imgUrl: '/assets/white-list/Berry.png',
+    assetName: 'Berry',
+  },
+  add6529cc60380af5d51566e32925287b5b04328332652ccac8de0a9: {
+    imgUrl: '/assets/white-list/O.png',
+    assetName: 'O',
+  },
+  '755457ffd6fffe7b20b384d002be85b54a0b3820181f19c5f9032c2e': {
+    imgUrl: '/assets/white-list/Pxlz.png',
+    assetName: 'Pxlz',
+  },
+  '4e529151fe66164ebcf52f81033eb0ec55cc012cb6c436104b30fa36': {
+    imgUrl: '/assets/white-list/Goats.png',
+    assetName: 'Goats',
+  },
+  '0b89a746fd2d859e0b898544487c17d9ac94b187ea4c74fd0bfbab16': {
+    imgUrl: '/assets/white-list/Diamond.png',
+    assetName: 'Diamond',
+  },
+  '436ca2e51fa2887fa306e8f6aa0c8bda313dd5882202e21ae2972ac8': {
+    imgUrl: '/assets/white-list/GOLD.png',
+    assetName: 'GOLD',
+  },
+  '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': {
+    imgUrl: '/assets/white-list/SLVR.png',
+    assetName: 'SLVR',
+  },
+  '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': {
+    imgUrl: '/assets/white-list/Insurance.png',
+    assetName: 'Insurance Asset',
+  },
+  '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': {
+    imgUrl: '/assets/white-list/Real Estate.png',
+    assetName: 'Real Estate Equity',
+  },
+};
