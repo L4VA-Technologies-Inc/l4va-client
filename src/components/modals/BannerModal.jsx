@@ -17,9 +17,8 @@ export const BannerModal = () => {
             rel="noopener noreferrer"
             className="text-orange-500 hover:underline"
           >
-            pre-sale details
-          </a>{' '}
-          coming soon
+            pre-sale details.
+          </a>
         </p>
       </div>
     </ModalWrapper>
