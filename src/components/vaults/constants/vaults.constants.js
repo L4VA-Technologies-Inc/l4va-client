@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
 export const MIN_SUPPLY = 1000000; // 10^6
-export const MAX_SUPPLY = 1000000000000; // 10^12
+export const MAX_SUPPLY = 9999999999; // 9 999 999 999
 // export const MIN_CONTRIBUTION_DURATION_MS = 3600000; // 1 hour in ms
 export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 1 day
 // export const MIN_ACQUIRE_WINDOW_DURATION_MS = 3600000; // 1 hour in ms
