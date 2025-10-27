@@ -93,10 +93,10 @@ export const LoginModal = () => {
     }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = (isMainNet = false) => {
     disconnect();
     logout();
-    closeModal();
+    if (!isMainNet) closeModal();
   };
 
   const handleSignMessage = async () => {
@@ -108,6 +108,13 @@ export const LoginModal = () => {
       const signature = await wallet.handler.signData(messageHex(message));
       const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
       closeModal();
+
+      if (res?.user?.address.startsWith('addr1')) {
+        openModal('MainNetModal');
+        handleDisconnect(true);
+        return;
+      }
+
       if (!res.user?.email) {
         openModal('EmailModal');
       }
