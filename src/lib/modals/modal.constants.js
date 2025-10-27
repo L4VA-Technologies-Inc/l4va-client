@@ -8,6 +8,7 @@ import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 import { ChartModal } from '@/components/modals/ChartModal';
 import { BannerModal } from '@/components/modals/BannerModal.jsx';
 import { EmailModal } from '@/components/modals/EmailModal.jsx';
+import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -49,5 +50,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'EmailModal',
     Component: EmailModal,
+  },
+  {
+    name: 'MainNetModal',
+    Component: MainNetModal,
   },
 ];
