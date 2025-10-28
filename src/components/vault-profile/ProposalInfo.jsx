@@ -349,47 +349,55 @@ export const ProposalInfo = ({ proposal }) => {
           </div>
           <div className="space-y-2">
             <h3 className="text-1xl font-bold">Results</h3>
-            <div className="space-y-3 mb-6">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-green-500 text-sm flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Yes, pass this Proposal
-                  </span>
-                  <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
-                </div>
-                <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${proposal.votes.yes}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-red-600 text-sm flex items-center">
-                    <XCircle className="w-4 h-4 mr-1" />
-                    No, do not pass this Proposal
-                  </span>
-                  <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
-                </div>
-                <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                  <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
-                </div>
-              </div>
-              {proposalInfo?.abstain ? (
+            {proposal.votes ? (
+              <div className="space-y-3 mb-6">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-gray-600 text-sm flex items-center">
-                      <Ellipsis className="w-4 h-4 mr-1" />
-                      Do nothing
+                    <span className="text-green-500 text-sm flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Yes, pass this Proposal
                     </span>
-                    <span className="text-gray-600 text-sm">{proposal.votes.abstain || 0}%</span>
+                    <span className="text-green-500 text-sm">{proposal.votes.yes ?? 0}%</span>
                   </div>
-                  <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
-                    <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${proposal.votes.abstain}%` }} />
+                  <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: `${proposal.votes.yes ?? 0}%` }} />
                   </div>
                 </div>
-              ) : null}
-            </div>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-red-600 text-sm flex items-center">
+                      <XCircle className="w-4 h-4 mr-1" />
+                      No, do not pass this Proposal
+                    </span>
+                    <span className="text-red-600 text-sm">{proposal.votes.no ?? 0}%</span>
+                  </div>
+                  <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
+                    <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no ?? 0}%` }} />
+                  </div>
+                </div>
+
+                {proposalInfo?.abstain && (
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-600 text-sm flex items-center">
+                        <Ellipsis className="w-4 h-4 mr-1" />
+                        Do nothing
+                      </span>
+                      <span className="text-gray-600 text-sm">{proposal.votes.abstain ?? 0}%</span>
+                    </div>
+                    <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gray-600 h-2 rounded-full"
+                        style={{ width: `${proposal.votes.abstain ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-gray-400 text-sm">No votes data yet</div>
+            )}
           </div>
         </div>
       </div>
