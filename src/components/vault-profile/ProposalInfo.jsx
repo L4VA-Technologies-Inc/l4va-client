@@ -303,6 +303,13 @@ export const ProposalInfo = ({ proposal }) => {
                   </PrimaryButton>
                 </div>
               </>
+            ) : proposal.status === 'upcoming' ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="text-gray-300">Voting for this proposal has not yet started.</div>
+                <div className="text-sm text-gray-500">
+                  Voting buttons will appear here once the voting period begins.
+                </div>
+              </div>
             ) : (
               <div className="text-center py-8 space-y-4">
                 <div className="text-gray-300">
