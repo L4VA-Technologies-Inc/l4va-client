@@ -62,7 +62,9 @@ export const VaultList = ({
   const handleOpenFilters = () =>
     openModal('VaultFiltersModal', {
       onApplyFilters: onApplyFilters,
+      onApplyStage: onTabChange,
       initialFilters: appliedFilters,
+      activeStage: activeTab,
     });
 
   const scrollUp = () => {

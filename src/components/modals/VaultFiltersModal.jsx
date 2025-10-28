@@ -9,7 +9,14 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 
-export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilters = {} }) => {
+export const VaultFiltersModal = ({
+  isOpen,
+  onClose,
+  onApplyFilters,
+  initialFilters = {},
+  onApplyStage,
+  activeStage,
+}) => {
   const [filters, setFilters] = useState({
     page: 1,
     limit: 12,
@@ -20,7 +27,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     minTvl: initialFilters.minTvl || 0,
     maxTvl: initialFilters.maxTvl || 0,
     tvlCurrency: initialFilters.tvlCurrency || 'ADA',
-    vaultStage: initialFilters.vaultStage || '',
+    vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
     assetWhitelist: initialFilters.assetWhitelist || '',
@@ -37,7 +44,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
   });
 
   const OPTIONS = {
-    vaultStages: ['Created', 'Contribution', 'Acquire', 'Locked', 'Terminated'],
+    vaultStages: ['Upcoming', 'Contribute', 'Acquire', 'Locked', 'Terminated'],
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
@@ -84,7 +91,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
       if (key === 'reserveMet') {
         processedValue = value === 'Yes' ? true : value === 'No' ? false : value;
       } else if (key === 'vaultStage') {
-        processedValue = value ? value.toLowerCase() : value;
+        processedValue = value;
       }
 
       setFilters(prev => {
@@ -123,6 +130,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         to: '',
       },
     });
+    onApplyStage('All');
     onApplyFilters(clearedFilters);
     onClose();
   };
@@ -131,7 +139,6 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
     const filterRules = {
       tags: value => Array.isArray(value) && value.length > 0,
       reserveMet: value => typeof value === 'boolean',
-      vaultStage: value => value !== '',
       minInitialVaultOffered: value => Number(value) > 0,
       maxInitialVaultOffered: value => Number(value) > 0,
       minTvl: value => Number(value) > 0,
@@ -174,6 +181,7 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
 
   const applyFilters = () => {
     const activeFilters = getActiveFilters(filters);
+    onApplyStage(filters.vaultStage);
     onApplyFilters(activeFilters);
     onClose();
   };
@@ -185,20 +193,23 @@ export const VaultFiltersModal = ({ isOpen, onClose, onApplyFilters, initialFilt
         if (isMultiple) {
           isSelected = filters[activeValue].includes(option);
         } else if (activeValue === 'reserveMet') {
-          isSelected = (option === 'Yes' && filters[activeValue] === true) || (option === 'No' && filters[activeValue] === false);
+          isSelected =
+            (option === 'Yes' && filters[activeValue] === true) || (option === 'No' && filters[activeValue] === false);
         } else if (activeValue === 'vaultStage') {
-          isSelected = filters[activeValue] === option.toLowerCase();
+          isSelected = filters[activeValue] === option;
         } else {
           isSelected = filters[activeValue] === option;
         }
-        
+
         return (
           <Chip
             key={option}
             label={option}
             value={option}
             selected={isSelected}
-            onSelect={() => (isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option))}
+            onSelect={() =>
+              isMultiple ? toggleArrayFilter(activeValue, option) : setSingleFilter(activeValue, option)
+            }
             size="lg"
           />
         );

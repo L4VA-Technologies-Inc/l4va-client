@@ -7,6 +7,7 @@ import { useVaults } from '@/services/api/queries';
 const VAULT_TABS = {
   ALL: 'All',
   DRAFT: 'Draft',
+  UPCOMING: 'Upcoming',
   OPEN: 'Open',
   LOCKED: 'Locked',
   GOVERN: 'Govern',
@@ -26,10 +27,16 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
   const [appliedFilters, setAppliedFilters] = useState(() => {
     const initialActiveTab = initialTab && TABS.includes(initialTab) ? initialTab : TABS[0];
+    const newTab =
+      initialActiveTab === 'Upcoming'
+        ? 'published'
+        : initialActiveTab === 'Contribute'
+          ? 'contribution'
+          : initialActiveTab.toLowerCase();
     return {
       page: 1,
       limit: 12,
-      filter: initialActiveTab.toLowerCase(),
+      filter: newTab,
       myVaults: true,
       search: '',
     };
@@ -39,10 +46,13 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   const router = useRouter();
 
   useEffect(() => {
+    const newTab =
+      activeTab === 'Upcoming' ? 'published' : activeTab === 'Contribute' ? 'contribution' : activeTab.toLowerCase();
+
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       page: 1,
-      filter: activeTab.toLowerCase(),
+      filter: newTab,
     }));
   }, [activeTab]);
 
@@ -55,11 +65,13 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   }, []);
 
   const handleTabChange = tab => {
+    const newTab = tab === 'Upcoming' ? 'published' : tab === 'Contribute' ? 'contribution' : tab.toLowerCase();
+
     setActiveTab(tab);
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
       page: 1,
-      filter: tab.toLowerCase(),
+      filter: newTab,
     }));
     router.navigate({
       to: '/vaults/my',
