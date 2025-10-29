@@ -132,11 +132,7 @@ export const VaultSettings = ({ vault }) => {
             <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
             <InfoRow label="Token Name" value={vault.name} />
             <InfoRow label="Token Symbol" value={vault.vaultTokenTicker} />
-            <InfoRow
-              copyable
-              label="Token Policy"
-              value={`${vault.policyId?.substring(0, 6)}...${vault.policyId?.substring(vault.policyId.length - 6)}`}
-            />
+            <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
             <InfoRow customClassName="items-start" label="Token Assets" value={renderAssets(vault.assetsWhitelist)} />
             <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
             <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
