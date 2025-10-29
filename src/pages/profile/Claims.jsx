@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -44,22 +44,34 @@ export const Claims = () => {
     setCurrentPage(page);
   };
 
+  const handleAdaAmount = amount => {
+    if (amount && amount > 0) {
+      return `${(amount / 1e6).toLocaleString()} ADA`;
+    }
+
+    return '-';
+  };
+
+  const handleVtAmount = (amount, claim) => {
+    if (amount) {
+      return `${amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRM`;
+    }
+
+    return `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRM`;
+  };
+
   const formattedClaims = claims.map(claim => {
     const date = claim.updated_at || claim.created_at;
-    const adaAmount = claim.metadata?.adaAmount;
-    let rewardText = '';
-    if (adaAmount && adaAmount > 0) {
-      rewardText = `${(adaAmount / 1e6).toLocaleString()} ADA`;
-    } else {
-      rewardText = `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault?.vaultTokenTicker || ''}`;
-    }
+    const adaAmount = handleAdaAmount(claim.metadata?.adaAmount);
+    const userTotalVtTokens = handleVtAmount(claim.metadata?.userTotalVtTokens, claim);
     return {
       id: claim.id,
       vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
       image: claim.vault?.vaultImage,
       link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
       date: date ? new Date(date).toLocaleDateString('en-US') : 'N/A',
-      reward: rewardText,
+      reward: adaAmount,
+      vt_tokens: userTotalVtTokens,
       status: claim.status || 'pending',
       type: claim.type,
       rawData: claim,
@@ -137,6 +149,7 @@ export const Claims = () => {
               {claim.link}
             </a>
             <span className="font-medium text-white text-base">{claim.reward}</span>
+            <span className="font-medium text-white text-base">{claim.vt_tokens}</span>
           </div>
         </div>
         <div className="flex-shrink-0">
@@ -172,6 +185,7 @@ export const Claims = () => {
                   <th className="px-4 py-3 text-left">Link</th>
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">Reward</th>
+                  <th className="px-4 py-3 text-left">TotalVtTokens</th>
                   <th className="px-4 py-3 text-left">Status</th>
                 </tr>
               </thead>
@@ -203,6 +217,7 @@ export const Claims = () => {
                     </td>
                     <td className="px-4 py-3 text-steel-300">{claim.date}</td>
                     <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
+                    <td className="px-4 py-3 font-medium text-white">{claim.vt_tokens}</td>
                     <td className="px-4 py-3">
                       <ClaimStatusIndicator claim={claim} />
                     </td>
