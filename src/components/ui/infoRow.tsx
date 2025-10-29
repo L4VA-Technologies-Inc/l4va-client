@@ -12,6 +12,7 @@ type InfoRowProps = {
   labelClassName?: string;
   symbol?: string;
   customClassName?: string;
+  hideLongString?: boolean;
 };
 
 export const InfoRow = ({
@@ -21,9 +22,19 @@ export const InfoRow = ({
   copyable,
   labelClassName = '',
   hideValue = false,
+  hideLongString = false,
   customClassName,
 }: InfoRowProps) => {
-  const formattedValue = typeof value === 'number' ? formatNum(value) : value;
+  const formattedValue = (text: any) => {
+    if (typeof text === 'number') {
+      return formatNum(text);
+    }
+    if (hideLongString) {
+      return `${text.substring(0, 6)}...${text.substring(text.length - 6)}`
+    }
+
+    return text;
+  }
 
   const handleCopy = () => {
     navigator.clipboard
@@ -43,7 +54,7 @@ export const InfoRow = ({
       <div className="flex items-center gap-2">
         {!hideValue && (
           <span>
-            {formattedValue} {symbol}
+            {formattedValue(value)} {symbol}
           </span>
         )}
         {copyable && (
