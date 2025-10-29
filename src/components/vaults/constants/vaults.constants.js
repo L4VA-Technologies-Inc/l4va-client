@@ -3,7 +3,7 @@ import * as yup from 'yup';
 export const MIN_SUPPLY = 1000000; // 10^6
 export const MAX_SUPPLY = 1000000000000; // 10^12
 // export const MIN_CONTRIBUTION_DURATION_MS = 3600000; // 1 hour in ms
-export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 1 day
+export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 1 day
 // export const MIN_ACQUIRE_WINDOW_DURATION_MS = 3600000; // 1 hour in ms
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 86400000; // 1 day
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
