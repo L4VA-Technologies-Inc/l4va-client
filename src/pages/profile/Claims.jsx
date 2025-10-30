@@ -185,7 +185,7 @@ export const Claims = () => {
                   <th className="px-4 py-3 text-left">Link</th>
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">Reward</th>
-                  <th className="px-4 py-3 text-left">TotalVtTokens</th>
+                  <th className="px-4 py-3 text-left">Vault Tokens</th>
                   <th className="px-4 py-3 text-left">Status</th>
                 </tr>
               </thead>
