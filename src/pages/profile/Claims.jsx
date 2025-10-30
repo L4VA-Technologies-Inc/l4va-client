@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
-import { useWallet } from '@ada-anvil/weld/react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -10,13 +9,12 @@ import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
-const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
-
-const TAB_TO_CLAIM_TYPES = {
-  Distribution: ['contributor', 'acquirer'],
-  'Distribution to Terminate': ['final_distribution'],
-  $L4VA: ['l4va'],
-};
+const tabOptions = [
+  { id: 'distribution', name: 'Distribution', type: 'distribution' },
+  { id: 'terminate', name: 'Distribution to Terminate', type: 'final_distribution' },
+  { id: 'l4va', name: '$L4VA', type: 'l4va' },
+  { id: 'cancellation', name: 'Cancellation', type: 'cancellation' },
+];
 
 const ASSET_TYPE_LABELS = {
   contributor: 'Contributor Reward',
@@ -24,15 +22,24 @@ const ASSET_TYPE_LABELS = {
   owner: 'Owner Reward',
 };
 
+const DEFAULT_TAB = 'distribution';
+
 export const Claims = () => {
-  const [activeTab, setActiveTab] = useState(tabOptions[0]);
+  const tabParam = DEFAULT_TAB;
+  const initialTab = tabOptions.find(tab => tab.id === tabParam) || tabOptions.find(tab => tab.id === DEFAULT_TAB);
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [status, setStatus] = useState('idle');
   const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    type: initialTab.type,
+  });
 
-  const { data, isLoading, error, refetch } = useClaims(currentPage, 10);
+  const { data, isLoading, error } = useClaims(filters);
   const claims = data?.data?.items || [];
   const pagination = data?.data || { page: 1, total: 0, limit: 10 };
 
@@ -40,8 +47,23 @@ export const Claims = () => {
     setCurrentPage(1);
   }, [activeTab]);
 
+  const handleTabChange = tab => {
+    const selectedTab = tabOptions.find(t => t.name === tab);
+    if (selectedTab) {
+      setActiveTab(selectedTab);
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        page: 1,
+        type: selectedTab.type,
+      }));
+    }
+  };
+
   const handlePageChange = page => {
-    setCurrentPage(page);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      page: page,
+    }));
   };
 
   const handleAdaAmount = amount => {
@@ -79,9 +101,6 @@ export const Claims = () => {
   });
 
   const filteredClaims = formattedClaims.filter(claim => {
-    const allowedTypes = TAB_TO_CLAIM_TYPES[activeTab];
-    if (!allowedTypes.includes(claim.type)) return false;
-
     const allowedStatuses = ['pending', 'claimed', 'failed'];
     return allowedStatuses.includes(claim.status);
   });
@@ -163,7 +182,7 @@ export const Claims = () => {
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">My Rewards</h2>
       <div>
-        <LavaTabs tabs={tabOptions} activeTab={activeTab} onTabChange={setActiveTab} />
+        <LavaTabs tabs={tabOptions.map(tab => tab.name)} activeTab={activeTab.name} onTabChange={handleTabChange} />
       </div>
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
