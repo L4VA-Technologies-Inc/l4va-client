@@ -137,7 +137,7 @@ export const VaultContribution = ({ vault }) => {
                   ? `₳${formatNum(vault.requireReservedCostAda)}`
                   : `$${formatNum(vault.requireReservedCostUsd)}`}
               </span>
-              <span className="text-dark-100">{Math.round(acquireProgress)}%</span>
+              <span className="text-dark-100">{Math.floor(acquireProgress)}%</span>
             </div>
             <LavaProgressBar
               className="h-2 rounded-full bg-steel-750 mb-4"
