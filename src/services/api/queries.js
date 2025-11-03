@@ -198,12 +198,10 @@ export const useWalletAssetAmount = (assetId, address) => {
 };
 
 // Claims Queries
-export const useClaims = (page, limit) => {
+export const useClaims = (params) => {
   return useQuery({
-    queryKey: ['vault-claims', page, limit],
-    queryFn: () => {
-      return ClaimsApiProvider.getClaims({ page: page || 1, limit });
-    },
+    queryKey: ['vault-claims', JSON.stringify(params)],
+    queryFn: () => ClaimsApiProvider.getClaims(params),
   });
 };
 

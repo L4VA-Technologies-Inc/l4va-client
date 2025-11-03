@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { ExternalLink, Eye, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
-import { useWallet } from '@ada-anvil/weld/react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -9,14 +8,14 @@ import { useClaims } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { useModalControls } from '@/lib/modals/modal.context';
 
-const tabOptions = ['Distribution', 'Distribution to Terminate', '$L4VA'];
-
-const TAB_TO_CLAIM_TYPES = {
-  Distribution: ['contributor', 'acquirer'],
-  'Distribution to Terminate': ['final_distribution'],
-  $L4VA: ['l4va'],
-};
+const tabOptions = [
+  { id: 'distribution', name: 'Distribution', type: 'distribution' },
+  { id: 'terminate', name: 'Distribution to Terminate', type: 'final_distribution' },
+  { id: 'l4va', name: '$L4VA', type: 'l4va' },
+  { id: 'cancellation', name: 'Cancellation', type: 'cancellation' },
+];
 
 const ASSET_TYPE_LABELS = {
   contributor: 'Contributor Reward',
@@ -24,32 +23,60 @@ const ASSET_TYPE_LABELS = {
   owner: 'Owner Reward',
 };
 
+const DEFAULT_TAB = 'distribution';
+
 export const Claims = () => {
-  const [activeTab, setActiveTab] = useState(tabOptions[0]);
+  const tabParam = DEFAULT_TAB;
+  const initialTab = tabOptions.find(tab => tab.id === tabParam) || tabOptions.find(tab => tab.id === DEFAULT_TAB);
+
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [status, setStatus] = useState('idle');
   const [processedClaim, setProcessedClaim] = useState(null);
   const [selectedClaims, setSelectedClaims] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    type: initialTab.type,
+  });
 
-  const { data, isLoading, error, refetch } = useClaims(currentPage, 10);
+  const { data, isLoading, error } = useClaims(filters);
   const claims = data?.data?.items || [];
   const pagination = data?.data || { page: 1, total: 0, limit: 10 };
+
+  const { openModal } = useModalControls();
 
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
 
+  const handleTabChange = tab => {
+    const selectedTab = tabOptions.find(t => t.name === tab);
+    if (selectedTab) {
+      setActiveTab(selectedTab);
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        page: 1,
+        type: selectedTab.type,
+      }));
+    }
+  };
+
   const handlePageChange = page => {
-    setCurrentPage(page);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      page: page,
+    }));
   };
 
   const handleAdaAmount = amount => {
-    if (amount && amount > 0) {
+    if (amount && amount > 0 && activeTab.id === 'cancellation') {
+      return `${amount.toLocaleString()} ADA`;
+    } else if (amount && amount > 0) {
       return `${(amount / 1e6).toLocaleString()} ADA`;
     }
 
-    return '-';
+    return '';
   };
 
   const handleVtAmount = (amount, claim) => {
@@ -66,6 +93,7 @@ export const Claims = () => {
     const userTotalVtTokens = handleVtAmount(claim.metadata?.userTotalVtTokens, claim);
     return {
       id: claim.id,
+      assets: claim.metadata?.assets,
       vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
       image: claim.vault?.vaultImage,
       link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
@@ -79,9 +107,6 @@ export const Claims = () => {
   });
 
   const filteredClaims = formattedClaims.filter(claim => {
-    const allowedTypes = TAB_TO_CLAIM_TYPES[activeTab];
-    if (!allowedTypes.includes(claim.type)) return false;
-
     const allowedStatuses = ['pending', 'claimed', 'failed'];
     return allowedStatuses.includes(claim.status);
   });
@@ -163,7 +188,7 @@ export const Claims = () => {
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">My Rewards</h2>
       <div>
-        <LavaTabs tabs={tabOptions} activeTab={activeTab} onTabChange={setActiveTab} />
+        <LavaTabs tabs={tabOptions.map(tab => tab.name)} activeTab={activeTab.name} onTabChange={handleTabChange} />
       </div>
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
@@ -184,8 +209,8 @@ export const Claims = () => {
                   <th className="px-4 py-3 text-left">Preview</th>
                   <th className="px-4 py-3 text-left">Link</th>
                   <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">Reward</th>
-                  <th className="px-4 py-3 text-left">Vault Tokens</th>
+                  <th className="px-4 py-3 text-left">{activeTab.id !== 'cancellation' ? 'Reward' : 'Asset'}</th>
+                  {activeTab.id !== 'cancellation' && <th className="px-4 py-3 text-left">Vault Tokens</th>}
                   <th className="px-4 py-3 text-left">Status</th>
                 </tr>
               </thead>
@@ -216,8 +241,24 @@ export const Claims = () => {
                       </a>
                     </td>
                     <td className="px-4 py-3 text-steel-300">{claim.date}</td>
-                    <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
-                    <td className="px-4 py-3 font-medium text-white">{claim.vt_tokens}</td>
+                    {claim.reward ? (
+                      <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
+                    ) : !claim.reward && activeTab.id === 'cancellation' && claim.assets ? (
+                      <td className="px-4 py-3 font-medium text-white">
+                        <button
+                          onClick={() => openModal('NftModal', { assets: claim.assets })}
+                          className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+                        >
+                          Show All NFTs
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    ) : (
+                      <td className="px-4 py-3 font-medium text-white">-</td>
+                    )}
+                    {activeTab.id !== 'cancellation' && (
+                      <td className="px-4 py-3 font-medium text-white">{claim.vt_tokens}</td>
+                    )}
                     <td className="px-4 py-3">
                       <ClaimStatusIndicator claim={claim} />
                     </td>
