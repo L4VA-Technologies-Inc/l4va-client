@@ -147,7 +147,11 @@ export const VaultSettings = ({ vault }) => {
               symbol={currency === 'ada' ? 'ADA' : 'USD'}
               value={currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd}
             />
-            <InfoRow label="Implied Vault Valuation @ Lock" value={vault.valuationAmount} />
+            <InfoRow
+              label="Implied Vault Valuation @ Lock"
+              symbol="ADA"
+              value={vault.valuationAmount ? vault.valuationAmount : 0}
+            />
             <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
             <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />
             <InfoRow label="Termination Type" value={vault.terminationType} />
