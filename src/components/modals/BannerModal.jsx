@@ -12,7 +12,7 @@ export const BannerModal = () => {
         <p className="text-dark-100 text-center m-0">
           Click{' '}
           <a
-            href="https://app.vyfi.io/launchpad"
+            href="https://app.vyfi.io/explorer/L4VA"
             target="_blank"
             rel="noopener noreferrer"
             className="text-orange-500 hover:underline"
