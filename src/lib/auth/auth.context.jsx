@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('vlrm_balance_cache');
     queryClient.setQueryData(['profile'], null);
+    window.location.href = '/';
   };
 
   const value = {
