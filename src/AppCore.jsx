@@ -8,6 +8,7 @@ import { ModalProvider } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
+import { useWalletChangeListener } from '@/hooks/useWalletChangeListener';
 
 const router = createRouter({
   routeTree,
@@ -20,6 +21,7 @@ const router = createRouter({
 
 const AppWithInterceptor = () => {
   useAuthInterceptor();
+  useWalletChangeListener();
   return (
     <ModalProvider>
       <RouterProvider router={router} />
