@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth/auth.js';
 import { usePublicProfile } from '@/services/api/queries.js';
 import { Spinner } from '@/components/Spinner.jsx';
 import { UserPublicVaultsList } from '@/components/vaults/UserPublicVaultsList.jsx';
+import { Transactions } from '@/pages/profile/Transactions.jsx';
 
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ export const Profile = ({ userId, isEditable }) => {
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList />}
         {!userId && <Claims />}
+        {!userId && <Transactions />}
       </div>
     </div>
   );

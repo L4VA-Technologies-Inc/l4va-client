@@ -7,7 +7,7 @@ export const NftModal = ({ assets }) => {
 
   const renderNFTs = (assets = []) => {
     if (!Array.isArray(assets) || assets.length === 0) {
-      return <span className="text-gray-400 text-sm">Нет полученных NFT</span>;
+      return <span className="text-gray-400 text-sm">No NFTs received</span>;
     }
 
     return (

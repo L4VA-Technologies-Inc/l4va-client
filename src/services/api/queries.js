@@ -110,6 +110,13 @@ export const useSubmitTransaction = () => {
   });
 };
 
+export const useTransactions = (params) => {
+  return useQuery({
+    queryKey: ['transactions', JSON.stringify(params)],
+    queryFn: () => TransactionsApiProvider.getUserTransactions(params),
+  });
+};
+
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({
