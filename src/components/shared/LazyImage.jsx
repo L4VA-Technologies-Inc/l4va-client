@@ -14,6 +14,9 @@ export const LazyImage = ({
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef(null);
 
+  const isValidSrc = src && typeof src === 'string' && src.trim() !== '';
+  const imageSrc = hasError || !isValidSrc ? fallbackSrc : src;
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -54,7 +57,7 @@ export const LazyImage = ({
 
       {isInView && (
         <img
-          src={hasError ? fallbackSrc : src}
+          src={imageSrc}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-200 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
