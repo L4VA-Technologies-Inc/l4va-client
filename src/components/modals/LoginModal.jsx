@@ -81,7 +81,6 @@ export const LoginModal = () => {
     if (walletKey) {
       connect(walletKey, {
         onSuccess: () => {
-          console.log('Successfully connected to wallet');
           setIsLoading(false);
         },
         onError: error => {
