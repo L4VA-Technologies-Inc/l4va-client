@@ -11,4 +11,8 @@ export class TransactionsApiProvider {
     const response = await axiosInstance.post(TransactionsConfigProvider.submitTransaction(), params);
     return response;
   }
+
+  static async getUserTransactions(params) {
+    return await axiosInstance.get(TransactionsConfigProvider.getUserTransactions(), { params });
+  }
 }

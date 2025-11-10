@@ -10,6 +10,7 @@ import { BannerModal } from '@/components/modals/BannerModal.jsx';
 import { EmailModal } from '@/components/modals/EmailModal.jsx';
 import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
+import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -59,5 +60,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'NftModal',
     Component: NftModal,
+  },
+  {
+    name: 'TransactionFilterModal',
+    Component: TransactionFilterModal,
   },
 ];
