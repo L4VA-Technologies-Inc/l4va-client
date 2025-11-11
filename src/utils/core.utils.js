@@ -1,5 +1,4 @@
 import { formatISO } from 'date-fns';
-import { TruckElectric } from 'lucide-react';
 
 export const formatNum = (value, maximumFractionDigits = 2) =>
   value

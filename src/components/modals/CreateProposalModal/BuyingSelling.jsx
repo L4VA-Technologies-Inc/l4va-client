@@ -31,7 +31,7 @@ const validateOptions = options => {
       transactionOptionSchema.validateSync(option);
     });
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 };
@@ -41,7 +41,7 @@ const validateOption = option => {
     try {
       transactionOptionSchema.validateSync(option);
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }

@@ -3,8 +3,6 @@ import { useMemo, useState, useEffect } from 'react';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 const marketOptions = [

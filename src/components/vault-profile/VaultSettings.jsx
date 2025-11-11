@@ -133,7 +133,11 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Token Name" value={vault.name} />
             <InfoRow label="Token Symbol" value={vault.vaultTokenTicker} />
             <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
-            <InfoRow customClassName="items-start" label="Asset Whitelist" value={renderAssets(vault.assetsWhitelist)} />
+            <InfoRow
+              customClassName="items-start"
+              label="Asset Whitelist"
+              value={renderAssets(vault.assetsWhitelist)}
+            />
             <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
             <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />

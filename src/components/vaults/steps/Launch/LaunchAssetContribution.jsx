@@ -66,8 +66,8 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
               <div className="space-y-6">
                 {data.assetsWhitelist.slice(0, 5).map((asset, index) => {
                   return (
-                    <div className="space-y-4">
-                      <div key={index} className="flex items-center gap-10">
+                    <div key={asset.policyId || index} className="space-y-4">
+                      <div className="flex items-center gap-10">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-primary" />
                           <span>{substringAddress(asset.policyId)}</span>

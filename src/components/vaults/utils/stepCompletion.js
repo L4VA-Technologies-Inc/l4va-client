@@ -96,12 +96,12 @@ export const updateStepErrorIndicators = (steps, errors, stepFields) => {
 
   return steps.map(step => {
     const stepFieldNames = stepFields[step.id] || [];
-    
+
     const hasErrors = errorFields.some(errorField => {
       return stepFieldNames.some(stepField => {
-        return errorField === stepField ||
-               errorField.startsWith(`${stepField}.`) || 
-               errorField.startsWith(`${stepField}[`);
+        return (
+          errorField === stepField || errorField.startsWith(`${stepField}.`) || errorField.startsWith(`${stepField}[`)
+        );
       });
     });
 

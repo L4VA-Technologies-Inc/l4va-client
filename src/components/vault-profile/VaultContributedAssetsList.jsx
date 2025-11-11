@@ -6,7 +6,6 @@ import SearchInput from '@/components/shared/SearchInput';
 import { Pagination } from '@/components/shared/Pagination';
 import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
-import { useCurrency } from '@/hooks/useCurrency';
 
 export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
@@ -23,7 +22,6 @@ export const VaultContributedAssetsList = ({ vault }) => {
         limit: data.data.limit,
       }
     : null;
-  const { currency } = useCurrency();
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -30,9 +30,9 @@ export const Claims = () => {
   const initialTab = tabOptions.find(tab => tab.id === tabParam) || tabOptions.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [status, setStatus] = useState('idle');
-  const [processedClaim, setProcessedClaim] = useState(null);
-  const [selectedClaims, setSelectedClaims] = useState([]);
+  const [status] = useState('idle');
+  const [processedClaim] = useState(null);
+  const [selectedClaims] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     page: 1,

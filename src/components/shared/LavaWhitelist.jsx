@@ -131,11 +131,7 @@ export const LavaWhitelist = ({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              {fieldError && (
-                <p className="text-red-600 text-sm mt-1">
-                  {fieldError}
-                </p>
-              )}
+              {fieldError && <p className="text-red-600 text-sm mt-1">{fieldError}</p>}
             </div>
           );
         })}

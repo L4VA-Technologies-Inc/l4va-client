@@ -14,7 +14,6 @@ export const CurrencyDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { currency, updateCurrency } = useCurrency();
 
-
   const options = [
     { value: 'ada', label: 'ADA' },
     { value: 'usdt', label: 'USD' },

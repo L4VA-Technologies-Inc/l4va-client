@@ -11,7 +11,7 @@ export class CoreApiProvider {
     return response;
   }
 
-  static async sendNotification( data ) {
+  static async sendNotification(data) {
     const response = await axiosInstance.post(CoreConfigProvider.sendNotification(), data);
     return response;
   }

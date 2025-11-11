@@ -4,7 +4,7 @@ const Acquire = () => {
   const { data } = useAcquire();
   const acquires = data?.data || [];
 
-  const formatTimeLeft = (timeLeft) => {
+  const formatTimeLeft = timeLeft => {
     if (!timeLeft) return 'N/A';
     const now = new Date();
     const end = new Date(timeLeft);
@@ -18,7 +18,6 @@ const Acquire = () => {
     return `${days}d ${hours}h`;
   };
 
-
   return (
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">Acquire</h2>
@@ -26,41 +25,44 @@ const Acquire = () => {
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-y-3">
             <thead>
-            <tr className="text-steel-300 text-sm">
-              <th className="px-4 py-3 text-left">VAULT</th>
-              <th className="px-4 py-3 text-right">INVESTED (ADA)</th>
-              <th className="px-4 py-3 text-right">VAL</th>
-              <th className="px-4 py-3 text-right">ASSETS TVL (ADA)</th>
-              <th className="px-4 py-3 text-right">TIME LEFT</th>
-              <th className="px-4 py-3 text-center">ACCESS</th>
-              <th className="px-4 py-3 text-center">STATUS</th>
-            </tr>
+              <tr className="text-steel-300 text-sm">
+                <th className="px-4 py-3 text-left">VAULT</th>
+                <th className="px-4 py-3 text-right">INVESTED (ADA)</th>
+                <th className="px-4 py-3 text-right">VAL</th>
+                <th className="px-4 py-3 text-right">ASSETS TVL (ADA)</th>
+                <th className="px-4 py-3 text-right">TIME LEFT</th>
+                <th className="px-4 py-3 text-center">ACCESS</th>
+                <th className="px-4 py-3 text-center">STATUS</th>
+              </tr>
             </thead>
             <tbody>
-            {acquires.map((acquire, index) => (
-              <tr
-                key={index}
-                className="text-steel-100 text-sm bg-steel-800/50 rounded-xl hover:bg-steel-800/70 transition-colors"
-              >
-                <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">
-                  <div className="w-6 flex items-center">
-                    {acquire.vault_image?.file_url ? (
-                      <div className="w-14 bg-steel-0">
-                        <img src={acquire.vault_image?.file_url} />
-                      </div>) : null}
-                    <div>{acquire.name}</div>
-                  </div>
-                </td> 
-                <td
-                  className="px-4 py-4 text-right text-xl bg-steel-950">{Number(acquire.total_assets_cost_ada).toFixed(2)}</td>
-                <td className="px-4 py-4 text-right text-xl bg-steel-950">-</td>
-                <td
-                  className="px-4 py-4 text-right text-xl bg-steel-950">{Number(acquire.total_assets_cost_ada).toFixed(2)}</td>
-                <td className="px-4 py-4 text-right text-xl bg-steel-950">{formatTimeLeft(acquire.timeLeft)}</td>
-                <td className="px-4 py-4 text-center text-xl bg-steel-950">{acquire.privacy}</td>
-                <td className="px-4 py-4 rounded-r-xl text-center text-xl bg-steel-950">{acquire.vault_status}</td>
-              </tr>
-            ))}
+              {acquires.map((acquire, index) => (
+                <tr
+                  key={index}
+                  className="text-steel-100 text-sm bg-steel-800/50 rounded-xl hover:bg-steel-800/70 transition-colors"
+                >
+                  <td className="px-4 py-4 rounded-l-xl font-medium text-xl text-white bg-steel-950">
+                    <div className="w-6 flex items-center">
+                      {acquire.vault_image?.file_url ? (
+                        <div className="w-14 bg-steel-0">
+                          <img src={acquire.vault_image?.file_url} />
+                        </div>
+                      ) : null}
+                      <div>{acquire.name}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-right text-xl bg-steel-950">
+                    {Number(acquire.total_assets_cost_ada).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-xl bg-steel-950">-</td>
+                  <td className="px-4 py-4 text-right text-xl bg-steel-950">
+                    {Number(acquire.total_assets_cost_ada).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-xl bg-steel-950">{formatTimeLeft(acquire.timeLeft)}</td>
+                  <td className="px-4 py-4 text-center text-xl bg-steel-950">{acquire.privacy}</td>
+                  <td className="px-4 py-4 rounded-r-xl text-center text-xl bg-steel-950">{acquire.vault_status}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -70,4 +72,3 @@ const Acquire = () => {
 };
 
 export default Acquire;
-

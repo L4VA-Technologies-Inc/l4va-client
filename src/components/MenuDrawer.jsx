@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import React from 'react';
 
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency.js';

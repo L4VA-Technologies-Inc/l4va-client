@@ -1,7 +1,6 @@
-import SecondaryButton from '@/components/shared/SecondaryButton';
-import { Filter } from 'lucide-react';
-import { GridIcon, ListIcon } from 'lucide-react';
+import { Filter, GridIcon, ListIcon } from 'lucide-react';
 
+import SecondaryButton from '@/components/shared/SecondaryButton';
 
 const ViewToggle = ({ activeView, onViewChange }) => (
   <div className="flex items-center space-x-2">
@@ -20,17 +19,16 @@ const ViewToggle = ({ activeView, onViewChange }) => (
   </div>
 );
 
-
 const VaultFilter = ({ handleOpenFilters, viewType, setViewType }) => {
   return (
     <div className="flex items-center w-full sm:w-auto gap-2">
       <SecondaryButton onClick={handleOpenFilters} className="w-full sm:w-auto">
         <Filter className="w-4 h-4" />
-          Filters
+        Filters
       </SecondaryButton>
       <ViewToggle activeView={viewType} onViewChange={setViewType} />
     </div>
-  )
-}
+  );
+};
 
 export default VaultFilter;
