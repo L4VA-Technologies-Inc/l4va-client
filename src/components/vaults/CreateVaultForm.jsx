@@ -156,6 +156,10 @@ export const CreateVaultForm = ({ vault }) => {
           vaultId: data.vaultId,
           transaction: data.presignedTx,
           signatures: [signature],
+        }).then(res => {
+          if (res.data.id) {
+            navigate({ to: `/vaults/${data.vaultId}` });
+          }
         });
         toast.success('Vault launched successfully');
 
@@ -164,7 +168,6 @@ export const CreateVaultForm = ({ vault }) => {
           queryClient.invalidateQueries({ queryKey: ['vault', data.vaultId] }),
           queryClient.invalidateQueries({ queryKey: ['vaults'] }),
         ]);
-        navigate({ to: `/vaults/${data.vaultId}` });
         setVaultData(initialVaultState);
         setCurrentStep(1);
         setSteps(CREATE_VAULT_STEPS);
