@@ -1,6 +1,6 @@
 import { Link, useRouter } from '@tanstack/react-router';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, X } from 'lucide-react';
 import { useCounts, useNotifications } from '@novu/react';
 
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
@@ -111,6 +111,64 @@ export const Header = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
+  const renderNotifications = () => {
+    return (
+      isAuthenticated && (
+        <DropdownMenu
+          open={isNotificationsOpen}
+          onOpenChange={() => {
+            setIsNotificationsOpen(!isNotificationsOpen);
+            readAll();
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-2 rounded-full hover:bg-steel-850 transition-colors relative"
+              aria-label="Show notifications"
+            >
+              <Bell className="w-6 h-6" />
+              {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[500px] overflow-y-auto">
+            <div className="flex w-full justify-between items-center mb-4">
+              <h3 className="font-bold">Notifications</h3>
+              <button
+                className="p-2 rounded-full hover:bg-steel-850 transition-colors relative mr-2"
+                aria-label="Hide notifications"
+                onClick={() => {
+                  setIsNotificationsOpen(false);
+                }}
+              >
+                <X className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
+              {fetching && notifications?.length === 0 && <div className="text-dark-100">Loading...</div>}
+              {notifications?.map(n => (
+                <div
+                  key={n.id}
+                  className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
+                  onClick={() => handleNotificationClick(n.data?.vaultId)}
+                >
+                  <div className="font-medium text-white">{n.subject || 'No subject'}</div>
+                  <div className="text-base text-dark-100">{n.body || 'No message'}</div>
+                  <div className="text-sm mt-1 text-dark-100 opacity-70">{new Date(n.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
+              {!fetching && notifications?.length === 0 && <div className="text-dark-100">No notifications yet</div>}
+              {hasMore && (
+                <div ref={observerTarget} className="h-10 flex items-center justify-center">
+                  {isLoading && <div className="text-dark-100">Loading more...</div>}
+                </div>
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    );
+  };
+
   return (
     <header
       className={cn(
@@ -123,18 +181,8 @@ export const Header = () => {
             <L4vaIcon className="flex-shrink-0" height={24} width={24} />
             <span className="hidden md:block text-2xl font-bold uppercase">L4VA</span>
           </Link>
-          <div className="md:hidden flex items-center gap-2">
-            <ConnectButton />
-            <button
-              className={cn('p-2 rounded-full hover:bg-steel-850 transition-colors')}
-              aria-label="Toggle mobile menu"
-              onClick={toggleMobileMenu}
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="hidden md:flex items-center flex-1">
-            <div className="flex items-center gap-8 ml-[56px]">
+          <div className="flex w-full items-center">
+            <div className="hidden md:flex items-center gap-8 ml-[56px]">
               <div>
                 <LavaSteelSelect
                   options={currencyOptions}
@@ -149,53 +197,17 @@ export const Header = () => {
               ))}
             </div>
             <div className="flex-1" />
-            {isAuthenticated && (
-              <DropdownMenu
-                open={isNotificationsOpen}
-                onOpenChange={() => {
-                  setIsNotificationsOpen(!isNotificationsOpen);
-                  readAll();
-                }}
+            <div className="flex gap-2">
+              {renderNotifications()}
+              <ConnectButton />
+              <button
+                className={cn('p-2 rounded-full hover:bg-steel-850 transition-colors md:hidden flex')}
+                aria-label="Toggle mobile menu"
+                onClick={toggleMobileMenu}
               >
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 rounded-full hover:bg-steel-850 transition-colors relative mr-2"
-                    aria-label="Show notifications"
-                  >
-                    <Bell className="w-6 h-6" />
-                    {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[500px] overflow-y-auto">
-                  <h3 className="font-bold mb-4">Notifications</h3>
-                  <div className="flex flex-col gap-2">
-                    {fetching && notifications?.length === 0 && <div className="text-dark-100">Loading...</div>}
-                    {notifications?.map(n => (
-                      <div
-                        key={n.id}
-                        className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
-                        onClick={() => handleNotificationClick(n.data?.vaultId)}
-                      >
-                        <div className="font-medium text-white">{n.subject || 'No subject'}</div>
-                        <div className="text-base text-dark-100">{n.body || 'No message'}</div>
-                        <div className="text-sm mt-1 text-dark-100 opacity-70">
-                          {new Date(n.createdAt).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                    {!fetching && notifications?.length === 0 && (
-                      <div className="text-dark-100">No notifications yet</div>
-                    )}
-                    {hasMore && (
-                      <div ref={observerTarget} className="h-10 flex items-center justify-center">
-                        {isLoading && <div className="text-dark-100">Loading more...</div>}
-                      </div>
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            <ConnectButton />
+                <Menu className="w-6 h-6" />
+              </button>
+            </div>
           </div>
           <MenuDrawer
             navLinks={navLinks}
