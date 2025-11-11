@@ -26,7 +26,7 @@ jobs:
         run: npm run lint
 
   deploy:
-    needs: [save-logs, build-check]
+    needs: [build-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
