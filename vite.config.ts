@@ -34,6 +34,12 @@ export default defineConfig({
   },
   build: {
     target: 'esnext', // enables top-level await in deps like lucid
+    minify: 'esbuild',
+    terserOptions: {
+      ecma: 2020,
+      compress: { passes: 2 },
+      mangle: true,
+    },
   },
   optimizeDeps: {
     esbuildOptions: {
