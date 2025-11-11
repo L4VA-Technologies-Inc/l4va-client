@@ -47,6 +47,7 @@ export default defineConfig([
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
   {
@@ -90,6 +91,7 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
 ]);
