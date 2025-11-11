@@ -1,5 +1,3 @@
-import { HelpCircle } from 'lucide-react';
-
 import { Label } from '@/components/ui/label';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 
@@ -8,9 +6,7 @@ export const LavaRadio = ({ name, value, label, options, onChange, error, hint }
     {label ? (
       <Label className="font-bold flex items-center gap-2">
         <span className="uppercase">{label}</span>
-        {hint && (
-          <HoverHelp hint={hint} />
-        )}
+        {hint && <HoverHelp hint={hint} />}
       </Label>
     ) : null}
     <div className="space-y-2 mt-4">

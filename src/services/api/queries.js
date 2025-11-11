@@ -110,7 +110,7 @@ export const useSubmitTransaction = () => {
   });
 };
 
-export const useTransactions = (params) => {
+export const useTransactions = params => {
   return useQuery({
     queryKey: ['transactions', JSON.stringify(params)],
     queryFn: () => TransactionsApiProvider.getUserTransactions(params),
@@ -205,7 +205,7 @@ export const useWalletAssetAmount = (assetId, address) => {
 };
 
 // Claims Queries
-export const useClaims = (params) => {
+export const useClaims = params => {
   return useQuery({
     queryKey: ['vault-claims', JSON.stringify(params)],
     queryFn: () => ClaimsApiProvider.getClaims(params),

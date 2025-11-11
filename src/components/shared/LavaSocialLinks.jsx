@@ -36,7 +36,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
       const validation = validateUrlRealTime(url);
       setRealTimeErrors(prev => ({
         ...prev,
-        [linkId]: validation.isEmpty ? null : validation.error
+        [linkId]: validation.isEmpty ? null : validation.error,
       }));
     }, 300),
     []
@@ -69,7 +69,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
     const errorKey = `socialLinks[${index}].${field}`;
     const formError = errors[errorKey];
     const realTimeError = realTimeErrors[linkId];
-    
+
     return realTimeError || formError;
   };
 

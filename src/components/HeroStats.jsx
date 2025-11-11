@@ -5,7 +5,12 @@ import { formatNum } from '@/utils/core.utils.js';
 
 const Counter = ({ value, prefix = '' }) => {
   const animatedValue = useCountAnimation(value);
-  return <span>{prefix}{animatedValue}</span>;
+  return (
+    <span>
+      {prefix}
+      {animatedValue}
+    </span>
+  );
 };
 
 const HeroStats = () => {
@@ -33,10 +38,7 @@ const HeroStats = () => {
         <div className="text-center sm:text-left">
           <p>TVL</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
-            <Counter 
-              value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd)} 
-              prefix={currencySymbol}
-            />
+            <Counter value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd)} prefix={currencySymbol} />
           </p>
         </div>
       </div>
@@ -44,8 +46,8 @@ const HeroStats = () => {
         <div className="text-center sm:text-left">
           <p>Total Contributed</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
-            <Counter 
-              value={formatCurrencyValue(stats?.totalContributedAda, stats?.totalContributedUsd)} 
+            <Counter
+              value={formatCurrencyValue(stats?.totalContributedAda, stats?.totalContributedUsd)}
               prefix={currencySymbol}
             />
           </p>
@@ -54,6 +56,5 @@ const HeroStats = () => {
     </div>
   );
 };
-
 
 export default HeroStats;

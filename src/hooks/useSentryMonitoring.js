@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import * as Sentry from '@sentry/react';
 
 export const useSentryMonitoring = () => {
-  const setUser = (user) => {
+  const setUser = user => {
     Sentry.setUser({
       id: user.id,
       email: user.email,
@@ -94,7 +94,6 @@ export const useSentryMonitoring = () => {
     });
   };
 
-
   const trackPerformance = (operation, duration, metadata = {}) => {
     Sentry.addBreadcrumb({
       message: `Performance: ${operation} took ${duration}ms`,
@@ -125,7 +124,7 @@ export const useSentryMonitoring = () => {
   };
 
   const trackCriticalError = (error, context, metadata = {}) => {
-    Sentry.withScope((scope) => {
+    Sentry.withScope(scope => {
       scope.setLevel('fatal');
       scope.setTag('critical', true);
       scope.setTag('context', context);
@@ -140,7 +139,7 @@ export const useSentryMonitoring = () => {
   };
 
   useEffect(() => {
-    const handleQueryError = (event) => {
+    const handleQueryError = event => {
       if (event.detail?.error) {
         Sentry.captureException(event.detail.error, {
           tags: {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { formatNum } from '@/utils/core.utils.js';
 
 export const useCountAnimation = (endValue, duration = 2000) => {

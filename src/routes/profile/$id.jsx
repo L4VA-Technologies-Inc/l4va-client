@@ -5,7 +5,7 @@ import { Profile } from '@/pages/profile/index.jsx';
 const ProfileComponent = () => {
   const userId = useParams({
     from: '/profile/$id',
-    select: (p) => p.id,
+    select: p => p.id,
   });
 
   return <Profile userId={userId} isEditable={false} />;

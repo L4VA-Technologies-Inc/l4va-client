@@ -1,25 +1,26 @@
+// eslint-disable-next-line no-useless-escape
 const URL_REGEX = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
 
-export const validateUrlRealTime = (url) => {
+export const validateUrlRealTime = url => {
   if (!url || url.trim() === '') {
     return {
       isValid: false,
       error: '',
       formattedUrl: '',
-      isEmpty: true
+      isEmpty: true,
     };
   }
 
   const trimmedUrl = url.trim();
-  
+
   const formattedUrl = trimmedUrl.startsWith('http') ? trimmedUrl : `https://${trimmedUrl}`;
-  
+
   if (!URL_REGEX.test(formattedUrl)) {
     return {
       isValid: false,
       error: 'Please enter a valid URL (e.g., https://example.com)',
       formattedUrl,
-      isEmpty: false
+      isEmpty: false,
     };
   }
 
@@ -30,24 +31,24 @@ export const validateUrlRealTime = (url) => {
         isValid: false,
         error: 'Please enter a valid URL with a proper domain',
         formattedUrl,
-        isEmpty: false
+        isEmpty: false,
       };
     }
-    
+
     if (urlObj.protocol !== 'https:') {
       return {
         isValid: false,
         error: 'Only HTTPS URLs are allowed for security reasons',
         formattedUrl,
-        isEmpty: false
+        isEmpty: false,
       };
     }
-  } catch (error) {
+  } catch {
     return {
       isValid: false,
       error: 'Please enter a valid URL format',
       formattedUrl,
-      isEmpty: false
+      isEmpty: false,
     };
   }
 
@@ -55,11 +56,11 @@ export const validateUrlRealTime = (url) => {
     isValid: true,
     error: '',
     formattedUrl,
-    isEmpty: false
+    isEmpty: false,
   };
 };
 
-export const autoFormatUrl = (url) => {
+export const autoFormatUrl = url => {
   if (!url || url.trim() === '') return '';
   const trimmedUrl = url.trim();
   return trimmedUrl.startsWith('http') ? trimmedUrl : `https://${trimmedUrl}`;

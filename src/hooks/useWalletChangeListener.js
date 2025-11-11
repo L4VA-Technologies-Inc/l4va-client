@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+
 import { useAuth } from '@/lib/auth/auth';
 
 export const useWalletChangeListener = () => {
