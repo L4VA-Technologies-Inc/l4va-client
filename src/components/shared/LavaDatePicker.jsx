@@ -124,7 +124,7 @@ export const LavaDatePicker = ({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn('w-auto p-0', styles.popover)}>
+            <PopoverContent className={cn('w-auto p-0 z-[9999]', styles.popover)}>
               <div className="sm:flex">
                 <Calendar
                   initialFocus
