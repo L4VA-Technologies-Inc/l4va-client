@@ -1,14 +1,18 @@
 import CheckmarkIcon from '@/icons/checkmark.svg?react';
 import { LazyImage } from '@/components/shared/LazyImage';
 
-export const NFTItem = ({ nft, isSelected, onToggle }) => {
+export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   return (
-    <div className="flex items-center gap-3 cursor-pointer" onClick={() => onToggle(nft)}>
+    <div
+      className={`flex items-center gap-3 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      onClick={() => !isDisabled && onToggle(nft)}
+    >
       <div
         className={`
         relative w-6 h-6 flex items-center justify-center rounded-full
         border border-steel-750 bg-steel-800
         ${isSelected ? 'bg-primary-500 border-primary-500' : ''}
+        ${isDisabled ? 'opacity-50' : ''}
       `}
       >
         {isSelected && (

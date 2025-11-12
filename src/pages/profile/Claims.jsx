@@ -30,9 +30,9 @@ export const Claims = () => {
   const initialTab = tabOptions.find(tab => tab.id === tabParam) || tabOptions.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [status, setStatus] = useState('idle');
-  const [processedClaim, setProcessedClaim] = useState(null);
-  const [selectedClaims, setSelectedClaims] = useState([]);
+  const [status] = useState('idle');
+  const [processedClaim] = useState(null);
+  const [selectedClaims] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     page: 1,
@@ -63,6 +63,7 @@ export const Claims = () => {
   };
 
   const handlePageChange = page => {
+    setCurrentPage(page);
     setFilters(prevFilters => ({
       ...prevFilters,
       page: page,
@@ -187,8 +188,15 @@ export const Claims = () => {
   return (
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">My Rewards</h2>
-      <div>
-        <LavaTabs tabs={tabOptions.map(tab => tab.name)} activeTab={activeTab.name} onTabChange={handleTabChange} />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+        <div className="flex-1 sm:w-auto">
+          <LavaTabs
+            className="overflow-x-auto text-sm md:text-base w-full"
+            tabs={tabOptions.map(tab => tab.name)}
+            activeTab={activeTab.name}
+            onTabChange={handleTabChange}
+          />
+        </div>
       </div>
       {isLoading ? (
         <div className="flex justify-center items-center py-20">

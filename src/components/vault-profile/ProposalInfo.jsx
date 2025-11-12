@@ -33,9 +33,9 @@ export const ProposalInfo = ({ proposal }) => {
       onClick: () => proposer && handleOwnerProposalClick(proposer?.id),
     },
     { label: 'IPFS', value: proposalInfo?.ipfsHash || 'N/A' },
-    { label: 'Voting system', value: 'Single choice' || 'N/A' },
-    { label: 'Start at', value: formatDate(proposalInfo?.startDate) || 'N/A' },
-    { label: 'End at', value: formatDate(proposalInfo?.endDate) || 'N/A' },
+    { label: 'Voting system', value: proposalInfo?.votingSystem ?? 'Single choice' },
+    { label: 'Start at', value: proposalInfo?.startDate ? formatDate(proposalInfo.startDate) : 'N/A' },
+    { label: 'End at', value: proposalInfo?.endDate ? formatDate(proposalInfo.endDate) : 'N/A' },
   ];
 
   const proposalBuyingSelling =

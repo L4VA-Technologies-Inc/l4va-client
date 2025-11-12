@@ -59,13 +59,13 @@ export const ModalWrapper = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 transition-opacity duration-300"
         aria-hidden="true"
         onClick={onClose}
       />
       <div
         className={`
-          fixed z-50 bg-steel-950 flex flex-col shadow-xl
+          fixed z-70 bg-steel-950 flex flex-col shadow-xl
 
           /* Desktop styles - centered modal */
           md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2
@@ -107,7 +107,7 @@ export const ModalWrapper = ({
           </div>
         ) : null}
         <div
-          className="flex-1 overflow-y-auto p-4 md:p-6"
+          className="flex-1 overflow-y-auto p-4 md:p-6 max-md:pb-8"
           style={{
             maxHeight: footer ? `calc(${maxHeight} - 120px)` : `calc(${maxHeight} - 60px)`,
           }}

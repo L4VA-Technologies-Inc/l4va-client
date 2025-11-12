@@ -1,6 +1,5 @@
 import { HelpCircle } from 'lucide-react';
 
-
 export const HoverHelp = ({ hint }) => {
   return (
     <div className="group relative inline-flex" tabIndex="0" role="button">
@@ -18,4 +17,4 @@ export const HoverHelp = ({ hint }) => {
       </div>
     </div>
   );
-}
+};

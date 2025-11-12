@@ -21,6 +21,8 @@ import { InfiniteScrollList } from '@/components/shared/InfiniteScrollList';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets';
 
 const DEFAULT_ASSET_VALUE_ADA = 152;
+const MAX_NFT_PER_TRANSACTION = 10;
+const MAX_FT_PER_TRANSACTION = 10;
 
 const testnetPrices = {
   f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: 0.00526,
@@ -50,22 +52,22 @@ const getIPFSUrl = src => {
 };
 
 // Enhanced NFT/FT items with IPFS support
-const EnhancedNFTItem = ({ nft, isSelected, onToggle }) => {
+const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   const enhancedNft = {
     ...nft,
     src: getIPFSUrl(nft.metadata.image),
   };
 
-  return <NFTItem isSelected={isSelected} nft={enhancedNft} onToggle={onToggle} />;
+  return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
 };
 
-const EnhancedFTItem = ({ ft, amount, onAmountChange }) => {
+const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   const enhancedFt = {
     ...ft,
     src: getIPFSUrl(ft.metadata.image),
   };
 
-  return <FTItem amount={amount} ft={enhancedFt} onAmountChange={onAmountChange} />;
+  return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
 };
 
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
@@ -133,12 +135,18 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const estimatedAdaReceived = ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString();
 
   const toggleNFT = useCallback(asset => {
-    if (asset.isFungibleToken) return; // Ignore toggle for FT tokens
+    if (asset.isFungibleToken) return;
 
     setSelectedNFTs(prevSelected => {
-      if (prevSelected.some(nft => nft.tokenId === asset.tokenId)) {
+      const isSelected = prevSelected.some(nft => nft.tokenId === asset.tokenId);
+
+      if (isSelected) {
         return prevSelected.filter(nft => nft.tokenId !== asset.tokenId);
       } else {
+        const nftCount = prevSelected.filter(a => !a.isFungibleToken).length;
+        if (nftCount >= MAX_NFT_PER_TRANSACTION) {
+          return prevSelected;
+        }
         return [...prevSelected, asset];
       }
     });
@@ -150,7 +158,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     if (!isValid) return;
 
     if (Number(amount) >= ft.quantity) {
-      amount = Number(ft.quantity).toFixed(2); // Ensure we don't exceed available quantity
+      amount = Number(ft.quantity).toFixed(2);
     }
 
     setSelectedAmount(prev => ({
@@ -158,7 +166,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       [ft.tokenId]: amount,
     }));
 
-    // Update selected NFTs based on amount
     setSelectedNFTs(prevSelected => {
       const existingIndex = prevSelected.findIndex(nft => nft.tokenId === ft.tokenId);
 
@@ -166,6 +173,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         if (existingIndex >= 0) {
           return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount } : item));
         } else {
+          const ftCount = prevSelected.filter(a => a.isFungibleToken).length;
+          if (ftCount >= MAX_FT_PER_TRANSACTION) {
+            return prevSelected;
+          }
           return [...prevSelected, { ...ft, amount }];
         }
       } else {
@@ -211,20 +222,25 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const renderAssetItem = useCallback(
     item => {
       if (activeTab === 'NFT') {
-        return (
-          <EnhancedNFTItem
-            nft={item}
-            isSelected={selectedNFTs.some(selected => selected.tokenId === item.tokenId)}
-            onToggle={toggleNFT}
-          />
-        );
+        const isSelected = selectedNFTs.some(selected => selected.tokenId === item.tokenId);
+        const isDisabled = !isSelected && selectedNFTsCount >= MAX_NFT_PER_TRANSACTION;
+
+        return <EnhancedNFTItem nft={item} isSelected={isSelected} isDisabled={isDisabled} onToggle={toggleNFT} />;
       } else {
+        const hasAmount = selectedAmount[item.tokenId] && selectedAmount[item.tokenId] !== '0';
+        const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
+
         return (
-          <EnhancedFTItem ft={item} amount={selectedAmount[item.tokenId] || ''} onAmountChange={handleFTAmountChange} />
+          <EnhancedFTItem
+            ft={item}
+            amount={selectedAmount[item.tokenId] || ''}
+            isDisabled={isDisabled}
+            onAmountChange={handleFTAmountChange}
+          />
         );
       }
     },
-    [activeTab, selectedNFTs, selectedAmount, toggleNFT, handleFTAmountChange]
+    [activeTab, selectedNFTs, selectedAmount, selectedNFTsCount, selectedFTsCount, toggleNFT, handleFTAmountChange]
   );
 
   const renderFooter = () => (

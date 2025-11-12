@@ -11,13 +11,7 @@ interface PrimaryButtonProps {
   color?: string;
 }
 
-const PrimaryButton = ({
-  children,
-  className,
-  disabled = false,
-  size = 'md',
-  onClick,
-}: PrimaryButtonProps) => {
+const PrimaryButton = ({ children, className, disabled = false, size = 'md', onClick }: PrimaryButtonProps) => {
   const sizeClasses = {
     sm: 'h-9 px-4 py-2 rounded-lg text-sm',
     md: 'h-10 px-4 py-2.5 rounded-lg',

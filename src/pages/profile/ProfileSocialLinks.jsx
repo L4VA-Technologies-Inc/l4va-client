@@ -92,7 +92,8 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
       } else {
         resetEditState();
       }
-    } catch (error) {
+    } catch {
+      //
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +112,8 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
       const newLinks = socialLinks.filter(link => link.id !== id);
       await CoreApiProvider.updateProfile({ socialLinks: newLinks });
       setSocialLinks(newLinks);
-    } catch (error) {
+    } catch {
+      //
     } finally {
       setIsLoading(false);
     }

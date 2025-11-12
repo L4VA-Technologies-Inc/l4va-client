@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -15,10 +15,16 @@ export default function Distributing({ onDataChange, vaultId }) {
 
   const removeAsset = id => {
     setDistributionAssets(prev => prev.filter(a => a.id !== id));
+    if (distributeAll) {
+      setDistributeAll(false);
+    }
   };
 
   const updateAsset = (id, field, value) => {
     setDistributionAssets(prev => prev.map(asset => (asset.id === id ? { ...asset, [field]: value } : asset)));
+    if (distributeAll && field === 'amount') {
+      setDistributeAll(false);
+    }
   };
 
   const setMaxAmount = id => {
@@ -37,19 +43,16 @@ export default function Distributing({ onDataChange, vaultId }) {
     return asset ? asset.available : 0;
   };
 
-  const getProgressPercentage = (amount, assetValue) => {
-    const available = getAvailableAmount(assetValue);
-    if (!available || !amount) return 0;
-    return Math.min((parseFloat(amount) / available) * 100, 100);
-  };
-
   const addAsset = () => {
     const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
     setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
+    if (distributeAll) {
+      setDistributeAll(false);
+    }
   };
 
-  const distributeAllAssets = useCallback(() => {
-    if (availableAssets) {
+  const distributeAllAssets = () => {
+    if (availableAssets && availableAssets.length > 0) {
       const newAssets = availableAssets.map((a, index) => ({
         id: index + 1,
         asset: a.value,
@@ -59,13 +62,16 @@ export default function Distributing({ onDataChange, vaultId }) {
 
       setDistributionAssets(newAssets);
     }
-  }, [availableAssets]);
+  };
 
-  useEffect(() => {
-    if (distributeAll) {
+  const handleDistributeAllChange = checked => {
+    setDistributeAll(checked);
+    if (checked) {
       distributeAllAssets();
+    } else {
+      setDistributionAssets([]);
     }
-  }, [distributeAll, distributeAllAssets]);
+  };
 
   useEffect(() => {
     if (data?.data && !isLoading) {
@@ -148,7 +154,7 @@ export default function Distributing({ onDataChange, vaultId }) {
             type="button"
             className="px-4 py-2 bg-steel-600 hover:bg-steel-500 text-white text-sm rounded-lg"
             checked={distributeAll}
-            onChange={e => setDistributeAll(e.target.checked)}
+            onChange={e => handleDistributeAllChange(e.target.checked)}
             description="Distribute All Assets"
           ></LavaCheckbox>
         </div>
@@ -157,7 +163,6 @@ export default function Distributing({ onDataChange, vaultId }) {
       <div className="space-y-4">
         {distributionAssets.map(asset => {
           const availableAmount = getAvailableAmount(asset.asset);
-          const progressPercentage = getProgressPercentage(asset.amount, asset.asset);
           const isOverLimit = parseFloat(asset.amount) > availableAmount;
 
           return (
@@ -242,7 +247,9 @@ export default function Distributing({ onDataChange, vaultId }) {
       </div>
 
       {distributionAssets.length === 0 && (
-        <div className="text-center py-8 text-white/60">No assets added. Click "Add Asset" to start distributing.</div>
+        <div className="text-center py-8 text-white/60">
+          No assets added. Click &quot;Add Asset&quot; to start distributing.
+        </div>
       )}
     </div>
   );

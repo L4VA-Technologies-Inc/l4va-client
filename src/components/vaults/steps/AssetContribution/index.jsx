@@ -11,7 +11,7 @@ export const AssetContribution = ({ data, errors = {}, updateField }) => {
     errors,
     updateField,
   };
-  
+
   if (vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC) {
     return <Public {...props} />;
   }
@@ -19,9 +19,8 @@ export const AssetContribution = ({ data, errors = {}, updateField }) => {
   if (vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE) {
     return <Private {...props} />;
   }
-  
+
   if (vaultPrivacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) {
     return <SemiPrivate {...props} />;
   }
-  
 };

@@ -2,8 +2,8 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatCompactNumber } from '@/utils/core.utils';
 
-export const FTItem = ({ ft, amount, onAmountChange }) => (
-  <div className="flex items-center gap-3">
+export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => (
+  <div className={`flex items-center gap-3 ${isDisabled ? 'opacity-50' : ''}`}>
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
       <div className="flex items-center gap-3">
         <LazyImage
@@ -24,7 +24,8 @@ export const FTItem = ({ ft, amount, onAmountChange }) => (
           id={`ft-input-${ft.id}`}
           placeholder="0.00"
           value={amount}
-          onChange={value => onAmountChange(ft, value)}
+          disabled={isDisabled}
+          onChange={value => !isDisabled && onAmountChange(ft, value)}
         />
       </div>
       <span className="text-dark-100 hover:underline text-sm">

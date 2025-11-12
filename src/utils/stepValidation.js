@@ -1,9 +1,9 @@
 // Define mandatory fields for each step
-import {VAULT_PRIVACY_TYPES} from "@/components/vaults/constants/vaults.constants.js";
+import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants.js';
 
 export const mandatoryStepFields = {
   1: ['name', 'type', 'privacy', 'vaultImage'],
-  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist'], 
+  2: ['valueMethod', 'contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist'],
   3: [
     'acquireWindowDuration',
     'acquireOpenWindowType',
@@ -11,15 +11,8 @@ export const mandatoryStepFields = {
     'acquireReserve',
     'liquidityPoolContribution',
     'acquirerWhitelist',
-  ], 
-  4: [
-    'ftTokenSupply',
-    'ftTokenImg',
-    'terminationType',
-    'creationThreshold',
-    'voteThreshold',
-    'executionThreshold',
   ],
+  4: ['ftTokenSupply', 'ftTokenImg', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
   5: [],
 };
 
@@ -43,7 +36,6 @@ export const isStepComplete = (stepId, vaultData) => {
         return true;
       }
       if (vaultData.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) {
-
         const hasContributorsWhitelist = vaultData.assetsWhitelist && vaultData.assetsWhitelist.length > 0;
         const hasAcquirersWhitelist = vaultData.acquirerWhitelist && vaultData.acquirerWhitelist.length > 0;
 

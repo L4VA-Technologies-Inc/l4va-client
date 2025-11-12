@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
@@ -101,7 +100,7 @@ export const useAssets = () => {
   const assets = useMemo(() => {
     if (!balanceDecoded) {
       return [];
-    };
+    }
 
     return parseBalanceToAssets(balanceDecoded);
   }, [balanceDecoded]);

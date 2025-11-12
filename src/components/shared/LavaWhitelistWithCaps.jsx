@@ -4,7 +4,6 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
-import { useWalletPolicyIds } from '@/services/api/queries';
 import { useAssets } from '@/hooks/useAssets';
 
 export const LavaWhitelistWithCaps = ({
@@ -15,7 +14,6 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
-  vaultType,
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
   const [scrollTop, setScrollTop] = useState(0);

@@ -14,8 +14,7 @@ const StatCard = ({ value, label }) => (
   </div>
 );
 
-const ProgressBar = ({ items, title, totalAmount, currency }) => {
-
+const ProgressBar = ({ items, title, currency }) => {
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
   const itemsWithValues = items.map(item => ({
@@ -37,8 +36,10 @@ const ProgressBar = ({ items, title, totalAmount, currency }) => {
                 <div>
                   <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>
                   <div className="text-base lg:text-lg xl:text-xl font-semibold">{item.percentage.toFixed(2)}%</div>
-                  <div
-                    className="text-dark-100 text-sm lg:text-base">{currencySymbol}{formatNum(item.actualValue)}</div>
+                  <div className="text-dark-100 text-sm lg:text-base">
+                    {currencySymbol}
+                    {formatNum(item.actualValue)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -61,9 +62,9 @@ const ProgressBar = ({ items, title, totalAmount, currency }) => {
                   }}
                 >
                   <div className="bg-steel-950 text-sm py-1 px-2 rounded whitespace-nowrap shadow-lg">
-                    {item.label}: {currencySymbol}{formatNum(item.actualValue)}
-                    <div
-                      className="absolute left-1/2 top-full -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-steel-850" />
+                    {item.label}: {currencySymbol}
+                    {formatNum(item.actualValue)}
+                    <div className="absolute left-1/2 top-full -translate-x-1/2 -mt-[1px] border-4 border-transparent border-t-steel-850" />
                   </div>
                 </div>
               </div>
@@ -92,36 +93,44 @@ const Stats = () => {
     return currency === 'ada' ? adaValue : usdValue;
   };
 
-  const stats = statistics ? [
-    { label: 'Total Vaults', value: statistics.totalVaults?.toString() || '0' },
-    { label: 'Assets', value: statistics.totalAssets?.toString() || '0' },
-    { label: 'Acquired', value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd) },
-    { label: 'TVL', value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd) },
-  ] : [
-    { label: 'Total Vaults', value: '0' },
-    { label: 'Assets', value: '0' },
-    { label: 'Acquired', value: '₳0' },
-    { label: 'TVL', value: '₳0' },
-  ];
+  const stats = statistics
+    ? [
+        { label: 'Total Vaults', value: statistics.totalVaults?.toString() || '0' },
+        { label: 'Assets', value: statistics.totalAssets?.toString() || '0' },
+        { label: 'Acquired', value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd) },
+        { label: 'TVL', value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd) },
+      ]
+    : [
+        { label: 'Total Vaults', value: '0' },
+        { label: 'Assets', value: '0' },
+        { label: 'Acquired', value: '₳0' },
+        { label: 'TVL', value: '₳0' },
+      ];
 
-  const statusData = statistics?.vaultsByStage ? Object.entries(statistics.vaultsByStage).map(([key, value]) => ({
-    label: key.charAt(0).toUpperCase() + key.slice(1),
-    percentage: value.percentage,
-    valueAda: value.valueAda,
-    valueUsd: value.valueUsd,
-  })) : [];
+  const statusData = statistics?.vaultsByStage
+    ? Object.entries(statistics.vaultsByStage).map(([key, value]) => ({
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        percentage: value.percentage,
+        valueAda: value.valueAda,
+        valueUsd: value.valueUsd,
+      }))
+    : [];
 
-  const typesData = statistics?.vaultsByType ? Object.entries(statistics.vaultsByType).map(([key, value]) => ({
-    label: key === 'semiPrivate' ? 'Semi-Private' : key.charAt(0).toUpperCase() + key.slice(1),
-    percentage: value.percentage,
-    valueAda: value.valueAda,
-    valueUsd: value.valueUsd,
-  })) : [];
+  const typesData = statistics?.vaultsByType
+    ? Object.entries(statistics.vaultsByType).map(([key, value]) => ({
+        label: key === 'semiPrivate' ? 'Semi-Private' : key.charAt(0).toUpperCase() + key.slice(1),
+        percentage: value.percentage,
+        valueAda: value.valueAda,
+        valueUsd: value.valueUsd,
+      }))
+    : [];
 
-  const totalAmount = statistics ? getTotalValue(
-    Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueAda, 0),
-    Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueUsd, 0),
-  ) : 0;
+  const totalAmount = statistics
+    ? getTotalValue(
+        Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueAda, 0),
+        Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueUsd, 0)
+      )
+    : 0;
 
   return (
     <div className="container mx-auto py-12 sm:py-16">

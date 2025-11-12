@@ -23,6 +23,11 @@ export default defineConfig([
         },
       },
     },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
     plugins: {
       js,
       react: reactPlugin,
@@ -35,6 +40,7 @@ export default defineConfig([
       ...reactPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react/no-unescaped-entities': 'off',
       'import/order': [
         'error',
         {
@@ -47,6 +53,7 @@ export default defineConfig([
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
   {
@@ -63,6 +70,11 @@ export default defineConfig([
         project: './tsconfig.json',
       },
     },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
     plugins: {
       '@typescript-eslint': tseslint,
       react: reactPlugin,
@@ -76,6 +88,7 @@ export default defineConfig([
       ...reactPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react/no-unescaped-entities': 'off',
       'import/order': [
         'error',
         {
@@ -90,6 +103,15 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+      quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
     },
+  },
+  {
+    // Node globals for Vite config
+    files: ['vite.config.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {},
   },
 ]);
