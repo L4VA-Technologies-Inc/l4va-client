@@ -72,6 +72,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
+  const [selectedAmount, setSelectedAmount] = useState({});
   const wallet = useWallet(
     'handler',
     'isConnected',
@@ -81,8 +82,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     'changeAddressBech32'
   );
   const { sendTransaction, status, error } = useTransaction();
-  const [selectedAmount, setSelectedAmount] = useState({});
-
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
@@ -111,47 +110,27 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     activeTab,
   });
 
-  // Handle wallet errors
-  useEffect(() => {
-    if (walletError) {
-      console.error('Error loading wallet assets:', walletError);
-      toast.error('Failed to load wallet assets');
+  // Calculate estimated value
+  let estimatedValue = 0;
+  selectedNFTs.forEach(asset => {
+    const assetPrice = testnetPrices[asset.metadata?.policyId] || DEFAULT_ASSET_VALUE_ADA;
+    if (asset.isFungibleToken && asset.amount) {
+      estimatedValue += assetPrice * Number(asset.amount);
+    } else {
+      estimatedValue += assetPrice;
     }
-  }, [walletError]);
+  });
 
-  const contributionDetails = useMemo(() => {
-    let estimatedValue = 0;
+  // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
+  const tokensForAcqPercent = vault.tokensForAcquires / 100;
+  const lpContributionPercent = vault.liquidityPoolContribution / 100;
+  const vaultAllocation = (1 - tokensForAcqPercent) * (1 - lpContributionPercent / 2);
+  const vaultAllocationPercent = (vaultAllocation * 100).toFixed(2);
 
-    selectedNFTs.forEach(asset => {
-      const assetPrice = testnetPrices[asset.metadata?.policyId] || DEFAULT_ASSET_VALUE_ADA;
-
-      if (asset.isFungibleToken && asset.amount) {
-        estimatedValue += assetPrice * Number(asset.amount);
-      } else {
-        estimatedValue += assetPrice;
-      }
-    });
-
-    // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
-    const tokensForAcqPercent = vault.tokensForAcquires / 100;
-    const lpContributionPercent = vault.liquidityPoolContribution / 100;
-
-    const vaultAllocation = (1 - tokensForAcqPercent) * (1 - lpContributionPercent / 2);
-    const vaultAllocationPercent = vaultAllocation * 100; // Convert back to percentage for display
-
-    // Estimated Vault Token Amount = Vault Token Allocation % × Vault Token Supply
-    const estimatedTickerVal = vaultAllocation * vault.ftTokenSupply;
-
-    // Estimated ADA to Receive = (1 - Vault Allocation %) × Estimated Value
-    const estimatedAdaReceived = (1 - vaultAllocation) * estimatedValue;
-
-    return {
-      vaultAllocation: vaultAllocationPercent.toFixed(2),
-      estimatedValue,
-      estimatedTickerVal: Math.floor(estimatedTickerVal),
-      estimatedAdaReceived: estimatedAdaReceived.toFixed(2),
-    };
-  }, [selectedNFTs, vault.ftTokenSupply, vault.liquidityPoolContribution, vault.tokensForAcquires]);
+  // Estimated Vault Token Amount = Vault Token Allocation % × Vault Token Supply
+  const estimatedTickerVal = Math.floor(vaultAllocation * vault.ftTokenSupply).toLocaleString();
+  // Estimated ADA to Receive = (1 - Vault Allocation %) × Estimated Value
+  const estimatedAdaReceived = ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString();
 
   const toggleNFT = useCallback(asset => {
     if (asset.isFungibleToken) return; // Ignore toggle for FT tokens
@@ -275,6 +254,14 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     </div>
   );
 
+  // Handle wallet errors
+  useEffect(() => {
+    if (walletError) {
+      console.error('Error loading wallet assets:', walletError);
+      toast.error('Failed to load wallet assets');
+    }
+  }, [walletError]);
+
   return (
     <ModalWrapper
       isOpen={isOpen}
@@ -332,31 +319,25 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
-            <MetricCard label="Estimated Value" value={`₳${contributionDetails.estimatedValue.toLocaleString()}`} />
+            <MetricCard label="Estimated Value" value={`₳${estimatedValue.toLocaleString()}`} />
             {/* 
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label="Vault Allocation" value={`${contributionDetails.vaultAllocation}%`} />
+            <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* 
                 Estimated Vault Token received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
             */}
-            <MetricCard
-              label="Estimated Vault Token Received"
-              value={contributionDetails.estimatedTickerVal.toLocaleString()}
-            />
+            <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />
 
             {/* 
                 Estimated ADA received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard
-              label="Estimated ADA Received"
-              value={contributionDetails.estimatedAdaReceived.toLocaleString()}
-            />
+            <MetricCard label="Estimated ADA Received" value={estimatedAdaReceived} />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown } from 'lucide-react';
@@ -22,43 +22,25 @@ export const AcquireModal = ({ vault, onClose }) => {
 
   const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
 
-  const acquisitionDetails = useMemo(() => {
-    const acquireAmountNum = parseFloat(acquireAmount) || 0;
+  const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-    // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
-    const estVaultTokenPercent = vault.tokensForAcquires * (1 - vault.liquidityPoolContribution / 100 / 2);
+  // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
+  const estVaultTokenPercent = vault.tokensForAcquires * (1 - vault.liquidityPoolContribution / 100 / 2);
 
-    // Est Vault Token Amount = Est Vault Token (%) x Token Supply
-    const estVaultTokenAmount = (estVaultTokenPercent / 100) * vault.ftTokenSupply;
+  // Est Vault Token Amount = Est Vault Token (%) x Token Supply
+  const estVaultTokenAmount = Math.floor((estVaultTokenPercent / 100) * vault.ftTokenSupply);
 
-    // Reserve ADA Amount calculation (based on vault's required reserve)
-    const reserveAdaAmount = vault.requireReservedCostAda || 0;
+  // Reserve ADA Amount calculation (based on vault's required reserve)
+  const reserveAdaAmount = vault.requireReservedCostAda || 0;
 
-    // Vault Allocation = Est Vault Token (%) above x [ADA Amount / Reserve ADA Amount]
-    let vaultAllocation = 0;
-    if (reserveAdaAmount > 0 && acquireAmountNum > 0) {
-      vaultAllocation = estVaultTokenPercent * (acquireAmountNum / reserveAdaAmount);
-    }
+  // Vault Allocation = Est Vault Token (%) above x [ADA Amount / Reserve ADA Amount]
+  let vaultAllocation = 0;
+  if (reserveAdaAmount > 0 && acquireAmountNum > 0) {
+    vaultAllocation = (estVaultTokenPercent * (acquireAmountNum / reserveAdaAmount)).toFixed(2);
+  }
 
-    // Est. Vault Token Acquired = Vault Allocation x Token Supply
-    const estimatedTickerVal = (vaultAllocation / 100) * vault.ftTokenSupply;
-
-    return {
-      acquireAmountNum,
-      estVaultToken: estVaultTokenPercent.toFixed(2),
-      estVaultTokenAmount: Math.floor(estVaultTokenAmount),
-      estTickerVal: Math.floor(estimatedTickerVal),
-      vaultAllocation: vaultAllocation.toFixed(2),
-      totalAcquired: vault.assetsPrices?.totalAcquiredAda || 0,
-    };
-  }, [
-    acquireAmount,
-    vault.assetsPrices?.totalAcquiredAda,
-    vault.ftTokenSupply,
-    vault.liquidityPoolContribution,
-    vault.tokensForAcquires,
-    vault.requireReservedCostAda,
-  ]);
+  // Est. Vault Token Acquired = Vault Allocation x Token Supply
+  const estimatedTickerVal = formatNum(Math.floor((vaultAllocation / 100) * vault.ftTokenSupply));
 
   const handleAcquire = async () => {
     try {
@@ -197,12 +179,12 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="text-center">
                 {/* Total Vault Token % of supply available to Acquirers */}
                 <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
-                <p className="text-xl font-medium">{acquisitionDetails.estVaultToken}%</p>
+                <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
               </div>
               <div className="text-center">
                 {/* Total Vault Token quantity available to Acquirers */}
                 <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
-                <p className="text-xl font-medium">{acquisitionDetails.estVaultTokenAmount}</p>
+                <p className="text-xl font-medium">{estVaultTokenAmount}</p>
               </div>
             </div>
           </div>
@@ -214,7 +196,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                 <div className="space-y-1 text-center">
                   {/* ADA Amount to send to acquire Vault Tokens */}
                   <p className="text-dark-100 text-sm">ADA Amount</p>
-                  <p className="text-2xl font-medium">{formatNum(acquisitionDetails.acquireAmountNum)}</p>
+                  <p className="text-2xl font-medium">{formatNum(acquireAmountNum)}</p>
                 </div>
                 <div className="space-y-1 text-center ">
                   {/* 
@@ -222,16 +204,16 @@ export const AcquireModal = ({ vault, onClose }) => {
                     Note: If more than the reserve amount is sent, the % of vault token received will reduce.
                   */}
                   <p className="text-dark-100 text-sm">Est. Vault Token Allocation (%)</p>
-                  <p className="text-2xl font-medium">{acquisitionDetails.vaultAllocation}%</p>
+                  <p className="text-2xl font-medium">{vaultAllocation}%</p>
                 </div>
-                {/*<div className="space-y-1 text-center">*/}
-                {/*  /!* */}
-                {/*    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.*/}
-                {/*    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.*/}
-                {/* *!/*/}
-                {/*  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>*/}
-                {/*  <p className="text-2xl font-medium truncate">{formatNum(acquisitionDetails.estVaultTokenAcquired)}</p>*/}
-                {/*</div>*/}
+                <div className="space-y-1 text-center">
+                  {/*  /!* */}
+                  {/*    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.*/}
+                  {/*    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.*/}
+                  {/* *!/*/}
+                  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>
+                  <p className="text-2xl font-medium truncate">{estimatedTickerVal}</p>
+                </div>
               </div>
 
               <div className="flex justify-center mt-8">
