@@ -75,6 +75,9 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
   const [selectedAmount, setSelectedAmount] = useState({});
+  const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
+  const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
+
   const wallet = useWallet(
     'handler',
     'isConnected',
