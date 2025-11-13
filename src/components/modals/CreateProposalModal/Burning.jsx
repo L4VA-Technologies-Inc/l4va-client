@@ -18,7 +18,7 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
       burnAssets: [],
       isValid: selectedAssets.length > 0,
     });
-  }, [onDataChange]);
+  }, [onDataChange, selectedAssets.length]);
 
   useEffect(() => {
     onDataChange?.({

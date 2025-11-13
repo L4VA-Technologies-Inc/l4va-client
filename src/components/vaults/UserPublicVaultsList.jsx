@@ -38,7 +38,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
       filter: newTab.filter,
       ownerId: ownerId,
     }));
-  }, [tabParam]);
+  }, [ownerId, tabParam]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
