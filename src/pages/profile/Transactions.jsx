@@ -111,12 +111,12 @@ export const Transactions = () => {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 pt-2 border-t border-steel-700">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between pt-2 border-t border-steel-750">
           <span className="text-steel-300 text-sm">Type</span>
           <span className="capitalize font-medium">{transaction.type}</span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-2 border-t border-steel-750">
           <span className="text-steel-300 text-sm">Status</span>
           <span className="capitalize font-medium">{transaction.status}</span>
         </div>
@@ -198,10 +198,10 @@ export const Transactions = () => {
             onTabChange={handleTabChange}
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex gap-4">
           <SecondaryButton className="w-full sm:w-auto" onClick={handleOpenFilters}>
             <Filter className="w-4 h-4" />
-            Filters
+            Filter by
           </SecondaryButton>
           <SecondaryButton className="w-full sm:w-auto" onClick={handleDownloadCSV}>
             <Download className="w-4 h-4" />

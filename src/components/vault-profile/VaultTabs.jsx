@@ -6,7 +6,6 @@ import { VaultAcquiredAssetsList } from '@/components/vault-profile/VaultAcquire
 import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import { LavaSelect } from '@/components/shared/LavaSelect';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
@@ -29,11 +28,6 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const activeTab = propActiveTab || search.tab || 'Assets';
   const tabs = Object.keys(tabContent);
 
-  const tabOptions = tabs.map(tab => ({
-    value: tab,
-    label: tab,
-  }));
-
   const handleTabSelect = selectedTab => {
     onTabChange(selectedTab);
     router.navigate({
@@ -44,20 +38,11 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   return (
     <>
       <div className="mb-6">
-        <div className="md:hidden mb-4">
-          <LavaSelect
-            label="Select Tab"
-            options={tabOptions}
-            value={activeTab}
-            onChange={handleTabSelect}
-            placeholder="Select a tab"
-          />
-        </div>
-        <div className="hidden md:block">
+        <div className="flex-1 w-full sm:w-auto">
           <LavaTabs
             activeTab={activeTab}
             activeTabClassName="text-primary"
-            className="w-full bg-steel-850 overflow-x-auto text-sm md:text-base"
+            className="w-full md:bg-steel-850 overflow-x-auto text-sm md:text-base"
             inactiveTabClassName="text-dark-100"
             tabClassName="flex-1 text-center"
             tabs={tabs}
