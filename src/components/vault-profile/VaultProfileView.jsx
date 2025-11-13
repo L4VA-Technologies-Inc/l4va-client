@@ -51,7 +51,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       viewVaultMutation.mutate(vault.id);
       viewedVaultsRef.current.add(vault.id);
     }
-  }, [vault?.id]);
+  }, [vault.id, viewVaultMutation]);
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
