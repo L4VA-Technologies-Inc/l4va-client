@@ -4,7 +4,7 @@ export const LazyImage = ({
   src,
   alt,
   className = '',
-  fallbackSrc = '/assets/icons/ada.png',
+  fallbackSrc = '/assets/icons/ada.svg',
   width = 32,
   height = 32,
   ...props
