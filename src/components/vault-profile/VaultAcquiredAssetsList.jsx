@@ -66,7 +66,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       src={
                         asset.metadata?.image
                           ? asset.metadata?.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                          : '/assets/icons/ada.png'
+                          : '/assets/icons/ada.svg'
                       }
                     />
                   </td>

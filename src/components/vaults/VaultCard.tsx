@@ -36,7 +36,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
       <Link className="block" to={`/vaults/${id}`}>
         <div className="relative h-52">
           {vaultImage ? (
-            <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} />
+            <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} loading="lazy" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
               <L4vaIcon className="h-8 w-8 text-white" />
@@ -52,10 +52,11 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             </div>
           )}
         </div>
+
         <div className="p-6">
           <div className="flex items-center gap-4 mb-6">
             {ftTokenImg ? (
-              <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} />
+              <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} loading="lazy" />
             ) : (
               <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center flex-shrink-0">
                 <L4vaIcon className="h-8 w-8 text-white" />
