@@ -146,7 +146,7 @@ export const Transactions = () => {
       const allData = await TransactionsApiProvider.getUserTransactions({
         ...filters,
         page: 1,
-        limit: 100,
+        isExport: true,
       });
 
       const allTransactions = allData?.data?.items || [];
