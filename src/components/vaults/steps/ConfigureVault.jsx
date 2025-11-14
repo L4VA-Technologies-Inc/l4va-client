@@ -105,8 +105,9 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
             image={data.vaultImage}
             label="Vault image"
             setImage={image => updateField('vaultImage', image)}
-            hint="This is the image that will live on the Vault Profile page."
+            hint="This is the image that will live on the Vault Profile page. For best results, upload a photo of 640×640 pixels — we will also crop it to these dimensions automatically."
             onUploadingChange={onImageUploadingChange}
+            imageType="background"
           />
           {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
         </div>
