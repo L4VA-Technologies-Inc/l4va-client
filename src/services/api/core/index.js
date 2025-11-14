@@ -30,16 +30,17 @@ export class CoreApiProvider {
     return response;
   }
 
-  static async uploadImage(file) {
+  static async uploadImage(file, imageType = '') {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await axiosInstance.post(CoreConfigProvider.uploadImage(), formData, {
+    if (imageType) formData.append('imageType', String(imageType));
+
+    return await axiosInstance.post(CoreConfigProvider.uploadImage(), formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response;
   }
 
   static async handleCsv(file) {
