@@ -122,6 +122,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
           <div>
             <LavaWhitelist
               required
+              allowCsv
               itemPlaceholder="Enter Wallet Address"
               label="Contributor Whitelist"
               itemFieldName="walletAddress"

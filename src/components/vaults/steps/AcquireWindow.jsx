@@ -51,15 +51,14 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           <div>
             <LavaWhitelist
               required={vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE}
-              // allowCsv
-              csvData={data.acquirerWhitelistCsv}
+              allowCsv
               itemFieldName="walletAddress"
               itemPlaceholder="Wallet address"
               label="Acquirer whitelist"
               whitelistFieldName="acquirerWhitelist"
-              setCsvData={csvData => updateField('acquirerWhitelistCsv', csvData)}
               setWhitelist={assets => updateField('acquirerWhitelist', assets)}
               whitelist={data.acquirerWhitelist || []}
+              maxItems={100}
               errors={errors}
             />
             {errors.acquirerWhitelist && <p className="text-red-600 mt-1">{errors.acquirerWhitelist}</p>}

@@ -47,17 +47,6 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
                       </p>
                     )}
                   </>
-                ) : data.acquirerWhitelistCsv ? (
-                  <div className="flex items-center gap-2">
-                    <span>CSV file uploaded</span>
-                    <a
-                      href={data.acquirerWhitelistCsv.url}
-                      download={data.acquirerWhitelistCsv.fileName}
-                      className="text-primary hover:underline"
-                    >
-                      Download
-                    </a>
-                  </div>
                 ) : (
                   <span>Not set</span>
                 )}

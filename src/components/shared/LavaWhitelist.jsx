@@ -1,6 +1,5 @@
 import { X, Plus, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +15,9 @@ export const LavaWhitelist = ({
   setWhitelist,
   maxItems = 10,
   allowCsv = false,
-  csvData,
-  setCsvData,
   errors = {},
 }) => {
-  const [csvName, setCsvName] = useState(csvData?.fileName || '');
+  const csvInputId = `${whitelistFieldName}-csv-upload`;
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
     const newId = Date.now();
@@ -55,21 +52,53 @@ export const LavaWhitelist = ({
 
     try {
       const { data } = await CoreApiProvider.handleCsv(file);
-      if (setCsvData) {
-        setCsvData(data);
-        setCsvName(data.fileName);
+
+      if (Array.isArray(data?.addresses) && data.addresses.length && typeof setWhitelist === 'function') {
+        const normalized = data.addresses
+          .map(address => (typeof address === 'string' ? address.trim() : ''))
+          .filter(address => address.length > 0);
+
+        const uniqueAddresses = Array.from(new Set(normalized));
+
+        const existingValues = new Set(
+          whitelist.map(item => (item[itemFieldName] || '').toString().trim().toLowerCase())
+        );
+        const newUniqueAddresses = uniqueAddresses.filter(address => !existingValues.has(address.toLowerCase()));
+
+        if (newUniqueAddresses.length === 0) {
+          toast.success('No new entries to add from CSV');
+          return;
+        }
+
+        const availableSlots = Math.max(0, maxItems - whitelist.length);
+        let addressesToUse = newUniqueAddresses;
+
+        if (newUniqueAddresses.length > availableSlots) {
+          addressesToUse = newUniqueAddresses.slice(0, availableSlots);
+          toast.error(`Only ${addressesToUse.length} new item(s) were added to stay within the ${maxItems} limit.`);
+        }
+
+        if (addressesToUse.length === 0) {
+          toast.error('Whitelist already contains the maximum number of items.');
+          return;
+        }
+
+        const now = Date.now();
+        const csvWhitelist = addressesToUse.map((address, index) => ({
+          id: `${now}-${index}`,
+          [itemFieldName]: address,
+        }));
+
+        setWhitelist([...whitelist, ...csvWhitelist]);
       }
+
       toast.success('CSV file processed successfully');
     } catch (error) {
       console.error('CSV upload error:', error);
-      toast.error('Failed to process CSV file');
+      const errorMessage = error?.response?.data?.message || 'Failed to process CSV file';
+      toast.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
     }
     event.target.value = '';
-  };
-
-  const handleRemoveCsv = () => {
-    setCsvData(null);
-    setCsvName(null);
   };
 
   return (
@@ -82,10 +111,10 @@ export const LavaWhitelist = ({
         <div className="flex gap-2">
           {allowCsv && (
             <>
-              <input accept=".csv" className="hidden" id="csv-upload" type="file" onChange={handleCsvUpload} />
+              <input accept=".csv" className="hidden" id={csvInputId} type="file" onChange={handleCsvUpload} />
               <label
                 className="border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors"
-                htmlFor="csv-upload"
+                htmlFor={csvInputId}
               >
                 <Upload className="w-4 h-4" />
               </label>
@@ -101,14 +130,6 @@ export const LavaWhitelist = ({
           </button>
         </div>
       </div>
-      {csvName && (
-        <div className="flex items-center justify-between mb-4 p-3 bg-input-bg border-steel-850 rounded-[10px]">
-          <span className="text-[20px]">{csvName}</span>
-          <Button className="h-8 w-8 rounded-full" size="icon" variant="ghost" onClick={handleRemoveCsv}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
       <div className="space-y-4">
         {whitelist.map((asset, index) => {
           const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
@@ -136,7 +157,7 @@ export const LavaWhitelist = ({
           );
         })}
       </div>
-      {whitelist.length === 0 && !csvData && (
+      {whitelist.length === 0 && (
         <div className="text-dark-100 text-base my-4">
           No items. Click the + button to add one {allowCsv ? 'or upload a CSV file' : ''}.
         </div>
