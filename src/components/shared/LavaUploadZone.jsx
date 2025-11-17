@@ -15,6 +15,7 @@ export const UploadZone = ({
   maxSizeMB = 5,
   hint,
   onUploadingChange,
+  imageType = '',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -78,7 +79,7 @@ export const UploadZone = ({
     }
 
     try {
-      const { data } = await CoreApiProvider.uploadImage(file);
+      const { data } = await CoreApiProvider.uploadImage(file, imageType);
       setUploadStatus('success');
 
       setImage(data.url);

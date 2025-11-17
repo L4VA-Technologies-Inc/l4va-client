@@ -65,6 +65,8 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
             label="VT Token Image"
             setImage={image => updateField('ftTokenImg', image)}
             onUploadingChange={onImageUploadingChange}
+            hint="This is the image that will live on Vault Tocken. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
+            imageType="ticker"
           />
           {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
         </div>
