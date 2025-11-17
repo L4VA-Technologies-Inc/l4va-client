@@ -13,7 +13,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
           className="rounded-full"
           width={32}
           height={32}
-          fallbackSrc="/assets/icons/ada.png"
+          fallbackSrc="/assets/icons/ada.svg"
         />
         <span className="font-medium truncate">
           {asset.type === 'FT' && asset.amount ? `${formatNum(asset.amount)} ${asset.name}` : asset.name}

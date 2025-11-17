@@ -12,7 +12,7 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => (
           className="rounded-full"
           width={32}
           height={32}
-          fallbackSrc="/assets/icons/ada.png"
+          fallbackSrc="/assets/icons/ada.svg"
         />
         <div className="flex flex-col">
           <span className="font-medium truncate">{ft.name}</span>

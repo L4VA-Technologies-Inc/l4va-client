@@ -29,7 +29,7 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
             className="rounded-full"
             width={32}
             height={32}
-            fallbackSrc="/assets/icons/ada.png"
+            fallbackSrc="/assets/icons/ada.svg"
           />
           <span className="font-medium truncate">{nft.name}</span>
         </div>
