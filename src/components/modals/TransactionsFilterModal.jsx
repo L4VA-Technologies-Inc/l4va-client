@@ -8,7 +8,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 
 const OPTIONS = {
-  status: ['created', 'pending', 'submitted', 'confirmed', 'failed', 'stuck'],
+  status: ['pending', 'confirmed'],
   order: [
     { value: 'DESC', label: 'Newest first' },
     { value: 'ASC', label: 'Oldest first' },
