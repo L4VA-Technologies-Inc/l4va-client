@@ -82,10 +82,10 @@ export const Claims = () => {
 
   const handleVtAmount = (amount, claim) => {
     if (amount) {
-      return `${amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRM`;
+      return `${amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault.vaultTokenTicker}`;
     }
 
-    return `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} TRM`;
+    return `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault.vaultTokenTicker}`;
   };
 
   const formattedClaims = claims.map(claim => {
