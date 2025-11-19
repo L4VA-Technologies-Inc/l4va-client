@@ -134,6 +134,7 @@ export const Transactions = () => {
   const handleApplyFilters = filters => {
     setFilters(prevFilters => ({
       page: 1,
+      limit: 10,
       filter: prevFilters.filter || 'all',
       ...filters,
     }));
