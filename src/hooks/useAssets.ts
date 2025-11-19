@@ -95,7 +95,7 @@ const groupAssetsByPolicy = (assets: WalletAsset[]) => {
 };
 
 export const useAssets = () => {
-  const balanceDecoded = useWallet('balanceDecoded');
+  const { balanceDecoded } = useWallet('balanceDecoded', 'isConnected');
 
   const assets = useMemo(() => {
     if (!balanceDecoded) {
@@ -105,7 +105,7 @@ export const useAssets = () => {
     return parseBalanceToAssets(balanceDecoded);
   }, [balanceDecoded]);
 
-  const groupedPolicies = useMemo(() => groupAssetsByPolicy(assets), [assets]);
+  const groupedPolicies = groupAssetsByPolicy(assets);
 
   return {
     data: {
