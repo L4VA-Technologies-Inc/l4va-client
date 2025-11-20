@@ -183,7 +183,11 @@ export const UploadZone = ({
         <input ref={fileInputRef} accept={accept} className="hidden" type="file" onChange={handleFileInputChange} />
         {preview ? (
           <div className="relative w-full h-full flex flex-col items-center">
-            <img alt="Uploaded preview" className="w-full h-full object-contain max-h-64" src={preview} />
+            <img
+              alt="Uploaded preview"
+              className="object-cover w-full max-w-[240px] h-auto aspect-square"
+              src={preview}
+            />
             <button
               aria-label="Remove image"
               className="
