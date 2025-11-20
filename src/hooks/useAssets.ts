@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 export interface WalletAsset {
@@ -97,15 +96,15 @@ const groupAssetsByPolicy = (assets: WalletAsset[]) => {
 export const useAssets = () => {
   const { balanceDecoded } = useWallet('balanceDecoded', 'isConnected');
 
-  const assets = useMemo(() => {
+  const assets = () => {
     if (!balanceDecoded) {
       return [];
     }
 
     return parseBalanceToAssets(balanceDecoded);
-  }, [balanceDecoded]);
+  };
 
-  const groupedPolicies = groupAssetsByPolicy(assets);
+  const groupedPolicies = groupAssetsByPolicy(assets());
 
   return {
     data: {
