@@ -1,0 +1,24 @@
+{
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "out": "documentation",
+  "exclude": [
+    "**/node_modules/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/routeTree.gen.ts",
+    "**/.tanstack/**",
+    "**/vite-env.d.ts"
+  ],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "readme": "README.md",
+  "name": "L4VA Client Documentation",
+  "theme": "default",
+  "skipErrorChecking": false,
+  "treatWarningsAsErrors": false
+}
