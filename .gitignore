@@ -31,3 +31,6 @@ dist-ssr
 *.key
 *.pem
 /ssl
+
+# Documentation
+documentation/

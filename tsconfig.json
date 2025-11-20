@@ -31,12 +31,13 @@
     "checkJs": false,
 
     /* Module resolution for config files */
-    "types": ["node"]
+     "types": ["node", "vite/client", "vite-plugin-svgr/client"]
   },
   "include": [
     "src/**/*",
     "vite.config.js",
-    "vite.config.ts"
+    "vite.config.ts",
+    "src/vite-env.d.ts"
   ],
   "exclude": [
     "node_modules",
