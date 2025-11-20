@@ -253,8 +253,8 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep === 5) {
       return (
         <div className="flex justify-center gap-4 py-8">
-          <PrimaryButton className="uppercase" disabled={isSubmitting} onClick={onSubmit}>
-            {isSubmitting ? 'Launching...' : 'Confirm & launch'}
+          <PrimaryButton className="uppercase" disabled={isSubmitting || !wallet.isConnected} onClick={onSubmit}>
+            {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
           </PrimaryButton>
         </div>
       );
