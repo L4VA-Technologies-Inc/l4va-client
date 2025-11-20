@@ -19,7 +19,6 @@
   "readme": "README.md",
   "name": "L4VA Client Documentation",
   "theme": "default",
-  "plugin": [],
   "skipErrorChecking": false,
   "treatWarningsAsErrors": false
 }
