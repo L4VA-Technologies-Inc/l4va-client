@@ -26,8 +26,12 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
         <div>
           <p className="uppercase font-semibold text-dark-100">VT Token image</p>
           {data.ftTokenImg ? (
-            <div className="mt-2 relative w-full overflow-hidden rounded-lg">
-              <img alt="VT Token Image" className="object-cover w-full h-auto max-h-[380px]" src={data.ftTokenImg} />
+            <div className="mt-2 relative w-full overflow-hidden">
+              <img
+                alt="VT Token Image"
+                className="object-cover w-full max-w-[240px] h-auto aspect-square rounded-lg"
+                src={data.ftTokenImg}
+              />
             </div>
           ) : (
             <p>No image</p>
