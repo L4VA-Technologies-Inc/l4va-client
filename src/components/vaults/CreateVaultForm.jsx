@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -6,7 +6,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Spinner } from '@/components/Spinner';
-import { SwapComponent } from '@/components/swap/Swap';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -32,6 +31,12 @@ import {
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+const LazySwapComponent = lazy(() =>
+  import('@/components/swap/Swap').then(module => ({
+    default: module.SwapComponent,
+  }))
+);
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -362,12 +367,16 @@ export const CreateVaultForm = ({ vault }) => {
       <>{renderButtons()}</>
       <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
         <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
-          <SwapComponent
-            config={{
-              defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-              supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
-            }}
-          />
+          {isVisibleSwipe ? (
+            <Suspense fallback={<div className="px-12 py-10 text-dark-100">Loading swap widget…</div>}>
+              <LazySwapComponent
+                config={{
+                  defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                  supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
+                }}
+              />
+            </Suspense>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

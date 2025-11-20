@@ -7,6 +7,9 @@ export const LazyImage = ({
   fallbackSrc = '/assets/icons/ada.svg',
   width = 32,
   height = 32,
+  sizes = '100vw',
+  srcSet,
+  loading = 'lazy',
   ...props
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -44,8 +47,17 @@ export const LazyImage = ({
     setIsLoaded(true);
   };
 
+  const widthStyle = typeof width === 'number' ? `${width}px` : width;
+  const heightStyle = typeof height === 'number' ? `${height}px` : height;
+  const widthAttr = typeof width === 'number' ? width : undefined;
+  const heightAttr = typeof height === 'number' ? height : undefined;
+
   return (
-    <div ref={imgRef} className={`relative overflow-hidden ${className}`} style={{ width, height }}>
+    <div
+      ref={imgRef}
+      className={`relative overflow-hidden ${className}`}
+      style={{ width: widthStyle, height: heightStyle }}
+    >
       {!isLoaded && (
         <div
           className="absolute inset-0 bg-steel-700 animate-pulse flex items-center justify-center"
@@ -64,8 +76,12 @@ export const LazyImage = ({
           }`}
           onLoad={handleLoad}
           onError={handleError}
-          loading="lazy"
+          loading={loading}
           decoding="async"
+          width={widthAttr}
+          height={heightAttr}
+          sizes={sizes}
+          srcSet={srcSet}
           {...props}
         />
       )}

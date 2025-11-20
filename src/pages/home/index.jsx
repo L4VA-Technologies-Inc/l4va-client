@@ -8,8 +8,14 @@ import Stats from '@/pages/home/Stats';
 export const Home = () => {
   return (
     <>
-      <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[750px]">
-        <img src="/assets/banner-bg.webp" alt="Banner" className="w-full h-full" fetchPriority="high" loading="lazy" />
+      <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[300px] md:min-h-[750px]">
+        <img
+          src="/assets/banner-bg.webp"
+          alt="Banner"
+          className="absolute inset-0 w-full h-full object-cover object-bottom"
+          fetchPriority="high"
+          decoding="async"
+        />
       </div>
       <div className="space-y-20">
         <div className="pt-12 relative">
