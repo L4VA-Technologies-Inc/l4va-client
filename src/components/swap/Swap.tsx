@@ -1,8 +1,28 @@
+import { useEffect } from 'react';
 import Swap from '@dexhunterio/swaps';
 import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
 import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
 import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
+
+const SWAP_STYLES_ID = 'dexhunter-swap-styles';
+
+const ensureSwapStyles = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  if (document.getElementById(SWAP_STYLES_ID)) {
+    return;
+  }
+
+  const link = document.createElement('link');
+  link.id = SWAP_STYLES_ID;
+  link.rel = 'stylesheet';
+  link.href = '/css/swap-custom.css';
+  link.media = 'all';
+  document.head.appendChild(link);
+};
 
 interface SwapProps {
   config?: {
@@ -34,6 +54,10 @@ interface SwapProps {
 }
 
 export const SwapComponent = ({ config }: SwapProps) => {
+  useEffect(() => {
+    ensureSwapStyles();
+  }, []);
+
   return (
     <Swap
       partnerName="L4VA"
