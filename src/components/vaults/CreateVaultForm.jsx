@@ -27,11 +27,13 @@ import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,
+  MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 
 export const CreateVaultForm = ({ vault }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -44,6 +46,8 @@ export const CreateVaultForm = ({ vault }) => {
   const [isImageUploading, setIsImageUploading] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
+
+  const { vlrmBalance } = useVlrmBalance();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -126,21 +130,14 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep < steps.length) {
       handleNextStep();
     } else {
-      try {
-        setIsSubmitting(true);
-
-        // const latestVlrm = await fetchVlrmBalance();
-        // if (latestVlrm < MIN_VLRM_REQUIRED) {
-        //   toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
-        //   setIsSubmitting(false);
-        //   setIsVisibleSwipe(true);
-        //   return;
-        // }
-      } catch (err) {
-        console.log('Error fetching VLRM balance', err);
-        toast.error('Failed to fetch VLRM balance');
+      if (vlrmBalance < MIN_VLRM_REQUIRED) {
+        toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
         setIsSubmitting(false);
+        // setIsVisibleSwipe(true);
+        return;
       }
+
+      setIsSubmitting(true);
 
       try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
