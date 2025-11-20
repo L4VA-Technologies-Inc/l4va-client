@@ -64,8 +64,12 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             <HoverHelp hint="This is the image that will live on the Vault Profile page." />
           </div>
           {data.vaultImage ? (
-            <div className="mt-2 relative w-full md:w-64 overflow-hidden rounded-lg">
-              <img alt="Vault Image" className="object-cover w-full h-auto max-h-[380px]" src={data.vaultImage} />
+            <div className="mt-2 relative w-full md:w-64 overflow-hidden">
+              <img
+                alt="Vault Image"
+                className="object-cover w-full max-w-[320px] h-auto aspect-square rounded-lg"
+                src={data.vaultImage}
+              />
             </div>
           ) : (
             <p>No image</p>
