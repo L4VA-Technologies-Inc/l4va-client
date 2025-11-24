@@ -207,7 +207,7 @@ export const LavaWhitelistWithCaps = ({
       </div>
       <div className="space-y-4">
         {whitelist.map(asset => (
-          <div key={asset.id || asset.uniqueId} className="space-y-2">
+          <div key={asset.id || asset.uniqueId} className="space-y-6">
             <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
               <LavaInput
                 placeholder={itemPlaceholder}
@@ -273,9 +273,10 @@ export const LavaWhitelistWithCaps = ({
             <div className="flex gap-4">
               <div className="flex-1">
                 <LavaInput
+                  required={true}
+                  label="Min asset cap"
                   type="text"
                   pattern="[0-9]*"
-                  placeholder="*Min asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
                   onChange={e => updateAsset(asset.uniqueId, 'countCapMin', e.target.value)}
@@ -295,7 +296,8 @@ export const LavaWhitelistWithCaps = ({
 
               <div className="flex-1">
                 <LavaInput
-                  placeholder="*Max asset cap"
+                  required={true}
+                  label="Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
                   onChange={e => updateAsset(asset.uniqueId, 'countCapMax', e.target.value)}

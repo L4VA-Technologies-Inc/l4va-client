@@ -253,6 +253,28 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     return null;
   };
 
+  const renderFailureBanner = () => {
+    if (vault.vaultStatus !== VAULT_STATUSES.FAILED || !vault.failureReason) {
+      return null;
+    }
+
+    const failureMessages = {
+      asset_threshold_violation: 'Assets did not meet the required thresholds',
+      acquire_threshold_not_met: 'Acquisition threshold was not met',
+      no_contributions: 'No assets were contributed',
+      no_confirmed_transactions: 'No confirmed transactions',
+      manual_cancellation: 'Vault was manually cancelled',
+    };
+
+    return (
+      <div className="bg-red-900/20 border border-red-500 rounded-xl p-4 mb-6">
+        <p className="text-sm text-red-300">
+          {failureMessages[vault.failureReason] || 'Vault did not meet requirements'}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <>
       {renderPublishedOverlay()}
@@ -275,6 +297,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
           </div>
+          <div className="mb-6">{renderFailureBanner()}</div>
           <VaultContribution vault={vault} />
         </div>
         <div className="col-span-1 lg:col-span-2 space-y-6">

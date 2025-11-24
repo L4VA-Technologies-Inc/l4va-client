@@ -51,7 +51,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
         <div>
           <LavaInput
             error={errors.ftTokenSupply}
-            label="VT TOKEN SUPPLY"
+            label="VAULT TOKENS SUPPLY"
             name="ftTokenSupply"
             placeholder="XXX,XXX,XXX"
             value={data.ftTokenSupply || ''}
@@ -62,7 +62,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
           <UploadZone
             required
             image={data.ftTokenImg}
-            label="VT Token Image"
+            label="Vault Token Image"
             setImage={image => updateField('ftTokenImg', image)}
             onUploadingChange={onImageUploadingChange}
             hint="This is the image that will live on Vault Tocken. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
@@ -120,7 +120,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
               required
               error={errors.creationThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT held by user (as % of total supply) required to create a proposal"
+              hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal"
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
               placeholder="XX"
@@ -162,7 +162,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails."
+              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails."
               label="VOTE THRESHOLD (%)"
               name="voteThreshold"
               placeholder="XX"
@@ -176,7 +176,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum VT votes for a given proposal option (as % of total votes) for a proposal to be approved."
+              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved."
               label="EXECUTION THRESHOLD (%)"
               name="executionThreshold"
               placeholder="XX"
