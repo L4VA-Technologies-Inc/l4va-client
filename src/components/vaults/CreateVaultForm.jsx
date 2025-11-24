@@ -121,7 +121,36 @@ export const CreateVaultForm = ({ vault }) => {
     setSteps(prevSteps => updateStepErrors(prevSteps, currentErrors, stepFields));
   };
 
-  const updateField = (fieldName, value) => setVaultData(prev => ({ ...prev, [fieldName]: value }));
+  const clearFieldError = fieldName => {
+    setErrors(prevErrors => {
+      if (!prevErrors[fieldName]) return prevErrors;
+      const nextErrors = { ...prevErrors };
+      delete nextErrors[fieldName];
+      updateStepErrorIndicators(nextErrors);
+      return nextErrors;
+    });
+  };
+
+  const handleServerFieldErrors = error => {
+    const message = error?.response?.data?.message;
+    if (!message) return false;
+
+    if (message.toLowerCase().includes('ticker')) {
+      const tickerError = { vaultTokenTicker: message };
+      setErrors(prev => ({ ...prev, ...tickerError }));
+      updateStepErrorIndicators(tickerError);
+      toast.error(message);
+      return true;
+    }
+
+    return false;
+  };
+
+  const updateField = (fieldName, value) => {
+    setVaultData(prev => ({ ...prev, [fieldName]: value }));
+    clearFieldError(fieldName);
+  };
+
   const onSubmit = async () => {
     if (currentStep < steps.length) {
       handleNextStep();
@@ -173,10 +202,14 @@ export const CreateVaultForm = ({ vault }) => {
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
-        const formattedErrors = transformYupErrors(err);
-        setErrors(formattedErrors);
-        updateStepErrorIndicators(formattedErrors);
-        toast.error('Please fix the validation errors before submitting');
+        if (err?.name === 'ValidationError') {
+          const formattedErrors = transformYupErrors(err);
+          setErrors(formattedErrors);
+          updateStepErrorIndicators(formattedErrors);
+          toast.error('Please fix the validation errors before submitting');
+        } else if (!handleServerFieldErrors(err)) {
+          toast.error('Failed to launch vault');
+        }
       } finally {
         setIsSubmitting(false);
       }
