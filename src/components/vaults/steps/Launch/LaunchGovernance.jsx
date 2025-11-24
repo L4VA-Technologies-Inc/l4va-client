@@ -20,15 +20,15 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
     <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
       <div className="space-y-12">
         <div>
-          <p className="uppercase font-semibold text-dark-100">VT TOKEN SUPPLY</p>
+          <p className="uppercase font-semibold text-dark-100">VAULT TOKENS SUPPLY</p>
           <p>{data.ftTokenSupply ? formatNum(data.ftTokenSupply) : 'Not set'}</p>
         </div>
         <div>
-          <p className="uppercase font-semibold text-dark-100">VT Token image</p>
+          <p className="uppercase font-semibold text-dark-100">Vault Token image</p>
           {data.ftTokenImg ? (
             <div className="mt-2 relative w-full overflow-hidden">
               <img
-                alt="VT Token Image"
+                alt="Vault Token Image"
                 className="object-cover w-full max-w-[240px] h-auto aspect-square rounded-lg"
                 src={data.ftTokenImg}
               />
@@ -61,7 +61,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             <div>
               <div className="flex items-center gap-2">
                 <p className="uppercase font-semibold text-dark-100">Creation Threshold %</p>
-                <HoverHelp hint="Minimum VT held by user (as % of total supply) required to create a proposal" />
+                <HoverHelp hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal" />
               </div>
               <p>{data.creationThreshold ? `${formatNum(data.creationThreshold)}%` : 'Not set'}</p>
             </div>
@@ -72,14 +72,14 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
             <div>
               <div className="flex items-center gap-2">
                 <p className="uppercase font-semibold text-dark-100">Vote Threshold %</p>
-                <HoverHelp hint="Minimum VT used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails." />
+                <HoverHelp hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails." />
               </div>
               <p>{data.voteThreshold ? `${formatNum(data.voteThreshold)}%` : 'Not set'}</p>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <p className="uppercase font-semibold text-dark-100">Execution Threshold %</p>
-                <HoverHelp hint="Minimum VT votes for a given proposal option (as % of total votes) for a proposal to be approved." />
+                <HoverHelp hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved." />
               </div>
               <p>{data.executionThreshold ? `${formatNum(data.executionThreshold)}%` : 'Not set'}</p>
             </div>
