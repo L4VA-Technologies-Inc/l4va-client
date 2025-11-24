@@ -43,7 +43,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <p className="uppercase font-semibold text-dark-100">VT Token Ticker</p>
+            <p className="uppercase font-semibold text-dark-100">Vault Token Ticker</p>
             <HoverHelp hint="This is the ticker that the Governance Token will have when minted." />
           </div>
           <p>{data.vaultTokenTicker || 'Not set'}</p>

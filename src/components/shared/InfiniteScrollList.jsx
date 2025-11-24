@@ -65,10 +65,6 @@ export const InfiniteScrollList = ({
           <Spinner size="sm" />
         </div>
       )}
-
-      {!hasNextPage && items.length > 0 && (
-        <div className="flex items-center justify-center py-4 text-sm text-dark-300">You've reached the end</div>
-      )}
     </div>
   );
 };
