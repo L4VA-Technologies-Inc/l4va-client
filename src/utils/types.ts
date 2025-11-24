@@ -238,5 +238,6 @@ export interface CreateVaultFormData {
   executionThreshold: number;
   cosigningThreshold: number;
   assetsWhitelist: IAssetsWhitelist[];
+  acquirerWhitelist?: IContributorWhitelist[];
   contributorWhitelist?: IContributorWhitelist[];
 }

@@ -59,6 +59,7 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
       <div>
         <LavaWhitelist
           required={false}
+          allowCsv
           label="Contributor Whitelist"
           itemPlaceholder="Enter Wallet Address"
           itemFieldName="walletAddress"
