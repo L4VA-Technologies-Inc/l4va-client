@@ -3,11 +3,11 @@ import * as yup from 'yup';
 export const MIN_SUPPLY = 1000000; // 10^6
 export const MAX_SUPPLY = 1000000000000; // 10^12
 // export const MIN_CONTRIBUTION_DURATION_MS = 3600000; // 1 hour in ms
-export const MIN_CONTRIBUTION_DURATION_MS = 86400000; // 1 day
+export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 1 day
 // export const MIN_ACQUIRE_WINDOW_DURATION_MS = 3600000; // 1 hour in ms
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 86400000; // 1 day
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 1 day
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
-export const BUTTON_DISABLE_THRESHOLD_MS = 300000; // Min 5 min before button is enabled
+export const BUTTON_DISABLE_THRESHOLD_MS = 100000; // Min 5 min before button is enabled
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
@@ -256,14 +256,16 @@ export const vaultSchema = yup.object({
     .required('Liquidity pool contribution is required')
     .max(100, 'Cannot exceed 100%')
     .test(
-      'lp-not-exceed-100%',
-      'Liquidity pool contribution + Tokens for Acquirers must be less than 100%',
+      'no-lp-when-no-acquirers',
+      'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
       function (value) {
         const { tokensForAcquires } = this.parent;
-        return value + tokensForAcquires < 100;
+        if (tokensForAcquires === 0) {
+          return value === 0;
+        }
+        return true;
       }
     ),
-
   // Step 4: Governance
   ftTokenSupply: yup
     .number()
