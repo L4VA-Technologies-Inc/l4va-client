@@ -78,6 +78,8 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
 
+  const [isDisabledSubmit, setIsDisabledSubmit] = useState(false);
+
   const wallet = useWallet(
     'handler',
     'isConnected',
@@ -194,6 +196,9 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const removeNFT = tokenId => setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
 
   const handleContribute = async () => {
+    if (isDisabledSubmit) return;
+
+    setIsDisabledSubmit(true);
     try {
       const formattedAssets = selectedNFTs.map(asset => {
         if (asset.isFungibleToken) {
@@ -215,10 +220,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       });
       setSelectedNFTs([]);
       setSelectedAmount({});
+      setIsDisabledSubmit(false);
       refresh(); // Refresh wallet assets after contribution
       onClose();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
+      setIsDisabledSubmit(false);
     }
   };
 
@@ -261,7 +268,8 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             status !== 'idle' ||
             wallet.isUpdatingUtxos ||
             new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-              Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+              Date.now() + BUTTON_DISABLE_THRESHOLD_MS ||
+            isDisabledSubmit
           }
           onClick={handleContribute}
           size="sm"

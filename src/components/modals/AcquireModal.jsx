@@ -20,6 +20,8 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
+  const [isDisabledSubmit, setIsDisabledSubmit] = useState(false);
+
   const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
@@ -43,6 +45,9 @@ export const AcquireModal = ({ vault, onClose }) => {
   const estimatedTickerVal = formatNum(Math.floor((vaultAllocation / 100) * vault.ftTokenSupply));
 
   const handleAcquire = async () => {
+    if (isDisabledSubmit) return;
+
+    setIsDisabledSubmit(true);
     try {
       if (!acquireAmount || parseFloat(acquireAmount) <= 0) return;
 
@@ -94,11 +99,12 @@ export const AcquireModal = ({ vault, onClose }) => {
 
       if (submitResult.data?.txHash) {
         toast.success('Acquisition completed successfully');
+        setIsDisabledSubmit(false);
         onClose();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Acquisition failed');
-    } finally {
+      setIsDisabledSubmit(false);
       setStatus('idle');
     }
   };
@@ -223,7 +229,8 @@ export const AcquireModal = ({ vault, onClose }) => {
                     status !== 'idle' ||
                     wallet.isUpdatingUtxos ||
                     new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
-                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS ||
+                    isDisabledSubmit
                   }
                   onClick={handleAcquire}
                   icon={status !== 'idle' ? Spinner : null}
