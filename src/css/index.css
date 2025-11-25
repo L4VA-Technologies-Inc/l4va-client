@@ -1,8 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Russo+One&display=swap");
 @import "tailwindcss";
 @import "./fonts.css";
 @import "./scrollbar.css";
-@import "stream-chat-react/dist/css/v2/index.css";
 @import "./stream-overrides.css";
 
 #nufi-widget {
