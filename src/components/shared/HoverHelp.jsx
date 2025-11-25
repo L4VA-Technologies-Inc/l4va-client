@@ -1,8 +1,8 @@
 import { HelpCircle } from 'lucide-react';
 
-export const HoverHelp = ({ hint }) => {
+export const HoverHelp = ({ hint, className = '' }) => {
   return (
-    <div className="group relative inline-flex" tabIndex="0" role="button">
+    <div className={`group relative inline-flex font-normal ${className}`} tabIndex="0" role="button">
       <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
       <div
         className="
