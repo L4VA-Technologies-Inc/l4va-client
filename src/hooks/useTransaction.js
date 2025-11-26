@@ -16,6 +16,7 @@ export const useTransaction = () => {
 
   const sendTransaction = useCallback(
     async ({ recipient, vaultId, selectedNFTs }) => {
+      setStatus('building');
       try {
         setError(null);
         setTxHash(null);
@@ -36,8 +37,6 @@ export const useTransaction = () => {
         });
 
         const changeAddress = await wallet.handler.getChangeAddressBech32();
-
-        setStatus('building');
 
         const buildResult = await buildTransaction.mutateAsync({
           changeAddress,
