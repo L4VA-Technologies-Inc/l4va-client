@@ -37,8 +37,8 @@ const Features = () => {
           "
         />
       </div>
-      <div className="space-y-2 sm:space-y-3">
-        <h3 className="text-xl sm:text-2xl font-bold text-white">{title}</h3>
+      <div className="flex flex-col space-y-2 sm:space-y-3">
+        <span className="text-xl sm:text-2xl font-bold text-white">{title}</span>
         <p className="text-sm sm:text-base text-dark-100 leading-relaxed">{description}</p>
       </div>
     </div>

@@ -99,9 +99,9 @@ const Faq = () => {
         <section className="mb-8 sm:mb-12 lg:mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[70px]">
             <div className="space-y-4 text-dark-100 lg:pr-[135px]">
-              <h2 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
+              <h3 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
                 How it Works
-              </h2>
+              </h3>
               <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
                 Unlock liquidity, access, and governance for any asset on Cardano.
               </h4>

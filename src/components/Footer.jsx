@@ -63,7 +63,7 @@ export const Footer = () => {
   return (
     <div className="container mx-auto px-4 xl:px-0">
       <div className="flex items-center flex-col mb-8 md:mb-16">
-        <h2 className="text-primary-text text-xl md:text-2xl font-russo font-bold mb-8 md:mb-16">FIND US ON SOCIAL</h2>
+        <h2 className="text-primary-text text-xl md:text-2xl font-russo font-bold mb-6 md:mb-12">FIND US ON SOCIAL</h2>
         <div className="flex flex-wrap justify-center items-center gap-4 md:gap-16">
           {socialLinks.map(social => {
             const IconComponent = social.icon;
@@ -71,7 +71,7 @@ export const Footer = () => {
               <a
                 key={social.name}
                 aria-label={`Visit our ${social.name} page`}
-                className="transition-transform hover:scale-110"
+                className="w-12 h-12 flex items-center justify-center transition-transform hover:scale-110"
                 href={social.url}
                 rel="noopener noreferrer"
                 target="_blank"
