@@ -50,6 +50,7 @@ export const LavaInput = ({
         <div className="relative flex items-center">
           <input
             className={`
+              lava-input
               rounded-[10px] bg-input-bg py-4 pl-5 
               ${suffix ? 'pr-12' : 'pr-5'} font-medium w-full border border-steel-850 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
@@ -105,6 +106,7 @@ export const LavaSteelInput = ({
       ) : null}
       <input
         className={`
+          lava-steel-input
           w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
           ${error ? 'border border-red-600' : 'border border-steel-750'}
           focus:outline-none focus:ring-2 focus:ring-steel-750
@@ -157,6 +159,7 @@ export const LavaSearchInput = ({
     <div className="relative flex items-center w-full">
       <input
         className={`
+              lava-input
               bg-input-bg h-10 px-4 py-2.5 rounded-lg
               pr-12 font-medium w-full border border-steel-850
               focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
