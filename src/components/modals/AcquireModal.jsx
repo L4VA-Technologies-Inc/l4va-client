@@ -20,8 +20,6 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
-  const [isDisabledSubmit, setIsDisabledSubmit] = useState(false);
-
   const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
@@ -45,9 +43,8 @@ export const AcquireModal = ({ vault, onClose }) => {
   const estimatedTickerVal = formatNum(Math.floor((vaultAllocation / 100) * vault.ftTokenSupply));
 
   const handleAcquire = async () => {
-    if (isDisabledSubmit) return;
+    setStatus('building');
 
-    setIsDisabledSubmit(true);
     try {
       if (!acquireAmount || parseFloat(acquireAmount) <= 0) return;
 
@@ -64,8 +61,6 @@ export const AcquireModal = ({ vault, onClose }) => {
       });
 
       const changeAddress = await wallet.handler.getChangeAddressBech32();
-
-      setStatus('building');
 
       const buildResult = await buildTransaction.mutateAsync({
         changeAddress,
@@ -99,12 +94,10 @@ export const AcquireModal = ({ vault, onClose }) => {
 
       if (submitResult.data?.txHash) {
         toast.success('Acquisition completed successfully');
-        setIsDisabledSubmit(false);
         onClose();
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Acquisition failed');
-      setIsDisabledSubmit(false);
       setStatus('idle');
     }
   };
@@ -229,8 +222,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                     status !== 'idle' ||
                     wallet.isUpdatingUtxos ||
                     new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
-                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS ||
-                    isDisabledSubmit
+                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
                   }
                   onClick={handleAcquire}
                   icon={status !== 'idle' ? Spinner : null}

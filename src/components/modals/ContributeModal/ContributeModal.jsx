@@ -78,8 +78,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
 
-  const [isDisabledSubmit, setIsDisabledSubmit] = useState(false);
-
   const wallet = useWallet(
     'handler',
     'isConnected',
@@ -196,9 +194,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const removeNFT = tokenId => setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
 
   const handleContribute = async () => {
-    if (isDisabledSubmit) return;
-
-    setIsDisabledSubmit(true);
     try {
       const formattedAssets = selectedNFTs.map(asset => {
         if (asset.isFungibleToken) {
@@ -220,12 +215,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       });
       setSelectedNFTs([]);
       setSelectedAmount({});
-      setIsDisabledSubmit(false);
       refresh(); // Refresh wallet assets after contribution
       onClose();
     } catch (err) {
       toast.error(err.message || error || 'Contribution failed');
-      setIsDisabledSubmit(false);
     }
   };
 
@@ -235,13 +228,22 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         const isSelected = selectedNFTs.some(selected => selected.tokenId === item.tokenId);
         const isDisabled = !isSelected && selectedNFTsCount >= MAX_NFT_PER_TRANSACTION;
 
-        return <EnhancedNFTItem nft={item} isSelected={isSelected} isDisabled={isDisabled} onToggle={toggleNFT} />;
+        return (
+          <EnhancedNFTItem
+            key={item.tokenId}
+            nft={item}
+            isSelected={isSelected}
+            isDisabled={isDisabled}
+            onToggle={toggleNFT}
+          />
+        );
       } else {
         const hasAmount = selectedAmount[item.tokenId] && selectedAmount[item.tokenId] !== '0';
         const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
 
         return (
           <EnhancedFTItem
+            key={item.tokenId}
             ft={item}
             amount={selectedAmount[item.tokenId] || ''}
             isDisabled={isDisabled}
@@ -268,8 +270,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             status !== 'idle' ||
             wallet.isUpdatingUtxos ||
             new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-              Date.now() + BUTTON_DISABLE_THRESHOLD_MS ||
-            isDisabledSubmit
+              Date.now() + BUTTON_DISABLE_THRESHOLD_MS
           }
           onClick={handleContribute}
           size="sm"
