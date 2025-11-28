@@ -9,26 +9,46 @@ import { MAX_SUPPLY, TERMINATION_TYPE_OPTIONS } from '@/components/vaults/consta
 
 export const Governance = ({ data, errors = {}, updateField, onImageUploadingChange }) => {
   const handlePercentageChange = value => {
-    const numericValue = value.replace(/[^0-9.]/g, '');
-    const parts = numericValue.split('.');
-    const sanitizedValue = parts.length > 2 ? `${parts[0]}.${parts[1]}` : numericValue;
+    let numericValue = value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
 
-    if (parts.length === 2 && parts[1].length > 2) {
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
       return null;
     }
 
-    return sanitizedValue === '' ? '' : +sanitizedValue;
+    if (numericValue.startsWith('100') && numericValue.length > 3) {
+      return null;
+    }
+
+    if (Number(numericValue) > 100) {
+      return null;
+    }
+
+    if (parts[1] && parts[1].length > 1) {
+      return null;
+    }
+
+    return numericValue;
   };
 
   const handleNumChange = e => {
     const { name, value } = e.target;
+
     const sanitizedValue = handlePercentageChange(value);
+
     if (sanitizedValue !== null) {
       if (sanitizedValue === '') {
-        updateField(name, null);
-      } else {
+        updateField(name, '');
+        return;
+      }
+
+      if (parseFloat(sanitizedValue) > 100) {
         const limitedValue = Math.min(sanitizedValue, 100);
         updateField(name, +limitedValue);
+      }
+
+      if (parseFloat(sanitizedValue) <= 100) {
+        updateField(name, sanitizedValue);
       }
     }
   };
