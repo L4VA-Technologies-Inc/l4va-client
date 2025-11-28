@@ -161,6 +161,36 @@ button {
   color: transparent;
 }
 
+input.lava-input:-webkit-autofill,
+input.lava-input:-webkit-autofill:hover,
+input.lava-input:-webkit-autofill:active,
+input.lava-input:-webkit-autofill:focus,
+input.lava-input:-webkit-autofill:focus-visible {
+  -webkit-text-fill-color: var(--color-white) !important;
+  color: var(--color-white) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-input-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--color-input-bg) inset !important;
+  caret-color: var(--color-white) !important;
+  background-color: var(--color-input-bg) !important;
+  transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+}
+
+input.lava-steel-input:-webkit-autofill,
+input.lava-steel-input:-webkit-autofill:hover,
+input.lava-steel-input:-webkit-autofill:active,
+input.lava-steel-input:-webkit-autofill:focus,
+input.lava-steel-input:-webkit-autofill:focus-visible {
+  -webkit-text-fill-color: var(--color-white) !important;
+  color: var(--color-white) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-steel-850) inset !important;
+  box-shadow: 0 0 0 1000px var(--color-steel-850) inset !important;
+  caret-color: var(--color-white) !important;
+  background-color: var(--color-steel-850) !important;
+  transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+}
+
 @utility fixed-center {
   position: fixed;
   top: 50%;
