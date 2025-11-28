@@ -155,7 +155,7 @@ export const LavaWhitelistWithCaps = ({
     return (
       <div className="space-y-2 pr-2">
         {filteredPolicies.map(policy => (
-          <div key={policy.id}>{renderAssetItem(asset, policy)}</div>
+          <div key={policy.policyId}>{renderAssetItem(asset, policy)}</div>
         ))}
       </div>
     );
