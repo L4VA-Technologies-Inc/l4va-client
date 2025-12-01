@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { CalendarIcon, HelpCircle } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -34,7 +34,11 @@ export const LavaDatePicker = ({
   onChange = () => {},
   hint,
   error = false,
+  id,
+  name,
 }) => {
+  const generatedId = useId();
+  const datePickerId = id || generatedId;
   const [isOpen, setIsOpen] = useState(false);
   const [dateValue, setDateValue] = useState(null);
 
@@ -81,7 +85,7 @@ export const LavaDatePicker = ({
   return (
     <>
       {label ? (
-        <div className="font-bold flex items-center gap-2">
+        <label htmlFor={datePickerId} className="font-bold flex items-center gap-2">
           <span className="uppercase">
             {required ? '*' : ''}
             {label}
@@ -100,13 +104,15 @@ export const LavaDatePicker = ({
               </div>
             </div>
           )}
-        </div>
+        </label>
       ) : null}
       <div className="mt-1">
         <div className="relative flex items-center">
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
+                id={datePickerId}
+                name={name}
                 className={cn(
                   styles.button,
                   'justify-start text-left',

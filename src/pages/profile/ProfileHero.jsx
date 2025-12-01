@@ -87,54 +87,64 @@ const ProfileName = ({
   inputRef,
   isUpdating,
   isEditable = true,
-}) => (
-  <div className="flex items-center gap-3 mt-3">
-    {isEditing && isEditable ? (
-      <div className="flex items-center gap-2 w-full">
-        <Input
-          ref={inputRef}
-          className="bg-steel-850 border-steel-800 text-white placeholder:text-gray-400 focus:border-orange-500 max-w-xs"
-          value={name}
-          onChange={onChange}
-          onKeyDown={onKeyDown}
-          placeholder="Enter your name"
-        />
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
-          onClick={onSave}
-          disabled={isUpdating}
-        >
-          <Check size={16} />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
-          onClick={onCancel}
-          disabled={isUpdating}
-        >
-          <X size={16} />
-        </Button>
-      </div>
-    ) : (
-      <>
-        <h1 className="text-xl font-bold text-white">{name || 'Anonymous User'}</h1>
-        {isEditable && (
+}) => {
+  const inputId = 'profile-name-input';
+
+  return (
+    <div className="flex items-center gap-3 mt-3">
+      {isEditing && isEditable ? (
+        <div className="flex items-center gap-2 w-full">
+          <label htmlFor={inputId} className="sr-only">
+            Name
+          </label>
+          <Input
+            id={inputId}
+            ref={inputRef}
+            name="name"
+            autoComplete="name"
+            className="bg-steel-850 border-steel-800 text-white placeholder:text-gray-400 focus:border-orange-500 max-w-xs"
+            value={name}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+            placeholder="Enter your name"
+          />
           <Button
             size="sm"
             variant="ghost"
-            className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
-            onClick={onEdit}
+            className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
+            onClick={onSave}
+            disabled={isUpdating}
           >
-            <Edit size={16} />
+            <Check size={16} />
           </Button>
-        )}
-      </>
-    )}
-  </div>
-);
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
+            onClick={onCancel}
+            disabled={isUpdating}
+          >
+            <X size={16} />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <h1 className="text-xl font-bold text-white">{name || 'Anonymous User'}</h1>
+          {isEditable && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
+              onClick={onEdit}
+            >
+              <Edit size={16} />
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 const ProfileEmail = ({
   isEditable = true,
@@ -148,20 +158,28 @@ const ProfileEmail = ({
   inputRef,
   isUpdating,
 }) => {
+  const inputId = 'profile-email-input';
+
   if (!isEditable) return null;
 
   return (
     <div className="flex items-center gap-3 mt-2">
       {isEditing ? (
         <div className="flex items-center gap-2 w-full max-w-md">
+          <label htmlFor={inputId} className="sr-only">
+            Email
+          </label>
           <Input
+            id={inputId}
             ref={inputRef}
+            name="email"
+            type="email"
+            autoComplete="email"
             className="bg-steel-850 border-steel-800 text-white placeholder:text-gray-400 focus:border-orange-500"
             value={email}
             onChange={onChange}
             onKeyDown={onKeyDown}
             placeholder="Enter your email"
-            type="email"
           />
           <Button
             size="sm"

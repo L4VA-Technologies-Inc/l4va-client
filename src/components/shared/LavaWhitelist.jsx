@@ -133,21 +133,31 @@ export const LavaWhitelist = ({
       <div className="space-y-4">
         {whitelist.map((asset, index) => {
           const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
+          const inputId = `${whitelistFieldName}-${index}-${itemFieldName}`;
+          const inputName = `${whitelistFieldName}[${index}].${itemFieldName}`;
           return (
             <div key={asset.id} className="space-y-2">
               <div className="relative">
+                <label htmlFor={inputId} className="sr-only">
+                  {itemPlaceholder} {index + 1}
+                </label>
                 <Input
+                  id={inputId}
+                  name={inputName}
+                  autoComplete="off"
                   className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
                   placeholder={itemPlaceholder}
                   style={{ fontSize: '18px' }}
                   value={asset[itemFieldName]}
                   onChange={e => updateAsset(asset.id, e.target.value)}
+                  aria-label={`${itemPlaceholder} ${index + 1}`}
                 />
                 <Button
                   className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
                   size="icon"
                   variant="ghost"
                   onClick={() => removeAsset(asset.id)}
+                  aria-label={`Remove ${itemPlaceholder} ${index + 1}`}
                 >
                   <X className="h-4 w-4" />
                 </Button>
