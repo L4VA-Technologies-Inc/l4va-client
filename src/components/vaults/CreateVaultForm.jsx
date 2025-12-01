@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
@@ -33,6 +33,7 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
+import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -63,6 +64,21 @@ export const CreateVaultForm = ({ vault }) => {
       top: 0,
       behavior: 'smooth',
     });
+  };
+
+  const scrollToTutorial = () => {
+    const tutorialElement = document.getElementById('vault-creation-tutorial');
+    if (tutorialElement) {
+      const headerHeight = 72;
+      const offset = headerHeight + 24;
+      const elementPosition = tutorialElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    }
   };
 
   useEffect(() => {
@@ -339,6 +355,15 @@ export const CreateVaultForm = ({ vault }) => {
 
   return (
     <div className="pb-8">
+      <PrimaryButton
+        onClick={scrollToTutorial}
+        className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+        aria-label="Scroll to tutorial"
+      >
+        <BookOpen className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+        <span className="hidden sm:inline font-russo uppercase text-sm">Tutorial</span>
+        <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
+      </PrimaryButton>
       <div className="md:hidden mb-8">
         <LavaSelect
           label="Current Step"
@@ -363,7 +388,7 @@ export const CreateVaultForm = ({ vault }) => {
           </div>
         </div>
       </div>
-      <div className="hidden md:flex relative items-center">
+      <div className="hidden md:flex relative items-center mb-8">
         {steps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
@@ -409,6 +434,7 @@ export const CreateVaultForm = ({ vault }) => {
           ) : null}
         </DialogContent>
       </Dialog>
+      <VaultCreationTutorial />
     </div>
   );
 };
