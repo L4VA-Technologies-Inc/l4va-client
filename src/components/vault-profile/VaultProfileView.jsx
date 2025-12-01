@@ -420,12 +420,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <img
                   src={vault.vaultImage}
                   alt={vault.name}
-                  width="800"
-                  height="600"
                   loading="eager"
                   decoding="async"
-                  sizes="(min-width: 1024px) 33vw, 100vw"
-                  className="object-cover w-full h-full rounded-lg"
+                  className="object-cover w-full h-auto aspect-square rounded-lg"
                 />
               ) : (
                 <div className="w-full h-full bg-steel-850 flex items-center justify-center">
