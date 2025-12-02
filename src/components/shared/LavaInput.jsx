@@ -1,8 +1,56 @@
 import { HelpCircle, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 
 import { formatNum } from '@/utils/core.utils';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
+
+const getAutocompleteValue = (name, type) => {
+  if (!name) return undefined;
+
+  const nameLower = name.toLowerCase();
+
+  if (nameLower.includes('email') || type === 'email') {
+    return 'email';
+  }
+
+  if (nameLower.includes('password') || type === 'password') {
+    return 'current-password';
+  }
+
+  if (nameLower === 'name' || nameLower === 'fullname' || nameLower === 'full-name') {
+    return 'name';
+  }
+
+  if (nameLower.includes('username') || nameLower === 'user') {
+    return 'username';
+  }
+
+  if (nameLower.includes('phone') || nameLower.includes('tel')) {
+    return 'tel';
+  }
+
+  if (nameLower.includes('address')) {
+    return 'street-address';
+  }
+
+  if (nameLower === 'city') {
+    return 'address-level2';
+  }
+
+  if (nameLower === 'country') {
+    return 'country';
+  }
+
+  if (nameLower.includes('zip') || nameLower.includes('postal')) {
+    return 'postal-code';
+  }
+
+  if (nameLower.includes('search')) {
+    return 'off';
+  }
+
+  return undefined;
+};
 
 export const LavaInput = ({
   name,
@@ -18,7 +66,13 @@ export const LavaInput = ({
   placeholder = 'Enter text',
   type = 'text',
   required = false,
+  id,
+  autoComplete,
 }) => {
+  const generatedId = useId();
+  const inputId = id || (name ? `lava-input-${name}` : generatedId);
+  const autocompleteValue = autoComplete !== undefined ? autoComplete : getAutocompleteValue(name, type);
+
   const handleChange = e => {
     const newValue = e.target.value;
     const isNumber = /^\d*$/.test(newValue.replace(/,/g, ''));
@@ -38,17 +92,18 @@ export const LavaInput = ({
   return (
     <>
       {label ? (
-        <div className="font-bold flex items-center gap-2">
+        <label htmlFor={inputId} className="font-bold flex items-center gap-2">
           <span className="uppercase">
             {required ? '*' : ''}
             {label}
           </span>
           {hint && <HoverHelp hint={hint} />}
-        </div>
+        </label>
       ) : null}
       <div className="mt-4">
         <div className="relative flex items-center">
           <input
+            id={inputId}
             className={`
               lava-input
               rounded-[10px] bg-input-bg py-4 pl-5 
@@ -63,6 +118,7 @@ export const LavaInput = ({
             value={displayValue}
             onChange={handleChange}
             onBlur={onBlur}
+            autoComplete={autocompleteValue}
           />
           {suffix && <div className="absolute right-5 text-white/60 select-none">{suffix}</div>}
         </div>
@@ -82,8 +138,15 @@ export const LavaSteelInput = ({
   required = false,
   placeholder = 'Lorem ipsum',
   error = false,
+  name,
+  id,
+  autoComplete,
   ...props
 }) => {
+  const generatedId = useId();
+  const inputId = id || (name ? `lava-steel-input-${name}` : generatedId);
+  const autocompleteValue = autoComplete !== undefined ? autoComplete : getAutocompleteValue(name, type);
+
   const handleChange = e => {
     if (onChange) onChange(e.target.value);
   };
@@ -91,7 +154,7 @@ export const LavaSteelInput = ({
   return (
     <div>
       {label ? (
-        <div className="font-semibold mb-4 flex items-center gap-2">
+        <label htmlFor={inputId} className="font-semibold mb-4 flex items-center gap-2">
           {required ? '*' : ''}
           {label}
           {hint && (
@@ -102,9 +165,10 @@ export const LavaSteelInput = ({
               </div>
             </div>
           )}
-        </div>
+        </label>
       ) : null}
       <input
+        id={inputId}
         className={`
           lava-steel-input
           w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
@@ -116,6 +180,8 @@ export const LavaSteelInput = ({
         type={type}
         value={value}
         onChange={handleChange}
+        name={name}
+        autoComplete={autocompleteValue}
         {...props}
       />
     </div>
@@ -132,7 +198,12 @@ export const LavaSearchInput = ({
   type = 'text',
   value: propValue = '',
   debounceTime = 300,
+  id,
 }) => {
+  const generatedId = useId();
+  const inputId = id || (name ? `lava-search-input-${name}` : generatedId);
+  const autocompleteValue = 'off';
+
   const [value, setValue] = useState(propValue);
 
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -158,6 +229,7 @@ export const LavaSearchInput = ({
   return (
     <div className="relative flex items-center w-full">
       <input
+        id={inputId}
         className={`
               lava-input
               bg-input-bg h-10 px-4 py-2.5 rounded-lg
@@ -172,6 +244,8 @@ export const LavaSearchInput = ({
         onChange={event => handleChange(event)}
         onBlur={onBlur}
         value={value}
+        autoComplete={autocompleteValue}
+        aria-label={placeholder}
       />
       <div className="absolute right-3 text-white/60 select-none">
         <Search />

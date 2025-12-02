@@ -110,6 +110,7 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
               </Label>
               <div className="mt-4">
                 <LavaIntervalPicker
+                  id="timeElapsedIsEqualToTime"
                   value={data.timeElapsedIsEqualToTime}
                   onChange={date => updateField('timeElapsedIsEqualToTime', date)}
                 />

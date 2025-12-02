@@ -35,6 +35,7 @@ type LavaIntervalPickerProps = {
   minDays?: number;
   minMs?: number;
   error?: boolean;
+  id?: string;
 };
 
 export const LavaIntervalPicker = ({
@@ -49,6 +50,7 @@ export const LavaIntervalPicker = ({
   required = false,
   onChange = () => {},
   error = false,
+  id,
 }: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
@@ -84,19 +86,20 @@ export const LavaIntervalPicker = ({
   return (
     <>
       {label ? (
-        <div className="font-bold flex items-center gap-2">
+        <label htmlFor={id} className="font-bold flex items-center gap-2">
           <span className="uppercase">
             {required ? '*' : ''}
             {label}
           </span>
           {hint && <HoverHelp hint={hint} />}
-        </div>
+        </label>
       ) : null}
       <div className="mt-4">
         <div className="relative flex items-center">
           <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <Button
+                id={id}
                 className={cn(
                   styles.button,
                   'justify-start text-left',

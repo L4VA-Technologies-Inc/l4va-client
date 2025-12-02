@@ -70,6 +70,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           </Label>
           <div className="mt-4">
             <LavaIntervalPicker
+              id="acquireWindowDuration"
               value={data.acquireWindowDuration}
               onChange={date => updateField('acquireWindowDuration', date)}
               minMs={MIN_ACQUIRE_WINDOW_DURATION_MS}
