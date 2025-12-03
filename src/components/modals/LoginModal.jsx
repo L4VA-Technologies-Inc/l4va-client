@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
@@ -10,6 +10,7 @@ import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
+import { validateWalletNetwork } from '@/utils/networkValidation';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
@@ -41,6 +42,9 @@ export const LoginModal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
+  const hasCheckedNetworkRef = useRef(false);
+
+  const environment = import.meta.env.VITE_CARDANO_NETWORK;
 
   const { isAuthenticated, login, logout } = useAuth();
   const wallet = useWallet('isConnectingTo', 'isConnected', 'handler', 'stakeAddressBech32', 'changeAddressBech32');
@@ -60,10 +64,29 @@ export const LoginModal = () => {
   useEffect(() => {
     if (wallet.isConnected) {
       setView('sign');
+
+      if (wallet.changeAddressBech32 && !hasCheckedNetworkRef.current) {
+        hasCheckedNetworkRef.current = true;
+        const { isValid, networkType } = validateWalletNetwork(
+          wallet.changeAddressBech32,
+          environment,
+          wallet.changeAddressBech32
+        );
+
+        if (!isValid) {
+          disconnect();
+          closeModal();
+          openModal('MainNetModal', {
+            networkType,
+            onDisconnect: handleDisconnect,
+          });
+        }
+      }
     } else {
       setView('wallets');
+      hasCheckedNetworkRef.current = false;
     }
-  }, [wallet.isConnected]);
+  }, [wallet.isConnected, wallet.changeAddressBech32, environment, disconnect, closeModal, openModal]);
 
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;
@@ -78,48 +101,85 @@ export const LoginModal = () => {
   };
 
   const handleConnect = walletKey => {
-    if (walletKey) {
-      connect(walletKey, {
-        onSuccess: () => {
-          setIsLoading(false);
-        },
-        onError: error => {
-          toast.error('Failed to connect to wallet');
-          console.error('Error connecting to wallet:', error);
-          setIsLoading(false);
-        },
-      });
+    if (!walletKey) {
+      toast.error('Please select a wallet');
+      return;
+    }
+
+    if (!isChecked || !isCheckedService) {
+      toast.error('Please accept the terms and conditions');
+      return;
+    }
+
+    setIsLoading(true);
+
+    connect(walletKey, {
+      onSuccess: () => {
+        setIsLoading(false);
+        toast.success('Wallet connected successfully');
+      },
+      onError: error => {
+        const errorMessage = error?.message || 'Failed to connect to wallet';
+        toast.error(errorMessage);
+        console.error('Error connecting to wallet:', error);
+        setIsLoading(false);
+      },
+    });
+  };
+
+  const handleDisconnect = (keepModalOpen = false) => {
+    disconnect();
+    logout();
+    if (!keepModalOpen) {
+      closeModal();
     }
   };
 
-  const handleDisconnect = (isMainNet = false) => {
-    disconnect();
-    logout();
-    if (!isMainNet) closeModal();
-  };
-
   const handleSignMessage = async () => {
-    if (!wallet.isConnected || !wallet.handler) return false;
+    if (!wallet.isConnected || !wallet.handler) {
+      toast.error('Wallet is not connected');
+      return false;
+    }
+
     setIsLoading(true);
 
     try {
       const message = `account: ${wallet.stakeAddressBech32}`;
       const signature = await wallet.handler.signData(messageHex(message));
       const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
-      closeModal();
 
-      if (res?.user?.address.startsWith('addr1')) {
-        openModal('MainNetModal');
-        handleDisconnect(true);
-        return;
+      if (!res?.user?.address) {
+        toast.error('Failed to authenticate: Invalid response from server');
+        return false;
       }
+
+      const { isValid, networkType } = validateWalletNetwork(res.user.address, environment, wallet.changeAddressBech32);
+      if (!isValid) {
+        disconnect();
+        logout();
+        closeModal();
+        openModal('MainNetModal', {
+          networkType,
+          onDisconnect: handleDisconnect,
+        });
+        return false;
+      }
+
+      closeModal();
 
       if (!res.user?.email) {
         openModal('EmailModal');
       }
-      return activeModalData?.props?.onSuccess && activeModalData.props.onSuccess();
+
+      if (activeModalData?.props?.onSuccess) {
+        activeModalData.props.onSuccess();
+      }
+
+      return true;
     } catch (error) {
-      return console.error('Authentication failed:', error);
+      console.error('Authentication failed:', error);
+      toast.error('Authentication failed. Please try again.');
+      return false;
     } finally {
       setIsLoading(false);
     }
