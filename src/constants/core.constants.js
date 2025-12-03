@@ -45,3 +45,14 @@ export const socialPlatforms = [
     placeholder: 'https://',
   },
 ];
+
+export const environments = {
+  DEV: 'dev',
+  PROD: 'prod',
+};
+
+export const NETWORK_TYPES = {
+  MAINNET_ON_TESTNET: 'mainnet_on_testnet',
+  TESTNET_ON_MAINNET: 'testnet_on_mainnet',
+  WALLET_NOT_WHITELISTED: 'wallet_not_whitelisted',
+};
