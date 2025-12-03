@@ -2,12 +2,11 @@ import { Info } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
-import { UploadZone } from '@/components/shared/LavaUploadZone';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MAX_SUPPLY, TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
-export const Governance = ({ data, errors = {}, updateField, onImageUploadingChange }) => {
+export const Governance = ({ data, errors = {}, updateField }) => {
   const handlePercentageChange = value => {
     let numericValue = value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
 
@@ -77,18 +76,6 @@ export const Governance = ({ data, errors = {}, updateField, onImageUploadingCha
             value={data.ftTokenSupply || ''}
             onChange={handleSupplyChange}
           />
-        </div>
-        <div>
-          <UploadZone
-            required
-            image={data.ftTokenImg}
-            label="Vault Token Image"
-            setImage={image => updateField('ftTokenImg', image)}
-            onUploadingChange={onImageUploadingChange}
-            hint="This is the image that will live on Vault Tocken. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
-            imageType="ticker"
-          />
-          {errors.ftTokenImg && <p className="text-red-600 mt-1">{errors.ftTokenImg}</p>}
         </div>
       </div>
       <div className="space-y-12">

@@ -3,19 +3,15 @@ import { addMilliseconds } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
-import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 import {
-  VAULT_PRIVACY_TYPES,
   RESERVE_HINT,
   LIQUIDITY_POOL_CONTRIBUTION_HINT,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 
 export const AcquireWindow = ({ data, errors = {}, updateField }) => {
-  const vaultPrivacy = data.privacy;
-
   const handleChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
@@ -47,23 +43,6 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   return (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
       <div className="space-y-12">
-        {vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE || vaultPrivacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE ? (
-          <div>
-            <LavaWhitelist
-              required={vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE}
-              allowCsv
-              itemFieldName="walletAddress"
-              itemPlaceholder="Wallet address"
-              label="Acquirer whitelist"
-              whitelistFieldName="acquirerWhitelist"
-              setWhitelist={assets => updateField('acquirerWhitelist', assets)}
-              whitelist={data.acquirerWhitelist || []}
-              maxItems={100}
-              errors={errors}
-            />
-            {errors.acquirerWhitelist && <p className="text-red-600 mt-1">{errors.acquirerWhitelist}</p>}
-          </div>
-        ) : null}
         <div>
           <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">
             *ACQUIRE WINDOW DURATION

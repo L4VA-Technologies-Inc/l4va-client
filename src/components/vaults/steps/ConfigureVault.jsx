@@ -5,10 +5,13 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { Chip } from '@/components/shared/Chip';
+import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
+import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import {
-  VAULT_TYPE_OPTIONS,
+  VAULT_PRESET_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
   VAULT_TAGS_OPTIONS,
+  VAULT_PRIVACY_TYPES,
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
@@ -50,14 +53,14 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <LavaRadio
-              label="*Vault type"
-              name="type"
-              options={VAULT_TYPE_OPTIONS}
-              value={data.type || ''}
-              onChange={value => updateField('type', value)}
-              hint="Type of assets that can be contributed to the Vault."
+              label="*Vault Preset"
+              name="preset"
+              options={VAULT_PRESET_OPTIONS}
+              value={data.preset || ''}
+              onChange={value => updateField('preset', value)}
+              hint="Choose a preset to auto-fill vault configuration fields."
             />
-            {errors.type && <p className="text-red-600 mt-2 text-sm">{errors.type}</p>}
+            {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
           </div>
           <div>
             <LavaRadio
@@ -96,6 +99,72 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
             onChange={handleChange}
           />
         </div>
+
+        <div>
+          <LavaWhitelistWithCaps
+            required
+            label="Asset Whitelist"
+            setWhitelist={assets => updateField('assetsWhitelist', assets)}
+            whitelist={data.assetsWhitelist || []}
+            errors={errors}
+            vaultType={data.type}
+          />
+          {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
+        </div>
+
+        {data.privacy === VAULT_PRIVACY_TYPES.PRIVATE && data.valueMethod === 'lbe' && (
+          <div>
+            <LavaWhitelist
+              required
+              allowCsv
+              itemPlaceholder="Enter Wallet Address"
+              label="Contributor Whitelist"
+              itemFieldName="walletAddress"
+              whitelistFieldName="contributorWhitelist"
+              setWhitelist={assets => updateField('contributorWhitelist', assets)}
+              whitelist={data.contributorWhitelist || []}
+              maxItems={100}
+              errors={errors}
+            />
+            {errors.contributorWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.contributorWhitelist}</p>}
+          </div>
+        )}
+
+        {data.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE && (
+          <div>
+            <LavaWhitelist
+              required={false}
+              allowCsv
+              label="Contributor Whitelist"
+              itemPlaceholder="Enter Wallet Address"
+              itemFieldName="walletAddress"
+              whitelistFieldName="contributorWhitelist"
+              setWhitelist={contributors => updateField('contributorWhitelist', contributors)}
+              whitelist={data.contributorWhitelist || []}
+              maxItems={100}
+              errors={errors}
+            />
+            {errors.contributorWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.contributorWhitelist}</p>}
+          </div>
+        )}
+
+        {(data.privacy === VAULT_PRIVACY_TYPES.PRIVATE || data.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) && (
+          <div>
+            <LavaWhitelist
+              required={data.privacy === VAULT_PRIVACY_TYPES.PRIVATE}
+              allowCsv
+              itemFieldName="walletAddress"
+              itemPlaceholder="Wallet address"
+              label="Acquirer whitelist"
+              whitelistFieldName="acquirerWhitelist"
+              setWhitelist={assets => updateField('acquirerWhitelist', assets)}
+              whitelist={data.acquirerWhitelist || []}
+              maxItems={100}
+              errors={errors}
+            />
+            {errors.acquirerWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.acquirerWhitelist}</p>}
+          </div>
+        )}
       </div>
 
       <div className="space-y-12">
@@ -110,6 +179,18 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
             imageType="background"
           />
           {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
+        </div>
+        <div>
+          <UploadZone
+            required
+            image={data.ftTokenImg}
+            label="Vault Token Image"
+            setImage={image => updateField('ftTokenImg', image)}
+            onUploadingChange={onImageUploadingChange}
+            hint="This is the image that will live on Vault Tocken. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
+            imageType="ticker"
+          />
+          {errors.ftTokenImg && <p className="text-red-600 mt-2 text-sm">{errors.ftTokenImg}</p>}
         </div>
         <div>
           <LavaSocialLinks

@@ -23,20 +23,6 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => (
           <p className="uppercase font-semibold text-dark-100">VAULT TOKENS SUPPLY</p>
           <p>{data.ftTokenSupply ? formatNum(data.ftTokenSupply) : 'Not set'}</p>
         </div>
-        <div>
-          <p className="uppercase font-semibold text-dark-100">Vault Token image</p>
-          {data.ftTokenImg ? (
-            <div className="mt-2 relative w-full overflow-hidden">
-              <img
-                alt="Vault Token Image"
-                className="object-cover w-full max-w-[240px] h-auto aspect-square rounded-lg"
-                src={data.ftTokenImg}
-              />
-            </div>
-          ) : (
-            <p>No image</p>
-          )}
-        </div>
       </div>
       <div className="space-y-12">
         <div>
