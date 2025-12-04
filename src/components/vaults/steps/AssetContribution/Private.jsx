@@ -1,7 +1,5 @@
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
-import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
-import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
@@ -117,36 +115,6 @@ export const Private = ({ data, errors = {}, updateField }) => {
               )}
             </div>
           )}
-        </div>
-        {valueMethod === 'lbe' ? (
-          <div>
-            <LavaWhitelist
-              required
-              allowCsv
-              itemPlaceholder="Enter Wallet Address"
-              label="Contributor Whitelist"
-              itemFieldName="walletAddress"
-              whitelistFieldName="contributorWhitelist"
-              setWhitelist={assets => updateField('contributorWhitelist', assets)}
-              whitelist={data.contributorWhitelist || []}
-              maxItems={100}
-              errors={errors}
-            />
-            {errors.contributorWhitelist && <p className="text-red-600 mt-1">{errors.contributorWhitelist}</p>}
-          </div>
-        ) : null}
-      </div>
-      <div className="space-y-12">
-        <div>
-          <LavaWhitelistWithCaps
-            required
-            label="Asset Whitelist"
-            setWhitelist={assets => updateField('assetsWhitelist', assets)}
-            whitelist={data.assetsWhitelist || []}
-            errors={errors}
-            vaultType={data.type}
-          />
-          {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
         </div>
       </div>
     </div>

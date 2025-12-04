@@ -70,6 +70,44 @@ export const VAULT_PRIVACY_OPTIONS = [
   { name: 'semi-private', label: 'Semi-Private Vault' },
 ];
 
+export const VAULT_PRESET_OPTIONS = [
+  { name: 'simple', label: 'Simple Vault' },
+  { name: 'contributors', label: 'Contributors Vault' },
+  { name: 'acquirers', label: 'Acquirers Vault' },
+  { name: 'advanced', label: 'Advanced Vault' },
+];
+
+// Preset configurations for auto-filling percentage fields
+export const VAULT_PRESETS = {
+  simple: {
+    tokensForAcquires: 50,
+    acquireReserve: 80,
+    liquidityPoolContribution: 10,
+    creationThreshold: 1,
+    voteThreshold: 5,
+    executionThreshold: 51,
+  },
+  contributors: {
+    tokensForAcquires: 20,
+    acquireReserve: 80,
+    liquidityPoolContribution: 10,
+    creationThreshold: 1,
+    voteThreshold: 5,
+    executionThreshold: 51,
+  },
+  acquirers: {
+    tokensForAcquires: 80,
+    acquireReserve: 80,
+    liquidityPoolContribution: 10,
+    creationThreshold: 1,
+    voteThreshold: 5,
+    executionThreshold: 51,
+  },
+  advanced: {
+    // Advanced doesn't auto-fill anything
+  },
+};
+
 export const VAULT_TAGS_OPTIONS = [
   { value: 'NFT', label: 'NFT' },
   { value: 'FT', label: 'FT' },
@@ -139,6 +177,7 @@ export const vaultSchema = yup.object({
     .max(50, 'Vault name must be less than 50 characters')
     .required('Vault name is required'),
   type: yup.string().required('Type is required'),
+  preset: yup.string().required('Preset is required'),
   privacy: yup.string().required('Privacy setting is required'),
   vaultTokenTicker: yup
     .string()
@@ -181,6 +220,19 @@ export const vaultSchema = yup.object({
         }),
     }),
   valueMethod: yup.string().required('Vault value method is required'),
+  valuationCurrency: yup.string().when(['privacy', 'valueMethod'], {
+    is: (privacy, valueMethod) => privacy === 'private' && valueMethod === 'fixed',
+    then: schema => schema.required('Valuation currency is required'),
+    otherwise: schema => schema.nullable(),
+  }),
+  valuationAmount: yup
+    .number()
+    .typeError('Valuation amount must be a number')
+    .when(['privacy', 'valueMethod'], {
+      is: (privacy, valueMethod) => privacy === 'private' && valueMethod === 'fixed',
+      then: schema => schema.required('Valuation amount is required').positive('Must be a positive number'),
+      otherwise: schema => schema.nullable(),
+    }),
   contributionOpenWindowType: yup
     .string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
@@ -313,7 +365,8 @@ export const vaultSchema = yup.object({
 export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
-  type: 'single',
+  type: 'cnt',
+  preset: 'simple',
   privacy: 'public',
   vaultTokenTicker: '',
   description: '',
@@ -329,6 +382,7 @@ export const initialVaultState = {
   contributionDuration: MIN_CONTRIBUTION_DURATION_MS,
   assetsWhitelist: [],
   valuationCurrency: 'ADA',
+  valuationAmount: null,
 
   // Step 3: Acquire Window
   acquireWindowDuration: MIN_ACQUIRE_WINDOW_DURATION_MS,
@@ -355,25 +409,38 @@ export const initialVaultState = {
 };
 
 export const stepFields = {
-  1: ['name', 'type', 'privacy', 'vaultTokenTicker', 'description', 'vaultImage', 'socialLinks', 'tags'],
-  2: [
+  1: [
+    'name',
+    'type',
+    'preset',
+    'privacy',
+    'vaultTokenTicker',
+    'description',
+    'vaultImage',
+    'ftTokenImg',
+    'socialLinks',
+    'tags',
+    'assetsWhitelist',
     'contributorWhitelist',
+    'acquirerWhitelist',
+  ],
+  2: [
     'valueMethod',
     'contributionDuration',
     'contributionOpenWindowType',
     'contributionOpenWindowTime',
-    'assetsWhitelist',
+    'valuationCurrency',
+    'valuationAmount',
   ],
   3: [
     'acquireWindowDuration',
     'acquireOpenWindowType',
     'acquireOpenWindowTime',
-    'acquirerWhitelist',
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
   ],
-  4: ['ftTokenSupply', 'ftTokenImg', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
+  4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
   5: [],
 };
 

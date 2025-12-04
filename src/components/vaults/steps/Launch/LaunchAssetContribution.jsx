@@ -1,6 +1,6 @@
 import { Edit } from 'lucide-react';
 
-import { formatInterval, formatNum, formatDateTime, substringAddress } from '@/utils/core.utils';
+import { formatInterval, formatNum, formatDateTime } from '@/utils/core.utils';
 import { VAULT_VALUE_METHOD_OPTIONS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 
@@ -57,43 +57,6 @@ export const LaunchAssetContribution = ({ data, setCurrentStep }) => {
           <div>
             <p className="uppercase font-semibold text-dark-100">Contribution Window Open Time</p>
             <p>{formatTime(data.contributionOpenWindowType, data.contributionOpenWindowTime)}</p>
-          </div>
-        </div>
-        <div className="space-y-12">
-          <div>
-            <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>
-            {data.assetsWhitelist?.length ? (
-              <div className="space-y-6">
-                {data.assetsWhitelist.slice(0, 5).map((asset, index) => {
-                  return (
-                    <div key={asset.policyId || index} className="space-y-4">
-                      <div className="flex items-center gap-10">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <span>{substringAddress(asset.policyId)}</span>
-                        </div>
-                        <span>{asset.policyName}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <p className="uppercase font-semibold text-dark-100">Min asset cap</p>
-                          <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMin) : 'Not set'}</p>
-                        </div>
-                        <div>
-                          <p className="uppercase font-semibold text-dark-100">Max asset cap</p>
-                          <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {data.assetsWhitelist.length > 5 && (
-                  <p className="text-dark-100 mt-2">+{formatNum(data.assetsWhitelist.length - 5)} more assets</p>
-                )}
-              </div>
-            ) : (
-              <span>Not set</span>
-            )}
           </div>
         </div>
       </div>

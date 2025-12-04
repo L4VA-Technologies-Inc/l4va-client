@@ -29,6 +29,7 @@ import {
   MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
+  VAULT_PRESETS,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -97,7 +98,12 @@ export const CreateVaultForm = ({ vault }) => {
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
-      const nextStep = currentStep + 1;
+      let nextStep;
+      if (vaultData.preset !== 'advanced') {
+        nextStep = steps.length;
+      } else {
+        nextStep = currentStep + 1;
+      }
 
       setVisitedSteps(prev => new Set([...prev, nextStep]));
 
@@ -178,7 +184,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   const onSubmit = async () => {
     if (currentStep < steps.length) {
-      handleNextStep();
+      await handleNextStep();
     } else {
       if (vlrmBalance < MIN_VLRM_REQUIRED) {
         toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
@@ -285,14 +291,7 @@ export const CreateVaultForm = ({ vault }) => {
       case 3:
         return <AcquireWindow data={vaultData} errors={errors} updateField={updateField} />;
       case 4:
-        return (
-          <Governance
-            data={vaultData}
-            errors={errors}
-            updateField={updateField}
-            onImageUploadingChange={setIsImageUploading}
-          />
-        );
+        return <Governance data={vaultData} errors={errors} updateField={updateField} />;
       case 5:
         return <Launch data={vaultData} setCurrentStep={setCurrentStep} errors={errors} updateField={updateField} />;
       default:
@@ -342,6 +341,29 @@ export const CreateVaultForm = ({ vault }) => {
       updateValueMethod('lbe');
     }
   }, [vaultData.privacy, updateValueMethod]);
+
+  useEffect(() => {
+    if (vaultData.preset && VAULT_PRESETS[vaultData.preset]) {
+      const presetValues = VAULT_PRESETS[vaultData.preset];
+
+      if (vaultData.preset === 'advanced') {
+        setVaultData(prev => ({
+          ...prev,
+          tokensForAcquires: null,
+          acquireReserve: null,
+          liquidityPoolContribution: null,
+          creationThreshold: null,
+          voteThreshold: null,
+          executionThreshold: null,
+        }));
+      } else if (Object.keys(presetValues).length > 0) {
+        setVaultData(prev => ({
+          ...prev,
+          ...presetValues,
+        }));
+      }
+    }
+  }, [vaultData.preset]);
 
   const stepOptions = steps.map(step => ({
     value: step.id.toString(),

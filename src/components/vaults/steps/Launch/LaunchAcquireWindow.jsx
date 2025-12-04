@@ -29,30 +29,6 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
       </div>
       <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
         <div className="space-y-12">
-          {data.privacy !== 'public' && (
-            <div>
-              <p className="uppercase font-semibold text-dark-100">Acquirer whitelist</p>
-              <div className="space-y-2">
-                {data.acquirerWhitelist?.length ? (
-                  <>
-                    {data.acquirerWhitelist.slice(0, 5).map((acquirer, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="max-w-[300px] truncate">{acquirer.walletAddress || 'Not set'}</span>
-                      </div>
-                    ))}
-                    {data.acquirerWhitelist.length > 5 && (
-                      <p className="text-dark-100 mt-2">
-                        +{formatNum(data.acquirerWhitelist.length - 5)} more acquirers
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <span>Not set</span>
-                )}
-              </div>
-            </div>
-          )}
           <div>
             <p className="uppercase font-semibold text-dark-100">Acquire Window Duration</p>
             <p>{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>

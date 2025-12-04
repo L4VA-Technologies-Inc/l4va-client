@@ -1,7 +1,5 @@
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
-import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
-import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
@@ -23,6 +21,18 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
           hint={VALUE_METHOD_HINT}
         />
         {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
+      </div>
+      <div>
+        <div className="uppercase font-bold">*Contribution duration</div>
+        <div className="mt-4">
+          <LavaIntervalPicker
+            value={data.contributionDuration}
+            error={errors.contributionDuration}
+            onChange={value => updateField('contributionDuration', value)}
+            minMs={MIN_CONTRIBUTION_DURATION_MS}
+          />
+          {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
+        </div>
       </div>
       <div>
         <LavaRadio
@@ -53,45 +63,6 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
             )}
           </div>
         )}
-      </div>
-    </div>
-    <div className="space-y-12">
-      <div>
-        <LavaWhitelist
-          required={false}
-          allowCsv
-          label="Contributor Whitelist"
-          itemPlaceholder="Enter Wallet Address"
-          itemFieldName="walletAddress"
-          whitelistFieldName="contributorWhitelist"
-          setWhitelist={contributors => updateField('contributorWhitelist', contributors)}
-          whitelist={data.contributorWhitelist || []}
-          maxItems={100}
-          errors={errors}
-        />
-        {errors.contributorWhitelist && <p className="text-red-600 mt-1">{errors.contributorWhitelist}</p>}
-      </div>
-      <div>
-        <LavaWhitelistWithCaps
-          label="Asset Whitelist"
-          setWhitelist={assets => updateField('assetsWhitelist', assets)}
-          whitelist={data.assetsWhitelist || []}
-          errors={errors}
-          vaultType={data.type}
-        />
-        {errors.assetsWhitelist && <p className="text-red-600 mt-1">{errors.assetsWhitelist}</p>}
-      </div>
-      <div>
-        <div className="uppercase font-bold">*Contribution duration</div>
-        <div className="mt-4">
-          <LavaIntervalPicker
-            value={data.contributionDuration}
-            error={errors.contributionDuration}
-            onChange={value => updateField('contributionDuration', value)}
-            minMs={MIN_CONTRIBUTION_DURATION_MS}
-          />
-          {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
-        </div>
       </div>
     </div>
   </div>

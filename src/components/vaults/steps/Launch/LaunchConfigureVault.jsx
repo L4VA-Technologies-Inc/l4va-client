@@ -7,6 +7,7 @@ import {
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { formatNum, substringAddress } from '@/utils/core.utils.js';
 
 export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
   <section>
@@ -56,6 +57,63 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <p className="uppercase font-semibold text-dark-100">Social links</p>
           <LavaSocialLinksPreview socialLinks={data.socialLinks} />
         </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>
+          {data.assetsWhitelist?.length ? (
+            <div className="space-y-6">
+              {data.assetsWhitelist.slice(0, 5).map((asset, index) => {
+                return (
+                  <div key={asset.policyId || index} className="space-y-4">
+                    <div className="flex items-center gap-10">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span>{substringAddress(asset.policyId)}</span>
+                      </div>
+                      <span>{asset.policyName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="uppercase font-semibold text-dark-100">Min asset cap</p>
+                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMin) : 'Not set'}</p>
+                      </div>
+                      <div>
+                        <p className="uppercase font-semibold text-dark-100">Max asset cap</p>
+                        <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {data.assetsWhitelist.length > 5 && (
+                <p className="text-dark-100 mt-2">+{formatNum(data.assetsWhitelist.length - 5)} more assets</p>
+              )}
+            </div>
+          ) : (
+            <span>Not set</span>
+          )}
+        </div>
+        {data.privacy !== 'public' && (
+          <div>
+            <p className="uppercase font-semibold text-dark-100">Acquirer whitelist</p>
+            <div className="space-y-2">
+              {data.acquirerWhitelist?.length ? (
+                <>
+                  {data.acquirerWhitelist.slice(0, 5).map((acquirer, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="max-w-[300px] truncate">{acquirer.walletAddress || 'Not set'}</span>
+                    </div>
+                  ))}
+                  {data.acquirerWhitelist.length > 5 && (
+                    <p className="text-dark-100 mt-2">+{formatNum(data.acquirerWhitelist.length - 5)} more acquirers</p>
+                  )}
+                </>
+              ) : (
+                <span>Not set</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <div className="space-y-12">
         <div>
@@ -69,6 +127,20 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
                 alt="Vault Image"
                 className="object-cover w-full max-w-[320px] h-auto aspect-square rounded-lg"
                 src={data.vaultImage}
+              />
+            </div>
+          ) : (
+            <p>No image</p>
+          )}
+        </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">Vault Token image</p>
+          {data.ftTokenImg ? (
+            <div className="mt-2 relative w-full overflow-hidden">
+              <img
+                alt="Vault Token Image"
+                className="object-cover w-full max-w-[240px] h-auto aspect-square rounded-lg"
+                src={data.ftTokenImg}
               />
             </div>
           ) : (
