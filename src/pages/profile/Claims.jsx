@@ -70,37 +70,16 @@ export const Claims = () => {
     }));
   };
 
-  const handleAdaAmount = amount => {
-    if (amount && amount > 0 && activeTab.id === 'cancellation') {
-      return `${amount.toLocaleString()} ADA`;
-    } else if (amount && amount > 0) {
-      return `${(amount / 1e6).toLocaleString()} ADA`;
-    }
-
-    return '';
-  };
-
-  const handleVtAmount = (amount, claim) => {
-    if (amount) {
-      return `${amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault.vaultTokenTicker}`;
-    }
-
-    return `${claim.amount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${claim.vault.vaultTokenTicker}`;
-  };
-
   const formattedClaims = claims.map(claim => {
-    const date = claim.updated_at || claim.created_at;
-    const adaAmount = handleAdaAmount(claim.metadata?.adaAmount);
-    const userTotalVtTokens = handleVtAmount(claim.metadata?.userTotalVtTokens, claim);
     return {
       id: claim.id,
       assets: claim.metadata?.assets,
       vault: claim.vault?.name || ASSET_TYPE_LABELS[claim.type] || 'Unknown Vault',
       image: claim.vault?.vaultImage,
       link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
-      date: date ? new Date(date).toLocaleDateString('en-US') : 'N/A',
-      reward: adaAmount,
-      vt_tokens: userTotalVtTokens,
+      date: new Date(claim.updatedAt || claim.createdAt).toLocaleDateString('en-US') || 'N/A',
+      reward: claim.adaAmount ? `${claim.adaAmount.toLocaleString()} ADA` : null,
+      vt_tokens: `${claim.amount.toLocaleString()} ${claim.vault.vaultTokenTicker}`,
       status: claim.status || 'pending',
       type: claim.type,
       rawData: claim,

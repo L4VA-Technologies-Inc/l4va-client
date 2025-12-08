@@ -8,6 +8,8 @@ import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 
+const FALLBACK_IMAGE = '/assets/icons/ada.svg';
+
 export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const [searchValue, setSearchValue] = useState('');
@@ -97,18 +99,16 @@ export const VaultContributedAssetsList = ({ vault }) => {
                     >
                       <td className="px-4 py-3">
                         <img
-                          alt={asset.metadata?.onchainMetadata?.name || 'NFT'}
+                          alt={asset.name || 'NFT'}
                           className="w-12 h-12 rounded-lg object-cover"
-                          src={
-                            asset.metadata?.image
-                              ? asset.metadata?.image?.replace('ipfs://', 'https://ipfs.io/ipfs/')
-                              : '/assets/icons/ada.svg'
-                          }
+                          src={asset.imageUrl || FALLBACK_IMAGE}
+                          onError={e => {
+                            e.target.src = FALLBACK_IMAGE;
+                          }}
                         />
                       </td>
                       <td className="px-4 py-3 font-medium">
-                        {asset.metadata?.onchainMetadata?.name ||
-                          (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
+                        {asset?.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
                       </td>
                       <td className="px-4 py-3 capitalize">{asset.type}</td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
@@ -172,10 +172,10 @@ export const VaultContributedAssetsList = ({ vault }) => {
                               <p className="font-medium">Updated At:</p>
                               <p>{new Date(asset.updatedAt).toLocaleDateString()}</p>
                             </div>
-                            {asset.metadata?.onchainMetadata?.description && (
+                            {asset?.description && (
                               <div className="col-span-2">
                                 <p className="font-medium">Description:</p>
-                                <p>{asset.metadata.onchainMetadata.description}</p>
+                                <p>{asset.description}</p>
                               </div>
                             )}
                           </div>
