@@ -11,12 +11,8 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
     toast.success(message);
   };
 
-  const imageUrl = asset.metadata?.image
-    ? asset.metadata.image.replace('ipfs://', 'https://ipfs.io/ipfs/')
-    : '/assets/icons/ada.svg';
-
-  const assetName =
-    asset.metadata?.onchainMetadata?.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
+  const imageUrl = asset.imageUrl ? asset.imageUrl : '/assets/icons/ada.svg';
+  const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
 
   return (
     <div
@@ -97,10 +93,10 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
               <p>{new Date(asset.updatedAt).toLocaleDateString()}</p>
             </div>
 
-            {asset.metadata?.onchainMetadata?.description && (
+            {asset?.description && (
               <div className="col-span-2">
                 <p className="font-medium text-gray-300">Description:</p>
-                <p className="text-gray-300">{asset.metadata.onchainMetadata.description}</p>
+                <p className="text-gray-300">{asset.description}</p>
               </div>
             )}
           </div>
