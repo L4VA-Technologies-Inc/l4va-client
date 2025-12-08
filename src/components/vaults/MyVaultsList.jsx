@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -43,7 +42,6 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   });
 
   const myVaultsListRef = useRef(null);
-  const router = useRouter();
 
   useEffect(() => {
     const newTab =
@@ -73,10 +71,6 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
       page: 1,
       filter: newTab,
     }));
-    router.navigate({
-      to: '/vaults/my',
-      search: { tab: tab },
-    });
   };
 
   const { data, isLoading, error } = useVaults(appliedFilters);
