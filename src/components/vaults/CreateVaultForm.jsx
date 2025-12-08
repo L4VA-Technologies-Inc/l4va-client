@@ -232,7 +232,8 @@ export const CreateVaultForm = ({ vault }) => {
           updateStepErrorIndicators(formattedErrors);
           toast.error('Please fix the validation errors before submitting');
         } else if (!handleServerFieldErrors(err)) {
-          toast.error('Failed to launch vault');
+          toast.error('Failed to launch vault, it will be saved as draft');
+          await saveDraft();
         }
       } finally {
         setIsSubmitting(false);
