@@ -1,8 +1,9 @@
-import { X, Plus, Upload } from 'lucide-react';
+import { X, Plus, Upload, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { VirtualizedList } from '@/components/shared/VirtualizedList';
 import { CoreApiProvider } from '@/services/api/core';
 
 export const LavaWhitelist = ({
@@ -14,10 +15,15 @@ export const LavaWhitelist = ({
   whitelist = [],
   setWhitelist,
   maxItems = 10,
+  scrollOnOverflow = false,
+  maxVisibleItems = 5,
+  allowDeleteAll = false,
   allowCsv = false,
   errors = {},
 }) => {
   const csvInputId = `${whitelistFieldName}-csv-upload`;
+  const shouldScroll = scrollOnOverflow && whitelist.length > maxVisibleItems;
+  const shouldVirtualize = whitelist.length > 10 && scrollOnOverflow;
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
     const newId = Date.now();
@@ -39,6 +45,48 @@ export const LavaWhitelist = ({
   const removeAsset = id => {
     const filteredAssets = whitelist.filter(asset => asset.id !== id);
     setWhitelist(filteredAssets);
+  };
+
+  const clearWhitelist = () => {
+    if (!whitelist.length) return;
+    setWhitelist([]);
+  };
+
+  const renderWhitelistItem = (asset, index) => {
+    const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
+    const inputId = `${whitelistFieldName}-${index}-${itemFieldName}`;
+    const inputName = `${whitelistFieldName}[${index}].${itemFieldName}`;
+
+    return (
+      <div className="space-y-2" key={asset.id ?? index}>
+        <div className="relative">
+          <label htmlFor={inputId} className="sr-only">
+            {itemPlaceholder} {index + 1}
+          </label>
+          <Input
+            id={inputId}
+            name={inputName}
+            autoComplete="off"
+            className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
+            placeholder={itemPlaceholder}
+            style={{ fontSize: '18px' }}
+            value={asset[itemFieldName]}
+            onChange={e => updateAsset(asset.id, e.target.value)}
+            aria-label={`${itemPlaceholder} ${index + 1}`}
+          />
+          <Button
+            className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
+            size="icon"
+            variant="ghost"
+            onClick={() => removeAsset(asset.id)}
+            aria-label={`Remove ${itemPlaceholder} ${index + 1}`}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {fieldError && <p className="text-red-600 text-sm mt-1">{fieldError}</p>}
+      </div>
+    );
   };
 
   const handleCsvUpload = async event => {
@@ -90,9 +138,10 @@ export const LavaWhitelist = ({
         }));
 
         setWhitelist([...whitelist, ...csvWhitelist]);
+        toast.success(
+          `CSV file processed successfully. Added ${csvWhitelist.length} addresses from ${data.addresses.length}`
+        );
       }
-
-      toast.success('CSV file processed successfully');
     } catch (error) {
       console.error('CSV upload error:', error);
       const errorMessage = error?.response?.data?.message || 'Failed to process CSV file';
@@ -109,6 +158,16 @@ export const LavaWhitelist = ({
           {label}
         </div>
         <div className="flex gap-2">
+          {allowDeleteAll && (
+            <button
+              className={`border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center transition-colors ${whitelist.length === 0 ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'hover:bg-white/5'}`}
+              disabled={whitelist.length === 0}
+              type="button"
+              onClick={clearWhitelist}
+            >
+              <Trash className="w-4 h-4" />
+            </button>
+          )}
           {allowCsv && (
             <>
               <input accept=".csv" className="hidden" id={csvInputId} type="file" onChange={handleCsvUpload} />
@@ -130,43 +189,20 @@ export const LavaWhitelist = ({
           </button>
         </div>
       </div>
-      <div className="space-y-4">
-        {whitelist.map((asset, index) => {
-          const fieldError = errors[`${whitelistFieldName}[${index}].${itemFieldName}`];
-          const inputId = `${whitelistFieldName}-${index}-${itemFieldName}`;
-          const inputName = `${whitelistFieldName}[${index}].${itemFieldName}`;
-          return (
-            <div key={asset.id} className="space-y-2">
-              <div className="relative">
-                <label htmlFor={inputId} className="sr-only">
-                  {itemPlaceholder} {index + 1}
-                </label>
-                <Input
-                  id={inputId}
-                  name={inputName}
-                  autoComplete="off"
-                  className="rounded-[10px] py-4 pl-5 pr-12 bg-input-bg border-steel-850 h-[60px]"
-                  placeholder={itemPlaceholder}
-                  style={{ fontSize: '18px' }}
-                  value={asset[itemFieldName]}
-                  onChange={e => updateAsset(asset.id, e.target.value)}
-                  aria-label={`${itemPlaceholder} ${index + 1}`}
-                />
-                <Button
-                  className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeAsset(asset.id)}
-                  aria-label={`Remove ${itemPlaceholder} ${index + 1}`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              {fieldError && <p className="text-red-600 text-sm mt-1">{fieldError}</p>}
-            </div>
-          );
-        })}
-      </div>
+      {shouldVirtualize ? (
+        <VirtualizedList
+          items={whitelist}
+          itemHeight={76}
+          containerHeight={400}
+          className={shouldScroll ? 'pr-2' : ''}
+          useAbsolute={false}
+          renderItem={(asset, index) => renderWhitelistItem(asset, index)}
+        />
+      ) : (
+        <div className={`space-y-4 ${shouldScroll ? 'max-h-[400px] overflow-y-auto pr-2' : ''}`}>
+          {whitelist.map(renderWhitelistItem)}
+        </div>
+      )}
       {whitelist.length === 0 && (
         <div className="text-dark-100 text-base my-4">
           No items. Click the + button to add one {allowCsv ? 'or upload a CSV file' : ''}.
