@@ -7,6 +7,7 @@ export const VirtualizedList = ({
   renderItem,
   className = '',
   overscan = 5,
+  useAbsolute = true,
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
   const scrollElementRef = useRef(null);
@@ -52,19 +53,25 @@ export const VirtualizedList = ({
 
   return (
     <div ref={scrollElementRef} className={`overflow-auto ${className}`} style={{ height: containerHeight }}>
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div
-          style={{
-            transform: `translateY(${offsetY}px)`,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-          }}
-        >
-          {visibleItems.map(renderVisibleItem)}
+      {useAbsolute ? (
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div
+            style={{
+              transform: `translateY(${offsetY}px)`,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+            }}
+          >
+            {visibleItems.map(renderVisibleItem)}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ height: totalHeight }}>
+          <div style={{ paddingTop: offsetY }}>{visibleItems.map(renderVisibleItem)}</div>
+        </div>
+      )}
     </div>
   );
 };

@@ -121,6 +121,8 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
               label="Contributor Whitelist"
               itemFieldName="walletAddress"
               whitelistFieldName="contributorWhitelist"
+              scrollOnOverflow
+              allowDeleteAll
               setWhitelist={assets => updateField('contributorWhitelist', assets)}
               whitelist={data.contributorWhitelist || []}
               maxItems={100}
@@ -139,6 +141,8 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
               itemPlaceholder="Enter Wallet Address"
               itemFieldName="walletAddress"
               whitelistFieldName="contributorWhitelist"
+              scrollOnOverflow
+              allowDeleteAll
               setWhitelist={contributors => updateField('contributorWhitelist', contributors)}
               whitelist={data.contributorWhitelist || []}
               maxItems={100}
@@ -157,6 +161,8 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
               itemPlaceholder="Wallet address"
               label="Acquirer whitelist"
               whitelistFieldName="acquirerWhitelist"
+              scrollOnOverflow
+              allowDeleteAll
               setWhitelist={assets => updateField('acquirerWhitelist', assets)}
               whitelist={data.acquirerWhitelist || []}
               maxItems={100}
