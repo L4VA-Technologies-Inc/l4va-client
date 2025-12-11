@@ -1,9 +1,21 @@
 server {
     listen 80;
+    listen 443 ssl;
     server_name l4va.click;
 
     # Allow uploads up to 5MB
     client_max_body_size 5M;
+
+    # SSL certificate configuration
+    ssl_certificate /etc/letsencrypt/live/l4va.click/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/l4va.click/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+
+    # SSL parameters
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
 
     location / {
         root /usr/share/nginx/html;
