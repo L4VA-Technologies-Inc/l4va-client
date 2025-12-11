@@ -17,11 +17,10 @@ export const ProfileModal = () => {
 
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'disconnect');
 
-  const { vlrmBalance, isLoading, lastUpdated, refreshBalance, clearCache } = useVlrmBalance();
+  const { vlrmBalance, isLoading, lastUpdated, refreshBalance } = useVlrmBalance();
 
   const handleDisconnect = () => {
     wallet.disconnect();
-    clearCache();
     logout();
     closeModal();
   };
