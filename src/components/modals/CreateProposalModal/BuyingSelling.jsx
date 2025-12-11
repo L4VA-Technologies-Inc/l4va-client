@@ -61,7 +61,7 @@ export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
   }, [assetsData, options]);
 
   useEffect(() => {
-    if (assetsData && !isLoading) {
+    if (assetsData?.data && !isLoading) {
       const formattedAssets = assetsData.data.map(asset => ({
         value: asset.name,
         label: asset.name,
@@ -101,7 +101,7 @@ export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
 
   const setFTMax = id => {
     const option = options.find(o => o.id === id);
-    if (option && assetsData) {
+    if (option && assetsData?.data) {
       const asset = assetsData.data.find(a => a.name === option.assetName);
       if (asset) {
         setOptions(prev => prev.map(o => (o.id === id ? { ...o, quantity: String(asset.quantity) } : o)));
@@ -111,7 +111,7 @@ export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
 
   const getAvailableAmount = id => {
     const option = options.find(o => o.id === id);
-    if (option && assetsData) {
+    if (option && assetsData?.data) {
       const asset = assetsData.data.find(a => a.name === option.assetName);
       return asset ? (+asset.quantity).toFixed(0) : 0;
     }
