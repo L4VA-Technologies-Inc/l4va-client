@@ -8,14 +8,24 @@ import { Chip } from '@/components/shared/Chip';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import {
-  VAULT_PRESET_OPTIONS,
   VAULT_PRIVACY_OPTIONS,
   VAULT_TAGS_OPTIONS,
   VAULT_PRIVACY_TYPES,
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadingChange }) => {
+export const ConfigureVault = ({
+  data,
+  errors = {},
+  updateField,
+  onImageUploadingChange,
+  presetOptions = [],
+  presetValue = '',
+  onPresetChange,
+  isPresetsLoading = false,
+  onDeletePreset,
+  deletingPresetId,
+}) => {
   const handleChange = e => {
     const { name, value } = e.target;
     updateField(name, value);
@@ -55,11 +65,15 @@ export const ConfigureVault = ({ data, errors = {}, updateField, onImageUploadin
             <LavaRadio
               label="*Vault Preset"
               name="preset"
-              options={VAULT_PRESET_OPTIONS}
-              value={data.preset || ''}
-              onChange={value => updateField('preset', value)}
+              options={presetOptions}
+              value={presetValue}
+              onChange={onPresetChange}
+              onDeleteOption={onDeletePreset}
+              isOptionDeletable={option => option?.isCustom}
+              deletingOptionId={deletingPresetId}
               hint="Choose a preset to auto-fill vault configuration fields."
             />
+            {isPresetsLoading && <p className="text-dark-100 mt-2 text-sm">Loading presets…</p>}
             {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
           </div>
           <div>
