@@ -70,44 +70,6 @@ export const VAULT_PRIVACY_OPTIONS = [
   { name: 'semi-private', label: 'Semi-Private Vault' },
 ];
 
-export const VAULT_PRESET_OPTIONS = [
-  { name: 'simple', label: 'Simple Vault' },
-  { name: 'contributors', label: 'Contributors Vault' },
-  { name: 'acquirers', label: 'Acquirers Vault' },
-  { name: 'advanced', label: 'Advanced Vault' },
-];
-
-// Preset configurations for auto-filling percentage fields
-export const VAULT_PRESETS = {
-  simple: {
-    tokensForAcquires: 50,
-    acquireReserve: 80,
-    liquidityPoolContribution: 10,
-    creationThreshold: 1,
-    voteThreshold: 5,
-    executionThreshold: 51,
-  },
-  contributors: {
-    tokensForAcquires: 20,
-    acquireReserve: 80,
-    liquidityPoolContribution: 10,
-    creationThreshold: 1,
-    voteThreshold: 5,
-    executionThreshold: 51,
-  },
-  acquirers: {
-    tokensForAcquires: 80,
-    acquireReserve: 80,
-    liquidityPoolContribution: 10,
-    creationThreshold: 1,
-    voteThreshold: 5,
-    executionThreshold: 51,
-  },
-  advanced: {
-    // Advanced doesn't auto-fill anything
-  },
-};
-
 export const VAULT_TAGS_OPTIONS = [
   { value: 'NFT', label: 'NFT' },
   { value: 'FT', label: 'FT' },
@@ -366,7 +328,8 @@ export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
   type: 'cnt',
-  preset: 'simple',
+  preset: 'advanced',
+  preset_id: null,
   privacy: 'public',
   vaultTokenTicker: '',
   description: '',

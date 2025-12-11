@@ -11,6 +11,7 @@ import { EmailModal } from '@/components/modals/EmailModal.jsx';
 import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
+import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -64,5 +65,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'TransactionFilterModal',
     Component: TransactionFilterModal,
+  },
+  {
+    name: 'SavePresetModal',
+    Component: SavePresetModal,
   },
 ];
