@@ -45,7 +45,7 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
     const newValue = !selectedAll;
     setSelectedAll(newValue);
 
-    if (newValue && assetsData.data) {
+    if (newValue && assetsData?.data) {
       // Select all assets
       setSelectedAssets(assetsData.data.map(asset => asset.id));
     } else {
