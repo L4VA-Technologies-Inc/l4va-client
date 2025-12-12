@@ -54,7 +54,7 @@ export const CreateVaultForm = ({ vault }) => {
 
   const [vaultData, setVaultData] = useState(initialVaultState);
 
-  const { vlrmBalance } = useVlrmBalance();
+  const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -186,10 +186,24 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep < steps.length) {
       await handleNextStep();
     } else {
-      if (vlrmBalance < MIN_VLRM_REQUIRED) {
+      const BALANCE_STALENESS_MS = 5 * 60 * 1000;
+      const isBalanceOutdated = !lastUpdated || Date.now() - lastUpdated.getTime() > BALANCE_STALENESS_MS;
+
+      let currentBalance = vlrmBalance;
+
+      if (isBalanceOutdated) {
+        try {
+          const refreshedBalance = await fetchVlrmBalance(false);
+          if (refreshedBalance !== undefined) {
+            currentBalance = refreshedBalance;
+          }
+        } catch (err) {
+          console.error('Error refreshing VLRM balance:', err);
+        }
+      }
+
+      if (currentBalance < MIN_VLRM_REQUIRED) {
         toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
-        setIsSubmitting(false);
-        // setIsVisibleSwipe(true);
         return;
       }
 
@@ -208,6 +222,7 @@ export const CreateVaultForm = ({ vault }) => {
         await VaultsApiProvider.launchVault({
           vaultId: data.vaultId,
           transaction: data.presignedTx,
+          txId: data.txId,
           signatures: [signature],
         }).then(res => {
           if (res.data.id) {
