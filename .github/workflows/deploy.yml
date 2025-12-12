@@ -40,13 +40,10 @@ jobs:
         run: |
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "environment=mainnet" >> $GITHUB_OUTPUT
-            echo "dockerfile=Dockerfile.prod" >> $GITHUB_OUTPUT
           else
             echo "environment=testnet" >> $GITHUB_OUTPUT
-            echo "dockerfile=Dockerfile.dev" >> $GITHUB_OUTPUT
           fi
           echo "Deploying to: ${{ steps.env.outputs.environment }}"
-          echo "Using Dockerfile: ${{ steps.env.outputs.dockerfile }}"
 
       - name: Create .env for Testnet
         if: steps.env.outputs.environment == 'testnet'
@@ -80,6 +77,5 @@ jobs:
           username: ${{ github.ref == 'refs/heads/dev' && secrets.SSH_USERNAME_DEV || secrets.SSH_USERNAME }}
           key: ${{ github.ref == 'refs/heads/dev' && secrets.SSH_PRIVATE_KEY_DEV || secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/apps/l4va-client
-            docker build -f ${{ steps.env.outputs.dockerfile }} -t l4va-client .
-            docker compose up -d l4va-client
+            cd ~/apps
+            docker compose build l4va-client
