@@ -222,6 +222,7 @@ export const CreateVaultForm = ({ vault }) => {
         await VaultsApiProvider.launchVault({
           vaultId: data.vaultId,
           transaction: data.presignedTx,
+          txId: data.txId,
           signatures: [signature],
         }).then(res => {
           if (res.data.id) {
