@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -29,12 +29,13 @@ import {
   MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
-  VAULT_PRESETS,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
+import { usePresets, useDeletePreset } from '@/services/api/queries';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -53,12 +54,44 @@ export const CreateVaultForm = ({ vault }) => {
   const [isImageUploading, setIsImageUploading] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
+  const [selectedPresetId, setSelectedPresetId] = useState('advanced');
+  const [isPresetAutoApplied, setPresetAutoApplied] = useState(false);
+  const [deletingPresetId, setDeletingPresetId] = useState(null);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
   const queryClient = useQueryClient();
+  const { openModal } = useModalControls();
+
+  const { data: presetsData, isLoading: isPresetsLoading } = usePresets();
+  const { mutateAsync: deletePreset } = useDeletePreset();
+  const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
+
+  const presetOptions = useMemo(() => {
+    const fetchedOptions = Array.isArray(presets)
+      ? presets
+          .filter(preset => preset?.id !== undefined && preset?.id !== null)
+          .map(preset => ({
+            name: preset.id.toString(),
+            label: preset?.name || preset?.type || 'Preset',
+            type: preset?.type || '',
+            isCustom: preset?.type === 'custom',
+          }))
+      : [];
+
+    const hasAdvancedPreset =
+      Array.isArray(presets) &&
+      presets.some(
+        preset =>
+          preset?.type?.toLowerCase?.() === 'advanced' ||
+          preset?.name?.toLowerCase?.() === 'advanced' ||
+          preset?.slug === 'advanced'
+      );
+
+    return hasAdvancedPreset ? fetchedOptions : [...fetchedOptions, { name: 'advanced', label: 'Advanced' }];
+  }, [presets]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -85,8 +118,44 @@ export const CreateVaultForm = ({ vault }) => {
   useEffect(() => {
     if (vault) {
       setVaultData(vault);
+      setSelectedPresetId(vault?.preset_id ? vault.preset_id.toString() : 'advanced');
+      setPresetAutoApplied(true);
+    } else {
+      setSelectedPresetId('advanced');
     }
   }, [vault]);
+
+  useEffect(() => {
+    if (isPresetAutoApplied || isPresetsLoading || vault) return;
+
+    const simplePreset =
+      Array.isArray(presets) &&
+      presets.find(
+        preset =>
+          preset?.type?.toLowerCase?.() === 'simple' ||
+          preset?.name?.toLowerCase?.() === 'simple' ||
+          preset?.slug === 'simple'
+      );
+
+    const advancedPreset =
+      Array.isArray(presets) &&
+      presets.find(
+        preset =>
+          preset?.type?.toLowerCase?.() === 'advanced' ||
+          preset?.name?.toLowerCase?.() === 'advanced' ||
+          preset?.slug === 'advanced'
+      );
+
+    let defaultPresetId = 'advanced';
+    if (simplePreset?.id) {
+      defaultPresetId = simplePreset.id.toString();
+    } else if (advancedPreset?.id) {
+      defaultPresetId = advancedPreset.id.toString();
+    }
+
+    setSelectedPresetId(defaultPresetId);
+    setPresetAutoApplied(true);
+  }, [isPresetAutoApplied, isPresetsLoading, presets, vault]);
 
   useEffect(() => {
     scrollToTop();
@@ -180,6 +249,11 @@ export const CreateVaultForm = ({ vault }) => {
   const updateField = (fieldName, value) => {
     setVaultData(prev => ({ ...prev, [fieldName]: value }));
     clearFieldError(fieldName);
+  };
+
+  const handlePresetChange = value => {
+    setSelectedPresetId(value || 'advanced');
+    clearFieldError('preset');
   };
 
   const onSubmit = async () => {
@@ -291,6 +365,47 @@ export const CreateVaultForm = ({ vault }) => {
     }
   };
 
+  const handleOpenSavePresetModal = () => {
+    openModal('SavePresetModal', {
+      vaultData,
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ['presets'] }),
+    });
+  };
+
+  const handleDeletePreset = async option => {
+    if (!option?.name) return;
+    const presetId = option.name;
+    const findSimplePresetId = () => {
+      const simplePreset =
+        Array.isArray(presets) &&
+        presets.find(
+          preset =>
+            preset?.type?.toLowerCase?.() === 'simple' ||
+            preset?.name?.toLowerCase?.() === 'simple' ||
+            preset?.slug === 'simple'
+        );
+      return simplePreset?.id ? simplePreset.id.toString() : null;
+    };
+
+    try {
+      setDeletingPresetId(presetId);
+      await deletePreset(presetId);
+      await queryClient.invalidateQueries({ queryKey: ['presets'] });
+
+      if (selectedPresetId === presetId) {
+        const simplePresetId = findSimplePresetId();
+        setSelectedPresetId(simplePresetId || 'advanced');
+      }
+
+      toast.success('Preset deleted');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to delete preset');
+    } finally {
+      setDeletingPresetId(null);
+    }
+  };
+
   const renderStepContent = step => {
     switch (step) {
       case 1:
@@ -299,6 +414,12 @@ export const CreateVaultForm = ({ vault }) => {
             data={vaultData}
             errors={errors}
             updateField={updateField}
+            presetOptions={presetOptions}
+            presetValue={selectedPresetId}
+            onPresetChange={handlePresetChange}
+            isPresetsLoading={isPresetsLoading}
+            onDeletePreset={handleDeletePreset}
+            deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
           />
         );
@@ -319,6 +440,13 @@ export const CreateVaultForm = ({ vault }) => {
     if (currentStep === 5) {
       return (
         <div className="flex justify-center gap-4 py-8">
+          <SecondaryButton
+            className="uppercase font-semibold"
+            disabled={isSubmitting || isSavingDraft || presets.filter(preset => preset.type === 'custom').length >= 3}
+            onClick={handleOpenSavePresetModal}
+          >
+            Save preset
+          </SecondaryButton>
           <PrimaryButton className="uppercase" disabled={isSubmitting || !wallet.isConnected} onClick={onSubmit}>
             {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
           </PrimaryButton>
@@ -359,27 +487,45 @@ export const CreateVaultForm = ({ vault }) => {
   }, [vaultData.privacy, updateValueMethod]);
 
   useEffect(() => {
-    if (vaultData.preset && VAULT_PRESETS[vaultData.preset]) {
-      const presetValues = VAULT_PRESETS[vaultData.preset];
+    if (!selectedPresetId) return;
 
-      if (vaultData.preset === 'advanced') {
-        setVaultData(prev => ({
-          ...prev,
-          tokensForAcquires: null,
-          acquireReserve: null,
-          liquidityPoolContribution: null,
-          creationThreshold: null,
-          voteThreshold: null,
-          executionThreshold: null,
-        }));
-      } else if (Object.keys(presetValues).length > 0) {
-        setVaultData(prev => ({
-          ...prev,
-          ...presetValues,
-        }));
-      }
+    if (selectedPresetId === 'advanced') {
+      setVaultData(prev => ({
+        ...prev,
+        preset: 'advanced',
+        preset_id: null,
+        tokensForAcquires: null,
+        acquireReserve: null,
+        liquidityPoolContribution: null,
+        creationThreshold: null,
+        voteThreshold: null,
+        executionThreshold: null,
+      }));
+      return;
     }
-  }, [vaultData.preset]);
+
+    const selectedPreset = presets.find(preset => preset?.id?.toString() === selectedPresetId);
+    if (!selectedPreset) {
+      if (!isPresetsLoading) {
+        setSelectedPresetId('advanced');
+      }
+      return;
+    }
+
+    const config = selectedPreset.config || {};
+
+    setVaultData(prev => ({
+      ...prev,
+      preset: selectedPreset.type || prev.preset || 'advanced',
+      preset_id: selectedPreset.id ?? null,
+      tokensForAcquires: config.tokensForAcquires ?? null,
+      acquireReserve: config.acquireReserve ?? null,
+      liquidityPoolContribution: config.liquidityPoolContribution ?? null,
+      creationThreshold: config.creationThreshold ?? null,
+      voteThreshold: config.voteThreshold ?? null,
+      executionThreshold: config.executionThreshold ?? null,
+    }));
+  }, [isPresetsLoading, presets, selectedPresetId]);
 
   const stepOptions = steps.map(step => ({
     value: step.id.toString(),

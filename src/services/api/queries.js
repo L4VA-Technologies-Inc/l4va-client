@@ -7,6 +7,7 @@ import { VaultsApiProvider } from '@/services/api/vaults';
 import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
+import { PresetsApiProvider } from '@/services/api/presets/index.js';
 
 export const useVaults = filters => {
   return useQuery({
@@ -272,5 +273,24 @@ export const useBuildBurnTransaction = ({ id }) => {
 export const usePublishBurnTransaction = ({ id, payload }) => {
   return useMutation({
     mutationFn: () => VaultsApiProvider.publishBurnTransaction(id, payload),
+  });
+};
+
+export const usePresets = () => {
+  return useQuery({
+    queryKey: ['presets'],
+    queryFn: () => PresetsApiProvider.getAllPresets(),
+  });
+};
+
+export const useCreatePreset = () => {
+  return useMutation({
+    mutationFn: payload => PresetsApiProvider.createPreset(payload),
+  });
+};
+
+export const useDeletePreset = () => {
+  return useMutation({
+    mutationFn: presetId => PresetsApiProvider.deletePreset(presetId),
   });
 };
