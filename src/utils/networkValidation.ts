@@ -1,7 +1,9 @@
 import { environments, NETWORK_TYPES } from '@/constants/core.constants.js';
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
-const MAINNET_WALLET_WHITELIST = import.meta.env.VITE_WALLET_WHITELIST?.split(',').filter((addr: string) => addr);
+const MAINNET_WALLET_WHITELIST = new Set(
+  import.meta.env.VITE_WALLET_WHITELIST?.split(',').filter((addr: string) => addr) || []
+);
 
 const isMainnetAddress = (address: string) => address && address.startsWith('addr1');
 const isTestnetAddress = (address: string) => address && address.startsWith('addr_test');
@@ -27,7 +29,7 @@ export const validateWalletNetwork = (address: string) => {
     if (isMainnet) {
       const addressToCheck = address;
 
-      if (MAINNET_WALLET_WHITELIST.length > 0 && !MAINNET_WALLET_WHITELIST.includes(addressToCheck)) {
+      if (MAINNET_WALLET_WHITELIST.size > 0 && !MAINNET_WALLET_WHITELIST.has(addressToCheck)) {
         return { isValid: false, networkType: NETWORK_TYPES.WALLET_NOT_WHITELISTED };
       }
     }
