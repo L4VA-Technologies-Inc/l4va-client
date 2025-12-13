@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
@@ -42,12 +42,16 @@ export const LoginModal = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
-  const hasCheckedNetworkRef = useRef(false);
-
-  const environment = import.meta.env.VITE_CARDANO_NETWORK;
 
   const { isAuthenticated, login, logout } = useAuth();
-  const wallet = useWallet('isConnectingTo', 'isConnected', 'handler', 'stakeAddressBech32', 'changeAddressBech32');
+  const wallet = useWallet(
+    'isConnectingTo',
+    'isConnected',
+    'handler',
+    'stakeAddressBech32',
+    'changeAddressBech32',
+    'networkId'
+  );
   const connect = useWallet('connect');
   const disconnect = useWallet('disconnect');
 
@@ -61,32 +65,13 @@ export const LoginModal = () => {
     return savedAcceptanceService === 'true';
   });
 
-  useEffect(() => {
-    if (wallet.isConnected) {
-      setView('sign');
-
-      if (wallet.changeAddressBech32 && !hasCheckedNetworkRef.current) {
-        hasCheckedNetworkRef.current = true;
-        const { isValid, networkType } = validateWalletNetwork(
-          wallet.changeAddressBech32,
-          environment,
-          wallet.changeAddressBech32
-        );
-
-        if (!isValid) {
-          disconnect();
-          closeModal();
-          openModal('MainNetModal', {
-            networkType,
-            onDisconnect: handleDisconnect,
-          });
-        }
-      }
-    } else {
-      setView('wallets');
-      hasCheckedNetworkRef.current = false;
+  const handleDisconnect = (keepModalOpen = false) => {
+    disconnect();
+    logout();
+    if (!keepModalOpen) {
+      closeModal();
     }
-  }, [wallet.isConnected, wallet.changeAddressBech32, environment, disconnect, closeModal, openModal]);
+  };
 
   const handleTermsAcceptance = () => {
     const newValue = !isChecked;
@@ -114,25 +99,28 @@ export const LoginModal = () => {
     setIsLoading(true);
 
     connect(walletKey, {
-      onSuccess: () => {
-        setIsLoading(false);
-        toast.success('Wallet connected successfully');
+      onSuccess: ({ changeAddressBech32 }) => {
+        const { isValid, networkType } = validateWalletNetwork(changeAddressBech32);
+
+        if (!isValid) {
+          disconnect();
+          closeModal();
+          openModal('MainNetModal', {
+            networkType,
+            onDisconnect: handleDisconnect,
+          });
+        } else {
+          console.log('Successfully connected to wallet');
+        }
       },
       onError: error => {
         const errorMessage = error?.message || 'Failed to connect to wallet';
         toast.error(errorMessage);
         console.error('Error connecting to wallet:', error);
-        setIsLoading(false);
       },
     });
-  };
 
-  const handleDisconnect = (keepModalOpen = false) => {
-    disconnect();
-    logout();
-    if (!keepModalOpen) {
-      closeModal();
-    }
+    setIsLoading(false);
   };
 
   const handleSignMessage = async () => {
@@ -152,8 +140,7 @@ export const LoginModal = () => {
         toast.error('Failed to authenticate: Invalid response from server');
         return false;
       }
-
-      const { isValid, networkType } = validateWalletNetwork(res.user.address, environment, wallet.changeAddressBech32);
+      const { isValid, networkType } = validateWalletNetwork(res.user.address, wallet.changeAddressBech32);
       if (!isValid) {
         disconnect();
         logout();
@@ -184,6 +171,14 @@ export const LoginModal = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (wallet.isConnected) {
+      setView('sign');
+    } else {
+      setView('wallets');
+    }
+  }, [wallet.isConnected]);
 
   const renderWalletsList = () => {
     const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];
