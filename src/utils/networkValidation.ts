@@ -33,7 +33,6 @@ export const validateWalletNetwork = (address: string) => {
         return { isValid: false, networkType: NETWORK_TYPES.WALLET_NOT_WHITELISTED };
       }
     }
-
     return { isValid: true, networkType: null };
   }
 
