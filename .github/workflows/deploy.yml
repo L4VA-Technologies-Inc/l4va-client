@@ -47,7 +47,7 @@ jobs:
           cd ~/apps/l4va-client
           cp -r $GITHUB_WORKSPACE/* ./
           docker compose build l4va-client
-          docker compose up -d l4va-client
+          docker compose up -d --force-recreate l4va-client
 
   deploy-prod:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -68,4 +68,4 @@ jobs:
           cd ~/apps/l4va-client
           cp -r $GITHUB_WORKSPACE/* ./
           docker compose build l4va-client
-          docker compose up -d l4va-client
+          docker compose up -d --force-recreate l4va-client
