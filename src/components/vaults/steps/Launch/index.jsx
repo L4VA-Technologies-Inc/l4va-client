@@ -9,5 +9,12 @@ export const Launch = ({ data, setCurrentStep }) => (
     <LaunchAssetContribution data={data} setCurrentStep={setCurrentStep} />
     <LaunchAcquireWindow data={data} setCurrentStep={setCurrentStep} />
     <LaunchGovernance data={data} setCurrentStep={setCurrentStep} />
+    <div className="bg-steel-900/50 border border-steel-800/50 rounded-lg p-4 md:p-6">
+      <p className="text-sm text-dark-100 mb-2">Transaction Costs:</p>
+      <p className="text-base font-medium">
+        You will spend: <span className="text-white">1000 VLRM + ~44.44 ADA</span>
+      </p>
+      <p className="text-sm text-dark-100 mt-1">(39 ADA will be returned when vault enters locked or cancel phase)</p>
+    </div>
   </div>
 );

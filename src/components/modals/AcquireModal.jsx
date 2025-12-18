@@ -215,7 +215,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                 </div>
               </div>
 
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-col items-center mt-8 gap-2">
                 <PrimaryButton
                   className="uppercase"
                   disabled={
@@ -229,6 +229,10 @@ export const AcquireModal = ({ vault, onClose }) => {
                 >
                   {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
                 </PrimaryButton>
+                <div className="text-xs text-dark-100">
+                  Transaction cost: <span className="text-white font-medium">~5.77 ADA</span> (5 ADA per transaction +
+                  0.77 ADA)
+                </div>
               </div>
             </div>
           </div>

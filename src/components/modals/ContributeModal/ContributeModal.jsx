@@ -255,32 +255,44 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     [activeTab, selectedNFTs, selectedAmount, selectedNFTsCount, selectedFTsCount, toggleNFT, handleFTAmountChange]
   );
 
-  const renderFooter = () => (
-    <div className="flex justify-between items-center">
-      <div className="text-sm text-gray-400">
-        {selectedNFTs.length} asset{selectedNFTs.length !== 1 ? 's' : ''} selected
+  const renderFooter = () => {
+    const transactionCost = selectedNFTs.length > 0 ? selectedNFTs.length * 5 + 0.77 : 0;
+
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-400">
+            {selectedNFTs.length} asset{selectedNFTs.length !== 1 ? 's' : ''} selected
+          </div>
+          <div className="flex gap-2">
+            <SecondaryButton onClick={onClose} size="sm">
+              Close
+            </SecondaryButton>
+            <PrimaryButton
+              disabled={
+                selectedNFTs.length === 0 ||
+                status !== 'idle' ||
+                wallet.isUpdatingUtxos ||
+                new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
+                  Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+              }
+              onClick={handleContribute}
+              size="sm"
+              className="capitalize"
+            >
+              {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'Contribute' : status}
+            </PrimaryButton>
+          </div>
+        </div>
+        {selectedNFTs.length > 0 && (
+          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+            Transaction cost: <span className="text-white font-medium">~{transactionCost.toFixed(2)} ADA</span> (5 ADA
+            per asset + 0.77 ADA)
+          </div>
+        )}
       </div>
-      <div className="flex gap-2">
-        <SecondaryButton onClick={onClose} size="sm">
-          Close
-        </SecondaryButton>
-        <PrimaryButton
-          disabled={
-            selectedNFTs.length === 0 ||
-            status !== 'idle' ||
-            wallet.isUpdatingUtxos ||
-            new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-              Date.now() + BUTTON_DISABLE_THRESHOLD_MS
-          }
-          onClick={handleContribute}
-          size="sm"
-          className="capitalize"
-        >
-          {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'Contribute' : status}
-        </PrimaryButton>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Handle wallet errors
   useEffect(() => {
