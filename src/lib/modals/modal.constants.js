@@ -12,6 +12,7 @@ import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
 import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
+import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarningModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -69,5 +70,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'SavePresetModal',
     Component: SavePresetModal,
+  },
+  {
+    name: 'ChangePresetWarningModal',
+    Component: ChangePresetWarningModal,
   },
 ];
