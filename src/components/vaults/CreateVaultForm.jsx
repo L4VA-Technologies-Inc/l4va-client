@@ -133,6 +133,23 @@ export const CreateVaultForm = ({ vault }) => {
   }, [vault]);
 
   useEffect(() => {
+    if (!vault || !vaultData.preset_id || vaultData.preset || isPresetsLoading) return;
+
+    const foundPreset = presets.find(preset => preset?.id?.toString() === vaultData.preset_id?.toString());
+    if (foundPreset) {
+      setVaultData(prev => ({
+        ...prev,
+        preset: foundPreset.type || 'advanced',
+      }));
+    } else if (!vaultData.preset_id) {
+      setVaultData(prev => ({
+        ...prev,
+        preset: 'advanced',
+      }));
+    }
+  }, [vault, vaultData.preset_id, presets, isPresetsLoading, vaultData.preset]);
+
+  useEffect(() => {
     if (isPresetAutoApplied || isPresetsLoading || vault) return;
 
     const simplePreset =
