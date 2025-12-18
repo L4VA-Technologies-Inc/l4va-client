@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -57,6 +57,8 @@ export const CreateVaultForm = ({ vault }) => {
   const [selectedPresetId, setSelectedPresetId] = useState('advanced');
   const [isPresetAutoApplied, setPresetAutoApplied] = useState(false);
   const [deletingPresetId, setDeletingPresetId] = useState(null);
+  const initialPresetIdRef = useRef(null);
+  const isPresetManuallyChanged = useRef(false);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
@@ -118,10 +120,15 @@ export const CreateVaultForm = ({ vault }) => {
   useEffect(() => {
     if (vault) {
       setVaultData(vault);
-      setSelectedPresetId(vault?.preset_id ? vault.preset_id.toString() : 'advanced');
+      const presetId = vault?.preset_id ? vault.preset_id.toString() : 'advanced';
+      setSelectedPresetId(presetId);
+      initialPresetIdRef.current = presetId;
+      isPresetManuallyChanged.current = false;
       setPresetAutoApplied(true);
     } else {
       setSelectedPresetId('advanced');
+      initialPresetIdRef.current = 'advanced';
+      isPresetManuallyChanged.current = false;
     }
   }, [vault]);
 
@@ -252,7 +259,23 @@ export const CreateVaultForm = ({ vault }) => {
   };
 
   const handlePresetChange = value => {
-    setSelectedPresetId(value || 'advanced');
+    const newPresetId = value || 'advanced';
+
+    if (vault && !isPresetManuallyChanged.current) {
+      openModal('ChangePresetWarningModal', {
+        onConfirm: () => {
+          setSelectedPresetId(newPresetId);
+          isPresetManuallyChanged.current = true;
+          clearFieldError('preset');
+        },
+      });
+      return;
+    }
+
+    setSelectedPresetId(newPresetId);
+    if (vault) {
+      isPresetManuallyChanged.current = true;
+    }
     clearFieldError('preset');
   };
 
@@ -487,6 +510,10 @@ export const CreateVaultForm = ({ vault }) => {
   }, [vaultData.privacy, updateValueMethod]);
 
   useEffect(() => {
+    if (vault) {
+      if (!isPresetManuallyChanged.current) return;
+    }
+
     if (!selectedPresetId) return;
 
     if (selectedPresetId === 'advanced') {
@@ -525,7 +552,7 @@ export const CreateVaultForm = ({ vault }) => {
       voteThreshold: config.voteThreshold ?? null,
       executionThreshold: config.executionThreshold ?? null,
     }));
-  }, [isPresetsLoading, presets, selectedPresetId]);
+  }, [isPresetsLoading, presets, selectedPresetId, vault]);
 
   const stepOptions = steps.map(step => ({
     value: step.id.toString(),
