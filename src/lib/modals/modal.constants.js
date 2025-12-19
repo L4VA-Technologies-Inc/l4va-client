@@ -14,6 +14,7 @@ import { TransactionFilterModal } from '@/components/modals/TransactionsFilterMo
 import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
 import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarningModal.jsx';
 import { DeletePresetConfirmModal } from '@/components/modals/DeletePresetConfirmModal.jsx';
+import { DeleteDraftConfirmModal } from '@/components/modals/DeleteDraftConfirmModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -79,5 +80,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'DeletePresetConfirmModal',
     Component: DeletePresetConfirmModal,
+  },
+  {
+    name: 'DeleteDraftConfirmModal',
+    Component: DeleteDraftConfirmModal,
   },
 ];
