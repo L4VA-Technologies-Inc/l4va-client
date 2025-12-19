@@ -415,6 +415,9 @@ export const CreateVaultForm = ({ vault }) => {
   const handleDeletePreset = async option => {
     if (!option?.name) return;
     const presetId = option.name;
+    const presetToDelete = presets.find(preset => preset?.id?.toString() === presetId);
+    const presetName = presetToDelete?.name || presetToDelete?.type || option?.label || 'this preset';
+
     const findSimplePresetId = () => {
       const simplePreset =
         Array.isArray(presets) &&
@@ -427,23 +430,30 @@ export const CreateVaultForm = ({ vault }) => {
       return simplePreset?.id ? simplePreset.id.toString() : null;
     };
 
-    try {
-      setDeletingPresetId(presetId);
-      await deletePreset(presetId);
-      await queryClient.invalidateQueries({ queryKey: ['presets'] });
+    const performDelete = async () => {
+      try {
+        setDeletingPresetId(presetId);
+        await deletePreset(presetId);
+        await queryClient.invalidateQueries({ queryKey: ['presets'] });
 
-      if (selectedPresetId === presetId) {
-        const simplePresetId = findSimplePresetId();
-        setSelectedPresetId(simplePresetId || 'advanced');
+        if (selectedPresetId === presetId) {
+          const simplePresetId = findSimplePresetId();
+          setSelectedPresetId(simplePresetId || 'advanced');
+        }
+
+        toast.success('Preset deleted');
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to delete preset');
+      } finally {
+        setDeletingPresetId(null);
       }
+    };
 
-      toast.success('Preset deleted');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to delete preset');
-    } finally {
-      setDeletingPresetId(null);
-    }
+    openModal('DeletePresetConfirmModal', {
+      presetName,
+      onConfirm: performDelete,
+    });
   };
 
   const renderStepContent = step => {
