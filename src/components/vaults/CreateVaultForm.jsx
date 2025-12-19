@@ -456,6 +456,38 @@ export const CreateVaultForm = ({ vault }) => {
     });
   };
 
+  const handleDeleteDraft = () => {
+    if (!vault?.id) {
+      toast.error('No draft to delete');
+      return;
+    }
+
+    const performDelete = async () => {
+      try {
+        setIsSavingDraft(true);
+        await VaultsApiProvider.deleteDraft(vault.id);
+        await queryClient.invalidateQueries({ queryKey: ['vault', vault.id] });
+        await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+
+        toast.success('Draft deleted successfully');
+        navigate({
+          to: '/vaults/my',
+          search: { tab: 'Draft' },
+        });
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to delete draft');
+      } finally {
+        setIsSavingDraft(false);
+      }
+    };
+
+    openModal('DeleteDraftConfirmModal', {
+      vaultName: vaultData.name || vault.name,
+      onConfirm: performDelete,
+    });
+  };
+
   const renderStepContent = step => {
     switch (step) {
       case 1:
@@ -508,6 +540,11 @@ export const CreateVaultForm = ({ vault }) => {
         {currentStep > 1 && (
           <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
+          </SecondaryButton>
+        )}
+        {vault && vault.vaultStatus === 'draft' && (
+          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleDeleteDraft}>
+            Delete draft
           </SecondaryButton>
         )}
         <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>

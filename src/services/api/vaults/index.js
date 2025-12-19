@@ -78,4 +78,9 @@ export class VaultsApiProvider {
     const response = await axiosInstance.post(VaultsConfigProvider.publishBurnTransaction(vaultId), payload);
     return response;
   }
+
+  static async deleteDraft(vaultId) {
+    const response = await axiosInstance.delete(VaultsConfigProvider.deleteDraft(vaultId));
+    return response;
+  }
 }
