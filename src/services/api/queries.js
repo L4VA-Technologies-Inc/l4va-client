@@ -294,3 +294,10 @@ export const useDeletePreset = () => {
     mutationFn: presetId => PresetsApiProvider.deletePreset(presetId),
   });
 };
+
+export const useVaultTokenStatistics = vaultId => {
+  return useQuery({
+    queryKey: ['vaults', 'token-statistics', vaultId],
+    queryFn: () => VaultsApiProvider.getVaultTokenStatistics(vaultId),
+  });
+};
