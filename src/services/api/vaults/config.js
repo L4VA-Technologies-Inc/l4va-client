@@ -62,4 +62,8 @@ export class VaultsConfigProvider {
   static deleteDraft(id) {
     return `/api/v1/vaults/${id}`;
   }
+
+  static getVaultTokenStatistics(id) {
+    return `/api/v1/vaults/vt-statistics/${id}`;
+  }
 }

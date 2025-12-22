@@ -83,4 +83,8 @@ export class VaultsApiProvider {
     const response = await axiosInstance.delete(VaultsConfigProvider.deleteDraft(vaultId));
     return response;
   }
+
+  static async getVaultTokenStatistics(vaultId) {
+    return await axiosInstance.get(VaultsConfigProvider.getVaultTokenStatistics(vaultId));
+  }
 }
