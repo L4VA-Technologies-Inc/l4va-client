@@ -36,6 +36,7 @@ type LavaIntervalPickerProps = {
   minMs?: number;
   error?: boolean;
   id?: string;
+  margin?: number;
 };
 
 export const LavaIntervalPicker = ({
@@ -51,6 +52,7 @@ export const LavaIntervalPicker = ({
   onChange = () => {},
   error = false,
   id,
+  margin = 4,
 }: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
@@ -94,9 +96,9 @@ export const LavaIntervalPicker = ({
           {hint && <HoverHelp hint={hint} />}
         </label>
       ) : null}
-      <div className="mt-4">
+      <div className={`mt-${margin}`}>
         <div className="relative flex items-center">
-          <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
             <PopoverTrigger asChild>
               <Button
                 id={id}
@@ -117,7 +119,7 @@ export const LavaIntervalPicker = ({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn('w-auto p-0', styles.popover)}>
+            <PopoverContent className={cn('w-auto p-0 !z-[100]', styles.popover)}>
               <div className="flex">
                 <ScrollArea className={cn('sm:w-auto ', styles.scrollArea)}>
                   <div className="p-4">

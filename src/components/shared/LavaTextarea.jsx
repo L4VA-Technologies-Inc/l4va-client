@@ -89,7 +89,7 @@ export const LavaSteelTextarea = ({
   return (
     <div>
       {label ? (
-        <label htmlFor={textareaId} className="font-semibold mb-4">
+        <label htmlFor={textareaId} className="font-semibold mb-4 flex">
           {required ? '*' : ''}
           {label}
         </label>

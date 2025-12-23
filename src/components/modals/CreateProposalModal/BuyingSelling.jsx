@@ -132,7 +132,7 @@ export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
   };
 
   const handleAddOption = () => {
-    if (options.length >= 10 || remainingAssets.length === 0) return;
+    if (options.length >= 10) return;
 
     setOptions([
       ...options,
@@ -160,7 +160,7 @@ export const BuyingSelling = ({ vaultId, onDataChange, error }) => {
         <button
           className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto"
           type="button"
-          disabled={options.length >= 10 || remainingAssets.length === 0}
+          disabled={options.length >= 10}
           onClick={handleAddOption}
         >
           Add Option

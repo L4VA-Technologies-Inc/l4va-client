@@ -246,6 +246,22 @@ export const useVaultAssetsForProposalByType = (vaultId, type) => {
   });
 };
 
+export const useAssetsToUnlist = vaultId => {
+  return useQuery({
+    queryKey: ['assets-to-unlist', vaultId],
+    queryFn: () => GovernanceApiProvider.getAssetsToUnlist(vaultId),
+    enabled: !!vaultId,
+  });
+};
+
+export const useAssetsToUpdateListing = vaultId => {
+  return useQuery({
+    queryKey: ['assets-to-update-listing', vaultId],
+    queryFn: () => GovernanceApiProvider.getAssetsToUpdateListing(vaultId),
+    enabled: !!vaultId,
+  });
+};
+
 export const useCreateProposal = () => {
   return useMutation({
     mutationFn: ({ vaultId, proposalData }) => GovernanceApiProvider.createProposal(vaultId, proposalData),
