@@ -15,11 +15,11 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
   const getAcquireWindowDuration = () => formatInterval(new Date(data.acquireWindowDuration));
 
   return (
-    <section>
-      <div className="rounded-t-[10px] py-4 px-4 md:px-8 flex justify-between bg-white/5 gap-4">
-        <p className="font-bold text-xl md:text-2xl">Acquire</p>
+    <section className="min-w-0 overflow-x-hidden">
+      <div className="rounded-t-[10px] py-4 px-4 md:px-8 flex justify-between bg-white/5 gap-4 min-w-0">
+        <p className="font-bold text-xl md:text-2xl break-words min-w-0 flex-shrink">Acquire</p>
         <button
-          className="flex items-center gap-2 text-dark-100 self-start md:self-auto hover:text-orange-500"
+          className="flex items-center gap-2 text-dark-100 self-start md:self-auto hover:text-orange-500 flex-shrink-0"
           type="button"
           onClick={() => setCurrentStep(3)}
         >
@@ -27,38 +27,44 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
           Edit
         </button>
       </div>
-      <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg">
-        <div className="space-y-12">
+      <div className="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-16 rounded-b-[10px] bg-input-bg min-w-0">
+        <div className="space-y-12 min-w-0">
           <div>
             <p className="uppercase font-semibold text-dark-100">Acquire Window Duration</p>
-            <p>{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>
+            <p className="break-words">{data.acquireWindowDuration ? getAcquireWindowDuration() : 'Not set'}</p>
           </div>
           <div>
             <p className="uppercase font-semibold text-dark-100">Acquire Window Open Time</p>
-            <p>{formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}</p>
+            <p className="break-words">{formatTime(data.acquireOpenWindowType, data.acquireOpenWindowTime)}</p>
           </div>
         </div>
-        <div className="space-y-12">
+        <div className="space-y-12 min-w-0">
           <div>
-            <div className="flex items-center gap-2">
-              <p className="uppercase font-semibold text-dark-100">Tokens for Acquirers (%)</p>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Tokens for Acquirers (%)</p>
               <HoverHelp hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks." />
             </div>
-            <p>{data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}</p>
+            <p className="break-words">
+              {data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}
+            </p>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <p className="uppercase font-semibold text-dark-100">Reserve (%)</p>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Reserve (%)</p>
               <HoverHelp hint={RESERVE_HINT} />
             </div>
-            <p>{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
+            <p className="break-words">{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <p className="uppercase font-semibold text-dark-100">Liquidity Pool (LP) Contribution (%)</p>
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">
+                Liquidity Pool (LP) Contribution (%)
+              </p>
               <HoverHelp hint={LIQUIDITY_POOL_CONTRIBUTION_HINT} />
             </div>
-            <p>{data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}</p>
+            <p className="break-words">
+              {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}
+            </p>
           </div>
         </div>
       </div>

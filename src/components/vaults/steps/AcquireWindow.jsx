@@ -41,8 +41,8 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
   const minDate = getMinAcquireDate();
 
   return (
-    <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
-      <div className="space-y-12">
+    <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16 min-w-0 overflow-x-hidden">
+      <div className="space-y-12 min-w-0">
         <div>
           <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">
             *ACQUIRE WINDOW DURATION
@@ -92,7 +92,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
           </div>
         </div>
       </div>
-      <div className="space-y-12">
+      <div className="space-y-12 min-w-0">
         <div>
           <LavaInput
             required

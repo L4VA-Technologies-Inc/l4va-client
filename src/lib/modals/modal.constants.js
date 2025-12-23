@@ -13,6 +13,8 @@ import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
 import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
 import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarningModal.jsx';
+import { DeletePresetConfirmModal } from '@/components/modals/DeletePresetConfirmModal.jsx';
+import { DeleteDraftConfirmModal } from '@/components/modals/DeleteDraftConfirmModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -74,5 +76,13 @@ export const MODAL_ENTRIES = [
   {
     name: 'ChangePresetWarningModal',
     Component: ChangePresetWarningModal,
+  },
+  {
+    name: 'DeletePresetConfirmModal',
+    Component: DeletePresetConfirmModal,
+  },
+  {
+    name: 'DeleteDraftConfirmModal',
+    Component: DeleteDraftConfirmModal,
   },
 ];

@@ -133,6 +133,23 @@ export const CreateVaultForm = ({ vault }) => {
   }, [vault]);
 
   useEffect(() => {
+    if (!vault || !vaultData.preset_id || vaultData.preset || isPresetsLoading) return;
+
+    const foundPreset = presets.find(preset => preset?.id?.toString() === vaultData.preset_id?.toString());
+    if (foundPreset) {
+      setVaultData(prev => ({
+        ...prev,
+        preset: foundPreset.type || 'advanced',
+      }));
+    } else if (!vaultData.preset_id) {
+      setVaultData(prev => ({
+        ...prev,
+        preset: 'advanced',
+      }));
+    }
+  }, [vault, vaultData.preset_id, presets, isPresetsLoading, vaultData.preset]);
+
+  useEffect(() => {
     if (isPresetAutoApplied || isPresetsLoading || vault) return;
 
     const simplePreset =
@@ -398,6 +415,9 @@ export const CreateVaultForm = ({ vault }) => {
   const handleDeletePreset = async option => {
     if (!option?.name) return;
     const presetId = option.name;
+    const presetToDelete = presets.find(preset => preset?.id?.toString() === presetId);
+    const presetName = presetToDelete?.name || presetToDelete?.type || option?.label || 'this preset';
+
     const findSimplePresetId = () => {
       const simplePreset =
         Array.isArray(presets) &&
@@ -410,23 +430,62 @@ export const CreateVaultForm = ({ vault }) => {
       return simplePreset?.id ? simplePreset.id.toString() : null;
     };
 
-    try {
-      setDeletingPresetId(presetId);
-      await deletePreset(presetId);
-      await queryClient.invalidateQueries({ queryKey: ['presets'] });
+    const performDelete = async () => {
+      try {
+        setDeletingPresetId(presetId);
+        await deletePreset(presetId);
+        await queryClient.invalidateQueries({ queryKey: ['presets'] });
 
-      if (selectedPresetId === presetId) {
-        const simplePresetId = findSimplePresetId();
-        setSelectedPresetId(simplePresetId || 'advanced');
+        if (selectedPresetId === presetId) {
+          const simplePresetId = findSimplePresetId();
+          setSelectedPresetId(simplePresetId || 'advanced');
+        }
+
+        toast.success('Preset deleted');
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to delete preset');
+      } finally {
+        setDeletingPresetId(null);
       }
+    };
 
-      toast.success('Preset deleted');
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to delete preset');
-    } finally {
-      setDeletingPresetId(null);
+    openModal('DeletePresetConfirmModal', {
+      presetName,
+      onConfirm: performDelete,
+    });
+  };
+
+  const handleDeleteDraft = () => {
+    if (!vault?.id) {
+      toast.error('No draft to delete');
+      return;
     }
+
+    const performDelete = async () => {
+      try {
+        setIsSavingDraft(true);
+        await VaultsApiProvider.deleteDraft(vault.id);
+        await queryClient.invalidateQueries({ queryKey: ['vault', vault.id] });
+        await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+
+        toast.success('Draft deleted successfully');
+        navigate({
+          to: '/vaults/my',
+          search: { tab: 'Draft' },
+        });
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to delete draft');
+      } finally {
+        setIsSavingDraft(false);
+      }
+    };
+
+    openModal('DeleteDraftConfirmModal', {
+      vaultName: vaultData.name || vault.name,
+      onConfirm: performDelete,
+    });
   };
 
   const renderStepContent = step => {
@@ -481,6 +540,11 @@ export const CreateVaultForm = ({ vault }) => {
         {currentStep > 1 && (
           <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
             <ChevronLeft size={24} />
+          </SecondaryButton>
+        )}
+        {vault && vault.vaultStatus === 'draft' && (
+          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleDeleteDraft}>
+            Delete draft
           </SecondaryButton>
         )}
         <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>

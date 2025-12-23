@@ -58,4 +58,8 @@ export class VaultsConfigProvider {
   static publishBurnTransaction(id) {
     return `/api/v1/vaults/${id}/burn/publish`;
   }
+
+  static deleteDraft(id) {
+    return `/api/v1/vaults/${id}`;
+  }
 }
