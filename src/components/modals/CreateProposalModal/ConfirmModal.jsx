@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -5,9 +6,18 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 export const ConfirmModal = ({ onClose, isOpen, onConfirm }) => {
+  useEffect(() => {
+    if (isOpen) {
+      const overlay = document.querySelector('[data-radix-dialog-overlay]');
+      if (overlay) {
+        overlay.style.zIndex = '90';
+      }
+    }
+  }, [isOpen]);
+
   return (
     <Dialog open={isOpen}>
-      <DialogContent className="sm:max-w-md p-6 bg-steel-950 border-none">
+      <DialogContent className="sm:max-w-md p-6 bg-steel-950 border-none !z-[100]">
         <VisuallyHidden>
           <DialogTitle>Do you want to create this proposal?</DialogTitle>
         </VisuallyHidden>

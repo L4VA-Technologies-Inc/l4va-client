@@ -1,8 +1,6 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { BuyingSelling } from './BuyingSelling';
-
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
 import { ConfirmModal } from '@/components/modals/CreateProposalModal/ConfirmModal';
@@ -18,13 +16,14 @@ import { useCreateProposal, useGovernanceProposals } from '@/services/api/querie
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
+import MarketActions from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
 const executionOptions = [
   { value: 'staking', label: 'Staking' },
   { value: 'distribution', label: 'Distributing' },
   { value: 'termination', label: 'Terminating' },
   { value: 'burning', label: 'Burning' },
-  { value: 'buy_sell', label: 'Buying/Selling' },
+  { value: 'marketplace_action', label: 'Market Actions' },
 ];
 
 const initialProposalData = {
@@ -34,7 +33,7 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('buy_sell');
+  const [selectedOption, setSelectedOption] = useState('staking');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -88,8 +87,28 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.metadata = {
           burnAssets: proposalData.burnAssets || [],
         };
-      } else if (selectedOption === 'buy_sell') {
-        proposalPayload.metadata = proposalData;
+      } else if (selectedOption === 'marketplace_action') {
+        const marketActionType = proposalData.marketActionType || 'buy_sell';
+
+        if (marketActionType === 'update_list') {
+          proposalPayload.marketplaceActions = (proposalData.updateListingAssets || [])
+            .filter(asset => asset.newPrice && Number(asset.newPrice) > 0)
+            .map(asset => ({
+              assetId: asset.id,
+              exec: 'UPDATE_LISTING',
+              newPrice: asset.newPrice,
+              market: asset.market || 'WayUp',
+            }));
+        } else if (marketActionType === 'buy_sell') {
+          proposalPayload.type = 'buy_sell';
+          proposalPayload.metadata = proposalData;
+        } else {
+          proposalPayload.marketplaceActions = (proposalData.unlistAssets || []).map(asset => ({
+            assetId: asset.id,
+            exec: 'UNLIST',
+            market: asset.market || 'WayUp',
+          }));
+        }
       }
 
       createProposalMutation
@@ -192,8 +211,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 error={error}
               />
             )}
-            {selectedOption === 'buy_sell' && (
-              <BuyingSelling error={error} vaultId={vault?.id} onDataChange={handleDataChange} />
+            {selectedOption === 'marketplace_action' && (
+              <MarketActions vaultId={vault.id} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">
@@ -209,6 +228,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 </div>
                 <div className="flex-1 relative">
                   <LavaIntervalPicker
+                    margin={1}
                     label={'Duration:*'}
                     value={proposalDuration}
                     onChange={value => setProposalDuration(value)}

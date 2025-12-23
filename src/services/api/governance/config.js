@@ -22,4 +22,12 @@ export class GovernanceConfigProvider {
   static getAssets(vaultId, type) {
     return `/api/v1/governance/vaults/${vaultId}/assets/${type}`;
   }
+
+  static getAssetsToUnlist(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/assets/unlist`;
+  }
+
+  static getAssetsToUpdateListing(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/assets/update-listing`;
+  }
 }
