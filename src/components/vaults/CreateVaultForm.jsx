@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
-import { ChevronRight, ChevronLeft, ChevronDown, BookOpen } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, BookOpen, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
@@ -36,6 +36,7 @@ import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
 import { usePresets, useDeletePreset } from '@/services/api/queries';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -43,7 +44,7 @@ const LazySwapComponent = lazy(() =>
   }))
 );
 
-export const CreateVaultForm = ({ vault }) => {
+export const CreateVaultForm = ({ vault, setVault }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
@@ -52,6 +53,7 @@ export const CreateVaultForm = ({ vault }) => {
   const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
   const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
   const [selectedPresetId, setSelectedPresetId] = useState('advanced');
@@ -188,6 +190,12 @@ export const CreateVaultForm = ({ vault }) => {
   useEffect(() => {
     setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, currentStep));
   }, [vaultData, currentStep]);
+
+  useEffect(() => {
+    if (setVault) {
+      setVault(vaultData);
+    }
+  }, [vaultData, setVault]);
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
@@ -340,17 +348,16 @@ export const CreateVaultForm = ({ vault }) => {
           signatures: [signature],
         }).then(res => {
           if (res.data.id) {
+            localStorage.removeItem('storageVault');
             navigate({ to: `/vaults/${data.vaultId}` });
           }
         });
         toast.success('Vault launched successfully');
 
-        // Redirect to the created vault and reset form
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['vault', data.vaultId] }),
           queryClient.invalidateQueries({ queryKey: ['vaults'] }),
         ]);
-        setVaultData(initialVaultState);
         setCurrentStep(1);
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
@@ -412,23 +419,23 @@ export const CreateVaultForm = ({ vault }) => {
     });
   };
 
+  const findSimplePresetId = () => {
+    const simplePreset =
+      Array.isArray(presets) &&
+      presets.find(
+        preset =>
+          preset?.type?.toLowerCase?.() === 'simple' ||
+          preset?.name?.toLowerCase?.() === 'simple' ||
+          preset?.slug === 'simple'
+      );
+    return simplePreset?.id ? simplePreset.id.toString() : null;
+  };
+
   const handleDeletePreset = async option => {
     if (!option?.name) return;
     const presetId = option.name;
     const presetToDelete = presets.find(preset => preset?.id?.toString() === presetId);
     const presetName = presetToDelete?.name || presetToDelete?.type || option?.label || 'this preset';
-
-    const findSimplePresetId = () => {
-      const simplePreset =
-        Array.isArray(presets) &&
-        presets.find(
-          preset =>
-            preset?.type?.toLowerCase?.() === 'simple' ||
-            preset?.name?.toLowerCase?.() === 'simple' ||
-            preset?.slug === 'simple'
-        );
-      return simplePreset?.id ? simplePreset.id.toString() : null;
-    };
 
     const performDelete = async () => {
       try {
@@ -486,6 +493,48 @@ export const CreateVaultForm = ({ vault }) => {
       vaultName: vaultData.name || vault.name,
       onConfirm: performDelete,
     });
+  };
+
+  const handleResetVault = () => {
+    setIsResetModalOpen(true);
+  };
+
+  const resetVault = () => {
+    localStorage.removeItem('storageVault');
+
+    const simplePresetId = findSimplePresetId();
+    const simplePreset = presets.find(preset => preset?.id?.toString() === simplePresetId);
+    const presetId = simplePresetId || 'advanced';
+
+    const resetData = { ...initialVaultState };
+
+    if (simplePreset && simplePreset.config) {
+      const config = simplePreset.config;
+      resetData.preset = simplePreset.type || 'simple';
+      resetData.preset_id = simplePreset.id ?? null;
+      resetData.tokensForAcquires = config.tokensForAcquires ?? null;
+      resetData.acquireReserve = config.acquireReserve ?? null;
+      resetData.liquidityPoolContribution = config.liquidityPoolContribution ?? null;
+      resetData.creationThreshold = config.creationThreshold ?? null;
+      resetData.voteThreshold = config.voteThreshold ?? null;
+      resetData.executionThreshold = config.executionThreshold ?? null;
+    }
+
+    setVaultData(resetData);
+    setCurrentStep(1);
+    setSteps(CREATE_VAULT_STEPS);
+    setErrors({});
+    setVisitedSteps(new Set([1]));
+    setSelectedPresetId(presetId);
+    setPresetAutoApplied(false);
+    initialPresetIdRef.current = presetId;
+    isPresetManuallyChanged.current = false;
+
+    if (setVault) {
+      setVault(resetData);
+    }
+
+    toast.success('Vault creation form has been reset');
   };
 
   const renderStepContent = step => {
@@ -630,6 +679,15 @@ export const CreateVaultForm = ({ vault }) => {
 
   return (
     <div className="pb-8">
+      <button
+        onClick={handleResetVault}
+        disabled={isSubmitting || isSavingDraft}
+        className="fixed top-25 right-8 z-50 w-12 h-12 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        aria-label="Reset vault creation"
+        title="Reset vault creation"
+      >
+        <RotateCcw className="w-5 h-5" />
+      </button>
       <PrimaryButton
         onClick={scrollToTutorial}
         className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
@@ -709,6 +767,11 @@ export const CreateVaultForm = ({ vault }) => {
           ) : null}
         </DialogContent>
       </Dialog>
+      <ResetVaultConfirmModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={resetVault}
+      />
       <VaultCreationTutorial />
     </div>
   );

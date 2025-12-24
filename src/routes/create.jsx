@@ -6,6 +6,21 @@ import { useAuth } from '@/lib/auth/auth';
 const CreateComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
+  const getStorageVault = () => {
+    try {
+      const stored = localStorage.getItem('storageVault');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const storageVault = getStorageVault();
+
+  const handleSaveVault = data => {
+    localStorage.setItem('storageVault', JSON.stringify(data));
+  };
+
   if (isLoading) {
     return null;
   }
@@ -25,7 +40,7 @@ const CreateComponent = () => {
           backgroundImage: 'url(/assets/vaults/create-vault-bg.webp)',
         }}
       />
-      <CreateVaultForm />
+      <CreateVaultForm vault={storageVault} setVault={handleSaveVault} />
     </>
   );
 };
