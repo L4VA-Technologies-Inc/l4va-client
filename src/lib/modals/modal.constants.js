@@ -2,7 +2,7 @@ import { LoginModal } from '@/components/modals/LoginModal';
 import { AcquireModal } from '@/components/modals/AcquireModal';
 import { ProposalConfirmationModal } from '@/components/modals/ProposalConfirmationModal';
 import { CreateProposalModal } from '@/components/modals/CreateProposalModal/CreateProposalModal';
-import { ContributeModal } from '@/components/modals/ContributeModal/ContributeModal';
+import { ContributeModal } from '@/components/modals/ContributeModal.jsx';
 import { ProfileModal } from '@/components/modals/ProfileModal';
 import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 import { ChartModal } from '@/components/modals/ChartModal';
