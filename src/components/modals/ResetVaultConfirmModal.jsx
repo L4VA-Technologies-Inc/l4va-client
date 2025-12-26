@@ -3,7 +3,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 
-export const ChangePresetWarningModal = ({ isOpen = true, onClose, onConfirm }) => {
+export const ResetVaultConfirmModal = ({ isOpen = true, onClose, onConfirm }) => {
   const { closeModal } = useModalControls();
 
   const handleClose = () => {
@@ -22,18 +22,18 @@ export const ChangePresetWarningModal = ({ isOpen = true, onClose, onConfirm }) 
   };
 
   return (
-    <ModalWrapper isOpen={isOpen} onClose={handleClose} title="Change preset" size="md">
+    <ModalWrapper isOpen={isOpen} onClose={handleClose} title="Reset vault creation" size="md">
       <div className="flex flex-col gap-4">
         <p className="text-white/80">
-          Changing the preset will overwrite saved settings with the preset configuration.
+          Are you sure you want to reset the vault creation form? All your progress will be lost.
         </p>
-        <p className="text-sm text-dark-100">Are you sure you want to proceed? This action cannot be undone.</p>
+        <p className="text-sm text-dark-100">This action cannot be undone.</p>
         <div className="flex flex-col md:flex-row gap-3 justify-end mt-4">
           <SecondaryButton className="w-full md:w-auto justify-center" onClick={handleClose}>
             Cancel
           </SecondaryButton>
           <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleConfirm}>
-            Change preset
+            Reset
           </PrimaryButton>
         </div>
       </div>

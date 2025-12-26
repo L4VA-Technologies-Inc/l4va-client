@@ -1,5 +1,7 @@
 import * as yup from 'yup';
 
+import { environments } from '@/constants/core.constants.js';
+
 export const MIN_SUPPLY = 1000000; // 10^6
 export const MAX_SUPPLY = 1000000000000; // 10^12
 // export const MIN_CONTRIBUTION_DURATION_MS = 3600000; // 1 hour in ms
@@ -8,6 +10,21 @@ export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 1 day
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 1 day
 export const MIN_VLRM_REQUIRED = 1000; // Minimum VLRM required for vault creation
 export const BUTTON_DISABLE_THRESHOLD_MS = 100000; // Min 5 min before button is enabled
+
+const environment = import.meta.env.VITE_CARDANO_NETWORK;
+
+// Cardano address regex based on environment
+let cardanoAddressRegex;
+if (environment === environments.PREPROD) {
+  // Only testnet addresses allowed in preprod
+  cardanoAddressRegex = /^addr_test1[a-z0-9]{20,}$/i;
+} else if (environment === environments.MAINNET) {
+  // Only mainnet addresses allowed in mainnet
+  cardanoAddressRegex = /^addr1[a-z0-9]{20,}$/i;
+} else {
+  // Default: allow both (for development)
+  cardanoAddressRegex = /^addr(_test)?1[a-z0-9]{20,}$/i;
+}
 
 export const VAULT_PRIVACY_TYPES = {
   PUBLIC: 'public',
@@ -124,11 +141,19 @@ const assetWhitelistItemSchema = yup.object({
 });
 
 const acquirerWhitelistItemSchema = yup.object({
-  walletAddress: yup.string().required('Wallet address is required'),
+  walletAddress: yup
+    .string()
+    .required('Wallet address is required')
+    .min(20, 'Wallet address must be at least 20 characters')
+    .matches(cardanoAddressRegex, 'Invalid Cardano wallet address format'),
 });
 
 const contributorWhitelistItemSchema = yup.object({
-  walletAddress: yup.string().required('Wallet address is required'),
+  walletAddress: yup
+    .string()
+    .required('Wallet address is required')
+    .min(20, 'Wallet address must be at least 20 characters')
+    .matches(cardanoAddressRegex, 'Invalid Cardano wallet address format'),
 });
 
 export const vaultSchema = yup.object({
@@ -328,7 +353,7 @@ export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
   type: 'cnt',
-  preset: 'advanced',
+  preset: 'simple',
   preset_id: null,
   privacy: 'public',
   vaultTokenTicker: '',
