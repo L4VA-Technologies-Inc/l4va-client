@@ -15,6 +15,7 @@ import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
 import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarningModal.jsx';
 import { DeletePresetConfirmModal } from '@/components/modals/DeletePresetConfirmModal.jsx';
 import { DeleteDraftConfirmModal } from '@/components/modals/DeleteDraftConfirmModal.jsx';
+import { DeleteWhitelistConfirmModal } from '@/components/modals/DeleteWhitelistConfirmModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -84,5 +85,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'DeleteDraftConfirmModal',
     Component: DeleteDraftConfirmModal,
+  },
+  {
+    name: 'DeleteWhitelistConfirmModal',
+    Component: DeleteWhitelistConfirmModal,
   },
 ];
