@@ -353,7 +353,7 @@ export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
   type: 'cnt',
-  preset: 'advanced',
+  preset: 'simple',
   preset_id: null,
   privacy: 'public',
   vaultTokenTicker: '',
