@@ -247,12 +247,37 @@ export const CreateVaultForm = ({ vault }) => {
 
   const clearFieldError = fieldName => {
     setErrors(prevErrors => {
-      if (!prevErrors[fieldName]) return prevErrors;
       const nextErrors = { ...prevErrors };
-      delete nextErrors[fieldName];
-      updateStepErrorIndicators(nextErrors);
-      return nextErrors;
+      let hasChanges = false;
+      if (nextErrors[fieldName]) {
+        delete nextErrors[fieldName];
+        hasChanges = true;
+      }
+
+      Object.keys(nextErrors).forEach(errorKey => {
+        if (errorKey.startsWith(`${fieldName}[`)) {
+          delete nextErrors[errorKey];
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        updateStepErrorIndicators(nextErrors);
+        return nextErrors;
+      }
+
+      return prevErrors;
     });
+  };
+
+  const validateField = async (fieldName, value) => {
+    try {
+      const tempData = { ...vaultData, [fieldName]: value };
+      await vaultSchema.validateAt(fieldName, tempData, { abortEarly: false });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const handleServerFieldErrors = error => {
@@ -270,9 +295,14 @@ export const CreateVaultForm = ({ vault }) => {
     return false;
   };
 
-  const updateField = (fieldName, value) => {
+  const updateField = async (fieldName, value) => {
     setVaultData(prev => ({ ...prev, [fieldName]: value }));
-    clearFieldError(fieldName);
+
+    const isValid = await validateField(fieldName, value);
+
+    if (isValid) {
+      clearFieldError(fieldName);
+    }
   };
 
   const handlePresetChange = value => {

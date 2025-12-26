@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { VirtualizedList } from '@/components/shared/VirtualizedList';
 import { CoreApiProvider } from '@/services/api/core';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 export const LavaWhitelist = ({
   required = true,
@@ -21,6 +22,7 @@ export const LavaWhitelist = ({
   allowCsv = false,
   errors = {},
 }) => {
+  const { openModal } = useModalControls();
   const csvInputId = `${whitelistFieldName}-csv-upload`;
   const shouldScroll = scrollOnOverflow && whitelist.length > maxVisibleItems;
   const shouldVirtualize = whitelist.length > 10 && scrollOnOverflow;
@@ -28,11 +30,11 @@ export const LavaWhitelist = ({
     if (whitelist.length >= maxItems) return;
     const newId = Date.now();
     const newAssets = [
-      ...whitelist,
       {
         [itemFieldName]: '',
         id: newId,
       },
+      ...whitelist,
     ];
     setWhitelist(newAssets);
   };
@@ -49,7 +51,12 @@ export const LavaWhitelist = ({
 
   const clearWhitelist = () => {
     if (!whitelist.length) return;
-    setWhitelist([]);
+    openModal('DeleteWhitelistConfirmModal', {
+      label,
+      onConfirm: () => {
+        setWhitelist([]);
+      },
+    });
   };
 
   const renderWhitelistItem = (asset, index) => {
@@ -58,7 +65,7 @@ export const LavaWhitelist = ({
     const inputName = `${whitelistFieldName}[${index}].${itemFieldName}`;
 
     return (
-      <div className="space-y-2" key={asset.id ?? index}>
+      <div key={asset.id ?? index}>
         <div className="relative">
           <label htmlFor={inputId} className="sr-only">
             {itemPlaceholder} {index + 1}
@@ -84,7 +91,7 @@ export const LavaWhitelist = ({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        {fieldError && <p className="text-red-600 text-sm mt-1">{fieldError}</p>}
+        <div className="min-h-[20px] mt-1">{fieldError && <p className="text-red-600 text-sm">{fieldError}</p>}</div>
       </div>
     );
   };
@@ -192,14 +199,14 @@ export const LavaWhitelist = ({
       {shouldVirtualize ? (
         <VirtualizedList
           items={whitelist}
-          itemHeight={76}
-          containerHeight={400}
+          itemHeight={100}
+          containerHeight={500}
           className={shouldScroll ? 'pr-2' : ''}
           useAbsolute={false}
           renderItem={(asset, index) => renderWhitelistItem(asset, index)}
         />
       ) : (
-        <div className={`space-y-4 ${shouldScroll ? 'max-h-[400px] overflow-y-auto pr-2' : ''}`}>
+        <div className={`space-y-4 ${shouldScroll ? 'max-h-[500px] overflow-y-auto pr-2' : ''}`}>
           {whitelist.map(renderWhitelistItem)}
         </div>
       )}
