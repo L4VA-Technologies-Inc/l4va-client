@@ -18,8 +18,8 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
     if (!assetsData?.data) return [];
     return assetsData.data.map(asset => {
       const imageSrc = getIPFSUrl(asset.imageUrl || asset.metadata?.imageUrl || asset.metadata?.image || asset.image);
-      const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'cnt');
-      const isFungibleToken = asset.type === 'cnt' || asset.isFungibleToken || !isNft;
+      const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'ft');
+      const isFungibleToken = asset.type === 'ft' || asset.isFungibleToken || !isNft;
 
       return {
         id: asset.id, // Preserve UUID from database

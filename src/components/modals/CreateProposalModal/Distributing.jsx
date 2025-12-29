@@ -80,9 +80,8 @@ export default function Distributing({ onDataChange, vaultId }) {
         // Special case for lovelace - show as ADA
         if (asset.asset_id === 'lovelace') {
           label = 'ADA';
-        } else if (asset.type === 'nft' && asset.metadata?.onchainMetadata?.name) {
-          // Use NFT name if available
-          label = asset.metadata.onchainMetadata.name;
+        } else {
+          label = asset?.name;
         }
 
         return {

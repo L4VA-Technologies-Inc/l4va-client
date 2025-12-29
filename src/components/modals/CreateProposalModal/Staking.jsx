@@ -65,7 +65,7 @@ export default function Staking({ vaultId, onDataChange }) {
     if (data?.data?.length > 0 && !isLoading && !isInitialized) {
       // Filter and map FTs (CNTs)
       const ftAssets = data.data
-        .filter(asset => asset.type === 'cnt')
+        .filter(asset => asset.type === 'ft')
         .map(asset => ({
           id: asset.id,
           symbol: asset.asset_id === 'lovelace' ? 'ADA' : asset.asset_id,
@@ -79,8 +79,8 @@ export default function Staking({ vaultId, onDataChange }) {
         .filter(asset => asset.type === 'nft')
         .map(asset => ({
           id: asset.id,
-          project: asset.metadata?.onchainMetadata?.name || 'Unknown Project',
-          tokenLabel: asset.metadata?.onchainMetadata?.name || 'Unknown Token',
+          project: asset?.name || 'Unknown Project',
+          tokenLabel: asset?.name || 'Unknown Token',
           selected: false,
           market: 'm1',
         }));
