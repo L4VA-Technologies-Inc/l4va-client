@@ -1,5 +1,5 @@
 import { LockIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import LavaProgressBar from '@/components/shared/LavaProgressBar';
@@ -29,27 +29,18 @@ const getAssetCountByPolicy = (assets, policyId) => {
   }, 0);
 };
 
+const calculateAcquireProgress = (totalAcquiredUsd, requireReservedCostUsd) => {
+  if (totalAcquiredUsd <= 0 || !requireReservedCostUsd || requireReservedCostUsd <= 0) return 0;
+  return (totalAcquiredUsd / requireReservedCostUsd) * 100;
+};
+
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
   const { currency } = useCurrency();
 
-  const minContributeAssets = useMemo(
-    () => findMinValue(vault.assetsWhitelist, 'countCapMin'),
-    [vault.assetsWhitelist]
-  );
-
-  const acquireProgress = useMemo(
-    () =>
-      vault.assetsPrices.totalAcquiredUsd <= 0 || !vault.requireReservedCostUsd || vault.requireReservedCostUsd <= 0
-        ? 0
-        : (vault.assetsPrices.totalAcquiredUsd / vault.requireReservedCostUsd) * 100,
-    [vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd]
-  );
-
-  const contributionProgress = useMemo(
-    () => calculateProgress(vault.assetsCount, vault.maxContributeAssets),
-    [vault.assetsCount, vault.maxContributeAssets]
-  );
+  const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);
+  const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
+  const minContributeAssets = findMinValue(vault.assetsWhitelist, 'countCapMin');
 
   const reserveThresholdMet = acquireProgress >= 100;
 
