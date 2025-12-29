@@ -75,7 +75,7 @@ export default function Distributing({ onDataChange, vaultId }) {
 
   useEffect(() => {
     if (data?.data && !isLoading) {
-      const formattedAssets = data.data.map(asset => {
+      const formattedAssets = data.data.assets.map(asset => {
         let label = asset.asset_id;
         // Special case for lovelace - show as ADA
         if (asset.asset_id === 'lovelace') {
