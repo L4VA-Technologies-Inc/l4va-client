@@ -11,7 +11,7 @@ const marketOptions = [
   { value: 'update_list', label: 'Update List' },
 ];
 
-export default function MarketActions({ vaultId, onDataChange, error }) {
+export const MarketActions = ({ vaultId, onDataChange, error }) => {
   const [selectedOption, setSelectedOption] = useState(marketOptions[0].value);
 
   const handleOptionChange = value => {
@@ -52,4 +52,4 @@ export default function MarketActions({ vaultId, onDataChange, error }) {
       )}
     </div>
   );
-}
+};

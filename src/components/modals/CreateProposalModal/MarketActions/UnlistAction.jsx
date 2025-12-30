@@ -69,27 +69,28 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
 
     if (!isValid) return;
 
+    let cappedAmount = amount;
     if (Number(amount) >= ft.quantity) {
-      amount = Number(ft.quantity).toFixed(2);
+      cappedAmount = Number(ft.quantity).toFixed(2);
     }
 
     setSelectedAmount(prev => ({
       ...prev,
-      [ft.tokenId]: amount,
+      [ft.tokenId]: cappedAmount,
     }));
 
     setSelectedNFTs(prevSelected => {
       const existingIndex = prevSelected.findIndex(nft => nft.tokenId === ft.tokenId);
 
-      if (amount && amount !== '0') {
+      if (cappedAmount && cappedAmount !== '0') {
         if (existingIndex >= 0) {
-          return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount } : item));
+          return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount: cappedAmount } : item));
         } else {
           const ftCount = prevSelected.filter(a => a.isFungibleToken).length;
           if (ftCount >= MAX_FT_PER_TRANSACTION) {
             return prevSelected;
           }
-          return [...prevSelected, { ...ft, amount }];
+          return [...prevSelected, { ...ft, amount: cappedAmount }];
         }
       } else {
         if (existingIndex >= 0) {

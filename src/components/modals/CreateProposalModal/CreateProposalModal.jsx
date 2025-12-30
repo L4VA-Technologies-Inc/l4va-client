@@ -16,7 +16,7 @@ import { useCreateProposal, useGovernanceProposals } from '@/services/api/querie
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
-import MarketActions from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
+import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
 const executionOptions = [
   { value: 'staking', label: 'Staking' },

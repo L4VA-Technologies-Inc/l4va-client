@@ -15,7 +15,7 @@ const MAX_FT_PER_TRANSACTION = 10;
 const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   const enhancedNft = {
     ...nft,
-    src: getIPFSUrl(nft.metadata.image),
+    src: getIPFSUrl(nft.metadata?.image),
   };
 
   return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
@@ -24,7 +24,7 @@ const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
 const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   const enhancedFt = {
     ...ft,
-    src: getIPFSUrl(ft.metadata.image),
+    src: getIPFSUrl(ft.metadata?.image),
   };
 
   return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
