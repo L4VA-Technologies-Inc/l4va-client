@@ -62,20 +62,20 @@ export default function Staking({ vaultId, onDataChange }) {
   }
 
   useEffect(() => {
-    if (data?.data?.length > 0 && !isLoading && !isInitialized) {
-      // Filter and map FTs (CNTs)
-      const ftAssets = data.data
+    const assetsArray = data?.data?.assets;
+
+    if (Array.isArray(assetsArray) && assetsArray.length > 0 && !isLoading && !isInitialized) {
+      const ftAssets = assetsArray
         .filter(asset => asset.type === 'ft')
         .map(asset => ({
           id: asset.id,
           symbol: asset.asset_id === 'lovelace' ? 'ADA' : asset.asset_id,
-          available: parseFloat(asset.quantity),
+          available: parseFloat(asset.quantity || 0),
           selected: false,
           amount: '',
         }));
 
-      // Filter and map NFTs
-      const nftAssets = data.data
+      const nftAssets = assetsArray
         .filter(asset => asset.type === 'nft')
         .map(asset => ({
           id: asset.id,
@@ -89,7 +89,7 @@ export default function Staking({ vaultId, onDataChange }) {
       setNfts(nftAssets);
       setIsInitialized(true);
     }
-  }, [isLoading, data, isInitialized]);
+  }, [data, isLoading, isInitialized]);
 
   useEffect(() => {
     if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0)) {

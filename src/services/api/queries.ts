@@ -260,19 +260,11 @@ export const useVaultAssetsForProposalByType = (vaultId: string, type: any) => {
   });
 };
 
-export const useAssetsToUnlist = (vaultId: string) => {
+export const useMarketAssets = (vaultId: string, type: 'unlist' | 'update-listing') => {
   return useQuery({
-    queryKey: ['assets-to-unlist', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToUnlist(vaultId),
-    enabled: !!vaultId,
-  });
-};
-
-export const useAssetsToUpdateListing = (vaultId: string) => {
-  return useQuery({
-    queryKey: ['assets-to-update-listing', vaultId],
-    queryFn: () => GovernanceApiProvider.getAssetsToUpdateListing(vaultId),
-    enabled: !!vaultId,
+    queryKey: ['market-assets', vaultId, type],
+    queryFn: () => GovernanceApiProvider.getAssets(vaultId, type),
+    enabled: !!vaultId && !!type,
   });
 };
 

@@ -19,7 +19,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
       </div>
       <div className="space-y-4 pl-4 border-l border-steel-750">
         {actions.map((action, index) => (
-          <div key={index} className="space-y-2">
+          <div key={action.assetId} className="space-y-2">
             <div className="text-sm text-gray-500">Action {index + 1}</div>
             <div className="space-y-2">
               {type === 'marketplace' ? (

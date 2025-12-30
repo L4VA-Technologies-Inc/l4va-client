@@ -36,14 +36,4 @@ export class GovernanceApiProvider {
     const response = await axiosInstance.get(GovernanceConfigProvider.getAssets(vaultId, type));
     return response;
   }
-
-  static async getAssetsToUnlist(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToUnlist(vaultId));
-    return response;
-  }
-
-  static async getAssetsToUpdateListing(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToUpdateListing(vaultId));
-    return response;
-  }
 }

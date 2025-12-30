@@ -74,8 +74,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       };
 
       if (selectedOption === 'staking') {
-        proposalPayload.fts = proposalData.fungibleTokens || [];
-        proposalPayload.nfts = proposalData.nonFungibleTokens || [];
+        proposalPayload.fts = proposalData.fts || [];
+        proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionAssets = proposalData.distributionAssets || [];
       } else if (selectedOption === 'termination') {

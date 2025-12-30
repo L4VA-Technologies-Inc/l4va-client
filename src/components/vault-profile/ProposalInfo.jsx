@@ -8,6 +8,7 @@ import PrimaryButton from '../shared/PrimaryButton';
 import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
 import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
+import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 
@@ -25,6 +26,8 @@ export const ProposalInfo = ({ proposal }) => {
   const { data: response, refetch } = useGovernanceProposal(proposal.id);
 
   const proposalInfo = response?.data?.proposal;
+  const proposalBurnAssetsInfo = response?.data?.burnAssets;
+  const proposalDistributionAssetsInfo = response?.data?.distributionAssets;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
@@ -53,7 +56,7 @@ export const ProposalInfo = ({ proposal }) => {
   ];
 
   const getProposalData = () => {
-    const marketplaceActions = proposalInfo?.metadata?.marketplaceActions || [];
+    const actionData = proposalInfo?.metadata || [];
     const executionOptions = {
       label: 'Execution Options',
       value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A',
@@ -63,34 +66,40 @@ export const ProposalInfo = ({ proposal }) => {
       case 'staking':
         return [
           executionOptions,
-          { label: 'Fungible Tokens', value: proposalInfo?.fungibleTokens || 'N/A', type: 'list' },
-          { label: 'Non Fungible Tokens', value: proposalInfo?.nonFungibleTokens || 'N/A', type: 'list' },
+          { label: 'Fungible Tokens', value: actionData?.fungibleTokens || 'N/A', type: 'list' },
+          { label: 'Non Fungible Tokens', value: actionData?.nonFungibleTokens || 'N/A', type: 'list' },
         ];
 
       case 'distribution':
-        return [
-          executionOptions,
-          { label: 'Distribution Assets', value: proposalInfo?.distributionAssets || 'N/A', type: 'list' },
-        ];
+        return proposalDistributionAssetsInfo?.length > 0
+          ? [
+              executionOptions,
+              { label: 'Distribution Assets', value: proposalDistributionAssetsInfo, type: 'distribution_assets_list' },
+            ]
+          : [];
 
       case 'termination':
         return [
           executionOptions,
-          { label: 'Termination Reason', value: proposalInfo?.terminationReason || 'N/A', type: 'list' },
-          { label: 'Termination Date', value: proposalInfo?.terminationDate || 'N/A', type: 'list' },
+          { label: 'Termination Assets', value: 'Should we terminate all assets from vault?', type: 'list' },
         ];
 
       case 'burning':
-        return [executionOptions, { label: 'Burn Assets', value: proposalInfo?.burnAssets || 'N/A', type: 'list' }];
+        return proposalBurnAssetsInfo?.length > 0
+          ? [executionOptions, { label: 'Burn Assets', value: proposalBurnAssetsInfo, type: 'burn_assets_list' }]
+          : [];
 
       case 'buy_sell':
-        return marketplaceActions.length > 0
-          ? [executionOptions, { label: 'Actions', value: marketplaceActions, type: 'buy_sell_list' }]
+        return actionData?.marketplaceActions.length > 0
+          ? [executionOptions, { label: 'Actions', value: actionData?.marketplaceActions, type: 'buy_sell_list' }]
           : [];
 
       case 'marketplace_action':
-        return marketplaceActions.length > 0
-          ? [executionOptions, { label: 'Actions', value: marketplaceActions, type: 'marketplace_actions_list' }]
+        return actionData?.marketplaceActions.length > 0
+          ? [
+              executionOptions,
+              { label: 'Actions', value: actionData?.marketplaceActions, type: 'marketplace_actions_list' },
+            ]
           : [];
 
       default:
@@ -173,6 +182,14 @@ export const ProposalInfo = ({ proposal }) => {
 
                       if (item.type === 'buy_sell_list') {
                         return <MarketplaceActionsList key={index} actions={item.value} type="buy_sell" />;
+                      }
+
+                      if (item.type === 'distribution_assets_list') {
+                        return <AssetsList key={index} assets={item.value} title="Distribution Assets" />;
+                      }
+
+                      if (item.type === 'burn_assets_list') {
+                        return <AssetsList key={index} assets={item.value} title="Burn Assets" />;
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;

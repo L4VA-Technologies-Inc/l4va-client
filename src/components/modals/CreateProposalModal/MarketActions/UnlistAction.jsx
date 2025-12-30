@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
-import { useAssetsToUnlist } from '@/services/api/queries';
+import { useMarketAssets } from '@/services/api/queries';
 import { getIPFSUrl } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
@@ -12,7 +12,7 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
   const [activeTab, setActiveTab] = useState('NFT');
   const [selectedAmount, setSelectedAmount] = useState({});
 
-  const { data: assetsData, isLoading } = useAssetsToUnlist(vaultId);
+  const { data: assetsData, isLoading } = useMarketAssets(vaultId, 'unlist');
 
   const walletAssets = useMemo(() => {
     if (!assetsData?.data) return [];

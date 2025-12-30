@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { SelectedAssetItemWithPrice } from '@/components/modals/AssetsList/SelectedAssetItemWithPrice.jsx';
-import { useAssetsToUpdateListing } from '@/services/api/queries';
+import { useMarketAssets } from '@/services/api/queries';
 import { getIPFSUrl } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
@@ -14,7 +14,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
   const [selectedAmount, setSelectedAmount] = useState({});
   const [newPrices, setNewPrices] = useState({});
 
-  const { data: assetsData, isLoading } = useAssetsToUpdateListing(vaultId);
+  const { data: assetsData, isLoading } = useMarketAssets(vaultId, 'update-listing');
 
   const walletAssets = useMemo(() => {
     if (!assetsData?.data) return [];

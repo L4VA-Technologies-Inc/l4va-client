@@ -74,20 +74,21 @@ export default function Distributing({ onDataChange, vaultId }) {
   };
 
   useEffect(() => {
-    if (data?.data && !isLoading) {
-      const formattedAssets = data.data.assets.map(asset => {
-        let label = asset.asset_id;
-        // Special case for lovelace - show as ADA
+    const rawAssets = data?.data?.assets;
+
+    if (Array.isArray(rawAssets) && rawAssets.length > 0 && !isLoading) {
+      const formattedAssets = rawAssets.map(asset => {
+        let label = '';
         if (asset.asset_id === 'lovelace') {
           label = 'ADA';
         } else {
-          label = asset?.name;
+          label = asset?.name || asset?.asset_id || 'Unknown Asset';
         }
 
         return {
           value: asset.id,
           label: label,
-          available: parseFloat(asset.quantity),
+          available: parseFloat(asset.quantity || 0),
           type: asset.type,
           policy_id: asset.policy_id,
           asset_id: asset.asset_id,
@@ -147,7 +148,7 @@ export default function Distributing({ onDataChange, vaultId }) {
             <div className="flex items-center px-1 py-1 bg-steel-750 hover:bg-steel-700 text-white rounded-lg">
               <Plus className="w-4 h-4" />
             </div>
-            <p className="text-dark-100 text-sm mt-1">Add Asset</p>
+            <p className="text-dark-100 text-sm">Add Asset</p>
           </Button>
           <LavaCheckbox
             type="button"
