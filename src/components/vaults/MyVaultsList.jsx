@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
+import { capitalizeFirst } from '@/utils/core.utils.js';
 
 const VAULT_TABS = {
   ALL: 'All',
@@ -17,7 +19,15 @@ const VAULT_TABS = {
 const TABS = Object.values(VAULT_TABS);
 
 export const MyVaultsList = ({ className = '', initialTab }) => {
+  const search = useSearch({ from: '/profile/' });
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(() => {
+    if (search?.tab) {
+      const capitalizedTab = capitalizeFirst(search.tab);
+      if (TABS.includes(capitalizedTab)) {
+        return capitalizedTab;
+      }
+    }
     if (initialTab && TABS.includes(initialTab)) {
       return initialTab;
     }
@@ -71,6 +81,12 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
       page: 1,
       filter: newTab,
     }));
+    router.navigate({
+      to: '/profile',
+      search: prev => ({ ...prev, tab: newTab }),
+      resetScroll: false,
+      replace: true,
+    });
   };
 
   const { data, isLoading, error } = useVaults(appliedFilters);

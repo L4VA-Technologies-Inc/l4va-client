@@ -62,6 +62,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
       router.navigate({
         to: '/vaults',
         search: { tab: selectedTab.id },
+        resetScroll: false,
+        replace: true,
       });
     }
   };
