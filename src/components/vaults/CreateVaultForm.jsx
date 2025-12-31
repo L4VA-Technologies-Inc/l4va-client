@@ -206,51 +206,92 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         nextStep = currentStep + 1;
       }
 
-      setVisitedSteps(prev => new Set([...prev, nextStep]));
-
-      try {
-        await vaultSchema.validate(vaultData, { abortEarly: false });
-        setErrors({});
-      } catch (err) {
-        const formattedErrors = transformYupErrors(err);
-
-        const filteredErrors = {};
-        const previousSteps = [...visitedSteps].filter(stepId => stepId < nextStep);
-
-        Object.keys(formattedErrors).forEach(errorKey => {
-          const belongsToPreviousStep = previousSteps.some(stepId => {
-            const stepFieldNames = stepFields[stepId] || [];
-            return stepFieldNames.some(stepField => {
-              return (
-                errorKey === stepField || errorKey.startsWith(`${stepField}.`) || errorKey.startsWith(`${stepField}[`)
-              );
-            });
-          });
-
-          if (belongsToPreviousStep) {
-            filteredErrors[errorKey] = formattedErrors[errorKey];
-          }
-        });
-
-        setErrors(filteredErrors);
-        updateStepErrorIndicators(filteredErrors);
-      }
-
-      setCurrentStep(nextStep);
-      setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, nextStep));
+      await changeStep(nextStep);
     }
   };
 
-  const handlePreviousStep = () => {
+  const handlePreviousStep = async () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, prevStep));
+      await changeStep(prevStep, true);
     }
   };
 
   const updateStepErrorIndicators = currentErrors => {
     setSteps(prevSteps => updateStepErrors(prevSteps, currentErrors, stepFields));
+  };
+
+  const validateStepNavigation = async (targetStep, currentVisitedSteps) => {
+    const previousSteps = [...currentVisitedSteps].filter(stepId => stepId < targetStep);
+
+    const belongsToPreviousStep = errorKey => {
+      return previousSteps.some(stepId => {
+        const stepFieldNames = stepFields[stepId] || [];
+        return stepFieldNames.some(stepField => {
+          return errorKey === stepField || errorKey.startsWith(`${stepField}.`) || errorKey.startsWith(`${stepField}[`);
+        });
+      });
+    };
+
+    try {
+      await vaultSchema.validate(vaultData, { abortEarly: false });
+      setErrors(prevErrors => {
+        if (!prevErrors || Object.keys(prevErrors).length === 0) {
+          updateStepErrorIndicators(prevErrors || {});
+          return prevErrors || {};
+        }
+
+        const remainingErrors = {};
+        Object.keys(prevErrors).forEach(errorKey => {
+          if (!belongsToPreviousStep(errorKey)) {
+            remainingErrors[errorKey] = prevErrors[errorKey];
+          }
+        });
+        updateStepErrorIndicators(remainingErrors);
+        return remainingErrors;
+      });
+      return true;
+    } catch (err) {
+      const formattedErrors = transformYupErrors(err);
+
+      const filteredErrors = {};
+
+      Object.keys(formattedErrors).forEach(errorKey => {
+        if (belongsToPreviousStep(errorKey)) {
+          filteredErrors[errorKey] = formattedErrors[errorKey];
+        }
+      });
+
+      setErrors(prevErrors => {
+        const mergedErrors = { ...filteredErrors };
+        if (prevErrors) {
+          Object.keys(prevErrors).forEach(errorKey => {
+            if (!belongsToPreviousStep(errorKey)) {
+              mergedErrors[errorKey] = prevErrors[errorKey];
+            }
+          });
+        }
+        updateStepErrorIndicators(mergedErrors);
+        return mergedErrors;
+      });
+      return false;
+    }
+  };
+
+  const changeStep = async (newStep, skipValidation = false) => {
+    const updatedVisitedSteps = new Set([...visitedSteps, newStep]);
+    setVisitedSteps(updatedVisitedSteps);
+
+    if (skipValidation) {
+      setCurrentStep(newStep);
+      setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, newStep));
+      return;
+    }
+
+    await validateStepNavigation(newStep, updatedVisitedSteps);
+
+    setCurrentStep(newStep);
+    setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, newStep));
   };
 
   const clearFieldError = fieldName => {
@@ -388,7 +429,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           queryClient.invalidateQueries({ queryKey: ['vault', data.vaultId] }),
           queryClient.invalidateQueries({ queryKey: ['vaults'] }),
         ]);
-        setCurrentStep(1);
+        await changeStep(1, true);
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
@@ -407,13 +448,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
   };
 
-  const handleStepClick = stepId => {
+  const handleStepClick = async stepId => {
     if (stepId === currentStep) return;
 
-    setVisitedSteps(prev => new Set([...prev, stepId]));
-    setCurrentStep(stepId);
+    const skipValidation = stepId < currentStep;
+    await changeStep(stepId, skipValidation);
     scrollToTop();
-    setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, stepId));
   };
 
   const saveDraft = async () => {
@@ -529,7 +569,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     setIsResetModalOpen(true);
   };
 
-  const resetVault = () => {
+  const resetVault = async () => {
     localStorage.removeItem('storageVault');
 
     const simplePresetId = findSimplePresetId();
@@ -551,7 +591,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
 
     setVaultData(resetData);
-    setCurrentStep(1);
+    await changeStep(1, true);
     setSteps(CREATE_VAULT_STEPS);
     setErrors({});
     setVisitedSteps(new Set([1]));
@@ -591,7 +631,16 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       case 4:
         return <Governance data={vaultData} errors={errors} updateField={updateField} />;
       case 5:
-        return <Launch data={vaultData} setCurrentStep={setCurrentStep} errors={errors} updateField={updateField} />;
+        return (
+          <Launch
+            data={vaultData}
+            setCurrentStep={async stepId => {
+              await changeStep(stepId, stepId < currentStep);
+            }}
+            errors={errors}
+            updateField={updateField}
+          />
+        );
       default:
         return null;
     }
