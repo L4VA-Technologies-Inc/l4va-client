@@ -49,6 +49,7 @@ export enum ProposalType {
   TERMINATION = 'termination',
   BURNING = 'burning',
   BUY_SELL = 'buy_sell',
+  MARKETPLACE_ACTION = 'marketplace_action',
 }
 
 export const ProposalTypeLabels = {
@@ -57,6 +58,7 @@ export const ProposalTypeLabels = {
   [ProposalType.TERMINATION]: 'Termination',
   [ProposalType.BURNING]: 'Burning',
   [ProposalType.BUY_SELL]: 'Buy/Sell',
+  [ProposalType.MARKETPLACE_ACTION]: 'Market Actions',
 };
 
 export enum ClaimStatus {

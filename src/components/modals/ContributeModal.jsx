@@ -2,23 +2,17 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
-import { NFTItem } from './NFTItem';
-import { FTItem } from './FTItem';
-import { SelectedAssetItem } from './SelectedAssetItem';
-
-import { LavaTabs } from '@/components/shared/LavaTabs';
-import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { Spinner } from '@/components/Spinner';
-import PrimaryButton from '@/components/shared/PrimaryButton';
-import SecondaryButton from '@/components/shared/SecondaryButton';
-import MetricCard from '@/components/shared/MetricCard';
-import { useTransaction } from '@/hooks/useTransaction';
+import { ModalWrapper } from '@/components/shared/ModalWrapper.jsx';
+import PrimaryButton from '@/components/shared/PrimaryButton.tsx';
+import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
+import MetricCard from '@/components/shared/MetricCard.jsx';
+import { useTransaction } from '@/hooks/useTransaction.js';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
-import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants';
-import { getContributionStatus } from '@/utils/vaultContributionLimits';
-import { useVaultAssets } from '@/services/api/queries';
-import { InfiniteScrollList } from '@/components/shared/InfiniteScrollList';
-import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets';
+import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants.js';
+import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
+import { useVaultAssets } from '@/services/api/queries.js';
+import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
+import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 
 const DEFAULT_ASSET_VALUE_ADA = 152;
 const MAX_NFT_PER_TRANSACTION = 10;
@@ -36,38 +30,6 @@ const testnetPrices = {
   '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': 188.57,
   '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': 100000.0,
   '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': 250000.0,
-};
-
-// IPFS URL resolver
-const getIPFSUrl = src => {
-  if (!src) return src;
-
-  // Handle IPFS URLs
-  if (src.startsWith('ipfs://')) {
-    const hash = src.replace('ipfs://', '');
-    return `https://ipfs.io/ipfs/${hash}`;
-  }
-
-  return src;
-};
-
-// Enhanced NFT/FT items with IPFS support
-const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
-  const enhancedNft = {
-    ...nft,
-    src: getIPFSUrl(nft.metadata.image),
-  };
-
-  return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
-};
-
-const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
-  const enhancedFt = {
-    ...ft,
-    src: getIPFSUrl(ft.metadata.image),
-  };
-
-  return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
 };
 
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
@@ -222,39 +184,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     }
   };
 
-  const renderAssetItem = useCallback(
-    item => {
-      if (activeTab === 'NFT') {
-        const isSelected = selectedNFTs.some(selected => selected.tokenId === item.tokenId);
-        const isDisabled = !isSelected && selectedNFTsCount >= MAX_NFT_PER_TRANSACTION;
-
-        return (
-          <EnhancedNFTItem
-            key={item.tokenId}
-            nft={item}
-            isSelected={isSelected}
-            isDisabled={isDisabled}
-            onToggle={toggleNFT}
-          />
-        );
-      } else {
-        const hasAmount = selectedAmount[item.tokenId] && selectedAmount[item.tokenId] !== '0';
-        const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
-
-        return (
-          <EnhancedFTItem
-            key={item.tokenId}
-            ft={item}
-            amount={selectedAmount[item.tokenId] || ''}
-            isDisabled={isDisabled}
-            onAmountChange={handleFTAmountChange}
-          />
-        );
-      }
-    },
-    [activeTab, selectedNFTs, selectedAmount, selectedNFTsCount, selectedFTsCount, toggleNFT, handleFTAmountChange]
-  );
-
   const renderFooter = () => {
     const transactionCost = selectedNFTs.length > 0 ? selectedNFTs.length * 5 + 0.77 : 0;
 
@@ -311,47 +240,22 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       footer={renderFooter()}
     >
       <div className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-medium">Available Assets</h2>
-            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={['NFT', 'FT']} onTabChange={setActiveTab} />
-          </div>
-          <div className="space-y-1 h-full flex flex-col">
-            <div className="flex justify-between text-dark-100 text-sm px-2">
-              <span>Asset</span>
-              <span>Policy ID</span>
-            </div>
-            {isLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Spinner />
-              </div>
-            ) : (
-              <InfiniteScrollList
-                items={walletAssets}
-                renderItem={renderAssetItem}
-                isLoading={isLoading}
-                isLoadingMore={isLoadingMore}
-                hasNextPage={hasNextPage}
-                onLoadMore={loadMoreAssets}
-                className="pr-2 max-h-64"
-                loadThreshold={50}
-              />
-            )}
-          </div>
-        </div>
-        <div className="space-y-3">
-          <h3 className="text-lg font-medium">Selected Assets ({selectedNFTs.length})</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-            {selectedNFTs.length > 0 ? (
-              selectedNFTs.map(asset => <SelectedAssetItem key={asset.tokenId} asset={asset} onRemove={removeNFT} />)
-            ) : (
-              <div className="text-center py-6 text-dark-100 bg-steel-900/50 rounded-lg border border-steel-800/50">
-                <p className="mb-2">No assets selected</p>
-                <p className="text-sm">Select assets from above to contribute</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <AssetsList
+          walletAssets={walletAssets}
+          isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          hasNextPage={hasNextPage}
+          loadMoreAssets={loadMoreAssets}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          selectedNFTs={selectedNFTs}
+          selectedAmount={selectedAmount}
+          onToggleNFT={toggleNFT}
+          onFTAmountChange={handleFTAmountChange}
+          onRemoveNFT={removeNFT}
+          selectedNFTsCount={selectedNFTsCount}
+          selectedFTsCount={selectedFTsCount}
+        />
         <div className="space-y-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-medium">Contribution Summary</h2>
