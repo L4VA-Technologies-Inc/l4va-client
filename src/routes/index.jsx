@@ -6,4 +6,7 @@ const HomeComponent = () => <Home />;
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
+  validateSearch: search => ({
+    tab: search?.tab || undefined,
+  }),
 });

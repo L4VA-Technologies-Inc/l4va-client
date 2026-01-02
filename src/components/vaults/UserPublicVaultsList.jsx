@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -15,9 +16,11 @@ const VAULT_TABS = [
 const DEFAULT_TAB = 'all';
 
 export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
+  const search = useSearch({ from: '/profile/$id' });
+  const router = useRouter();
   const communityVaultsListRef = useRef(null);
 
-  const tabParam = DEFAULT_TAB;
+  const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -58,6 +61,12 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
         filter: selectedTab.filter,
         ownerId: ownerId,
       }));
+
+      router.navigate({
+        search: prev => ({ ...prev, tab: selectedTab.id }),
+        resetScroll: false,
+        replace: true,
+      });
     }
   };
 

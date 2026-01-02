@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
@@ -17,7 +18,9 @@ const VAULT_TABS = [
 const DEFAULT_TAB = 'all';
 
 const VaultsFilters = ({ className = '' }) => {
-  const tabParam = DEFAULT_TAB;
+  const search = useSearch({ from: '/' });
+  const router = useRouter();
+  const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -25,6 +28,11 @@ const VaultsFilters = ({ className = '' }) => {
   useEffect(() => {
     const newTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
     setActiveTab(newTab);
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      page: 1,
+      filter: newTab.filter,
+    }));
   }, [tabParam]);
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -50,6 +58,12 @@ const VaultsFilters = ({ className = '' }) => {
         page: 1,
         filter: selectedTab.filter,
       }));
+
+      router.navigate({
+        search: prev => ({ ...prev, tab: selectedTab.id }),
+        resetScroll: false,
+        replace: true,
+      });
     }
   };
   const { data, isLoading, error } = useVaults(appliedFilters);
