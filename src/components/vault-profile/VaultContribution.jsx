@@ -51,11 +51,15 @@ export const VaultContribution = ({ vault }) => {
 
   // Calculate LP minimum threshold position based on projected LP amount
   const lpMinThresholdPosition = calculateLpMinThresholdPosition(vault.lpMinLiquidityAda, vault.projectedLpAdaAmount);
-  const lpMinThresholdMet = acquireProgress >= lpMinThresholdPosition;
 
-  // Calculate current LP amount based on actual progress
-  const currentLpAdaAmount = vault.projectedLpAdaAmount * (acquireProgress / 100);
-  const currentLpUsdAmount = vault.projectedLpUsdAmount * (acquireProgress / 100);
+  // Check if projected LP at 100% reserve can ever meet the minimum
+  const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
+
+  // Only consider threshold met if we CAN meet it and current progress is sufficient
+  const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
+  const lpProgressMultiplier = Math.min(acquireProgress, 100) / 100;
+  const currentLpAdaAmount = vault.projectedLpAdaAmount * lpProgressMultiplier;
+  const currentLpUsdAmount = vault.projectedLpUsdAmount * lpProgressMultiplier;
 
   return (
     <div className="space-y-4">
@@ -156,37 +160,40 @@ export const VaultContribution = ({ vault }) => {
                   ...(reserveThresholdMet
                     ? [
                         {
-                          progress: acquireProgress - 100, // This would be the progress past reserve threshold
+                          progress: acquireProgress - 100,
                           className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
                         },
                       ]
                     : []),
                 ]}
               />
-              {/* LP Minimum Threshold Marker */}
-              {lpMinThresholdPosition > 0 && lpMinThresholdPosition <= 100 && (
-                <div
-                  className="absolute top-0 h-2 w-0.5 bg-yellow-400"
-                  style={{ left: `${lpMinThresholdPosition}%` }}
-                  title={`LP Min (500 ADA recommended): At ${Math.floor(lpMinThresholdPosition)}% of reserve threshold`}
-                />
-              )}
             </div>
-            {/* LP Minimum Info */}
-            {lpMinThresholdPosition > 0 && (
+            {vault.liquidityPoolContribution > 0 && (
               <div className="flex flex-col gap-1 text-xs mt-2">
-                <div className="flex justify-between">
-                  <span className="text-dark-100">Current LP amount:</span>
-                  <span className="text-dark-100">
-                    {currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-dark-100">LP Minimum ({vault.lpMinLiquidityAda} ADA):</span>
-                  <span className={lpMinThresholdMet ? 'text-green-400' : 'text-dark-100'}>
-                    {lpMinThresholdMet ? '✓ Threshold met' : `Need ${Math.floor(lpMinThresholdPosition)}% of reserve`}
-                  </span>
-                </div>
+                {/* Show different messages based on whether vault can meet minimum */}
+                {!canMeetLpMinimum ? (
+                  <div className="flex flex-col gap-1 p-2 border border-red-500/30 rounded mt-1">
+                    <span className="text-red-400 text-xs">
+                      LP will not be created - estimated LP ({formatNum(vault.projectedLpAdaAmount)} ADA) is below
+                      minimum ({vault.lpMinLiquidityAda} ADA)
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-dark-100">Current LP amount:</span>
+                      <span className="text-dark-100">
+                        {currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-dark-100">LP Minimum ({vault.lpMinLiquidityAda} ADA):</span>
+                      <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                        {lpMinThresholdMet ? '✓ Threshold met' : 'Not yet reached'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
