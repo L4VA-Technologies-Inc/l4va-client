@@ -132,8 +132,7 @@ export const formatInterval = timestamp => {
 };
 
 export const handleNumberInput = value => {
-  const numericValue = value.replace(/[^0-9]/g, '');
-  return numericValue;
+  return value.replace(/[^0-9]/g, '');
 };
 
 export const transformYupErrors = err => {
@@ -182,6 +181,16 @@ export const formatDateTime = dt => {
   const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
 
   return `${date} ${time} (${timezoneString})`;
+};
+
+// IPFS URL resolver
+export const getIPFSUrl = src => {
+  if (!src) return src;
+  if (src.startsWith('ipfs://')) {
+    const hash = src.replace('ipfs://', '');
+    return `https://ipfs.io/ipfs/${hash}`;
+  }
+  return src;
 };
 
 const VAULT_STATUS_CONFIG = {

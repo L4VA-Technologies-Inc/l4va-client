@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, useSearch } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
@@ -19,23 +19,22 @@ const VAULT_TABS = {
 const TABS = Object.values(VAULT_TABS);
 
 export const MyVaultsList = ({ className = '', initialTab }) => {
-  const search = useSearch({ from: '/profile/' });
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(() => {
-    if (search?.tab) {
-      const capitalizedTab = capitalizeFirst(search.tab);
-      if (TABS.includes(capitalizedTab)) {
-        return capitalizedTab;
-      }
+    const normalized = initialTab ? capitalizeFirst(initialTab) : null;
+
+    if (normalized === 'Published') return 'Upcoming';
+
+    if (normalized && TABS.includes(normalized)) {
+      return normalized;
     }
-    if (initialTab && TABS.includes(initialTab)) {
-      return initialTab;
-    }
+
     return TABS[0];
   });
 
   const [appliedFilters, setAppliedFilters] = useState(() => {
-    const initialActiveTab = initialTab && TABS.includes(initialTab) ? initialTab : TABS[0];
+    const capitalizedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
+    const initialActiveTab = capitalizedTab && TABS.includes(capitalizedTab) ? capitalizedTab : TABS[0];
     const newTab =
       initialActiveTab === 'Upcoming'
         ? 'published'

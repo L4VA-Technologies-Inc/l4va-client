@@ -1,3 +1,5 @@
+import { useSearch } from '@tanstack/react-router';
+
 import ProfileHero from '@/pages/profile/ProfileHero';
 import { Stats } from '@/pages/profile/Stats';
 import { ProfileSocialLinks } from '@/pages/profile/ProfileSocialLinks';
@@ -12,6 +14,7 @@ import { Transactions } from '@/pages/profile/Transactions.jsx';
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
   const { data: publicData, isLoading } = usePublicProfile(userId);
+  const search = useSearch({ from: '/profile/' });
 
   const userData = userId ? publicData?.data : user;
 
@@ -30,7 +33,7 @@ export const Profile = ({ userId, isEditable }) => {
         <Stats user={userData} />
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
         {userId && <UserPublicVaultsList ownerId={userId} />}
-        {!userId && <MyVaultsList />}
+        {!userId && <MyVaultsList initialTab={search?.tab} />}
         {!userId && <Claims />}
         {!userId && <Transactions />}
       </div>

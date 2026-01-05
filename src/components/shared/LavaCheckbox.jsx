@@ -11,8 +11,8 @@ export const LavaCheckbox = ({
   labelClassName = '',
 }) => (
   <div className={`flex items-center ${className}`}>
-    <label className="flex items-center cursor-pointer" htmlFor={name}>
-      <div className="relative mr-2 mt-1">
+    <label className="flex items-center gap-2 cursor-pointer" htmlFor={name}>
+      <div className="relative">
         <input checked={checked} className="peer sr-only" id={name} name={name} type="checkbox" onChange={onChange} />
         <div
           className={`w-6 h-6 flex items-center justify-center border ${error ? 'border-red-600' : 'border-steel-750'} bg-steel-850 rounded-lg`}
@@ -22,7 +22,7 @@ export const LavaCheckbox = ({
       </div>
       <div>
         <span className={`text-sm ${labelClassName}`}>{label}</span>
-        {description && <p className="text-dark-100 text-sm mt-1">{description}</p>}
+        {description && <p className="text-dark-100 text-sm">{description}</p>}
         {error && (
           <p className="text-red-600 text-sm mt-1">{typeof error === 'string' ? error : 'This field is required'}</p>
         )}

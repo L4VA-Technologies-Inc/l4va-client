@@ -25,6 +25,7 @@ export const ConfigureVault = ({
   isPresetsLoading = false,
   onDeletePreset,
   deletingPresetId,
+  onRemoveWhitelistItem,
 }) => {
   const handleChange = e => {
     const { name, value } = e.target;
@@ -141,6 +142,7 @@ export const ConfigureVault = ({
               whitelist={data.contributorWhitelist || []}
               maxItems={100}
               errors={errors}
+              onRemove={index => onRemoveWhitelistItem('contributorWhitelist', index)}
             />
             {errors.contributorWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.contributorWhitelist}</p>}
           </div>
@@ -161,6 +163,7 @@ export const ConfigureVault = ({
               whitelist={data.contributorWhitelist || []}
               maxItems={100}
               errors={errors}
+              onRemove={index => onRemoveWhitelistItem('contributorWhitelist', index)}
             />
             {errors.contributorWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.contributorWhitelist}</p>}
           </div>
@@ -181,6 +184,7 @@ export const ConfigureVault = ({
               whitelist={data.acquirerWhitelist || []}
               maxItems={100}
               errors={errors}
+              onRemove={index => onRemoveWhitelistItem('acquirerWhitelist', index)}
             />
             {errors.acquirerWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.acquirerWhitelist}</p>}
           </div>

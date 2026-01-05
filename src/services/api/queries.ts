@@ -9,14 +9,13 @@ import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
 
-export const useVaults = filters => {
+export const useVaults = (filters: any) => {
   return useQuery({
     queryKey: ['vaults', filters],
     queryFn: () => {
       return VaultsApiProvider.getVaults(filters);
     },
     staleTime: 0,
-    cacheTime: 0,
   });
 };
 
@@ -55,7 +54,7 @@ export const useMyLockedVaults = () => {
   });
 };
 
-export const useVault = id => {
+export const useVault = (id: string) => {
   return useQuery({
     queryKey: ['vault', id],
     queryFn: () => VaultsApiProvider.getVault(id),
@@ -63,7 +62,7 @@ export const useVault = id => {
   });
 };
 
-export const useVaultAssets = (id, search = '', page = 1, limit = 10) => {
+export const useVaultAssets = (id: string, search = '', page = 1, limit = 10) => {
   return useQuery({
     queryKey: ['vault-assets', id, search, page, limit],
     queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit),
@@ -71,7 +70,7 @@ export const useVaultAssets = (id, search = '', page = 1, limit = 10) => {
   });
 };
 
-export const useVaultAcquiredAssets = (id, page = 1, limit = 10) => {
+export const useVaultAcquiredAssets = (id: string, page = 1, limit = 10) => {
   return useQuery({
     queryKey: ['vault-acquired-assets', id, page, limit],
     queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit),
@@ -111,7 +110,7 @@ export const useSubmitTransaction = () => {
   });
 };
 
-export const useTransactions = params => {
+export const useTransactions = (params: { page: number; limit: number; filter: string }) => {
   return useQuery({
     queryKey: ['transactions', JSON.stringify(params)],
     queryFn: () => TransactionsApiProvider.getUserTransactions(params),
@@ -121,13 +120,15 @@ export const useTransactions = params => {
 // Contribute Mutations
 export const useCreateContributionTx = () => {
   return useMutation({
-    mutationFn: ({ vaultId, assets }) => CoreApiProvider.createContributionTx({ vaultId, assets }),
+    mutationFn: ({ vaultId, assets }: { vaultId: string; assets: any[] }) =>
+      CoreApiProvider.createContributionTx({ vaultId, assets }),
   });
 };
 
 export const useUpdateTransactionHash = () => {
   return useMutation({
-    mutationFn: ({ txId, txHash }) => CoreApiProvider.updateTransactionHash({ txId, txHash }),
+    mutationFn: ({ txId, txHash }: { txId: string; txHash: string }) =>
+      CoreApiProvider.updateTransactionHash({ txId, txHash }),
   });
 };
 
@@ -140,7 +141,7 @@ export const useProfile = () => {
   });
 };
 
-export const usePublicProfile = userId => {
+export const usePublicProfile = (userId: string) => {
   return useQuery({
     queryKey: ['profile', userId],
     queryFn: () => CoreApiProvider.getPublicProfile(userId),
@@ -151,7 +152,8 @@ export const usePublicProfile = userId => {
 // Core Mutations
 export const useLogin = () => {
   return useMutation({
-    mutationFn: credentials => CoreApiProvider.login(credentials),
+    mutationFn: (credentials: { signature: string; stakeAddress: string; walletAddress: string }) =>
+      CoreApiProvider.login(credentials),
   });
 };
 
@@ -175,11 +177,24 @@ export const useHandleCsv = () => {
 
 export const useCreateAcquireTx = () => {
   return useMutation({
-    mutationFn: ({ vaultId, assets }) => CoreApiProvider.acquireAda({ vaultId, assets }),
+    mutationFn: ({ vaultId, assets }: { vaultId: string; assets: any[] }) =>
+      CoreApiProvider.acquireAda({ vaultId, assets }),
   });
 };
 
-export const useWalletSummaryPaginated = ({ address, page = 1, limit = 20, filter = 'all', whitelistedPolicies }) => {
+export const useWalletSummaryPaginated = ({
+  address,
+  page = 1,
+  limit = 20,
+  filter = 'all',
+  whitelistedPolicies,
+}: {
+  address: string;
+  page?: number;
+  limit?: number;
+  filter?: 'all' | 'ft' | 'nft';
+  whitelistedPolicies?: string[];
+}) => {
   return useQuery({
     queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies],
     queryFn: () => TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies }),
@@ -187,17 +202,16 @@ export const useWalletSummaryPaginated = ({ address, page = 1, limit = 20, filte
   });
 };
 
-export const useWalletPolicyIds = (address, excludeFts = false) => {
+export const useWalletPolicyIds = (address: string, excludeFts = false) => {
   return useQuery({
     queryKey: ['wallet-policy-ids', address, excludeFts],
     queryFn: () => TapToolsApiProvider.getWalletPolicyIds(address, excludeFts),
     enabled: !!address,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 };
 
-export const useWalletAssetAmount = (assetId, address) => {
+export const useWalletAssetAmount = (assetId: string, address: string) => {
   return useQuery({
     queryKey: ['wallet-asset-amount', assetId, address],
     queryFn: () => TapToolsApiProvider.getWalletAssetAmount(assetId, address),
@@ -206,14 +220,14 @@ export const useWalletAssetAmount = (assetId, address) => {
 };
 
 // Claims Queries
-export const useClaims = params => {
+export const useClaims = (params: any) => {
   return useQuery({
     queryKey: ['vault-claims', JSON.stringify(params)],
     queryFn: () => ClaimsApiProvider.getClaims(params),
   });
 };
 
-export const useGovernanceProposals = vaultId => {
+export const useGovernanceProposals = (vaultId: string) => {
   return useQuery({
     queryKey: ['governance-proposals', vaultId],
     queryFn: () => GovernanceApiProvider.getProposals(vaultId),
@@ -221,7 +235,7 @@ export const useGovernanceProposals = vaultId => {
   });
 };
 
-export const useGovernanceProposal = proposalId => {
+export const useGovernanceProposal = (proposalId: string) => {
   return useQuery({
     queryKey: ['governance-proposal', proposalId],
     queryFn: () => GovernanceApiProvider.getProposal(proposalId),
@@ -229,7 +243,7 @@ export const useGovernanceProposal = proposalId => {
   });
 };
 
-export const useVotingPower = vaultId => {
+export const useVotingPower = (vaultId: string) => {
   return useQuery({
     queryKey: ['voting-power', vaultId],
     queryFn: () => GovernanceApiProvider.getVotingPower(vaultId),
@@ -238,7 +252,7 @@ export const useVotingPower = vaultId => {
   });
 };
 
-export const useVaultAssetsForProposalByType = (vaultId, type) => {
+export const useVaultAssetsForProposalByType = (vaultId: string, type: any) => {
   return useQuery({
     queryKey: ['vault-assets', vaultId, type],
     queryFn: () => GovernanceApiProvider.getAssets(vaultId, type),
@@ -246,31 +260,41 @@ export const useVaultAssetsForProposalByType = (vaultId, type) => {
   });
 };
 
+export const useMarketAssets = (vaultId: string, type: 'unlist' | 'update-listing') => {
+  return useQuery({
+    queryKey: ['market-assets', vaultId, type],
+    queryFn: () => GovernanceApiProvider.getAssets(vaultId, type),
+    enabled: !!vaultId && !!type,
+  });
+};
+
 export const useCreateProposal = () => {
   return useMutation({
-    mutationFn: ({ vaultId, proposalData }) => GovernanceApiProvider.createProposal(vaultId, proposalData),
+    mutationFn: ({ vaultId, proposalData }: { vaultId: string; proposalData: any }) =>
+      GovernanceApiProvider.createProposal(vaultId, proposalData),
   });
 };
 
 export const useVoteOnProposal = () => {
   return useMutation({
-    mutationFn: ({ proposalId, voteData }) => GovernanceApiProvider.voteOnProposal(proposalId, voteData),
+    mutationFn: ({ proposalId, voteData }: { proposalId: string; voteData: any }) =>
+      GovernanceApiProvider.voteOnProposal(proposalId, voteData),
   });
 };
 
 export const useViewVault = () => {
   return useMutation({
-    mutationFn: vaultId => VaultsApiProvider.viewVault(vaultId),
+    mutationFn: (vaultId: string) => VaultsApiProvider.viewVault(vaultId),
   });
 };
 
-export const useBuildBurnTransaction = ({ id }) => {
+export const useBuildBurnTransaction = ({ id }: { id: string }) => {
   return useMutation({
     mutationFn: () => VaultsApiProvider.buildBurnTransaction(id),
   });
 };
 
-export const usePublishBurnTransaction = ({ id, payload }) => {
+export const usePublishBurnTransaction = ({ id, payload }: { id: string; payload: any }) => {
   return useMutation({
     mutationFn: () => VaultsApiProvider.publishBurnTransaction(id, payload),
   });
