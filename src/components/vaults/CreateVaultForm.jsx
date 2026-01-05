@@ -278,6 +278,46 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
   };
 
+  const syncArrayErrors = (currentErrors, fieldName, deletedIndex) => {
+    const nextErrors = {};
+    const regex = new RegExp(`^${fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\[(\\d+)\\]`);
+
+    Object.keys(currentErrors).forEach(key => {
+      if (!key.startsWith(`${fieldName}[`)) {
+        nextErrors[key] = currentErrors[key];
+        return;
+      }
+
+      const match = key.match(regex);
+      if (match) {
+        const index = parseInt(match[1], 10);
+
+        if (index === deletedIndex) {
+          return;
+        }
+
+        if (index > deletedIndex) {
+          const newKey = key.replace(`[${index}]`, `[${index - 1}]`);
+          nextErrors[newKey] = currentErrors[key];
+        } else {
+          nextErrors[key] = currentErrors[key];
+        }
+      } else {
+        nextErrors[key] = currentErrors[key];
+      }
+    });
+
+    return nextErrors;
+  };
+
+  const handleRemoveWhitelistItem = (fieldName, index) => {
+    setErrors(prev => {
+      const updated = syncArrayErrors(prev, fieldName, index);
+      updateStepErrorIndicators(updated);
+      return updated;
+    });
+  };
+
   const changeStep = async (newStep, skipValidation = false) => {
     const updatedVisitedSteps = new Set([...visitedSteps, newStep]);
     setVisitedSteps(updatedVisitedSteps);
@@ -465,12 +505,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       }
 
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
-      updateField('id', data.id);
+      await updateField('id', data.id);
       await queryClient.invalidateQueries({ queryKey: ['vault', data.id] });
       await queryClient.invalidateQueries({ queryKey: ['vaults'] });
 
       toast.success('Vault saved as a draft');
-      navigate({
+      await navigate({
         to: '/vaults/my',
         search: { tab: 'Draft' },
       });
@@ -622,6 +662,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             onDeletePreset={handleDeletePreset}
             deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
+            onRemoveWhitelistItem={handleRemoveWhitelistItem}
           />
         );
       case 2:
