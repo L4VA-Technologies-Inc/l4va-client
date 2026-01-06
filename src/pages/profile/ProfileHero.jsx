@@ -269,6 +269,10 @@ const ProfileHero = ({ user, isEditable = true }) => {
   const handleFileChange = type => async e => {
     const file = e.target.files[0];
     if (file) {
+      if (type === 'banner' && file.size > 5 * 1024 * 1024) {
+        toast.error('File size must not exceed 5MB');
+        return;
+      }
       await handleFileUpload(file, type);
     }
   };
