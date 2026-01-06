@@ -66,4 +66,8 @@ export class VaultsConfigProvider {
   static getVaultTokenStatistics(id) {
     return `/api/v1/vaults/vt-statistics/${id}`;
   }
+
+  static getMarketStatistics() {
+    return '/api/v1/vaults/market-statistics';
+  }
 }

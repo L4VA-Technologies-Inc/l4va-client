@@ -87,4 +87,8 @@ export class VaultsApiProvider {
   static async getVaultTokenStatistics(vaultId) {
     return await axiosInstance.get(VaultsConfigProvider.getVaultTokenStatistics(vaultId));
   }
+
+  static async getMarketStatistics() {
+    return await axiosInstance.get(VaultsConfigProvider.getMarketStatistics());
+  }
 }
