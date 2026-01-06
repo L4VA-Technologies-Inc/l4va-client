@@ -38,12 +38,19 @@ export const AssetsList = ({ assets, title = 'Assets' }) => {
               {asset.quantity && <AssetField label="Quantity" value={asset.quantity} />}
               {asset.amount && <AssetField label="Amount" value={asset.amount} />}
               {asset.type && <AssetField label="Type" value={asset.type} />}
+              {asset.policyId && (
+                <AssetField
+                  label="Policy ID"
+                  value={`${asset.policyId.substring(0, 8)}...${asset.policyId.substring(asset.policyId.length - 6)}`}
+                />
+              )}
               {asset.assetId && (
                 <AssetField
                   label="Asset ID"
                   value={`${asset.assetId.substring(0, 8)}...${asset.assetId.substring(asset.assetId.length - 6)}`}
                 />
               )}
+              {asset.market && <AssetField label="Market" value={asset.market} />}
             </div>
           </div>
         ))}
