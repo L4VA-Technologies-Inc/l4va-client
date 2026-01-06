@@ -3,6 +3,8 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
+import { SwapComponent } from '../swap/Swap';
+
 import { useCurrency } from '@/hooks/useCurrency';
 import {
   BUTTON_DISABLE_THRESHOLD_MS,
@@ -447,6 +449,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           ) : (
             <ContributionSkeleton />
           )}
+          <div className="overflow-hidden mx-auto w-full mt-4">
+            <SwapComponent
+              overrideDisplay
+              config={{
+                defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                style: { width: '100%' },
+              }}
+            />
+          </div>
         </div>
         <div className="col-span-1 lg:col-span-2 space-y-6">
           <div className="bg-steel-950 rounded-xl p-4">

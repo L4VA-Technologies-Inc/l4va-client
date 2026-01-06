@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
+import { Route as SwapRouteImport } from './routes/swap'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CreateRouteImport } from './routes/create'
@@ -24,6 +25,11 @@ import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SwapRoute = SwapRouteImport.update({
+  id: '/swap',
+  path: '/swap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
+    | '/swap'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
+    | '/swap'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/create'
     | '/how-it-works'
     | '/privacy-policy'
+    | '/swap'
     | '/terms-of-service'
     | '/profile/$id'
     | '/vaults/$id'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ProfileIdRoute: typeof ProfileIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/terms-of-service'
       fullPath: '/terms-of-service'
       preLoaderRoute: typeof TermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/swap': {
+      id: '/swap'
+      path: '/swap'
+      fullPath: '/swap'
+      preLoaderRoute: typeof SwapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   HowItWorksRoute: HowItWorksRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   ProfileIdRoute: ProfileIdRoute,
   VaultsIdRoute: VaultsIdRoute,
