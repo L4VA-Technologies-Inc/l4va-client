@@ -21,6 +21,7 @@ export const LavaWhitelist = ({
   allowDeleteAll = false,
   allowCsv = false,
   errors = {},
+  onRemove,
 }) => {
   const { openModal } = useModalControls();
   const csvInputId = `${whitelistFieldName}-csv-upload`;
@@ -45,6 +46,12 @@ export const LavaWhitelist = ({
   };
 
   const removeAsset = id => {
+    const indexToRemove = whitelist.findIndex(asset => asset.id === id);
+
+    if (indexToRemove !== -1 && onRemove) {
+      onRemove(indexToRemove);
+    }
+
     const filteredAssets = whitelist.filter(asset => asset.id !== id);
     setWhitelist(filteredAssets);
   };
