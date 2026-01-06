@@ -46,6 +46,7 @@ jobs:
         run: |
           cd ~/apps/l4va-client
           cp -r $GITHUB_WORKSPACE/* ./
+          cp -r $GITHUB_WORKSPACE/.env ./
           docker compose build l4va-client
           docker compose up -d --force-recreate l4va-client
 
@@ -67,5 +68,6 @@ jobs:
         run: |
           cd ~/apps/l4va-client
           cp -r $GITHUB_WORKSPACE/* ./
+          cp -r $GITHUB_WORKSPACE/.env ./
           docker compose build l4va-client
           docker compose up -d --force-recreate l4va-client

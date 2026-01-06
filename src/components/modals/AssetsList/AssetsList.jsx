@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs.jsx';
 import { Spinner } from '@/components/Spinner.jsx';
@@ -47,6 +47,19 @@ export const AssetsList = ({
   selectedFTsCount,
   renderSelectedItem,
 }) => {
+  const filteredAssets = useMemo(() => {
+    if (!walletAssets || walletAssets.length === 0) return [];
+
+    return walletAssets.filter(asset => {
+      if (activeTab === 'NFT') {
+        return asset.isNft && !asset.isFungibleToken;
+      } else if (activeTab === 'FT') {
+        return asset.isFungibleToken;
+      }
+      return true;
+    });
+  }, [walletAssets, activeTab]);
+
   const renderAssetItem = useCallback(
     item => {
       if (activeTab === 'NFT') {
@@ -98,7 +111,7 @@ export const AssetsList = ({
             </div>
           ) : (
             <InfiniteScrollList
-              items={walletAssets}
+              items={filteredAssets}
               renderItem={renderAssetItem}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}

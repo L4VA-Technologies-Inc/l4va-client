@@ -28,6 +28,8 @@ export const ProposalInfo = ({ proposal }) => {
   const proposalInfo = response?.data?.proposal;
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
   const proposalDistributionAssetsInfo = response?.data?.distributionAssets;
+  const proposalFungibleTokensInfo = response?.data?.fungibleTokens;
+  const proposalNonFungibleTokensInfo = response?.data?.nonFungibleTokens;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
@@ -63,12 +65,24 @@ export const ProposalInfo = ({ proposal }) => {
     };
 
     switch (proposalInfo?.proposalType) {
-      case 'staking':
-        return [
-          executionOptions,
-          { label: 'Fungible Tokens', value: actionData?.fungibleTokens || 'N/A', type: 'list' },
-          { label: 'Non Fungible Tokens', value: actionData?.nonFungibleTokens || 'N/A', type: 'list' },
-        ];
+      case 'staking': {
+        const stakingItems = [executionOptions];
+        if (proposalFungibleTokensInfo?.length > 0) {
+          stakingItems.push({
+            label: 'Fungible Tokens',
+            value: proposalFungibleTokensInfo,
+            type: 'fungible_tokens_list',
+          });
+        }
+        if (proposalNonFungibleTokensInfo?.length > 0) {
+          stakingItems.push({
+            label: 'Non Fungible Tokens',
+            value: proposalNonFungibleTokensInfo,
+            type: 'non_fungible_tokens_list',
+          });
+        }
+        return stakingItems;
+      }
 
       case 'distribution':
         return proposalDistributionAssetsInfo?.length > 0
@@ -190,6 +204,14 @@ export const ProposalInfo = ({ proposal }) => {
 
                       if (item.type === 'burn_assets_list') {
                         return <AssetsList key={index} assets={item.value} title="Burn Assets" />;
+                      }
+
+                      if (item.type === 'fungible_tokens_list') {
+                        return <AssetsList key={index} assets={item.value} title="Fungible Tokens" />;
+                      }
+
+                      if (item.type === 'non_fungible_tokens_list') {
+                        return <AssetsList key={index} assets={item.value} title="Non Fungible Tokens" />;
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;
