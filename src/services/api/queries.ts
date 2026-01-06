@@ -202,15 +202,6 @@ export const useWalletSummaryPaginated = ({
   });
 };
 
-export const useWalletPolicyIds = (address: string, excludeFts = false) => {
-  return useQuery({
-    queryKey: ['wallet-policy-ids', address, excludeFts],
-    queryFn: () => TapToolsApiProvider.getWalletPolicyIds(address, excludeFts),
-    enabled: !!address,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
-};
-
 export const useWalletAssetAmount = (assetId: string, address: string) => {
   return useQuery({
     queryKey: ['wallet-asset-amount', assetId, address],
