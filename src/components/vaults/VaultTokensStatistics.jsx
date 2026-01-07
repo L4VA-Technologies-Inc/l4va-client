@@ -174,10 +174,10 @@ export const VaultTokensStatistics = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex w-full items-center justify-between">
           <LavaTabs tabs={TIME_PERIODS} activeTab={timePeriod} onTabChange={setTimePeriod} className="bg-steel-850" />
-          <SecondaryButton className="w-full sm:w-auto">
-            <Filter className="w-4 h-4" />
-            Filter by
-          </SecondaryButton>
+          {/*<SecondaryButton className="w-full sm:w-auto">*/}
+          {/*  <Filter className="w-4 h-4" />*/}
+          {/*  Filter by*/}
+          {/*</SecondaryButton>*/}
         </div>
       </div>
 
