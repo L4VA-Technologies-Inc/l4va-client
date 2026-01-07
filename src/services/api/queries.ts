@@ -309,3 +309,18 @@ export const useDeletePreset = () => {
     mutationFn: presetId => PresetsApiProvider.deletePreset(presetId),
   });
 };
+
+export const useVaultTokenStatistics = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['vaults', 'token-statistics', vaultId],
+    queryFn: () => VaultsApiProvider.getVaultTokenStatistics(vaultId),
+  });
+};
+
+export const useMarketStatistics = () => {
+  return useQuery({
+    queryKey: ['vaults', 'market-statistics'],
+    queryFn: () => VaultsApiProvider.getMarketStatistics(),
+    staleTime: 0,
+  });
+};
