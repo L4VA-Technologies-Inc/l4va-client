@@ -13,26 +13,13 @@ import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
 import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
+import { useCurrency } from '@/hooks/useCurrency';
 
-const DEFAULT_ASSET_VALUE_ADA = 152;
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
 
-const testnetPrices = {
-  f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: 0.00526,
-  ed8145e0a4b8b54967e8f7700a5ee660196533ded8a55db620cc6a37: 0.00374,
-  '755457ffd6fffe7b20b384d002be85b54a0b3820181f19c5f9032c2e': 250.0,
-  fd948c7248ecef7654f77a0264a188dccc76bae5b73415fc51824cf3: 19000.0,
-  add6529cc60380af5d51566e32925287b5b04328332652ccac8de0a9: 36.0,
-  '4e529151fe66164ebcf52f81033eb0ec55cc012cb6c436104b30fa36': 69.0,
-  '0b89a746fd2d859e0b898544487c17d9ac94b187ea4c74fd0bfbab16': 3400.0,
-  '436ca2e51fa2887fa306e8f6aa0c8bda313dd5882202e21ae2972ac8': 115.93,
-  '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': 188.57,
-  '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': 100000.0,
-  '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': 250000.0,
-};
-
 export const ContributeModal = ({ vault, onClose, isOpen }) => {
+  const { currencySymbol, isAda } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -80,12 +67,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   // Calculate estimated value
   let estimatedValue = 0;
   selectedNFTs.forEach(asset => {
-    const assetPrice = testnetPrices[asset.metadata?.policyId] || DEFAULT_ASSET_VALUE_ADA;
-    if (asset.isFungibleToken && asset.amount) {
-      estimatedValue += assetPrice * Number(asset.amount);
-    } else {
-      estimatedValue += assetPrice;
-    }
+    estimatedValue += isAda ? asset.valueAda : asset.valueUsd;
   });
 
   // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
@@ -96,8 +78,9 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
 
   // Estimated Vault Token Amount = Vault Token Allocation % × Vault Token Supply
   const estimatedTickerVal = Math.floor(vaultAllocation * vault.ftTokenSupply).toLocaleString();
-  // Estimated ADA to Receive = (1 - Vault Allocation %) × Estimated Value
-  const estimatedAdaReceived = ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString();
+  // Estimated Amount to Receive = (1 - Vault Allocation %) × Estimated Value
+  const estimatedReceived = ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString();
+  const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
 
   const toggleNFT = useCallback(asset => {
     if (asset.isFungibleToken) return;
@@ -263,7 +246,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
-            <MetricCard label="Estimated Value" value={`₳${estimatedValue.toLocaleString()}`} />
+            <MetricCard label="Estimated Value" value={`${currencySymbol}${estimatedValue.toLocaleString()}`} />
             {/* 
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
@@ -278,10 +261,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />
 
             {/* 
-                Estimated ADA received, based on assets contributed to date and current floor prices.
+                Estimated amount received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label="Estimated ADA Received" value={estimatedAdaReceived} />
+            <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
           </div>
         </div>
       </div>
