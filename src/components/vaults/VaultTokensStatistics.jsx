@@ -194,7 +194,6 @@ export const VaultTokensStatistics = () => {
                 <SortableHeader columnKey="market_cap">TVL Delta</SortableHeader>
                 <SortableHeader columnKey="circulating_supply">Supply</SortableHeader>
                 <th className="px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750">Vault</th>
-                <th className="px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -241,12 +240,6 @@ export const VaultTokensStatistics = () => {
                     <td className="px-4 py-3 text-white">{formatNumber(item.circulating_supply)}</td>
 
                     <td className="px-4 py-3 text-white">12 NFTs</td>
-
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 rounded-lg bg-steel-750 text-white text-sm">
-                        {index % 2 === 0 ? 'Staked' : 'Listed'}
-                      </span>
-                    </td>
                   </tr>
                 );
               })}
