@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpDown, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
 
 import { useMarketStatistics } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
