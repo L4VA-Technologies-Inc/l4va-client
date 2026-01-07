@@ -131,7 +131,7 @@ export const VaultSettings = ({ vault }) => {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
             <InfoRow label="Token Name" value={vault.name} />
-            <InfoRow label="Token Symbol" value={vault.vaultTokenTicker} />
+            <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
             <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
             <InfoRow
               customClassName="items-start"
