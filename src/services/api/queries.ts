@@ -202,14 +202,6 @@ export const useWalletSummaryPaginated = ({
   });
 };
 
-export const useWalletAssetAmount = (assetId: string, address: string) => {
-  return useQuery({
-    queryKey: ['wallet-asset-amount', assetId, address],
-    queryFn: () => TapToolsApiProvider.getWalletAssetAmount(assetId, address),
-    enabled: !!assetId && !!address,
-  });
-};
-
 // Claims Queries
 export const useClaims = (params: any) => {
   return useQuery({
