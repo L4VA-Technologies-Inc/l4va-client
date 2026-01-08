@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
-let globalCurrency = localStorage.getItem('selectedCurrency') || 'ada';
+// Normalize currency value to ensure it's always valid
+const normalizeCurrency = (value: string | null): 'ada' | 'usdt' => {
+  return value === 'usdt' ? 'usdt' : 'ada';
+};
+
+let globalCurrency = normalizeCurrency(localStorage.getItem('selectedCurrency'));
 const subscribers = new Set<(newCurrency: 'ada' | 'usdt') => void>();
 
 const notifySubscribers = (newCurrency: 'ada' | 'usdt') => {
@@ -14,7 +19,7 @@ export const useCurrency = (): {
   isAda: boolean;
   updateCurrency: (newCurrency: 'ada' | 'usdt') => void;
 } => {
-  const [currency, setCurrency] = useState<'ada' | 'usdt'>(globalCurrency as 'ada' | 'usdt');
+  const [currency, setCurrency] = useState<'ada' | 'usdt'>(globalCurrency);
 
   const updateLocalCurrency = useCallback((newCurrency: 'ada' | 'usdt') => {
     setCurrency(newCurrency);
@@ -23,7 +28,7 @@ export const useCurrency = (): {
   useEffect(() => {
     subscribers.add(updateLocalCurrency);
 
-    setCurrency(globalCurrency as 'ada' | 'usdt');
+    setCurrency(globalCurrency);
 
     return () => {
       subscribers.delete(updateLocalCurrency);
@@ -35,7 +40,7 @@ export const useCurrency = (): {
     notifySubscribers(newCurrency);
   }, []);
 
-  const currencySymbol = currency === 'ada' ? '₳' : '$';
+  const currencySymbol: '₳' | '$' = currency === 'ada' ? '₳' : '$';
   const isAda = currency === 'ada';
 
   return { currency, currencySymbol, isAda, updateCurrency };
