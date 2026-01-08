@@ -79,18 +79,18 @@ const ProgressBar = ({ items, title }) => {
 const Stats = () => {
   const { data } = useStatistics();
   const statistics = data?.data;
-  const { currency, currencySymbol } = useCurrency();
+  const { isAda } = useCurrency();
 
   const formatCurrency = (adaValue, usdValue) => {
-    if (currency === 'ada') {
-      return `${currencySymbol}${formatNum(adaValue)}`;
+    if (isAda) {
+      return `₳${formatNum(adaValue)}`;
     } else {
-      return `${currencySymbol}${formatNum(usdValue)}`;
+      return `$${formatNum(usdValue)}`;
     }
   };
 
   const getTotalValue = (adaValue, usdValue) => {
-    return currency === 'ada' ? adaValue : usdValue;
+    return isAda ? adaValue : usdValue;
   };
 
   const stats = statistics

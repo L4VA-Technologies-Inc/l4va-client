@@ -141,7 +141,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const navigate = useNavigate();
 
-  const { currency } = useCurrency();
+  const { isAda } = useCurrency();
   const [deferredReady, setDeferredReady] = useState(false);
 
   useVaultStatusTracker(vault?.id);
@@ -473,9 +473,19 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <Suspense fallback={<StatsSkeleton />}>
                   <VaultStats
                     assetValue={vault.vaultStatus}
-                    ftGains={vault.ftGains || 'N/A'}
+                    ftGains={(() => {
+                      if (isAda) {
+                        if (!vault?.gainsAda) return 'N/A';
+                        const isNegative = vault.gainsAda < 0;
+                        return `${isNegative ? '-' : ''}₳${formatNum(Math.abs(vault.gainsAda))}`;
+                      } else {
+                        if (!vault?.gainsUsd) return 'N/A';
+                        const isNegative = vault.gainsUsd < 0;
+                        return `${isNegative ? '-' : ''}$${formatNum(Math.abs(vault.gainsUsd))}`;
+                      }
+                    })()}
                     fdv={(() => {
-                      if (currency === 'ada') {
+                      if (isAda) {
                         return vault?.fdvAda ? `₳${formatNum(vault.fdvAda)}` : 'N/A';
                       } else {
                         return vault?.fdv ? `$${formatNum(vault.fdv)}` : 'N/A';
@@ -483,7 +493,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                     })()}
                     fdvTvl={vault.fdvTvl || 'N/A'}
                     tvl={(() => {
-                      if (currency === 'ada') {
+                      if (isAda) {
                         return vault.assetsPrices?.totalValueAda
                           ? `₳${formatNum(vault.assetsPrices?.totalValueAda)}`
                           : 'N/A';
