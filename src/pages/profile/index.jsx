@@ -14,7 +14,9 @@ import { Transactions } from '@/pages/profile/Transactions.jsx';
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
   const { data: publicData, isLoading } = usePublicProfile(userId);
-  const search = useSearch({ from: '/profile/' });
+  const search = useSearch({
+    from: userId ? '/profile/$id' : '/profile/',
+  });
 
   const userData = userId ? publicData?.data : user;
 
