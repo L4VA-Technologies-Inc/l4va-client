@@ -45,6 +45,7 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
+import { IS_PREPROD } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -294,7 +295,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </button>
             )}
             {/* Statistic */}
-            {vault.liquidityPoolContribution !== 0 && (
+            {vault.liquidityPoolContribution !== 0 && IS_PREPROD && (
               <button
                 onClick={() => openModal('ChartModal', { vault })}
                 className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
