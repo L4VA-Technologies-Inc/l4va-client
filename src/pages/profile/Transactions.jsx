@@ -14,8 +14,10 @@ import { TransactionsApiProvider } from '@/services/api/transactions/index.js';
 
 const tabOptions = [
   { id: 'all', name: 'All', type: 'all' },
+  { id: 'create-vault', name: 'Vault Creation', type: 'create-vault' },
   { id: 'contribute', name: 'Contribution', type: 'contribute' },
   { id: 'acquire', name: 'Acquire', type: 'acquire' },
+  { id: 'distribution', name: 'Distribution', type: 'distribution' },
   { id: 'burn', name: 'Burn', type: 'burn' },
 ];
 
