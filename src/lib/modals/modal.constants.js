@@ -11,6 +11,7 @@ import { EmailModal } from '@/components/modals/EmailModal.jsx';
 import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
+import { MarketFiltersModal } from '@/components/modals/MarketFiltersModal.jsx';
 import { SavePresetModal } from '@/components/modals/SavePresetModal.jsx';
 import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarningModal.jsx';
 import { DeletePresetConfirmModal } from '@/components/modals/DeletePresetConfirmModal.jsx';
@@ -69,6 +70,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'TransactionFilterModal',
     Component: TransactionFilterModal,
+  },
+  {
+    name: 'MarketFiltersModal',
+    Component: MarketFiltersModal,
   },
   {
     name: 'SavePresetModal',
