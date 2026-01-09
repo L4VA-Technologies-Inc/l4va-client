@@ -68,6 +68,6 @@ export class VaultsConfigProvider {
   }
 
   static getMarketStatistics() {
-    return '/api/v1/vaults/market-statistics';
+    return '/api/v1/markets';
   }
 }

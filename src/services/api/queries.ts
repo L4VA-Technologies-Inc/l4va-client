@@ -317,10 +317,10 @@ export const useVaultTokenStatistics = (vaultId: string) => {
   });
 };
 
-export const useMarketStatistics = () => {
+export const useMarketStatistics = (params = {}) => {
   return useQuery({
-    queryKey: ['vaults', 'market-statistics'],
-    queryFn: () => VaultsApiProvider.getMarketStatistics(),
+    queryKey: ['vaults', 'market-statistics', params],
+    queryFn: () => VaultsApiProvider.getMarketStatistics(params),
     staleTime: 0,
   });
 };
