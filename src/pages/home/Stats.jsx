@@ -14,15 +14,15 @@ const StatCard = ({ value, label }) => (
   </div>
 );
 
-const ProgressBar = ({ items, title, currency }) => {
+const ProgressBar = ({ items, title }) => {
+  const { currency, currencySymbol } = useCurrency();
+
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
   const itemsWithValues = items.map(item => ({
     ...item,
     actualValue: currency === 'ada' ? item.valueAda : item.valueUsd,
   }));
-
-  const currencySymbol = currency === 'ada' ? '₳' : '$';
 
   return (
     <div className="mb-16">
@@ -79,10 +79,10 @@ const ProgressBar = ({ items, title, currency }) => {
 const Stats = () => {
   const { data } = useStatistics();
   const statistics = data?.data;
-  const { currency } = useCurrency();
+  const { isAda } = useCurrency();
 
   const formatCurrency = (adaValue, usdValue) => {
-    if (currency === 'ada') {
+    if (isAda) {
       return `₳${formatNum(adaValue)}`;
     } else {
       return `$${formatNum(usdValue)}`;
@@ -90,7 +90,7 @@ const Stats = () => {
   };
 
   const getTotalValue = (adaValue, usdValue) => {
-    return currency === 'ada' ? adaValue : usdValue;
+    return isAda ? adaValue : usdValue;
   };
 
   const stats = statistics
@@ -141,8 +141,8 @@ const Stats = () => {
         ))}
       </div>
       <div className="space-y-16">
-        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} currency={currency} />
-        <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} currency={currency} />
+        <ProgressBar items={statusData} title="Vault by Stage" totalAmount={totalAmount} />
+        <ProgressBar items={typesData} title="Vault by Types" totalAmount={totalAmount} />
       </div>
     </div>
   );

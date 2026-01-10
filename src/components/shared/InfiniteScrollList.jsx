@@ -54,7 +54,7 @@ export const InfiniteScrollList = ({
     <div ref={scrollRef} className={`overflow-y-auto ${className}`}>
       <div className="space-y-2">
         {items.map((item, index) => (
-          <div key={item.id || item.tokenId || index} className={itemClassName}>
+          <div key={`${item.tokenId}-${index}`} className={itemClassName}>
             {renderItem(item, index)}
           </div>
         ))}

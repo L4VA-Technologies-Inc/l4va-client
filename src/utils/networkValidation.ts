@@ -1,6 +1,10 @@
 import { environments, NETWORK_TYPES } from '@/constants/core.constants.js';
 
-const environment = import.meta.env.VITE_CARDANO_NETWORK;
+export const CURRENT_NETWORK = import.meta.env.VITE_CARDANO_NETWORK;
+
+export const IS_MAINNET = CURRENT_NETWORK === environments.MAINNET;
+export const IS_PREPROD = CURRENT_NETWORK === environments.PREPROD;
+
 const MAINNET_WALLET_WHITELIST = new Set(
   import.meta.env.VITE_WALLET_WHITELIST?.split(',').filter((addr: string) => addr) || []
 );
@@ -16,24 +20,21 @@ export const validateWalletNetwork = (address: string) => {
   const isMainnet = isMainnetAddress(address);
   const isTestnet = isTestnetAddress(address);
 
-  if (environment === environments.PREPROD) {
+  if (IS_PREPROD) {
     if (isMainnet) {
       return { isValid: false, networkType: NETWORK_TYPES.MAINNET_ON_TESTNET };
     }
     return { isValid: true, networkType: null };
-  } else if (environment === environments.MAINNET) {
+  } else if (IS_MAINNET) {
     if (isTestnet) {
       return { isValid: false, networkType: NETWORK_TYPES.TESTNET_ON_MAINNET };
     }
 
     if (isMainnet) {
-      const addressToCheck = address;
-
-      if (MAINNET_WALLET_WHITELIST.size > 0 && !MAINNET_WALLET_WHITELIST.has(addressToCheck)) {
+      if (MAINNET_WALLET_WHITELIST.size > 0 && !MAINNET_WALLET_WHITELIST.has(address)) {
         return { isValid: false, networkType: NETWORK_TYPES.WALLET_NOT_WHITELISTED };
       }
     }
-    return { isValid: true, networkType: null };
   }
 
   return { isValid: true, networkType: null };

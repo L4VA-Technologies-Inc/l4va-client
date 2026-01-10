@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3 } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -45,6 +45,7 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
+import { IS_PREPROD } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -140,7 +141,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const navigate = useNavigate();
 
-  const { currency } = useCurrency();
+  const { isAda } = useCurrency();
   const [deferredReady, setDeferredReady] = useState(false);
 
   useVaultStatusTracker(vault?.id);
@@ -294,12 +295,14 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </button>
             )}
             {/* Statistic */}
-            {/* <button
-          onClick={() => openModal('ChartModal', { vault })}
-          className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
-        >
-          <BarChart3 className="w-4 h-4 text-orange-500" />
-        </button> */}
+            {vault.liquidityPoolContribution !== 0 && IS_PREPROD && (
+              <button
+                onClick={() => openModal('ChartModal', { vault })}
+                className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
+              >
+                <BarChart3 className="w-4 h-4 text-orange-500" />
+              </button>
+            )}
             <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
               <EyeIcon className="w-4 h-4 text-orange-500" />
               <span>{formatCompactNumber(vault.countView)}</span>
@@ -470,9 +473,19 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <Suspense fallback={<StatsSkeleton />}>
                   <VaultStats
                     assetValue={vault.vaultStatus}
-                    ftGains={vault.ftGains || 'N/A'}
+                    ftGains={(() => {
+                      if (isAda) {
+                        if (!vault?.gainsAda) return 'N/A';
+                        const isNegative = vault.gainsAda < 0;
+                        return `${isNegative ? '-' : ''}₳${formatNum(Math.abs(vault.gainsAda))}`;
+                      } else {
+                        if (!vault?.gainsUsd) return 'N/A';
+                        const isNegative = vault.gainsUsd < 0;
+                        return `${isNegative ? '-' : ''}$${formatNum(Math.abs(vault.gainsUsd))}`;
+                      }
+                    })()}
                     fdv={(() => {
-                      if (currency === 'ada') {
+                      if (isAda) {
                         return vault?.fdvAda ? `₳${formatNum(vault.fdvAda)}` : 'N/A';
                       } else {
                         return vault?.fdv ? `$${formatNum(vault.fdv)}` : 'N/A';
@@ -480,7 +493,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                     })()}
                     fdvTvl={vault.fdvTvl || 'N/A'}
                     tvl={(() => {
-                      if (currency === 'ada') {
+                      if (isAda) {
                         return vault.assetsPrices?.totalValueAda
                           ? `₳${formatNum(vault.assetsPrices?.totalValueAda)}`
                           : 'N/A';

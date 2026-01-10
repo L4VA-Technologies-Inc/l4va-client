@@ -19,4 +19,7 @@ const ProfileComponent = () => {
 
 export const Route = createFileRoute('/profile/')({
   component: ProfileComponent,
+  validateSearch: search => ({
+    tab: search?.tab || undefined,
+  }),
 });

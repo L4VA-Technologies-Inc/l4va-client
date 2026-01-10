@@ -58,7 +58,7 @@ export const useInfiniteWalletAssets = ({
 }: {
   walletAddress: string;
   activeTab: 'NFT' | 'FT' | 'ALL';
-  filter?: 'all' | 'nfts' | 'tokens';
+  filter: 'all' | 'ft' | 'nft';
   pageSize?: number;
   whitelistedPolicies?: string[];
 }) => {

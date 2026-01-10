@@ -16,8 +16,7 @@ const Counter = ({ value, prefix = '' }) => {
 const HeroStats = () => {
   const { data } = useStatistics();
   const stats = data?.data;
-  const { currency } = useCurrency();
-  const currencySymbol = currency === 'ada' ? '₳' : '$';
+  const { currency, currencySymbol } = useCurrency();
 
   const formatCurrencyValue = (adaValue, usdValue) => {
     const value = currency === 'ada' ? adaValue : usdValue;

@@ -4,6 +4,8 @@ import Features from '@/components/Features';
 import Faq from '@/pages/home/Faq';
 import VaultsFilters from '@/pages/home/VaultsFilters';
 import Stats from '@/pages/home/Stats';
+import { VaultTokensStatistics } from '@/components/vaults/VaultTokensStatistics.jsx';
+import { IS_PREPROD } from '@/utils/networkValidation.ts';
 
 export const Home = () => {
   return (
@@ -24,6 +26,7 @@ export const Home = () => {
         <HeroStats />
         <Features />
         <VaultsFilters />
+        {IS_PREPROD && <VaultTokensStatistics />}
         {/* <Acquire /> */}
         <Stats />
         <Faq />
