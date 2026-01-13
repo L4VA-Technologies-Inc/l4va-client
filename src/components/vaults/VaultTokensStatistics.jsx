@@ -13,10 +13,10 @@ import { useModalControls } from '@/lib/modals/modal.context';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
-  '1h': '1h',
-  '1d': '24h',
-  '1w': '7d',
-  '1m': '30d',
+  '1h': 'price_change_1h',
+  '1d': 'price_change_24h',
+  '1w': 'price_change_7d',
+  '1m': 'price_change_30d',
 };
 
 const formatCurrency = value => {
