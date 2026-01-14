@@ -5,26 +5,26 @@ on:
     branches: [main, dev]
     types: [opened, synchronize, reopened]
   push:
-    branches: [main, dev]  
+    branches: [main, dev]
 
 jobs:
   build-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          cache: 'yarn'
-      
+          node-version: "20"
+          cache: "yarn"
+
       - name: Install dependencies
         run: yarn install
-      
+
       - name: Build project
         run: yarn build
-      
+
       - name: Run linter
         run: yarn lint
 
@@ -45,8 +45,12 @@ jobs:
       - name: Build and deploy on Dev server
         run: |
           cd ~/apps/l4va-client
-          cp -r $GITHUB_WORKSPACE/* ./
-          cp -r $GITHUB_WORKSPACE/.env ./
+          # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
+          rm -rf src/
+          # Copy all files from workspace
+          rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' $GITHUB_WORKSPACE/ ~/apps/l4va-client/
+          # Copy environment-specific files
+          cp $GITHUB_WORKSPACE/.env ~/apps/l4va-client/.env
           docker compose build l4va-client
           docker compose up -d --force-recreate l4va-client
 
@@ -67,7 +71,11 @@ jobs:
       - name: Build and deploy on Prod server
         run: |
           cd ~/apps/l4va-client
-          cp -r $GITHUB_WORKSPACE/* ./
-          cp -r $GITHUB_WORKSPACE/.env ./
+          # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
+          rm -rf src/
+          # Copy all files from workspace
+          rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' $GITHUB_WORKSPACE/ ~/apps/l4va-client/
+          # Copy environment-specific files
+          cp $GITHUB_WORKSPACE/.env ~/apps/l4va-client/.env
           docker compose build l4va-client
           docker compose up -d --force-recreate l4va-client
