@@ -183,6 +183,45 @@ export const formatDateTime = dt => {
   return `${date} ${time} (${timezoneString})`;
 };
 
+export const formatProposalEndDate = endDate => {
+  if (!endDate) return null;
+
+  const end = new Date(endDate);
+  const now = new Date();
+  const diff = end - now;
+  const hoursLeft = diff / (1000 * 60 * 60);
+
+  // Якщо пропозал завершився
+  if (diff <= 0) {
+    const date = formatDate(end);
+    const time = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return {
+      type: 'ended',
+      value: `${date} at ${time}`,
+    };
+  }
+
+  // Якщо до кінця менше 24 години - показуємо таймер
+  if (hoursLeft < 24) {
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+    return {
+      type: 'countdown',
+      value: { hours, minutes, seconds },
+      totalMs: diff,
+    };
+  }
+
+  // Якщо до кінця >= 24 години - показуємо дату + час
+  const date = formatDate(end);
+  const time = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return {
+    type: 'date',
+    value: `${date} at ${time}`,
+  };
+};
+
 // IPFS URL resolver
 export const getIPFSUrl = src => {
   if (!src) return src;
