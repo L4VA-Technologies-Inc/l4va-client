@@ -11,8 +11,9 @@ import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
+import { ProposalEndDate } from './ProposalEndDate';
 
-import { formatDate } from '@/utils/core.utils';
+import { formatDateWithTime } from '@/utils/core.utils';
 import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
@@ -53,8 +54,8 @@ export const ProposalInfo = ({ proposal }) => {
     },
     { label: 'IPFS', value: proposalInfo?.ipfsHash || 'N/A' },
     { label: 'Voting system', value: proposalInfo?.votingSystem ?? 'Single choice' },
-    { label: 'Start at', value: proposalInfo?.startDate ? formatDate(proposalInfo.startDate) : 'N/A' },
-    { label: 'End at', value: proposalInfo?.endDate ? formatDate(proposalInfo.endDate) : 'N/A' },
+    { label: 'Start at', value: proposalInfo?.startDate ? formatDateWithTime(proposalInfo.startDate) : 'N/A' },
+    { label: 'End at', value: proposalInfo?.endDate ? formatDateWithTime(proposalInfo.endDate) : 'N/A' },
   ];
 
   const getProposalData = () => {
@@ -160,7 +161,12 @@ export const ProposalInfo = ({ proposal }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
-            <div className="text-dark-100 text-md mb-3">Ended {formatDate(proposalInfo?.endDate)}</div>
+            <div className="text-dark-100 text-md mb-3">
+              <ProposalEndDate
+                endDate={proposalInfo?.endDate}
+                isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
+              />
+            </div>
           </div>
 
           <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">

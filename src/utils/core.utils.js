@@ -169,6 +169,16 @@ export const formatDate = date => {
   });
 };
 
+export const formatDateWithTime = dt => {
+  if (!dt) return null;
+
+  const dateObj = typeof dt === 'string' ? new Date(dt) : dt;
+  const date = formatDate(dateObj);
+  const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  return `${date} at ${time}`;
+};
+
 export const formatDateTime = dt => {
   if (!dt) return null;
 
@@ -193,11 +203,9 @@ export const formatProposalEndDate = endDate => {
 
   // Якщо пропозал завершився
   if (diff <= 0) {
-    const date = formatDate(end);
-    const time = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return {
       type: 'ended',
-      value: `${date} at ${time}`,
+      value: formatDateWithTime(end),
     };
   }
 
@@ -214,11 +222,9 @@ export const formatProposalEndDate = endDate => {
   }
 
   // Якщо до кінця >= 24 години - показуємо дату + час
-  const date = formatDate(end);
-  const time = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return {
     type: 'date',
-    value: `${date} at ${time}`,
+    value: formatDateWithTime(end),
   };
 };
 
