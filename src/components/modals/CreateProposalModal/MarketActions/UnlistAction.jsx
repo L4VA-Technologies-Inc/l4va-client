@@ -11,12 +11,14 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
   const [selectedAmount, setSelectedAmount] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: assetsData, isLoading } = useMarketAssets(vaultId, 'unlist');
 
   const walletAssets = useMemo(() => {
     if (!assetsData?.data) return [];
-    return assetsData.data.map(asset => {
+
+    let assets = assetsData.data.map(asset => {
       const imageSrc = getIPFSUrl(asset.imageUrl || asset.metadata?.imageUrl || asset.metadata?.image || asset.image);
       const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'ft');
       const isFungibleToken = asset.type === 'ft' || asset.isFungibleToken || !isNft;
@@ -41,7 +43,25 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
         ...asset,
       };
     });
-  }, [assetsData]);
+
+    // Filter by activeTab
+    if (activeTab === 'NFT') {
+      assets = assets.filter(asset => asset.isNft && !asset.isFungibleToken);
+    } else if (activeTab === 'FT') {
+      assets = assets.filter(asset => asset.isFungibleToken);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      assets = assets.filter(asset => {
+        const name = (asset.name || '').toLowerCase();
+
+        return name.includes(query);
+      });
+    }
+
+    return assets;
+  }, [assetsData, activeTab, searchQuery]);
 
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
@@ -147,6 +167,8 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
       onRemoveNFT={removeNFT}
       selectedNFTsCount={selectedNFTsCount}
       selectedFTsCount={selectedFTsCount}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
     />
   );
 };

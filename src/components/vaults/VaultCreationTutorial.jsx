@@ -248,8 +248,8 @@ export const VaultCreationTutorial = () => {
                         engagement
                       </li>
                       <li>
-                        <strong>Execution Threshold:</strong> 51% for routine decisions, 66%+ for critical changes
-                        (asset sales, vault termination)
+                        <strong>Execution Threshold:</strong> The execution threshold can only be set once. Set 51% for
+                        standard majority rule voting or higher if you want to ensure a larger majority consensus.
                       </li>
                     </ul>
                   </div>
