@@ -188,16 +188,19 @@ export const useWalletSummaryPaginated = ({
   limit = 20,
   filter = 'all',
   whitelistedPolicies,
+  search,
 }: {
   address: string;
   page?: number;
   limit?: number;
-  filter?: 'all' | 'ft' | 'nft';
+  filter?: 'all' | 'nfts' | 'tokens';
   whitelistedPolicies?: string[];
+  search?: string;
 }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies],
-    queryFn: () => TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies }),
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search],
+    queryFn: () =>
+      TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search }),
     enabled: !!address,
   });
 };

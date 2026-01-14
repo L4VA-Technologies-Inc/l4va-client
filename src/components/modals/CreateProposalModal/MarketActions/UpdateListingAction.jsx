@@ -13,12 +13,14 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
   const [activeTab, setActiveTab] = useState('NFT');
   const [selectedAmount, setSelectedAmount] = useState({});
   const [newPrices, setNewPrices] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: assetsData, isLoading } = useMarketAssets(vaultId, 'update-listing');
 
   const walletAssets = useMemo(() => {
     if (!assetsData?.data) return [];
-    return assetsData.data.map(asset => {
+
+    let assets = assetsData.data.map(asset => {
       const imageSrc = getIPFSUrl(asset.imageUrl || asset.metadata?.imageUrl || asset.metadata?.image || asset.image);
       const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'ft');
       const isFungibleToken = asset.type === 'ft' || asset.isFungibleToken || !isNft;
@@ -44,7 +46,28 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
         ...asset,
       };
     });
-  }, [assetsData]);
+
+    // Filter by activeTab
+    if (activeTab === 'NFT') {
+      assets = assets.filter(asset => asset.isNft && !asset.isFungibleToken);
+    } else if (activeTab === 'FT') {
+      assets = assets.filter(asset => asset.isFungibleToken);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      assets = assets.filter(asset => {
+        const name = (asset.name || '').toLowerCase();
+        const policyId = (asset.metadata?.policyId || '').toLowerCase();
+        const assetName = (asset.metadata?.assetName || '').toLowerCase();
+        const tokenId = (asset.tokenId || '').toLowerCase();
+
+        return name.includes(query) || policyId.includes(query) || assetName.includes(query) || tokenId.includes(query);
+      });
+    }
+
+    return assets;
+  }, [assetsData, activeTab, searchQuery]);
 
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
@@ -196,6 +219,8 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
       selectedNFTsCount={selectedNFTsCount}
       selectedFTsCount={selectedFTsCount}
       renderSelectedItem={renderSelectedItem}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
     />
   );
 };

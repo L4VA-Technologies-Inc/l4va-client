@@ -7,6 +7,7 @@ import { SelectedAssetItem } from '@/components/modals/AssetsList/SelectedAssetI
 import { NFTItem } from '@/components/modals/AssetsList/NFTItem.jsx';
 import { FTItem } from '@/components/modals/AssetsList/FTItem.jsx';
 import { getIPFSUrl } from '@/utils/core.utils';
+import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -46,19 +47,13 @@ export const AssetsList = ({
   selectedNFTsCount,
   selectedFTsCount,
   renderSelectedItem,
+  searchQuery = '',
+  onSearchChange,
 }) => {
   const filteredAssets = useMemo(() => {
     if (!walletAssets || walletAssets.length === 0) return [];
-
-    return walletAssets.filter(asset => {
-      if (activeTab === 'NFT') {
-        return asset.isNft && !asset.isFungibleToken;
-      } else if (activeTab === 'FT') {
-        return asset.isFungibleToken;
-      }
-      return true;
-    });
-  }, [walletAssets, activeTab]);
+    return walletAssets;
+  }, [walletAssets]);
 
   const renderAssetItem = useCallback(
     item => {
@@ -100,6 +95,12 @@ export const AssetsList = ({
           <h2 className="text-xl font-medium">Available Assets</h2>
           <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={['NFT', 'FT']} onTabChange={onTabChange} />
         </div>
+        <LavaSearchInput
+          value={searchQuery}
+          onChange={onSearchChange}
+          placeholder="Search assets"
+          className="bg-steel-850 border-steel-750 text-white placeholder:text-dark-100"
+        />
         <div className="space-y-1 h-full flex flex-col">
           <div className="flex justify-between text-dark-100 text-sm px-2">
             <span>Asset</span>

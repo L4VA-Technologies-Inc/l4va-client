@@ -23,7 +23,7 @@ export const Public = ({ data, errors = {}, updateField }) => (
         {errors.valueMethod && <p className="text-red-600 mt-1">{errors.valueMethod}</p>}
       </div>
       <div>
-        <div className="uppercase font-bold">*Contribution duration</div>
+        <div className="uppercase font-bold">*Contribution window duration</div>
         <div className="mt-4">
           <LavaIntervalPicker
             value={data.contributionDuration}
