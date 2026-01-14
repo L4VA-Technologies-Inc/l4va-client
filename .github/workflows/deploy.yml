@@ -47,6 +47,10 @@ jobs:
           cd ~/apps/l4va-client
           # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
           rm -rf src/
+          # Install rsync if not available
+          if ! command -v rsync &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y rsync
+          fi
           # Copy all files from workspace
           rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' $GITHUB_WORKSPACE/ ~/apps/l4va-client/
           # Copy environment-specific files
@@ -73,6 +77,10 @@ jobs:
           cd ~/apps/l4va-client
           # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
           rm -rf src/
+          # Install rsync if not available
+          if ! command -v rsync &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y rsync
+          fi
           # Copy all files from workspace
           rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' $GITHUB_WORKSPACE/ ~/apps/l4va-client/
           # Copy environment-specific files
