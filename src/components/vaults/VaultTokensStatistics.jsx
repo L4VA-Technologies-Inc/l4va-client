@@ -1,48 +1,58 @@
-import { useMemo, useState } from 'react';
-import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { ArrowUpDown, ChevronDown, ChevronUp, ExternalLink, Filter } from 'lucide-react';
 import clsx from 'clsx';
+import { useNavigate } from '@tanstack/react-router';
 
 import { useMarketStatistics } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { LavaTabs } from '@/components/shared/LavaTabs';
+import { Pagination } from '@/components/shared/Pagination';
+import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
+import SecondaryButton from '@/components/shared/SecondaryButton.js';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
-  '1h': 'price_change_percentage_1h_in_currency',
-  '1d': 'price_change_percentage_24h_in_currency',
-  '1w': 'price_change_percentage_7d_in_currency',
-  '1m': 'price_change_percentage_30d_in_currency',
+  '1h': 'price_change_1h',
+  '1d': 'price_change_24h',
+  '1w': 'price_change_7d',
+  '1m': 'price_change_30d',
 };
 
 const formatCurrency = value => {
-  if (value === null || value === undefined) return '-';
+  if (!value) return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
-  }).format(value);
+  }).format(numValue);
 };
 
 const formatNumber = value => {
-  if (value === null || value === undefined) return '-';
-  if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
-  return value.toFixed(2);
+  if (!value) return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  if (numValue >= 1e12) return `${(numValue / 1e12).toFixed(2)}T`;
+  if (numValue >= 1e9) return `${(numValue / 1e9).toFixed(2)}B`;
+  if (numValue >= 1e6) return `${(numValue / 1e6).toFixed(2)}M`;
+  if (numValue >= 1e3) return `${(numValue / 1e3).toFixed(2)}K`;
+  return numValue.toFixed(2);
 };
 
 const formatPercentage = value => {
-  if (value === null || value === undefined) return '-';
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}${value.toFixed(2)}%`;
+  if (!value) return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  const sign = numValue >= 0 ? '+' : '';
+  return `${sign}${numValue.toFixed(2)}%`;
 };
 
-const calculateTVLDelta = (marketCap, priceChange) => {
-  if (!marketCap || !priceChange) return null;
-  const mockTVLChange = priceChange * 0.5;
-  return priceChange - mockTVLChange;
+const calculateMktCapTVLPercentage = (mcap, tvl) => {
+  if (!mcap || !tvl || tvl === 0) return null;
+  return (mcap / tvl) * 100;
 };
 
 const LoadingState = () => (
@@ -64,66 +74,119 @@ const EmptyState = () => (
 );
 
 export const VaultTokensStatistics = () => {
+  const { openModal } = useModalControls();
   const [timePeriod, setTimePeriod] = useState('1d');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    sortBy: 'mcap',
+    sortOrder: 'DESC',
+    unit: '',
+    minPrice: '',
+    maxPrice: '',
+    minMcap: '',
+    maxMcap: '',
+    minTvl: '',
+    maxTvl: '',
+  });
 
-  const { data, isLoading, error } = useMarketStatistics();
+  const { data, isLoading, error } = useMarketStatistics(filters);
+
+  const navigate = useNavigate();
+
+  const responseData = data?.data || data;
+  const items = responseData?.items || [];
+
+  const pagination = {
+    currentPage: responseData?.page || filters.page,
+    totalPages: responseData?.totalPages || 1,
+    totalItems: responseData?.total || 0,
+  };
 
   const handleSort = key => {
-    setSortConfig(prev => {
-      if (prev.key === key) {
-        return {
-          key,
-          direction: prev.direction === 'asc' ? 'desc' : 'asc',
-        };
-      }
-      return { key, direction: 'asc' };
+    if (key === 'mktCapTVL') return;
+
+    setFilters(prev => {
+      const isSameKey = prev.sortBy === key;
+      const newOrder = isSameKey && prev.sortOrder === 'ASC' ? 'DESC' : 'ASC';
+      return {
+        ...prev,
+        sortBy: key,
+        sortOrder: newOrder,
+        page: 1,
+      };
     });
   };
 
-  const filteredAndSortedData = useMemo(() => {
-    const responseData = data?.data || data;
-    if (!responseData || !Array.isArray(responseData)) return [];
+  const handleOpenFilters = () => {
+    openModal('MarketFiltersModal', {
+      onApplyFilters: handleApplyFilters,
+      initialFilters: filters,
+    });
+  };
 
-    let filtered = [...responseData];
+  const handleApplyFilters = newFilters => {
+    setFilters(prev => ({
+      ...prev,
+      ...newFilters,
+      page: 1,
+    }));
+  };
 
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
+  const handleTickerSearch = useCallback(value => {
+    setFilters(prev => ({
+      ...prev,
+      ticker: value,
+      page: 1,
+    }));
+  }, []);
 
-        if (sortConfig.key === 'priceChange') {
-          const periodKey = TIME_PERIOD_MAP[timePeriod];
-          aValue = a[periodKey];
-          bValue = b[periodKey];
-        }
+  const handleTimePeriodChange = newPeriod => {
+    setTimePeriod(newPeriod);
+    setFilters(prev => ({
+      ...prev,
+      page: 1,
+    }));
+  };
 
-        if (aValue === null || aValue === undefined) return 1;
-        if (bValue === null || bValue === undefined) return -1;
+  const getPriceChangeValue = item => {
+    const periodKey = TIME_PERIOD_MAP[timePeriod];
+    return item[periodKey];
+  };
 
-        if (typeof aValue === 'string') {
-          return sortConfig.direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        }
+  const handlePageChange = newPage => {
+    setFilters(prev => ({
+      ...prev,
+      page: newPage,
+    }));
+  };
 
-        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
-      });
-    }
+  const formatADA = value => {
+    if (value === null || value === undefined || value === '') return '-';
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(numValue)) return '-';
+    return `${numValue.toFixed(2)} ADA`;
+  };
 
-    return filtered;
-  }, [data, sortConfig, timePeriod]);
+  const getPriceChangeColor = value => {
+    if (value === null || value === undefined || value === '') return 'text-dark-100';
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(numValue)) return 'text-dark-100';
+    return numValue >= 0 ? 'text-emerald-500' : 'text-rose-500';
+  };
 
   const getSortIcon = columnKey => {
-    if (sortConfig.key !== columnKey) {
+    if (filters.sortBy !== columnKey) {
       return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
     }
-    return sortConfig.direction === 'asc' ? (
+    return filters.sortOrder === 'ASC' ? (
       <ChevronUp className="w-4 h-4 ml-1" />
     ) : (
       <ChevronDown className="w-4 h-4 ml-1" />
     );
   };
 
-  const SortableHeader = ({ columnKey, children, className = '' }) => (
+  const SortableHeader = ({ columnKey, children, className = '', isShowIcon = true }) => (
     <th
       className={clsx(
         'px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750 cursor-pointer hover:text-white transition-colors',
@@ -133,34 +196,15 @@ export const VaultTokensStatistics = () => {
     >
       <div className="flex items-center">
         {children}
-        {getSortIcon(columnKey)}
+        {isShowIcon && getSortIcon(columnKey)}
       </div>
     </th>
   );
 
-  const getPriceChangeValue = item => {
-    const periodKey = TIME_PERIOD_MAP[timePeriod];
-    return item[periodKey];
-  };
-
-  const getPriceChangeColor = value => {
-    if (value === null || value === undefined) return 'text-dark-100';
-    return value >= 0 ? 'text-emerald-500' : 'text-rose-500';
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">INVESTMENTS</h2>
-        <LoadingState />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="flex flex-col gap-6">
-        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">INVESTMENTS</h2>
+        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
         <ErrorState error={error} />
       </div>
     );
@@ -168,84 +212,109 @@ export const VaultTokensStatistics = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">INVESTMENTS</h2>
+      <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex w-full items-center justify-between">
-          <LavaTabs tabs={TIME_PERIODS} activeTab={timePeriod} onTabChange={setTimePeriod} className="bg-steel-850" />
-          {/*<SecondaryButton className="w-full sm:w-auto">*/}
-          {/*  <Filter className="w-4 h-4" />*/}
-          {/*  Filter by*/}
-          {/*</SecondaryButton>*/}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+        <div className="flex-1 w-full sm:w-auto">
+          <LavaTabs
+            className="overflow-x-auto text-sm md:text-base w-full"
+            tabs={TIME_PERIODS}
+            activeTab={timePeriod}
+            onTabChange={handleTimePeriodChange}
+          />
+        </div>
+        <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-4">
+          <LavaSearchInput name="ticker" placeholder="Search by ticker" onChange={handleTickerSearch} />
+          <SecondaryButton className="w-full sm:w-auto" onClick={handleOpenFilters}>
+            <Filter className="w-4 h-4" />
+            Filter by
+          </SecondaryButton>
         </div>
       </div>
-
-      {filteredAndSortedData.length === 0 ? (
+      {isLoading ? (
+        <LoadingState />
+      ) : items.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-steel-750">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-steel-850">
-                <SortableHeader columnKey="name">Token</SortableHeader>
-                <SortableHeader columnKey="current_price">Price</SortableHeader>
-                <SortableHeader columnKey="priceChange">% Change</SortableHeader>
-                <SortableHeader columnKey="market_cap">Market Cap</SortableHeader>
-                <SortableHeader columnKey="market_cap">TVL Delta</SortableHeader>
-                <SortableHeader columnKey="circulating_supply">Supply</SortableHeader>
-                <th className="px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750">Vault</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAndSortedData.map((item, index) => {
-                const priceChange = getPriceChangeValue(item);
-                const tvlDelta = calculateTVLDelta(item.market_cap, priceChange);
+        <>
+          <div className="overflow-x-auto rounded-2xl border border-steel-750">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-steel-850">
+                  <SortableHeader columnKey="ticker">Token</SortableHeader>
+                  <SortableHeader columnKey="price">Price</SortableHeader>
+                  <SortableHeader columnKey={TIME_PERIOD_MAP[timePeriod]}>% Change</SortableHeader>
+                  <SortableHeader columnKey="mcap">Market Cap</SortableHeader>
+                  <SortableHeader columnKey="mktCapTVL" isShowIcon={false}>
+                    Mkt Cap / TVL delta (%)
+                  </SortableHeader>
+                  <SortableHeader columnKey="tvl">TVL</SortableHeader>
+                  <SortableHeader columnKey="circSupply">Supply</SortableHeader>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, index) => {
+                  const priceChange = getPriceChangeValue(item);
+                  const mktCapTVL = calculateMktCapTVLPercentage(item.mcap, item.tvl);
 
-                return (
-                  <tr
-                    key={item.id || index}
-                    className="bg-steel-850 hover:bg-steel-750 transition-colors border-b border-steel-750 last:border-b-0"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {item.image && (
+                  return (
+                    <tr
+                      key={item.unit || index}
+                      className="bg-steel-850 hover:bg-steel-750 transition-colors border-b border-steel-750 last:border-b-0"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
                           <img
-                            src={item.image}
-                            alt={item.name || item.symbol}
+                            src={item?.token_image || '/favicon/favicon.ico'}
+                            alt={item.ticker || '-'}
                             className="w-8 h-8 rounded-full"
                             onError={e => {
                               e.target.style.display = 'none';
                             }}
                           />
-                        )}
-                        <div>
-                          <div className="font-medium text-white">{item.name || '-'}</div>
-                          <div className="text-sm text-dark-100 uppercase">{item.symbol || '-'}</div>
+                          <div>
+                            <div className="font-medium text-white uppercase">{item.ticker || '-'}</div>
+                            <button
+                              onClick={() => navigate({ to: `/vaults/${item.vault_id}` })}
+                              className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+                            >
+                              Vault
+                              <ExternalLink size={16} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="px-4 py-3 text-white">{formatCurrency(item.current_price)}</td>
+                      <td className="px-4 py-3 text-white">{formatCurrency(item.price)}</td>
 
-                    <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(priceChange))}>
-                      {formatPercentage(priceChange)}
-                    </td>
+                      <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(priceChange))}>
+                        {formatPercentage(priceChange)}
+                      </td>
 
-                    <td className="px-4 py-3 text-white">{formatNumber(item.market_cap)}</td>
+                      <td className="px-4 py-3 text-white">{formatNumber(item.mcap)}</td>
 
-                    <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(tvlDelta))}>
-                      {tvlDelta !== null ? formatPercentage(tvlDelta) : '-'}
-                    </td>
+                      <td className="px-4 py-3 text-white">
+                        {mktCapTVL !== null ? `${formatNumber(mktCapTVL)}%` : '-'}
+                      </td>
 
-                    <td className="px-4 py-3 text-white">{formatNumber(item.circulating_supply)}</td>
+                      <td className="px-4 py-3 text-white">{formatADA(item.tvl)}</td>
 
-                    <td className="px-4 py-3 text-white">12 NFTs</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-4 py-3 text-white">{formatNumber(item.circSupply)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {pagination && pagination.totalPages > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -52,15 +52,17 @@ interface WalletOverview {
 export const useInfiniteWalletAssets = ({
   walletAddress,
   activeTab,
-  filter = 'all',
+  filter,
   pageSize = 20,
   whitelistedPolicies,
+  search,
 }: {
   walletAddress: string;
   activeTab: 'NFT' | 'FT' | 'ALL';
-  filter: 'all' | 'ft' | 'nft';
+  filter?: 'all' | 'nfts' | 'tokens';
   pageSize?: number;
   whitelistedPolicies?: string[];
+  search?: string;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allAssets, setAllAssets] = useState<WalletAsset[]>([]);
@@ -68,13 +70,21 @@ export const useInfiniteWalletAssets = ({
   const [hasNextPage, setHasNextPage] = useState(false);
   const loadedPages = useRef(new Set<number>());
 
+  const apiFilter = useMemo(() => {
+    if (filter) return filter;
+    if (activeTab === 'NFT') return 'nfts';
+    if (activeTab === 'FT') return 'tokens';
+    return 'all';
+  }, [activeTab, filter]);
+
   // Use the hook for the current page
   const { data, isLoading, error, refetch } = useWalletSummaryPaginated({
     address: walletAddress,
     page: currentPage,
     limit: pageSize,
-    filter,
+    filter: apiFilter,
     whitelistedPolicies,
+    search,
   });
 
   // Reset when dependencies change
@@ -84,7 +94,7 @@ export const useInfiniteWalletAssets = ({
     setOverview(null);
     setHasNextPage(false);
     loadedPages.current.clear();
-  }, [walletAddress, filter, pageSize]);
+  }, [walletAddress, apiFilter, pageSize, search]);
 
   // Handle new data from the hook
   useEffect(() => {

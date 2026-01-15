@@ -24,6 +24,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
   const [selectedAmount, setSelectedAmount] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
 
@@ -62,6 +63,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     walletAddress: wallet?.changeAddressBech32,
     whitelistedPolicies,
     activeTab,
+    search: searchQuery.trim() || '',
   });
 
   // Calculate estimated value
@@ -238,6 +240,8 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           onRemoveNFT={removeNFT}
           selectedNFTsCount={selectedNFTsCount}
           selectedFTsCount={selectedFTsCount}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
         <div className="space-y-6">
           <div className="flex items-center gap-2">

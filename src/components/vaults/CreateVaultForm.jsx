@@ -380,6 +380,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       toast.error(message);
       return true;
     }
+    if (error.status === 400) {
+      toast.error(message);
+      return true;
+    }
 
     return false;
   };
@@ -509,7 +513,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       await queryClient.invalidateQueries({ queryKey: ['vault', data.id] });
       await queryClient.invalidateQueries({ queryKey: ['vaults'] });
 
-      toast.success('Vault saved as a draft');
       await navigate({
         to: '/vaults/my',
         search: { tab: 'Draft' },

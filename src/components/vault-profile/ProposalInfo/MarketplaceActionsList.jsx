@@ -27,6 +27,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market} />
                   {action.assetPrice && <ActionField label="Price" value={`₳${action.assetPrice}`} />}
+                  {action.assetPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
                   {action.newPrice && <ActionField label="New Price" value={`₳${action.newPrice}`} />}
                   {action.assetName && <ActionField label="Asset Name" value={action.assetName} />}
                   {action.assetImg && (

@@ -74,7 +74,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
           </>
         )}
         <div>
-          <div className="uppercase font-bold">*Contribution duration</div>
+          <div className="uppercase font-bold">*Contribution window duration</div>
           <div className="mt-4">
             <LavaIntervalPicker
               value={data.contributionDuration}
