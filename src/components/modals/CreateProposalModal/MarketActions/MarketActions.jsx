@@ -3,10 +3,12 @@ import { useCallback, useState } from 'react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { UnlistAction } from '@/components/modals/CreateProposalModal/MarketActions/UnlistAction.jsx';
 import { UpdateListingAction } from '@/components/modals/CreateProposalModal/MarketActions/UpdateListingAction.jsx';
-import { BuyingSelling } from '@/components/modals/CreateProposalModal/BuyingSelling.jsx';
+import { BuyAction } from '@/components/modals/CreateProposalModal/MarketActions/BuyAction.jsx';
+import { SellAction } from '@/components/modals/CreateProposalModal/MarketActions/SellAction.jsx';
 
 const marketOptions = [
-  { value: 'buy_sell', label: 'Buying/Selling' },
+  { value: 'buy', label: 'Buy' },
+  { value: 'sell', label: 'Sell' },
   { value: 'unlist', label: 'Unlist' },
   { value: 'update_list', label: 'Update List' },
 ];
@@ -43,8 +45,9 @@ export const MarketActions = ({ vaultId, onDataChange, error }) => {
         value={selectedOption}
         onChange={handleOptionChange}
       />
-      {selectedOption === 'buy_sell' && (
-        <BuyingSelling error={error} vaultId={vaultId} onDataChange={handleActionDataChange} />
+      {selectedOption === 'buy' && <BuyAction error={error} vaultId={vaultId} onDataChange={handleActionDataChange} />}
+      {selectedOption === 'sell' && (
+        <SellAction error={error} vaultId={vaultId} onDataChange={handleActionDataChange} />
       )}
       {selectedOption === 'unlist' && <UnlistAction vaultId={vaultId} onDataChange={handleActionDataChange} />}
       {selectedOption === 'update_list' && (
