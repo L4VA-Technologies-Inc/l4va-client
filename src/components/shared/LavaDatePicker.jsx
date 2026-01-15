@@ -1,5 +1,6 @@
-import { useState, useEffect, useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { CalendarIcon, HelpCircle } from 'lucide-react';
+import { addHours, getHours, getMinutes, isToday as isTodayFn, setHours, setMinutes, startOfToday } from 'date-fns';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -41,71 +42,96 @@ export const LavaDatePicker = ({
   const datePickerId = id || generatedId;
   const [isOpen, setIsOpen] = useState(false);
   const [dateValue, setDateValue] = useState(null);
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     if (value) {
-      const date = typeof value === 'number' ? new Date(value) : value;
-      setDateValue(date);
+      setDateValue(typeof value === 'number' ? new Date(value) : value);
     } else {
       setDateValue(null);
     }
   }, [value]);
 
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+  useEffect(() => {
+    const intervalId = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const isToday = dateValue && isTodayFn(dateValue);
+  const currentHour = getHours(now);
+  const currentMinute = getMinutes(now);
+
+  const getValidTime = date => {
+    if (!isTodayFn(date)) return date;
+    const nowLocal = new Date();
+    const dateMs = date.getTime();
+    const nowMs = nowLocal.getTime();
+
+    if (dateMs < nowMs) {
+      const roundedMinutes = Math.ceil(getMinutes(nowLocal) / 5) * 5;
+      return roundedMinutes === 60 ? addHours(setMinutes(nowLocal, 0), 1) : setMinutes(nowLocal, roundedMinutes);
+    }
+    return date;
+  };
 
   const handleDateSelect = selectedDate => {
     if (selectedDate) {
+      let newDate = selectedDate;
       if (dateValue) {
-        const currentDate = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-        selectedDate.setHours(currentDate.getHours());
-        selectedDate.setMinutes(currentDate.getMinutes());
+        newDate = setHours(newDate, getHours(dateValue));
+        newDate = setMinutes(newDate, getMinutes(dateValue));
+      } else {
+        const nowLocal = new Date();
+        const roundedMinutes = Math.ceil(getMinutes(nowLocal) / 5) * 5;
+        const roundedNow =
+          roundedMinutes === 60 ? addHours(setMinutes(nowLocal, 0), 1) : setMinutes(nowLocal, roundedMinutes);
+        newDate = setHours(newDate, getHours(roundedNow));
+        newDate = setMinutes(newDate, getMinutes(roundedNow));
       }
-      onChange(selectedDate.getTime());
+      onChange(getValidTime(newDate).getTime());
     }
   };
 
   const handleTimeChange = (type, val) => {
     if (dateValue) {
-      const newDate = new Date(dateValue);
+      let newDate = new Date(dateValue);
       if (type === 'hour') {
-        newDate.setHours((Number.parseInt(val, 10) % 12) + (newDate.getHours() >= 12 ? 12 : 0));
+        const isPM = getHours(newDate) >= 12;
+        const h = Number.parseInt(val, 10);
+        const newHour24 = isPM ? (h === 12 ? 12 : h + 12) : h === 12 ? 0 : h;
+        newDate = setHours(newDate, newHour24);
       } else if (type === 'minute') {
-        newDate.setMinutes(Number.parseInt(val, 10));
+        newDate = setMinutes(newDate, Number.parseInt(val, 10));
       } else if (type === 'ampm') {
-        const currentHours = newDate.getHours();
-        const newHours = val === 'PM' ? (currentHours % 12) + 12 : currentHours % 12;
-        newDate.setHours(newHours);
+        const h12 = getHours(newDate) % 12;
+        const newHour24 = val === 'PM' ? h12 + 12 : h12;
+        newDate = setHours(newDate, newHour24);
       }
-      onChange(newDate.getTime());
+      onChange(getValidTime(newDate).getTime());
     }
   };
 
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   const styles = variants[variant];
 
   return (
     <>
-      {label ? (
+      {label && (
         <label htmlFor={datePickerId} className="font-bold flex items-center gap-2">
           <span className="uppercase">
-            {required ? '*' : ''}
+            {required && '*'}
             {label}
           </span>
           {hint && (
             <div className="group relative inline-flex">
               <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div
-                className="
-                  absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg 
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 
-                  whitespace-pre-wrap break-words text-left pointer-events-none
-                "
-              >
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 max-w-[360px] min-w-[200px] w-max z-10 whitespace-pre-wrap break-words text-left pointer-events-none">
                 {hint}
               </div>
             </div>
           )}
         </label>
-      ) : null}
+      )}
       <div className="mt-1">
         <div className="relative flex items-center">
           <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -140,27 +166,18 @@ export const LavaDatePicker = ({
                     months: 'flex gap-4 flex-col md:flex-row relative',
                     month: 'flex flex-col w-full gap-4',
                     nav: 'flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between',
-                    button_previous: cn(
-                      'size-8 aria-disabled:opacity-50 p-0 select-none',
-                      'hover:bg-accent hover:text-accent-foreground'
-                    ),
-                    button_next: cn(
-                      'size-8 aria-disabled:opacity-50 p-0 select-none',
-                      'hover:bg-accent hover:text-accent-foreground'
-                    ),
+                    button_previous:
+                      'size-8 aria-disabled:opacity-50 p-0 select-none hover:bg-accent hover:text-accent-foreground',
+                    button_next:
+                      'size-8 aria-disabled:opacity-50 p-0 select-none hover:bg-accent hover:text-accent-foreground',
                     month_caption: 'flex items-center justify-center h-8 w-full px-8',
-                    dropdowns: 'w-full flex items-center text-sm font-medium justify-center h-8 gap-1.5',
-                    dropdown_root:
-                      'relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md',
-                    dropdown: 'absolute inset-0 opacity-0',
                     caption_label: 'select-none font-medium text-sm',
                     table: 'w-full border-collapse',
                     weekdays: 'flex',
                     weekday: 'text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none',
                     week: 'flex w-full mt-2',
                     day: cn(
-                      'relative w-full h-full p-0 text-center aspect-square select-none',
-                      'hover:bg-accent hover:text-accent-foreground rounded-md'
+                      'relative w-full h-full p-0 text-center aspect-square select-none hover:bg-accent hover:text-accent-foreground rounded-md'
                     ),
                     today: 'bg-accent text-accent-foreground rounded-md',
                     outside: 'text-muted-foreground aria-selected:text-muted-foreground',
@@ -169,7 +186,7 @@ export const LavaDatePicker = ({
                       'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
                   }}
                   disabled={date => {
-                    const minimumDate = minDate || new Date(new Date().setHours(0, 0, 0, 0));
+                    const minimumDate = minDate || startOfToday();
                     return date < minimumDate;
                   }}
                   mode="single"
@@ -179,23 +196,23 @@ export const LavaDatePicker = ({
                 <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
                   <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
                     <div className="flex sm:flex-col p-2">
-                      {hours.reverse().map(hour => (
-                        <Button
-                          key={hour}
-                          className="sm:w-full shrink-0 aspect-square"
-                          size="icon"
-                          variant={
-                            dateValue &&
-                            (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() % 12 ===
-                              hour % 12
-                              ? 'default'
-                              : 'ghost'
-                          }
-                          onClick={() => handleTimeChange('hour', hour.toString())}
-                        >
-                          {hour}
-                        </Button>
-                      ))}
+                      {hours.map(hour => {
+                        const hour24AM = hour === 12 ? 0 : hour;
+                        const hour24PM = hour === 12 ? 12 : hour + 12;
+                        const isHourDisabled = isToday && hour24AM < currentHour && hour24PM < currentHour;
+                        return (
+                          <Button
+                            key={hour}
+                            className="sm:w-full shrink-0 aspect-square"
+                            size="icon"
+                            disabled={!dateValue || isHourDisabled}
+                            variant={dateValue && getHours(dateValue) % 12 === hour % 12 ? 'default' : 'ghost'}
+                            onClick={() => handleTimeChange('hour', hour.toString())}
+                          >
+                            {hour}
+                          </Button>
+                        );
+                      })}
                     </div>
                     <ScrollBar className="sm:hidden" orientation="horizontal" />
                   </ScrollArea>
@@ -206,12 +223,10 @@ export const LavaDatePicker = ({
                           key={minute}
                           className="sm:w-full shrink-0 aspect-square"
                           size="icon"
-                          variant={
-                            dateValue &&
-                            (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getMinutes() === minute
-                              ? 'default'
-                              : 'ghost'
+                          disabled={
+                            !dateValue || (isToday && getHours(dateValue) === currentHour && minute < currentMinute)
                           }
+                          variant={dateValue && getMinutes(dateValue) === minute ? 'default' : 'ghost'}
                           onClick={() => handleTimeChange('minute', minute.toString())}
                         >
                           {minute}
@@ -227,12 +242,11 @@ export const LavaDatePicker = ({
                           key={ampm}
                           className="sm:w-full shrink-0 aspect-square"
                           size="icon"
+                          disabled={!dateValue || (isToday && ampm === 'AM' && currentHour >= 12)}
                           variant={
                             dateValue &&
-                            ((ampm === 'AM' &&
-                              (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() < 12) ||
-                              (ampm === 'PM' &&
-                                (typeof dateValue === 'string' ? new Date(dateValue) : dateValue).getHours() >= 12))
+                            ((ampm === 'AM' && getHours(dateValue) < 12) ||
+                              (ampm === 'PM' && getHours(dateValue) >= 12))
                               ? 'default'
                               : 'ghost'
                           }
