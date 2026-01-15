@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle, CircleCheck, CircleArrowUp } from 'lucide-react';
 
 import { ProposalInfo } from './ProposalInfo';
+import { ProposalEndDate } from './ProposalEndDate';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
-import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
@@ -195,8 +195,10 @@ export const VaultGovernance = ({ vault }) => {
                     </div>
 
                     <div className="text-dark-100 text-sm mb-3">
-                      {proposal.status === 'Closed' ? 'Ended ' : 'Ends '}
-                      {formatDate(proposal.endDate)}
+                      <ProposalEndDate
+                        endDate={proposal.endDate}
+                        isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
+                      />
                     </div>
 
                     <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
