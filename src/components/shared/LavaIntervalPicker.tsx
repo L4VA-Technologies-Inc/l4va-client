@@ -37,6 +37,7 @@ type LavaIntervalPickerProps = {
   error?: boolean;
   id?: string;
   margin?: number;
+  disabled?: boolean;
 };
 
 export const LavaIntervalPicker = ({
@@ -53,6 +54,7 @@ export const LavaIntervalPicker = ({
   error = false,
   id,
   margin = 4,
+  disabled = false,
 }: LavaIntervalPickerProps) => {
   const [interval, setIntervalValue] = useState(msToInterval(value));
   const [isOpen, setIsOpen] = useState(false);
@@ -98,7 +100,7 @@ export const LavaIntervalPicker = ({
       ) : null}
       <div className={`mt-${margin}`}>
         <div className="relative flex items-center">
-          <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
+          <Popover open={isOpen && !disabled} onOpenChange={setIsOpen} modal={false}>
             <PopoverTrigger asChild>
               <Button
                 id={id}
@@ -107,9 +109,11 @@ export const LavaIntervalPicker = ({
                   'justify-start text-left',
                   !value && 'text-white/60',
                   error ? 'border border-red-600' : 'border border-steel-750',
+                  disabled && 'opacity-50',
                   className
                 )}
                 variant="outline"
+                disabled={disabled}
               >
                 <ClockIcon className="mr-2 h-4 w-4" />
                 {value ? (
