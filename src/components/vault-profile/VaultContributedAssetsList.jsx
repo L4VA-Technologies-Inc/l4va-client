@@ -83,6 +83,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                   <th className="px-4 py-3 text-left">Type</th>
                   {/* <th className="px-4 py-3 text-left">Value</th> */}
                   <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Origin Type</th>
                   <th className="px-4 py-3 text-left">Quantity</th>
                   {/* <th className="px-4 py-3 text-left">Contribute</th> */}
                   <th className="px-4 py-3"></th>
@@ -113,6 +114,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                       <td className="px-4 py-3 capitalize">{asset.type}</td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 capitalize">{asset.status}</td>
+                      <td className="px-4 py-3 capitalize">{asset.originType}</td>
                       <td className="px-4 py-3">{asset.quantity}</td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 text-center">
@@ -130,7 +132,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                     </tr>
                     {expandedAsset === index && (
                       <tr className="bg-steel-750">
-                        <td colSpan="6" className="px-4 py-2">
+                        <td colSpan="7" className="px-4 py-2">
                           <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                             <div>
                               <p className="font-medium">Policy ID:</p>
