@@ -192,7 +192,7 @@ export const TransactionAction = ({
           disabled={options.length >= 10}
           onClick={handleAddOption}
         >
-          Add Option
+          Add Action
           <Plus className="h-4 w-4" />
         </button>
       </div>
