@@ -55,6 +55,10 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
               <p className="capitalize">{asset.status}</p>
             </div>
             <div>
+              <p className="font-medium text-gray-300">Origin Type:</p>
+              <p className="capitalize">{asset.originType}</p>
+            </div>
+            <div>
               <p className="font-medium text-gray-300">Quantity:</p>
               <p>{asset.quantity}</p>
             </div>
