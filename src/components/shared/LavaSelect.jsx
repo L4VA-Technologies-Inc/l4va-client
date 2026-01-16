@@ -95,8 +95,8 @@ export const LavaSteelSelect = ({
         type="button"
         onClick={toggleDropdown}
       >
-        <span>{selectedOption}</span>
-        <ChevronDown className={`ml-2 h-5 w-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="truncate mr-2">{selectedOption}</span>
+        <ChevronDown className={`h-5 w-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
         <div
@@ -110,8 +110,9 @@ export const LavaSteelSelect = ({
               "
               type="button"
               onClick={() => handleOptionClick(option.value)}
+              title={option.label}
             >
-              {option.label}
+              <span className="block truncate">{option.label}</span>
             </button>
           ))}
         </div>

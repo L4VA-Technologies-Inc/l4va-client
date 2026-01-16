@@ -141,6 +141,7 @@ export const LavaSteelInput = ({
   name,
   id,
   autoComplete,
+  disabled = false,
   ...props
 }) => {
   const generatedId = useId();
@@ -174,6 +175,7 @@ export const LavaSteelInput = ({
           w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
           ${error ? 'border border-red-600' : 'border border-steel-750'}
           focus:outline-none focus:ring-2 focus:ring-steel-750
+          ${disabled ? 'opacity-50' : ''}
           ${className}
         `}
         placeholder={placeholder}
@@ -182,6 +184,7 @@ export const LavaSteelInput = ({
         onChange={handleChange}
         name={name}
         autoComplete={autocompleteValue}
+        disabled={disabled}
         {...props}
       />
     </div>

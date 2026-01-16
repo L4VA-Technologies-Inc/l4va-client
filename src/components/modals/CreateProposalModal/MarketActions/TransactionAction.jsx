@@ -9,7 +9,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { transactionOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
 
 const methodOptions = [
-  { value: 'N/A', label: 'N/A' },
+  { value: 'N/A', label: 'Time Limit' },
   { value: 'GTC', label: 'GTC' },
 ];
 
@@ -23,7 +23,7 @@ const buyTypeOptions = [
   { value: 'Buy', label: 'Buy' },
 ];
 
-const validateOptions = (options = false) => {
+const validateOptions = options => {
   if (options.length === 0) return false;
 
   try {
@@ -274,7 +274,7 @@ export const TransactionAction = ({
                       )}
                     </div>
                     <div>
-                      <div className="flex justify-between gap-2 mb-2">
+                      <div className="flex justify-between gap-2 mb-1">
                         <p className="text-sm text-gray-400 ">Quantity</p>
                         {!useAssetIdInput && (
                           <LavaCheckbox
@@ -284,6 +284,7 @@ export const TransactionAction = ({
                             className="whitespace-nowrap"
                             labelClassName="text-gray-400"
                             onChange={e => setFTMax(option.id, e.target.checked)}
+                            disabled={!option.assetName}
                           />
                         )}
                       </div>
@@ -361,6 +362,7 @@ export const TransactionAction = ({
                         value={option.duration}
                         variant="steel"
                         onChange={value => handleOptionChange(option.id, 'duration', value)}
+                        disabled={option.method === 'GTC'}
                       />
                     </div>
                     <div>
@@ -382,6 +384,7 @@ export const TransactionAction = ({
                           value={option.price}
                           onChange={value => handleAmountChange(option.id, 'price', value)}
                           className="[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          disabled={option.sellType === 'Market'}
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                           <button
