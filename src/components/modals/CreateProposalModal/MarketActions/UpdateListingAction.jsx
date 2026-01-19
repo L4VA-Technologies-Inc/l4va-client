@@ -178,7 +178,12 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
     onDataChange?.({
       updateListingAssets: formattedAssets,
       isValid:
-        formattedAssets.length > 0 && formattedAssets.every(asset => asset.newPrice && Number(asset.newPrice) > 0),
+        formattedAssets.length > 0 &&
+        formattedAssets.every(asset => {
+          if (!asset.newPrice || asset.newPrice === '') return false;
+          const priceDiff = Math.abs(Number(asset.newPrice) - asset.floor_price);
+          return priceDiff >= 5;
+        }),
     });
   }, [selectedNFTs, newPrices, onDataChange]);
 
