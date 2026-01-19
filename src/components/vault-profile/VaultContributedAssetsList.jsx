@@ -83,7 +83,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                   <th className="px-4 py-3 text-left">Type</th>
                   {/* <th className="px-4 py-3 text-left">Value</th> */}
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Origin Type</th>
+                  <th className="px-4 py-3 text-left">Origin</th>
                   <th className="px-4 py-3 text-left">Quantity</th>
                   {/* <th className="px-4 py-3 text-left">Contribute</th> */}
                   <th className="px-4 py-3"></th>

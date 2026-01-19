@@ -273,6 +273,28 @@ export const ProposalInfo = ({ proposal }) => {
                   Voting buttons will appear here once the voting period begins.
                 </div>
               </div>
+            ) : proposal.status === 'passed' ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+                  <h3 className="text-lg font-semibold text-green-500">Execution in Progress</h3>
+                </div>
+                <div className="text-gray-300">
+                  {proposalInfo?.proposalType === 'burning' && 'Burning transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'distribution' &&
+                    'Distribution transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'marketplace_action' &&
+                    'Marketplace transactions are being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'staking' && 'Staking transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'termination' &&
+                    'Termination process is being prepared and executed...'}
+                  {!proposalInfo?.proposalType && 'Proposal actions are being prepared and executed...'}
+                </div>
+                <div className="text-sm text-gray-400">
+                  This proposal has been approved and is currently being executed on the blockchain. Please check back
+                  shortly for the final status.
+                </div>
+              </div>
             ) : (
               <div className="text-center py-8 space-y-4">
                 <div className="text-gray-300">

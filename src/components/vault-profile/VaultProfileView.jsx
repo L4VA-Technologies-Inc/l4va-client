@@ -325,7 +325,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={`https://pool.pm/pool/${vault.contractAddress}`}
+              href={`https://pool.pm/${vault.contractAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"

@@ -39,7 +39,7 @@ export const VaultGovernance = ({ vault }) => {
     if (activeTab === 'Upcoming') return proposal.status === 'upcoming';
     if (activeTab === 'Active') return proposal.status === 'active';
     if (activeTab === 'Rejected') return proposal.status === 'rejected';
-    if (activeTab === 'Finished') return proposal.status === 'executed';
+    if (activeTab === 'Finished') return proposal.status === 'executed' || proposal.status === 'passed';
     return false;
   });
 
@@ -79,8 +79,7 @@ export const VaultGovernance = ({ vault }) => {
   );
 
   const renderInactiveStatus = status => {
-    const proposalStatus = status === 'executed' ? 'finished' : status;
-
+    const proposalStatus = status === 'executed' || status === 'passed' ? 'finished' : status;
     const statusIconColors = {
       finished: {
         text: 'text-yellow-500',
@@ -180,7 +179,7 @@ export const VaultGovernance = ({ vault }) => {
                         )}
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            proposal.status === 'executed'
+                            proposal.status === 'executed' || proposal.status === 'passed'
                               ? 'bg-yellow-700 text-yellow-400'
                               : proposal.status === 'active'
                                 ? 'bg-green-900 text-green-500'
@@ -189,7 +188,9 @@ export const VaultGovernance = ({ vault }) => {
                                   : 'bg-steel-600 text-steel-400'
                           }`}
                         >
-                          {proposal.status !== 'executed' ? proposal.status?.toLocaleUpperCase() : 'FINISHED'}
+                          {proposal.status !== 'executed' && proposal.status !== 'passed'
+                            ? proposal.status?.toLocaleUpperCase()
+                            : 'FINISHED'}
                         </span>
                       </div>
                     </div>
