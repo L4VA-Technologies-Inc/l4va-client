@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SwapRouteImport } from './routes/swap'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -22,6 +23,11 @@ import { Route as VaultsMyRouteImport } from './routes/vaults/my'
 import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 
+const TokensRoute = TokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/swap'
     | '/terms-of-service'
+    | '/tokens'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/swap'
     | '/terms-of-service'
+    | '/tokens'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/swap'
     | '/terms-of-service'
+    | '/tokens'
     | '/profile/$id'
     | '/vaults/$id'
     | '/vaults/my'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  TokensRoute: typeof TokensRoute
   ProfileIdRoute: typeof ProfileIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
   VaultsMyRoute: typeof VaultsMyRoute
@@ -188,6 +201,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tokens': {
+      id: '/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof TokensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms-of-service': {
       id: '/terms-of-service'
       path: '/terms-of-service'
@@ -283,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  TokensRoute: TokensRoute,
   ProfileIdRoute: ProfileIdRoute,
   VaultsIdRoute: VaultsIdRoute,
   VaultsMyRoute: VaultsMyRoute,
