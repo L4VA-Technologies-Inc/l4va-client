@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import SearchInput from '@/components/shared/SearchInput';
 import { Pagination } from '@/components/shared/Pagination';
 import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
+import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 
 export const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const [searchValue, setSearchValue] = useState('');
-  const [debouncedSearchValue, setDebouncedSearchValue] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-  const { data, isLoading, error } = useVaultAssets(vault?.id, debouncedSearchValue, currentPage, limit);
+  const { data, isLoading, error } = useVaultAssets(vault?.id, searchValue, currentPage, limit);
   const assets = data?.data?.items || [];
   const pagination = data?.data
     ? {
@@ -26,18 +25,10 @@ export const VaultContributedAssetsList = ({ vault }) => {
       }
     : null;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchValue(searchValue);
-      setCurrentPage(1);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  const handleSearchChange = value => {
-    setSearchValue(value);
-  };
+  const handleSearch = useCallback(searchText => {
+    setSearchValue(searchText);
+    setCurrentPage(1);
+  }, []);
 
   const handlePageChange = page => {
     setCurrentPage(page);
@@ -48,13 +39,18 @@ export const VaultContributedAssetsList = ({ vault }) => {
     return <div className="text-center p-8 text-red-500">{error.message}</div>;
   }
 
-  if (!assets.length && debouncedSearchValue !== '' && !isLoading) {
+  if (!assets.length && !isLoading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="w-full">
-          <SearchInput className="w-full" onChange={handleSearchChange} />
+          <LavaSearchInput
+            name="name"
+            placeholder="Search by asset name"
+            onChange={handleSearch}
+            className="!h-[60px] !rounded-2xl bg-steel-850 !border-steel-750"
+          />
         </div>
-        <div className="text-center p-8 text-dark-100">No assets found for &quot;{debouncedSearchValue}&quot;.</div>
+        <div className="text-center p-8 text-dark-100">No assets found for &quot;{searchValue}&quot;.</div>
       </div>
     );
   }
@@ -62,7 +58,12 @@ export const VaultContributedAssetsList = ({ vault }) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="w-full">
-        <SearchInput className="w-full" onChange={handleSearchChange} />
+        <LavaSearchInput
+          name="name"
+          placeholder="Search by asset name"
+          onChange={handleSearch}
+          className="!h-[60px] !rounded-2xl bg-steel-850 !border-steel-750"
+        />
       </div>
 
       {isLoading ? (
