@@ -129,23 +129,30 @@ export const ProposalInfo = ({ proposal }) => {
       openModal('LoginModal');
       return;
     }
-    try {
-      await voteOnProposal.mutateAsync({
-        proposalId,
-        voteData: {
-          vote: voteType.toLowerCase(),
-          voterAddress: user.address,
-        },
-      });
-      setCanVote(false);
-      setSelectedVote(voteType);
-      toast.success('Your vote has been recorded successfully');
-      await refetch();
-    } catch (error) {
-      console.error('Error voting on proposal:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
-      toast.error(errorMessage);
-    }
+
+    openModal('VoteConfirmModal', {
+      voteType,
+      proposalTitle: proposalInfo?.title,
+      onConfirm: async () => {
+        try {
+          await voteOnProposal.mutateAsync({
+            proposalId,
+            voteData: {
+              vote: voteType.toLowerCase(),
+              voterAddress: user.address,
+            },
+          });
+          setCanVote(false);
+          setSelectedVote(voteType);
+          toast.success('Your vote has been recorded successfully');
+          await refetch();
+        } catch (error) {
+          console.error('Error voting on proposal:', error);
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
+          toast.error(errorMessage);
+        }
+      },
+    });
   };
 
   useEffect(() => {

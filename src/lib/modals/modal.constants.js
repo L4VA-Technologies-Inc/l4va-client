@@ -17,6 +17,7 @@ import { ChangePresetWarningModal } from '@/components/modals/ChangePresetWarnin
 import { DeletePresetConfirmModal } from '@/components/modals/DeletePresetConfirmModal.jsx';
 import { DeleteDraftConfirmModal } from '@/components/modals/DeleteDraftConfirmModal.jsx';
 import { DeleteWhitelistConfirmModal } from '@/components/modals/DeleteWhitelistConfirmModal.jsx';
+import { VoteConfirmModal } from '@/components/modals/VoteConfirmModal.jsx';
 
 export const MODAL_ENTRIES = [
   {
@@ -94,5 +95,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'DeleteWhitelistConfirmModal',
     Component: DeleteWhitelistConfirmModal,
+  },
+  {
+    name: 'VoteConfirmModal',
+    Component: VoteConfirmModal,
   },
 ];
