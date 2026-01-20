@@ -52,6 +52,34 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     }
   };
 
+  const handleMinOnePercentChange = e => {
+    const { name, value } = e.target;
+
+    const sanitizedValue = handlePercentageChange(value);
+
+    if (sanitizedValue !== null) {
+      if (sanitizedValue === '') {
+        updateField(name, '');
+        return;
+      }
+
+      const numValue = parseFloat(sanitizedValue);
+
+      if (numValue > 0 && numValue < 1) {
+        return;
+      }
+
+      if (numValue > 100) {
+        const limitedValue = Math.min(sanitizedValue, 100);
+        updateField(name, +limitedValue);
+      }
+
+      if (numValue >= 1 && numValue <= 100) {
+        updateField(name, sanitizedValue);
+      }
+    }
+  };
+
   const handleSupplyChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -128,7 +156,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.creationThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal"
+              hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal. Set to 0% to allow anyone holding any vault token to create proposals."
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
               placeholder="XX"
@@ -170,13 +198,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails."
+              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 1%."
               label="VOTE THRESHOLD (%)"
               name="voteThreshold"
               placeholder="XX"
               suffix="%"
               value={data.voteThreshold || ''}
-              onChange={handleNumChange}
+              onChange={handleMinOnePercentChange}
             />
           </div>
           <div>
@@ -184,13 +212,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved."
+              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved. Minimum 1%."
               label="EXECUTION THRESHOLD (%)"
               name="executionThreshold"
               placeholder="XX"
               suffix="%"
               value={data.executionThreshold || ''}
-              onChange={handleNumChange}
+              onChange={handleMinOnePercentChange}
             />
           </div>
         </>

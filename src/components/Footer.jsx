@@ -22,21 +22,24 @@ const navLinks = [
   { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isRequireAuth: true },
   { to: '/how-it-works', label: 'How it works', isRequireAuth: false },
-  { to: '/about-us', label: 'About us', isRequireAuth: false },
+  { to: 'https://l4va.com/', label: 'About us', isRequireAuth: false, isExternal: true },
   { to: '/terms-of-service', label: 'Terms of Service', isRequireAuth: false },
   { to: '/privacy-policy', label: 'Privacy Policy', isRequireAuth: false },
 ];
 
-const NavLink = React.memo(({ to, label, onClick }) => (
-  <Link
-    activeProps={{ className: 'text-orange-500' }}
-    className="font-medium hover:text-orange-500 transition-colors"
-    to={to}
-    onClick={onClick}
-  >
-    {label}
-  </Link>
-));
+const NavLink = React.memo(({ to, label, onClick, isExternal }) => {
+  return (
+    <Link
+      activeProps={{ className: 'text-orange-500' }}
+      className="font-medium hover:text-orange-500 transition-colors"
+      to={to}
+      onClick={onClick}
+      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
+      {label}
+    </Link>
+  );
+});
 NavLink.displayName = 'NavLink';
 
 export const Footer = () => {
@@ -84,7 +87,13 @@ export const Footer = () => {
       </div>
       <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16 text-center">
         {navLinks.map(link => (
-          <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link, e)} />
+          <NavLink
+            key={link.to}
+            to={link.to}
+            label={link.label}
+            isExternal={link.isExternal}
+            onClick={e => handleNavClick(link, e)}
+          />
         ))}
       </div>
       <div className="flex justify-center mb-8">

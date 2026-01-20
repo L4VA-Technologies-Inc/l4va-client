@@ -509,9 +509,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       }
 
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
-      await updateField('id', data.id);
       await queryClient.invalidateQueries({ queryKey: ['vault', data.id] });
       await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+
+      localStorage.removeItem('storageVault');
 
       await navigate({
         to: '/vaults/my',

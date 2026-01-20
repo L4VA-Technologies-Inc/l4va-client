@@ -89,7 +89,7 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
             <div className="bg-steel-800 rounded-lg p-4 space-y-4">
               <div className="grid grid-cols-3 gap-4 font-bold">
                 <p className="text-dark-100 text-sm mt-1 col-span-2">Asset Name</p>
-                <p className="text-dark-100 text-sm mt-1">ID</p>
+                <p className="text-dark-100 text-sm mt-1">Policy ID</p>
               </div>
 
               {assetsData?.data?.map((asset, index) => (
@@ -102,8 +102,10 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
                     />
                     <span className="text-sm">{asset.name}</span>
                   </div>
-                  <span className="text-sm truncate" title={`${asset.policy_id}${asset.asset_id}`}>
-                    {asset.asset_id ? asset.asset_id.substring(0, 10) + '...' : 'N/A'}
+                  <span className="text-sm truncate" title={`${asset.policy_id}`}>
+                    {asset.policy_id
+                      ? asset.policy_id.substring(0, 6) + '...' + asset.policy_id.substring(asset.policy_id.length - 6)
+                      : 'N/A'}
                   </span>
                 </div>
               ))}

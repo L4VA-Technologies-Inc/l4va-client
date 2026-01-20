@@ -20,9 +20,9 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 
 const executionOptions = [
   { value: 'staking', label: 'Staking' },
-  { value: 'distribution', label: 'Distributing' },
-  { value: 'termination', label: 'Terminating' },
-  { value: 'burning', label: 'Burning' },
+  { value: 'distribution', label: 'Distribution' },
+  { value: 'termination', label: 'Termination' },
+  { value: 'burning', label: 'Burn' },
   { value: 'marketplace_action', label: 'Market Actions' },
 ];
 
@@ -88,7 +88,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           burnAssets: proposalData.burnAssets || [],
         };
       } else if (selectedOption === 'marketplace_action') {
-        const marketActionType = proposalData.marketActionType || 'buy_sell';
+        const marketActionType = proposalData.marketActionType || 'buy';
 
         if (marketActionType === 'update_list') {
           proposalPayload.marketplaceActions = (proposalData.updateListingAssets || [])
@@ -99,7 +99,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               newPrice: asset.newPrice,
               market: asset.market || 'WayUp',
             }));
-        } else if (marketActionType === 'buy_sell') {
+        } else if (marketActionType === 'buy' || marketActionType === 'sell' || marketActionType === 'buy_sell') {
           proposalPayload.type = 'buy_sell';
           proposalPayload.metadata = proposalData;
         } else {
@@ -216,8 +216,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
 
             <div className="mt-8">
-              <h4 className="text-white font-medium mb-4">Voting Period</h4>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <h4 className="text-lg font-medium mb-4">Voting Period</h4>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center text-sm">
                 <div className="flex-1 relative">
                   <LavaDatePicker
                     label={'Start: *'}

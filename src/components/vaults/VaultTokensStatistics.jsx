@@ -262,7 +262,7 @@ export const VaultTokensStatistics = () => {
                       key={item.unit || index}
                       className="bg-steel-850 hover:bg-steel-750 transition-colors border-b border-steel-750 last:border-b-0"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 pr-8 sm:pr-0 py-3">
                         <div className="flex items-center gap-3">
                           <img
                             src={item?.token_image || '/favicon/favicon.ico'}

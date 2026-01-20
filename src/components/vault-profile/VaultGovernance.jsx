@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle, CircleCheck, CircleArrowUp } from 'lucide-react';
 
 import { ProposalInfo } from './ProposalInfo';
+import { ProposalEndDate } from './ProposalEndDate';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
-import { formatDate } from '@/utils/core.utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
@@ -39,7 +39,7 @@ export const VaultGovernance = ({ vault }) => {
     if (activeTab === 'Upcoming') return proposal.status === 'upcoming';
     if (activeTab === 'Active') return proposal.status === 'active';
     if (activeTab === 'Rejected') return proposal.status === 'rejected';
-    if (activeTab === 'Finished') return proposal.status === 'executed';
+    if (activeTab === 'Finished') return proposal.status === 'executed' || proposal.status === 'passed';
     return false;
   });
 
@@ -79,8 +79,7 @@ export const VaultGovernance = ({ vault }) => {
   );
 
   const renderInactiveStatus = status => {
-    const proposalStatus = status === 'executed' ? 'finished' : status;
-
+    const proposalStatus = status === 'executed' || status === 'passed' ? 'finished' : status;
     const statusIconColors = {
       finished: {
         text: 'text-yellow-500',
@@ -180,7 +179,7 @@ export const VaultGovernance = ({ vault }) => {
                         )}
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            proposal.status === 'executed'
+                            proposal.status === 'executed' || proposal.status === 'passed'
                               ? 'bg-yellow-700 text-yellow-400'
                               : proposal.status === 'active'
                                 ? 'bg-green-900 text-green-500'
@@ -189,14 +188,18 @@ export const VaultGovernance = ({ vault }) => {
                                   : 'bg-steel-600 text-steel-400'
                           }`}
                         >
-                          {proposal.status !== 'executed' ? proposal.status?.toLocaleUpperCase() : 'FINISHED'}
+                          {proposal.status !== 'executed' && proposal.status !== 'passed'
+                            ? proposal.status?.toLocaleUpperCase()
+                            : 'FINISHED'}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-dark-100 text-sm mb-3">
-                      {proposal.status === 'Closed' ? 'Ended ' : 'Ends '}
-                      {formatDate(proposal.endDate)}
+                      <ProposalEndDate
+                        endDate={proposal.endDate}
+                        isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
+                      />
                     </div>
 
                     <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>

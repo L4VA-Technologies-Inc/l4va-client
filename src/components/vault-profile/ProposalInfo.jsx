@@ -11,8 +11,9 @@ import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
+import { ProposalEndDate } from './ProposalEndDate';
 
-import { formatDate } from '@/utils/core.utils';
+import { formatDateWithTime } from '@/utils/core.utils';
 import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
@@ -53,8 +54,8 @@ export const ProposalInfo = ({ proposal }) => {
     },
     { label: 'IPFS', value: proposalInfo?.ipfsHash || 'N/A' },
     { label: 'Voting system', value: proposalInfo?.votingSystem ?? 'Single choice' },
-    { label: 'Start at', value: proposalInfo?.startDate ? formatDate(proposalInfo.startDate) : 'N/A' },
-    { label: 'End at', value: proposalInfo?.endDate ? formatDate(proposalInfo.endDate) : 'N/A' },
+    { label: 'Start at', value: proposalInfo?.startDate ? formatDateWithTime(proposalInfo.startDate) : 'N/A' },
+    { label: 'End at', value: proposalInfo?.endDate ? formatDateWithTime(proposalInfo.endDate) : 'N/A' },
   ];
 
   const getProposalData = () => {
@@ -128,23 +129,30 @@ export const ProposalInfo = ({ proposal }) => {
       openModal('LoginModal');
       return;
     }
-    try {
-      await voteOnProposal.mutateAsync({
-        proposalId,
-        voteData: {
-          vote: voteType.toLowerCase(),
-          voterAddress: user.address,
-        },
-      });
-      setCanVote(false);
-      setSelectedVote(voteType);
-      toast.success('Your vote has been recorded successfully');
-      await refetch();
-    } catch (error) {
-      console.error('Error voting on proposal:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
-      toast.error(errorMessage);
-    }
+
+    openModal('VoteConfirmModal', {
+      voteType,
+      proposalTitle: proposalInfo?.title,
+      onConfirm: async () => {
+        try {
+          await voteOnProposal.mutateAsync({
+            proposalId,
+            voteData: {
+              vote: voteType.toLowerCase(),
+              voterAddress: user.address,
+            },
+          });
+          setCanVote(false);
+          setSelectedVote(voteType);
+          toast.success('Your vote has been recorded successfully');
+          await refetch();
+        } catch (error) {
+          console.error('Error voting on proposal:', error);
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
+          toast.error(errorMessage);
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -160,7 +168,9 @@ export const ProposalInfo = ({ proposal }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
-            <div className="text-dark-100 text-md mb-3">Ended {formatDate(proposalInfo?.endDate)}</div>
+            <div className="text-dark-100 text-md mb-3">
+              <ProposalEndDate endDate={proposalInfo?.endDate} proposalStatus={proposal.status} />
+            </div>
           </div>
 
           <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
@@ -267,12 +277,33 @@ export const ProposalInfo = ({ proposal }) => {
                   Voting buttons will appear here once the voting period begins.
                 </div>
               </div>
+            ) : proposal.status === 'passed' ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+                  <h3 className="text-lg font-semibold text-green-500">Execution in Progress</h3>
+                </div>
+                <div className="text-gray-300">
+                  {proposalInfo?.proposalType === 'burning' && 'Burning transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'distribution' &&
+                    'Distribution transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'marketplace_action' &&
+                    'Marketplace transactions are being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'staking' && 'Staking transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'termination' &&
+                    'Termination process is being prepared and executed...'}
+                  {!proposalInfo?.proposalType && 'Proposal actions are being prepared and executed...'}
+                </div>
+                <div className="text-sm text-gray-400">
+                  This proposal has been approved and is currently being executed on the blockchain. Please check back
+                  shortly for the final status.
+                </div>
+              </div>
             ) : (
               <div className="text-center py-8 space-y-4">
                 <div className="text-gray-300">
                   This proposal voting period has concluded. You can view the final results below.
                 </div>
-                <div className="text-sm text-gray-500">Thank you for your participation in the governance process.</div>
               </div>
             )}
           </div>

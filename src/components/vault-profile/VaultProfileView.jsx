@@ -325,7 +325,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={`https://pool.pm/pool/${vault.contractAddress}`}
+              href={`https://pool.pm/${vault.contractAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"
@@ -452,7 +452,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           ) : (
             <ContributionSkeleton />
           )}
-          <div className="overflow-hidden mx-auto w-full mt-4">
+          <div className="overflow-hidden mx-auto w-full mt-4 sm:block hidden">
             <SwapComponent
               overrideDisplay
               config={{
@@ -517,6 +517,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             ) : (
               <TabsSkeleton />
             )}
+          </div>
+          <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 sm:hidden block">
+            <SwapComponent
+              overrideDisplay
+              config={{
+                defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                style: { width: '100%' },
+              }}
+            />
           </div>
         </div>
       </div>
