@@ -1,4 +1,4 @@
-import { TransactionAction } from './TransactionAction.jsx';
+import TransactionAction from './TransactionAction.jsx';
 
 export const SellAction = ({ vaultId, onDataChange, error }) => {
   return (

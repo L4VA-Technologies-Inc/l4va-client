@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
-import { LavaSteelSelect } from '@/components/shared/LavaSelect';
+import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
@@ -36,28 +36,23 @@ const validateOptions = options => {
   }
 };
 
-const validateOption = (option, useAssetIdInput = false) => {
+const validateOption = (option, isBuyType = false) => {
   if (option) {
     try {
       transactionOptionSchema.validateSync(option);
-      return !(useAssetIdInput && (!option.assetId || option.assetId.length < 56));
+      return !(isBuyType && (!option.assetId || option.assetId.length < 56));
     } catch {
       return false;
     }
   }
 };
 
-export const TransactionAction = ({
-  vaultId,
-  onDataChange,
-  error,
-  execType,
-  title = 'Transaction Options',
-  useAssetIdInput = false,
-}) => {
+const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Transaction Options' }) => {
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
+
+  const isBuyType = execType === 'BUY';
 
   const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
 
@@ -66,6 +61,10 @@ export const TransactionAction = ({
     const usedAssetNames = options.map(option => option.assetName).filter(Boolean);
     return assetsData.data.filter(asset => !usedAssetNames.includes(asset.name));
   }, [assetsData, options]);
+
+  const selectedAssets = useMemo(() => {
+    return options.map(opt => (isBuyType ? opt.assetId : opt.assetName)).filter(Boolean);
+  }, [options, isBuyType]);
 
   useEffect(() => {
     if (assetsData?.data && !isLoading) {
@@ -83,9 +82,9 @@ export const TransactionAction = ({
     onDataChange({
       buyingSellingOptions: options,
       abstain,
-      isValid: validateOptions(options, useAssetIdInput),
+      isValid: validateOptions(options, isBuyType),
     });
-  }, [options, onDataChange, abstain, useAssetIdInput]);
+  }, [options, onDataChange, abstain, isBuyType]);
 
   const handleOptionChange = (id, field, value) => {
     if (field === 'assetName') {
@@ -114,6 +113,14 @@ export const TransactionAction = ({
               }
             : option
         )
+      );
+    } else if (field === 'sellType') {
+      setOptions(
+        options.map(option => (option.id === id ? { ...option, [field]: value, price: '', exec: execType } : option))
+      );
+    } else if (field === 'method') {
+      setOptions(
+        options.map(option => (option.id === id ? { ...option, [field]: value, duration: '', exec: execType } : option))
       );
     } else {
       setOptions(options.map(option => (option.id === id ? { ...option, [field]: value, exec: execType } : option)));
@@ -156,25 +163,59 @@ export const TransactionAction = ({
       value = int + '.' + dec.slice(0, 2);
     }
 
+    if (Number(value) <= 0) {
+      setOptions(options.map(option => (option.id === id ? { ...option, [field]: '' } : option)));
+    }
+
     setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
   };
 
-  const handleAddOption = () => {
+  const handleAddOption = selectedAssetValues => {
     if (options.length >= 10) return;
+
+    if (selectedAssetValues && Array.isArray(selectedAssetValues)) {
+      const newOptions = selectedAssetValues.map(assetValue => {
+        const existingOption = options.find(opt =>
+          isBuyType ? opt.assetId === assetValue : opt.assetName === assetValue
+        );
+
+        if (existingOption) {
+          return existingOption;
+        }
+
+        const selectedAsset = assetOptions.find(opt => opt.value === assetValue);
+        return {
+          id: Date.now() + Math.random(),
+          assetName: selectedAsset?.label || '',
+          assetId: selectedAsset?.id || (isBuyType ? assetValue : null),
+          exec: execType,
+          quantity: '',
+          sellType: '',
+          duration: '',
+          isMax: false,
+          method: 'N/A',
+          market: 'WayUp',
+          price: '',
+        };
+      });
+
+      setOptions(newOptions);
+      return;
+    }
 
     setOptions([
       ...options,
       {
         id: Date.now(),
         assetName: '',
-        assetId: useAssetIdInput ? '' : null,
-        exec: execType, // Fixed exec type
+        assetId: isBuyType ? '' : null,
+        exec: execType,
         quantity: '',
         sellType: '',
         duration: '',
         isMax: false,
-        method: 'N/A', // Default value
-        market: 'WayUp', // Default value
+        method: 'N/A',
+        market: 'WayUp',
         price: '',
       },
     ]);
@@ -186,21 +227,35 @@ export const TransactionAction = ({
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">{title}</h3>
-        <button
-          className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto"
-          type="button"
-          disabled={options.length >= 10}
-          onClick={handleAddOption}
-        >
-          Add Action
-          <Plus className="h-4 w-4" />
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 sm:w-auto w-[100%]">
+          <button
+            className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto border border-steel-750"
+            type="button"
+            disabled={options.length >= 10}
+            onClick={handleAddOption}
+          >
+            Add Action
+            <Plus className="h-4 w-4" />
+          </button>
+          {!isBuyType && (
+            <LavaMultiSelect
+              options={assetOptions.map(asset => ({
+                label: asset.label,
+                value: asset.value,
+              }))}
+              value={selectedAssets}
+              placeholder="Add Multiple Tokens"
+              onChange={handleAddOption}
+              className="min-w-[250px]"
+            />
+          )}
+        </div>
       </div>
 
       {options.length === 0 ? (
         <>
-          {error && <p className="text-center text-red-600 font-bold py-8">Add options!</p>}
-          {!error && <p className="text-center text-white/60 py-8">Start by clicking Add option</p>}
+          {error && <p className="text-center text-red-600 font-bold py-8">Add actions!</p>}
+          {!error && <p className="text-center text-white/60 py-8">Start by clicking Add action</p>}
         </>
       ) : (
         <div className="space-y-8">
@@ -211,9 +266,9 @@ export const TransactionAction = ({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                   <p className="font-medium">
                     Option {index + 1}{' '}
-                    {error && !validateOption(option, useAssetIdInput) && (
+                    {error && !validateOption(option, isBuyType) && (
                       <span className="text-red-600 ml-2">
-                        {useAssetIdInput && option.assetId && option.assetId.length > 0 && option.assetId.length < 56
+                        {isBuyType && option.assetId && option.assetId.length > 0 && option.assetId.length < 56
                           ? 'Asset ID must be at least 56 characters!'
                           : 'Fill in all inputs!'}
                       </span>
@@ -232,8 +287,8 @@ export const TransactionAction = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <p className="text-sm text-gray-400">{useAssetIdInput ? 'Asset ID:' : 'Asset Name:'}</p>
-                        {useAssetIdInput && (
+                        <p className="text-sm text-gray-400">{isBuyType ? 'Asset ID:' : 'Asset Name:'}</p>
+                        {isBuyType && (
                           <a
                             href="https://www.wayup.io/"
                             target="_blank"
@@ -244,7 +299,7 @@ export const TransactionAction = ({
                           </a>
                         )}
                       </div>
-                      {useAssetIdInput ? (
+                      {isBuyType ? (
                         <div>
                           <LavaSteelInput
                             type="text"
@@ -276,7 +331,7 @@ export const TransactionAction = ({
                     <div>
                       <div className="flex justify-between gap-2 mb-1">
                         <p className="text-sm text-gray-400 ">Quantity</p>
-                        {!useAssetIdInput && (
+                        {!isBuyType && (
                           <LavaCheckbox
                             name={`max-${option.id}`}
                             checked={option.isMax}
@@ -295,7 +350,7 @@ export const TransactionAction = ({
                           placeholder="0.00"
                           value={option.quantity}
                           onChange={value => {
-                            if (useAssetIdInput) {
+                            if (isBuyType) {
                               const numValue = parseFloat(value);
                               if (value === '' || numValue >= 0) {
                                 handleOptionChange(option.id, 'quantity', value);
@@ -307,14 +362,14 @@ export const TransactionAction = ({
                               }
                             }
                           }}
-                          className={`${!useAssetIdInput && isOverLimit ? '!border-red-500/60' : ''} [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]`}
+                          className={`${!isBuyType && isOverLimit ? '!border-red-500/60' : ''} [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]`}
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                           <button
                             type="button"
                             onClick={() => {
                               const newValue = (parseFloat(option.quantity) || 0) + 1;
-                              if (useAssetIdInput || newValue <= getAvailableAmount(option.id)) {
+                              if (isBuyType || newValue <= getAvailableAmount(option.id)) {
                                 handleOptionChange(option.id, 'quantity', newValue.toString());
                               }
                             }}
@@ -336,9 +391,9 @@ export const TransactionAction = ({
                       </div>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-2">{useAssetIdInput ? 'Buy Type' : 'Sell Type'}</p>
+                      <p className="text-sm text-gray-400 mb-2">{isBuyType ? 'Buy Type' : 'Sell Type'}</p>
                       <LavaSteelSelect
-                        options={useAssetIdInput ? buyTypeOptions : sellTypeOptions}
+                        options={isBuyType ? buyTypeOptions : sellTypeOptions}
                         placeholder="Select type"
                         value={option.sellType}
                         onChange={value => handleOptionChange(option.id, 'sellType', value)}
@@ -436,3 +491,5 @@ export const TransactionAction = ({
     </>
   );
 };
+
+export default TransactionAction;
