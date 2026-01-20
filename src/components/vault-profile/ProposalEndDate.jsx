@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { formatProposalEndDate } from '@/utils/core.utils';
 
-export const ProposalEndDate = ({ endDate, isEnded = false }) => {
+export const ProposalEndDate = ({ endDate, proposalStatus }) => {
   const [displayValue, setDisplayValue] = useState(null);
+
+  const isEnded = proposalStatus === 'executed' || proposalStatus === 'rejected';
 
   useEffect(() => {
     if (!endDate) return;
@@ -25,7 +27,11 @@ export const ProposalEndDate = ({ endDate, isEnded = false }) => {
   if (!displayValue) return null;
 
   if (displayValue.type === 'ended' || isEnded) {
-    return <span>Ended {displayValue.value}</span>;
+    return (
+      <span>
+        {proposalStatus === 'executed' ? 'Executed' : 'Failed'} {displayValue.value}
+      </span>
+    );
   }
 
   if (displayValue.type === 'countdown') {

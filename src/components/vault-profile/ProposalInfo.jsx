@@ -162,10 +162,7 @@ export const ProposalInfo = ({ proposal }) => {
         <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
             <div className="text-dark-100 text-md mb-3">
-              <ProposalEndDate
-                endDate={proposalInfo?.endDate}
-                isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
-              />
+              <ProposalEndDate endDate={proposalInfo?.endDate} proposalStatus={proposal.status} />
             </div>
           </div>
 
@@ -300,7 +297,6 @@ export const ProposalInfo = ({ proposal }) => {
                 <div className="text-gray-300">
                   This proposal voting period has concluded. You can view the final results below.
                 </div>
-                <div className="text-sm text-gray-500">Thank you for your participation in the governance process.</div>
               </div>
             )}
           </div>
