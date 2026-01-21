@@ -452,7 +452,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           ) : (
             <ContributionSkeleton />
           )}
-          <div className="overflow-hidden mx-auto w-full mt-4 sm:block hidden">
+          <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay
               config={{
@@ -518,7 +518,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <TabsSkeleton />
             )}
           </div>
-          <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 sm:hidden block">
+          <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
             <SwapComponent
               overrideDisplay
               config={{
