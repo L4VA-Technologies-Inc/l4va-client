@@ -310,11 +310,13 @@ export const ProposalInfo = ({ proposal }) => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 space-y-4">
-                <div className="text-gray-300">
-                  This proposal voting period has concluded. You can view the final results below.
+              !proposalInfo?.executionError && (
+                <div className="text-center py-8 space-y-4">
+                  <div className="text-gray-300">
+                    This proposal voting period has concluded. You can view the final results below.
+                  </div>
                 </div>
-              </div>
+              )
             )}
           </div>
         </div>
