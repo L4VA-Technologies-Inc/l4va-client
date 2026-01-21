@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
+import { CheckCircle, XCircle, Ellipsis, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -31,6 +31,7 @@ export const ProposalInfo = ({ proposal }) => {
   const proposalDistributionAssetsInfo = response?.data?.distributionAssets;
   const proposalFungibleTokensInfo = response?.data?.fungibleTokens;
   const proposalNonFungibleTokensInfo = response?.data?.nonFungibleTokens;
+  const marketplaceActionsInfo = response?.data?.marketplaceActions;
   const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
@@ -59,7 +60,6 @@ export const ProposalInfo = ({ proposal }) => {
   ];
 
   const getProposalData = () => {
-    const actionData = proposalInfo?.metadata || [];
     const executionOptions = {
       label: 'Execution Options',
       value: ProposalTypeLabels[proposalInfo?.proposalType] || 'N/A',
@@ -105,16 +105,13 @@ export const ProposalInfo = ({ proposal }) => {
           : [];
 
       case 'buy_sell':
-        return actionData?.marketplaceActions.length > 0
-          ? [executionOptions, { label: 'Actions', value: actionData?.marketplaceActions, type: 'buy_sell_list' }]
+        return marketplaceActionsInfo.length > 0
+          ? [executionOptions, { label: 'Actions', value: marketplaceActionsInfo, type: 'buy_sell_list' }]
           : [];
 
       case 'marketplace_action':
-        return actionData?.marketplaceActions.length > 0
-          ? [
-              executionOptions,
-              { label: 'Actions', value: actionData?.marketplaceActions, type: 'marketplace_actions_list' },
-            ]
+        return marketplaceActionsInfo.length > 0
+          ? [executionOptions, { label: 'Actions', value: marketplaceActionsInfo, type: 'marketplace_actions_list' }]
           : [];
 
       default:
@@ -172,6 +169,19 @@ export const ProposalInfo = ({ proposal }) => {
               <ProposalEndDate endDate={proposalInfo?.endDate} proposalStatus={proposal.status} />
             </div>
           </div>
+
+          {proposalInfo?.executionError && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
+              </div>
+              <div className="text-red-300">{proposalInfo.executionError.message}</div>
+              {proposalInfo.executionError.timestamp && (
+                <div className="text-sm text-gray-400">{formatDateWithTime(proposalInfo.executionError.timestamp)}</div>
+              )}
+            </div>
+          )}
 
           <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
             <div className="w-full space-y-2">
