@@ -78,7 +78,7 @@ export const VaultGovernance = ({ vault }) => {
     </div>
   );
 
-  const renderInactiveStatus = status => {
+  const renderInactiveStatus = (status, executionError) => {
     const proposalStatus = status === 'executed' || status === 'passed' ? 'finished' : status;
     const statusIconColors = {
       finished: {
@@ -107,8 +107,13 @@ export const VaultGovernance = ({ vault }) => {
               {proposalStatus === 'upcoming' && <CircleArrowUp className="w-6 h-6" />}
             </div>
             <h4 className="text-lg font-semibold mb-2">Proposal {proposalStatus}</h4>
-            {proposalStatus !== 'upcoming' && <p className="text-sm">This proposal has been {proposalStatus}.</p>}
             {proposalStatus === 'upcoming' && <p className="text-sm">This proposal will be available soon.</p>}
+            {proposalStatus !== 'upcoming' && executionError && (
+              <p className="text-sm text-red-400 max-w-md">{executionError}</p>
+            )}
+            {proposalStatus !== 'upcoming' && !executionError && (
+              <p className="text-sm">This proposal has been {proposalStatus}.</p>
+            )}
           </div>
         </div>
       </div>
@@ -205,7 +210,7 @@ export const VaultGovernance = ({ vault }) => {
                     <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
 
                     {proposal.status !== 'active' ? (
-                      renderInactiveStatus(proposal.status)
+                      renderInactiveStatus(proposal.status, proposal.executionError)
                     ) : proposal.votes ? (
                       <div className="space-y-3 mb-6">
                         <div>
