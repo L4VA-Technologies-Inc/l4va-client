@@ -9,13 +9,17 @@ import { VaultTokensStatistics } from '@/components/vaults/VaultTokensStatistics
 export const Home = () => {
   return (
     <>
-      <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[300px] md:min-h-[750px]">
+      <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[750px]">
         <img
           src="/assets/banner-bg.webp"
           alt="Banner"
-          className="absolute inset-0 w-full h-full object-cover object-bottom"
+          className="absolute inset-0 w-full h-full object-cover object-top"
           fetchPriority="high"
           decoding="async"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+          }}
         />
       </div>
       <div className="space-y-20">
