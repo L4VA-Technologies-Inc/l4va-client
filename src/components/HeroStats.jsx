@@ -26,7 +26,7 @@ const HeroStats = () => {
   return (
     <div className="flex flex-col md:flex-row gap-8">
       <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
-        <div className="text-center sm:text-left">
+        <div className="text-center md:text-left">
           <p>Active Vaults</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
             <Counter value={stats?.activeVaults || 0} />
@@ -34,7 +34,7 @@ const HeroStats = () => {
         </div>
       </div>
       <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
-        <div className="text-center sm:text-left">
+        <div className="text-center md:text-left">
           <p>TVL</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
             <Counter value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd)} prefix={currencySymbol} />
@@ -42,7 +42,7 @@ const HeroStats = () => {
         </div>
       </div>
       <div className="flex flex-col items-center text-2xl font-bold min-w-[240px]">
-        <div className="text-center sm:text-left">
+        <div className="text-center md:text-left">
           <p>Total Contributed</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
             <Counter
