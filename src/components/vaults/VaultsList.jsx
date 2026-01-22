@@ -79,7 +79,7 @@ export const VaultList = ({
   const renderVaultsView = () => {
     if (viewType === 'grid') {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 flex-wrap items-center justify-center w-full gap-6">
           {vaults.map(vault => (
             <VaultCard key={vault.id} vault={vault} />
           ))}
@@ -102,10 +102,10 @@ export const VaultList = ({
       <div className="flex flex-col gap-6 md:gap-8">
         {title ? <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2> : null}
         {tabs.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
-            <div className="flex-1 w-full sm:w-auto">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 w-full">
+            <div className="flex-1 w-full lg:w-auto">
               <LavaTabs
-                className="overflow-x-auto text-sm md:text-base w-full"
+                className="overflow-x-auto text-sm lg:text-base w-full"
                 activeTab={activeTab}
                 tabs={tabs}
                 onTabChange={handleTabChange}

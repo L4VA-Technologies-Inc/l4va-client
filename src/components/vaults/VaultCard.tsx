@@ -32,7 +32,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   }, [vault.phaseStartTime, vault.phaseEndTime, vault.timeRemaining]);
 
   return (
-    <div className="max-w-md rounded-xl bg-steel-950 overflow-hidden">
+    <div className="w-full max-w-md rounded-xl bg-steel-950 overflow-hidden">
       <Link className="block" to={`/vaults/${id}`}>
         <div className="relative h-52">
           {vaultImage ? (
