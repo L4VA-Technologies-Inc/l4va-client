@@ -287,6 +287,12 @@ const VAULT_STATUS_CONFIG = {
     buttonText: '',
     isCountdownActive: true,
   },
+  terminating: {
+    countdownName: '',
+    getCountdownTime: () => 'Terminating',
+    buttonText: '',
+    isCountdownActive: false,
+  },
 };
 
 export const getCountdownName = vault => {

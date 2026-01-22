@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { ExternalLink, Eye, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
+import { useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
-import { useClaims } from '@/services/api/queries';
+import { useClaims, useBuildTerminationClaim, useSubmitTerminationClaim } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { ClaimsApiProvider } from '@/services/api/claims';
 
 const tabOptions = [
   { id: 'distribution', name: 'Distribution', type: 'distribution' },
-  { id: 'terminate', name: 'Distribution to Terminate', type: 'final_distribution' },
+  { id: 'terminate', name: 'Distribution to Terminate', type: 'termination' },
   { id: 'l4va', name: '$L4VA', type: 'l4va' },
   { id: 'cancellation', name: 'Cancellation', type: 'cancellation' },
 ];
@@ -26,25 +29,35 @@ const ASSET_TYPE_LABELS = {
 const DEFAULT_TAB = 'distribution';
 
 export const Claims = () => {
-  const tabParam = DEFAULT_TAB;
-  const initialTab = tabOptions.find(tab => tab.id === tabParam) || tabOptions.find(tab => tab.id === DEFAULT_TAB);
+  const initialTab = tabOptions.find(tab => tab.id === DEFAULT_TAB);
+
+  const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
 
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [status] = useState('idle');
-  const [processedClaim] = useState(null);
-  const [selectedClaims] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [processedClaim, setProcessedClaim] = useState(null);
+  const [selectedClaims, setSelectedClaims] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [claims, setClaims] = useState([]);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
     type: initialTab.type,
   });
 
-  const { data, isLoading, error } = useClaims(filters);
-  const claims = data?.data?.items || [];
+  const { data, isLoading, error, refetch } = useClaims(filters);
   const pagination = data?.data || { page: 1, total: 0, limit: 10 };
 
+  const buildTerminationClaim = useBuildTerminationClaim();
+  const submitTerminationClaim = useSubmitTerminationClaim();
+
   const { openModal } = useModalControls();
+
+  useEffect(() => {
+    if (data?.data?.items) {
+      setClaims(data.data.items);
+    }
+  }, [data]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -70,7 +83,88 @@ export const Claims = () => {
     }));
   };
 
+  const handleClaim = async claimId => {
+    try {
+      setProcessedClaim(claimId);
+      setStatus('building');
+
+      // Find the claim to check its type
+      const claim = claims.find(c => c.id === claimId);
+      const isTerminationClaim = claim?.type === 'termination';
+
+      if (isTerminationClaim) {
+        // Termination claim flow: send VT to admin wallet
+        const buildResponse = await buildTerminationClaim.mutateAsync(claimId);
+        const { transactionId, presignedTx } = buildResponse.data;
+
+        setStatus('signing');
+
+        const signature = await wallet?.handler?.signTx(presignedTx, true);
+
+        if (!signature) {
+          throw new Error('Transaction signing was cancelled');
+        }
+
+        setStatus('submitting');
+
+        await submitTerminationClaim.mutateAsync({
+          transactionId,
+          signedTx: signature,
+        });
+
+        toast.success('Termination claim processed! Your VT has been sent and distribution is on the way.');
+      } else {
+        // Regular claim flow
+        const { data } = await ClaimsApiProvider.receiveClaim(claimId);
+
+        setStatus('signing');
+
+        const signature = await wallet?.handler?.signTx(data.presignedTx, true);
+
+        if (!signature) {
+          throw new Error('Transaction signing was cancelled');
+        }
+
+        setStatus('submitting');
+
+        await ClaimsApiProvider.submitClaim(data.transactionId, {
+          transaction: data.presignedTx,
+          txId: data.txId,
+          signatures: [signature],
+          claimId,
+        });
+
+        toast.success('Claim successful! Your item has been claimed.');
+      }
+
+      setSelectedClaims([]);
+      await refetch();
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to claim item. Please try again.');
+    } finally {
+      setStatus('idle');
+      setProcessedClaim(null);
+    }
+  };
+
   const formattedClaims = claims.map(claim => {
+    const isTerminationClaim = claim.type === 'termination';
+    const ftShares = claim.metadata?.ftShares || [];
+    const hasFtDistribution = ftShares.length > 0;
+
+    // Build reward display
+    let rewardDisplay = null;
+    if (claim.adaAmount && claim.adaAmount > 0) {
+      rewardDisplay = `${(claim.adaAmount / 1000000).toLocaleString()} ADA`;
+    }
+
+    // Add FT information for termination claims
+    let ftDisplay = null;
+    if (isTerminationClaim && hasFtDistribution) {
+      const ftCount = ftShares.length;
+      ftDisplay = `+ ${ftCount} FT${ftCount > 1 ? 's' : ''}`;
+    }
+
     return {
       id: claim.id,
       assets: claim.metadata?.assets,
@@ -78,7 +172,9 @@ export const Claims = () => {
       image: claim.vault?.vaultImage,
       link: claim.vault?.id ? `/vaults/${claim.vault.id}` : '#',
       date: new Date(claim.updatedAt || claim.createdAt).toLocaleDateString('en-US') || 'N/A',
-      reward: claim.adaAmount ? `${claim.adaAmount.toLocaleString()} ADA` : null,
+      reward: rewardDisplay,
+      ftReward: ftDisplay,
+      ftShares: ftShares,
       vt_tokens: `${claim.amount.toLocaleString()} ${claim.vault.vaultTokenTicker}`,
       status: claim.status || 'pending',
       type: claim.type,
@@ -87,7 +183,7 @@ export const Claims = () => {
   });
 
   const filteredClaims = formattedClaims.filter(claim => {
-    const allowedStatuses = ['pending', 'claimed', 'failed'];
+    const allowedStatuses = ['pending', 'claimed', 'failed', 'available'];
     return allowedStatuses.includes(claim.status);
   });
 
@@ -115,6 +211,16 @@ export const Claims = () => {
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Pending</span>
         </div>
+      );
+    } else if (claim.status === 'available' && claim.type === 'termination') {
+      return (
+        <PrimaryButton
+          size="sm"
+          disabled={status !== 'idle' || wallet.isUpdatingUtxos}
+          onClick={() => handleClaim(claim.id)}
+        >
+          {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : 'Claim'}
+        </PrimaryButton>
       );
     } else if (claim.status === 'failed') {
       return (
@@ -151,9 +257,10 @@ export const Claims = () => {
               rel="noopener noreferrer"
               className="underline text-orange-400 hover:text-orange-300 text-sm"
             >
-              {claim.link}
+              {claim.vault}
             </a>
-            <span className="font-medium text-white text-base">{claim.reward}</span>
+            {claim.reward && <span className="font-medium text-white text-base">{claim.reward}</span>}
+            {claim.ftReward && <span className="font-medium text-green-400 text-sm">{claim.ftReward}</span>}
             <span className="font-medium text-white text-base">{claim.vt_tokens}</span>
           </div>
         </div>
@@ -161,6 +268,19 @@ export const Claims = () => {
           <ClaimStatusIndicator claim={claim} />
         </div>
       </div>
+      {claim.ftShares && claim.ftShares.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-steel-700">
+          <p className="text-xs text-steel-400 mb-1">FT Distribution:</p>
+          <div className="flex flex-wrap gap-2">
+            {claim.ftShares.map((ft, idx) => (
+              <div key={idx} className="text-xs bg-steel-800 px-2 py-1 rounded">
+                <span className="text-green-400">{Number(ft.quantity).toLocaleString()}</span>
+                <span className="text-steel-300 ml-1">{ft.name || ft.assetId.slice(0, 8)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -228,8 +348,15 @@ export const Claims = () => {
                       </a>
                     </td>
                     <td className="px-4 py-3 text-steel-300">{claim.date}</td>
-                    {claim.reward ? (
-                      <td className="px-4 py-3 font-medium text-white">{claim.reward}</td>
+                    {claim.reward || claim.ftReward ? (
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          {claim.reward && <span className="font-medium text-white">{claim.reward}</span>}
+                          {claim.ftReward && (
+                            <span className="font-medium text-green-400 text-sm">{claim.ftReward}</span>
+                          )}
+                        </div>
+                      </td>
                     ) : !claim.reward && activeTab.id === 'cancellation' && claim.assets ? (
                       <td className="px-4 py-3 font-medium text-white">
                         <button

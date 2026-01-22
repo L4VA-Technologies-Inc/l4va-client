@@ -16,4 +16,20 @@ export class ClaimsApiProvider {
     const response = await axiosInstance.post(ClaimsConfigProvider.submitClaim(internalTransactionId), data);
     return response;
   }
+
+  // Termination Claims
+  static async getTerminationStatus(vaultId) {
+    const response = await axiosInstance.get(ClaimsConfigProvider.getTerminationStatus(vaultId));
+    return response;
+  }
+
+  static async buildTerminationClaim(claimId) {
+    const response = await axiosInstance.post(ClaimsConfigProvider.buildTerminationClaim(claimId));
+    return response;
+  }
+
+  static async submitTerminationClaim(transactionId, data) {
+    const response = await axiosInstance.post(ClaimsConfigProvider.submitTerminationClaim(transactionId), data);
+    return response;
+  }
 }

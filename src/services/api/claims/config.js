@@ -10,4 +10,17 @@ export class ClaimsConfigProvider {
   static submitClaim(internalTransactionId) {
     return `/api/v1/claims/${internalTransactionId}/submit`;
   }
+
+  // Termination Claims
+  static getTerminationStatus(vaultId) {
+    return `/api/v1/termination/vaults/${vaultId}/status`;
+  }
+
+  static buildTerminationClaim(claimId) {
+    return `/api/v1/termination/claims/${claimId}/build`;
+  }
+
+  static submitTerminationClaim(transactionId) {
+    return `/api/v1/termination/claims/${transactionId}/submit`;
+  }
 }

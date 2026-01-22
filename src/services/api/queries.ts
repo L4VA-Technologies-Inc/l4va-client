@@ -212,6 +212,28 @@ export const useClaims = (params: any) => {
     queryFn: () => ClaimsApiProvider.getClaims(params),
   });
 };
+// Termination Claims Queries
+export const useTerminationStatus = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['termination-status', vaultId],
+    queryFn: () => ClaimsApiProvider.getTerminationStatus(vaultId),
+    enabled: !!vaultId,
+  });
+};
+
+// Termination Claims Mutations
+export const useBuildTerminationClaim = () => {
+  return useMutation({
+    mutationFn: (claimId: string) => ClaimsApiProvider.buildTerminationClaim(claimId),
+  });
+};
+
+export const useSubmitTerminationClaim = () => {
+  return useMutation({
+    mutationFn: ({ transactionId, signedTx }: { transactionId: string; signedTx: string }) =>
+      ClaimsApiProvider.submitTerminationClaim(transactionId, { signedTx }),
+  });
+};
 
 export const useGovernanceProposals = (vaultId: string) => {
   return useQuery({
