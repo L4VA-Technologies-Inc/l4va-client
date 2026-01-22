@@ -9,7 +9,7 @@ const getBackgroundColor = index => {
 
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-red-600 text-3xl lg:text-6xl xl:text-4xl font-bold mb-2">{value}</p>
+    <p className="font-russo text-red-600 text-3xl xl:text-4xl font-bold mb-2">{value}</p>
     <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
   </div>
 );
@@ -134,7 +134,7 @@ const Stats = () => {
 
   return (
     <div className="container mx-auto py-12 sm:py-16">
-      <h1 className="font-russo font-bold text-3xl lg:text-6xl xl:text-4xl mb-8">QUICK STATS</h1>
+      <h1 className="font-russo font-bold text-3xl xl:text-4xl mb-8">QUICK STATS</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         {stats.map(stat => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} />

@@ -1,7 +1,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const StepCard = ({ number, title, description }) => (
-  <div className="w-full lg:w-[600px] flex flex-col sm:flex-row items-center sm:items-start p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]">
+  <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]">
     <div className="min-w-[80px] text-center text-4xl sm:text-6xl lg:text-8xl xl:text-[128px] font-extrabold text-red-600 font-satoshi">
       {number}
     </div>
@@ -97,7 +97,7 @@ const Faq = () => {
     <div className="relative py-8 sm:py-12 lg:py-16">
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
         <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[70px]">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-[70px]">
             <div className="space-y-4 text-dark-100 lg:pr-[135px]">
               <h3 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
                 How it Works
