@@ -230,8 +230,7 @@ export const useBuildTerminationClaim = () => {
 
 export const useSubmitTerminationClaim = () => {
   return useMutation({
-    mutationFn: ({ transactionId, signedTx }: { transactionId: string; signedTx: string }) =>
-      ClaimsApiProvider.submitTerminationClaim(transactionId, { signedTx }),
+    mutationFn: params => ClaimsApiProvider.submitTerminationClaim(params),
   });
 };
 

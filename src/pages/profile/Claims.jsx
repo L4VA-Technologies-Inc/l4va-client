@@ -83,18 +83,17 @@ export const Claims = () => {
     }));
   };
 
-  const handleClaim = async claimId => {
+  const handleClaim = async claim => {
     try {
-      setProcessedClaim(claimId);
+      setProcessedClaim(claim.id);
       setStatus('building');
 
       // Find the claim to check its type
-      const claim = claims.find(c => c.id === claimId);
       const isTerminationClaim = claim?.type === 'termination';
 
       if (isTerminationClaim) {
         // Termination claim flow: send VT to admin wallet
-        const buildResponse = await buildTerminationClaim.mutateAsync(claimId);
+        const buildResponse = await buildTerminationClaim.mutateAsync(claim.id);
         const { transactionId, presignedTx } = buildResponse.data;
 
         setStatus('signing');
@@ -108,14 +107,16 @@ export const Claims = () => {
         setStatus('submitting');
 
         await submitTerminationClaim.mutateAsync({
-          transactionId,
-          signedTx: signature,
+          transaction: presignedTx,
+          vaultId: claim.rawData.vault.id,
+          txId: transactionId,
+          signatures: [signature],
         });
 
-        toast.success('Termination claim processed! Your VT has been sent and distribution is on the way.');
+        toast.success('Termination claim processed!');
       } else {
         // Regular claim flow
-        const { data } = await ClaimsApiProvider.receiveClaim(claimId);
+        const { data } = await ClaimsApiProvider.receiveClaim(claim.id);
 
         setStatus('signing');
 
@@ -131,7 +132,7 @@ export const Claims = () => {
           transaction: data.presignedTx,
           txId: data.txId,
           signatures: [signature],
-          claimId,
+          claimId: claim.id,
         });
 
         toast.success('Claim successful! Your item has been claimed.');
@@ -200,10 +201,16 @@ export const Claims = () => {
     });
 
   const ClaimStatusIndicator = ({ claim }) => {
-    if (claim.status === 'claimed') {
+    if (claim.status === 'claimed' && claim.type !== 'termination') {
       return (
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Distributed</span>
+        </div>
+      );
+    } else if (claim.status === 'claimed' && claim.type === 'termination') {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Claimed</span>
         </div>
       );
     } else if (claim.status === 'pending') {
@@ -217,7 +224,7 @@ export const Claims = () => {
         <PrimaryButton
           size="sm"
           disabled={status !== 'idle' || wallet.isUpdatingUtxos}
-          onClick={() => handleClaim(claim.id)}
+          onClick={() => handleClaim(claim)}
         >
           {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : 'Claim'}
         </PrimaryButton>

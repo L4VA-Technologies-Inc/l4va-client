@@ -28,8 +28,8 @@ export class ClaimsApiProvider {
     return response;
   }
 
-  static async submitTerminationClaim(transactionId, data) {
-    const response = await axiosInstance.post(ClaimsConfigProvider.submitTerminationClaim(transactionId), data);
+  static async submitTerminationClaim(params) {
+    const response = await axiosInstance.post(ClaimsConfigProvider.submitTerminationClaim(params.txId), params);
     return response;
   }
 }
