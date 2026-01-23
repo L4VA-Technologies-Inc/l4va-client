@@ -27,14 +27,14 @@ const Hero = () => {
         <div className="font-russo">
           <h1
             className="
-              uppercase leading-tight text-3xl lg:text-6xl xl:text-7xl tracking-wide lg:tracking-wider
+              uppercase leading-tight text-2xl lg:text-5xl xl:text-6xl tracking-wide lg:tracking-wider
               bg-gradient-to-r from-[var(--color-orange-500)] to-[#FFD012] bg-clip-text text-transparent
             "
           >
-            Dream big
+            The Future of Asset Fractionalization
           </h1>
-          <p className="uppercase leading-tight block text-2xl lg:text-5xl xl:text-6xl tracking-wide lg:tracking-wider">
-            FRACTIONALIZE BIGGER
+          <p className="uppercase leading-tight block text-xl lg:text-4xl xl:text-5xl tracking-wide lg:tracking-wider">
+            Liquidity 4 Virtual Assets
           </p>
         </div>
         <p className="lg:text-2xl uppercase text-dark-100 font-bold tracking-wide lg:tracking-wider">
