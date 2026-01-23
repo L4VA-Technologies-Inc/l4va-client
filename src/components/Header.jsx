@@ -187,7 +187,13 @@ export const Header = () => {
           </Link>
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">
-              <div>
+              {navLinks.map(link => (
+                <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
+              ))}
+            </div>
+            <div className="flex-1" />
+            <div className="flex gap-2">
+              <div className="hidden lg:block">
                 <LavaSteelSelect
                   options={currencyOptions}
                   value={selectedCurrency}
@@ -196,12 +202,6 @@ export const Header = () => {
                   }}
                 />
               </div>
-              {navLinks.map(link => (
-                <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
-              ))}
-            </div>
-            <div className="flex-1" />
-            <div className="flex gap-2">
               <button
                 className={cn(
                   'p-2 rounded-full hover:bg-steel-850 transition-colors',
