@@ -17,6 +17,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
     maxMcap: initialFilters.maxMcap || '',
     minTvl: initialFilters.minTvl || '',
     maxTvl: initialFilters.maxTvl || '',
+    minDelta: initialFilters.minDelta || '',
+    maxDelta: initialFilters.maxDelta || '',
   });
 
   const [errors, setErrors] = useState({
@@ -26,6 +28,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
     maxMcap: '',
     minTvl: '',
     maxTvl: '',
+    minDelta: '',
+    maxDelta: '',
   });
 
   const validateRange = (minKey, maxKey, minValue, maxValue) => {
@@ -45,6 +49,12 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
   };
 
   const handleFilterChange = (key, value) => {
+    // Don't allow negative numbers
+    const numValue = parseFloat(value);
+    if (value !== '' && numValue < 0) {
+      return;
+    }
+
     setFilters(prev => {
       const newFilters = {
         ...prev,
@@ -63,6 +73,9 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
         } else if (key === 'minTvl' || key === 'maxTvl') {
           const rangeErrors = validateRange('minTvl', 'maxTvl', newFilters.minTvl, newFilters.maxTvl);
           newErrors = { ...newErrors, ...rangeErrors };
+        } else if (key === 'minDelta' || key === 'maxDelta') {
+          const rangeErrors = validateRange('minDelta', 'maxDelta', newFilters.minDelta, newFilters.maxDelta);
+          newErrors = { ...newErrors, ...rangeErrors };
         }
 
         return newErrors;
@@ -80,6 +93,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
       maxMcap: '',
       minTvl: '',
       maxTvl: '',
+      minDelta: '',
+      maxDelta: '',
     };
 
     setFilters(cleared);
@@ -90,6 +105,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
       maxMcap: '',
       minTvl: '',
       maxTvl: '',
+      minDelta: '',
+      maxDelta: '',
     });
     onApplyFilters(cleared);
     closeModal();
@@ -141,6 +158,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Min Price"
               type="number"
+              min={0}
               placeholder="Min price..."
               value={filters.minPrice}
               onChange={value => handleFilterChange('minPrice', value)}
@@ -152,6 +170,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Max Price"
               type="number"
+              min={0}
               placeholder="Max price..."
               value={filters.maxPrice}
               onChange={value => handleFilterChange('maxPrice', value)}
@@ -166,6 +185,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Min Market Cap"
               type="number"
+              min={0}
               placeholder="Min mcap..."
               value={filters.minMcap}
               onChange={value => handleFilterChange('minMcap', value)}
@@ -177,6 +197,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Max Market Cap"
               type="number"
+              min={0}
               placeholder="Max mcap..."
               value={filters.maxMcap}
               onChange={value => handleFilterChange('maxMcap', value)}
@@ -191,6 +212,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Min TVL"
               type="number"
+              min={0}
               placeholder="Min TVL..."
               value={filters.minTvl}
               onChange={value => handleFilterChange('minTvl', value)}
@@ -202,12 +224,40 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
             <LavaSteelInput
               label="Max TVL"
               type="number"
+              min={0}
               placeholder="Max TVL..."
               value={filters.maxTvl}
               onChange={value => handleFilterChange('maxTvl', value)}
               error={!!errors.maxTvl}
             />
             {errors.maxTvl && <p className="text-red-600 text-xs mt-1">{errors.maxTvl}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <LavaSteelInput
+              label="Min Mkt Cap / TVL (%)"
+              type="number"
+              min={0}
+              placeholder="Min delta..."
+              value={filters.minDelta}
+              onChange={value => handleFilterChange('minDelta', value)}
+              error={!!errors.minDelta}
+            />
+            {errors.minDelta && <p className="text-red-600 text-xs mt-1">{errors.minDelta}</p>}
+          </div>
+          <div>
+            <LavaSteelInput
+              label="Max Mkt Cap / TVL (%)"
+              type="number"
+              min={0}
+              placeholder="Max delta..."
+              value={filters.maxDelta}
+              onChange={value => handleFilterChange('maxDelta', value)}
+              error={!!errors.maxDelta}
+            />
+            {errors.maxDelta && <p className="text-red-600 text-xs mt-1">{errors.maxDelta}</p>}
           </div>
         </div>
       </div>
