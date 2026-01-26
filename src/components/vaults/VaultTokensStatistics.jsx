@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { ArrowUpDown, ChevronDown, ChevronUp, ExternalLink, Filter } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
@@ -9,7 +9,9 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import { Pagination } from '@/components/shared/Pagination';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import SecondaryButton from '@/components/shared/SecondaryButton.js';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useCurrency } from '@/hooks/useCurrency.ts';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
@@ -50,11 +52,6 @@ const formatPercentage = value => {
   return `${sign}${numValue.toFixed(2)}%`;
 };
 
-const calculateMktCapTVLPercentage = (mcap, tvl) => {
-  if (!mcap || !tvl || tvl === 0) return null;
-  return (mcap / tvl) * 100;
-};
-
 const LoadingState = () => (
   <div className="py-8 flex items-center justify-center">
     <Spinner />
@@ -75,6 +72,7 @@ const EmptyState = () => (
 
 export const VaultTokensStatistics = () => {
   const { openModal } = useModalControls();
+  const { currency } = useCurrency();
   const [timePeriod, setTimePeriod] = useState('1d');
   const [filters, setFilters] = useState({
     page: 1,
@@ -88,11 +86,22 @@ export const VaultTokensStatistics = () => {
     maxMcap: '',
     minTvl: '',
     maxTvl: '',
+    minDelta: '',
+    maxDelta: '',
+    tvlCurrency: currency,
   });
 
   const { data, isLoading, error } = useMarketStatistics(filters);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const newCurrency = currency === 'ada' ? 'ada' : 'usd';
+    setFilters(prev => ({
+      ...prev,
+      tvlCurrency: newCurrency,
+    }));
+  }, [currency]);
 
   const responseData = data?.data || data;
   const items = responseData?.items || [];
@@ -104,8 +113,6 @@ export const VaultTokensStatistics = () => {
   };
 
   const handleSort = key => {
-    if (key === 'mktCapTVL') return;
-
     setFilters(prev => {
       const isSameKey = prev.sortBy === key;
       const newOrder = isSameKey && prev.sortOrder === 'ASC' ? 'DESC' : 'ASC';
@@ -161,18 +168,20 @@ export const VaultTokensStatistics = () => {
     }));
   };
 
-  const formatADA = value => {
-    if (value === null || value === undefined || value === '') return '-';
-    const numValue = typeof value === 'number' ? value : parseFloat(value);
-    if (isNaN(numValue)) return '-';
-    return `${numValue.toFixed(2)} ADA`;
-  };
-
   const getPriceChangeColor = value => {
     if (value === null || value === undefined || value === '') return 'text-dark-100';
     const numValue = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(numValue)) return 'text-dark-100';
     return numValue >= 0 ? 'text-emerald-500' : 'text-rose-500';
+  };
+
+  const getDeltaColor = value => {
+    if (value === null || value === undefined || value === '') return 'text-dark-100';
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(numValue)) return 'text-dark-100';
+    return numValue > 100
+      ? 'bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent'
+      : 'text-emerald-500';
   };
 
   const getSortIcon = columnKey => {
@@ -186,7 +195,7 @@ export const VaultTokensStatistics = () => {
     );
   };
 
-  const SortableHeader = ({ columnKey, children, className = '', isShowIcon = true }) => (
+  const SortableHeader = ({ columnKey, children, className = '' }) => (
     <th
       className={clsx(
         'px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750 cursor-pointer hover:text-white transition-colors',
@@ -196,7 +205,7 @@ export const VaultTokensStatistics = () => {
     >
       <div className="flex items-center">
         {children}
-        {isShowIcon && getSortIcon(columnKey)}
+        {getSortIcon(columnKey)}
       </div>
     </th>
   );
@@ -244,18 +253,16 @@ export const VaultTokensStatistics = () => {
                   <SortableHeader columnKey="ticker">Token</SortableHeader>
                   <SortableHeader columnKey="price">Price</SortableHeader>
                   <SortableHeader columnKey={TIME_PERIOD_MAP[timePeriod]}>% Change</SortableHeader>
+                  <SortableHeader columnKey="delta">Mkt Cap / TVL (%)</SortableHeader>
                   <SortableHeader columnKey="mcap">Market Cap</SortableHeader>
-                  <SortableHeader columnKey="mktCapTVL" isShowIcon={false}>
-                    Mkt Cap / TVL delta (%)
-                  </SortableHeader>
                   <SortableHeader columnKey="tvl">TVL</SortableHeader>
                   <SortableHeader columnKey="circSupply">Supply</SortableHeader>
+                  <th className="px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750"></th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, index) => {
                   const priceChange = getPriceChangeValue(item);
-                  const mktCapTVL = calculateMktCapTVLPercentage(item.mcap, item.tvl);
 
                   return (
                     <tr
@@ -291,15 +298,23 @@ export const VaultTokensStatistics = () => {
                         {formatPercentage(priceChange)}
                       </td>
 
+                      <td className={clsx('px-4 py-3 font-medium', getDeltaColor(item.delta))}>
+                        {formatNumber(item.delta)}%
+                      </td>
+
                       <td className="px-4 py-3 text-white">{formatNumber(item.mcap)}</td>
 
                       <td className="px-4 py-3 text-white">
-                        {mktCapTVL !== null ? `${formatNumber(mktCapTVL)}%` : '-'}
+                        {currency === 'ada' ? `₳${formatNumber(item.tvl_ada)}` : `$${formatNumber(item.tvl_usd)}`}
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatADA(item.tvl)}</td>
-
                       <td className="px-4 py-3 text-white">{formatNumber(item.circSupply)}</td>
+
+                      <td className="px-4 py-3">
+                        <PrimaryButton size="sm" onClick={() => navigate({ to: `/vaults/${item.vault_id}` })}>
+                          Buy
+                        </PrimaryButton>
+                      </td>
                     </tr>
                   );
                 })}

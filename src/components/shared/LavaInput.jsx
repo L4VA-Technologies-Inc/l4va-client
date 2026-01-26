@@ -1,4 +1,4 @@
-import { HelpCircle, Search } from 'lucide-react';
+import { HelpCircle, Search, ChevronUp, ChevronDown } from 'lucide-react';
 import { useEffect, useState, useId } from 'react';
 
 import { formatNum } from '@/utils/core.utils';
@@ -68,6 +68,7 @@ export const LavaInput = ({
   required = false,
   id,
   autoComplete,
+  disabled = false,
 }) => {
   const generatedId = useId();
   const inputId = id || (name ? `lava-input-${name}` : generatedId);
@@ -109,6 +110,7 @@ export const LavaInput = ({
               rounded-[10px] bg-input-bg py-4 pl-5 
               ${suffix ? 'pr-12' : 'pr-5'} font-medium w-full border border-steel-850 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
+              disabled:opacity-50
               ${className}
             `}
             maxLength={maxLength}
@@ -119,6 +121,7 @@ export const LavaInput = ({
             onChange={handleChange}
             onBlur={onBlur}
             autoComplete={autocompleteValue}
+            disabled={disabled}
           />
           {suffix && <div className="absolute right-5 text-white/60 select-none">{suffix}</div>}
         </div>
@@ -142,14 +145,58 @@ export const LavaSteelInput = ({
   id,
   autoComplete,
   disabled = false,
+  step = 1,
+  min,
+  max,
+  onIncrement,
+  onDecrement,
   ...props
 }) => {
   const generatedId = useId();
   const inputId = id || (name ? `lava-steel-input-${name}` : generatedId);
   const autocompleteValue = autoComplete !== undefined ? autoComplete : getAutocompleteValue(name, type);
+  const isNumberType = type === 'number';
 
   const handleChange = e => {
     if (onChange) onChange(e.target.value);
+  };
+
+  const handleIncrement = () => {
+    if (onIncrement) {
+      onIncrement();
+      return;
+    }
+
+    const currentValue = parseFloat(value) || 0;
+    const stepValue = typeof step === 'number' ? step : 1;
+    let newValue = currentValue + stepValue;
+
+    if (max !== undefined && newValue > max) {
+      newValue = max;
+    }
+
+    if (onChange) {
+      onChange(newValue.toString());
+    }
+  };
+
+  const handleDecrement = () => {
+    if (onDecrement) {
+      onDecrement();
+      return;
+    }
+
+    const currentValue = parseFloat(value) || 0;
+    const stepValue = typeof step === 'number' ? step : 1;
+    let newValue = currentValue - stepValue;
+
+    if (min !== undefined && newValue < min) {
+      newValue = min;
+    }
+
+    if (onChange) {
+      onChange(newValue.toString());
+    }
   };
 
   return (
@@ -168,25 +215,51 @@ export const LavaSteelInput = ({
           )}
         </label>
       ) : null}
-      <input
-        id={inputId}
-        className={`
-          lava-steel-input
-          w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
-          ${error ? 'border border-red-600' : 'border border-steel-750'}
-          focus:outline-none focus:ring-2 focus:ring-steel-750
-          ${disabled ? 'opacity-50' : ''}
-          ${className}
-        `}
-        placeholder={placeholder}
-        type={type}
-        value={value}
-        onChange={handleChange}
-        name={name}
-        autoComplete={autocompleteValue}
-        disabled={disabled}
-        {...props}
-      />
+      <div className="relative">
+        <input
+          id={inputId}
+          className={`
+            lava-steel-input
+            w-full px-4 py-2 bg-steel-850 text-white placeholder-white/60 rounded-lg 
+            ${error ? 'border border-red-600' : 'border border-steel-750'}
+            focus:outline-none focus:ring-2 focus:ring-steel-750
+            ${disabled ? 'opacity-50' : ''}
+            ${isNumberType ? 'pr-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]' : ''}
+            ${className}
+          `}
+          placeholder={placeholder}
+          type={type}
+          value={value}
+          onChange={handleChange}
+          name={name}
+          autoComplete={autocompleteValue}
+          disabled={disabled}
+          min={min}
+          max={max}
+          step={step}
+          {...props}
+        />
+        {isNumberType && !disabled && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
+            <button
+              type="button"
+              onClick={handleIncrement}
+              className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+              tabIndex={-1}
+            >
+              <ChevronUp className="w-3 h-3 text-gray-400" />
+            </button>
+            <button
+              type="button"
+              onClick={handleDecrement}
+              className="p-0.5 hover:bg-steel-600 rounded transition-colors"
+              tabIndex={-1}
+            >
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

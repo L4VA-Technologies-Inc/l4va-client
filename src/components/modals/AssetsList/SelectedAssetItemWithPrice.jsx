@@ -1,4 +1,4 @@
-import { X, ChevronUp, ChevronDown } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -29,43 +29,28 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
         </div>
         <div className="flex items-center gap-3">
           <div className="w-32">
-            <div className="relative">
-              <LavaSteelInput
-                placeholder="New price"
-                value={asset.newPrice || ''}
-                onChange={value => {
-                  const numValue = parseFloat(value);
-                  if (value === '' || numValue >= 0) {
-                    onPriceChange(asset.tokenId, value);
-                  }
-                }}
-                type="number"
-                min="0"
-                className={`text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${!isValidPrice ? '!border-red-500/60' : ''}`}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newValue = (parseFloat(asset.newPrice) || 0) + 0.1;
-                    onPriceChange(asset.tokenId, newValue.toFixed(1));
-                  }}
-                  className="p-0.5 hover:bg-steel-600 rounded transition-colors"
-                >
-                  <ChevronUp className="w-3 h-3 text-gray-400" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newValue = Math.max(0, (parseFloat(asset.newPrice) || 0) - 0.1);
-                    onPriceChange(asset.tokenId, newValue.toFixed(1));
-                  }}
-                  className="p-0.5 hover:bg-steel-600 rounded transition-colors"
-                >
-                  <ChevronDown className="w-3 h-3 text-gray-400" />
-                </button>
-              </div>
-            </div>
+            <LavaSteelInput
+              placeholder="New price"
+              value={asset.newPrice || ''}
+              onChange={value => {
+                const numValue = parseFloat(value);
+                if (value === '' || numValue >= 0) {
+                  onPriceChange(asset.tokenId, value);
+                }
+              }}
+              onIncrement={() => {
+                const newValue = (parseFloat(asset.newPrice) || 0) + 0.1;
+                onPriceChange(asset.tokenId, newValue.toFixed(1));
+              }}
+              onDecrement={() => {
+                const newValue = Math.max(0, (parseFloat(asset.newPrice) || 0) - 0.1);
+                onPriceChange(asset.tokenId, newValue.toFixed(1));
+              }}
+              type="number"
+              min={0}
+              step={0.1}
+              className={`text-sm ${!isValidPrice ? '!border-red-500/60' : ''}`}
+            />
             {!isValidPrice && (
               <p className="text-xs text-red-500 mt-1">
                 Price must differ by at least ₳5 (current: ₳{priceDiff.toFixed(2)})

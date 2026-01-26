@@ -183,11 +183,17 @@ export const Header = () => {
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
             <L4vaIcon className="flex-shrink-0" height={24} width={24} />
-            <span className="hidden md:block text-2xl font-bold uppercase">L4VA</span>
+            <span className="hidden lg:block text-2xl font-bold uppercase">L4VA</span>
           </Link>
           <div className="flex w-full items-center">
-            <div className="hidden md:flex items-center gap-8 ml-[56px]">
-              <div>
+            <div className="hidden lg:flex items-center gap-8 ml-[56px]">
+              {navLinks.map(link => (
+                <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
+              ))}
+            </div>
+            <div className="flex-1" />
+            <div className="flex gap-2">
+              <div className="hidden lg:block">
                 <LavaSteelSelect
                   options={currencyOptions}
                   value={selectedCurrency}
@@ -196,12 +202,6 @@ export const Header = () => {
                   }}
                 />
               </div>
-              {navLinks.map(link => (
-                <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
-              ))}
-            </div>
-            <div className="flex-1" />
-            <div className="flex gap-2">
               <button
                 className={cn(
                   'p-2 rounded-full hover:bg-steel-850 transition-colors',
@@ -215,7 +215,7 @@ export const Header = () => {
               {renderNotifications()}
               <ConnectButton />
               <button
-                className={cn('p-2 rounded-full hover:bg-steel-850 transition-colors md:hidden flex')}
+                className={cn('p-2 rounded-full hover:bg-steel-850 transition-colors lg:hidden flex')}
                 aria-label="Toggle mobile menu"
                 onClick={toggleMobileMenu}
               >
