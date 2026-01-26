@@ -68,6 +68,7 @@ export const LavaInput = ({
   required = false,
   id,
   autoComplete,
+  disabled = false,
 }) => {
   const generatedId = useId();
   const inputId = id || (name ? `lava-input-${name}` : generatedId);
@@ -109,6 +110,7 @@ export const LavaInput = ({
               rounded-[10px] bg-input-bg py-4 pl-5 
               ${suffix ? 'pr-12' : 'pr-5'} font-medium w-full border border-steel-850 h-[60px]
               focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
+              disabled:opacity-50
               ${className}
             `}
             maxLength={maxLength}
@@ -119,6 +121,7 @@ export const LavaInput = ({
             onChange={handleChange}
             onBlur={onBlur}
             autoComplete={autocompleteValue}
+            disabled={disabled}
           />
           {suffix && <div className="absolute right-5 text-white/60 select-none">{suffix}</div>}
         </div>
