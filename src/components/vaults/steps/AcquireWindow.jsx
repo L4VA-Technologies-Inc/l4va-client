@@ -106,6 +106,12 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             onChange={handleChange}
             hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
+          {data.tokensForAcquires === 0 && (
+            <p className="text-orange-500 mt-1">
+              Warning: 0% Tokens for Acquirers means this vault will NOT be offered to acquirers to send ADA and Reserve
+              % will not apply.
+            </p>
+          )}
         </div>
         <div>
           <LavaInput
@@ -119,7 +125,14 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
             hint={RESERVE_HINT}
+            disabled={data.tokensForAcquires === 0}
           />
+          {data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
+            <p className="text-orange-500 mt-1">
+              Warning: Reserve % of &lt; 100% means that assets contributed will be valued at less than 100% of market
+              price (floor price for NFTs / spot price for CNTs at end of Contribution window).
+            </p>
+          )}
         </div>
         <div>
           <LavaInput
@@ -140,6 +153,11 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             onChange={handleChange}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
+          {data.liquidityPoolContribution === 0 && (
+            <p className="text-orange-500 mt-1">
+              Warning: 0% LP Contribution means there will NOT be a liquidity pool launched for this Vault.
+            </p>
+          )}
         </div>
       </div>
     </div>
