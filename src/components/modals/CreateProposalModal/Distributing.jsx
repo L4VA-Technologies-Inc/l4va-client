@@ -14,6 +14,7 @@ export default function Distributing({ onDataChange, vaultId }) {
   const distributionInfo = data?.data;
   const treasuryBalance = distributionInfo?.treasuryBalance?.lovelace || 0;
   const treasuryBalanceAda = treasuryBalance / 1000000;
+  const maxDistributableAda = distributionInfo?.maxDistributableAda || 0;
   const vtHolderCount = distributionInfo?.vtHolderCount || 0;
   const minAdaPerHolder = distributionInfo?.minAdaPerHolder || 2;
   const warnings = distributionInfo?.warnings || [];
@@ -22,7 +23,7 @@ export default function Distributing({ onDataChange, vaultId }) {
   // Validation
   const enteredAda = parseFloat(adaAmount) || 0;
   const enteredLovelace = Math.floor(enteredAda * 1000000);
-  const isOverBalance = enteredAda > treasuryBalanceAda;
+  const isOverBalance = enteredAda > maxDistributableAda; // Use max distributable instead of raw balance
   const adaPerHolder = vtHolderCount > 0 ? enteredAda / vtHolderCount : 0;
   const hasNoFunds = hasTreasuryWallet && treasuryBalanceAda === 0;
   // Allow distribution even if some holders get less than minimum - they will be skipped
@@ -33,7 +34,8 @@ export default function Distributing({ onDataChange, vaultId }) {
   const handleDistributeAllChange = checked => {
     setDistributeAll(checked);
     if (checked) {
-      setAdaAmount(treasuryBalanceAda.toString());
+      // Use max distributable ADA (treasury minus fee reserve)
+      setAdaAmount(maxDistributableAda.toFixed(6));
     } else {
       setAdaAmount('');
     }
@@ -57,12 +59,12 @@ export default function Distributing({ onDataChange, vaultId }) {
     }
   }, [enteredLovelace, isValid, onDataChange]);
 
-  // Auto-check "distribute all" if user enters the exact treasury balance
+  // Auto-check "distribute all" if user enters the exact max distributable amount
   useEffect(() => {
-    if (!distributeAll && enteredAda === treasuryBalanceAda && treasuryBalanceAda > 0) {
+    if (!distributeAll && Math.abs(enteredAda - maxDistributableAda) < 0.000001 && maxDistributableAda > 0) {
       setDistributeAll(true);
     }
-  }, [enteredAda, treasuryBalanceAda, distributeAll]);
+  }, [enteredAda, maxDistributableAda, distributeAll]);
 
   if (isLoading) {
     return (
@@ -122,7 +124,10 @@ export default function Distributing({ onDataChange, vaultId }) {
           {isOverBalance && (
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
-              <span>Amount exceeds treasury balance ({treasuryBalanceAda.toLocaleString()} ADA)</span>
+              <span>
+                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} ADA). Fee reserve required for
+                transaction.
+              </span>
             </div>
           )}
 
@@ -152,6 +157,10 @@ export default function Distributing({ onDataChange, vaultId }) {
             <span className="text-sm">Treasury Balance</span>
           </div>
           <p className="text-2xl font-semibold text-white">{treasuryBalanceAda.toLocaleString()} ADA</p>
+          <p className="text-xs text-green-400 mt-1">Max Distributable: {maxDistributableAda.toLocaleString()} ADA</p>
+          <p className="text-xs text-white/40">
+            (Fees reserved: {(treasuryBalanceAda - maxDistributableAda).toFixed(2)} ADA)
+          </p>
         </div>
 
         <div className="bg-steel-800 rounded-lg p-4">
