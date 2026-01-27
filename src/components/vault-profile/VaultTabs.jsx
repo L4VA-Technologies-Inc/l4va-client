@@ -7,6 +7,8 @@ import { VaultSettings } from '@/components/vault-profile/VaultSettings';
 import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
+import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
+import { IS_PREPROD } from '@/utils/networkValidation.ts';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const { isAuthenticated } = useAuth();
@@ -15,12 +17,13 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
     Assets: <VaultContributedAssetsList vault={vault} />,
     Acquire: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
-    Settings: <VaultSettings vault={vault} />,
+    ...(IS_PREPROD ? { Activity: <VaultActivity vault={vault} /> } : {}),
   };
 
   const tabContent = {
     ...baseTabContent,
     ...(vault.isChatVisible && isAuthenticated ? { Chat: <VaultChatWrapper vault={vault} /> } : {}),
+    Settings: <VaultSettings vault={vault} />,
   };
 
   const router = useRouter();
