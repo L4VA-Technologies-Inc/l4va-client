@@ -1,254 +1,218 @@
 import { useEffect, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
-import { LavaSteelSelect } from '@/components/shared/LavaSelect';
-import { Button } from '@/components/ui/button';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 
 export default function Distributing({ onDataChange, vaultId }) {
-  const [distributionAssets, setDistributionAssets] = useState([]);
+  const [adaAmount, setAdaAmount] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
-  const [availableAssets, setAvailableAssets] = useState([]);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
 
-  const removeAsset = id => {
-    setDistributionAssets(prev => prev.filter(a => a.id !== id));
-    if (distributeAll) {
-      setDistributeAll(false);
-    }
-  };
+  // Distribution info from backend
+  const distributionInfo = data?.data;
+  const treasuryBalance = distributionInfo?.treasuryBalance?.lovelace || 0;
+  const treasuryBalanceAda = treasuryBalance / 1000000;
+  const vtHolderCount = distributionInfo?.vtHolderCount || 0;
+  const minAdaPerHolder = distributionInfo?.minAdaPerHolder || 2;
+  const warnings = distributionInfo?.warnings || [];
+  const hasTreasuryWallet = distributionInfo?.hasTreasuryWallet ?? false;
 
-  const updateAsset = (id, field, value) => {
-    setDistributionAssets(prev => prev.map(asset => (asset.id === id ? { ...asset, [field]: value } : asset)));
-    if (distributeAll && field === 'amount') {
-      setDistributeAll(false);
-    }
-  };
-
-  const setMaxAmount = id => {
-    const asset = distributionAssets.find(a => a.id === id);
-    if (asset && asset.asset) {
-      const availableAsset = availableAssets.find(a => a.value === asset.asset);
-      if (availableAsset) {
-        updateAsset(id, 'amount', availableAsset.available.toString());
-        updateAsset(id, 'isMax', true);
-      }
-    }
-  };
-
-  const getAvailableAmount = assetValue => {
-    const asset = availableAssets.find(a => a.value === assetValue);
-    return asset ? asset.available : 0;
-  };
-
-  const addAsset = () => {
-    const newId = Math.max(...distributionAssets.map(a => a.id), 0) + 1;
-    setDistributionAssets(prev => [...prev, { id: newId, asset: '', amount: '', isMax: false }]);
-    if (distributeAll) {
-      setDistributeAll(false);
-    }
-  };
-
-  const distributeAllAssets = () => {
-    if (availableAssets && availableAssets.length > 0) {
-      const newAssets = availableAssets.map((a, index) => ({
-        id: index + 1,
-        asset: a.value,
-        amount: a.available.toString(),
-        isMax: true,
-      }));
-
-      setDistributionAssets(newAssets);
-    }
-  };
+  // Validation
+  const enteredAda = parseFloat(adaAmount) || 0;
+  const enteredLovelace = Math.floor(enteredAda * 1000000);
+  const isOverBalance = enteredAda > treasuryBalanceAda;
+  const adaPerHolder = vtHolderCount > 0 ? enteredAda / vtHolderCount : 0;
+  const hasNoFunds = hasTreasuryWallet && treasuryBalanceAda === 0;
+  // Allow distribution even if some holders get less than minimum - they will be skipped
+  // Only block if amount is too small to give anyone the minimum (less than 2 ADA total)
+  const noOneWillReceive = enteredAda > 0 && enteredAda < minAdaPerHolder;
+  const isValid = enteredAda > 0 && !isOverBalance && !noOneWillReceive && hasTreasuryWallet && !hasNoFunds;
 
   const handleDistributeAllChange = checked => {
     setDistributeAll(checked);
     if (checked) {
-      distributeAllAssets();
+      setAdaAmount(treasuryBalanceAda.toString());
     } else {
-      setDistributionAssets([]);
+      setAdaAmount('');
     }
   };
 
-  useEffect(() => {
-    const rawAssets = data?.data?.assets;
-
-    if (Array.isArray(rawAssets) && rawAssets.length > 0 && !isLoading) {
-      const formattedAssets = rawAssets.map(asset => {
-        let label = '';
-        if (asset.asset_id === 'lovelace') {
-          label = 'ADA';
-        } else {
-          label = asset?.name || asset?.asset_id || 'Unknown Asset';
-        }
-
-        return {
-          value: asset.id,
-          label: label,
-          available: parseFloat(asset.quantity || 0),
-          type: asset.type,
-          policy_id: asset.policy_id,
-          asset_id: asset.asset_id,
-        };
-      });
-
-      setAvailableAssets(formattedAssets);
+  const handleAdaAmountChange = value => {
+    setAdaAmount(value);
+    // Uncheck "distribute all" if user manually changes amount
+    if (distributeAll && parseFloat(value) !== treasuryBalanceAda) {
+      setDistributeAll(false);
     }
-  }, [data, isLoading]);
+  };
 
+  // Notify parent of changes
   useEffect(() => {
     if (onDataChange) {
-      const formattedAssets = distributionAssets
-        .filter(asset => asset.asset && asset.amount)
-        .map(asset => {
-          const selectedAsset = availableAssets.find(a => a.value === asset.asset);
-          return {
-            id: asset.asset,
-            amount: parseFloat(asset.amount),
-            policyId: selectedAsset?.policy_id,
-            assetId: selectedAsset?.asset_id,
-            type: selectedAsset?.type,
-          };
-        });
-
       onDataChange({
-        distributionAssets: formattedAssets,
+        distributionLovelaceAmount: isValid ? enteredLovelace : null,
+        isValid: isValid,
       });
     }
-  }, [distributionAssets, onDataChange, availableAssets]);
+  }, [enteredLovelace, isValid, onDataChange]);
 
+  // Auto-check "distribute all" if user enters the exact treasury balance
   useEffect(() => {
-    if (!distributeAll) {
-      const selectedAssets = distributionAssets.map(a => a.asset).filter(Boolean);
-      const allAssetsSelected =
-        availableAssets.length > 0 &&
-        selectedAssets.length === availableAssets.length &&
-        availableAssets.every(a => selectedAssets.includes(a.value));
-
-      if (allAssetsSelected) {
-        setDistributeAll(true);
-      }
+    if (!distributeAll && enteredAda === treasuryBalanceAda && treasuryBalanceAda > 0) {
+      setDistributeAll(true);
     }
-  }, [distributionAssets, availableAssets, distributeAll]);
+  }, [enteredAda, treasuryBalanceAda, distributeAll]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        <span className="ml-3 text-white/60">Loading treasury info...</span>
+      </div>
+    );
+  }
+
+  if (!hasTreasuryWallet) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <div>
+            <p className="text-red-400 font-medium">No Treasury Wallet</p>
+            <p className="text-white/60 text-sm mt-1">
+              This vault does not have a treasury wallet configured. Distribution proposals require a treasury wallet
+              with ADA funds.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-white">Distribution Assets</h3>
-        <div className="flex gap-3 items-center">
-          <Button
-            type="button"
-            onClick={addAsset}
-            disabled={distributionAssets.length >= availableAssets.length}
-            className="flex items-center gap-2 px-4 py-2 bg-steel-0 hover:bg-steel-0 text-sm rounded-lg"
-          >
-            <div className="flex items-center px-1 py-1 bg-steel-750 hover:bg-steel-700 text-white rounded-lg">
-              <Plus className="w-4 h-4" />
-            </div>
-            <p className="text-dark-100 text-sm">Add Asset</p>
-          </Button>
+    <div className="space-y-6">
+      {/* Distribution Amount Input */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-white">Distribution Amount</h3>
           <LavaCheckbox
-            type="button"
-            className="px-4 py-2 bg-steel-600 hover:bg-steel-500 text-white text-sm rounded-lg"
             checked={distributeAll}
             onChange={e => handleDistributeAllChange(e.target.checked)}
-            description="Distribute All Assets"
-          ></LavaCheckbox>
+            description="Distribute All"
+            disabled={treasuryBalanceAda <= 0}
+          />
+        </div>
+
+        <div className="bg-steel-800 rounded-lg p-4 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <LavaSteelInput
+                type="number"
+                label="Amount (ADA)"
+                placeholder="0.00"
+                value={adaAmount}
+                onChange={handleAdaAmountChange}
+                className={isOverBalance || noOneWillReceive ? 'border-red-500/60' : ''}
+              />
+            </div>
+          </div>
+
+          {/* Validation Messages */}
+          {isOverBalance && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Amount exceeds treasury balance ({treasuryBalanceAda.toLocaleString()} ADA)</span>
+            </div>
+          )}
+
+          {noOneWillReceive && (
+            <div className="flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>Minimum {minAdaPerHolder} ADA required for at least one holder to receive distribution</span>
+            </div>
+          )}
+
+          {enteredAda > 0 && adaPerHolder > 0 && adaPerHolder < minAdaPerHolder && !noOneWillReceive && (
+            <div className="flex items-center gap-2 text-yellow-400 text-sm">
+              <AlertCircle className="w-4 h-4" />
+              <span>
+                Some holders with smaller VT balances may not receive distribution (minimum {minAdaPerHolder} ADA per
+                recipient)
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Treasury Info Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Wallet className="w-4 h-4" />
+            <span className="text-sm">Treasury Balance</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{treasuryBalanceAda.toLocaleString()} ADA</p>
+        </div>
+
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Users className="w-4 h-4" />
+            <span className="text-sm">VT Holders</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{vtHolderCount.toLocaleString()}</p>
+          <p className="text-xs text-white/40 mt-1">Min {minAdaPerHolder} ADA per holder required</p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {distributionAssets.map(asset => {
-          const availableAmount = getAvailableAmount(asset.asset);
-          const isOverLimit = parseFloat(asset.amount) > availableAmount;
-
-          return (
-            <div key={asset.id} className="bg-steel-800 rounded-lg p-4 space-y-4">
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm text-white/60 w-12">Asset</div>
-                  <div className="w-48">
-                    <LavaSteelSelect
-                      options={availableAssets.filter(
-                        a =>
-                          !distributionAssets.some(
-                            selectedAsset => selectedAsset.asset === a.value && selectedAsset.id !== asset.id
-                          )
-                      )}
-                      value={asset.asset}
-                      onChange={value => {
-                        updateAsset(asset.id, 'asset', value);
-                        if (asset.isMax) {
-                          setMaxAmount(asset.id);
-                        }
-                      }}
-                      placeholder="Select asset"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="text-sm text-white/60 w-16">Quantity</div>
-                  <div className="flex items-center gap-2 flex-1">
-                    <LavaSteelInput
-                      type="number"
-                      placeholder="0.00"
-                      value={asset.amount}
-                      onChange={value => {
-                        updateAsset(asset.id, 'amount', value);
-                        updateAsset(asset.id, 'isMax', false);
-                      }}
-                      className={isOverLimit ? 'border-red-500/60' : ''}
-                    />
-                    <label className="flex items-center gap-2 text-sm text-white/60 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={asset.isMax}
-                        onChange={e => {
-                          if (e.target.checked) {
-                            setMaxAmount(asset.id);
-                          } else {
-                            updateAsset(asset.id, 'isMax', false);
-                          }
-                        }}
-                        className="rounded border-steel-600 bg-steel-700 text-orange-500 focus:ring-orange-500"
-                      />
-                      Max
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  {distributionAssets.length > 1 && (
-                    <Button
-                      type="button"
-                      onClick={() => removeAsset(asset.id)}
-                      className="p-2 text-white/60 hover:text-white hover:bg-steel-700 rounded"
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {asset.asset && isOverLimit && (
-                <div className="text-xs text-red-400">
-                  Amount exceeds available balance ({availableAmount.toLocaleString()})
-                </div>
-              )}
-            </div>
-          );
-        })}
+      {/* Info Section */}
+      <div className="bg-steel-800/50 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 mt-0.5" />
+          <div className="text-sm text-white/70">
+            <p className="font-medium text-white/90 mb-2">How Distribution Works</p>
+            <ul className="space-y-1 list-disc list-inside">
+              <li>ADA is distributed proportionally based on VT holdings</li>
+              <li>Minimum 2 ADA per recipient (Cardano UTXO requirement)</li>
+              <li>Distribution is processed in batches of 40 recipients</li>
+              <li>Claims are created for each recipient to track status</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
-      {distributionAssets.length === 0 && (
-        <div className="text-center py-8 text-white/60">
-          No assets added. Click &quot;Add Asset&quot; to start distributing.
+      {/* Warnings from Backend */}
+      {warnings.length > 0 && (
+        <div className="space-y-2">
+          {warnings.map((warning, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-900/20 rounded-lg p-3"
+            >
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{warning}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Summary */}
+      {enteredAda > 0 && isValid && (
+        <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+          <p className="text-green-400 font-medium mb-2">Distribution Summary</p>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-white/60">Total Amount:</span>
+              <span className="ml-2 text-white">{enteredAda.toLocaleString()} ADA</span>
+            </div>
+            <div>
+              <span className="text-white/60">Recipients:</span>
+              <span className="ml-2 text-white">{vtHolderCount.toLocaleString()}</span>
+            </div>
+            <div>
+              <span className="text-white/60">Est. Batches:</span>
+              <span className="ml-2 text-white">{Math.ceil(vtHolderCount / 40)}</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

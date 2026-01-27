@@ -28,7 +28,8 @@ export const ProposalInfo = ({ proposal }) => {
 
   const proposalInfo = response?.data?.proposal;
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
-  const proposalDistributionAssetsInfo = response?.data?.distributionAssets;
+  const proposalDistributionInfo = response?.data?.distributionInfo;
+  const proposalDistributionStatus = response?.data?.distributionStatus;
   const proposalFungibleTokensInfo = response?.data?.fungibleTokens;
   const proposalNonFungibleTokensInfo = response?.data?.nonFungibleTokens;
   const marketplaceActionsInfo = response?.data?.marketplaceActions;
@@ -38,11 +39,82 @@ export const ProposalInfo = ({ proposal }) => {
   const proposer = response?.data?.proposer;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
 
+  const getTerminationProgress = status => {
+    const statuses = [
+      'initiated',
+      'nft_burning',
+      'nft_burned',
+      'lp_removal_pending',
+      'lp_removal_awaiting',
+      'lp_return_received',
+      'vt_burned',
+      'ada_in_treasury',
+      'claims_created',
+      'claims_processing',
+      'claims_complete',
+      'vault_burned',
+      'treasury_cleaned',
+    ];
+    const currentIndex = statuses.indexOf(status);
+    return currentIndex >= 0 ? Math.round(((currentIndex + 1) / statuses.length) * 100) : 0;
+  };
+
   const handleOwnerProposalClick = id => {
     router.navigate({
       to: '/profile/$id',
       params: { id },
     });
+  };
+
+  const getMarketplaceActionMessage = () => {
+    const actions = proposalInfo?.metadata?.marketplaceActions;
+    if (!actions || actions.length === 0) return 'All marketplace actions have been successfully executed.';
+
+    const actionGroups = {
+      SELL: [],
+      BUY: [],
+      UNLIST: [],
+      UPDATE_LISTING: [],
+    };
+
+    // Group actions by type
+    actions.forEach(action => {
+      if (actionGroups[action.exec]) {
+        actionGroups[action.exec].push(action);
+      }
+    });
+
+    const messages = [];
+
+    if (actionGroups.SELL.length > 0) {
+      const count = actionGroups.SELL.length;
+      const names = actionGroups.SELL.map(a => a.assetName).join(', ');
+      messages.push(
+        count === 1 ? `Listed ${names} for sale on the marketplace.` : `Listed ${count} assets for sale: ${names}.`
+      );
+    }
+
+    if (actionGroups.BUY.length > 0) {
+      const count = actionGroups.BUY.length;
+      const names = actionGroups.BUY.map(a => a.assetName).join(', ');
+      messages.push(count === 1 ? `Purchased ${names} from the marketplace.` : `Purchased ${count} assets: ${names}.`);
+    }
+
+    if (actionGroups.UNLIST.length > 0) {
+      const count = actionGroups.UNLIST.length;
+      const names = actionGroups.UNLIST.map(a => a.assetName).join(', ');
+      messages.push(count === 1 ? `Unlisted ${names} from the marketplace.` : `Unlisted ${count} assets: ${names}.`);
+    }
+
+    if (actionGroups.UPDATE_LISTING.length > 0) {
+      const count = actionGroups.UPDATE_LISTING.length;
+      const names = actionGroups.UPDATE_LISTING.map(a => a.assetName).join(', ');
+      messages.push(
+        count === 1 ? `Updated listing price for ${names}.` : `Updated listing prices for ${count} assets: ${names}.`
+      );
+    }
+
+    return messages.length > 0 ? messages.join(' ') : 'All marketplace actions have been successfully executed.';
   };
 
   const informationItems = [
@@ -85,19 +157,46 @@ export const ProposalInfo = ({ proposal }) => {
         return stakingItems;
       }
 
-      case 'distribution':
-        return proposalDistributionAssetsInfo?.length > 0
-          ? [
-              executionOptions,
-              { label: 'Distribution Assets', value: proposalDistributionAssetsInfo, type: 'distribution_assets_list' },
-            ]
-          : [];
+      case 'distribution': {
+        const distributionItems = [executionOptions];
+
+        if (proposalDistributionInfo) {
+          distributionItems.push({
+            label: 'Total Amount',
+            value: `${proposalDistributionInfo.totalAdaAmount?.toLocaleString()} ADA`,
+          });
+          distributionItems.push({
+            label: 'Eligible Recipients',
+            value: `${proposalDistributionInfo.eligibleHolders} of ${proposalDistributionInfo.totalHolders} holders`,
+          });
+          if (proposalDistributionInfo.skippedHolders > 0) {
+            distributionItems.push({
+              label: 'Skipped Recipients',
+              value: `${proposalDistributionInfo.skippedHolders} (below min ${proposalDistributionInfo.minAdaPerRecipient} ADA)`,
+            });
+          }
+        }
+
+        // Show execution status if available
+        if (proposalDistributionStatus) {
+          distributionItems.push({
+            label: 'Batches',
+            value: `${proposalDistributionStatus.completedBatches}/${proposalDistributionStatus.totalBatches} completed`,
+          });
+          if (proposalDistributionStatus.totalDistributed) {
+            const distributedAda = parseInt(proposalDistributionStatus.totalDistributed) / 1000000;
+            distributionItems.push({
+              label: 'Distributed',
+              value: `${distributedAda.toLocaleString()} ADA`,
+            });
+          }
+        }
+
+        return distributionItems;
+      }
 
       case 'termination':
-        return [
-          executionOptions,
-          { label: 'Termination Assets', value: 'Should we terminate all assets from vault?', type: 'list' },
-        ];
+        return [''];
 
       case 'burning':
         return proposalBurnAssetsInfo?.length > 0
@@ -169,19 +268,6 @@ export const ProposalInfo = ({ proposal }) => {
               <ProposalEndDate endDate={proposalInfo?.endDate} proposalStatus={proposal.status} />
             </div>
           </div>
-
-          {proposalInfo?.executionError && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-                <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
-              </div>
-              <div className="text-red-300">{proposalInfo.executionError.message}</div>
-              {proposalInfo.executionError.timestamp && (
-                <div className="text-sm text-gray-400">{formatDateWithTime(proposalInfo.executionError.timestamp)}</div>
-              )}
-            </div>
-          )}
 
           <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
             <div className="w-full space-y-2">
@@ -293,20 +379,147 @@ export const ProposalInfo = ({ proposal }) => {
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
                   <h3 className="text-lg font-semibold text-green-500">Execution in Progress</h3>
                 </div>
+                {proposalInfo?.proposalType === 'termination' && proposalInfo?.vault?.terminationMetadata?.status ? (
+                  <div className="space-y-3">
+                    <div className="w-full bg-steel-800 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${getTerminationProgress(proposalInfo.vault.terminationMetadata.status)}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="text-gray-300 font-medium">
+                      {(() => {
+                        const status = proposalInfo.vault.terminationMetadata.status;
+                        switch (status) {
+                          case 'initiated':
+                            return 'Termination initiated - Preparing to process vault assets...';
+                          case 'nft_burning':
+                            return 'Burning NFTs - Sending NFTs to burn wallet...';
+                          case 'nft_burned':
+                            return 'NFTs burned successfully - Proceeding to liquidity removal...';
+                          case 'lp_removal_pending':
+                            return 'Removing liquidity - Sending LP tokens to VyFi...';
+                          case 'lp_removal_awaiting':
+                            return 'Awaiting liquidity return - Waiting for VyFi to return VT and ADA...';
+                          case 'lp_return_received':
+                            return 'Liquidity returned - VT and ADA received from VyFi...';
+                          case 'vt_burned':
+                            return 'VT tokens burned - Preparing treasury distribution...';
+                          case 'ada_in_treasury':
+                            return 'ADA transferred to treasury - Creating claims for VT holders...';
+                          case 'claims_created':
+                            return 'Claims created - VT holders can now claim their share...';
+                          case 'claims_processing':
+                            return 'Claims in progress - VT holders are claiming their distributions...';
+                          case 'claims_complete':
+                            return 'All claims processed - Finalizing vault termination...';
+                          case 'vault_burned':
+                            return 'Vault NFT burned - Cleaning up treasury wallet...';
+                          case 'treasury_cleaned':
+                            return 'Treasury cleaned - Termination complete!';
+                          default:
+                            return 'Termination process is being prepared and executed...';
+                        }
+                      })()}
+                    </div>
+                    {proposalInfo.vault.terminationMetadata.status === 'claims_created' ||
+                    proposalInfo.vault.terminationMetadata.status === 'claims_processing' ? (
+                      <div className="text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 rounded p-3">
+                        VT holders can now claim their share of assets and ADA. Check the Claims tab to process your
+                        claim.
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-400">
+                        The termination process is running automatically. Please check back for updates.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-gray-300">
+                      {proposalInfo?.proposalType === 'burning' &&
+                        'Burning transaction is being prepared and executed...'}
+                      {proposalInfo?.proposalType === 'distribution' &&
+                        'Distribution transaction is being prepared and executed...'}
+                      {proposalInfo?.proposalType === 'marketplace_action' &&
+                        'Marketplace transactions are being prepared and executed...'}
+                      {proposalInfo?.proposalType === 'staking' &&
+                        'Staking transaction is being prepared and executed...'}
+                      {proposalInfo?.proposalType === 'termination' &&
+                        'Termination process is being prepared and executed...'}
+                      {!proposalInfo?.proposalType && 'Proposal actions are being prepared and executed...'}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      This proposal has been approved and is currently being executed on the blockchain. Please check
+                      back shortly for the final status.
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : proposal.status === 'executed' ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                  <h3 className="text-lg font-semibold text-green-500">Successfully Executed</h3>
+                </div>
                 <div className="text-gray-300">
-                  {proposalInfo?.proposalType === 'burning' && 'Burning transaction is being prepared and executed...'}
+                  {proposalInfo?.proposalType === 'burning' &&
+                    'Assets have been successfully burned and removed from the vault.'}
                   {proposalInfo?.proposalType === 'distribution' &&
-                    'Distribution transaction is being prepared and executed...'}
-                  {proposalInfo?.proposalType === 'marketplace_action' &&
-                    'Marketplace transactions are being prepared and executed...'}
-                  {proposalInfo?.proposalType === 'staking' && 'Staking transaction is being prepared and executed...'}
+                    'ADA has been successfully distributed to all eligible VT holders.'}
+                  {(proposalInfo?.proposalType === 'marketplace_action' || proposalInfo?.proposalType === 'buy_sell') &&
+                    getMarketplaceActionMessage()}
+                  {proposalInfo?.proposalType === 'staking' &&
+                    'Assets have been successfully staked according to the proposal.'}
                   {proposalInfo?.proposalType === 'termination' &&
-                    'Termination process is being prepared and executed...'}
-                  {!proposalInfo?.proposalType && 'Proposal actions are being prepared and executed...'}
+                    (() => {
+                      const vault = proposalInfo?.vault;
+                      if (!vault) return 'Vault termination has been successfully completed.';
+
+                      if (vault.termination_type === 'dao') {
+                        return 'Vault has been successfully terminated by governance vote.';
+                      }
+                      return 'Vault termination has been successfully completed.';
+                    })()}
+                  {!['burning', 'distribution', 'marketplace_action', 'buy_sell', 'staking', 'termination'].includes(
+                    proposalInfo?.proposalType
+                  ) && 'Proposal has been successfully executed.'}
+                </div>
+                {proposalInfo?.executionDate && (
+                  <div className="text-sm text-gray-400">
+                    Executed on {formatDateWithTime(proposalInfo.executionDate)}
+                  </div>
+                )}
+              </div>
+            ) : proposal.status === 'rejected' ? (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center space-y-3">
+                <div className="flex items-center justify-center space-x-2">
+                  <XCircle className="h-6 w-6 text-red-500" />
+                  <h3 className="text-lg font-semibold text-red-500">Proposal Rejected</h3>
+                </div>
+                <div className="text-gray-300">
+                  {(() => {
+                    const totals = response?.data?.totals;
+                    const yesVotes = totals?.yes ? parseFloat(totals.yes) : 0;
+                    const noVotes = totals?.no ? parseFloat(totals.no) : 0;
+                    const abstainVotes = totals?.abstain ? parseFloat(totals.abstain) : 0;
+                    const totalVotingPower = yesVotes + noVotes + abstainVotes;
+
+                    if (totalVotingPower === 0) {
+                      return 'This proposal did not receive any votes during the voting period and was automatically rejected.';
+                    }
+
+                    if (noVotes > yesVotes) {
+                      return 'This proposal was rejected by the community. The majority voted against this proposal.';
+                    }
+
+                    return 'This proposal did not meet the requirements to pass and was rejected.';
+                  })()}
                 </div>
                 <div className="text-sm text-gray-400">
-                  This proposal has been approved and is currently being executed on the blockchain. Please check back
-                  shortly for the final status.
+                  You can view the voting results below to see how the community voted.
                 </div>
               </div>
             ) : (
@@ -318,6 +531,20 @@ export const ProposalInfo = ({ proposal }) => {
                 </div>
               )
             )}
+            {proposalInfo?.executionError ? (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
+                </div>
+                <div className="text-red-300">{proposalInfo.executionError.message}</div>
+                {proposalInfo.executionError.timestamp && (
+                  <div className="text-sm text-gray-400">
+                    {formatDateWithTime(proposalInfo.executionError.timestamp)}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
 

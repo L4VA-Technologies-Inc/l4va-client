@@ -133,7 +133,7 @@ export const VaultGovernance = ({ vault }) => {
         <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
 
-      {vault.vaultStatus === 'locked' ? (
+      {vault.vaultStatus === 'locked' || vault.vaultStatus === 'burned' ? (
         selectedProposal ? (
           <div>
             <button

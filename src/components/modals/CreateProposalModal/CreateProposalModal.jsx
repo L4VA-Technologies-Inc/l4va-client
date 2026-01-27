@@ -77,7 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.fts = proposalData.fts || [];
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
-        proposalPayload.distributionAssets = proposalData.distributionAssets || [];
+        proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
