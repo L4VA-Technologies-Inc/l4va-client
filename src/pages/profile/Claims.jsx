@@ -220,6 +220,14 @@ export const Claims = () => {
         </div>
       );
     } else if (claim.status === 'available' && claim.type === 'termination') {
+      if (processedClaim === claim.id && status !== 'idle') {
+        return (
+          <PrimaryButton size="sm" disabled>
+            {status.toUpperCase()}
+          </PrimaryButton>
+        );
+      }
+
       return (
         <PrimaryButton
           size="sm"
