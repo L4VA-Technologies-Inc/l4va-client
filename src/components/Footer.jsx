@@ -11,7 +11,7 @@ import DiscordIcon from '@/icons/discord.svg?react';
 import YouTubeIcon from '@/icons/youtube.svg?react';
 
 const socialLinks = [
-  { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com/lava_protocol' },
+  { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com/l4vaprotocol' },
   { name: 'Medium', icon: MediumIcon, url: 'https://l4va.medium.com' },
   { name: 'Discord', icon: DiscordIcon, url: 'https://discord.com/invite/mBbTUfAzuS' },
   { name: 'YouTube', icon: YouTubeIcon, url: 'https://www.youtube.com/@_L4VA_' },
