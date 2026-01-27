@@ -70,4 +70,8 @@ export class VaultsConfigProvider {
   static getMarketStatistics() {
     return '/api/v1/markets';
   }
+
+  static getVaultActivity(id) {
+    return `/api/v1/vaults/activity/${id}`;
+  }
 }
