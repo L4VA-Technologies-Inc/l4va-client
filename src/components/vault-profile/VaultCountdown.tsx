@@ -6,23 +6,23 @@ import { cn } from '@/lib/utils';
 type VaultCountdownProps = {
   className?: string;
   color?: 'red' | 'yellow';
-  endTime: string | number | null;
+  countdownValue: string | number | null;
 };
 
-export const VaultCountdown = ({ endTime, className = '', color = 'red' }: VaultCountdownProps) => {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(endTime));
+export const VaultCountdown = ({ countdownValue, className = '', color = 'red' }: VaultCountdownProps) => {
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(countdownValue));
 
   useEffect(() => {
-    if (typeof endTime !== 'number') return;
+    if (typeof countdownValue !== 'number') return;
 
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft(endTime));
+      setTimeLeft(calculateTimeLeft(countdownValue));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [endTime]);
+  }, [countdownValue]);
 
-  if (typeof endTime === 'string') {
+  if (typeof countdownValue === 'string') {
     return (
       <div className="flex flex-col items-center relative" role="status">
         <div
@@ -32,7 +32,7 @@ export const VaultCountdown = ({ endTime, className = '', color = 'red' }: Vault
             className
           )}
         >
-          {endTime}
+          {countdownValue}
         </div>
       </div>
     );
