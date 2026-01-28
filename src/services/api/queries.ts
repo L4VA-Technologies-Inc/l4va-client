@@ -341,7 +341,10 @@ export const useMarketStatistics = (params = {}) => {
   });
 };
 
-export const useVaultActivity = (vaultId: string, params: { page?: number; limit?: number; sortOrder?: string }) => {
+export const useVaultActivity = (
+  vaultId: string,
+  params: { page?: number; limit?: number; sortOrder?: string; filter?: string }
+) => {
   return useQuery({
     queryKey: ['vault-activity', vaultId, params],
     queryFn: () => VaultsApiProvider.getVaultActivity(vaultId, params),
