@@ -22,4 +22,8 @@ export class GovernanceConfigProvider {
   static getAssets(vaultId, type) {
     return `/api/v1/governance/vaults/${vaultId}/assets/${type}`;
   }
+
+  static getSwappableAssets(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/swappable-assets`;
+  }
 }
