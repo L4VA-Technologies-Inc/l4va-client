@@ -1,16 +1,34 @@
 import { useState } from 'react';
-import { Rocket, Coins, Settings, User, Calendar, ChevronUp, ExternalLink, Bitcoin } from 'lucide-react';
+import {
+  Rocket,
+  Coins,
+  Settings,
+  User,
+  Calendar,
+  ChevronUp,
+  ExternalLink,
+  Bitcoin,
+  Vote,
+  Play,
+  CheckCircle,
+  XCircle,
+  Download,
+} from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from '@tanstack/react-router';
+import toast from 'react-hot-toast';
 
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
-import { getIPFSUrl } from '@/utils/core.utils';
+import { getIPFSUrl, formatDateTime } from '@/utils/core.utils';
 import { IS_PREPROD } from '@/utils/networkValidation';
+import { LavaTabs } from '@/components/shared/LavaTabs';
+import SecondaryButton from '@/components/shared/SecondaryButton';
+import { VaultsApiProvider } from '@/services/api/vaults';
 
-const TRANSACTION_TYPES = {
+const ACTIVITY_TYPES = {
   'create-vault': {
     label: 'Vault Created',
     icon: Rocket,
@@ -29,6 +47,21 @@ const TRANSACTION_TYPES = {
   'update-vault': {
     label: 'Phase Transition',
     icon: Settings,
+    iconColor: 'text-orange-500',
+  },
+  proposal_created: {
+    label: 'Proposal Created',
+    icon: Vote,
+    iconColor: 'text-orange-500',
+  },
+  proposal_started: {
+    label: 'Voting Started',
+    icon: Play,
+    iconColor: 'text-orange-500',
+  },
+  proposal_ended: {
+    label: 'Voting Ended',
+    icon: CheckCircle,
     iconColor: 'text-orange-500',
   },
 };
@@ -56,51 +89,76 @@ const formatAmount = amount => {
   }).format(numValue);
 };
 
-const getTransactionTitle = transaction => {
-  const config = TRANSACTION_TYPES[transaction.type] || TRANSACTION_TYPES.contribute;
-
-  switch (transaction.type) {
-    case 'create-vault': {
-      return 'Vault Created';
-    }
-
-    case 'acquire': {
-      const adaAsset = transaction.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
-      if (adaAsset?.quantity) {
-        return `${formatAmount(adaAsset.quantity)} ADA`;
+const getActivityTitle = activity => {
+  if (activity.activityType === 'transaction') {
+    switch (activity.type) {
+      case 'create-vault': {
+        return 'Vault Created';
       }
-      if (transaction.amount) {
-        return `${formatAmount(transaction.amount)} ADA`;
+
+      case 'acquire': {
+        const adaAsset = activity.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
+        if (adaAsset?.quantity) {
+          return `${formatAmount(adaAsset.quantity)} ADA Acquired`;
+        }
+        if (activity.amount) {
+          return `${formatAmount(activity.amount)} ADA Acquired`;
+        }
+        return 'Acquire';
       }
-      return 'Acquire';
-    }
 
-    case 'contribute': {
-      const nftCount = transaction.assets?.length || 0;
-      if (nftCount > 0) {
-        return `${nftCount} ${nftCount === 1 ? 'Asset' : 'Assets'}`;
+      case 'contribute': {
+        const nftCount = activity.assets?.length || 0;
+        if (nftCount > 0) {
+          return `${nftCount} ${nftCount === 1 ? 'Asset' : 'Assets'} Contributed`;
+        }
+        return 'Contribution';
       }
-      return 'Contribution';
-    }
 
-    case 'update-vault': {
-      return 'Phase Transition';
-    }
+      case 'update-vault': {
+        return 'Phase Transition';
+      }
 
-    default:
-      return config.label;
+      default: {
+        return 'Transaction';
+      }
+    }
+  } else {
+    return `Proposal "${activity.title || 'Untitled'}"`;
   }
 };
 
-const ActivityCard = ({ transaction }) => {
+const getProposalStatus = activityType => {
+  switch (activityType) {
+    case 'proposal_created': {
+      return { label: 'Created', color: 'bg-orange-500/20 text-orange-500' };
+    }
+    case 'proposal_started': {
+      return { label: 'Started', color: 'bg-emerald-500/20 text-emerald-500' };
+    }
+    case 'proposal_ended': {
+      return { label: 'Finished', color: 'bg-blue-500/20 text-blue-500' };
+    }
+    default: {
+      return null;
+    }
+  }
+};
+
+const ActivityCard = ({ activity }) => {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
-  const config = TRANSACTION_TYPES[transaction.type] || TRANSACTION_TYPES.contribute;
-  const Icon = config.icon;
-  const title = getTransactionTitle(transaction);
 
-  const hasDetails = transaction.user || (transaction.type === 'contribute' && transaction.assets?.length > 0);
+  const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
+  const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
+  const Icon = config.icon;
+  const title = getActivityTitle(activity);
+
+  const isTransaction = activity.activityType === 'transaction';
+  const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+  const hasDetails =
+    activity.user || (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) || isProposal;
 
   const handleOwnerClick = ownerId => {
     if (ownerId) {
@@ -112,33 +170,47 @@ const ActivityCard = ({ transaction }) => {
   };
 
   const getDescription = () => {
-    switch (transaction.type) {
-      case 'create-vault': {
-        return 'Vault was initialized';
+    if (isTransaction) {
+      switch (activity.type) {
+        case 'create-vault': {
+          return 'Vault was initialized';
+        }
+        case 'contribute': {
+          return 'Assets contributed to vault';
+        }
+        case 'acquire': {
+          return 'ADA spent on acquire';
+        }
+        case 'update-vault': {
+          return 'Vault moved to next phase';
+        }
+        default:
+          return config.label;
       }
-      case 'contribute': {
-        return 'Assets contributed to vault';
-      }
-      case 'acquire': {
-        return 'ADA spent on acquire';
-      }
-      case 'update-vault': {
-        return 'Vault moved to next phase';
-      }
-      default:
-        return config.label;
+    } else if (isProposal) {
+      return activity.description || config.label;
     }
+    return config.label;
   };
 
   const openCardanoScan = () => {
-    if (transaction.tx_hash) {
+    if (activity.tx_hash) {
       const baseUrl = IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io';
-      window.open(`${baseUrl}/transaction/${transaction.tx_hash}`, '_blank');
+      window.open(`${baseUrl}/transaction/${activity.tx_hash}`, '_blank');
+    }
+  };
+
+  const handleProposalClick = () => {
+    if (activity.proposalId) {
+      router.navigate({
+        to: '/proposals/$id',
+        params: { id: activity.proposalId },
+      });
     }
   };
 
   const nftAssets =
-    transaction.type === 'contribute' ? transaction.assets?.filter(asset => asset.type === 'nft') || [] : [];
+    isTransaction && activity.type === 'contribute' ? activity.assets?.filter(asset => asset.type === 'nft') || [] : [];
   const visibleNFTs = showAllAssets ? nftAssets : nftAssets.slice(0, 4);
   const remainingNFTs = nftAssets.length - 4;
 
@@ -153,14 +225,25 @@ const ActivityCard = ({ transaction }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-white mb-1">{title}</h3>
+                <div className="flex sm:flex-row flex-col sm:items-center items-start gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-white">{title}</h3>
+                  {isProposal &&
+                    (() => {
+                      const status = getProposalStatus(activity.activityType);
+                      return status ? (
+                        <span className={clsx('text-xs font-medium uppercase px-2 py-0.5 rounded', status.color)}>
+                          {status.label}
+                        </span>
+                      ) : null;
+                    })()}
+                </div>
                 <div className="flex items-center gap-2 text-sm text-dark-100">
                   <Calendar className="w-3.5 h-3.5" />
-                  {formatDate(transaction.created_at)}
+                  {formatDate(activity.created_at)}
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {transaction.tx_hash && (
+                {isTransaction && activity.tx_hash && (
                   <button
                     onClick={openCardanoScan}
                     className="flex-shrink-0 inline-flex items-center gap-1 p-1.5 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
@@ -168,6 +251,17 @@ const ActivityCard = ({ transaction }) => {
                     <ExternalLink className="w-4 h-4 text-dark-100 group-hover:text-orange-500 transition-colors" />
                     <span className="text-xs text-white font-medium group-hover:text-orange-500 transition-colors hidden sm:block">
                       Show in Explorer
+                    </span>
+                  </button>
+                )}
+                {isProposal && activity.proposalId && (
+                  <button
+                    onClick={handleProposalClick}
+                    className="flex-shrink-0 inline-flex items-center gap-1 p-1.5 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
+                  >
+                    <Vote className="w-4 h-4 text-dark-100 group-hover:text-orange-500 transition-colors" />
+                    <span className="text-xs text-white font-medium group-hover:text-orange-500 transition-colors hidden sm:block">
+                      View Proposal
                     </span>
                   </button>
                 )}
@@ -190,70 +284,93 @@ const ActivityCard = ({ transaction }) => {
 
             {expanded && (
               <div className="mt-3 pt-3 border-t border-steel-750">
-                <p className="text-sm text-dark-100 mb-3">{getDescription()}</p>
+                {isProposal ? (
+                  <>
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-white mb-2">Proposal Description</p>
+                      <p className="text-sm text-dark-100">{activity.description || 'No description provided'}</p>
+                    </div>
 
-                {transaction.type === 'contribute' && nftAssets.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {visibleNFTs.map((asset, index) => (
-                        <div key={asset.id || index} className="relative group" title={asset.name || 'NFT'}>
-                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-steel-850 border border-steel-750 hover:border-orange-500/50 transition-colors">
-                            {asset.image ? (
-                              <img
-                                src={getIPFSUrl(asset.image)}
-                                alt={asset.name || 'NFT'}
-                                className="w-full h-full object-cover"
-                                onError={e => {
-                                  e.target.style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Coins className="w-6 h-6 text-dark-100" />
-                              </div>
-                            )}
+                    {activity.executionError && (
+                      <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                        <div className="flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-rose-500 mb-1">Execution Error</p>
+                            <p className="text-xs text-rose-400">{activity.executionError}</p>
                           </div>
-                          {asset.name && (
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-steel-850 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none border border-steel-750">
-                              {asset.name}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-dark-100 mb-3">{getDescription()}</p>
+
+                    {activity.type === 'contribute' && nftAssets.length > 0 && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {visibleNFTs.map((asset, index) => (
+                            <div key={asset.id || index} className="relative group" title={asset.name || 'NFT'}>
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-steel-850 border border-steel-750 hover:border-orange-500/50 transition-colors">
+                                {asset.image ? (
+                                  <img
+                                    src={getIPFSUrl(asset.image)}
+                                    alt={asset.name || 'NFT'}
+                                    className="w-full h-full object-cover"
+                                    onError={e => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Coins className="w-6 h-6 text-dark-100" />
+                                  </div>
+                                )}
+                              </div>
+                              {asset.name && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-steel-850 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none border border-steel-750">
+                                  {asset.name}
+                                </div>
+                              )}
                             </div>
+                          ))}
+                          {!showAllAssets && remainingNFTs > 0 && (
+                            <button
+                              onClick={() => setShowAllAssets(true)}
+                              className="w-12 h-12 rounded-lg flex items-center justify-center bg-steel-850 border border-steel-750 hover:border-orange-500/50 hover:bg-steel-750 transition-all cursor-pointer group"
+                              title={`Show ${remainingNFTs} more assets`}
+                            >
+                              <span className="text-sm font-medium text-dark-100 group-hover:text-orange-500 transition-colors">
+                                +{remainingNFTs}
+                              </span>
+                            </button>
                           )}
                         </div>
-                      ))}
-                      {!showAllAssets && remainingNFTs > 0 && (
-                        <button
-                          onClick={() => setShowAllAssets(true)}
-                          className="w-12 h-12 rounded-lg flex items-center justify-center bg-steel-850 border border-steel-750 hover:border-orange-500/50 hover:bg-steel-750 transition-all cursor-pointer group"
-                          title={`Show ${remainingNFTs} more assets`}
-                        >
-                          <span className="text-sm font-medium text-dark-100 group-hover:text-orange-500 transition-colors">
-                            +{remainingNFTs}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                    {showAllAssets && nftAssets.length > 4 && (
+                        {showAllAssets && nftAssets.length > 4 && (
+                          <button
+                            onClick={() => setShowAllAssets(false)}
+                            className="mt-2 inline-flex items-center gap-1 text-sm text-dark-100 hover:text-orange-500 transition-colors"
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                            Show less
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {activity.user && (
                       <button
-                        onClick={() => setShowAllAssets(false)}
-                        className="mt-2 inline-flex items-center gap-1 text-sm text-dark-100 hover:text-orange-500 transition-colors"
+                        onClick={() => handleOwnerClick(activity.user.id)}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
                       >
-                        <ChevronUp className="w-4 h-4" />
-                        Show less
+                        <User className="w-4 h-4 text-dark-100 group-hover:text-orange-500 transition-colors" />
+                        <span className="text-sm text-white font-medium group-hover:text-orange-500 transition-colors">
+                          {activity.user.name || `User ${activity.user.id?.slice(0, 8)}`}
+                        </span>
                       </button>
                     )}
-                  </div>
-                )}
-
-                {transaction.user && (
-                  <button
-                    onClick={() => handleOwnerClick(transaction.user.id)}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
-                  >
-                    <User className="w-4 h-4 text-dark-100 group-hover:text-orange-500 transition-colors" />
-                    <span className="text-sm text-white font-medium group-hover:text-orange-500 transition-colors">
-                      {transaction.user.name || `User ${transaction.user.id?.slice(0, 8)}`}
-                    </span>
-                  </button>
+                  </>
                 )}
               </div>
             )}
@@ -290,14 +407,25 @@ const EmptyState = () => (
   </div>
 );
 
+const ACTIVITY_FILTERS = ['All', 'Contribute', 'Acquire', 'Governance'];
+
+const FILTER_MAP = {
+  All: 'all',
+  Contribute: 'contribute',
+  Acquire: 'acquire',
+  Governance: 'governance',
+};
+
 export const VaultActivity = ({ vault }) => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [activeFilter, setActiveFilter] = useState('All');
 
   const { data, isLoading, error } = useVaultActivity(vault?.id, {
     page,
     limit,
     sortOrder: 'DESC',
+    filter: FILTER_MAP[activeFilter],
   });
 
   const responseData = data?.data || data;
@@ -311,6 +439,104 @@ export const VaultActivity = ({ vault }) => {
   const handlePageChange = newPage => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFilterChange = filter => {
+    setActiveFilter(filter);
+    setPage(1);
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      toast.loading('Preparing CSV...', { id: 'download' });
+
+      const allData = await VaultsApiProvider.getVaultActivity(vault?.id, {
+        page: 1,
+        limit: 9999,
+        sortOrder: 'DESC',
+        filter: FILTER_MAP[activeFilter],
+        isExport: true,
+      });
+
+      const allActivities = allData?.data?.items || allData?.items || [];
+
+      if (!allActivities.length) {
+        toast.error('No activities to export', { id: 'download' });
+        return;
+      }
+
+      const headers = ['Date', 'Type', 'Activity', 'Description', 'User ID', 'Asset Names', 'Policy IDs', 'TX Hash'];
+
+      const rows = allActivities.map(activity => {
+        const isTransaction = activity.activityType === 'transaction';
+        const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+
+        let activityType = '';
+        if (isTransaction) {
+          activityType = activity.type;
+        } else if (isProposal) {
+          activityType = activity.activityType.replace('proposal_', 'proposal ');
+        }
+
+        let description = '';
+        if (isTransaction) {
+          switch (activity.type) {
+            case 'create-vault':
+              description = 'Vault was initialized';
+              break;
+            case 'contribute':
+              description = 'Assets contributed to vault';
+              break;
+            case 'acquire':
+              description = 'ADA spent on acquire';
+              break;
+            case 'update-vault':
+              description = 'Vault moved to next phase';
+              break;
+          }
+        } else {
+          description = activity.description || '';
+        }
+
+        const userId = activity.user?.id || activity.creatorId || '';
+
+        let assetNames = '';
+        let policyIds = '';
+        if (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) {
+          const nftAssets = activity.assets.filter(asset => asset.type === 'nft');
+          assetNames = nftAssets.map(asset => asset.name || asset.asset_id || 'Unknown').join('; ');
+          policyIds = nftAssets.map(asset => asset.policy_id || 'Unknown').join('; ');
+        }
+
+        return [
+          formatDateTime(activity.created_at),
+          activityType,
+          getActivityTitle(activity),
+          description,
+          userId,
+          assetNames,
+          policyIds,
+          activity.tx_hash || '',
+        ];
+      });
+
+      const csvContent =
+        'data:text/csv;charset=utf-8,' +
+        [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `${vault.name}_activity_${FILTER_MAP[activeFilter]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success('CSV downloaded successfully', { id: 'download' });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export CSV', { id: 'download' });
+    }
   };
 
   return (
@@ -332,13 +558,28 @@ export const VaultActivity = ({ vault }) => {
         </div>
 
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase text-white">Vault Activity</h2>
-            {!isLoading && !error && items.length > 0 && (
-              <span className="text-sm text-dark-100 bg-steel-750 px-3 py-1 rounded-full">
-                {pagination.totalItems} {pagination.totalItems === 1 ? 'transaction' : 'transactions'}
-              </span>
-            )}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase text-white">Vault Activity</h2>
+              {!isLoading && !error && items.length > 0 && (
+                <span className="text-sm text-dark-100 bg-steel-750 px-3 py-1 rounded-full">
+                  {pagination.totalItems} {pagination.totalItems === 1 ? 'activity' : 'activities'}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+              <LavaTabs
+                tabs={ACTIVITY_FILTERS}
+                activeTab={activeFilter}
+                onTabChange={handleFilterChange}
+                className="w-full sm:w-auto"
+              />
+              <SecondaryButton className="w-full sm:w-auto" onClick={handleDownloadCSV}>
+                <Download className="w-4 h-4" />
+                Export CSV
+              </SecondaryButton>
+            </div>
           </div>
 
           {isLoading ? (
@@ -350,8 +591,8 @@ export const VaultActivity = ({ vault }) => {
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4">
-                {items.map((transaction, index) => (
-                  <ActivityCard key={transaction.id || index} transaction={transaction} />
+                {items.map((activity, index) => (
+                  <ActivityCard key={activity.id || index} activity={activity} />
                 ))}
               </div>
 
