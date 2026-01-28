@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ExternalLink } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -9,11 +9,12 @@ import { getIPFSUrl } from '@/utils/core.utils';
 const SwapAction = ({ vaultId, onDataChange, error }) => {
   const [swapActions, setSwapActions] = useState([]);
   const [selectedAssets, setSelectedAssets] = useState(new Set());
+  const [useMaxFlags, setUseMaxFlags] = useState(new Map());
   const { data: swappableData, isLoading } = useSwappableAssets(vaultId);
 
   useEffect(() => {
     onDataChange({
-      marketplaceActions: swapActions,
+      swapActions: swapActions,
       isValid: swapActions.length > 0 && swapActions.every(action => validateSwapAction(action)),
     });
   }, [swapActions, onDataChange]);
@@ -23,6 +24,13 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
     const qty = parseFloat(action.quantity);
     if (isNaN(qty) || qty <= 0) return false;
     if (action.slippage < 0.5 || action.slippage > 5) return false;
+
+    // Validate custom price if not using market price
+    if (!action.useMarketPrice) {
+      const customPrice = parseFloat(action.customPriceAda);
+      if (!action.customPriceAda || isNaN(customPrice) || customPrice <= 0) return false;
+    }
+
     return true;
   };
 
@@ -37,10 +45,13 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
       assetId: asset.id,
       assetName: asset.name,
       assetImage: asset.image,
+      assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
       currentPriceAda: asset.currentPriceAda,
       quantity: '',
       slippage: 0.5,
+      useMarketPrice: true, // Default to market price
+      customPriceAda: '',
       market: 'DexHunter',
       exec: 'SELL',
     };
@@ -57,37 +68,73 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
   };
 
   const handleQuantityChange = (id, value) => {
+    // Only allow positive numbers
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    const parts = cleanValue.split('.');
+    const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanValue;
+
     setSwapActions(
       swapActions.map(action => {
         if (action.id === id) {
-          // Only allow positive numbers
-          const cleanValue = value.replace(/[^0-9.]/g, '');
-          const parts = cleanValue.split('.');
-          const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanValue;
-
           return { ...action, quantity: finalValue };
         }
         return action;
       })
     );
+
+    // Uncheck max if user manually changes quantity
+    const newFlags = new Map(useMaxFlags);
+    newFlags.set(id, false);
+    setUseMaxFlags(newFlags);
+  };
+
+  const handleMaxToggle = (id, availableQuantity) => {
+    const isCurrentlyMax = useMaxFlags.get(id) || false;
+    const newFlags = new Map(useMaxFlags);
+    newFlags.set(id, !isCurrentlyMax);
+    setUseMaxFlags(newFlags);
+
+    if (!isCurrentlyMax) {
+      // Set to max
+      setSwapActions(
+        swapActions.map(action => (action.id === id ? { ...action, quantity: availableQuantity.toString() } : action))
+      );
+    }
   };
 
   const handleSlippageChange = (id, value) => {
-    const slippage = parseFloat(value);
-    if (isNaN(slippage)) return;
+    const slippage = parseFloat(value) || 0.5;
+    setSwapActions(swapActions.map(action => (action.id === id ? { ...action, slippage } : action)));
+  };
 
+  const handlePriceModeChange = (id, useMarketPrice) => {
     setSwapActions(
-      swapActions.map(action =>
-        action.id === id ? { ...action, slippage: Math.max(0.5, Math.min(5, slippage)) } : action
-      )
+      swapActions.map(action => (action.id === id ? { ...action, useMarketPrice, customPriceAda: '' } : action))
     );
   };
 
+  const handleCustomPriceChange = (id, value) => {
+    // Only allow positive numbers
+    const cleanValue = value.replace(/[^0-9.]/g, '');
+    const parts = cleanValue.split('.');
+    const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanValue;
+
+    setSwapActions(swapActions.map(action => (action.id === id ? { ...action, customPriceAda: finalValue } : action)));
+  };
+
   const calculateEstimatedOutput = action => {
-    if (!action.quantity || !action.currentPriceAda) return null;
+    if (!action.quantity) return null;
     const qty = parseFloat(action.quantity);
     if (isNaN(qty) || qty <= 0) return null;
-    const output = qty * action.currentPriceAda * (1 - action.slippage / 100);
+
+    // Use custom price if set, otherwise use current market price
+    const priceToUse = action.useMarketPrice
+      ? action.currentPriceAda
+      : parseFloat(action.customPriceAda) || action.currentPriceAda;
+
+    if (!priceToUse) return null;
+
+    const output = qty * priceToUse * (1 - action.slippage / 100);
     return output.toFixed(2);
   };
 
@@ -118,9 +165,13 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm font-medium truncate">{asset.name}</div>
                   <div className="text-white/40 text-xs">
-                    {asset.quantity} tokens
-                    {asset.currentPriceAda && ` • ₳${asset.currentPriceAda.toFixed(4)}`}
+                    {asset.quantity} tokens • ₳{asset.currentPriceAda?.toFixed(6) || '0.00'} each
                   </div>
+                  {asset.currentPriceAda && (
+                    <div className="text-green-400/80 text-xs font-medium mt-0.5">
+                      Total: ₳{(asset.quantity * asset.currentPriceAda).toFixed(2)}
+                    </div>
+                  )}
                 </div>
                 <Plus className="h-4 w-4 text-white/40 flex-shrink-0" />
               </button>
@@ -140,6 +191,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                 action.quantity &&
                 parseFloat(action.quantity) > 0 &&
                 parseFloat(action.quantity) <= action.availableQuantity;
+              const isValidSlippage = action.slippage >= 0.5 && action.slippage <= 5;
 
               return (
                 <div key={action.id} className="bg-steel-850 border border-steel-750 rounded-lg p-4">
@@ -170,53 +222,141 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       <LavaSteelInput
                         type="text"
                         value={action.quantity}
-                        onChange={e => handleQuantityChange(action.id, e.target.value)}
+                        onChange={value => handleQuantityChange(action.id, value)}
                         placeholder="0.00"
                         className="w-full"
+                        disabled={useMaxFlags.get(action.id) || false}
                       />
-                      <button
-                        type="button"
-                        onClick={() => handleQuantityChange(action.id, action.availableQuantity.toString())}
-                        className="text-xs text-orange-500 hover:text-orange-400 mt-1"
-                      >
-                        Use Max ({action.availableQuantity})
-                      </button>
+                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={useMaxFlags.get(action.id) || false}
+                          onChange={() => handleMaxToggle(action.id, action.availableQuantity)}
+                          className="w-4 h-4 rounded border-steel-700 bg-steel-850 text-orange-500 focus:ring-orange-500 focus:ring-offset-steel-900"
+                        />
+                        <span className="text-xs text-white/60">Max ({action.availableQuantity})</span>
+                      </label>
                     </div>
 
                     {/* Slippage Input */}
                     <div>
-                      <label className="block text-white/60 text-sm mb-2">Slippage Tolerance (0.5%-5%)</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="5"
-                          step="0.1"
-                          value={action.slippage}
-                          onChange={e => handleSlippageChange(action.id, e.target.value)}
-                          className="flex-1"
-                        />
-                        <span className="text-white text-sm font-medium w-12 text-right">
-                          {action.slippage.toFixed(1)}%
-                        </span>
-                      </div>
+                      <label className="block text-white/60 text-sm mb-2">Slippage Tolerance (%)</label>
+                      <LavaSteelInput
+                        type="number"
+                        value={action.slippage}
+                        onChange={value => handleSlippageChange(action.id, value)}
+                        placeholder="0.5"
+                        step="0.1"
+                        min="0.5"
+                        max="5"
+                        className="w-full"
+                      />
+                      {!isValidSlippage ? (
+                        <div className="text-xs text-red-400 mt-1">Must be between 0.5% and 5%</div>
+                      ) : (
+                        <div className="text-xs text-white/40 mt-1">Range: 0.5% - 5%</div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Estimated Output */}
-                  {isValidQty && estimatedOutput && (
-                    <div className="mt-4 pt-4 border-t border-steel-750">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-white/60">Estimated Output:</span>
-                        <span className="text-white font-medium">~{estimatedOutput} ₳</span>
+                  {/* Price Mode Selection */}
+                  <div className="mt-4 pt-4 border-t border-steel-750 space-y-3">
+                    <div>
+                      <label className="block text-white/60 text-sm mb-2">Price Mode</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={action.useMarketPrice}
+                            onChange={() => handlePriceModeChange(action.id, true)}
+                            className="w-4 h-4 text-orange-500 focus:ring-orange-500 focus:ring-offset-steel-900"
+                          />
+                          <span className="text-sm text-white">Market Price (at execution)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={!action.useMarketPrice}
+                            onChange={() => handlePriceModeChange(action.id, false)}
+                            className="w-4 h-4 text-orange-500 focus:ring-orange-500 focus:ring-offset-steel-900"
+                          />
+                          <span className="text-sm text-white">Custom Price</span>
+                        </label>
                       </div>
-                      {action.currentPriceAda && (
-                        <div className="text-xs text-white/40 mt-1 text-right">
-                          Current Price: ₳{action.currentPriceAda.toFixed(4)} per token
-                        </div>
-                      )}
                     </div>
-                  )}
+
+                    {!action.useMarketPrice && (
+                      <div>
+                        <label className="block text-white/60 text-sm mb-2">Custom Price (₳ per token)</label>
+                        <LavaSteelInput
+                          type="text"
+                          value={action.customPriceAda}
+                          onChange={value => handleCustomPriceChange(action.id, value)}
+                          placeholder={action.currentPriceAda ? action.currentPriceAda.toFixed(6) : '0.000000'}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-white/40 mt-1">
+                          Current market: ₳{action.currentPriceAda?.toFixed(6) || 'N/A'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Price & Estimated Output */}
+                  <div className="mt-4 pt-4 border-t border-steel-750 space-y-2">
+                    {action.currentPriceAda && action.useMarketPrice && (
+                      <>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-white/60">Current Price:</span>
+                          <span className="text-white font-medium">₳{action.currentPriceAda.toFixed(6)} per token</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-white/40">Price Source:</span>
+                          <span className="text-white/60">DexHunter</span>
+                        </div>
+                      </>
+                    )}
+                    {!action.useMarketPrice && action.customPriceAda && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-white/60">Your Limit Price:</span>
+                        <span className="text-orange-400 font-medium">
+                          ₳{parseFloat(action.customPriceAda).toFixed(2)} per token
+                        </span>
+                      </div>
+                    )}
+                    {isValidQty && estimatedOutput && (
+                      <>
+                        <div className="flex justify-between items-center text-sm pt-2">
+                          <span className="text-white/60">Estimated Output:</span>
+                          <span className="text-green-400 font-medium text-base">~₳{estimatedOutput}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-white/40">Minimum Received:</span>
+                          <span className="text-orange-400 font-medium">
+                            ₳{(parseFloat(estimatedOutput) * 0.99).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-white/40 text-right">
+                          After {action.slippage}% slippage tolerance
+                        </div>
+                      </>
+                    )}
+
+                    {/* DexHunter Link */}
+                    {action.assetUnit && (
+                      <div className="pt-2 mt-2 border-t border-steel-750">
+                        <a
+                          href={`https://app.dexhunter.io/swap?tokenIdSell=&tokenIdBuy=${action.assetUnit}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-orange-500 hover:text-orange-400 transition-colors text-xs"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          <span>View on DexHunter</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
 
                   {action.quantity && !isValidQty && (
                     <div className="mt-3 text-xs text-red-400">

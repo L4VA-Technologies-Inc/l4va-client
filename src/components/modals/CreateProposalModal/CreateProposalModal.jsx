@@ -96,6 +96,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             exec: 'SELL',
             quantity: action.quantity,
             slippage: action.slippage,
+            useMarketPrice: action.useMarketPrice !== false, // Default to true
+            customPriceAda: action.useMarketPrice ? undefined : parseFloat(action.customPriceAda),
             market: 'DexHunter',
           }));
         } else if (marketActionType === 'update_list') {
