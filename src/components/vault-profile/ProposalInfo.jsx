@@ -1,9 +1,10 @@
-import { CheckCircle, XCircle, Ellipsis, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
 import PrimaryButton from '../shared/PrimaryButton';
+import SecondaryButton from '../shared/SecondaryButton';
 
 import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
@@ -13,7 +14,7 @@ import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 import { ProposalEndDate } from './ProposalEndDate';
 
-import { formatDateWithTime } from '@/utils/core.utils';
+import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
 import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
@@ -249,6 +250,45 @@ export const ProposalInfo = ({ proposal }) => {
         }
       },
     });
+  };
+
+  const handleExportVotes = () => {
+    try {
+      if (!votes || votes.length === 0) {
+        toast.error('No votes to export');
+        return;
+      }
+
+      toast.loading('Preparing CSV...', { id: 'download' });
+
+      const headers = ['Vote', 'Wallet Address', 'Voting Weight (VT)', 'Timestamp'];
+
+      const rows = votes.map(vote => {
+        return [
+          vote.vote || 'N/A',
+          vote.voterAddress || 'N/A',
+          vote.voteWeight || 'N/A',
+          vote.timestamp ? formatDateTime(vote.timestamp) : vote.createdAt ? formatDateTime(vote.createdAt) : 'N/A',
+        ];
+      });
+
+      const csvContent =
+        'data:text/csv;charset=utf-8,' +
+        [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `proposal_${proposalInfo?.id || 'votes'}_votes.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success('CSV downloaded successfully', { id: 'download' });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export CSV', { id: 'download' });
+    }
   };
 
   useEffect(() => {
@@ -549,9 +589,17 @@ export const ProposalInfo = ({ proposal }) => {
         </div>
 
         <div className="bg-steel-950 border border-steel-750 rounded-lg p-6">
-          <div className="flex justify-between">
-            <h3 className="text-1xl font-bold">Votes</h3>
-            <h3 className="text-orange-500 text-1xl font-bold">{totalVotes}</h3>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-1xl font-bold">Votes</h3>
+              <h3 className="text-orange-500 text-1xl font-bold">{totalVotes}</h3>
+            </div>
+            {votes.length > 0 && (
+              <SecondaryButton className="text-sm py-1.5 px-3" onClick={handleExportVotes}>
+                <Download className="w-4 h-4" />
+                Export CSV
+              </SecondaryButton>
+            )}
           </div>
           <div className="space-y-2">
             {votes.length ? (
