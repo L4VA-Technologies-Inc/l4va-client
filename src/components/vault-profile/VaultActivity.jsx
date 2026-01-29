@@ -27,6 +27,7 @@ import { IS_PREPROD } from '@/utils/networkValidation';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
+import { getSuccessMessage } from '@/constants/proposalMessages';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -299,12 +300,26 @@ const ActivityCard = ({ activity }) => {
                     </div>
 
                     {activity.executionError && (
-                      <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                      <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 mb-3">
                         <div className="flex items-start gap-2">
                           <XCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
                           <div>
                             <p className="text-sm font-medium text-rose-500 mb-1">Execution Error</p>
                             <p className="text-xs text-rose-400">{activity.executionError}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activity.activityType === 'proposal_ended' && activity.proposalStatus === 'executed' && (
+                      <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                        <div className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-emerald-500 mb-1">Successfully Executed</p>
+                            <p className="text-xs text-emerald-400">
+                              {getSuccessMessage(activity.proposalType, activity.vault)}
+                            </p>
                           </div>
                         </div>
                       </div>

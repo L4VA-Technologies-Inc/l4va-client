@@ -19,6 +19,7 @@ import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 
 export const ProposalInfo = ({ proposal }) => {
   const { user } = useAuth();
@@ -430,39 +431,7 @@ export const ProposalInfo = ({ proposal }) => {
                       />
                     </div>
                     <div className="text-gray-300 font-medium">
-                      {(() => {
-                        const status = proposalInfo.vault.terminationMetadata.status;
-                        switch (status) {
-                          case 'initiated':
-                            return 'Termination initiated - Preparing to process vault assets...';
-                          case 'nft_burning':
-                            return 'Burning NFTs - Sending NFTs to burn wallet...';
-                          case 'nft_burned':
-                            return 'NFTs burned successfully - Proceeding to liquidity removal...';
-                          case 'lp_removal_pending':
-                            return 'Removing liquidity - Sending LP tokens to VyFi...';
-                          case 'lp_removal_awaiting':
-                            return 'Awaiting liquidity return - Waiting for VyFi to return VT and ADA...';
-                          case 'lp_return_received':
-                            return 'Liquidity returned - VT and ADA received from VyFi...';
-                          case 'vt_burned':
-                            return 'VT tokens burned - Preparing treasury distribution...';
-                          case 'ada_in_treasury':
-                            return 'ADA transferred to treasury - Creating claims for VT holders...';
-                          case 'claims_created':
-                            return 'Claims created - VT holders can now claim their share...';
-                          case 'claims_processing':
-                            return 'Claims in progress - VT holders are claiming their distributions...';
-                          case 'claims_complete':
-                            return 'All claims processed - Finalizing vault termination...';
-                          case 'vault_burned':
-                            return 'Vault NFT burned - Cleaning up treasury wallet...';
-                          case 'treasury_cleaned':
-                            return 'Treasury cleaned - Termination complete!';
-                          default:
-                            return 'Termination process is being prepared and executed...';
-                        }
-                      })()}
+                      {getTerminationStatusMessage(proposalInfo.vault.terminationMetadata.status)}
                     </div>
                     {proposalInfo.vault.terminationMetadata.status === 'claims_created' ||
                     proposalInfo.vault.terminationMetadata.status === 'claims_processing' ? (
@@ -478,19 +447,7 @@ export const ProposalInfo = ({ proposal }) => {
                   </div>
                 ) : (
                   <>
-                    <div className="text-gray-300">
-                      {proposalInfo?.proposalType === 'burning' &&
-                        'Burning transaction is being prepared and executed...'}
-                      {proposalInfo?.proposalType === 'distribution' &&
-                        'Distribution transaction is being prepared and executed...'}
-                      {proposalInfo?.proposalType === 'marketplace_action' &&
-                        'Marketplace transactions are being prepared and executed...'}
-                      {proposalInfo?.proposalType === 'staking' &&
-                        'Staking transaction is being prepared and executed...'}
-                      {proposalInfo?.proposalType === 'termination' &&
-                        'Termination process is being prepared and executed...'}
-                      {!proposalInfo?.proposalType && 'Proposal actions are being prepared and executed...'}
-                    </div>
+                    <div className="text-gray-300">{getInProgressMessage(proposalInfo?.proposalType)}</div>
                     <div className="text-sm text-gray-400">
                       This proposal has been approved and is currently being executed on the blockchain. Please check
                       back shortly for the final status.
@@ -505,27 +462,9 @@ export const ProposalInfo = ({ proposal }) => {
                   <h3 className="text-lg font-semibold text-green-500">Successfully Executed</h3>
                 </div>
                 <div className="text-gray-300">
-                  {proposalInfo?.proposalType === 'burning' &&
-                    'Assets have been successfully burned and removed from the vault.'}
-                  {proposalInfo?.proposalType === 'distribution' &&
-                    'ADA has been successfully distributed to all eligible VT holders.'}
-                  {(proposalInfo?.proposalType === 'marketplace_action' || proposalInfo?.proposalType === 'buy_sell') &&
-                    getMarketplaceActionMessage()}
-                  {proposalInfo?.proposalType === 'staking' &&
-                    'Assets have been successfully staked according to the proposal.'}
-                  {proposalInfo?.proposalType === 'termination' &&
-                    (() => {
-                      const vault = proposalInfo?.vault;
-                      if (!vault) return 'Vault termination has been successfully completed.';
-
-                      if (vault.termination_type === 'dao') {
-                        return 'Vault has been successfully terminated by governance vote.';
-                      }
-                      return 'Vault termination has been successfully completed.';
-                    })()}
-                  {!['burning', 'distribution', 'marketplace_action', 'buy_sell', 'staking', 'termination'].includes(
-                    proposalInfo?.proposalType
-                  ) && 'Proposal has been successfully executed.'}
+                  {proposalInfo?.proposalType === 'marketplace_action' || proposalInfo?.proposalType === 'buy_sell'
+                    ? getMarketplaceActionMessage()
+                    : getSuccessMessage(proposalInfo?.proposalType, proposalInfo?.vault)}
                 </div>
                 {proposalInfo?.executionDate && (
                   <div className="text-sm text-gray-400">
