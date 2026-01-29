@@ -8,16 +8,17 @@ import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
-import { IS_PREPROD } from '@/utils/networkValidation.ts';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { openModal } = useModalControls();
 
   const baseTabContent = {
     Assets: <VaultContributedAssetsList vault={vault} />,
     Acquire: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
-    ...(IS_PREPROD ? { Activity: <VaultActivity vault={vault} /> } : {}),
+    Activity: <VaultActivity vault={vault} />,
   };
 
   const tabContent = {
@@ -32,6 +33,11 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const tabs = Object.keys(tabContent);
 
   const handleTabSelect = selectedTab => {
+    if (selectedTab === 'Activity' && !user) {
+      openModal('LoginModal');
+      return;
+    }
+
     onTabChange(selectedTab);
     router.navigate({
       search: prev => ({ ...prev, tab: selectedTab }),
