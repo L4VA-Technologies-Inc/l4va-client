@@ -182,7 +182,7 @@ export default function Distributing({ onDataChange, vaultId }) {
             <ul className="space-y-1 list-disc list-inside">
               <li>ADA is distributed proportionally based on VT holdings</li>
               <li>Minimum 2 ADA per recipient (Cardano UTXO requirement)</li>
-              <li>Distribution is processed in batches of 40 recipients</li>
+              <li>Distribution is processed in batches of ~200 recipients</li>
               <li>Claims are created for each recipient to track status</li>
             </ul>
           </div>
@@ -219,7 +219,7 @@ export default function Distributing({ onDataChange, vaultId }) {
             </div>
             <div>
               <span className="text-white/60">Est. Batches:</span>
-              <span className="ml-2 text-white">{Math.ceil(vtHolderCount / 40)}</span>
+              <span className="ml-2 text-white">{Math.ceil(vtHolderCount / 200)}</span>
             </div>
           </div>
         </div>
