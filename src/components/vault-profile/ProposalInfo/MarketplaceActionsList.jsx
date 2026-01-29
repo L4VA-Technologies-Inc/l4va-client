@@ -13,6 +13,10 @@ const ActionField = ({ label, value, children, className }) => (
 export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
   if (!Array.isArray(actions) || actions.length === 0) return null;
 
+  // Check if this is a DexHunter swap action
+  // DexHunter swaps have market='DexHunter' OR have slippage field (unique to swaps)
+  const isDexHunterSwap = actions[0]?.market === 'DexHunter' || actions[0]?.slippage !== undefined;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between">
@@ -24,12 +28,65 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
           <div key={action.assetId} className="space-y-2">
             <div className="text-sm text-gray-500">Action {index + 1}</div>
             <div className="space-y-2">
-              {type === 'marketplace' ? (
+              {isDexHunterSwap ? (
+                <>
+                  <ActionField label="Market" value={action.market || 'DexHunter'} />
+                  <ActionField label="Type" value="Swap to ADA" />
+                  {action.assetName && <ActionField label="Token" value={action.assetName} />}
+                  {action.assetImg && (
+                    <ActionField label="Token Image">
+                      <LazyImage
+                        src={getIPFSUrl(action.assetImg)}
+                        alt={action.assetName || 'Token image'}
+                        className="rounded-full"
+                        width={32}
+                        height={32}
+                        fallbackSrc="/assets/icons/ada.svg"
+                      />
+                    </ActionField>
+                  )}
+                  {action.quantity && <ActionField label="Quantity" value={action.quantity.toLocaleString()} />}
+                  {action.slippage !== undefined && (
+                    <ActionField label="Slippage Tolerance" value={`${action.slippage}%`} />
+                  )}
+                  {action.useMarketPrice !== undefined && (
+                    <ActionField
+                      label="Price Mode"
+                      value={action.useMarketPrice ? 'Market Price (at execution)' : 'Custom Price'}
+                    />
+                  )}
+                  {!action.useMarketPrice && action.customPriceAda && (
+                    <ActionField label="Custom Price" value={`₳${action.customPriceAda} per token`} />
+                  )}
+                  {action.estimatedOutput && (
+                    <ActionField label="Estimated Output" value={`₳${action.estimatedOutput.toFixed(2)}`} />
+                  )}
+                  {action.actualOutput && (
+                    <ActionField label="Actual Output" value={`₳${action.actualOutput.toFixed(2)}`} />
+                  )}
+                  {action.txHash && (
+                    <ActionField label="Transaction">
+                      <a
+                        href={`https://cardanoscan.io/transaction/${action.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-orange-500 hover:text-orange-400 transition-colors text-sm"
+                      >
+                        <span>View on Cardanoscan</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </ActionField>
+                  )}
+                  {action.assetStatus && (
+                    <ActionField label="Status" className="uppercase" value={action.assetStatus} />
+                  )}
+                </>
+              ) : type === 'marketplace' ? (
                 <>
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market} />
                   {action.assetPrice && <ActionField label="Price" value={`₳${action.assetPrice}`} />}
-                  {action.assetPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
+                  {action.listingPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
                   {action.newPrice && <ActionField label="New Price" value={`₳${action.newPrice}`} />}
                   {action.assetName && <ActionField label="Asset Name" value={action.assetName} />}
                   {action.assetImg && (

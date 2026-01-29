@@ -36,4 +36,9 @@ export class GovernanceApiProvider {
     const response = await axiosInstance.get(GovernanceConfigProvider.getAssets(vaultId, type));
     return response;
   }
+
+  static async getSwappableAssets(vaultId) {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getSwappableAssets(vaultId));
+    return response;
+  }
 }

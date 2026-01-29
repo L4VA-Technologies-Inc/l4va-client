@@ -275,6 +275,14 @@ export const useMarketAssets = (vaultId: string, type: 'unlist' | 'update-listin
   });
 };
 
+export const useSwappableAssets = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['swappable-assets', vaultId],
+    queryFn: () => GovernanceApiProvider.getSwappableAssets(vaultId),
+    enabled: !!vaultId,
+  });
+};
+
 export const useCreateProposal = () => {
   return useMutation({
     mutationFn: ({ vaultId, proposalData }: { vaultId: string; proposalData: any }) =>

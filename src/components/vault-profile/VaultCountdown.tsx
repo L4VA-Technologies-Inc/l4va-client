@@ -38,7 +38,13 @@ export const VaultCountdown = ({ countdownValue, className = '', color = 'red' }
     );
   }
 
-  const formatNumber = (num: number) => String(num);
+  const formatNumber = (num: number) => {
+    // Safety check to prevent NaN display
+    if (isNaN(num) || num === null || num === undefined) {
+      return '0';
+    }
+    return String(num);
+  };
   const countdownText = `${formatNumber(timeLeft.days)}d ${formatNumber(timeLeft.hours)}h ${formatNumber(timeLeft.minutes)}m ${formatNumber(timeLeft.seconds)}s`;
 
   return (
