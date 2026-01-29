@@ -311,7 +311,7 @@ const ActivityCard = ({ activity }) => {
                       </div>
                     )}
 
-                    {activity.activityType === 'proposal_ended' && activity.proposalStatus === 'executed' && (
+                    {activity.activityType === 'proposal_ended' && activity.status === 'executed' && (
                       <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
                         <div className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
