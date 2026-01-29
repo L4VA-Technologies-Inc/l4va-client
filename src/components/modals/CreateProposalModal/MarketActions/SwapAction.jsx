@@ -47,7 +47,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
       assetImage: asset.image,
       assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
-      currentPriceAda: asset.currentPriceAda,
+      currentPriceAda: Number(asset.currentPriceAda) || 0,
       quantity: '',
       slippage: 0.5,
       useMarketPrice: true, // Default to market price
@@ -164,12 +164,10 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-white text-sm font-medium truncate">{asset.name}</div>
-                  <div className="text-white/40 text-xs">
-                    {asset.quantity} tokens • ₳{asset.currentPriceAda?.toFixed(6) || '0.00'} each
-                  </div>
+                  <div className="text-white/40 text-xs">{asset.quantity} tokens</div>
                   {asset.currentPriceAda && (
                     <div className="text-green-400/80 text-xs font-medium mt-0.5">
-                      Total: ₳{(asset.quantity * asset.currentPriceAda).toFixed(2)}
+                      Total: ₳{(Number(asset.quantity) * Number(asset.currentPriceAda)).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -292,11 +290,11 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                           type="text"
                           value={action.customPriceAda}
                           onChange={value => handleCustomPriceChange(action.id, value)}
-                          placeholder={action.currentPriceAda ? action.currentPriceAda.toFixed(6) : '0.000000'}
+                          placeholder={action.currentPriceAda ? Number(action.currentPriceAda).toFixed(2) : '0.00'}
                           className="w-full"
                         />
                         <div className="text-xs text-white/40 mt-1">
-                          Current market: ₳{action.currentPriceAda?.toFixed(6) || 'N/A'}
+                          Current market: ₳{action.currentPriceAda ? Number(action.currentPriceAda).toFixed(2) : 'N/A'}
                         </div>
                       </div>
                     )}
@@ -308,7 +306,9 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       <>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-white/60">Current Price:</span>
-                          <span className="text-white font-medium">₳{action.currentPriceAda.toFixed(6)} per token</span>
+                          <span className="text-white font-medium">
+                            ₳{Number(action.currentPriceAda).toFixed(2)} per token
+                          </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-white/40">Price Source:</span>

@@ -14,7 +14,8 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
   if (!Array.isArray(actions) || actions.length === 0) return null;
 
   // Check if this is a DexHunter swap action
-  const isDexHunterSwap = actions[0]?.market === 'DexHunter';
+  // DexHunter swaps have market='DexHunter' OR have slippage field (unique to swaps)
+  const isDexHunterSwap = actions[0]?.market === 'DexHunter' || actions[0]?.slippage !== undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,7 +30,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
             <div className="space-y-2">
               {isDexHunterSwap ? (
                 <>
-                  <ActionField label="Market" value="DexHunter" />
+                  <ActionField label="Market" value={action.market || 'DexHunter'} />
                   <ActionField label="Type" value="Swap to ADA" />
                   {action.assetName && <ActionField label="Token" value={action.assetName} />}
                   {action.assetImg && (
@@ -45,7 +46,18 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                     </ActionField>
                   )}
                   {action.quantity && <ActionField label="Quantity" value={action.quantity.toLocaleString()} />}
-                  {action.slippage && <ActionField label="Slippage" value={`${action.slippage}%`} />}
+                  {action.slippage !== undefined && (
+                    <ActionField label="Slippage Tolerance" value={`${action.slippage}%`} />
+                  )}
+                  {action.useMarketPrice !== undefined && (
+                    <ActionField
+                      label="Price Mode"
+                      value={action.useMarketPrice ? 'Market Price (at execution)' : 'Custom Price'}
+                    />
+                  )}
+                  {!action.useMarketPrice && action.customPriceAda && (
+                    <ActionField label="Custom Price" value={`₳${action.customPriceAda} per token`} />
+                  )}
                   {action.estimatedOutput && (
                     <ActionField label="Estimated Output" value={`₳${action.estimatedOutput.toFixed(2)}`} />
                   )}
@@ -74,7 +86,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market} />
                   {action.assetPrice && <ActionField label="Price" value={`₳${action.assetPrice}`} />}
-                  {action.assetPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
+                  {action.listingPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
                   {action.newPrice && <ActionField label="New Price" value={`₳${action.newPrice}`} />}
                   {action.assetName && <ActionField label="Asset Name" value={action.assetName} />}
                   {action.assetImg && (
