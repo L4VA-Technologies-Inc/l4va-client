@@ -44,7 +44,7 @@ const ACTIVITY_TYPES = {
     icon: Coins,
     iconColor: 'text-orange-500',
   },
-  'update-vault': {
+  phase_transition: {
     label: 'Phase Transition',
     icon: Settings,
     iconColor: 'text-orange-500',
@@ -115,14 +115,17 @@ const getActivityTitle = activity => {
         return 'Contribution';
       }
 
-      case 'update-vault': {
-        return 'Phase Transition';
-      }
-
       default: {
         return 'Transaction';
       }
     }
+  } else if (activity.activityType === 'phase_transition') {
+    const phaseLabels = {
+      contribution: 'Contribution Phase Started',
+      acquire: 'Acquire Phase Started',
+      locked: 'Vault Locked',
+    };
+    return phaseLabels[activity.phase] || 'Phase Transition';
   } else {
     return `Proposal "${activity.title || 'Untitled'}"`;
   }
@@ -181,12 +184,16 @@ const ActivityCard = ({ activity }) => {
         case 'acquire': {
           return 'ADA spent on acquire';
         }
-        case 'update-vault': {
-          return 'Vault moved to next phase';
-        }
         default:
           return config.label;
       }
+    } else if (activity.activityType === 'phase_transition') {
+      const phaseDescriptions = {
+        contribution: 'Vault entered contribution phase where users can contribute assets',
+        acquire: 'Vault entered acquire phase where assets can be acquired',
+        locked: 'Vault has been locked and is now in the final phase',
+      };
+      return phaseDescriptions[activity.phase] || 'Vault moved to next phase';
     } else if (isProposal) {
       return activity.description || config.label;
     }
@@ -465,15 +472,27 @@ export const VaultActivity = ({ vault }) => {
         return;
       }
 
-      const headers = ['Date', 'Type', 'Activity', 'Description', 'User ID', 'Asset Names', 'Policy IDs', 'TX Hash'];
+      const headers = [
+        'Date',
+        'Type',
+        'Activity',
+        'Description',
+        'User Address',
+        'Asset Names',
+        'Policy IDs',
+        'TX Hash',
+      ];
 
       const rows = allActivities.map(activity => {
         const isTransaction = activity.activityType === 'transaction';
+        const isPhaseTransition = activity.activityType === 'phase_transition';
         const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
 
         let activityType = '';
         if (isTransaction) {
           activityType = activity.type;
+        } else if (isPhaseTransition) {
+          activityType = 'phase_transition';
         } else if (isProposal) {
           activityType = activity.activityType.replace('proposal_', 'proposal ');
         }
@@ -490,15 +509,19 @@ export const VaultActivity = ({ vault }) => {
             case 'acquire':
               description = 'ADA spent on acquire';
               break;
-            case 'update-vault':
-              description = 'Vault moved to next phase';
-              break;
           }
+        } else if (isPhaseTransition) {
+          const phaseDescriptions = {
+            contribution: 'Vault entered contribution phase where users can contribute assets',
+            acquire: 'Vault entered acquire phase where assets can be acquired',
+            locked: 'Vault has been locked and is now in the final phase',
+          };
+          description = phaseDescriptions[activity.phase] || 'Vault moved to next phase';
         } else {
           description = activity.description || '';
         }
 
-        const userId = activity.user?.id || activity.creatorId || '';
+        const userAddress = activity.user?.address || '';
 
         let assetNames = '';
         let policyIds = '';
@@ -513,7 +536,7 @@ export const VaultActivity = ({ vault }) => {
           activityType,
           getActivityTitle(activity),
           description,
-          userId,
+          userAddress,
           assetNames,
           policyIds,
           activity.tx_hash || '',
