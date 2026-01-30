@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ClaimsApiProvider } from './claims';
 import { GovernanceApiProvider } from './governance';
@@ -158,8 +158,16 @@ export const useLogin = () => {
 };
 
 export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: profileData => CoreApiProvider.updateProfile(profileData),
+    onSuccess: response => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      if (response?.data) {
+        queryClient.setQueryData(['profile'], response);
+      }
+    },
   });
 };
 
@@ -212,6 +220,27 @@ export const useClaims = (params: any) => {
     queryFn: () => ClaimsApiProvider.getClaims(params),
   });
 };
+// Termination Claims Queries
+export const useTerminationStatus = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['termination-status', vaultId],
+    queryFn: () => ClaimsApiProvider.getTerminationStatus(vaultId),
+    enabled: !!vaultId,
+  });
+};
+
+// Termination Claims Mutations
+export const useBuildTerminationClaim = () => {
+  return useMutation({
+    mutationFn: (claimId: string) => ClaimsApiProvider.buildTerminationClaim(claimId),
+  });
+};
+
+export const useSubmitTerminationClaim = () => {
+  return useMutation({
+    mutationFn: params => ClaimsApiProvider.submitTerminationClaim(params),
+  });
+};
 
 export const useGovernanceProposals = (vaultId: string) => {
   return useQuery({
@@ -251,6 +280,14 @@ export const useMarketAssets = (vaultId: string, type: 'unlist' | 'update-listin
     queryKey: ['market-assets', vaultId, type],
     queryFn: () => GovernanceApiProvider.getAssets(vaultId, type),
     enabled: !!vaultId && !!type,
+  });
+};
+
+export const useSwappableAssets = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['swappable-assets', vaultId],
+    queryFn: () => GovernanceApiProvider.getSwappableAssets(vaultId),
+    enabled: !!vaultId,
   });
 };
 
@@ -317,5 +354,16 @@ export const useMarketStatistics = (params = {}) => {
     queryKey: ['vaults', 'market-statistics', params],
     queryFn: () => VaultsApiProvider.getMarketStatistics(params),
     staleTime: 0,
+  });
+};
+
+export const useVaultActivity = (
+  vaultId: string,
+  params: { page?: number; limit?: number; sortOrder?: string; filter?: string }
+) => {
+  return useQuery({
+    queryKey: ['vault-activity', vaultId, params],
+    queryFn: () => VaultsApiProvider.getVaultActivity(vaultId, params),
+    enabled: !!vaultId,
   });
 };

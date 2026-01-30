@@ -77,7 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.fts = proposalData.fts || [];
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
-        proposalPayload.distributionAssets = proposalData.distributionAssets || [];
+        proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -90,7 +90,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
-        if (marketActionType === 'update_list') {
+        if (marketActionType === 'swap') {
+          proposalPayload.marketplaceActions = (proposalData.swapActions || []).map(action => ({
+            assetId: action.assetId,
+            exec: 'SELL',
+            quantity: action.quantity,
+            slippage: action.slippage,
+            useMarketPrice: action.useMarketPrice !== false, // Default to true
+            customPriceAda: action.useMarketPrice ? undefined : parseFloat(action.customPriceAda),
+            market: 'DexHunter',
+          }));
+        } else if (marketActionType === 'update_list') {
           proposalPayload.marketplaceActions = (proposalData.updateListingAssets || [])
             .filter(asset => asset.newPrice && Number(asset.newPrice) > 0)
             .map(asset => ({

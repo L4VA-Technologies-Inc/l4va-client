@@ -50,7 +50,9 @@ export const VaultContributedAssetsList = ({ vault }) => {
             className="!h-[60px] !rounded-2xl bg-steel-850 !border-steel-750"
           />
         </div>
-        <div className="text-center p-8 text-dark-100">No assets found for &quot;{searchValue}&quot;.</div>
+        <div className="text-center p-8 text-dark-100">
+          No assets found for &quot;{searchValue || vault.name}&quot;.
+        </div>
       </div>
     );
   }

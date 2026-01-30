@@ -93,4 +93,10 @@ export class VaultsApiProvider {
       params,
     });
   }
+
+  static async getVaultActivity(vaultId, params = {}) {
+    return await axiosInstance.get(VaultsConfigProvider.getVaultActivity(vaultId), {
+      params,
+    });
+  }
 }

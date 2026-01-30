@@ -20,13 +20,10 @@ const findMinValue = (array, property) => {
   return min === Infinity ? 0 : min;
 };
 
-const getAssetCountByPolicy = (assets, policyId) => {
-  if (!assets || !assets.length) return 0;
-  const matchingAssets = assets.filter(asset => asset.policyId === policyId);
-  if (matchingAssets.length === 0) return 0;
-  return matchingAssets.reduce((total, asset) => {
-    return total + asset.quantity;
-  }, 0);
+const getAssetCountByPolicy = (assetsByPolicy, policyId) => {
+  if (!assetsByPolicy || !assetsByPolicy.length) return 0;
+  const match = assetsByPolicy.find(asset => asset.policyId === policyId);
+  return match ? match.quantity : 0;
 };
 
 const calculateAcquireProgress = (totalAcquiredUsd, requireReservedCostUsd) => {
@@ -96,7 +93,7 @@ export const VaultContribution = ({ vault }) => {
                 }}
               >
                 {vault.assetsWhitelist.map(asset => {
-                  const assetCount = getAssetCountByPolicy(vault.assetsPrices.assets, asset.policyId);
+                  const assetCount = getAssetCountByPolicy(vault.assetsPrices.assetsByPolicy, asset.policyId);
                   const assetProgress = asset.countCapMax > 0 ? (assetCount / asset.countCapMax) * 100 : 0;
 
                   return (

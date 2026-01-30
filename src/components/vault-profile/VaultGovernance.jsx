@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle, CircleCheck, CircleArrowUp } from 'lucide-react';
+import { ArrowRight, Check, CheckCircle, Ellipsis, XCircle, CircleCheck, CircleArrowUp, ArrowLeft } from 'lucide-react';
 
 import { ProposalInfo } from './ProposalInfo';
 import { ProposalEndDate } from './ProposalEndDate';
@@ -133,14 +133,14 @@ export const VaultGovernance = ({ vault }) => {
         <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
 
-      {vault.vaultStatus === 'locked' ? (
+      {vault.vaultStatus === 'locked' || vault.vaultStatus === 'burned' || vault.vaultStatus === 'terminating' ? (
         selectedProposal ? (
           <div>
             <button
               onClick={handleBackToProposals}
-              className="flex items-center text-primary hover:text-primary-dark transition-colors mb-6"
+              className="flex items-center gap-1 text-primary hover:text-primary-dark transition-colors mb-6"
             >
-              ← Back to Proposals
+              <ArrowLeft className="w-4 h-4" /> Back to Proposals
             </button>
             <ProposalInfo proposal={selectedProposal} />
           </div>
@@ -202,7 +202,9 @@ export const VaultGovernance = ({ vault }) => {
 
                     <div className="text-dark-100 text-sm mb-3">
                       <ProposalEndDate
+                        startDate={proposal.startDate}
                         endDate={proposal.endDate}
+                        proposalStatus={proposal.status}
                         isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
                       />
                     </div>

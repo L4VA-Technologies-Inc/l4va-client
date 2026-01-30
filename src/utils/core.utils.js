@@ -146,7 +146,19 @@ export const transformYupErrors = err => {
 };
 
 export const calculateTimeLeft = endTime => {
-  const difference = new Date(endTime) - new Date();
+  // Validate input - return zeros if invalid
+  if (!endTime || endTime === null || endTime === undefined) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+
+  const endDate = new Date(endTime);
+
+  // Check if date is valid
+  if (isNaN(endDate.getTime())) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+
+  const difference = endDate - new Date();
 
   if (difference <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0 };
@@ -286,6 +298,12 @@ const VAULT_STATUS_CONFIG = {
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
     buttonText: '',
     isCountdownActive: true,
+  },
+  terminating: {
+    countdownName: '',
+    getCountdownTime: () => 'Terminating',
+    buttonText: '',
+    isCountdownActive: false,
   },
 };
 

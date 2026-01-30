@@ -244,7 +244,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                 value: asset.value,
               }))}
               value={selectedAssets}
-              placeholder="Add Multiple Tokens"
+              placeholder="Add Multiple NFTs"
               onChange={handleAddOption}
               className="min-w-[250px]"
             />

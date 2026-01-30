@@ -21,6 +21,7 @@ import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as VaultsMyRouteImport } from './routes/vaults/my'
 import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
+import { Route as ProposalsIdRouteImport } from './routes/proposals/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 
 const TokensRoute = TokensRouteImport.update({
@@ -83,6 +84,11 @@ const VaultsIdRoute = VaultsIdRouteImport.update({
   path: '/vaults/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProposalsIdRoute = ProposalsIdRouteImport.update({
+  id: '/proposals/$id',
+  path: '/proposals/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileIdRoute = ProfileIdRouteImport.update({
   id: '/profile/$id',
   path: '/profile/$id',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
   '/profile': typeof ProfileIndexRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
   '/profile': typeof ProfileIndexRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
+  '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/vaults/my': typeof VaultsMyRoute
   '/profile/': typeof ProfileIndexRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tokens'
     | '/profile/$id'
+    | '/proposals/$id'
     | '/vaults/$id'
     | '/vaults/my'
     | '/profile'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tokens'
     | '/profile/$id'
+    | '/proposals/$id'
     | '/vaults/$id'
     | '/vaults/my'
     | '/profile'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tokens'
     | '/profile/$id'
+    | '/proposals/$id'
     | '/vaults/$id'
     | '/vaults/my'
     | '/profile/'
@@ -193,6 +205,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TokensRoute: typeof TokensRoute
   ProfileIdRoute: typeof ProfileIdRoute
+  ProposalsIdRoute: typeof ProposalsIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
   VaultsMyRoute: typeof VaultsMyRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VaultsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/proposals/$id': {
+      id: '/proposals/$id'
+      path: '/proposals/$id'
+      fullPath: '/proposals/$id'
+      preLoaderRoute: typeof ProposalsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$id': {
       id: '/profile/$id'
       path: '/profile/$id'
@@ -305,6 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TokensRoute: TokensRoute,
   ProfileIdRoute: ProfileIdRoute,
+  ProposalsIdRoute: ProposalsIdRoute,
   VaultsIdRoute: VaultsIdRoute,
   VaultsMyRoute: VaultsMyRoute,
   ProfileIndexRoute: ProfileIndexRoute,

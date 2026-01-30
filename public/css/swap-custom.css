@@ -287,7 +287,7 @@
     --tw-contain-size: ;
     --tw-contain-layout: ;
     --tw-contain-paint: ;
-    --tw-contain-style:
+    --tw-contain-style: ;
 }
 
 .swap-component ::backdrop {
@@ -341,7 +341,7 @@
     --tw-contain-size: ;
     --tw-contain-layout: ;
     --tw-contain-paint: ;
-    --tw-contain-style:
+    --tw-contain-style: ;
 }
 
 #dexhunter-container {
@@ -3837,4 +3837,27 @@ input[type=search] {
     to {
         transform: rotate(360deg)
     }
+}
+
+/* Custom L4VA Button Styles - PrimaryButton */
+#dexhunter-container button.dhs-bg-accent,
+#dexhunter-container button.hover\:dhs-bg-accent:hover {
+    background: linear-gradient(to right, var(--color-orange-500), #FFD012) !important;
+    color: rgb(2 6 23) !important;
+    font-weight: 600 !important;
+    transition: opacity 0.2s !important;
+}
+
+#dexhunter-container button.dhs-bg-accent:hover {
+    opacity: 0.9 !important;
+}
+
+#dexhunter-container button.dhs-bg-accent:active {
+    opacity: 0.8 !important;
+}
+
+#dexhunter-container button.dhs-bg-accent:disabled {
+    background: rgb(209 213 219) !important;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
 }
