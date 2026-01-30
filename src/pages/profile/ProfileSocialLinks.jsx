@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { CoreApiProvider } from '@/services/api/core';
+import { useUpdateProfile } from '@/services/api/queries';
 import { autoFormatUrl, debounce, validateUrlRealTime } from '@/utils/urlValidation';
 
 const MAX_LINKS = 5;
@@ -20,6 +20,8 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
   });
   const [editingId, setEditingId] = useState(null);
   const [realTimeError, setRealTimeError] = useState('');
+
+  const updateProfileMutation = useUpdateProfile();
 
   useEffect(() => {
     if (user && Array.isArray(user.socialLinks)) {
@@ -78,7 +80,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
         newLinks = [...socialLinks, { ...editingLink, id: Date.now() }];
       }
 
-      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
+      await updateProfileMutation.mutateAsync({ socialLinks: newLinks });
       setSocialLinks(newLinks);
 
       if (shouldAddNew && newLinks.length < MAX_LINKS) {
@@ -110,7 +112,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
 
     try {
       const newLinks = socialLinks.filter(link => link.id !== id);
-      await CoreApiProvider.updateProfile({ socialLinks: newLinks });
+      await updateProfileMutation.mutateAsync({ socialLinks: newLinks });
       setSocialLinks(newLinks);
     } catch {
       //

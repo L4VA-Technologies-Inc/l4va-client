@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Camera, Check, Copy, Edit, Plus, X } from 'lucide-react';
 
-import { CoreApiProvider } from '@/services/api/core';
+import { useUpdateProfile, useUploadImage } from '@/services/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -247,12 +247,24 @@ const ProfileHero = ({ user, isEditable = true }) => {
   const nameInputRef = useRef(null);
   const emailInputRef = useRef(null);
 
+  const uploadImageMutation = useUploadImage();
+  const updateProfileMutation = useUpdateProfile();
+
+  useEffect(() => {
+    if (user) {
+      setAvatar(user.profileImage || null);
+      setBgImage(user.bannerImage || null);
+      setName(user.name || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
+
   const handleFileUpload = async (file, type) => {
     try {
-      const { data } = await CoreApiProvider.uploadImage(file);
+      const { data } = await uploadImageMutation.mutateAsync(file);
       const updateData = type === 'avatar' ? { profileImage: data.url } : { bannerImage: data.url };
 
-      await CoreApiProvider.updateProfile(updateData);
+      await updateProfileMutation.mutateAsync(updateData);
       if (type === 'avatar') {
         setAvatar(data.url);
       } else {
@@ -290,7 +302,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
     setIsUpdating(true);
     try {
-      await CoreApiProvider.updateProfile({ name: name.trim() });
+      await updateProfileMutation.mutateAsync({ name: name.trim() });
       setIsEditingName(false);
       toast.success('Name updated successfully');
     } catch (error) {
@@ -325,7 +337,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
     setIsUpdating(true);
     try {
-      await CoreApiProvider.updateProfile({ email: trimmedEmail || null });
+      await updateProfileMutation.mutateAsync({ email: trimmedEmail || null });
       setEmail(trimmedEmail);
       setIsEditingEmail(false);
       toast.success('Email updated successfully');
