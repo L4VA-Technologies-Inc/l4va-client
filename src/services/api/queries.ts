@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ClaimsApiProvider } from './claims';
 import { GovernanceApiProvider } from './governance';
@@ -158,8 +158,16 @@ export const useLogin = () => {
 };
 
 export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: profileData => CoreApiProvider.updateProfile(profileData),
+    onSuccess: response => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      if (response?.data) {
+        queryClient.setQueryData(['profile'], response);
+      }
+    },
   });
 };
 
