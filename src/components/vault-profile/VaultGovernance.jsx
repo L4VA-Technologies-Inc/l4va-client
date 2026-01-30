@@ -202,7 +202,9 @@ export const VaultGovernance = ({ vault }) => {
 
                     <div className="text-dark-100 text-sm mb-3">
                       <ProposalEndDate
+                        startDate={proposal.startDate}
                         endDate={proposal.endDate}
+                        proposalStatus={proposal.status}
                         isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
                       />
                     </div>

@@ -306,7 +306,11 @@ export const ProposalInfo = ({ proposal }) => {
         <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
           <div className="space-y-2">
             <div className="text-dark-100 text-md mb-3">
-              <ProposalEndDate endDate={proposalInfo?.endDate} proposalStatus={proposal.status} />
+              <ProposalEndDate
+                startDate={proposalInfo?.startDate}
+                endDate={proposalInfo?.endDate}
+                proposalStatus={proposal.status}
+              />
             </div>
           </div>
 

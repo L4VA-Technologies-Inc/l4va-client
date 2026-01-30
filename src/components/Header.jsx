@@ -15,11 +15,11 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useSnowfall } from '@/hooks/useSnowfall';
 
 const navLinks = [
-  { to: '/create', label: 'Create' },
-  { to: '/vaults?tab=contribution', label: 'Contribute' },
-  { to: '/vaults?tab=acquire', label: 'Acquire' },
-  { to: '/vaults?tab=govern', label: 'Govern' },
-  { to: '/tokens', label: 'Tokens' },
+  { to: '/create', label: 'Create', isAuth: true },
+  { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false },
+  { to: '/vaults?tab=acquire', label: 'Acquire', isAuth: false },
+  { to: '/vaults?tab=govern', label: 'Govern', isAuth: false },
+  { to: '/tokens', label: 'Tokens', isAuth: false },
 ];
 
 const NavLink = React.memo(({ to, label, onClick }) => (
@@ -96,8 +96,8 @@ export const Header = () => {
   // }, [isAuthenticated, activeModalData, openModal]);
 
   const handleNavClick = useCallback(
-    (to, e) => {
-      if (!isAuthenticated) {
+    (to, e, isAuth) => {
+      if (!isAuthenticated && isAuth) {
         e.preventDefault();
         openModal('LoginModal');
       }
@@ -188,7 +188,12 @@ export const Header = () => {
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">
               {navLinks.map(link => (
-                <NavLink key={link.to} to={link.to} label={link.label} onClick={e => handleNavClick(link.to, e)} />
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  label={link.label}
+                  onClick={e => handleNavClick(link.to, e, link.isAuth)}
+                />
               ))}
             </div>
             <div className="flex-1" />
