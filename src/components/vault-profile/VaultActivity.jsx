@@ -7,7 +7,7 @@ import {
   Calendar,
   ChevronUp,
   ExternalLink,
-  Bitcoin,
+  HandCoins,
   Vote,
   Play,
   CheckCircle,
@@ -37,11 +37,11 @@ const ACTIVITY_TYPES = {
   },
   contribute: {
     label: 'Contribution',
-    icon: Bitcoin,
+    icon: HandCoins,
     iconColor: 'text-orange-500',
   },
   acquire: {
-    label: 'Acquisition',
+    label: 'Acquire',
     icon: Coins,
     iconColor: 'text-orange-500',
   },
