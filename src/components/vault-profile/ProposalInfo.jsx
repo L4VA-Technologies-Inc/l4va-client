@@ -129,7 +129,6 @@ export const ProposalInfo = ({ proposal }) => {
     },
     { label: 'IPFS', value: proposalInfo?.ipfsHash || 'N/A' },
     { label: 'Voting system', value: proposalInfo?.votingSystem ?? 'Single choice' },
-    { label: 'Created at', value: proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : 'N/A' },
     { label: 'Start at', value: proposalInfo?.startDate ? formatDateWithTime(proposalInfo.startDate) : 'N/A' },
     { label: 'End at', value: proposalInfo?.endDate ? formatDateWithTime(proposalInfo.endDate) : 'N/A' },
   ];

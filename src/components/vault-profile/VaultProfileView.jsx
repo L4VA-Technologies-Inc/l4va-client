@@ -492,6 +492,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdvTvl={vault.fdvTvl || 'N/A'}
+                    vtPrice={vault.vtPrice || 'N/A'}
                     tvl={(() => {
                       if (isAda) {
                         return vault.assetsPrices?.totalValueAda
