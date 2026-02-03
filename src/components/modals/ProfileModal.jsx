@@ -26,7 +26,14 @@ export const ProfileModal = () => {
   };
 
   const handleNavigation = path => {
-    navigate({ to: path });
+    if (path === '/vaults') {
+      navigate({
+        to: '/profile',
+        search: { tab: 'all' },
+      });
+    } else {
+      navigate({ to: path });
+    }
     closeModal();
   };
 
@@ -56,10 +63,7 @@ export const ProfileModal = () => {
           <User size={20} />
           My profile
         </SecondaryButton>
-        <SecondaryButton
-          className="w-full justify-start gap-3 text-left"
-          onClick={() => handleNavigation('/vaults/my')}
-        >
+        <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/vaults')}>
           <FolderOpen size={20} />
           My vaults
         </SecondaryButton>

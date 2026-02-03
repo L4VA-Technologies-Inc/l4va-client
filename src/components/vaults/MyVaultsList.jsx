@@ -63,6 +63,27 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
     }));
   }, [activeTab]);
 
+  useEffect(() => {
+    if (initialTab && myVaultsListRef.current) {
+      const timer = setTimeout(() => {
+        const element = myVaultsListRef.current;
+        if (element) {
+          const headerHeight = 72;
+          const additionalOffset = 24;
+          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+          const offsetPosition = elementPosition - headerHeight - additionalOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [initialTab]);
+
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
       ...prevFilters,
