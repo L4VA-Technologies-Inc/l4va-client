@@ -88,6 +88,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-left">Origin</th>
                   <th className="px-4 py-3 text-left">Quantity</th>
+                  <th className="px-4 py-3 text-left">Value</th>
                   {/* <th className="px-4 py-3 text-left">Contribute</th> */}
                   <th className="px-4 py-3"></th>
                 </tr>
@@ -114,11 +115,12 @@ export const VaultContributedAssetsList = ({ vault }) => {
                       <td className="px-4 py-3 font-medium">
                         {asset?.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
                       </td>
-                      <td className="px-4 py-3 capitalize">{asset.type}</td>
+                      <td className="px-4 py-3 uppercase">{asset.type}</td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 capitalize">{asset.status}</td>
                       <td className="px-4 py-3 capitalize">{asset.originType}</td>
                       <td className="px-4 py-3">{asset.quantity}</td>
+                      <td className="px-4 py-3">₳{asset.quantity * asset.floorPrice}</td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 text-center">
                         <button
