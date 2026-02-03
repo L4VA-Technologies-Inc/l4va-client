@@ -30,6 +30,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
     return numericValue;
   };
 
+  const formatWithDecimal = value => {
+    if (value === '' || value === null || value === undefined) return '';
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    return num.toFixed(1);
+  };
+
   const handleNumChange = e => {
     const { name, value } = e.target;
 
@@ -42,13 +49,20 @@ export const Governance = ({ data, errors = {}, updateField }) => {
       }
 
       if (parseFloat(sanitizedValue) > 100) {
-        const limitedValue = Math.min(sanitizedValue, 100);
-        updateField(name, +limitedValue);
+        updateField(name, '100.0');
+        return;
       }
 
       if (parseFloat(sanitizedValue) <= 100) {
         updateField(name, sanitizedValue);
       }
+    }
+  };
+
+  const handleNumBlur = e => {
+    const { name, value } = e.target;
+    if (value !== '') {
+      updateField(name, formatWithDecimal(value));
     }
   };
 
@@ -70,12 +84,23 @@ export const Governance = ({ data, errors = {}, updateField }) => {
       }
 
       if (numValue > 100) {
-        const limitedValue = Math.min(sanitizedValue, 100);
-        updateField(name, +limitedValue);
+        updateField(name, '100.0');
+        return;
       }
 
       if (numValue >= 1 && numValue <= 100) {
         updateField(name, sanitizedValue);
+      }
+    }
+  };
+
+  const handleMinOnePercentBlur = e => {
+    const { name, value } = e.target;
+    if (value !== '') {
+      const formatted = formatWithDecimal(value);
+      const numValue = parseFloat(formatted);
+      if (numValue >= 1) {
+        updateField(name, formatted);
       }
     }
   };
@@ -142,9 +167,10 @@ export const Governance = ({ data, errors = {}, updateField }) => {
                 icon={<Info color="white" size={16} />}
                 label="VAULT APPRECIATION %"
                 name="vaultAppreciation"
-                placeholder="XX"
+                placeholder="XX.X"
                 suffix="%"
                 value={data.vaultAppreciation || ''}
+                onBlur={handleNumBlur}
                 onChange={handleNumChange}
               />
             </div>
@@ -156,12 +182,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.creationThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal. Set to 0% to allow anyone holding any vault token to create proposals."
+              hint="Minimum Vault tokens held by user (as % of total supply) required to create a proposal. Set to 0.0% to allow anyone holding any vault token to create proposals."
               label="CREATION THRESHOLD (%)"
               name="creationThreshold"
-              placeholder="XX"
+              placeholder="XX.X"
               suffix="%"
               value={data.creationThreshold || ''}
+              onBlur={handleNumBlur}
               onChange={handleNumChange}
             />
           </div>
@@ -198,12 +225,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 1%."
-              label="VOTE THRESHOLD (%)"
+              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 20.0%."
+              label="Vote Quorum Threshold (%)"
               name="voteThreshold"
-              placeholder="XX"
+              placeholder="XX.X"
               suffix="%"
               value={data.voteThreshold || ''}
+              onBlur={handleMinOnePercentBlur}
               onChange={handleMinOnePercentChange}
             />
           </div>
@@ -212,12 +240,13 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved. Minimum 1%."
-              label="EXECUTION THRESHOLD (%)"
+              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved. Minimum 50.0%."
+              label="Approval Threshold (%)"
               name="executionThreshold"
-              placeholder="XX"
+              placeholder="XX.X"
               suffix="%"
               value={data.executionThreshold || ''}
+              onBlur={handleMinOnePercentBlur}
               onChange={handleMinOnePercentChange}
             />
           </div>

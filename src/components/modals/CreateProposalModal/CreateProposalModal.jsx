@@ -135,7 +135,29 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         })
         .catch(err => {
           console.error('Failed to create proposal:', err);
-          toast.error(`Failed to create proposal: ${err.response.data.message}`);
+
+          // Extract error message from API response
+          let errorMessage = 'Failed to create proposal. Please try again.';
+
+          if (err?.response?.data?.message) {
+            errorMessage = err.response.data.message;
+
+            // Check if it's a swap amount too low error
+            if (errorMessage.includes('Swap amount too low')) {
+              // Already has helpful message with max amount suggestion
+              toast.error(errorMessage, { duration: 8000 });
+              return;
+            }
+            // Check if it's a pool not found error (genuinely no pool)
+            else if (errorMessage.includes('No liquidity pool available')) {
+              toast.error(`${errorMessage}\n\nThis token is not tradeable on DexHunter.`, { duration: 6000 });
+              return;
+            }
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+
+          toast.error(errorMessage, { duration: 6000 });
         });
       setShowConfirmation(false);
     } catch (error) {

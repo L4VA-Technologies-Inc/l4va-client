@@ -169,10 +169,15 @@ export const VaultContribution = ({ vault }) => {
               <div className="flex flex-col gap-1 text-xs mt-2">
                 {/* Show different messages based on whether vault can meet minimum */}
                 {!canMeetLpMinimum ? (
-                  <div className="flex flex-col gap-1 p-2 border border-red-500/30 rounded mt-1">
-                    <span className="text-red-400 text-xs">
-                      LP will not be created - estimated LP ({formatNum(vault.projectedLpAdaAmount)} ADA) is below
-                      minimum ({vault.lpMinLiquidityAda} ADA)
+                  <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
+                    <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
+                    <span className="text-red-300 text-xs">
+                      LP is required but estimated LP (
+                      {currency === 'ada'
+                        ? `₳${formatNum(vault.projectedLpAdaAmount)}`
+                        : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                      ) is below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will
+                      fail and refund users.
                     </span>
                   </div>
                 ) : (
@@ -184,11 +189,19 @@ export const VaultContribution = ({ vault }) => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-dark-100">LP Minimum ({vault.lpMinLiquidityAda} ADA):</span>
+                      <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
                       <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
                         {lpMinThresholdMet ? '✓ Threshold met' : 'Not yet reached'}
                       </span>
                     </div>
+                    {!lpMinThresholdMet && (
+                      <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                        <span className="text-yellow-300 text-xs">
+                          LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
+                          {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
+                        </span>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

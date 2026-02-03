@@ -7,7 +7,7 @@ import {
   Calendar,
   ChevronUp,
   ExternalLink,
-  Bitcoin,
+  HandCoins,
   Vote,
   Play,
   CheckCircle,
@@ -37,11 +37,11 @@ const ACTIVITY_TYPES = {
   },
   contribute: {
     label: 'Contribution',
-    icon: Bitcoin,
+    icon: HandCoins,
     iconColor: 'text-orange-500',
   },
   acquire: {
-    label: 'Acquisition',
+    label: 'Acquire',
     icon: Coins,
     iconColor: 'text-orange-500',
   },
@@ -217,10 +217,12 @@ const ActivityCard = ({ activity }) => {
     }
   };
 
-  const nftAssets =
-    isTransaction && activity.type === 'contribute' ? activity.assets?.filter(asset => asset.type === 'nft') || [] : [];
-  const visibleNFTs = showAllAssets ? nftAssets : nftAssets.slice(0, 4);
-  const remainingNFTs = nftAssets.length - 4;
+  const contributedAssets =
+    isTransaction && activity.type === 'contribute'
+      ? activity.assets?.filter(asset => asset.type === 'nft' || asset.type === 'ft') || []
+      : [];
+  const visibleAssets = showAllAssets ? contributedAssets : contributedAssets.slice(0, 4);
+  const remainingAssets = contributedAssets.length - 4;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-steel-750 bg-steel-950 transition-all duration-200 hover:border-steel-700">
@@ -329,47 +331,61 @@ const ActivityCard = ({ activity }) => {
                   <>
                     <p className="text-sm text-dark-100 mb-3">{getDescription()}</p>
 
-                    {activity.type === 'contribute' && nftAssets.length > 0 && (
+                    {activity.type === 'contribute' && contributedAssets.length > 0 && (
                       <div className="mb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {visibleNFTs.map((asset, index) => (
-                            <div key={asset.id || index} className="relative group" title={asset.name || 'NFT'}>
-                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-steel-850 border border-steel-750 hover:border-orange-500/50 transition-colors">
-                                {asset.image ? (
-                                  <img
-                                    src={getIPFSUrl(asset.image)}
-                                    alt={asset.name || 'NFT'}
-                                    className="w-full h-full object-cover"
-                                    onError={e => {
-                                      e.target.style.display = 'none';
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Coins className="w-6 h-6 text-dark-100" />
+                          {visibleAssets.map((asset, index) => (
+                            <div key={asset.id || index} className="relative group">
+                              {asset.type === 'ft' ? (
+                                <div
+                                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750 pointer-events-none"
+                                  title={`${asset.quantity} ${asset.name}`}
+                                >
+                                  <img src="/assets/icons/ada.svg" alt={asset.name || 'FT'} className="w-5 h-5" />
+                                  <span className="text-sm font-medium text-white">
+                                    {parseFloat(asset.quantity).toLocaleString()} {asset.name}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div title={asset.name || 'NFT'}>
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-steel-850 border border-steel-750">
+                                    {asset.image ? (
+                                      <img
+                                        src={getIPFSUrl(asset.image)}
+                                        alt={asset.name || 'NFT'}
+                                        className="w-full h-full object-cover"
+                                        onError={e => {
+                                          e.target.style.display = 'none';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <Coins className="w-6 h-6 text-dark-100" />
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                              {asset.name && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-steel-850 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none border border-steel-750">
-                                  {asset.name}
+                                  {asset.name && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-steel-850 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none border border-steel-750">
+                                      {asset.name}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
                           ))}
-                          {!showAllAssets && remainingNFTs > 0 && (
+                          {!showAllAssets && remainingAssets > 0 && (
                             <button
                               onClick={() => setShowAllAssets(true)}
                               className="w-12 h-12 rounded-lg flex items-center justify-center bg-steel-850 border border-steel-750 hover:border-orange-500/50 hover:bg-steel-750 transition-all cursor-pointer group"
-                              title={`Show ${remainingNFTs} more assets`}
+                              title={`Show ${remainingAssets} more assets`}
                             >
                               <span className="text-sm font-medium text-dark-100 group-hover:text-orange-500 transition-colors">
-                                +{remainingNFTs}
+                                +{remainingAssets}
                               </span>
                             </button>
                           )}
                         </div>
-                        {showAllAssets && nftAssets.length > 4 && (
+                        {showAllAssets && contributedAssets.length > 4 && (
                           <button
                             onClick={() => setShowAllAssets(false)}
                             className="mt-2 inline-flex items-center gap-1 text-sm text-dark-100 hover:text-orange-500 transition-colors"
@@ -541,9 +557,16 @@ export const VaultActivity = ({ vault }) => {
         let assetNames = '';
         let policyIds = '';
         if (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) {
-          const nftAssets = activity.assets.filter(asset => asset.type === 'nft');
-          assetNames = nftAssets.map(asset => asset.name || asset.asset_id || 'Unknown').join('; ');
-          policyIds = nftAssets.map(asset => asset.policy_id || 'Unknown').join('; ');
+          const contributedAssets = activity.assets.filter(asset => asset.type === 'nft' || asset.type === 'ft');
+          assetNames = contributedAssets
+            .map(asset => {
+              if (asset.type === 'ft') {
+                return `${parseFloat(asset.quantity).toLocaleString()} ${asset.name || asset.asset_id || 'Unknown'}`;
+              }
+              return asset.name || asset.asset_id || 'Unknown';
+            })
+            .join('; ');
+          policyIds = contributedAssets.map(asset => asset.policy_id || 'Unknown').join('; ');
         }
 
         return [

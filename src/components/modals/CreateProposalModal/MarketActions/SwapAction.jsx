@@ -144,6 +144,23 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
 
   return (
     <div className="space-y-6">
+      {/* Info Banner */}
+      <div className="bg-steel-850 border border-orange-500/30 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-500/20 flex items-center justify-center">
+            <span className="text-orange-500 text-xs font-bold">i</span>
+          </div>
+          <div className="flex-1">
+            <h5 className="text-orange-500 font-medium text-sm mb-1">Swap Requirements</h5>
+            <p className="text-white/60 text-xs leading-relaxed">
+              Tokens must have liquidity pools on DexHunter with sufficient depth. If validation fails due to low
+              amount, try using the maximum available quantity. The system validates both pool availability and minimum
+              swap thresholds.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Available Tokens Grid */}
       {availableAssets.length > 0 && (
         <div>

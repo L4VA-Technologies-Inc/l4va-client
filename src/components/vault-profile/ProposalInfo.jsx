@@ -410,6 +410,12 @@ export const ProposalInfo = ({ proposal }) => {
                     <span className="text-white-500 text-2md flex items-center">Vote</span>
                   </PrimaryButton>
                 </div>
+
+                <div className="text-center text-sm text-gray-400 italic">
+                  * Voting power was calculated on{' '}
+                  {proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : 'proposal creation'} and will
+                  not change during the voting period.
+                </div>
               </>
             ) : proposal.status === 'upcoming' ? (
               <div className="text-center py-8 space-y-4">
@@ -575,6 +581,11 @@ export const ProposalInfo = ({ proposal }) => {
           <div className="space-y-2">
             <h3 className="text-1xl font-bold">Results</h3>
             <VoteResultBar votes={proposal.votes} hasAbstain={proposalInfo?.abstain} />
+            <div className="text-xs text-gray-400 italic mt-2">
+              * Voting power was calculated on{' '}
+              {proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : 'proposal creation'} and will not
+              change during the voting period.
+            </div>
           </div>
         </div>
       </div>
