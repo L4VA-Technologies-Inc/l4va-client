@@ -19,7 +19,6 @@ import { Route as AboutUsRouteImport } from './routes/about-us'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
-import { Route as VaultsMyRouteImport } from './routes/vaults/my'
 import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
 import { Route as ProposalsIdRouteImport } from './routes/proposals/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
@@ -74,11 +73,6 @@ const ProfileIndexRoute = ProfileIndexRouteImport.update({
   path: '/profile/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VaultsMyRoute = VaultsMyRouteImport.update({
-  id: '/vaults/my',
-  path: '/vaults/my',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const VaultsIdRoute = VaultsIdRouteImport.update({
   id: '/vaults/$id',
   path: '/vaults/$id',
@@ -107,7 +101,6 @@ export interface FileRoutesByFullPath {
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
-  '/vaults/my': typeof VaultsMyRoute
   '/profile': typeof ProfileIndexRoute
   '/vaults': typeof VaultsIndexRoute
 }
@@ -123,7 +116,6 @@ export interface FileRoutesByTo {
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
-  '/vaults/my': typeof VaultsMyRoute
   '/profile': typeof ProfileIndexRoute
   '/vaults': typeof VaultsIndexRoute
 }
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/vaults/$id': typeof VaultsIdRoute
-  '/vaults/my': typeof VaultsMyRoute
   '/profile/': typeof ProfileIndexRoute
   '/vaults/': typeof VaultsIndexRoute
 }
@@ -158,7 +149,6 @@ export interface FileRouteTypes {
     | '/profile/$id'
     | '/proposals/$id'
     | '/vaults/$id'
-    | '/vaults/my'
     | '/profile'
     | '/vaults'
   fileRoutesByTo: FileRoutesByTo
@@ -174,7 +164,6 @@ export interface FileRouteTypes {
     | '/profile/$id'
     | '/proposals/$id'
     | '/vaults/$id'
-    | '/vaults/my'
     | '/profile'
     | '/vaults'
   id:
@@ -190,7 +179,6 @@ export interface FileRouteTypes {
     | '/profile/$id'
     | '/proposals/$id'
     | '/vaults/$id'
-    | '/vaults/my'
     | '/profile/'
     | '/vaults/'
   fileRoutesById: FileRoutesById
@@ -207,7 +195,6 @@ export interface RootRouteChildren {
   ProfileIdRoute: typeof ProfileIdRoute
   ProposalsIdRoute: typeof ProposalsIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
-  VaultsMyRoute: typeof VaultsMyRoute
   ProfileIndexRoute: typeof ProfileIndexRoute
   VaultsIndexRoute: typeof VaultsIndexRoute
 }
@@ -284,13 +271,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/vaults/my': {
-      id: '/vaults/my'
-      path: '/vaults/my'
-      fullPath: '/vaults/my'
-      preLoaderRoute: typeof VaultsMyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/vaults/$id': {
       id: '/vaults/$id'
       path: '/vaults/$id'
@@ -327,7 +307,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileIdRoute: ProfileIdRoute,
   ProposalsIdRoute: ProposalsIdRoute,
   VaultsIdRoute: VaultsIdRoute,
-  VaultsMyRoute: VaultsMyRoute,
   ProfileIndexRoute: ProfileIndexRoute,
   VaultsIndexRoute: VaultsIndexRoute,
 }

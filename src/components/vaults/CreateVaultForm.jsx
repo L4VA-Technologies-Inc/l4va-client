@@ -515,8 +515,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       localStorage.removeItem('storageVault');
 
       await navigate({
-        to: '/vaults/my',
-        search: { tab: 'Draft' },
+        to: '/profile',
+        search: { tab: 'draft' },
       });
     } catch (e) {
       console.log(e);
@@ -592,8 +592,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
         toast.success('Draft deleted successfully');
         navigate({
-          to: '/vaults/my',
-          search: { tab: 'Draft' },
+          to: '/profile',
+          search: { tab: 'draft' },
         });
       } catch (e) {
         console.error(e);
