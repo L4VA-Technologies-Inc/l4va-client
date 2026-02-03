@@ -488,9 +488,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                     })()}
                     fdv={(() => {
                       if (isAda) {
-                        return vault?.fdvAda ? `₳${formatNum(vault.fdvAda)}` : 'N/A';
+                        return vault?.fdv ? `₳${formatNum(vault.fdv)}` : 'N/A';
                       } else {
-                        return vault?.fdv ? `$${formatNum(vault.fdv)}` : 'N/A';
+                        return vault?.fdvUsd ? `$${formatNum(vault.fdvUsd)}` : 'N/A';
                       }
                     })()}
                     fdvTvl={vault.fdvTvl || 'N/A'}
