@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-useless-escape
-const URL_REGEX = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/i;
+const URL_REGEX = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.\-@~:?#\[\]!$&'()*+,;=%]*)*\/?$/i;
 
 export const validateUrlRealTime = url => {
   if (!url || url.trim() === '') {

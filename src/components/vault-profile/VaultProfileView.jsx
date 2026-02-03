@@ -445,13 +445,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             />
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
-          {deferredReady ? (
-            <Suspense fallback={<ContributionSkeleton />}>
-              <VaultContribution vault={vault} />
-            </Suspense>
-          ) : (
-            <ContributionSkeleton />
-          )}
+          {vault.vaultStatus !== 'locked' ? (
+            deferredReady ? (
+              <Suspense fallback={<ContributionSkeleton />}>
+                <VaultContribution vault={vault} />
+              </Suspense>
+            ) : (
+              <ContributionSkeleton />
+            )
+          ) : null}
           <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay
@@ -492,6 +494,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdvTvl={vault.fdvTvl || 'N/A'}
+                    vtPrice={vault.vtPrice || 'N/A'}
                     tvl={(() => {
                       if (isAda) {
                         return vault.assetsPrices?.totalValueAda

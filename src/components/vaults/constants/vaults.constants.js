@@ -323,12 +323,13 @@ export const vaultSchema = yup.object({
   voteThreshold: yup
     .number()
     .typeError('Vote threshold is required')
-    .required('Vote threshold is required')
+    .required('Vote Quorum Threshold is required')
     .min(20, 'Vote Quorum Threshold must be at least 20%'),
   executionThreshold: yup
     .number()
     .typeError('Execution threshold is required')
-    .required('Execution threshold is required'),
+    .required('Approval threshold is required')
+    .min(50, 'Approval threshold must be at least 50%'),
   // cosigningThreshold: yup
   //   .number()
   //   .typeError('Cosigning threshold is required')
