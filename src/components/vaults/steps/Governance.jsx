@@ -198,7 +198,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.voteThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 1%."
+              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 20%."
               label="Vote Quorum Threshold (%)"
               name="voteThreshold"
               placeholder="XX"
@@ -212,7 +212,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               required
               error={errors.executionThreshold}
               icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved. Minimum 1%."
+              hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved. Minimum 50%."
               label="Approval Threshold (%)"
               name="executionThreshold"
               placeholder="XX"
