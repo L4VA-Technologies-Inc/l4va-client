@@ -14,6 +14,7 @@ import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { formatAdaPrice } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -200,8 +201,8 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         </div>
         {selectedNFTs.length > 0 && (
           <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-            Transaction cost: <span className="text-white font-medium">~{transactionCost.toFixed(2)} ADA</span> (5 ADA
-            per asset + 0.77 ADA)
+            Transaction cost: <span className="text-white font-medium">~{formatAdaPrice(transactionCost)} ADA</span> (5
+            ADA ADA per asset + 0.77 ADA)
           </div>
         )}
       </div>

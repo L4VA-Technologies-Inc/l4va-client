@@ -4,6 +4,7 @@ import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { formatAdaPrice } from '@/utils/core.utils';
 
 export default function Distributing({ onDataChange, vaultId }) {
   const [adaAmount, setAdaAmount] = useState('');
@@ -159,7 +160,7 @@ export default function Distributing({ onDataChange, vaultId }) {
           <p className="text-2xl font-semibold text-white">{treasuryBalanceAda.toLocaleString()} ADA</p>
           <p className="text-xs text-green-400 mt-1">Max Distributable: {maxDistributableAda.toLocaleString()} ADA</p>
           <p className="text-xs text-white/40">
-            (Fees reserved: {(treasuryBalanceAda - maxDistributableAda).toFixed(2)} ADA)
+            (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} ADA)
           </p>
         </div>
 

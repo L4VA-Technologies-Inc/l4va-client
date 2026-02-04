@@ -8,6 +8,92 @@ export const formatNum = (value, maximumFractionDigits = 2) =>
       })
     : 0;
 
+/**
+ * Format ADA prices intelligently to handle very small values
+ * - For values >= 1: shows 2 decimal places (e.g., 123.45)
+ * - For values < 1 but >= 0.01: shows up to 4 decimal places (e.g., 0.1234)
+ * - For values < 0.01: uses compact notation with subscript zeros (e.g., 0.0₃129 for 0.000129)
+ * @param {number|string} value - The price value to format
+ * @returns {string} - Formatted price string
+ */
+export const formatAdaPrice = value => {
+  const num = Number(value);
+
+  // Handle invalid values
+  if (!num && num !== 0) return '0';
+  if (isNaN(num)) return '0';
+  if (num === 0) return '0';
+
+  // For negative values (shouldn't happen with prices, but handle gracefully)
+  if (num < 0) return '0';
+
+  // For large values >= 1, use 2 decimal places
+  if (num >= 1) {
+    return num.toLocaleString('en', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  // For medium values (0.01 to 1), use up to 4 decimal places
+  if (num >= 0.01) {
+    return num.toLocaleString('en', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
+    });
+  }
+
+  // For very small values (< 0.01), use compact notation with subscript
+  // e.g., 0.000129 → 0.0₃129 (where ₃ indicates 3 zeros)
+  const strValue = num.toString();
+
+  // Handle scientific notation (e.g., 1e-7)
+  if (strValue.includes('e')) {
+    const [base, exponent] = strValue.split('e');
+    const exp = Math.abs(parseInt(exponent));
+    const baseNum = parseFloat(base);
+
+    // Get significant digits (up to 4)
+    const significantDigits = baseNum.toString().replace('.', '').substring(0, 4);
+    const zerosCount = exp - 1;
+
+    const subscriptDigits = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+    const subscript = zerosCount
+      .toString()
+      .split('')
+      .map(d => subscriptDigits[parseInt(d)])
+      .join('');
+
+    return `0.0${subscript}${significantDigits}`;
+  }
+
+  // Regular decimal format
+  const decimalPart = strValue.split('.')[1] || '';
+
+  // Count leading zeros
+  let zerosCount = 0;
+  for (let i = 0; i < decimalPart.length; i++) {
+    if (decimalPart[i] === '0') {
+      zerosCount++;
+    } else {
+      break;
+    }
+  }
+
+  // Get the significant digits after zeros (up to 4 digits)
+  const significantDigits = decimalPart.substring(zerosCount, zerosCount + 4);
+
+  // Convert zeros count to subscript
+  const subscriptDigits = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+  const subscript = zerosCount
+    .toString()
+    .split('')
+    .map(d => subscriptDigits[parseInt(d)])
+    .join('');
+
+  return `0.0${subscript}${significantDigits}`;
+};
+
 export const formatCompactNumber = num => {
   if (!num) return 0;
   const formatter = Intl.NumberFormat('en', { notation: 'compact' });

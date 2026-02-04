@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
-import { substringAddress } from '@/utils/core.utils.js';
+import { substringAddress, formatAdaPrice } from '@/utils/core.utils.js';
 
 const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   const handleCopy = (e, text, message) => {
@@ -17,7 +17,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   const calculateValue = () => {
     const quantity = asset.quantity || 0;
     const price = isAda ? parseFloat(asset.floorPrice || 0) : parseFloat(asset.floorPriceUsd || 0);
-    return (quantity * price).toFixed(2);
+    return formatAdaPrice(quantity * price);
   };
 
   return (

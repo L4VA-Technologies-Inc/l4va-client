@@ -14,6 +14,7 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
+  maxCapValue = 1000000000,
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
   const [scrollTop, setScrollTop] = useState(0);
@@ -91,7 +92,7 @@ export const LavaWhitelistWithCaps = ({
         policyId: '',
         countCapMin: 1,
         policyName: 'N/A',
-        countCapMax: 1000,
+        countCapMax: Math.min(1000, maxCapValue),
         uniqueId: Date.now(),
       },
     ];
@@ -279,7 +280,13 @@ export const LavaWhitelistWithCaps = ({
                   pattern="[0-9]*"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMin}
-                  onChange={e => updateAsset(asset.uniqueId, 'countCapMin', e.target.value)}
+                  onChange={e => {
+                    const inputValue = e.target.value;
+                    const numericValue = Number(inputValue.replace(/,/g, ''));
+                    if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                      updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+                    }
+                  }}
                   onBlur={e =>
                     updateAsset(
                       asset.uniqueId,
@@ -287,6 +294,7 @@ export const LavaWhitelistWithCaps = ({
                       e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
                     )
                   }
+                  hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
                 />
                 {(() => {
                   const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
@@ -300,14 +308,19 @@ export const LavaWhitelistWithCaps = ({
                   label="Max asset cap"
                   style={{ fontSize: '20px' }}
                   value={asset.countCapMax}
-                  onChange={e => updateAsset(asset.uniqueId, 'countCapMax', e.target.value)}
-                  onBlur={e =>
-                    updateAsset(
-                      asset.uniqueId,
-                      'countCapMax',
-                      e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''))
-                    )
-                  }
+                  onChange={e => {
+                    const inputValue = e.target.value;
+                    const numericValue = Number(inputValue.replace(/,/g, ''));
+                    if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                      updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                    }
+                  }}
+                  onBlur={e => {
+                    const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                    const limitedValue = Math.min(rawValue, maxCapValue);
+                    updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                  }}
+                  hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
                 />
                 {(() => {
                   const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
