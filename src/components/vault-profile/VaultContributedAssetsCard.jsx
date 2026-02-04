@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { substringAddress } from '@/utils/core.utils.js';
 
-const AssetCard = ({ asset, isExpanded, onClick }) => {
+const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   const handleCopy = (e, text, message) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
@@ -13,6 +13,12 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
 
   const imageUrl = asset.imageUrl ? asset.imageUrl : '/assets/icons/ada.svg';
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
+
+  const calculateValue = () => {
+    const quantity = asset.quantity || 0;
+    const price = isAda ? parseFloat(asset.floorPrice || 0) : parseFloat(asset.floorPriceUsd || 0);
+    return (quantity * price).toFixed(2);
+  };
 
   return (
     <div
@@ -63,6 +69,13 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
               <p>{asset.quantity}</p>
             </div>
             <div>
+              <p className="font-medium text-gray-300">Value:</p>
+              <p>
+                {currencySymbol}
+                {calculateValue()}
+              </p>
+            </div>
+            <div>
               <p className="font-medium text-gray-300">Added At:</p>
               <p>{new Date(asset.addedAt).toLocaleDateString()}</p>
             </div>
@@ -110,7 +123,7 @@ const AssetCard = ({ asset, isExpanded, onClick }) => {
   );
 };
 
-export const VaultContributedAssetsCard = ({ assets }) => {
+export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
 
   return (
@@ -121,6 +134,8 @@ export const VaultContributedAssetsCard = ({ assets }) => {
           asset={asset}
           isExpanded={expandedAsset === index}
           onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
+          currencySymbol={currencySymbol}
+          isAda={isAda}
         />
       ))}
     </div>
