@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 import { Pagination } from '@/components/shared/Pagination';
 import { useVaultAssets } from '@/services/api/queries';
-import { substringAddress } from '@/utils/core.utils';
+import { substringAddress, formatAdaPrice } from '@/utils/core.utils';
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -124,9 +124,10 @@ export const VaultContributedAssetsList = ({ vault }) => {
                       <td className="px-4 py-3">{asset.quantity}</td>
                       <td className="px-4 py-3">
                         {currencySymbol}
-                        {isAda
-                          ? (asset.quantity * parseFloat(asset.floorPrice || 0)).toFixed(2)
-                          : (asset.quantity * parseFloat(asset.floorPriceUsd || 0)).toFixed(2)}
+                        {formatAdaPrice(
+                          asset.quantity *
+                            parseFloat(isAda ? asset.floorPrice || asset.dexPrice || 0 : asset.floorPriceUsd || 0)
+                        )}
                       </td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 text-center">

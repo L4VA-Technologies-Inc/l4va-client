@@ -526,7 +526,11 @@ export const ProposalInfo = ({ proposal }) => {
                   <AlertCircle className="h-5 w-5 text-red-500" />
                   <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
                 </div>
-                <div className="text-red-300">{proposalInfo.executionError.message}</div>
+                <div className="text-red-300">
+                  {proposalInfo.executionError.userFriendlyMessage
+                    ? proposalInfo.executionError.userFriendlyMessage
+                    : proposalInfo.executionError.message}
+                </div>
                 {proposalInfo.executionError.timestamp && (
                   <div className="text-sm text-gray-400">
                     {formatDateWithTime(proposalInfo.executionError.timestamp)}
