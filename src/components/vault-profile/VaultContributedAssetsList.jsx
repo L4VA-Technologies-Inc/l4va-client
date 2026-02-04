@@ -125,7 +125,8 @@ export const VaultContributedAssetsList = ({ vault }) => {
                       <td className="px-4 py-3">
                         {currencySymbol}
                         {formatAdaPrice(
-                          asset.quantity * parseFloat(isAda ? asset.floorPrice || 0 : asset.floorPriceUsd || 0)
+                          asset.quantity *
+                            parseFloat(isAda ? asset.floorPrice || asset.dexPrice || 0 : asset.floorPriceUsd || 0)
                         )}
                       </td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
