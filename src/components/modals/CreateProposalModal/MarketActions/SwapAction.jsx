@@ -4,7 +4,7 @@ import { Plus, X, ExternalLink } from 'lucide-react';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { useSwappableAssets } from '@/services/api/queries';
-import { getIPFSUrl } from '@/utils/core.utils';
+import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
 
 const SwapAction = ({ vaultId, onDataChange, error }) => {
   const [swapActions, setSwapActions] = useState([]);
@@ -184,7 +184,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                   <div className="text-white/40 text-xs">{asset.quantity} tokens</div>
                   {asset.currentPriceAda && (
                     <div className="text-green-400/80 text-xs font-medium mt-0.5">
-                      Total: ₳{(Number(asset.quantity) * Number(asset.currentPriceAda)).toFixed(2)}
+                      Total: ₳{formatAdaPrice(Number(asset.quantity) * Number(asset.currentPriceAda))}
                     </div>
                   )}
                 </div>
@@ -307,11 +307,12 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                           type="text"
                           value={action.customPriceAda}
                           onChange={value => handleCustomPriceChange(action.id, value)}
-                          placeholder={action.currentPriceAda ? Number(action.currentPriceAda).toFixed(2) : '0.00'}
+                          placeholder={action.currentPriceAda ? formatAdaPrice(Number(action.currentPriceAda)) : '0.00'}
                           className="w-full"
                         />
                         <div className="text-xs text-white/40 mt-1">
-                          Current market: ₳{action.currentPriceAda ? Number(action.currentPriceAda).toFixed(2) : 'N/A'}
+                          Current market: ₳
+                          {action.currentPriceAda ? formatAdaPrice(Number(action.currentPriceAda)) : 'N/A'}
                         </div>
                       </div>
                     )}
@@ -324,7 +325,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-white/60">Current Price:</span>
                           <span className="text-white font-medium">
-                            ₳{Number(action.currentPriceAda).toFixed(2)} per token
+                            ₳{formatAdaPrice(Number(action.currentPriceAda))} per token
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
@@ -337,7 +338,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-white/60">Your Limit Price:</span>
                         <span className="text-orange-400 font-medium">
-                          ₳{parseFloat(action.customPriceAda).toFixed(2)} per token
+                          ₳{formatAdaPrice(parseFloat(action.customPriceAda))} per token
                         </span>
                       </div>
                     )}
@@ -350,7 +351,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-white/40">Minimum Received:</span>
                           <span className="text-orange-400 font-medium">
-                            ₳{(parseFloat(estimatedOutput) * 0.99).toFixed(2)}
+                            ₳{formatAdaPrice(parseFloat(estimatedOutput) * 0.99)}
                           </span>
                         </div>
                         <div className="text-xs text-white/40 text-right">

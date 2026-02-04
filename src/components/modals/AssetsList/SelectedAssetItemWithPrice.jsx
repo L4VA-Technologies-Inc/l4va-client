@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
+import { formatAdaPrice } from '@/utils/core.utils';
 
 export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, oldPrice }) => {
   const newPrice = parseFloat(asset.newPrice);
@@ -24,7 +25,9 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
           />
           <div className="flex flex-col flex-1 min-w-0">
             <span className="font-medium truncate">{asset.name}</span>
-            {oldPrice !== undefined && <span className="text-xs text-dark-100">Current price: ₳{oldPrice}</span>}
+            {oldPrice !== undefined && (
+              <span className="text-xs text-dark-100">Current price: ₳{formatAdaPrice(oldPrice)}</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -53,7 +56,7 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
             />
             {!isValidPrice && (
               <p className="text-xs text-red-500 mt-1">
-                Price must differ by at least ₳5 (current: ₳{priceDiff.toFixed(2)})
+                Price must differ by at least ₳5 (current: ₳{formatAdaPrice(priceDiff)})
               </p>
             )}
           </div>
