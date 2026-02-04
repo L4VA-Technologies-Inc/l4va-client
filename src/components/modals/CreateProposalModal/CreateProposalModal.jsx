@@ -226,7 +226,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           </div>
 
           <div className="space-y-4">
-            {selectedOption === 'staking' && <Staking vaultId={vault?.id} onDataChange={handleDataChange} />}
+            {selectedOption === 'staking' && (
+              <Staking vaultId={vault?.id} onDataChange={handleDataChange} error={error} />
+            )}
             {selectedOption === 'distribution' && <Distributing vaultId={vault?.id} onDataChange={handleDataChange} />}
             {selectedOption === 'termination' && (
               <Terminating

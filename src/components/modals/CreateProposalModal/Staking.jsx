@@ -11,7 +11,7 @@ const marketOptions = [
   { value: 'm3', label: 'Market 3' },
 ];
 
-export default function Staking({ vaultId, onDataChange }) {
+export default function Staking({ vaultId, onDataChange, error }) {
   const [fts, setFts] = useState([]);
   const [nfts, setNfts] = useState([]);
   const [ftsAll, setFtsAll] = useState(false);
@@ -24,6 +24,11 @@ export default function Staking({ vaultId, onDataChange }) {
   const nftSelected = useMemo(() => nfts.filter(n => n.selected), [nfts]);
 
   const invalidFT = useMemo(() => fts.some(f => f.selected && f.amount && Number(f.amount) > f.available), [fts]);
+  const missingFTAmount = useMemo(() => fts.some(f => f.selected && (!f.amount || Number(f.amount) === 0)), [fts]);
+  const noAssetsSelected = useMemo(
+    () => ftSelected.length === 0 && nftSelected.length === 0,
+    [ftSelected, nftSelected]
+  );
 
   useEffect(() => {
     const allSelected = fts.length > 0 && fts.every(f => f.selected);
@@ -92,7 +97,9 @@ export default function Staking({ vaultId, onDataChange }) {
   }, [data, isLoading, isInitialized]);
 
   useEffect(() => {
-    if (onDataChange && (ftSelected.length > 0 || nftSelected.length > 0)) {
+    if (onDataChange) {
+      const hasErrors = noAssetsSelected || invalidFT || missingFTAmount;
+
       const stakingData = {
         fts: ftSelected.map(ft => ({
           id: ft.id,
@@ -102,16 +109,20 @@ export default function Staking({ vaultId, onDataChange }) {
           id: nft.id,
           market: nft.market,
         })),
+        isValid: !hasErrors,
       };
 
       onDataChange(stakingData);
     }
-  }, [fts, nfts, ftSelected, nftSelected, onDataChange]);
+  }, [fts, nfts, ftSelected, nftSelected, onDataChange, noAssetsSelected, invalidFT, missingFTAmount]);
 
   return (
     <div className="space-y-5">
       <div>
         <h3 className="text-lg font-medium text-white">Assets to Stake</h3>
+        {error && noAssetsSelected && (
+          <div className="mt-2 text-xs text-red-400">Please select at least one asset to stake.</div>
+        )}
       </div>
       <div className="rounded-xl border border-steel-750 bg-steel-850">
         <div className="flex items-center justify-between px-4 py-3 border-b border-steel-750">
@@ -155,7 +166,11 @@ export default function Staking({ vaultId, onDataChange }) {
                       value={row.amount}
                       onChange={v => setFTAmount(row.id, v)}
                       className={`text-right sm:text-left ${
-                        row.amount && Number(row.amount) > row.available ? 'border-red-500/60' : ''
+                        error && row.selected && (!row.amount || Number(row.amount) === 0)
+                          ? 'border-red-500/60'
+                          : error && row.amount && Number(row.amount) > row.available
+                            ? 'border-red-500/60'
+                            : ''
                       }`}
                     />
                   </div>
@@ -172,8 +187,11 @@ export default function Staking({ vaultId, onDataChange }) {
           ))}
         </div>
 
-        {invalidFT && (
-          <div className="px-4 pb-3 text-xs text-red-400">One or more amounts exceed available balance.</div>
+        {error && (invalidFT || missingFTAmount) && (
+          <div className="px-4 pb-3 text-xs text-red-400">
+            {missingFTAmount && <div>Amount is required for selected assets.</div>}
+            {invalidFT && <div>One or more amounts exceed available balance.</div>}
+          </div>
         )}
       </div>
 
