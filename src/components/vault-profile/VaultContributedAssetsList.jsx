@@ -7,6 +7,7 @@ import { useVaultAssets } from '@/services/api/queries';
 import { substringAddress } from '@/utils/core.utils';
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 
@@ -16,6 +17,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
   const { data, isLoading, error } = useVaultAssets(vault?.id, searchValue, currentPage, limit);
+  const { currencySymbol, isAda } = useCurrency();
   const assets = data?.data?.items || [];
   const pagination = data?.data
     ? {
@@ -76,7 +78,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
         <div className="text-center p-8 text-dark-100">No assets found in this vault.</div>
       ) : (
         <>
-          <VaultContributedAssetsCard assets={assets} />
+          <VaultContributedAssetsCard assets={assets} currencySymbol={currencySymbol} isAda={isAda} />
           <div className="md:block overflow-x-auto rounded-2xl border border-steel-750 hidden">
             <table className="w-full">
               <thead>
@@ -120,7 +122,12 @@ export const VaultContributedAssetsList = ({ vault }) => {
                       <td className="px-4 py-3 capitalize">{asset.status}</td>
                       <td className="px-4 py-3 capitalize">{asset.originType}</td>
                       <td className="px-4 py-3">{asset.quantity}</td>
-                      <td className="px-4 py-3">₳{asset.quantity * asset.floorPrice}</td>
+                      <td className="px-4 py-3">
+                        {currencySymbol}
+                        {isAda
+                          ? (asset.quantity * parseFloat(asset.floorPrice || 0)).toFixed(2)
+                          : (asset.quantity * parseFloat(asset.floorPriceUsd || 0)).toFixed(2)}
+                      </td>
                       {/* <td className="px-4 py-3">{currency}</td> */}
                       <td className="px-4 py-3 text-center">
                         <button
@@ -137,7 +144,7 @@ export const VaultContributedAssetsList = ({ vault }) => {
                     </tr>
                     {expandedAsset === index && (
                       <tr className="bg-steel-750">
-                        <td colSpan="7" className="px-4 py-2">
+                        <td colSpan="8" className="px-4 py-2">
                           <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                             <div>
                               <p className="font-medium">Policy ID:</p>
