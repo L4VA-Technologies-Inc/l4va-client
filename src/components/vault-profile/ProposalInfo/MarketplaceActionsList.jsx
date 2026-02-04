@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
-import { getIPFSUrl } from '@/utils/core.utils';
+import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
 
 const ActionField = ({ label, value, children, className }) => (
   <div className="flex justify-between items-center">
@@ -56,13 +56,13 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                     />
                   )}
                   {!action.useMarketPrice && action.customPriceAda && (
-                    <ActionField label="Custom Price" value={`₳${action.customPriceAda} per token`} />
+                    <ActionField label="Custom Price" value={`₳${formatAdaPrice(action.customPriceAda)} per token`} />
                   )}
                   {action.estimatedOutput && (
-                    <ActionField label="Estimated Output" value={`₳${action.estimatedOutput.toFixed(2)}`} />
+                    <ActionField label="Estimated Output" value={`₳${formatAdaPrice(action.estimatedOutput)}`} />
                   )}
                   {action.actualOutput && (
-                    <ActionField label="Actual Output" value={`₳${action.actualOutput.toFixed(2)}`} />
+                    <ActionField label="Actual Output" value={`₳${formatAdaPrice(action.actualOutput)}`} />
                   )}
                   {action.txHash && (
                     <ActionField label="Transaction">
@@ -85,9 +85,11 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                 <>
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market} />
-                  {action.assetPrice && <ActionField label="Price" value={`₳${action.assetPrice}`} />}
-                  {action.listingPrice && <ActionField label="Listing Price" value={`₳${action.listingPrice}`} />}
-                  {action.newPrice && <ActionField label="New Price" value={`₳${action.newPrice}`} />}
+                  {action.assetPrice && <ActionField label="Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />}
+                  {action.listingPrice && (
+                    <ActionField label="Listing Price" value={`₳${formatAdaPrice(action.listingPrice)}`} />
+                  )}
+                  {action.newPrice && <ActionField label="New Price" value={`₳${formatAdaPrice(action.newPrice)}`} />}
                   {action.assetName && <ActionField label="Asset Name" value={action.assetName} />}
                   {action.assetImg && (
                     <ActionField label="Asset Image">
@@ -126,7 +128,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   {action.sellType && <ActionField label="Sell Type" value={action.sellType} />}
                   {action.method && <ActionField label="Method" value={action.method} />}
                   {action.market && <ActionField label="Market" value={action.market} />}
-                  {action.assetPrice && <ActionField label="Price" value={`₳${action.assetPrice}`} />}
+                  {action.assetPrice && <ActionField label="Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />}
                   {action.assetStatus && (
                     <ActionField label="Status" className="uppercase" value={action.assetStatus} />
                   )}
