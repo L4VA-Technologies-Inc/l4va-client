@@ -493,8 +493,14 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                         return vault?.fdvUsd ? `$${formatNum(vault.fdvUsd)}` : 'N/A';
                       }
                     })()}
-                    fdvTvl={vault.fdvTvl || 'N/A'}
-                    vtPrice={vault.vtPrice || 'N/A'}
+                    fdvTvl={
+                      vault.fdvTvl != null
+                        ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
+                          ? '< 0.01'
+                          : vault.fdvTvl.toFixed(2)
+                        : 'N/A'
+                    }
+                    vtPrice={vault.vtPrice ?? 'N/A'}
                     tvl={(() => {
                       if (isAda) {
                         return vault.assetsPrices?.totalValueAda
