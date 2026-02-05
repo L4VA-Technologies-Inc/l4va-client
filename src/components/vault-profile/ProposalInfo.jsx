@@ -458,7 +458,24 @@ export const ProposalInfo = ({ proposalId }) => {
             </div>
           </div>
           <div className="space-y-4">
-            {proposalInfo.status === 'active' ? (
+            {proposalInfo?.executionError ? (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
+                </div>
+                <div className="text-red-300">
+                  {proposalInfo.executionError.userFriendlyMessage
+                    ? proposalInfo.executionError.userFriendlyMessage
+                    : proposalInfo.executionError.message}
+                </div>
+                {proposalInfo.executionError.timestamp && (
+                  <div className="text-sm text-gray-400">
+                    {formatDateWithTime(proposalInfo.executionError.timestamp)}
+                  </div>
+                )}
+              </div>
+            ) : proposalInfo.status === 'active' ? (
               <>
                 <VoteButton
                   voteType="yes"
@@ -598,32 +615,12 @@ export const ProposalInfo = ({ proposalId }) => {
                 </div>
               </div>
             ) : (
-              !proposalInfo?.executionError && (
-                <div className="text-center py-8 space-y-4">
-                  <div className="text-gray-300">
-                    This proposal voting period has concluded. You can view the final results below.
-                  </div>
+              <div className="text-center py-8 space-y-4">
+                <div className="text-gray-300">
+                  This proposal voting period has concluded. You can view the final results below.
                 </div>
-              )
-            )}
-            {proposalInfo?.executionError ? (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                  <h3 className="text-lg font-semibold text-red-500">Execution Error</h3>
-                </div>
-                <div className="text-red-300">
-                  {proposalInfo.executionError.userFriendlyMessage
-                    ? proposalInfo.executionError.userFriendlyMessage
-                    : proposalInfo.executionError.message}
-                </div>
-                {proposalInfo.executionError.timestamp && (
-                  <div className="text-sm text-gray-400">
-                    {formatDateWithTime(proposalInfo.executionError.timestamp)}
-                  </div>
-                )}
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 

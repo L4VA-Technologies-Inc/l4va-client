@@ -21,19 +21,19 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
           </div>
         )}
       </div>
-      <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800 overflow-hidden">
+        <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
           <LazyImage
             src={nft.src}
             alt={nft.name}
-            className="rounded-full"
+            className="rounded-full shrink-0"
             width={32}
             height={32}
             fallbackSrc="/assets/icons/ada.svg"
           />
           <span className="font-medium truncate">{nft.name}</span>
         </div>
-        <span className="text-dark-100 hover:underline text-sm">
+        <span className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap">
           {nft.metadata?.policyId.substring(0, 6)}...
           {nft.metadata?.policyId.substring(nft.metadata?.policyId.length - 6)}
         </span>
