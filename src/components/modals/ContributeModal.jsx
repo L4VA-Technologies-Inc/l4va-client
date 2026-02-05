@@ -68,21 +68,57 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   });
 
   // Calculate estimated value
-  let estimatedValue = 0;
-  selectedNFTs.forEach(asset => {
-    estimatedValue += isAda ? asset.valueAda : asset.valueUsd;
-  });
+  // For NFTs: use full asset value
+  // For FTs: calculate proportional value based on selected amount vs total quantity
+  const estimatedValue = useMemo(() => {
+    let total = 0;
+    selectedNFTs.forEach(asset => {
+      if (asset.isFungibleToken) {
+        // For FTs, calculate proportional value based on selected amount
+        const selectedQty = Number(asset.amount) || 0;
+        const totalQty = Number(asset.quantity) || 1;
+        const proportion = selectedQty / totalQty;
+        const assetValue = isAda ? asset.valueAda : asset.valueUsd;
+        total += assetValue * proportion;
+      } else {
+        // For NFTs, use full value
+        total += isAda ? asset.valueAda : asset.valueUsd;
+      }
+    });
+    return total;
+  }, [selectedNFTs, isAda]);
 
   // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
   const tokensForAcqPercent = vault.tokensForAcquires / 100;
   const lpContributionPercent = vault.liquidityPoolContribution / 100;
   const vaultAllocation = (1 - tokensForAcqPercent) * (1 - lpContributionPercent / 2);
-  const vaultAllocationPercent = (vaultAllocation * 100).toFixed(2);
 
-  // Estimated Vault Token Amount = Vault Token Allocation % × Vault Token Supply
-  const estimatedTickerVal = Math.floor(vaultAllocation * vault.ftTokenSupply).toLocaleString();
+  // Only show estimates if assets are selected
+  const hasSelectedAssets = selectedNFTs.length > 0 && estimatedValue > 0;
+
+  // Get current vault TVL (what contributors have already contributed)
+  const currentVaultTVL = isAda
+    ? vault.assetsPrices?.totalValueAda || vault.totalAssetsCostAda || 0
+    : vault.assetsPrices?.totalValueUsd || vault.totalAssetsCostUsd || 0;
+
+  // Calculate user's share of the total contributor pool
+  const totalContributorValue = currentVaultTVL + estimatedValue;
+  const userShareOfContributors = totalContributorValue > 0 ? estimatedValue / totalContributorValue : 0;
+
+  // Total tokens available for contributors (after LP and acquirers allocation)
+  const tokensForContributors = vaultAllocation * vault.ftTokenSupply;
+
+  // User's proportional share of contributor tokens
+  const userEstimatedTokens = hasSelectedAssets ? Math.floor(userShareOfContributors * tokensForContributors) : 0;
+
+  const vaultAllocationPercent = hasSelectedAssets ? (userShareOfContributors * 100).toFixed(2) : '0.00';
+
+  const estimatedTickerVal = hasSelectedAssets ? userEstimatedTokens.toLocaleString() : '0';
+
   // Estimated Amount to Receive = (1 - Vault Allocation %) × Estimated Value
-  const estimatedReceived = ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString();
+  const estimatedReceived = hasSelectedAssets
+    ? ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString()
+    : '0.00';
   const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
 
   const toggleNFT = useCallback(asset => {
@@ -139,7 +175,15 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
     });
   }, []);
 
-  const removeNFT = tokenId => setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
+  const removeNFT = tokenId => {
+    setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
+    // Also clear the amount for FTs when removed
+    setSelectedAmount(prev => {
+      const newAmounts = { ...prev };
+      delete newAmounts[tokenId];
+      return newAmounts;
+    });
+  };
 
   const handleContribute = async () => {
     try {
@@ -171,8 +215,6 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   };
 
   const renderFooter = () => {
-    const transactionCost = selectedNFTs.length > 0 ? selectedNFTs.length * 5 + 0.77 : 0;
-
     return (
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
@@ -199,12 +241,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
             </PrimaryButton>
           </div>
         </div>
-        {selectedNFTs.length > 0 && (
-          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-            Transaction cost: <span className="text-white font-medium">~{formatAdaPrice(transactionCost)} ADA</span> (5
-            ADA ADA per asset + 0.77 ADA)
-          </div>
-        )}
+        <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+          Transaction cost: <span className="text-white font-medium">~{formatAdaPrice(6.9)} ADA</span> (5 ADA protocol
+          fees + ~1.9 ADA network fees)
+        </div>
       </div>
     );
   };
@@ -251,7 +291,10 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
-            <MetricCard label="Estimated Value" value={`${currencySymbol}${estimatedValue.toLocaleString()}`} />
+            <MetricCard
+              label="Estimated Value"
+              value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            />
             {/* 
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.

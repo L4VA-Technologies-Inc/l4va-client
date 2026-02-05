@@ -494,10 +494,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdvTvl={
-                      vault.fdvTvl != null
-                        ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
-                          ? '< 0.01'
-                          : vault.fdvTvl.toFixed(2)
+                      vault.vaultStatus !== 'contribution' && vault.vaultStatus !== 'acquire'
+                        ? vault.fdvTvl != null
+                          ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
+                            ? '< 0.01'
+                            : vault.fdvTvl.toFixed(2)
+                          : 'N/A'
                         : 'N/A'
                     }
                     vtPrice={vault.vtPrice ?? 'N/A'}
