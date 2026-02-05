@@ -13,12 +13,12 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800 overflow-hidden">
+        <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
           <LazyImage
             src={asset.src}
             alt={asset.name}
-            className="rounded-full"
+            className="rounded-full shrink-0"
             width={32}
             height={32}
             fallbackSrc="/assets/icons/ada.svg"
@@ -26,11 +26,13 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
           <div className="flex flex-col flex-1 min-w-0">
             <span className="font-medium truncate">{asset.name}</span>
             {oldPrice !== undefined && (
-              <span className="text-xs text-dark-100">Current price: ₳{formatAdaPrice(oldPrice)}</span>
+              <span className="text-xs text-dark-100 whitespace-nowrap">
+                Current price: ₳{formatAdaPrice(oldPrice)}
+              </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="w-32">
             <LavaSteelInput
               placeholder="New price"
