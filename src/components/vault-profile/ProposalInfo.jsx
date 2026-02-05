@@ -13,6 +13,7 @@ import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 import { ProposalEndDate } from './ProposalEndDate';
+import { VaultSkeleton } from './VaultSkeleton';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
 import { ProposalTypeLabels } from '@/utils/types';
@@ -21,12 +22,92 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 
-export const ProposalInfo = ({ proposal }) => {
+const ProposalInfoSkeleton = () => (
+  <div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
+        {/* Countdown skeleton */}
+        <div className="space-y-2">
+          <VaultSkeleton className="h-5 w-48 bg-steel-800" />
+        </div>
+
+        {/* Main content skeleton */}
+        <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
+          <div className="w-full space-y-4">
+            <div className="flex justify-between items-start">
+              <VaultSkeleton className="h-4 w-24 bg-steel-800" />
+              <VaultSkeleton className="h-4 w-32 bg-steel-700" />
+            </div>
+            <div className="space-y-2">
+              <VaultSkeleton className="h-4 w-32 bg-steel-800" />
+              <VaultSkeleton className="h-16 w-full bg-steel-700" />
+            </div>
+          </div>
+          <div className="w-full space-y-3">
+            {[...Array(4)].map((_, idx) => (
+              <div key={idx} className="flex justify-between">
+                <VaultSkeleton className="h-4 w-24 bg-steel-800" />
+                <VaultSkeleton className="h-4 w-32 bg-steel-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Voting buttons skeleton */}
+        <div className="space-y-4">
+          {[...Array(3)].map((_, idx) => (
+            <VaultSkeleton key={idx} className="h-12 w-full bg-steel-850 rounded-lg" />
+          ))}
+          <div className="flex justify-center mt-4">
+            <VaultSkeleton className="h-10 w-60 bg-steel-800 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      {/* Votes section skeleton */}
+      <div className="bg-steel-950 border border-steel-750 rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            <VaultSkeleton className="h-6 w-16 bg-steel-800" />
+            <VaultSkeleton className="h-6 w-8 bg-steel-700" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          {[...Array(3)].map((_, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-2">
+              <VaultSkeleton className="h-4 w-24 bg-steel-800" />
+              <VaultSkeleton className="h-4 w-12 bg-steel-700" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Information section skeleton */}
+      <div className="bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6">
+        <div className="space-y-3">
+          <VaultSkeleton className="h-6 w-24 bg-steel-800" />
+          {[...Array(5)].map((_, idx) => (
+            <div key={idx} className="flex justify-between">
+              <VaultSkeleton className="h-4 w-20 bg-steel-800" />
+              <VaultSkeleton className="h-4 w-32 bg-steel-700" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <VaultSkeleton className="h-6 w-20 bg-steel-800" />
+          <VaultSkeleton className="h-8 w-full bg-steel-700 rounded" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+export const ProposalInfo = ({ proposalId }) => {
   const { user } = useAuth();
   const { openModal } = useModalControls();
   const router = useRouter();
 
-  const { data: response, refetch } = useGovernanceProposal(proposal.id);
+  const { data: response, refetch } = useGovernanceProposal(proposalId);
 
   const proposalInfo = response?.data?.proposal;
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
@@ -300,6 +381,11 @@ export const ProposalInfo = ({ proposal }) => {
       setSelectedVote(response.data.selectedVote);
     }
   }, [response?.data?.canVote, response?.data?.selectedVote]);
+
+  if (!proposalInfo) {
+    return <ProposalInfoSkeleton />;
+  }
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -309,7 +395,7 @@ export const ProposalInfo = ({ proposal }) => {
               <ProposalEndDate
                 startDate={proposalInfo?.startDate}
                 endDate={proposalInfo?.endDate}
-                proposalStatus={proposal.status}
+                proposalStatus={proposalInfo.status}
               />
             </div>
           </div>
@@ -372,7 +458,7 @@ export const ProposalInfo = ({ proposal }) => {
             </div>
           </div>
           <div className="space-y-4">
-            {proposal.status === 'active' ? (
+            {proposalInfo.status === 'active' ? (
               <>
                 <VoteButton
                   voteType="yes"
@@ -417,14 +503,14 @@ export const ProposalInfo = ({ proposal }) => {
                   not change during the voting period.
                 </div>
               </>
-            ) : proposal.status === 'upcoming' ? (
+            ) : proposalInfo.status === 'upcoming' ? (
               <div className="text-center py-8 space-y-4">
                 <div className="text-gray-300">Voting for this proposal has not yet started.</div>
                 <div className="text-sm text-gray-500">
                   Voting buttons will appear here once the voting period begins.
                 </div>
               </div>
-            ) : proposal.status === 'passed' ? (
+            ) : proposalInfo.status === 'passed' ? (
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
@@ -465,7 +551,7 @@ export const ProposalInfo = ({ proposal }) => {
                   </>
                 )}
               </div>
-            ) : proposal.status === 'executed' ? (
+            ) : proposalInfo.status === 'executed' ? (
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
                 <div className="flex items-center justify-center space-x-2">
                   <CheckCircle className="h-6 w-6 text-green-500" />
@@ -482,7 +568,7 @@ export const ProposalInfo = ({ proposal }) => {
                   </div>
                 )}
               </div>
-            ) : proposal.status === 'rejected' ? (
+            ) : proposalInfo?.status === 'rejected' ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center space-y-3">
                 <div className="flex items-center justify-center space-x-2">
                   <XCircle className="h-6 w-6 text-red-500" />
@@ -584,7 +670,7 @@ export const ProposalInfo = ({ proposal }) => {
           </div>
           <div className="space-y-2">
             <h3 className="text-1xl font-bold">Results</h3>
-            <VoteResultBar votes={proposal.votes} hasAbstain={proposalInfo?.abstain} />
+            <VoteResultBar votes={proposalInfo.votes} hasAbstain={proposalInfo?.abstain} />
             <div className="text-xs text-gray-400 italic mt-2">
               * Voting power was calculated on{' '}
               {proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : 'proposal creation'} and will not
