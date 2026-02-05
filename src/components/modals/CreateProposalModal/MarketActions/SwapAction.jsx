@@ -9,7 +9,6 @@ import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
 const SwapAction = ({ vaultId, onDataChange, error }) => {
   const [swapActions, setSwapActions] = useState([]);
   const [selectedAssets, setSelectedAssets] = useState(new Set());
-  const [useMaxFlags, setUseMaxFlags] = useState(new Map());
   const { data: swappableData, isLoading } = useSwappableAssets(vaultId);
 
   useEffect(() => {
@@ -20,10 +19,14 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
   }, [swapActions, onDataChange]);
 
   const validateSwapAction = action => {
+    // Full amount swap validation - quantity must match available quantity exactly
     if (!action.assetId || !action.quantity) return false;
     const qty = parseFloat(action.quantity);
     if (isNaN(qty) || qty <= 0) return false;
     if (action.slippage < 0.5 || action.slippage > 5) return false;
+
+    // Ensure quantity matches the full available amount
+    if (qty !== action.availableQuantity) return false;
 
     // Validate custom price if not using market price
     if (!action.useMarketPrice) {
@@ -48,7 +51,8 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
       assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
       currentPriceAda: Number(asset.currentPriceAda) || 0,
-      quantity: '',
+      // Full amount swap - quantity is always the full available amount
+      quantity: asset.quantity.toString(),
       slippage: 0.5,
       useMarketPrice: true, // Default to market price
       customPriceAda: '',
@@ -65,41 +69,6 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
     const newSelected = new Set(selectedAssets);
     newSelected.delete(assetId);
     setSelectedAssets(newSelected);
-  };
-
-  const handleQuantityChange = (id, value) => {
-    // Only allow positive numbers
-    const cleanValue = value.replace(/[^0-9.]/g, '');
-    const parts = cleanValue.split('.');
-    const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanValue;
-
-    setSwapActions(
-      swapActions.map(action => {
-        if (action.id === id) {
-          return { ...action, quantity: finalValue };
-        }
-        return action;
-      })
-    );
-
-    // Uncheck max if user manually changes quantity
-    const newFlags = new Map(useMaxFlags);
-    newFlags.set(id, false);
-    setUseMaxFlags(newFlags);
-  };
-
-  const handleMaxToggle = (id, availableQuantity) => {
-    const isCurrentlyMax = useMaxFlags.get(id) || false;
-    const newFlags = new Map(useMaxFlags);
-    newFlags.set(id, !isCurrentlyMax);
-    setUseMaxFlags(newFlags);
-
-    if (!isCurrentlyMax) {
-      // Set to max
-      setSwapActions(
-        swapActions.map(action => (action.id === id ? { ...action, quantity: availableQuantity.toString() } : action))
-      );
-    }
   };
 
   const handleSlippageChange = (id, value) => {
@@ -153,9 +122,10 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
           <div className="flex-1">
             <h5 className="text-orange-500 font-medium text-sm mb-1">Swap Requirements</h5>
             <p className="text-white/60 text-xs leading-relaxed">
-              Tokens must have liquidity pools on DexHunter with sufficient depth. If validation fails due to low
-              amount, try using the maximum available quantity. The system validates both pool availability and minimum
-              swap thresholds.
+              Tokens must have liquidity pools on DexHunter with sufficient depth. The system validates both pool
+              availability and minimum swap thresholds before execution. Swaps are executed for the{' '}
+              <span className="text-orange-400 font-medium">full token amount</span> of each selected asset. Partial
+              swaps are not supported to ensure atomic operations and simplified treasury management.
             </p>
           </div>
         </div>
@@ -202,10 +172,6 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
           <div className="space-y-3">
             {swapActions.map(action => {
               const estimatedOutput = calculateEstimatedOutput(action);
-              const isValidQty =
-                action.quantity &&
-                parseFloat(action.quantity) > 0 &&
-                parseFloat(action.quantity) <= action.availableQuantity;
               const isValidSlippage = action.slippage >= 0.5 && action.slippage <= 5;
 
               return (
@@ -219,7 +185,9 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-white font-medium">{action.assetName}</div>
-                      <div className="text-white/40 text-sm">Available: {action.availableQuantity} tokens</div>
+                      <div className="text-amber-400/90 text-sm font-medium">
+                        Swapping: {action.availableQuantity} tokens (full amount)
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -231,26 +199,17 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Quantity Input */}
+                    {/* Full Amount Display (Read-only) */}
                     <div>
                       <label className="block text-white/60 text-sm mb-2">Quantity to Swap</label>
-                      <LavaSteelInput
-                        type="text"
-                        value={action.quantity}
-                        onChange={value => handleQuantityChange(action.id, value)}
-                        placeholder="0.00"
-                        className="w-full"
-                        disabled={useMaxFlags.get(action.id) || false}
-                      />
-                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={useMaxFlags.get(action.id) || false}
-                          onChange={() => handleMaxToggle(action.id, action.availableQuantity)}
-                          className="w-4 h-4 rounded border-steel-700 bg-steel-850 text-orange-500 focus:ring-orange-500 focus:ring-offset-steel-900"
-                        />
-                        <span className="text-xs text-white/60">Max ({action.availableQuantity})</span>
-                      </label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-steel-900 border border-steel-700 rounded-lg">
+                        <span className="text-white font-medium">{action.availableQuantity}</span>
+                        <span className="text-white/40 text-sm">tokens</span>
+                        <span className="ml-auto text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                          Full Amount
+                        </span>
+                      </div>
+                      <div className="text-xs text-white/40 mt-1">Only full amount swaps are supported</div>
                     </div>
 
                     {/* Slippage Input */}
@@ -342,7 +301,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                         </span>
                       </div>
                     )}
-                    {isValidQty && estimatedOutput && (
+                    {estimatedOutput && (
                       <>
                         <div className="flex justify-between items-center text-sm pt-2">
                           <span className="text-white/60">Estimated Output:</span>
@@ -375,12 +334,6 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       </div>
                     )}
                   </div>
-
-                  {action.quantity && !isValidQty && (
-                    <div className="mt-3 text-xs text-red-400">
-                      Invalid quantity. Must be between 1 and {action.availableQuantity}
-                    </div>
-                  )}
                 </div>
               );
             })}
