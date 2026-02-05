@@ -2,8 +2,6 @@ import { createFileRoute, useParams, Navigate, useRouter } from '@tanstack/react
 import { ArrowLeft } from 'lucide-react';
 
 import { ProposalInfo } from '@/components/vault-profile/ProposalInfo';
-import { Spinner } from '@/components/Spinner';
-import { useGovernanceProposal } from '@/services/api/queries';
 
 function ProposalComponent() {
   const router = useRouter();
@@ -12,26 +10,11 @@ function ProposalComponent() {
     select: params => params.id,
   });
 
-  const { data, isLoading, error } = useGovernanceProposal(id);
-  const proposal = data?.data?.proposal;
-
   const handleBack = () => {
     router.history.back();
   };
 
   if (!id) {
-    return <Navigate replace to="/" />;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (error || !proposal) {
     return <Navigate replace to="/" />;
   }
 
@@ -43,7 +26,7 @@ function ProposalComponent() {
       >
         <ArrowLeft className="w-4 h-4" /> Back to Activities
       </button>
-      <ProposalInfo proposal={proposal} />
+      <ProposalInfo proposalId={id} />
     </div>
   );
 }

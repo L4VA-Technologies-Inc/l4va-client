@@ -1,15 +1,48 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X, ExternalLink } from 'lucide-react';
+import { Plus, X, ExternalLink, Check } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { useSwappableAssets } from '@/services/api/queries';
 import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
 
+/**
+ * Calculate all valid quantity combinations from individual asset amounts
+ * Uses subset sum to find all possible sums
+ */
+const getValidCombinations = amounts => {
+  if (!amounts || amounts.length === 0) return [0];
+
+  const combinations = new Set([0]);
+  for (const amount of amounts) {
+    const newCombinations = new Set(combinations);
+    for (const sum of combinations) {
+      newCombinations.add(sum + amount);
+    }
+    for (const sum of newCombinations) {
+      combinations.add(sum);
+    }
+  }
+
+  // Return sorted array excluding 0
+  return Array.from(combinations)
+    .filter(c => c > 0)
+    .sort((a, b) => a - b);
+};
+
+/**
+ * Check if a quantity is a valid combination of available amounts
+ */
+const isValidCombination = (quantity, amounts) => {
+  if (!amounts || amounts.length === 0) return false;
+  const validCombinations = getValidCombinations(amounts);
+  // Use tolerance for floating point comparison
+  return validCombinations.some(c => Math.abs(c - quantity) < 0.001);
+};
+
 const SwapAction = ({ vaultId, onDataChange, error }) => {
   const [swapActions, setSwapActions] = useState([]);
   const [selectedAssets, setSelectedAssets] = useState(new Set());
-  const [useMaxFlags, setUseMaxFlags] = useState(new Map());
   const { data: swappableData, isLoading } = useSwappableAssets(vaultId);
 
   useEffect(() => {
@@ -24,6 +57,9 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
     const qty = parseFloat(action.quantity);
     if (isNaN(qty) || qty <= 0) return false;
     if (action.slippage < 0.5 || action.slippage > 5) return false;
+
+    // Validate that quantity is a valid combination of available amounts
+    if (!isValidCombination(qty, action.availableAmounts)) return false;
 
     // Validate custom price if not using market price
     if (!action.useMarketPrice) {
@@ -40,6 +76,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
   }, [swappableData, selectedAssets]);
 
   const handleSelectAsset = asset => {
+    const availableAmounts = asset.availableAmounts || [asset.quantity];
     const newAction = {
       id: Date.now() + Math.random(),
       assetId: asset.id,
@@ -47,8 +84,10 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
       assetImage: asset.image,
       assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
+      availableAmounts: availableAmounts, // Individual asset quantities for valid combinations
       currentPriceAda: Number(asset.currentPriceAda) || 0,
-      quantity: '',
+      // Default to full amount
+      quantity: asset.quantity.toString(),
       slippage: 0.5,
       useMarketPrice: true, // Default to market price
       customPriceAda: '',
@@ -73,33 +112,13 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
     const parts = cleanValue.split('.');
     const finalValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanValue;
 
-    setSwapActions(
-      swapActions.map(action => {
-        if (action.id === id) {
-          return { ...action, quantity: finalValue };
-        }
-        return action;
-      })
-    );
-
-    // Uncheck max if user manually changes quantity
-    const newFlags = new Map(useMaxFlags);
-    newFlags.set(id, false);
-    setUseMaxFlags(newFlags);
+    setSwapActions(swapActions.map(action => (action.id === id ? { ...action, quantity: finalValue } : action)));
   };
 
-  const handleMaxToggle = (id, availableQuantity) => {
-    const isCurrentlyMax = useMaxFlags.get(id) || false;
-    const newFlags = new Map(useMaxFlags);
-    newFlags.set(id, !isCurrentlyMax);
-    setUseMaxFlags(newFlags);
-
-    if (!isCurrentlyMax) {
-      // Set to max
-      setSwapActions(
-        swapActions.map(action => (action.id === id ? { ...action, quantity: availableQuantity.toString() } : action))
-      );
-    }
+  const handleQuickQuantitySelect = (id, quantity) => {
+    setSwapActions(
+      swapActions.map(action => (action.id === id ? { ...action, quantity: quantity.toString() } : action))
+    );
   };
 
   const handleSlippageChange = (id, value) => {
@@ -153,9 +172,9 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
           <div className="flex-1">
             <h5 className="text-orange-500 font-medium text-sm mb-1">Swap Requirements</h5>
             <p className="text-white/60 text-xs leading-relaxed">
-              Tokens must have liquidity pools on DexHunter with sufficient depth. If validation fails due to low
-              amount, try using the maximum available quantity. The system validates both pool availability and minimum
-              swap thresholds.
+              Tokens must have liquidity pools on DexHunter with sufficient depth. Swap amounts must be{' '}
+              <span className="text-orange-400 font-medium">valid combinations</span> of the available asset chunks. Use
+              the quick select buttons or enter a valid sum of the available amounts.
             </p>
           </div>
         </div>
@@ -202,11 +221,14 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
           <div className="space-y-3">
             {swapActions.map(action => {
               const estimatedOutput = calculateEstimatedOutput(action);
-              const isValidQty =
-                action.quantity &&
-                parseFloat(action.quantity) > 0 &&
-                parseFloat(action.quantity) <= action.availableQuantity;
               const isValidSlippage = action.slippage >= 0.5 && action.slippage <= 5;
+              const currentQty = parseFloat(action.quantity) || 0;
+              const isValidQty = isValidCombination(currentQty, action.availableAmounts);
+              const validCombinations = getValidCombinations(action.availableAmounts || []);
+              // Show quick select buttons for individual amounts and max
+              const quickAmounts = [...new Set([...action.availableAmounts, action.availableQuantity])].sort(
+                (a, b) => a - b
+              );
 
               return (
                 <div key={action.id} className="bg-steel-850 border border-steel-750 rounded-lg p-4">
@@ -219,7 +241,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-white font-medium">{action.assetName}</div>
-                      <div className="text-white/40 text-sm">Available: {action.availableQuantity} tokens</div>
+                      <div className="text-white/50 text-sm">Total available: {action.availableQuantity} tokens</div>
                     </div>
                     <button
                       type="button"
@@ -231,26 +253,52 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Quantity Input */}
+                    {/* Quantity Selection */}
                     <div>
                       <label className="block text-white/60 text-sm mb-2">Quantity to Swap</label>
                       <LavaSteelInput
                         type="text"
                         value={action.quantity}
                         onChange={value => handleQuantityChange(action.id, value)}
-                        placeholder="0.00"
+                        placeholder="Enter amount"
                         className="w-full"
-                        disabled={useMaxFlags.get(action.id) || false}
                       />
-                      <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={useMaxFlags.get(action.id) || false}
-                          onChange={() => handleMaxToggle(action.id, action.availableQuantity)}
-                          className="w-4 h-4 rounded border-steel-700 bg-steel-850 text-orange-500 focus:ring-orange-500 focus:ring-offset-steel-900"
-                        />
-                        <span className="text-xs text-white/60">Max ({action.availableQuantity})</span>
-                      </label>
+
+                      {/* Quick select buttons */}
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {quickAmounts.map((amount, idx) => {
+                          const isSelected = Math.abs(currentQty - amount) < 0.001;
+                          const isMax = amount === action.availableQuantity;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleQuickQuantitySelect(action.id, amount)}
+                              className={`px-2 py-1 text-xs rounded transition-colors flex items-center gap-1 ${
+                                isSelected
+                                  ? 'bg-orange-500 text-white'
+                                  : 'bg-steel-700 text-white/70 hover:bg-steel-600'
+                              }`}
+                            >
+                              {isSelected && <Check className="h-3 w-3" />}
+                              {amount}
+                              {isMax && <span className="text-[10px] opacity-70">(max)</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Validation message */}
+                      {action.quantity && !isValidQty ? (
+                        <div className="text-xs text-red-400 mt-2">
+                          Invalid amount. Select from: {validCombinations.slice(0, 8).join(', ')}
+                          {validCombinations.length > 8 && '...'}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-white/40 mt-2">
+                          Available chunks: [{action.availableAmounts?.join(', ')}]
+                        </div>
+                      )}
                     </div>
 
                     {/* Slippage Input */}
@@ -342,7 +390,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                         </span>
                       </div>
                     )}
-                    {isValidQty && estimatedOutput && (
+                    {estimatedOutput && (
                       <>
                         <div className="flex justify-between items-center text-sm pt-2">
                           <span className="text-white/60">Estimated Output:</span>
@@ -375,12 +423,6 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       </div>
                     )}
                   </div>
-
-                  {action.quantity && !isValidQty && (
-                    <div className="mt-3 text-xs text-red-400">
-                      Invalid quantity. Must be between 1 and {action.availableQuantity}
-                    </div>
-                  )}
                 </div>
               );
             })}
