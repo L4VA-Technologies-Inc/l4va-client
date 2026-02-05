@@ -54,7 +54,7 @@ export const VaultGovernance = ({ vault }) => {
       openModal('LoginModal');
       return;
     }
-    setSelectedProposal(proposal);
+    setSelectedProposal(proposal.id);
   };
 
   const handleBackToProposals = () => {
@@ -142,7 +142,7 @@ export const VaultGovernance = ({ vault }) => {
             >
               <ArrowLeft className="w-4 h-4" /> Back to Proposals
             </button>
-            <ProposalInfo proposal={selectedProposal} />
+            <ProposalInfo proposalId={selectedProposal} />
           </div>
         ) : (
           <>
