@@ -14,7 +14,7 @@ export const Launch = ({ data, setCurrentStep }) => (
       <p className="text-base font-medium">
         You will spend: <span className="text-white">1000 VLRM + ~44.44 ADA</span>
       </p>
-      <p className="text-sm text-dark-100 mt-1">(39 ADA will be returned when vault enters locked or cancel phase)</p>
+      <p className="text-sm text-dark-100 mt-1">(39 ADA is upload on-chain fee that will be taken)</p>
     </div>
   </div>
 );

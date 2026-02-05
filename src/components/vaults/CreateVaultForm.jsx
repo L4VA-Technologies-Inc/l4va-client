@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
-import { ChevronRight, ChevronLeft, ChevronDown, BookOpen, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, BookOpen, RotateCcw, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
@@ -36,7 +36,9 @@ import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
 import { usePresets, useDeletePreset } from '@/services/api/queries';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
+import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -54,6 +56,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [canCreateVaults, setCanCreateVaults] = useState(true);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
   const [selectedPresetId, setSelectedPresetId] = useState('advanced');
@@ -68,10 +71,25 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const wallet = useWallet('handler', 'isConnected');
   const queryClient = useQueryClient();
   const { openModal } = useModalControls();
+  const { user } = useAuth();
 
   const { data: presetsData, isLoading: isPresetsLoading } = usePresets();
   const { mutateAsync: deletePreset } = useDeletePreset();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
+
+  // Check if user can create vaults (mainnet only)
+  useEffect(() => {
+    if (IS_MAINNET && user?.address) {
+      const authorized = canCreateVault(user.address);
+      setCanCreateVaults(authorized);
+      if (!authorized) {
+        toast.error('Your wallet address is not authorized to create vaults', {
+          duration: 6000,
+          id: 'vault-creation-unauthorized',
+        });
+      }
+    }
+  }, [user?.address]);
 
   const presetOptions = useMemo(() => {
     const fetchedOptions = Array.isArray(presets)
@@ -702,7 +720,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           >
             Save preset
           </SecondaryButton>
-          <PrimaryButton className="uppercase" disabled={isSubmitting || !wallet.isConnected} onClick={onSubmit}>
+          <PrimaryButton
+            className="uppercase"
+            disabled={isSubmitting || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
+            onClick={onSubmit}
+            title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
+          >
             {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
           </PrimaryButton>
         </div>
@@ -723,7 +746,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>
           Save for later
         </SecondaryButton>
-        <PrimaryButton size="lg" disabled={isSubmitting || isSavingDraft || isImageUploading} onClick={handleNextStep}>
+        <PrimaryButton
+          size="lg"
+          disabled={isSubmitting || isSavingDraft || isImageUploading || (IS_MAINNET && !canCreateVaults)}
+          onClick={handleNextStep}
+          title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
+        >
           {isImageUploading ? (
             <div className="flex items-center gap-2">
               <Spinner size="sm" />
@@ -803,6 +831,19 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   return (
     <div className="pb-8">
+      {IS_MAINNET && !canCreateVaults && (
+        <div className="mb-6 p-4 bg-red-900/20 border border-red-600/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-red-500 font-bold text-lg mb-1">Vault Creation Not Authorized</h3>
+              <p className="text-red-300 text-sm">
+                Your wallet address is not currently authorized to create vaults. Vault creation is restricted.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <button
         onClick={handleResetVault}
         disabled={isSubmitting || isSavingDraft}
