@@ -648,7 +648,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       resetData.acquireReserve = config.acquireReserve ?? null;
       resetData.liquidityPoolContribution = config.liquidityPoolContribution ?? null;
       resetData.creationThreshold = config.creationThreshold ?? null;
-      resetData.voteThreshold = config.voteThreshold ?? null;
+      resetData.voteThreshold = 0;
+      resetData.cosigningThreshold = config.cosigningThreshold ?? null;
       resetData.executionThreshold = config.executionThreshold ?? null;
     }
 
@@ -790,7 +791,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         acquireReserve: null,
         liquidityPoolContribution: null,
         creationThreshold: null,
-        voteThreshold: null,
+        voteThreshold: 0,
+        cosigningThreshold: null,
         executionThreshold: null,
       }));
       return;
@@ -814,7 +816,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       acquireReserve: config.acquireReserve ?? null,
       liquidityPoolContribution: config.liquidityPoolContribution ?? null,
       creationThreshold: config.creationThreshold ?? null,
-      voteThreshold: config.voteThreshold ?? null,
+      voteThreshold: 0,
+      cosigningThreshold: config.cosigningThreshold ?? null,
       executionThreshold: config.executionThreshold ?? null,
     }));
   }, [isPresetsLoading, presets, selectedPresetId, vault]);
