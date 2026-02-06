@@ -175,19 +175,23 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     setSelectedOption(value);
   };
 
-  const renderFooter = () => (
-    <div className="flex justify-between items-center">
-      <div className="text-sm text-gray-400">New proposal</div>
-      <div className="flex gap-2">
-        <SecondaryButton onClick={onClose} size="sm">
-          Cancel
-        </SecondaryButton>
-        <PrimaryButton onClick={handleCreateProposal} size="sm" className="capitalize">
-          Create
-        </PrimaryButton>
+  const renderFooter = () => {
+    const isInvalid = isValidProposal();
+
+    return (
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-gray-400">New proposal</div>
+        <div className="flex gap-2">
+          <SecondaryButton onClick={onClose} size="sm">
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton onClick={handleCreateProposal} size="sm" className="capitalize" disabled={isInvalid}>
+            Create
+          </PrimaryButton>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
