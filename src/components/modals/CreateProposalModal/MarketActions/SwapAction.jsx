@@ -7,35 +7,10 @@ import { useSwappableAssets } from '@/services/api/queries';
 import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
 
 /**
- * Calculate all valid quantity combinations from individual asset amounts
- * Uses subset sum to find all possible sums
+ * Check if a quantity is valid using precomputed combinations from backend
  */
-const getValidCombinations = amounts => {
-  if (!amounts || amounts.length === 0) return [0];
-
-  const combinations = new Set([0]);
-  for (const amount of amounts) {
-    const newCombinations = new Set(combinations);
-    for (const sum of combinations) {
-      newCombinations.add(sum + amount);
-    }
-    for (const sum of newCombinations) {
-      combinations.add(sum);
-    }
-  }
-
-  // Return sorted array excluding 0
-  return Array.from(combinations)
-    .filter(c => c > 0)
-    .sort((a, b) => a - b);
-};
-
-/**
- * Check if a quantity is a valid combination of available amounts
- */
-const isValidCombination = (quantity, amounts) => {
-  if (!amounts || amounts.length === 0) return false;
-  const validCombinations = getValidCombinations(amounts);
+const isValidCombination = (quantity, validCombinations) => {
+  if (!validCombinations || validCombinations.length === 0) return false;
   // Use tolerance for floating point comparison
   return validCombinations.some(c => Math.abs(c - quantity) < 0.001);
 };
@@ -58,8 +33,8 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
     if (isNaN(qty) || qty <= 0) return false;
     if (action.slippage < 0.5 || action.slippage > 5) return false;
 
-    // Validate that quantity is a valid combination of available amounts
-    if (!isValidCombination(qty, action.availableAmounts)) return false;
+    // Validate that quantity is a valid combination using precomputed values
+    if (!isValidCombination(qty, action.validCombinations)) return false;
 
     // Validate custom price if not using market price
     if (!action.useMarketPrice) {
@@ -77,6 +52,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
 
   const handleSelectAsset = asset => {
     const availableAmounts = asset.availableAmounts || [asset.quantity];
+    const validCombinations = asset.validCombinations || [asset.quantity];
     const newAction = {
       id: Date.now() + Math.random(),
       assetId: asset.id,
@@ -84,7 +60,8 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
       assetImage: asset.image,
       assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
-      availableAmounts: availableAmounts, // Individual asset quantities for valid combinations
+      availableAmounts: availableAmounts, // Individual asset quantities
+      validCombinations: validCombinations, // Precomputed valid combinations from backend
       currentPriceAda: Number(asset.currentPriceAda) || 0,
       // Default to full amount
       quantity: asset.quantity.toString(),
@@ -223,8 +200,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
               const estimatedOutput = calculateEstimatedOutput(action);
               const isValidSlippage = action.slippage >= 0.5 && action.slippage <= 5;
               const currentQty = parseFloat(action.quantity) || 0;
-              const isValidQty = isValidCombination(currentQty, action.availableAmounts);
-              const validCombinations = getValidCombinations(action.availableAmounts || []);
+              const isValidQty = isValidCombination(currentQty, action.validCombinations);
               // Show quick select buttons for individual amounts and max
               const quickAmounts = [...new Set([...action.availableAmounts, action.availableQuantity])].sort(
                 (a, b) => a - b
@@ -291,8 +267,8 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       {/* Validation message */}
                       {action.quantity && !isValidQty ? (
                         <div className="text-xs text-red-400 mt-2">
-                          Invalid amount. Select from: {validCombinations.slice(0, 8).join(', ')}
-                          {validCombinations.length > 8 && '...'}
+                          Invalid amount. Select from: {action.validCombinations.slice(0, 8).join(', ')}
+                          {action.validCombinations.length > 8 && '...'}
                         </div>
                       ) : (
                         <div className="text-xs text-white/40 mt-2">
