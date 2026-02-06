@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X, ExternalLink, Check } from 'lucide-react';
+import { Plus, X, ExternalLink, Check, ArrowRight } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -13,6 +13,27 @@ const isValidCombination = (quantity, validCombinations) => {
   if (!validCombinations || validCombinations.length === 0) return false;
   // Use tolerance for floating point comparison
   return validCombinations.some(c => Math.abs(c - quantity) < 0.001);
+};
+
+/**
+ * Find the closest valid combination to the target quantity
+ */
+const findClosestValidAmount = (targetQuantity, validCombinations) => {
+  if (!validCombinations || validCombinations.length === 0) return null;
+  if (isNaN(targetQuantity) || targetQuantity <= 0) return null;
+
+  let closest = validCombinations[0];
+  let minDiff = Math.abs(targetQuantity - closest);
+
+  for (const amount of validCombinations) {
+    const diff = Math.abs(targetQuantity - amount);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = amount;
+    }
+  }
+
+  return closest;
 };
 
 const SwapAction = ({ vaultId, onDataChange, error }) => {
@@ -53,13 +74,19 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
   const handleSelectAsset = asset => {
     const availableAmounts = asset.availableAmounts || [asset.quantity];
     const validCombinations = asset.validCombinations || [asset.quantity];
+    const assetRecords = asset.assetRecords || [{ id: asset.id, quantity: asset.quantity }];
+
     const newAction = {
       id: Date.now() + Math.random(),
-      assetId: asset.id,
+      assetId: asset.id, // First asset ID (for backwards compatibility)
       assetName: asset.name,
       assetImage: asset.image,
       assetUnit: asset.unit, // Store unit for DexHunter link
       availableQuantity: asset.quantity,
+      lockedQuantity: asset.lockedQuantity || 0,
+      extractedQuantity: asset.extractedQuantity || 0,
+      treasuryQuantity: asset.treasuryQuantity || 0,
+      assetRecords: assetRecords, // All available asset records with IDs
       availableAmounts: availableAmounts, // Individual asset quantities
       validCombinations: validCombinations, // Precomputed valid combinations from backend
       currentPriceAda: Number(asset.currentPriceAda) || 0,
@@ -201,6 +228,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
               const isValidSlippage = action.slippage >= 0.5 && action.slippage <= 5;
               const currentQty = parseFloat(action.quantity) || 0;
               const isValidQty = isValidCombination(currentQty, action.validCombinations);
+              const closestAmount = !isValidQty ? findClosestValidAmount(currentQty, action.validCombinations) : null;
               // Show quick select buttons for individual amounts and max
               const quickAmounts = [...new Set([...action.availableAmounts, action.availableQuantity])].sort(
                 (a, b) => a - b
@@ -264,17 +292,24 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                         })}
                       </div>
 
-                      {/* Validation message */}
-                      {action.quantity && !isValidQty ? (
-                        <div className="text-xs text-red-400 mt-2">
-                          Invalid amount. Select from: {action.validCombinations.slice(0, 8).join(', ')}
-                          {action.validCombinations.length > 8 && '...'}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-white/40 mt-2">
-                          Available chunks: [{action.availableAmounts?.join(', ')}]
-                        </div>
-                      )}
+                      {/* Validation message with closest suggestion - reserved space to prevent jumping */}
+                      <div className="mt-2 min-h-[52px]">
+                        {action.quantity && !isValidQty && closestAmount && (
+                          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded animate-in fade-in duration-200">
+                            <div className="text-xs text-red-400 mb-1">
+                              Invalid amount. Must be a valid combination.
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickQuantitySelect(action.id, closestAmount)}
+                              className="text-xs text-orange-400 hover:text-orange-300 underline flex items-center gap-1 transition-colors"
+                            >
+                              <ArrowRight className="h-3 w-3" />
+                              Use closest: {closestAmount.toLocaleString()}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Slippage Input */}
