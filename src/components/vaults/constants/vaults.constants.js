@@ -320,9 +320,9 @@ export const vaultSchema = yup.object({
     .typeError('Creation threshold is required')
     .required('Creation threshold is required'),
   // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
-  voteThreshold: yup
+  cosigningThreshold: yup
     .number()
-    .typeError('Vote threshold is required')
+    .typeError('Vote Quorum Threshold is required')
     .required('Vote Quorum Threshold is required')
     .min(20, 'Vote Quorum Threshold must be at least 20%'),
   executionThreshold: yup
@@ -330,10 +330,6 @@ export const vaultSchema = yup.object({
     .typeError('Execution threshold is required')
     .required('Approval threshold is required')
     .min(50, 'Approval threshold must be at least 50%'),
-  // cosigningThreshold: yup
-  //   .number()
-  //   .typeError('Cosigning threshold is required')
-  //   .required('Cosigning threshold is required'),
 
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup
@@ -393,9 +389,9 @@ export const initialVaultState = {
   // DAO specific fields
   creationThreshold: null,
   // startThreshold: null,
-  voteThreshold: null,
+  voteThreshold: 0,
   executionThreshold: null,
-  // cosigningThreshold: null,
+  cosigningThreshold: null,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,
@@ -433,7 +429,7 @@ export const stepFields = {
     'acquireReserve',
     'liquidityPoolContribution',
   ],
-  4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
+  4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'cosigningThreshold', 'executionThreshold'],
   5: [],
 };
 
