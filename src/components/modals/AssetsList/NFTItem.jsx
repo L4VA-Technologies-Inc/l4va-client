@@ -25,18 +25,24 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
         <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
           <LazyImage
             src={nft.src}
-            alt={nft.name}
+            alt={nft.displayName || nft.name}
             className="rounded-full shrink-0"
             width={32}
             height={32}
             fallbackSrc="/assets/icons/ada.svg"
           />
-          <span className="font-medium truncate">{nft.name}</span>
+          <span className="font-medium truncate">{nft.displayName || nft.name}</span>
         </div>
-        <span className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap">
+        <a
+          href={`https://pool.pm/policy/${nft.metadata?.policyId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap"
+        >
           {nft.metadata?.policyId.substring(0, 6)}...
           {nft.metadata?.policyId.substring(nft.metadata?.policyId.length - 6)}
-        </span>
+        </a>
       </div>
     </div>
   );
