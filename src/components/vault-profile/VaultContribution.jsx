@@ -97,9 +97,12 @@ export const VaultContribution = ({ vault }) => {
                   const assetProgress = asset.countCapMax > 0 ? (assetCount / asset.countCapMax) * 100 : 0;
 
                   return (
-                    <div key={asset.id}>
+                    <div key={asset.policyId}>
                       <p className="mb-2 truncate text-dark-100">
-                        <span className="text-white">Name</span> {asset.policyId}
+                        <span className="text-white" title={asset.collectionName || asset.policyId}>
+                          {asset.collectionName ||
+                            `${asset.policyId.substring(0, 6)}...${asset.policyId.substring(asset.policyId.length - 6)}`}
+                        </span>
                       </p>
                       <LavaProgressBar
                         className="h-2 rounded-full bg-steel-750"
