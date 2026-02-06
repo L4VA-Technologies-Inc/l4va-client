@@ -230,8 +230,15 @@ export const AcquireModal = ({ vault, onClose }) => {
                   {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
                 </PrimaryButton>
                 <div className="text-xs text-dark-100">
-                  Transaction cost: <span className="text-white font-medium">~5.77 ADA</span> (5 ADA per transaction +
-                  0.77 ADA)
+                  Transaction cost:{' '}
+                  <span className="text-white font-medium">
+                    ~{((vault.protocolContributorsFeeAda || 0) + 0.77).toFixed(2)} ADA
+                  </span>{' '}
+                  (
+                  {vault.protocolContributorsFeeAda > 0
+                    ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~0.77 ADA Network fees`
+                    : '~0.77 ADA Network fees'}
+                  )
                 </div>
               </div>
             </div>

@@ -14,7 +14,6 @@ import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-import { formatAdaPrice } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -242,8 +241,15 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
           </div>
         </div>
         <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-          Transaction cost: <span className="text-white font-medium">~{formatAdaPrice(6.9)} ADA</span> (5 ADA protocol
-          fees + ~1.9 ADA network fees)
+          Transaction cost:{' '}
+          <span className="text-white font-medium">
+            ~{((vault.protocolContributorsFeeAda || 0) + 1.9).toFixed(2)} ADA
+          </span>{' '}
+          (
+          {vault.protocolContributorsFeeAda > 0
+            ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.9 ADA Network fees`
+            : '~1.9 ADA Network fees'}
+          )
         </div>
       </div>
     );
@@ -295,6 +301,13 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
               label="Estimated Value"
               value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             />
+            {/* Show protocol fee only if it's greater than 0 */}
+            {vault.protocolContributorsFeeAda > 0 && (
+              <MetricCard
+                label="Protocol Fee"
+                value={`${currencySymbol}${isAda ? vault.protocolContributorsFeeAda.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : vault.protocolContributorsFeeUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              />
+            )}
             {/* 
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
