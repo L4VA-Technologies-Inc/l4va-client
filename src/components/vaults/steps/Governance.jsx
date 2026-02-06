@@ -192,20 +192,21 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               onChange={handleNumChange}
             />
           </div>
-          {/*<div>*/}
-          {/*  <LavaInput*/}
-          {/*    required*/}
-          {/*    error={errors.cosigningThreshold}*/}
-          {/*    icon={<Info color="white" size={16} />}*/}
-          {/*    hint="Minimum amount of VT that must be present in a stake for it to be able to cosign a transaction"*/}
-          {/*    label="COSIGNING THRESHOLD (%)"*/}
-          {/*    name="cosigningThreshold"*/}
-          {/*    placeholder="XX"*/}
-          {/*    suffix="%"*/}
-          {/*    value={data.cosigningThreshold || ''}*/}
-          {/*    onChange={handleNumChange}*/}
-          {/*  />*/}
-          {/*</div>*/}
+          <div>
+            <LavaInput
+              required
+              error={errors.cosigningThreshold}
+              icon={<Info color="white" size={16} />}
+              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 20.0%."
+              label="Vote Quorum Threshold (%)"
+              name="cosigningThreshold"
+              placeholder="XX.X"
+              suffix="%"
+              value={data.cosigningThreshold || ''}
+              onBlur={handleMinOnePercentBlur}
+              onChange={handleMinOnePercentChange}
+            />
+          </div>
           {/*<div>*/}
           {/*  <LavaInput*/}
           {/*    required*/}
@@ -220,21 +221,6 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           {/*    onChange={handleNumChange}*/}
           {/*  />*/}
           {/*</div>*/}
-          <div>
-            <LavaInput
-              required
-              error={errors.voteThreshold}
-              icon={<Info color="white" size={16} />}
-              hint="Minimum Vault tokens used to vote in proposals (as % of total supply) required for vote to be valid. If less, the proposal automatically fails. Minimum 20.0%."
-              label="Vote Quorum Threshold (%)"
-              name="voteThreshold"
-              placeholder="XX.X"
-              suffix="%"
-              value={data.voteThreshold || ''}
-              onBlur={handleMinOnePercentBlur}
-              onChange={handleMinOnePercentChange}
-            />
-          </div>
           <div>
             <LavaInput
               required

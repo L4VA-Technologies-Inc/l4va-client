@@ -42,7 +42,8 @@ export const SavePresetModal = ({ isOpen = true, onClose, vaultData, onSuccess }
           acquireReserve: vaultData?.acquireReserve ?? null,
           liquidityPoolContribution: vaultData?.liquidityPoolContribution ?? null,
           creationThreshold: vaultData?.creationThreshold ?? null,
-          voteThreshold: vaultData?.voteThreshold ?? null,
+          voteThreshold: 0,
+          cosigningThreshold: vaultData?.cosigningThreshold ?? null,
           executionThreshold: vaultData?.executionThreshold ?? null,
         },
       };

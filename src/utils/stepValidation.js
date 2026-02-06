@@ -12,7 +12,14 @@ export const mandatoryStepFields = {
     'liquidityPoolContribution',
     'acquirerWhitelist',
   ],
-  4: ['ftTokenSupply', 'ftTokenImg', 'terminationType', 'creationThreshold', 'voteThreshold', 'executionThreshold'],
+  4: [
+    'ftTokenSupply',
+    'ftTokenImg',
+    'terminationType',
+    'creationThreshold',
+    'cosigningThreshold',
+    'executionThreshold',
+  ],
   5: [],
 };
 
