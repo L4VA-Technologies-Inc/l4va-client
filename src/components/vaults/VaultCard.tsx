@@ -32,8 +32,8 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
   }, [vault.phaseStartTime, vault.phaseEndTime, vault.timeRemaining]);
 
   return (
-    <div className="w-full max-w-md rounded-xl bg-steel-950 overflow-hidden">
-      <Link className="block" to={`/vaults/${id}`}>
+    <div className="w-full max-w-md rounded-xl bg-steel-950 overflow-hidden flex flex-col">
+      <Link className="block flex-1 flex flex-col" to={`/vaults/${id}`}>
         <div className="relative h-52">
           {vaultImage ? (
             <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} loading="lazy" />
@@ -53,7 +53,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
           )}
         </div>
 
-        <div className="p-6">
+        <div className="p-6 flex-1 flex flex-col">
           <div className="flex items-center gap-4 mb-6">
             {ftTokenImg ? (
               <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} loading="lazy" />
@@ -67,7 +67,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <p className="text-sm text-dark-100 line-clamp-3">{description || 'No description'}</p>
             </div>
           </div>
-          <div className="mb-6 grid grid-cols-3 gap-4 text-center">
+          <div className="mb-6 grid grid-cols-3 gap-4 text-center mt-auto">
             <div>
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
