@@ -490,7 +490,6 @@ export const VaultActivity = ({ vault }) => {
 
       const allData = await VaultsApiProvider.getVaultActivity(vault?.id, {
         page: 1,
-        limit: 9999,
         sortOrder: 'DESC',
         filter: FILTER_MAP[activeFilter],
         isExport: true,
@@ -581,17 +580,21 @@ export const VaultActivity = ({ vault }) => {
         ];
       });
 
-      const csvContent =
-        'data:text/csv;charset=utf-8,' +
-        [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const csvString = [headers, ...rows]
+        .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
 
-      const encodedUri = encodeURI(csvContent);
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
+      link.href = url;
       link.setAttribute('download', `${vault.name}_activity_${FILTER_MAP[activeFilter]}.csv`);
       document.body.appendChild(link);
       link.click();
+
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
       toast.success('CSV downloaded successfully', { id: 'download' });
     } catch (err) {
