@@ -79,7 +79,7 @@ export const VaultList = ({
   const renderVaultsView = () => {
     if (viewType === 'grid') {
       return (
-        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 flex-wrap items-center justify-center w-full gap-6">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 flex-wrap items-stretch justify-center w-full gap-6">
           {vaults.map(vault => (
             <VaultCard key={vault.id} vault={vault} />
           ))}
