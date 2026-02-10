@@ -63,12 +63,12 @@ export class VaultsConfigProvider {
     return `/api/v1/vaults/${id}`;
   }
 
-  static getVaultTokenStatistics(id) {
-    return `/api/v1/vaults/vt-statistics/${id}`;
-  }
-
   static getMarketStatistics() {
     return '/api/v1/markets';
+  }
+
+  static getMarketByIdWithOHLCV(id) {
+    return `/api/v1/markets/${id}/ohlcv`;
   }
 
   static getVaultActivity(id) {

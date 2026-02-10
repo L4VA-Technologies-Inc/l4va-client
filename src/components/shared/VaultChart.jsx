@@ -1,33 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { CandlestickSeries, createChart } from 'lightweight-charts';
 
-const transformDataToCandles = data => {
-  if (!data || data.s !== 'ok' || !data.t || !data.o || !data.h || !data.l || !data.c) {
+const transformDataToCandles = ohlcvData => {
+  if (!ohlcvData || !Array.isArray(ohlcvData) || ohlcvData.length === 0) {
     return [];
   }
 
-  const { t, o, h, l, c } = data;
-  const length = Math.min(t.length, o.length, h.length, l.length, c.length);
-
-  return Array.from({ length }, (_, i) => ({
-    time: t[i],
-    open: +o[i],
-    high: +h[i],
-    low: +l[i],
-    close: +c[i],
+  return ohlcvData.map(point => ({
+    time: point.time,
+    open: +point.open,
+    high: +point.high,
+    low: +point.low,
+    close: +point.close,
   }));
 };
 
-const VaultChart = ({ data }) => {
+const ChartSkeleton = () => (
+  <div className="w-full min-h-[260px] md:min-h-[320px] rounded-lg border border-steel-800/50 bg-steel-900/40">
+    <div className="h-[260px] md:h-[320px] w-full animate-pulse bg-gradient-to-r from-steel-800/60 via-steel-900/60 to-steel-800/60" />
+  </div>
+);
+
+const VaultChart = ({ ohlcvData, isLoading, isNotFound }) => {
   const chartContainerRef = useRef(null);
 
   useEffect(() => {
-    if (!data || data.s !== 'ok') {
+    if (!ohlcvData || !Array.isArray(ohlcvData) || ohlcvData.length === 0) {
       return;
     }
 
     let chart;
-    const candles = transformDataToCandles(data);
+    const candles = transformDataToCandles(ohlcvData);
 
     if (candles.length === 0) {
       return;
@@ -70,9 +73,25 @@ const VaultChart = ({ data }) => {
       window.removeEventListener('resize', handleResize);
       if (chart) chart.remove();
     };
-  }, [data]);
+  }, [ohlcvData]);
 
-  return <div ref={chartContainerRef} className="w-full h-[400px] min-h-[300px] md:min-h-[400px]" />;
+  if (isLoading) {
+    return <ChartSkeleton />;
+  }
+
+  if (isNotFound || !ohlcvData || !Array.isArray(ohlcvData) || ohlcvData.length === 0) {
+    return (
+      <div className="w-full min-h-[260px] md:min-h-[320px] rounded-lg border border-steel-800/50 bg-steel-900/40 flex items-center justify-center text-dark-100 text-sm">
+        No chart data available for this vault yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full rounded-lg border border-steel-800/50 bg-steel-900/40">
+      <div ref={chartContainerRef} className="w-full min-h-[260px] md:min-h-[320px]" />
+    </div>
+  );
 };
 
 export default VaultChart;
