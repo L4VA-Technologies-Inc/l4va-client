@@ -356,10 +356,11 @@ export const useDeletePreset = () => {
   });
 };
 
-export const useVaultTokenStatistics = (vaultId: string) => {
+export const useMarketWithOHLCV = (vaultId: string, interval: string = '1h') => {
   return useQuery({
-    queryKey: ['vaults', 'token-statistics', vaultId],
-    queryFn: () => VaultsApiProvider.getVaultTokenStatistics(vaultId),
+    queryKey: ['markets', 'ohlcv', vaultId, interval],
+    queryFn: () => VaultsApiProvider.getMarketByIdWithOHLCV(vaultId, interval),
+    enabled: !!vaultId,
   });
 };
 
