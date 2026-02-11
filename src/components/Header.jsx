@@ -1,6 +1,6 @@
 import { Link, useRouter } from '@tanstack/react-router';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { Menu, Bell, X, Snowflake } from 'lucide-react';
+import { Menu, Bell, X } from 'lucide-react';
 import { useCounts, useNotifications } from '@novu/react';
 
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/components/ui/dropdown-menu';
@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-import { useSnowfall } from '@/hooks/useSnowfall';
 
 const navLinks = [
   { to: '/create', label: 'Create', isAuth: true },
@@ -41,7 +40,6 @@ export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
-  const { enabled: snowfallEnabled, toggleSnowfall } = useSnowfall();
 
   const currencyOptions = [
     { label: 'ADA', value: 'ada' },
@@ -207,16 +205,6 @@ export const Header = () => {
                   }}
                 />
               </div>
-              <button
-                className={cn(
-                  'p-2 rounded-full hover:bg-steel-850 transition-colors',
-                  snowfallEnabled && 'text-orange-500'
-                )}
-                aria-label="Toggle snowfall"
-                onClick={toggleSnowfall}
-              >
-                <Snowflake className="w-6 h-6" />
-              </button>
               {renderNotifications()}
               <ConnectButton />
               <button

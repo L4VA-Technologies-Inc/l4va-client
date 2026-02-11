@@ -52,7 +52,7 @@ export const ProfileModal = () => {
           />
           <span className="text-dark-100">$VLRM</span>
         </div>
-        <span className="font-bold">{formatNum(vlrmBalance)} VLRM</span>
+        <span className="font-bold">{formatNum(vlrmBalance, 4)} VLRM</span>
       </div>
       <div className="flex justify-between items-center mt-2 p-3 bg-steel-850 rounded-lg">
         <span className="text-dark-100">ADA</span>

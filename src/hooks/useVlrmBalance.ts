@@ -69,7 +69,7 @@ const parseCborBalance = (cborHex: string, policyId: string, assetName: string):
     else if (firstByte === '1a') quantity = parseInt(afterAsset.slice(2, 10), 16);
     else if (firstByte === '1b') quantity = parseInt(afterAsset.slice(2, 18), 16);
 
-    return quantity;
+    return quantity / 10000; // VLRM has 4 decimals
   } catch {
     return 0;
   }
