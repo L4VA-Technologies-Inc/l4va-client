@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3 } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3, Users } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -285,34 +285,65 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       <div className="flex flex-col w-full">
         <div className="flex w-full justify-between items-center mb-3">
           <h1 className="text-2xl font-bold">{vault.name}</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {isAuthenticated && (
-              <button
-                onClick={() => handleOwnerClick(vault.owner.id)}
-                className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
-              >
-                <User className="w-4 h-4 text-orange-500" />
-              </button>
+              <div className="group relative">
+                <button
+                  onClick={() => handleOwnerClick(vault.owner.id)}
+                  className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
+                >
+                  <User className="w-4 h-4 text-orange-500" />
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  View owner profile
+                </div>
+              </div>
             )}
             {/* Statistic */}
             {vault.liquidityPoolContribution !== 0 && IS_PREPROD && (
-              <button
-                onClick={() => openModal('ChartModal', { vault })}
-                className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
-              >
-                <BarChart3 className="w-4 h-4 text-orange-500" />
-              </button>
+              <div className="group relative">
+                <button
+                  onClick={() => openModal('ChartModal', { vault })}
+                  className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
+                >
+                  <BarChart3 className="w-4 h-4 text-orange-500" />
+                </button>
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  View vault statistics
+                </div>
+              </div>
             )}
-            <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1">
-              <EyeIcon className="w-4 h-4 text-orange-500" />
-              <span>{formatCompactNumber(vault.countView)}</span>
-            </span>
-            <button
-              onClick={handleCopyVaultAddress}
-              className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center gap-1 hover:bg-steel-750 transition-colors"
-            >
-              <Share className="w-4 h-4 text-orange-500" />
-            </button>
+            <div className="group relative">
+              <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
+                <EyeIcon className="w-4 h-4 text-orange-500" />
+                <span>{formatCompactNumber(vault.countView)}</span>
+              </span>
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                Total views
+              </div>
+            </div>
+            {vault.vaultMembersCount && (
+              <div className="group relative">
+                <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
+                  <Users className="w-4 h-4 text-orange-500" />
+                  <span>{vault.vaultMembersCount}</span>
+                </span>
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  {vault.vaultMembersCount === 1 ? 'Member' : 'Members'}
+                </div>
+              </div>
+            )}
+            <div className="group relative">
+              <button
+                onClick={handleCopyVaultAddress}
+                className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
+              >
+                <Share className="w-4 h-4 text-orange-500" />
+              </button>
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                Share vault link
+              </div>
+            </div>
           </div>
         </div>
 
