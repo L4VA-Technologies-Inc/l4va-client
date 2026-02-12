@@ -110,6 +110,29 @@ export const formatAmount = amount => {
   return amount.toLocaleString();
 };
 
+export const formatNumber = value => {
+  if (!value) return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  if (numValue >= 1e12) {
+    const divided = numValue / 1e12;
+    return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}T`;
+  }
+  if (numValue >= 1e9) {
+    const divided = numValue / 1e9;
+    return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}B`;
+  }
+  if (numValue >= 1e6) {
+    const divided = numValue / 1e6;
+    return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}M`;
+  }
+  if (numValue >= 1e3) {
+    const divided = numValue / 1e3;
+    return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}K`;
+  }
+  return numValue % 1 === 0 ? numValue.toFixed(0) : numValue.toFixed(2);
+};
+
 export const formatDeadline = deadline => {
   const end = new Date(deadline);
   const now = new Date();

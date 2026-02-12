@@ -12,6 +12,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useCurrency } from '@/hooks/useCurrency.ts';
+import { formatNumber } from '@/utils/core.utils';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
@@ -31,17 +32,6 @@ const formatCurrency = value => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
   }).format(numValue);
-};
-
-const formatNumber = value => {
-  if (!value) return '-';
-  const numValue = typeof value === 'number' ? value : parseFloat(value);
-  if (isNaN(numValue)) return '-';
-  if (numValue >= 1e12) return `${(numValue / 1e12).toFixed(2)}T`;
-  if (numValue >= 1e9) return `${(numValue / 1e9).toFixed(2)}B`;
-  if (numValue >= 1e6) return `${(numValue / 1e6).toFixed(2)}M`;
-  if (numValue >= 1e3) return `${(numValue / 1e3).toFixed(2)}K`;
-  return numValue.toFixed(2);
 };
 
 const formatPercentage = value => {
