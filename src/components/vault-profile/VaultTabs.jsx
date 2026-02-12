@@ -16,7 +16,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
 
   const baseTabContent = {
     Assets: <VaultContributedAssetsList vault={vault} />,
-    Acquire: <VaultAcquiredAssetsList vault={vault} />,
+    Token: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
     Activity: <VaultActivity vault={vault} />,
   };
