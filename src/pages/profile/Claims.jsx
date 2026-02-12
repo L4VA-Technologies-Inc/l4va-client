@@ -301,7 +301,7 @@ export const Claims = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-russo text-4xl uppercase text-white">My Rewards</h2>
+      <h2 className="font-russo text-4xl uppercase text-white">My Distributions</h2>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
         <div className="flex-1 sm:w-auto">
           <LavaTabs

@@ -8,6 +8,7 @@ export const VaultStats = ({
   fdvTvl = 'N/A',
   tvl = 'N/A',
   vtPrice = 'N/A',
+  tokensForAcquires,
 }) => {
   const stats = [
     {
@@ -16,7 +17,7 @@ export const VaultStats = ({
     },
     {
       label: 'VT PRICE',
-      value: vtPrice,
+      value: tokensForAcquires === 0 ? 'N/A' : vtPrice,
     },
     {
       label: 'VT GAINS',
@@ -24,7 +25,7 @@ export const VaultStats = ({
     },
     {
       label: 'FDV',
-      value: fdv,
+      value: tokensForAcquires === 0 ? 'N/A' : fdv,
     },
     {
       label: 'FDV / TVL',

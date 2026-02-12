@@ -209,7 +209,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           !allAssetsAtMaxCapacity,
         disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
       },
-      Acquire: {
+      Token: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
         available:
@@ -514,6 +514,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                           : 'N/A';
                       }
                     })()}
+                    tokensForAcquires={vault.tokensForAcquires}
                   />
                 </Suspense>
               ) : (
