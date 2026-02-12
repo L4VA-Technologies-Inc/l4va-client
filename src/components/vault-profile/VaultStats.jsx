@@ -8,7 +8,7 @@ export const VaultStats = ({
   fdvTvl = 'N/A',
   tvl = 'N/A',
   vtPrice = 'N/A',
-  tokensForAcquires,
+  liquidityPoolContribution,
 }) => {
   const stats = [
     {
@@ -17,7 +17,7 @@ export const VaultStats = ({
     },
     {
       label: 'VT PRICE',
-      value: tokensForAcquires === 0 ? 'N/A' : vtPrice,
+      value: liquidityPoolContribution === 0 ? 'N/A' : vtPrice,
     },
     {
       label: 'VT GAINS',
@@ -25,11 +25,11 @@ export const VaultStats = ({
     },
     {
       label: 'FDV',
-      value: tokensForAcquires === 0 ? 'N/A' : fdv,
+      value: liquidityPoolContribution === 0 ? 'N/A' : fdv,
     },
     {
       label: 'FDV / TVL',
-      value: fdvTvl,
+      value: liquidityPoolContribution === 0 ? 'N/A' : fdvTvl,
     },
     {
       label: 'TVL',

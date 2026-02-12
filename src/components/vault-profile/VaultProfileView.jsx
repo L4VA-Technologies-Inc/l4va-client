@@ -476,15 +476,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             />
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
-          {vault.vaultStatus !== 'locked' ? (
-            deferredReady ? (
-              <Suspense fallback={<ContributionSkeleton />}>
-                <VaultContribution vault={vault} />
-              </Suspense>
-            ) : (
-              <ContributionSkeleton />
-            )
-          ) : null}
+          {deferredReady ? (
+            <Suspense fallback={<ContributionSkeleton />}>
+              <VaultContribution vault={vault} />
+            </Suspense>
+          ) : (
+            <ContributionSkeleton />
+          )}
           <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay
@@ -545,7 +543,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                           : 'N/A';
                       }
                     })()}
-                    tokensForAcquires={vault.tokensForAcquires}
+                    liquidityPoolContribution={vault.liquidityPoolContribution}
                   />
                 </Suspense>
               ) : (
