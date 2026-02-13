@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 
 import LavaProgressBar from '@/components/shared/LavaProgressBar';
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
@@ -39,19 +40,18 @@ export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
   const { currency } = useCurrency();
 
+  const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
+  const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
+  const isLocked = vault.vaultStatus === VAULT_STATUSES.LOCKED;
+
   const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);
   const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
   const minContributeAssets = findMinValue(vault.assetsWhitelist, 'countCapMin');
 
   const reserveThresholdMet = acquireProgress >= 100;
 
-  // Calculate LP minimum threshold position based on projected LP amount
   const lpMinThresholdPosition = calculateLpMinThresholdPosition(vault.lpMinLiquidityAda, vault.projectedLpAdaAmount);
-
-  // Check if projected LP at 100% reserve can ever meet the minimum
   const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
-
-  // Only consider threshold met if we CAN meet it and current progress is sufficient
   const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
   const lpProgressMultiplier = Math.min(acquireProgress, 100) / 100;
   const currentLpAdaAmount = vault.projectedLpAdaAmount * lpProgressMultiplier;
@@ -72,20 +72,12 @@ export const VaultContribution = ({ vault }) => {
     );
   };
 
-  const isShowProgress = vault.vaultStatus === VAULT_STATUSES.ACQUIRE || vault.vaultStatus === VAULT_STATUSES.LOCKED;
-
   return (
     <div className="space-y-4">
       <div className="relative overflow-visible">
-        {isShowProgress ? (
-          <div className="w-full">
-            <div className="text-sm text-dark-100 font-medium">
-              Total Contributed Assets: <span className="text-[#F97316]">{vault.assetsCount}</span>
-            </div>
-          </div>
-        ) : (
+        {isContribution ? (
           <>
-            <h2 className={`font-medium mb-${contributionProgress > 0 ? 10 : 2}`}>Contribution:</h2>
+            <h2 className={clsx('font-medium', contributionProgress > 0 ? 'mb-10' : 'mb-2')}>Contribution:</h2>
             <div className="flex flex-col items-center relative overflow-visible">
               <div className="relative w-full mb-2 overflow-visible">
                 <LavaProgressBar
@@ -110,10 +102,7 @@ export const VaultContribution = ({ vault }) => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{
-                      duration: 0.25,
-                      ease: 'easeInOut',
-                    }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
                   >
                     {vault.assetsWhitelist.map(asset => {
                       const assetCount = getAssetCountByPolicy(vault.assetsPrices.assetsByPolicy, asset.policyId);
@@ -121,7 +110,7 @@ export const VaultContribution = ({ vault }) => {
 
                       return (
                         <div key={asset.policyId} className="flex flex-col items-center relative">
-                          <p className={`mb-${assetProgress > 0 ? 10 : 2} truncate text-dark-100 w-full`}>
+                          <p className={clsx('truncate text-dark-100 w-full', assetProgress > 0 ? 'mb-10' : 'mb-2')}>
                             <span className="text-white" title={asset.collectionName || asset.policyId}>
                               {asset.collectionName ||
                                 `${asset.policyId.substring(0, 6)}...${asset.policyId.substring(asset.policyId.length - 6)}`}
@@ -154,21 +143,17 @@ export const VaultContribution = ({ vault }) => {
               )}
             </div>
           </>
-        )}
-      </div>
-      <div className="relative">
-        {isShowProgress ? (
+        ) : (
           <div className="w-full">
             <div className="text-sm text-dark-100 font-medium">
-              Total Acquired Amount:{' '}
-              <span className="text-[#F97316]">
-                {currency === 'ada'
-                  ? `₳${formatNumber(vault.assetsPrices.totalAcquiredAda || 0)}`
-                  : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
-              </span>
+              Total Contributed Assets: <span className="text-[#F97316]">{vault.assetsCount}</span>
             </div>
           </div>
-        ) : (
+        )}
+      </div>
+
+      <div className="relative">
+        {isContribution ? null : isAcquire ? (
           <div>
             <h2 className="font-medium mb-2">Acquire:</h2>
             <div className="flex justify-between text-sm mb-1">
@@ -184,12 +169,10 @@ export const VaultContribution = ({ vault }) => {
               <LavaProgressBar
                 className="h-2 rounded-full bg-steel-750 mb-4"
                 segments={[
-                  // Pre-threshold segment (orange gradient)
                   {
                     progress: Math.min(acquireProgress, 100),
                     className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
                   },
-                  // Post-threshold segment (red gradient) - only show if threshold is met
                   ...(reserveThresholdMet
                     ? [
                         {
@@ -242,8 +225,20 @@ export const VaultContribution = ({ vault }) => {
               </div>
             )}
           </div>
-        )}
+        ) : isLocked ? (
+          <div className="w-full">
+            <div className="text-sm text-dark-100 font-medium">
+              Total Acquired Amount:{' '}
+              <span className="text-[#F97316]">
+                {currency === 'ada'
+                  ? `₳${formatNumber(vault.assetsPrices.totalAcquiredAda || 0)}`
+                  : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
+              </span>
+            </div>
+          </div>
+        ) : null}
       </div>
+
       <VaultSocialLinks socialLinks={vault.socialLinks} />
     </div>
   );
