@@ -1,4 +1,7 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+
+import { VaultsApiProvider } from '@/services/api/vaults';
 
 export interface WalletAsset {
   id: string;
@@ -7,6 +10,15 @@ export interface WalletAsset {
   assetNameHex: string;
   quantity: number;
 }
+
+export interface GroupedPolicy {
+  policyId: string;
+  name: string;
+  count: number;
+  collectionName: string | null;
+}
+
+const PAGE_SIZE = 10;
 
 const hexToString = (hex: string): string => {
   try {
@@ -74,7 +86,7 @@ const parseBalanceToAssets = (balance: any): WalletAsset[] => {
   }
 };
 
-const groupAssetsByPolicy = (assets: WalletAsset[]) => {
+const groupAssetsByPolicy = (assets: WalletAsset[]): Omit<GroupedPolicy, 'collectionName'>[] => {
   const grouped = new Map<string, { policyId: string; name: string; count: number }>();
 
   assets.forEach(asset => {
@@ -96,17 +108,162 @@ const groupAssetsByPolicy = (assets: WalletAsset[]) => {
 export const useAssets = () => {
   const { balanceDecoded } = useWallet('balanceDecoded', 'isConnected');
 
-  if (!balanceDecoded) {
-    return [];
+  const [visiblePolicies, setVisiblePolicies] = useState<GroupedPolicy[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const allGroupedRef = useRef<Omit<GroupedPolicy, 'collectionName'>[]>([]);
+  const collectionNamesCache = useRef<Map<string, string | null>>(new Map());
+  const currentPageRef = useRef(0);
+  const prevBalanceRef = useRef<any>(null);
+
+  const allAssets = balanceDecoded ? parseBalanceToAssets(balanceDecoded) : [];
+  const allGrouped = groupAssetsByPolicy(allAssets);
+
+  // Reset when balance changes
+  if (balanceDecoded !== prevBalanceRef.current) {
+    prevBalanceRef.current = balanceDecoded;
+    allGroupedRef.current = allGrouped;
+    currentPageRef.current = 0;
+  } else {
+    allGroupedRef.current = allGrouped;
   }
 
-  const groupedPolicies = groupAssetsByPolicy(parseBalanceToAssets(balanceDecoded));
+  const fetchCollectionNames = useCallback(async (policyIds: string[]): Promise<Map<string, string | null>> => {
+    const uncachedIds = policyIds.filter(id => !collectionNamesCache.current.has(id));
+
+    if (uncachedIds.length > 0) {
+      try {
+        const response = await VaultsApiProvider.getCollectionNames(uncachedIds);
+        const items: { policyId: string; collectionName: string | null }[] = response.data;
+        items.forEach(item => {
+          collectionNamesCache.current.set(item.policyId, item.collectionName);
+        });
+      } catch (error) {
+        console.error('Error fetching collection names:', error);
+        uncachedIds.forEach(id => {
+          collectionNamesCache.current.set(id, null);
+        });
+      }
+    }
+
+    const result = new Map<string, string | null>();
+    policyIds.forEach(id => {
+      result.set(id, collectionNamesCache.current.get(id) ?? null);
+    });
+    return result;
+  }, []);
+
+  const loadPage = useCallback(
+    async (page: number) => {
+      const grouped = allGroupedRef.current;
+      const start = 0;
+      const end = (page + 1) * PAGE_SIZE;
+      const slice = grouped.slice(start, end);
+
+      const policyIds = slice.map(p => p.policyId);
+      const namesMap = await fetchCollectionNames(policyIds);
+
+      const withNames: GroupedPolicy[] = slice.map(p => ({
+        ...p,
+        collectionName: namesMap.get(p.policyId) ?? null,
+      }));
+
+      setVisiblePolicies(withNames);
+      setHasMore(end < grouped.length);
+    },
+    [fetchCollectionNames]
+  );
+
+  // Load initial page when balance arrives
+  useEffect(() => {
+    if (!balanceDecoded) {
+      setVisiblePolicies([]);
+      setHasMore(false);
+      return;
+    }
+
+    currentPageRef.current = 0;
+    loadPage(0);
+  }, [balanceDecoded, loadPage]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPageRef.current + 1;
+      currentPageRef.current = nextPage;
+      await loadPage(nextPage);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, loadPage]);
+
+  const searchPolicies = useCallback(
+    async (query: string): Promise<GroupedPolicy[]> => {
+      const allGrouped = allGroupedRef.current;
+      if (!query) return [];
+
+      const search = query.toLowerCase();
+
+      // First: filter by name / policyId (local data we always have)
+      const localMatches = allGrouped.filter(
+        p => p.name.toLowerCase().includes(search) || p.policyId.toLowerCase().includes(search)
+      );
+
+      // Fetch collection names for matched policies
+      const matchedIds = localMatches.map(p => p.policyId);
+      const namesMap = await fetchCollectionNames(matchedIds);
+
+      const withNames: GroupedPolicy[] = localMatches.map(p => ({
+        ...p,
+        collectionName: namesMap.get(p.policyId) ?? null,
+      }));
+
+      // Also include policies whose collectionName matches the search
+      // (they might not match by name/policyId but do match by collectionName)
+      const localMatchIds = new Set(matchedIds);
+      const remaining = allGrouped.filter(p => !localMatchIds.has(p.policyId));
+
+      if (remaining.length > 0) {
+        const remainingIds = remaining.map(p => p.policyId);
+        const remainingNamesMap = await fetchCollectionNames(remainingIds);
+
+        remaining.forEach(p => {
+          const collectionName = remainingNamesMap.get(p.policyId) ?? null;
+          if (collectionName && collectionName.toLowerCase().includes(search)) {
+            withNames.push({ ...p, collectionName });
+          }
+        });
+      }
+
+      return withNames;
+    },
+    [fetchCollectionNames]
+  );
+
+  if (!balanceDecoded) {
+    return {
+      data: { data: [] },
+      assets: [],
+      isLoading: false,
+      hasMore: false,
+      isLoadingMore: false,
+      loadMore: () => {},
+      searchPolicies: async () => [],
+    };
+  }
 
   return {
     data: {
-      data: groupedPolicies,
+      data: visiblePolicies,
     },
-    assets: parseBalanceToAssets(balanceDecoded),
+    assets: allAssets,
     isLoading: false,
+    hasMore,
+    isLoadingMore,
+    loadMore,
+    searchPolicies,
   };
 };

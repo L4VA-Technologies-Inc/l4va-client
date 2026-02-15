@@ -99,4 +99,9 @@ export class VaultsApiProvider {
       params,
     });
   }
+
+  static async getCollectionNames(policyIds) {
+    const response = await axiosInstance.post(VaultsConfigProvider.getCollectionNames(), { policyIds });
+    return response;
+  }
 }
