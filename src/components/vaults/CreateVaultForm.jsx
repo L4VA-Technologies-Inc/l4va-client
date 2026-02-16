@@ -500,7 +500,15 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           setErrors(formattedErrors);
           updateStepErrorIndicators(formattedErrors);
           toast.error('Please fix the validation errors before submitting');
-        } else if (!handleServerFieldErrors(err)) {
+          return;
+        }
+
+        if (err?.message === 'user declined sign tx') {
+          toast.error('Vault launch cancelled by user');
+          return;
+        }
+
+        if (!handleServerFieldErrors(err)) {
           toast.error('Failed to launch vault, it will be saved as draft');
           await saveDraft();
         }
