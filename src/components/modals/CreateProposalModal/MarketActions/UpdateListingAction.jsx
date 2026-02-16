@@ -10,7 +10,7 @@ const MAX_FT_PER_TRANSACTION = 10;
 
 export const UpdateListingAction = ({ vaultId, onDataChange }) => {
   const [selectedNFTs, setSelectedNFTs] = useState([]);
-  const [activeTab, setActiveTab] = useState('NFT');
+  const [activeTab] = useState('NFT'); // Fixed to NFT only
   const [selectedAmount, setSelectedAmount] = useState({});
   const [newPrices, setNewPrices] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +35,8 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
         quantity: asset.quantity || parseFloat(asset.quantity) || 0,
         isNft,
         isFungibleToken,
-        price: asset.price || asset.floor_price || asset.dex_price || 0,
+        price: asset.listing_price || asset.price || asset.floor_price || asset.dex_price || 0,
+        floor_price: asset.floor_price,
         src: imageSrc,
         metadata: {
           policyId: asset.policy_id || asset.policyId || asset.metadata?.policyId,
@@ -198,7 +199,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
         <SelectedAssetItemWithPrice
           key={asset.tokenId}
           asset={enhancedAsset}
-          oldPrice={asset.price}
+          oldPrice={parseFloat(asset.listing_price || asset.price)}
           onRemove={removeNFT}
           onPriceChange={handlePriceChange}
         />
@@ -215,7 +216,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
       hasNextPage={false}
       loadMoreAssets={() => {}}
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={() => {}} // No-op since tabs are hidden
       selectedNFTs={selectedNFTs}
       selectedAmount={selectedAmount}
       onToggleNFT={toggleNFT}
@@ -226,6 +227,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
       renderSelectedItem={renderSelectedItem}
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
+      showTabs={false}
     />
   );
 };

@@ -2,6 +2,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { Copy } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 
 import { InfoRow } from '@/components/ui/infoRow';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export const VaultSettings = ({ vault }) => {
   const { currency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
+  const navigate = useNavigate();
 
   const handleBurneVault = async vaultId => {
     try {
@@ -24,9 +26,6 @@ export const VaultSettings = ({ vault }) => {
 
       const signature = await wallet?.handler?.signTx(data.presignedTx, true);
 
-      if (!signature) {
-        throw new Error('Transaction signing was cancelled');
-      }
       if (data) {
         const payload = {
           vaultId,
@@ -38,10 +37,13 @@ export const VaultSettings = ({ vault }) => {
       }
 
       toast.success('Vault burn successful!');
+      navigate({ to: '/vaults' });
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to burn vault. Please try again.');
-    } finally {
-      window.location.href = '/vaults';
+      if (error?.message === 'user declined sign tx') {
+        toast.error('Vault burn cancelled by user');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to burn vault. Please try again.');
+      }
     }
   };
 

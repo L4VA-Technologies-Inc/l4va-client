@@ -8,7 +8,7 @@ export const MAX_SUPPLY = 1000000000000; // 10^12
 export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 1 day
 // export const MIN_ACQUIRE_WINDOW_DURATION_MS = 3600000; // 1 hour in ms
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 1 day
-export const MIN_VLRM_REQUIRED = 1; // Minimum VLRM required for vault creation
+export const MIN_VLRM_REQUIRED = 0; // Minimum VLRM required for vault creation
 export const BUTTON_DISABLE_THRESHOLD_MS = 100000; // Min 5 min before button is enabled
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
