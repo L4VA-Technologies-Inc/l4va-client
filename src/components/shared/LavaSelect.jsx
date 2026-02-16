@@ -75,6 +75,10 @@ export const LavaSteelSelect = ({
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleOptionClick = optionValue => {
+    const option = options.find(opt => opt.value === optionValue);
+    if (option?.disabled) {
+      return;
+    }
     setIsOpen(false);
     if (onChange) {
       onChange(optionValue);
@@ -107,11 +111,13 @@ export const LavaSteelSelect = ({
             {options.map(option => (
               <button
                 key={option.value}
-                className="
-                block w-full px-4 py-2 text-left hover:bg-white/5 first:rounded-t-lg last:rounded-b-lg
-              "
+                className={`
+                  block w-full px-4 py-2 text-left first:rounded-t-lg last:rounded-b-lg
+                  ${option.disabled ? 'opacity-50 cursor-not-allowed text-white/40' : 'hover:bg-white/5 cursor-pointer'}
+                `}
                 type="button"
                 onClick={() => handleOptionClick(option.value)}
+                disabled={option.disabled}
                 title={option.label}
               >
                 <span className="block truncate">{option.label}</span>
