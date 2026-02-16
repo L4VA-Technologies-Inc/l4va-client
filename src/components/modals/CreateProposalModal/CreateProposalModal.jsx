@@ -12,6 +12,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
+import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
@@ -21,6 +22,7 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'distribution', label: 'Distribution' },
+  { value: 'expansion', label: 'Vault Expansion' },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination' },
   { value: 'burning', label: 'Burn' },
@@ -79,6 +81,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+      } else if (selectedOption === 'expansion') {
+        proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        proposalPayload.expansionDuration = proposalData.expansionDuration;
+        proposalPayload.expansionNoLimit = proposalData.expansionNoLimit || false;
+        proposalPayload.expansionAssetMax = proposalData.expansionAssetMax;
+        proposalPayload.expansionNoMax = proposalData.expansionNoMax || false;
+        proposalPayload.expansionPriceType = proposalData.expansionPriceType || 'market';
+        proposalPayload.expansionLimitPrice = proposalData.expansionLimitPrice;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -256,6 +266,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'marketplace_action' && (
               <MarketActions vaultId={vault.id} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'expansion' && (
+              <Expansion vault={vault} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">
