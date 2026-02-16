@@ -74,4 +74,8 @@ export class VaultsConfigProvider {
   static getVaultActivity(id) {
     return `/api/v1/vaults/activity/${id}`;
   }
+
+  static getCollectionNames() {
+    return '/api/v1/vaults/collection-names';
+  }
 }
