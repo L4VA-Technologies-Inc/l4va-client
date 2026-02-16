@@ -53,14 +53,22 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getVaultAssets(id, search = '', page = 1, limit = 10) {
-    const response = await axiosInstance.post(VaultsConfigProvider.getVaultAssets(id), { search, page, limit });
-    return response;
+  static async getVaultAssets(id, search = '', page = 1, limit = 10, filter = {}) {
+    return await axiosInstance.post(VaultsConfigProvider.getVaultAssets(id), {
+      search,
+      page,
+      limit,
+      filter,
+    });
   }
 
-  static async getVaultAcquiredAssets(id, page = 1, limit = 10) {
+  static async getVaultAcquiredAssets(id, page = 1, limit = 10, search = '', minQuantity, maxQuantity) {
+    const params = { page, limit };
+    if (search) params.search = search;
+    if (minQuantity !== undefined && minQuantity !== null) params.minQuantity = minQuantity;
+    if (maxQuantity !== undefined && maxQuantity !== null) params.maxQuantity = maxQuantity;
     return await axiosInstance.get(VaultsConfigProvider.getVaultAcquiredAssets(id), {
-      params: { page, limit },
+      params,
     });
   }
 

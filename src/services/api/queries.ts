@@ -62,18 +62,31 @@ export const useVault = (id: string) => {
   });
 };
 
-export const useVaultAssets = (id: string, search = '', page = 1, limit = 10) => {
+export const useVaultAssets = (
+  id: string,
+  search = '',
+  page = 1,
+  limit = 10,
+  filter: { policyId?: string; type?: string; contributorWalletAddress?: string } = {}
+) => {
   return useQuery({
-    queryKey: ['vault-assets', id, search, page, limit],
-    queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit),
+    queryKey: ['vault-assets', id, search, page, limit, filter],
+    queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit, filter),
     enabled: !!id,
   });
 };
 
-export const useVaultAcquiredAssets = (id: string, page = 1, limit = 10) => {
+export const useVaultAcquiredAssets = (
+  id: string,
+  page = 1,
+  limit = 10,
+  search = '',
+  minQuantity?: number,
+  maxQuantity?: number
+) => {
   return useQuery({
-    queryKey: ['vault-acquired-assets', id, page, limit],
-    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit),
+    queryKey: ['vault-acquired-assets', id, page, limit, search, minQuantity, maxQuantity],
+    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit, search, minQuantity, maxQuantity),
     enabled: !!id,
   });
 };

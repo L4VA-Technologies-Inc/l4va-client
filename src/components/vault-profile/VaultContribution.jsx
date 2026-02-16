@@ -225,7 +225,7 @@ export const VaultContribution = ({ vault }) => {
               </div>
             )}
           </div>
-        ) : isLocked ? (
+        ) : isLocked && vault.assetsPrices.totalAcquiredAda && vault.assetsPrices.totalAcquiredUsd ? (
           <div className="w-full">
             <div className="text-sm text-dark-100 font-medium">
               Total Acquired Amount:{' '}
