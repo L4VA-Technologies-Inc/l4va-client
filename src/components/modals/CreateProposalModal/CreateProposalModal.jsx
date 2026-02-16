@@ -19,11 +19,12 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
 const executionOptions = [
-  { value: 'staking', label: 'Staking' },
+  { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'distribution', label: 'Distribution' },
+  { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination' },
   { value: 'burning', label: 'Burn' },
-  { value: 'marketplace_action', label: 'Market Actions' },
+  { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
 const initialProposalData = {
@@ -33,7 +34,7 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('staking');
+  const [selectedOption, setSelectedOption] = useState('marketplace_action');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -171,6 +172,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, []);
 
   const handleChangeExecutionOption = value => {
+    const option = executionOptions.find(opt => opt.value === value);
+    if (option?.disabled) {
+      return;
+    }
     setProposalData(initialProposalData);
     setSelectedOption(value);
   };
