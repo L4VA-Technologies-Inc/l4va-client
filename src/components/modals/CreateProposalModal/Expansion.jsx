@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { LavaSteelSelect } from '@/components/shared/LavaSelect';
+import { LavaSteelSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
@@ -61,13 +61,12 @@ export default function Expansion({ onDataChange, error, vault }) {
         {/* Policy Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Collections*</label>
-          <LavaSteelSelect
+          <LavaMultiSelect
             options={whitelistedPolicies}
             placeholder="Select policy IDs"
             value={selectedPolicies}
-            onChange={setSelectedPolicies}
-            isMulti
-            error={error && selectedPolicies.length === 0}
+            onChange={value => setSelectedPolicies(Array.isArray(value) ? value : [])}
+            className="min-w-full"
           />
           <p className="text-xs text-gray-400 mt-1">
             Select which whitelisted asset collections will be accepted during expansion
@@ -81,7 +80,7 @@ export default function Expansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">Expansion Duration*</label>
-            <LavaCheckbox checked={noLimit} onChange={setNoLimit} description="No Limit" />
+            <LavaCheckbox checked={noLimit} onChange={e => setNoLimit(e.target.checked)} description="No Limit" />
           </div>
           {!noLimit ? (
             <>
@@ -96,7 +95,7 @@ export default function Expansion({ onDataChange, error, vault }) {
           ) : (
             <div className="p-3 bg-steel-700 rounded-lg">
               <p className="text-sm text-gray-300">
-                ⚠️ Vault will remain open until closed by governance action or asset max is reached
+                Vault will remain open until closed by governance action or asset max is reached
               </p>
             </div>
           )}
@@ -106,7 +105,7 @@ export default function Expansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">Maximum Assets*</label>
-            <LavaCheckbox checked={noMax} onChange={setNoMax} description="No Max" />
+            <LavaCheckbox checked={noMax} onChange={e => setNoMax(e.target.checked)} description="No Max" />
           </div>
           {!noMax ? (
             <>
@@ -124,7 +123,7 @@ export default function Expansion({ onDataChange, error, vault }) {
           ) : (
             <div className="p-3 bg-steel-700 rounded-lg">
               <p className="text-sm text-gray-300">
-                ⚠️ Unlimited assets can be accepted until duration ends or governance closes the vault
+                Unlimited assets can be accepted until duration ends or governance closes the vault
               </p>
             </div>
           )}

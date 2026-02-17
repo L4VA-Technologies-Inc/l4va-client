@@ -1,4 +1,17 @@
 import { Check } from 'lucide-react';
+import { ChangeEvent } from 'react';
+
+type LavaCheckboxProps = {
+  name: string;
+  checked: boolean;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  label: string;
+  description?: string;
+  error?: string | boolean;
+  className?: string;
+  labelClassName?: string;
+  disabled?: boolean;
+};
 
 export const LavaCheckbox = ({
   name,
@@ -10,7 +23,7 @@ export const LavaCheckbox = ({
   className = '',
   labelClassName = '',
   disabled = false,
-}) => (
+}: LavaCheckboxProps) => (
   <div className={`flex items-center ${className}`}>
     <label
       className={`flex items-center gap-2 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}

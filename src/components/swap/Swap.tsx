@@ -5,6 +5,36 @@ import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/toke
 import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
 
+interface SwapProps {
+  overrideDisplay?: boolean;
+  config?: {
+    defaultToken?: string;
+    width?: string;
+    height?: string;
+    theme?: 'light' | 'dark';
+    className?: string;
+    style?: CSSProperties;
+    orderTypes?: orderTypesProps;
+    supportedTokens?: supportedTokensType;
+    onSwapSuccess?: (data: any) => void;
+    onSwapError?: (err: any) => void;
+    onSwapWarning?: (err: any) => void;
+    selectedWallet?: SelectedWallet;
+    inputs?: string[];
+    onWalletConnect?: (data: any) => void;
+    onClickWalletConnect?: () => void;
+    onViewOrder?: (data: any) => void;
+    displayType?: 'BUTTON' | 'DEFAULT' | 'WIDGET';
+    buttonText?: string;
+    orderTypeOnButtonClick?: 'SWAP' | 'LIMIT' | 'DCA';
+    buttonStyle?: object;
+    buttonClassName?: string;
+    widgetButtonClass?: object;
+    defaultSettings?: defaultSettingsProps;
+    autoFocus?: boolean;
+  };
+}
+
 const suppressedKeywords = [
   'RECONNECTING',
   'default token',
@@ -75,33 +105,3 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
 
   return <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...config} />;
 };
-
-interface SwapProps {
-  overrideDisplay?: boolean;
-  config?: {
-    defaultToken?: string;
-    width?: string;
-    height?: string;
-    theme?: 'light' | 'dark';
-    className?: string;
-    style?: CSSProperties;
-    orderTypes?: orderTypesProps;
-    supportedTokens?: supportedTokensType;
-    onSwapSuccess?: (data: any) => void;
-    onSwapError?: (err: any) => void;
-    onSwapWarning?: (err: any) => void;
-    selectedWallet?: SelectedWallet;
-    inputs?: string[];
-    onWalletConnect?: (data: any) => void;
-    onClickWalletConnect?: () => void;
-    onViewOrder?: (data: any) => void;
-    displayType?: 'BUTTON' | 'DEFAULT' | 'WIDGET';
-    buttonText?: string;
-    orderTypeOnButtonClick?: 'SWAP' | 'LIMIT' | 'DCA';
-    buttonStyle?: object;
-    buttonClassName?: string;
-    widgetButtonClass?: object;
-    defaultSettings?: defaultSettingsProps;
-    autoFocus?: boolean;
-  };
-}
