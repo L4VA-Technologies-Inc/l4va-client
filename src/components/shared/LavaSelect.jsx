@@ -1,4 +1,4 @@
-import { useState, useRef, useId } from 'react';
+import { useId, useState, useRef, useMemo } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,48 +16,179 @@ export const LavaSelect = ({
   className,
   id,
   name,
+  showSearch = false,
+  searchPlaceholder = 'Search...',
+  useOldStyle = true,
+  noMargin = false,
+  disabled = false,
 }) => {
   const generatedId = useId();
   const selectId = id || generatedId;
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+
+  useClickOutside(dropdownRef, () => {
+    setIsOpen(false);
+    setSearchQuery('');
+  });
+
+  const filteredOptions = useMemo(() => {
+    if (!showSearch || !searchQuery) return options;
+    return options.filter(option => option.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [options, showSearch, searchQuery]);
+
+  const selectedOption = options.find(option => (option.id || option.value) === value);
+  const wrapperClass = noMargin ? 'relative' : 'mt-4 relative';
+
+  const toggleDropdown = () => {
+    if (disabled) return;
+    setIsOpen(prev => !prev);
+    if (!isOpen) {
+      setSearchQuery('');
+    }
+  };
+
+  const handleOptionClick = optionValue => {
+    setIsOpen(false);
+    if (onChange) {
+      onChange(optionValue);
+    }
+  };
+
+  if (useOldStyle) {
+    return (
+      <div className="w-full">
+        {label && (
+          <label htmlFor={selectId} className="font-bold flex items-center gap-2 mb-2">
+            <span className="uppercase">
+              {required ? '*' : ''}
+              {label}
+            </span>
+          </label>
+        )}
+        <div className={wrapperClass}>
+          <Select value={value} onValueChange={onChange} disabled={disabled}>
+            <SelectTrigger
+              id={selectId}
+              name={name}
+              className={`
+                bg-input-bg py-4 pl-5 pr-5 font-medium border border-steel-850 h-[60px] 
+                focus:ring-0 focus:ring-offset-0 w-full
+                disabled:opacity-50 disabled:cursor-not-allowed
+                ${className}
+              `}
+            >
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent className="bg-input-bg border border-steel-850 max-h-[300px]">
+              {options.map(option => (
+                <SelectItem
+                  key={option.id || option.value}
+                  className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
+                  value={option.id || option.value}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error && <p className="text-red-600 mt-1 text-sm">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {label ? (
-        <label htmlFor={selectId} className="font-bold flex items-center gap-2">
+    <div className="w-full">
+      {label && (
+        <label htmlFor={selectId} className="font-bold flex items-center gap-2 mb-2">
           <span className="uppercase">
             {required ? '*' : ''}
             {label}
           </span>
         </label>
-      ) : null}
-      <div className="mt-4">
-        <Select value={value} onValueChange={onChange}>
-          <SelectTrigger
+      )}
+
+      <div className={wrapperClass}>
+        <div ref={dropdownRef} className="relative w-full">
+          <button
             id={selectId}
             name={name}
+            type="button"
+            disabled={disabled}
             className={`
-              bg-input-bg py-4 pl-5 pr-5 font-medium border border-steel-850 h-[60px] 
-              focus:ring-0 focus:ring-offset-0
+              flex items-center justify-between w-full bg-steel-850 text-white/60 px-4 py-4 rounded-lg transition-colors border border-steel-750 h-[60px]
+              ${!disabled ? 'hover:bg-steel-850/70 cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+              ${isOpen ? 'border-white/20' : ''}
               ${className}
             `}
+            onClick={toggleDropdown}
           >
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent className="bg-input-bg border border-steel-850">
-            {options.map(option => (
-              <SelectItem
-                key={option.id || option.value}
-                className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
-                value={option.id || option.value}
-              >
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {error && <p className="text-red-600 mt-1">{error}</p>}
+            <span className={`flex-1 text-left truncate mr-2`}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            <ChevronDown
+              className={`h-5 w-5 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {isOpen && !disabled && (
+            <div className="absolute left-0 z-50 mt-1 w-full rounded-lg bg-steel-850 shadow-xl border border-steel-750 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
+              {showSearch && (
+                <div className="p-2 border-b border-steel-750" onClick={e => e.stopPropagation()}>
+                  <LavaSearchInput
+                    placeholder={searchPlaceholder}
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    className="!h-9 bg-steel-900/50 !border-steel-750 focus:!border-white/20 text-sm"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              <div className="overflow-y-auto max-h-60 scrollbar-thin scrollbar-thumb-steel-700 scrollbar-track-transparent">
+                {filteredOptions.length === 0 ? (
+                  <div className="px-4 py-3 text-center text-white/40 text-sm">No options found</div>
+                ) : (
+                  filteredOptions.map(option => {
+                    const optionValue = option.id || option.value;
+                    const isSelected = value === optionValue;
+                    return (
+                      <button
+                        key={optionValue}
+                        type="button"
+                        className={`
+                          w-full px-4 py-2.5 text-left flex items-center gap-3 transition-colors text-sm
+                          ${isSelected ? 'bg-white/10' : 'hover:bg-white/5'}
+                        `}
+                        onClick={() => handleOptionClick(optionValue)}
+                      >
+                        <div
+                          className={`
+                            w-5 h-5 flex-shrink-0 flex items-center justify-center border rounded transition-colors
+                            ${isSelected ? 'border-white bg-white' : 'border-steel-600 bg-transparent'}
+                          `}
+                        >
+                          {isSelected && <Check size={14} strokeWidth={4} className="text-steel-900" />}
+                        </div>
+                        <span
+                          className={`flex-1 truncate ${isSelected ? 'text-white font-medium' : 'text-white/70'}`}
+                          title={option.label}
+                        >
+                          {option.label}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        {error && <p className="text-red-600 mt-1 text-sm">{error}</p>}
       </div>
-    </>
+    </div>
   );
 };
 
@@ -171,10 +302,10 @@ export const LavaMultiSelect = ({
   const selectedOptions = options.filter(option => value.includes(option.value));
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className="relative w-full">
       <button
         className={`
-          flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto border border-steel-750
+          flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full border border-steel-750
           ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           ${className}
         `}

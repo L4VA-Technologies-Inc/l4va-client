@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3, Users } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3 } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -209,7 +209,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           !allAssetsAtMaxCapacity,
         disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
       },
-      Token: {
+      Tokens: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
         available:
@@ -322,17 +322,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 Total views
               </div>
             </div>
-            {vault.vaultMembersCount && (
-              <div className="group relative">
-                <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
-                  <Users className="w-4 h-4 text-orange-500" />
-                  <span>{vault.vaultMembersCount}</span>
-                </span>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  {vault.vaultMembersCount === 1 ? 'Member' : 'Members'}
-                </div>
-              </div>
-            )}
             <div className="group relative">
               <button
                 onClick={handleCopyVaultAddress}
@@ -476,13 +465,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             />
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
-          {deferredReady ? (
-            <Suspense fallback={<ContributionSkeleton />}>
-              <VaultContribution vault={vault} />
-            </Suspense>
-          ) : (
-            <ContributionSkeleton />
-          )}
+          {vault.vaultStatus !== 'locked' ? (
+            deferredReady ? (
+              <Suspense fallback={<ContributionSkeleton />}>
+                <VaultContribution vault={vault} />
+              </Suspense>
+            ) : (
+              <ContributionSkeleton />
+            )
+          ) : null}
           <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay

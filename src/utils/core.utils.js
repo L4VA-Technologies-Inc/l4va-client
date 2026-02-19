@@ -111,9 +111,9 @@ export const formatAmount = amount => {
 };
 
 export const formatNumber = value => {
-  if (!value) return '-';
+  if (!value) return 0;
   const numValue = typeof value === 'number' ? value : parseFloat(value);
-  if (isNaN(numValue)) return '-';
+  if (isNaN(numValue)) return 0;
   if (numValue >= 1e12) {
     const divided = numValue / 1e12;
     return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}T`;

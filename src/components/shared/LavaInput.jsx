@@ -310,7 +310,7 @@ export const LavaSearchInput = ({
               lava-input
               bg-input-bg h-10 px-4 py-2.5 rounded-lg
               pr-12 font-medium w-full border border-steel-850
-              focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
+              focus:outline-none focus:ring-[1px] focus:ring-steel-750 transition-all duration-200
               ${className}
             `}
         maxLength={maxLength}
