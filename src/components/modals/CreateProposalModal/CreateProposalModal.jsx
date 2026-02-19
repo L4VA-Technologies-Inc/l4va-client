@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
@@ -15,7 +15,11 @@ import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
-import { MIN_TIME_FOR_VOTING, MAX_TIME_FOR_VOTING } from '@/components/vaults/constants/vaults.constants.js';
+import {
+  MIN_TIME_FOR_VOTING,
+  MAX_TIME_FOR_VOTING,
+  VAULT_STATUSES,
+} from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
@@ -46,6 +50,34 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const createProposalMutation = useCreateProposal();
 
   const { refetch } = useGovernanceProposals(vault.id);
+
+  // Filter execution options based on vault status
+  // During expansion, only Distribution is allowed (doesn't extract from vault)
+  const availableExecutionOptions = useMemo(() => {
+    const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+
+    if (isExpansion) {
+      return executionOptions.map(option => {
+        if (option.value === 'distribution') {
+          return option;
+        }
+        return {
+          ...option,
+          disabled: true,
+          label: option.label + ' (Not available during expansion)',
+        };
+      });
+    }
+
+    return executionOptions;
+  }, [vault.vaultStatus]);
+
+  // Set default option based on vault status
+  useState(() => {
+    if (vault.vaultStatus === VAULT_STATUSES.EXPANSION && selectedOption !== 'distribution') {
+      setSelectedOption('distribution');
+    }
+  });
 
   const handleCreateProposal = () => {
     // Validate voting duration constraints
@@ -249,11 +281,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             />
             <h3 className="text-lg font-medium">Execution Options</h3>
             <LavaSteelSelect
-              options={executionOptions}
+              options={availableExecutionOptions}
               placeholder="Select execution type"
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {vault.vaultStatus === VAULT_STATUSES.EXPANSION && (
+              <p className="text-sm text-yellow-500">
+                During expansion, only Distribution proposals are allowed. Other proposal types require asset extraction
+                from the vault.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">

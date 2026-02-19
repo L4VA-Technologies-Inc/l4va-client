@@ -18,7 +18,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
 
-export const ContributeModal = ({ vault, onClose, isOpen }) => {
+export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const { currencySymbol, isAda } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
@@ -27,6 +27,9 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
+
+  // Detect expansion mode from vault status or isExpansion prop
+  const isExpansionMode = isExpansion || vault.vaultStatus === 'expansion';
 
   const wallet = useWallet(
     'handler',
@@ -40,6 +43,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
+    // For expansion mode, use the expansion policy IDs from whitelist
+    if (isExpansionMode && vault?.expansionWhitelist) {
+      return vault.expansionWhitelist.map(item => item.policyId);
+    }
+
+    // For regular contribution mode
     if (!assetsWhitelist?.length) return [];
 
     const contributedAssets = vaultAssetsData?.data?.items || [];
@@ -49,7 +58,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       .map(status => status.policyId);
 
     return availablePolicyIds;
-  }, [assetsWhitelist, vaultAssetsData]);
+  }, [isExpansionMode, vault?.expansionWhitelist, assetsWhitelist, vaultAssetsData]);
 
   const {
     assets: walletAssets,
@@ -229,8 +238,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
                 selectedNFTs.length === 0 ||
                 status !== 'idle' ||
                 wallet.isUpdatingUtxos ||
-                new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-                  Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                (isExpansionMode
+                  ? vault.expansionPhaseStart &&
+                    new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration <
+                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                  : new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
+                    Date.now() + BUTTON_DISABLE_THRESHOLD_MS)
               }
               onClick={handleContribute}
               size="sm"
@@ -292,8 +305,16 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         />
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-medium">Contribution Summary</h2>
-            <HoverHelp hint="Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information." />
+            <h2 className="text-xl font-medium">
+              {isExpansionMode ? 'Expansion Contribution Summary' : 'Contribution Summary'}
+            </h2>
+            <HoverHelp
+              hint={
+                isExpansionMode
+                  ? 'You will receive VT tokens for your expansion contribution based on the governance-approved pricing method. VT tokens will be claimable after the expansion phase completes.'
+                  : 'Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information.'
+              }
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
@@ -312,20 +333,22 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />
+            {!isExpansionMode && <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* 
                 Estimated Vault Token received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
             */}
-            <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />
+            {!isExpansionMode && <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />}
 
             {/* 
                 Estimated amount received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
+            {!isExpansionMode && (
+              <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
+            )}
           </div>
         </div>
       </div>

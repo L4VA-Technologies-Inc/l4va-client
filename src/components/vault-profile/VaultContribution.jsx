@@ -240,22 +240,38 @@ export const VaultContribution = ({ vault }) => {
         ) : isExpansion ? (
           <div className="w-full">
             <h2 className="font-medium mb-2">Expansion Phase:</h2>
-            <div className="text-sm text-dark-100 mb-2">
-              The vault is accepting new contributions from whitelisted collections.
-            </div>
+            {vault.expansionWhitelist && vault.expansionWhitelist.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-dark-100 mb-1">Whitelisted Collections:</div>
+                <div className="flex flex-wrap gap-2">
+                  {vault.expansionWhitelist.map((collection, index) => (
+                    <div
+                      key={collection.policyId || index}
+                      className="px-2 py-1 bg-steel-850 border border-steel-750 rounded text-xs"
+                      title={collection.policyId}
+                    >
+                      <span className="text-dark-100">
+                        {collection.collectionName ||
+                          `${collection.policyId.substring(0, 6)}...${collection.policyId.substring(collection.policyId.length - 6)}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {vault.expansionAssetMax && vault.expansionAssetMax > 0 ? (
               <>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-dark-100">Assets:</span>
                   <span className="text-dark-100">
-                    {vault.expansionCurrentAssetCount || 0} / {vault.expansionAssetMax}
+                    {vault.expansionAssetsCount || 0} / {vault.expansionAssetMax}
                   </span>
                 </div>
                 <LavaProgressBar
                   className="h-2 rounded-full bg-steel-750 mb-2"
                   segments={[
                     {
-                      progress: calculateProgress(vault.expansionCurrentAssetCount || 0, vault.expansionAssetMax),
+                      progress: calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax),
                       className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
                     },
                   ]}
