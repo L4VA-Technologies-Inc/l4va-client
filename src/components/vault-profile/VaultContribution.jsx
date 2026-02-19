@@ -43,6 +43,7 @@ export const VaultContribution = ({ vault }) => {
   const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
   const isLocked = vault.vaultStatus === VAULT_STATUSES.LOCKED;
+  const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
 
   const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);
   const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
@@ -235,6 +236,36 @@ export const VaultContribution = ({ vault }) => {
                   : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
               </span>
             </div>
+          </div>
+        ) : isExpansion ? (
+          <div className="w-full">
+            <h2 className="font-medium mb-2">Expansion Phase:</h2>
+            <div className="text-sm text-dark-100 mb-2">
+              The vault is accepting new contributions from whitelisted collections.
+            </div>
+            {vault.expansionAssetMax && vault.expansionAssetMax > 0 ? (
+              <>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-dark-100">Assets:</span>
+                  <span className="text-dark-100">
+                    {vault.expansionCurrentAssetCount || 0} / {vault.expansionAssetMax}
+                  </span>
+                </div>
+                <LavaProgressBar
+                  className="h-2 rounded-full bg-steel-750 mb-2"
+                  segments={[
+                    {
+                      progress: calculateProgress(vault.expansionCurrentAssetCount || 0, vault.expansionAssetMax),
+                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                    },
+                  ]}
+                />
+              </>
+            ) : (
+              <div className="text-sm text-dark-100 mb-2">
+                No asset limit - contributions accepted until expansion duration expires
+              </div>
+            )}
           </div>
         ) : null}
       </div>

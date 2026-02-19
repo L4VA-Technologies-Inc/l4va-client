@@ -296,6 +296,67 @@ export const ProposalInfo = ({ proposalId }) => {
           ? [executionOptions, { label: 'Actions', value: marketplaceActionsInfo, type: 'marketplace_actions_list' }]
           : [];
 
+      case 'expansion': {
+        const expansionItems = [executionOptions];
+        const expansionConfig = proposalInfo?.metadata?.expansion;
+
+        if (expansionConfig) {
+          // Whitelisted Collections - show as expandable list
+          if (expansionConfig.policyIds && expansionConfig.policyIds.length > 0) {
+            expansionItems.push({
+              label: 'Whitelisted Collections',
+              value: expansionConfig.policyIds,
+              type: 'expansion_policy_list',
+            });
+          }
+
+          // Duration
+          if (expansionConfig.noLimit) {
+            expansionItems.push({
+              label: 'Duration',
+              value: 'No time limit',
+            });
+          } else if (expansionConfig.duration) {
+            const days = Math.floor(expansionConfig.duration / (24 * 60 * 60 * 1000));
+            const hours = Math.floor((expansionConfig.duration % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            expansionItems.push({
+              label: 'Duration',
+              value: days > 0 ? `${days} day${days > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`,
+            });
+          }
+
+          // Asset Max / Progress
+          if (expansionConfig.noMax) {
+            expansionItems.push({
+              label: 'Asset Limit',
+              value: 'No limit',
+            });
+          } else if (expansionConfig.assetMax) {
+            const currentCount = expansionConfig.currentAssetCount || 0;
+            const progressPercent = (currentCount / expansionConfig.assetMax) * 100;
+            expansionItems.push({
+              label: 'Asset Limit',
+              value: `${currentCount} / ${expansionConfig.assetMax} assets (${progressPercent.toFixed(1)}%)`,
+            });
+          }
+
+          // Pricing Method
+          if (expansionConfig.priceType === 'limit' && expansionConfig.limitPrice) {
+            expansionItems.push({
+              label: 'Pricing Method',
+              value: `Fixed: ${expansionConfig.limitPrice} ADA per VT`,
+            });
+          } else if (expansionConfig.priceType === 'market') {
+            expansionItems.push({
+              label: 'Pricing Method',
+              value: 'Market (current VT price)',
+            });
+          }
+        }
+
+        return expansionItems;
+      }
+
       default:
         return [];
     }
@@ -449,6 +510,24 @@ export const ProposalInfo = ({ proposalId }) => {
 
                       if (item.type === 'non_fungible_tokens_list') {
                         return <AssetsList key={index} assets={item.value} title="Non Fungible Tokens" />;
+                      }
+
+                      if (item.type === 'expansion_policy_list') {
+                        return (
+                          <div key={index} className="space-y-2">
+                            <h3 className="text-sm font-medium text-gray-400">{item.label}</h3>
+                            <div className="bg-steel-900 rounded-lg p-4 space-y-2">
+                              {item.value.map((policyId, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between p-2 bg-steel-850 rounded hover:bg-steel-800 transition-colors"
+                                >
+                                  <span className="text-sm font-mono text-gray-300 break-all">{policyId}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;

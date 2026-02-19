@@ -402,6 +402,13 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Create Proposal',
     isCountdownActive: false,
   },
+  expansion: {
+    countdownName: 'Expansion ends in:',
+    getCountdownTime: vault =>
+      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    buttonText: 'Contribute',
+    isCountdownActive: true,
+  },
   created: {
     countdownName: 'Contribution starts in:',
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),

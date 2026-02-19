@@ -15,7 +15,7 @@ import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
-import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
+import { MIN_TIME_FOR_VOTING, MAX_TIME_FOR_VOTING } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
@@ -48,6 +48,18 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const { refetch } = useGovernanceProposals(vault.id);
 
   const handleCreateProposal = () => {
+    // Validate voting duration constraints
+    if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
+      const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
+      const maxDays = MAX_TIME_FOR_VOTING / (1000 * 60 * 60 * 24);
+      toast.error(
+        `Voting duration must be between ${minHours} hours and ${maxDays} days. Please adjust the voting period.`,
+        { duration: 5000 }
+      );
+      setError(true);
+      return;
+    }
+
     if (!isValidProposal()) {
       setError(false);
       setShowConfirmation(true);
@@ -289,7 +301,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                     value={proposalDuration}
                     onChange={value => setProposalDuration(value)}
                     placeholder="Set Voting Period"
-                    minMs={MIN_CONTRIBUTION_DURATION_MS}
+                    minMs={MIN_TIME_FOR_VOTING}
+                    maxMs={MAX_TIME_FOR_VOTING}
                     error={error && !proposalDuration}
                   />
                 </div>
