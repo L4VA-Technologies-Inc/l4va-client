@@ -344,7 +344,7 @@ export const ProposalInfo = ({ proposalId }) => {
           if (expansionConfig.priceType === 'limit' && expansionConfig.limitPrice) {
             expansionItems.push({
               label: 'Pricing Method',
-              value: `Fixed: ${expansionConfig.limitPrice} ADA per VT`,
+              value: `Fixed: ${expansionConfig.limitPrice} VT per asset`,
             });
           } else if (expansionConfig.priceType === 'market') {
             expansionItems.push({

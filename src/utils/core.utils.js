@@ -453,5 +453,9 @@ export const getCountdownTime = vault => {
     return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
   }
 
+  if (status === 'expansion' && vault.expansionNoLimit && vault.expansionAssetMax) {
+    return `Asset Limit`;
+  }
+
   return VAULT_STATUS_CONFIG[status].getCountdownTime(vault);
 };

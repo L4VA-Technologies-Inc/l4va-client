@@ -80,7 +80,12 @@ export default function Expansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">Expansion Duration*</label>
-            <LavaCheckbox checked={noLimit} onChange={e => setNoLimit(e.target.checked)} description="No Limit" />
+            <LavaCheckbox
+              name="expansionNoLimit"
+              checked={noLimit}
+              onChange={e => setNoLimit(e.target.checked)}
+              description="No Limit"
+            />
           </div>
           {!noLimit ? (
             <>
@@ -105,7 +110,12 @@ export default function Expansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">Maximum Assets*</label>
-            <LavaCheckbox checked={noMax} onChange={e => setNoMax(e.target.checked)} description="No Max" />
+            <LavaCheckbox
+              name="expansionNoMax"
+              checked={noMax}
+              onChange={e => setNoMax(e.target.checked)}
+              description="No Max"
+            />
           </div>
           {!noMax ? (
             <>

@@ -113,16 +113,18 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     const decimalMultiplier = Math.pow(10, decimals);
 
     if (vault.expansionPriceType === 'limit') {
-      // Limit price: VT amount = Asset Value (ADA) / Limit Price (ADA per VT)
+      // Limit price: expansionLimitPrice is VT per asset; total VT = VT per asset * number of assets
       if (!vault.expansionLimitPrice || vault.expansionLimitPrice === 0) return 0;
-      return (assetValueAda / vault.expansionLimitPrice) * decimalMultiplier;
+      const assetCount = selectedNFTs.length;
+      if (assetCount === 0) return 0;
+      return vault.expansionLimitPrice * assetCount * decimalMultiplier;
     } else {
       // Market price: VT amount = Asset Value (ADA) / Current VT Price (ADA per VT)
       const currentVtPrice = vault.vtPrice;
       if (!currentVtPrice || currentVtPrice === 0) return 0;
       return (assetValueAda / currentVtPrice) * decimalMultiplier;
     }
-  }, [isExpansionMode, hasSelectedAssets, estimatedValue, isAda, vault]);
+  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, isAda, estimatedValue, vault]);
 
   const expansionVTValue = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets) return 0;
@@ -404,7 +406,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             {/* Expansion mode: show current value of VT tokens */}
             {isExpansionMode && (
               <MetricCard
-                label={`Current Value of VT to Receive`}
+                label={`Current Value of Vault Token to Receive`}
                 value={`${currencySymbol}${expansionVTValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               />
             )}
