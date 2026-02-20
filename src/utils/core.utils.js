@@ -94,6 +94,40 @@ export const formatAdaPrice = value => {
   return `0.0${subscript}${significantDigits}`;
 };
 
+// Format large numeric values with K/M/B/T suffixes
+export const formatLargeNumber = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  if (numValue >= 1e12) return `${(numValue / 1e12).toFixed(2)}T`;
+  if (numValue >= 1e9) return `${(numValue / 1e9).toFixed(2)}B`;
+  if (numValue >= 1e6) return `${(numValue / 1e6).toFixed(2)}M`;
+  if (numValue >= 1e3) return `${(numValue / 1e3).toFixed(2)}K`;
+  return numValue.toFixed(2);
+};
+
+// Format USD currency values
+export const formatUsdCurrency = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(numValue);
+};
+
+// Format percentage with +/- sign
+export const formatPercentage = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  const sign = numValue >= 0 ? '+' : '';
+  return `${sign}${numValue.toFixed(2)}%`;
+};
+
 export const formatCompactNumber = num => {
   if (!num) return 0;
   const formatter = Intl.NumberFormat('en', { notation: 'compact' });

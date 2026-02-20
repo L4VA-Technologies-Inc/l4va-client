@@ -92,13 +92,15 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getVaultTokenStatistics(vaultId) {
-    return await axiosInstance.get(VaultsConfigProvider.getVaultTokenStatistics(vaultId));
-  }
-
   static async getMarketStatistics(params = {}) {
     return await axiosInstance.get(VaultsConfigProvider.getMarketStatistics(), {
       params,
+    });
+  }
+
+  static async getMarketByIdWithOHLCV(id, interval = '1h') {
+    return await axiosInstance.get(VaultsConfigProvider.getMarketByIdWithOHLCV(id), {
+      params: { interval },
     });
   }
 
