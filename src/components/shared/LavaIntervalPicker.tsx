@@ -68,7 +68,9 @@ export const LavaIntervalPicker = ({
   const minInterval = minMs > 0 ? msToInterval(minMs) : { days: minDays, hours: 0, minutes: 0 };
   const maxInterval = maxMs > 0 ? msToInterval(maxMs) : { days: 30, hours: 23, minutes: 55 };
 
-  const days = Array.from({ length: maxInterval.days - minInterval.days + 1 }, (_, i) => i + minInterval.days);
+  const rawDaySpan = maxInterval.days - minInterval.days;
+  const dayCount = Math.max(1, rawDaySpan + 1);
+  const days = Array.from({ length: dayCount }, (_, i) => i + minInterval.days);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
   const isValidSelection = (newInterval: { days: number; hours: number; minutes: number }) => {
