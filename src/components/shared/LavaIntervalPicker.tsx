@@ -34,6 +34,7 @@ type LavaIntervalPickerProps = {
   variant?: 'default' | 'steel';
   minDays?: number;
   minMs?: number;
+  maxMs?: number;
   error?: boolean;
   id?: string;
   margin?: number;
@@ -47,6 +48,7 @@ export const LavaIntervalPicker = ({
   value = 0,
   minDays = 0,
   minMs = 0,
+  maxMs = 0,
   placeholder = 'Select interval',
   variant = 'default',
   required = false,
@@ -64,14 +66,18 @@ export const LavaIntervalPicker = ({
   }, [value]);
 
   const minInterval = minMs > 0 ? msToInterval(minMs) : { days: minDays, hours: 0, minutes: 0 };
+  const maxInterval = maxMs > 0 ? msToInterval(maxMs) : { days: 30, hours: 23, minutes: 55 };
 
-  const days = Array.from({ length: 31 - minInterval.days }, (_, i) => i + minInterval.days);
+  const rawDaySpan = maxInterval.days - minInterval.days;
+  const dayCount = Math.max(1, rawDaySpan + 1);
+  const days = Array.from({ length: dayCount }, (_, i) => i + minInterval.days);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
   const isValidSelection = (newInterval: { days: number; hours: number; minutes: number }) => {
     const totalMs = intervalToMs(newInterval);
     const minTotalMs = minMs > 0 ? minMs : intervalToMs(minInterval);
-    return totalMs >= minTotalMs;
+    const maxTotalMs = maxMs > 0 ? maxMs : intervalToMs(maxInterval);
+    return totalMs >= minTotalMs && totalMs <= maxTotalMs;
   };
 
   const handleIntervalChange = (type: keyof typeof interval, val: string) => {

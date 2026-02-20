@@ -18,7 +18,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
 
-export const ContributeModal = ({ vault, onClose, isOpen }) => {
+export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const { currencySymbol, isAda } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
@@ -27,6 +27,9 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const selectedNFTsCount = useMemo(() => selectedNFTs.filter(asset => !asset.isFungibleToken).length, [selectedNFTs]);
   const selectedFTsCount = useMemo(() => selectedNFTs.filter(asset => asset.isFungibleToken).length, [selectedNFTs]);
+
+  // Detect expansion mode from vault status or isExpansion prop
+  const isExpansionMode = isExpansion || vault.vaultStatus === 'expansion';
 
   const wallet = useWallet(
     'handler',
@@ -40,6 +43,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
+    // For expansion mode, use the expansion policy IDs from whitelist
+    if (isExpansionMode && vault?.expansionWhitelist) {
+      return vault.expansionWhitelist.map(item => item.policyId);
+    }
+
+    // For regular contribution mode
     if (!assetsWhitelist?.length) return [];
 
     const contributedAssets = vaultAssetsData?.data?.items || [];
@@ -49,7 +58,7 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
       .map(status => status.policyId);
 
     return availablePolicyIds;
-  }, [assetsWhitelist, vaultAssetsData]);
+  }, [isExpansionMode, vault?.expansionWhitelist, assetsWhitelist, vaultAssetsData]);
 
   const {
     assets: walletAssets,
@@ -94,6 +103,44 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
 
   // Only show estimates if assets are selected
   const hasSelectedAssets = selectedNFTs.length > 0 && estimatedValue > 0;
+
+  // Expansion mode calculations
+  const expansionVTAmount = useMemo(() => {
+    if (!isExpansionMode || !hasSelectedAssets) return 0;
+
+    const assetValueAda = isAda ? estimatedValue : estimatedValue / (vault.adaPrice || 1);
+    const decimals = vault.ftTokenDecimals ?? 6;
+    const decimalMultiplier = Math.pow(10, decimals);
+
+    if (vault.expansionPriceType === 'limit') {
+      // Limit price: expansionLimitPrice is VT per asset; total VT = VT per asset * number of assets
+      if (!vault.expansionLimitPrice || vault.expansionLimitPrice === 0) return 0;
+      const assetCount = selectedNFTs.length;
+      if (assetCount === 0) return 0;
+      return vault.expansionLimitPrice * assetCount * decimalMultiplier;
+    } else {
+      // Market price: VT amount = Asset Value (ADA) / Current VT Price (ADA per VT)
+      const currentVtPrice = vault.vtPrice;
+      if (!currentVtPrice || currentVtPrice === 0) return 0;
+      return (assetValueAda / currentVtPrice) * decimalMultiplier;
+    }
+  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, isAda, estimatedValue, vault]);
+
+  const expansionVTValue = useMemo(() => {
+    if (!isExpansionMode || !hasSelectedAssets) return 0;
+
+    const decimals = vault.ftTokenDecimals ?? 6;
+    const decimalMultiplier = Math.pow(10, decimals);
+    const vtCount = expansionVTAmount / decimalMultiplier;
+    const vtPriceInCurrency = isAda ? vault.vtPrice : vault.vtPrice * (vault.adaPrice || 1);
+
+    return vtCount * vtPriceInCurrency;
+  }, [isExpansionMode, hasSelectedAssets, expansionVTAmount, isAda, vault]);
+
+  const expansionValueDifference = useMemo(() => {
+    if (!isExpansionMode || !hasSelectedAssets || estimatedValue === 0) return 0;
+    return ((expansionVTValue - estimatedValue) / estimatedValue) * 100;
+  }, [isExpansionMode, hasSelectedAssets, expansionVTValue, estimatedValue]);
 
   // Get current vault TVL (what contributors have already contributed)
   const currentVaultTVL = isAda
@@ -229,8 +276,12 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
                 selectedNFTs.length === 0 ||
                 status !== 'idle' ||
                 wallet.isUpdatingUtxos ||
-                new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-                  Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                (isExpansionMode
+                  ? vault.expansionPhaseStart &&
+                    new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration <
+                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                  : new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
+                    Date.now() + BUTTON_DISABLE_THRESHOLD_MS)
               }
               onClick={handleContribute}
               size="sm"
@@ -292,13 +343,21 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
         />
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-medium">Contribution Summary</h2>
-            <HoverHelp hint="Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information." />
+            <h2 className="text-xl font-medium">
+              {isExpansionMode ? 'Expansion Contribution Summary' : 'Contribution Summary'}
+            </h2>
+            <HoverHelp
+              hint={
+                isExpansionMode
+                  ? 'You will receive VT tokens for your expansion contribution based on the governance-approved pricing method. VT tokens will be claimable after the expansion phase completes.'
+                  : 'Data are estimates based on the total assets contributed until now (including this transaction). Final Vault allocation and total number of vault tokens awarded will not be finalized until vault successfully locks. See L4VA docs for more information.'
+              }
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
             <MetricCard
-              label="Estimated Value"
+              label={isExpansionMode ? 'Estimated Asset(s) Value' : 'Estimated Value'}
               value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             />
             {/* Show protocol fee only if it's greater than 0 */}
@@ -312,21 +371,69 @@ export const ContributeModal = ({ vault, onClose, isOpen }) => {
                 Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />
+            {!isExpansionMode && <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {/* 
                 Estimated Vault Token received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
             */}
-            <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />
+            {!isExpansionMode && <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />}
+
+            {/* Expansion mode: show VT tokens to receive */}
+            {isExpansionMode && (
+              <MetricCard
+                label="Vault Token to Receive"
+                value={
+                  hasSelectedAssets
+                    ? (expansionVTAmount / Math.pow(10, vault.ftTokenDecimals ?? 6)).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : '0.00'
+                }
+              />
+            )}
 
             {/* 
                 Estimated amount received, based on assets contributed to date and current floor prices.
                 Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
              */}
-            <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
+            {!isExpansionMode && (
+              <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
+            )}
+
+            {/* Expansion mode: show current value of VT tokens */}
+            {isExpansionMode && (
+              <MetricCard
+                label={`Current Value of Vault Token to Receive`}
+                value={`${currencySymbol}${expansionVTValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              />
+            )}
           </div>
+
+          {/* Expansion mode: show gain/loss percentage */}
+          {isExpansionMode && hasSelectedAssets && (
+            <div className="p-4 bg-steel-850 rounded-lg border border-steel-750">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Value Difference</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-lg font-semibold ${expansionValueDifference >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                  >
+                    {expansionValueDifference >= 0 ? '+' : ''}
+                    {expansionValueDifference.toFixed(2)}%
+                  </span>
+                  <span className="text-xs text-gray-500">({expansionValueDifference >= 0 ? 'Gain' : 'Loss'})</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {expansionValueDifference >= 0
+                  ? 'You will receive VT tokens worth more than your contributed assets at current market price'
+                  : 'You will receive VT tokens worth less than your contributed assets at current market price'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </ModalWrapper>

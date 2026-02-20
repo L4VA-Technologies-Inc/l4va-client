@@ -436,6 +436,13 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Create Proposal',
     isCountdownActive: false,
   },
+  expansion: {
+    countdownName: 'Expansion ends in:',
+    getCountdownTime: vault =>
+      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    buttonText: 'Contribute',
+    isCountdownActive: true,
+  },
   created: {
     countdownName: 'Contribution starts in:',
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
@@ -478,6 +485,10 @@ export const getCountdownTime = vault => {
     (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
   ) {
     return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+  }
+
+  if (status === 'expansion' && vault.expansionNoLimit && vault.expansionAssetMax) {
+    return `Asset Limit`;
   }
 
   return VAULT_STATUS_CONFIG[status].getCountdownTime(vault);

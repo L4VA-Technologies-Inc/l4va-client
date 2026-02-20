@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
@@ -12,15 +12,21 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
+import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
-import { MIN_CONTRIBUTION_DURATION_MS } from '@/components/vaults/constants/vaults.constants.js';
+import {
+  MIN_TIME_FOR_VOTING,
+  MAX_TIME_FOR_VOTING,
+  VAULT_STATUSES,
+} from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'distribution', label: 'Distribution' },
+  { value: 'expansion', label: 'Vault Expansion' },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination' },
   { value: 'burning', label: 'Burn' },
@@ -45,7 +51,47 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const { refetch } = useGovernanceProposals(vault.id);
 
+  // Filter execution options based on vault status
+  // During expansion, only Distribution is allowed (doesn't extract from vault)
+  const availableExecutionOptions = useMemo(() => {
+    const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+
+    if (isExpansion) {
+      return executionOptions.map(option => {
+        if (option.value === 'distribution') {
+          return option;
+        }
+        return {
+          ...option,
+          disabled: true,
+          label: option.label + ' (Not available during expansion)',
+        };
+      });
+    }
+
+    return executionOptions;
+  }, [vault.vaultStatus]);
+
+  // Set default option based on vault status
+  useState(() => {
+    if (vault.vaultStatus === VAULT_STATUSES.EXPANSION && selectedOption !== 'distribution') {
+      setSelectedOption('distribution');
+    }
+  });
+
   const handleCreateProposal = () => {
+    // Validate voting duration constraints
+    if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
+      const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
+      const maxDays = MAX_TIME_FOR_VOTING / (1000 * 60 * 60 * 24);
+      toast.error(
+        `Voting duration must be between ${minHours} hours and ${maxDays} days. Please adjust the voting period.`,
+        { duration: 5000 }
+      );
+      setError(true);
+      return;
+    }
+
     if (!isValidProposal()) {
       setError(false);
       setShowConfirmation(true);
@@ -79,6 +125,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+      } else if (selectedOption === 'expansion') {
+        proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        proposalPayload.expansionDuration = proposalData.expansionDuration;
+        proposalPayload.expansionNoLimit = proposalData.expansionNoLimit || false;
+        proposalPayload.expansionAssetMax = proposalData.expansionAssetMax;
+        proposalPayload.expansionNoMax = proposalData.expansionNoMax || false;
+        proposalPayload.expansionPriceType = proposalData.expansionPriceType || 'market';
+        proposalPayload.expansionLimitPrice = proposalData.expansionLimitPrice;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -227,11 +281,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             />
             <h3 className="text-lg font-medium">Execution Options</h3>
             <LavaSteelSelect
-              options={executionOptions}
+              options={availableExecutionOptions}
               placeholder="Select execution type"
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {vault.vaultStatus === VAULT_STATUSES.EXPANSION && (
+              <p className="text-sm text-yellow-500">
+                During expansion, only Distribution proposals are allowed. Other proposal types require asset extraction
+                from the vault.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -257,6 +317,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'marketplace_action' && (
               <MarketActions vaultId={vault.id} onDataChange={handleDataChange} error={error} />
             )}
+            {selectedOption === 'expansion' && (
+              <Expansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
 
             <div className="mt-8">
               <h4 className="text-lg font-medium mb-4">Voting Period</h4>
@@ -276,7 +339,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                     value={proposalDuration}
                     onChange={value => setProposalDuration(value)}
                     placeholder="Set Voting Period"
-                    minMs={MIN_CONTRIBUTION_DURATION_MS}
+                    minMs={MIN_TIME_FOR_VOTING}
+                    maxMs={MAX_TIME_FOR_VOTING}
                     error={error && !proposalDuration}
                   />
                 </div>

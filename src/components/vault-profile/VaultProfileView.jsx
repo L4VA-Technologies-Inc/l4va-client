@@ -197,17 +197,35 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets);
+    const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+
+    // Check if expansion phase is active
+    const isExpansionActive =
+      isExpansion &&
+      vault.expansionPhaseStart &&
+      new Date(vault.expansionPhaseStart).getTime() + (vault.expansionDuration || 0) >
+        Date.now() + BUTTON_DISABLE_THRESHOLD_MS;
+
+    // Check if contribution phase is active and accepting contributions
+    const contributionPhaseEndTime = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+    const isContributionPhaseActive =
+      vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
+      contributionPhaseEndTime > Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
+      !allAssetsAtMaxCapacity;
+
+    // Check if vault is in an invalid status for contributions
+    const isInvalidStatus =
+      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION && vault.vaultStatus !== VAULT_STATUSES.EXPANSION;
+
+    // Check if contribution phase is full
+    const isContributionFull = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && allAssetsAtMaxCapacity;
 
     const buttonConfig = {
       Assets: {
         text: allAssetsAtMaxCapacity ? 'Contribution Limit Reached' : 'Contribute',
-        handleClick: () => openModal('ContributeModal', { vault }),
-        available:
-          vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
-          new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
-            Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
-          !allAssetsAtMaxCapacity,
-        disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
+        handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
+        available: isContributionPhaseActive || isExpansionActive,
+        disabled: isInvalidStatus || isContributionFull,
       },
       Tokens: {
         text: 'Acquire',
@@ -219,7 +237,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       },
       Governance: {
         text: 'Create Proposal',
-        available: vault.vaultStatus === VAULT_STATUSES.LOCKED && vault.canCreateProposal,
+        available:
+          (vault.vaultStatus === VAULT_STATUSES.LOCKED || vault.vaultStatus === VAULT_STATUSES.EXPANSION) &&
+          vault.canCreateProposal,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,

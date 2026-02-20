@@ -43,6 +43,7 @@ export const VaultContribution = ({ vault }) => {
   const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
   const isLocked = vault.vaultStatus === VAULT_STATUSES.LOCKED;
+  const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
 
   const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);
   const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
@@ -235,6 +236,52 @@ export const VaultContribution = ({ vault }) => {
                   : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
               </span>
             </div>
+          </div>
+        ) : isExpansion ? (
+          <div className="w-full">
+            <h2 className="font-medium mb-2">Expansion Phase:</h2>
+            {vault.expansionWhitelist && vault.expansionWhitelist.length > 0 && (
+              <div className="mb-3">
+                <div className="text-xs text-dark-100 mb-1">Whitelisted Collections:</div>
+                <div className="flex flex-wrap gap-2">
+                  {vault.expansionWhitelist.map((collection, index) => (
+                    <div
+                      key={collection.policyId || index}
+                      className="px-2 py-1 bg-steel-850 border border-steel-750 rounded text-xs"
+                      title={collection.policyId}
+                    >
+                      <span className="text-dark-100">
+                        {collection.collectionName ||
+                          `${collection.policyId.substring(0, 6)}...${collection.policyId.substring(collection.policyId.length - 6)}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {vault.expansionAssetMax && vault.expansionAssetMax > 0 ? (
+              <>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-dark-100">Assets:</span>
+                  <span className="text-dark-100">
+                    {vault.expansionAssetsCount || 0} / {vault.expansionAssetMax}
+                  </span>
+                </div>
+                <LavaProgressBar
+                  className="h-2 rounded-full bg-steel-750 mb-2"
+                  segments={[
+                    {
+                      progress: calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax),
+                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                    },
+                  ]}
+                />
+              </>
+            ) : (
+              <div className="text-sm text-dark-100 mb-2">
+                No asset limit - contributions accepted until expansion duration expires
+              </div>
+            )}
           </div>
         ) : null}
       </div>
