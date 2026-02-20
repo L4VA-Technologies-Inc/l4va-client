@@ -8,6 +8,7 @@ const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
   { id: 'upcoming', label: 'Upcoming', filter: 'published' },
   { id: 'contribution', label: 'Contribute', filter: 'contribution' },
+  { id: 'expansion', label: 'Expansion', filter: 'expansion' },
   { id: 'acquire', label: 'Acquire', filter: 'acquire' },
   { id: 'past', label: 'Locked', filter: 'locked' },
   { id: 'govern', label: 'Govern', filter: 'govern' },
