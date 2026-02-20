@@ -8,6 +8,7 @@ import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
+import { SettingsApiProvider } from '@/services/api/settings/index.js';
 
 export const useVaults = (filters: any) => {
   return useQuery({
@@ -378,5 +379,14 @@ export const useVaultActivity = (
     queryKey: ['vault-activity', vaultId, params],
     queryFn: () => VaultsApiProvider.getVaultActivity(vaultId, params),
     enabled: !!vaultId,
+  });
+};
+
+export const useVlrmFeeSettings = () => {
+  return useQuery({
+    queryKey: ['vlrm-fee-settings'],
+    queryFn: () => SettingsApiProvider.getVlrmFeeSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 };
