@@ -34,7 +34,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
-import { usePresets, useDeletePreset } from '@/services/api/queries';
+import { usePresets, useDeletePreset, useVlrmFeeSettings } from '@/services/api/queries';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
@@ -75,6 +75,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const { data: presetsData, isLoading: isPresetsLoading } = usePresets();
   const { mutateAsync: deletePreset } = useDeletePreset();
+  const { data: vlrmFeeData } = useVlrmFeeSettings();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
 
   useEffect(() => {
@@ -467,8 +468,20 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         }
       }
 
-      if (currentBalance < MIN_VLRM_REQUIRED) {
-        toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
+      const vlrmFeeSettings = vlrmFeeData?.data || {
+        vlrm_creator_fee: 100,
+        vlrm_creator_fee_enabled: true,
+      };
+
+      const requiredVlrm = vlrmFeeSettings.vlrm_creator_fee_enabled
+        ? MIN_VLRM_REQUIRED + vlrmFeeSettings.vlrm_creator_fee
+        : MIN_VLRM_REQUIRED;
+
+      if (currentBalance < requiredVlrm) {
+        const feeMessage = vlrmFeeSettings.vlrm_creator_fee_enabled
+          ? `You need at least ${requiredVlrm} VLRM to launch a vault (${MIN_VLRM_REQUIRED} base + ${vlrmFeeSettings.vlrm_creator_fee} creator fee).`
+          : `You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`;
+        toast.error(feeMessage);
         return;
       }
 
