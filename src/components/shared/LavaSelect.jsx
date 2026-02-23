@@ -359,9 +359,19 @@ export const LavaMultiSelect = ({
                     >
                       {isSelected && <Check size={16} strokeWidth={3} className="text-steel-900" />}
                     </div>
-                    <span className="flex-1 truncate" title={option.label}>
-                      {option.label}
-                    </span>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <span className="truncate flex-1" title={option.label}>
+                        {option.label}
+                      </span>
+                      {option.secondLabel && (
+                        <span
+                          className="text-white/40 text-sm ml-auto max-w-[120px] truncate"
+                          title={option.secondLabel}
+                        >
+                          {option.secondLabel}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })
