@@ -106,7 +106,7 @@ const VaultContributedAssetsList = ({ vault }) => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <StatBadge icon={Layers} label="Total Assets" value={formatNumber(pagination?.total || 0)} />
+            <StatBadge icon={Layers} label="Total Assets" value={formatNumber(statistics?.totalAssets || 0)} />
             <StatBadge
               icon={Coins}
               label="Assets Avg"
