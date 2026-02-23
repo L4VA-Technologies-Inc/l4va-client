@@ -18,8 +18,11 @@ export default function Expansion({ onDataChange, error, vault }) {
   const whitelistedPolicies =
     vault?.assetsWhitelist?.map(w => ({
       value: w.policyId,
-      label: `${w.policyId.substring(0, 10)}...${w.policyId.substring(w.policyId.length - 8)}`,
+      label: w.collectionName || `${w.policyId.substring(0, 10)}...${w.policyId.substring(w.policyId.length - 8)}`,
+      secondLabel: w.collectionName ? w.policyId : null,
     })) || [];
+
+  const selectedPolicyValues = selectedPolicies.map(p => p.policyId || p);
 
   const priceTypeOptions = [
     { value: 'market', label: 'Market Price' },
@@ -46,6 +49,17 @@ export default function Expansion({ onDataChange, error, vault }) {
     });
   }, [selectedPolicies, duration, noLimit, assetMax, noMax, priceType, limitPrice, onDataChange]);
 
+  const handlePolicyChange = values => {
+    const policyObjects = values.map(value => {
+      const option = whitelistedPolicies.find(opt => opt.value === value);
+      return {
+        policyId: value,
+        label: option?.label || value,
+      };
+    });
+    setSelectedPolicies(policyObjects);
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -63,9 +77,9 @@ export default function Expansion({ onDataChange, error, vault }) {
           <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Collections*</label>
           <LavaMultiSelect
             options={whitelistedPolicies}
-            placeholder="Select policy IDs"
-            value={selectedPolicies}
-            onChange={value => setSelectedPolicies(Array.isArray(value) ? value : [])}
+            placeholder="Select Asset Collections"
+            value={selectedPolicyValues}
+            onChange={handlePolicyChange}
             className="min-w-full"
           />
           <p className="text-xs text-gray-400 mt-1">

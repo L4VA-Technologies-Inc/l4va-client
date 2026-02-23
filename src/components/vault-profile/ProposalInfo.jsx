@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download } from 'lucide-react';
+import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -305,7 +305,10 @@ export const ProposalInfo = ({ proposalId }) => {
           if (expansionConfig.policyIds && expansionConfig.policyIds.length > 0) {
             expansionItems.push({
               label: 'Whitelisted Collections',
-              value: expansionConfig.policyIds,
+              value: {
+                policyIds: expansionConfig.policyIds,
+                labels: expansionConfig.labels || [],
+              },
               type: 'expansion_policy_list',
             });
           }
@@ -513,18 +516,46 @@ export const ProposalInfo = ({ proposalId }) => {
                       }
 
                       if (item.type === 'expansion_policy_list') {
+                        const { policyIds, labels } = item.value;
                         return (
                           <div key={index} className="space-y-2">
                             <h3 className="text-sm font-medium text-gray-400">{item.label}</h3>
-                            <div className="bg-steel-900 rounded-lg p-4 space-y-2">
-                              {item.value.map((policyId, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between p-2 bg-steel-850 rounded hover:bg-steel-800 transition-colors"
-                                >
-                                  <span className="text-sm font-mono text-gray-300 break-all">{policyId}</span>
-                                </div>
-                              ))}
+                            <div className="bg-steel-900 rounded-lg p-4 space-y-3">
+                              {policyIds.map((policyId, idx) => {
+                                const label = labels && labels[idx] ? labels[idx] : null;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="p-3 bg-steel-850 rounded hover:bg-steel-800 transition-colors space-y-2"
+                                  >
+                                    {label && <div className="text-sm text-white font-medium">{label}</div>}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono text-gray-400 break-all flex-1">
+                                        {policyId}
+                                      </span>
+                                      <button
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          navigator.clipboard
+                                            .writeText(policyId)
+                                            .then(() => {
+                                              toast.success('Policy ID copied to clipboard');
+                                            })
+                                            .catch(err => {
+                                              console.error('Failed to copy:', err);
+                                              toast.error('Failed to copy to clipboard');
+                                            });
+                                        }}
+                                        className="p-1 hover:bg-steel-700 rounded-md transition-colors flex-shrink-0"
+                                        type="button"
+                                        title="Copy Policy ID"
+                                      >
+                                        <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         );
