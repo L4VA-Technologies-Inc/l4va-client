@@ -409,15 +409,17 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const updateField = async (fieldName, value) => {
     setVaultData(prev => ({ ...prev, [fieldName]: value }));
 
-    const advancedPreset = presets.find(
-      preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
-    );
+    if (currentStep !== 1) {
+      const advancedPreset = presets.find(
+        preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
+      );
 
-    const advancedPresetId = advancedPreset?.id ? advancedPreset.id.toString() : 'advanced';
+      const advancedPresetId = advancedPreset?.id ? advancedPreset.id.toString() : 'advanced';
 
-    if (selectedPresetId !== advancedPresetId) {
-      setSelectedPresetId(advancedPresetId);
-      isPresetManuallyChanged.current = true;
+      if (selectedPresetId !== advancedPresetId) {
+        setSelectedPresetId(advancedPresetId);
+        isPresetManuallyChanged.current = true;
+      }
     }
 
     const isValid = await validateField(fieldName, value);
