@@ -141,6 +141,8 @@ export interface IAssetsWhitelist {
   policyId: string;
   countCapMin?: number;
   countCapMax?: number;
+  valuationMethod?: 'market' | 'custom';
+  customPriceAda?: number;
   updatedAt?: string;
   createdAt?: string;
 }

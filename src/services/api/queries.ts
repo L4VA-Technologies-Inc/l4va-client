@@ -211,6 +211,7 @@ export const useWalletSummaryPaginated = ({
   filter = 'all',
   whitelistedPolicies,
   search,
+  vaultId,
 }: {
   address: string;
   page?: number;
@@ -218,11 +219,12 @@ export const useWalletSummaryPaginated = ({
   filter?: 'all' | 'nfts' | 'tokens';
   whitelistedPolicies?: string[];
   search?: string;
+  vaultId?: string;
 }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search],
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId],
     queryFn: () =>
-      TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search }),
+      TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search, vaultId }),
     enabled: !!address,
   });
 };

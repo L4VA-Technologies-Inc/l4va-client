@@ -2,7 +2,7 @@ import { TapToolsConfigProvider } from '@/services/api/taptools/config';
 import { axiosInstance } from '@/services/api';
 
 export class TapToolsApiProvider {
-  static async getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search }) {
+  static async getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search, vaultId }) {
     return await axiosInstance.post(TapToolsConfigProvider.getWalletSummaryPaginated(), {
       address,
       page,
@@ -10,6 +10,7 @@ export class TapToolsApiProvider {
       filter,
       whitelistedPolicies,
       search,
+      vaultId,
     });
   }
 }
