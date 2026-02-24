@@ -458,17 +458,21 @@ const VAULT_STATUS_CONFIG = {
 };
 
 export const getCountdownName = vault => {
-  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+  const status = vault?.vaultStatus?.toLowerCase();
 
-  if (
-    vault.acquireOpenWindowType === 'custom' &&
-    contributionEnd < Date.now() &&
-    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
-  ) {
-    return VAULT_STATUS_CONFIG['custom_acquire']?.countdownName;
+  // Only check for custom acquire window if vault is in contribution status
+  if (status === 'contribution') {
+    const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+
+    if (
+      vault.acquireOpenWindowType === 'custom' &&
+      contributionEnd < Date.now() &&
+      (!vault.acquirePhaseStart || new Date(vault.acquirePhaseStart).getTime() > Date.now())
+    ) {
+      return VAULT_STATUS_CONFIG['custom_acquire']?.countdownName;
+    }
   }
 
-  const status = vault?.vaultStatus?.toLowerCase();
   return VAULT_STATUS_CONFIG[status]?.countdownName;
 };
 
@@ -478,13 +482,17 @@ export const getCountdownTime = vault => {
   const status = vault.vaultStatus?.toLowerCase();
   if (!status || !VAULT_STATUS_CONFIG[status]) return null;
 
-  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
-  if (
-    vault.acquireOpenWindowType === 'custom' &&
-    contributionEnd < Date.now() &&
-    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
-  ) {
-    return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+  // Only check for custom acquire window if vault is in contribution status
+  if (status === 'contribution') {
+    const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+
+    if (
+      vault.acquireOpenWindowType === 'custom' &&
+      contributionEnd < Date.now() &&
+      (!vault.acquirePhaseStart || new Date(vault.acquirePhaseStart).getTime() > Date.now())
+    ) {
+      return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+    }
   }
 
   if (status === 'expansion' && vault.expansionNoLimit && vault.expansionAssetMax) {
