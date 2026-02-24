@@ -227,7 +227,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         available: isContributionPhaseActive || isExpansionActive,
         disabled: isInvalidStatus || isContributionFull,
       },
-      Tokens: {
+      Token: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
         available:

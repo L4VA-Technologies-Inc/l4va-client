@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronUp, Copy, Search, Layers, Users, Wallet } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Search, Coins, Users, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { useVaultAcquiredAssets } from '@/services/api/queries';
-import { formatNumber, substringAddress, formatAdaPrice } from '@/utils/core.utils';
+import { formatNumber, substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils';
 import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -22,10 +22,21 @@ const StatBadge = ({ icon: Icon, label, value }) => (
   </div>
 );
 
+const calculateAcquireProgress = (totalAcquiredUsd, requireReservedCostUsd) => {
+  if (totalAcquiredUsd <= 0 || !requireReservedCostUsd || requireReservedCostUsd <= 0) return 0;
+  return (totalAcquiredUsd / requireReservedCostUsd) * 100;
+};
+
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const { currencySymbol, isAda } = useCurrency();
+  const { currencySymbol, isAda, currency } = useCurrency();
   const limit = 10;
+
+  const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
+
+  const lpProgressMultiplier = Math.min(acquireProgress, 100) / 100;
+  const currentLpAdaAmount = vault.projectedLpAdaAmount * lpProgressMultiplier;
+  const currentLpUsdAmount = vault.projectedLpUsdAmount * lpProgressMultiplier;
 
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -89,8 +100,12 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <StatBadge icon={Layers} label="Total Assets" value={formatNumber(pagination?.total || 0)} />
-            <StatBadge icon={Users} label="Total Acquirers" value={formatNumber(data?.data?.totalAcquirers || 0)} />
+            <StatBadge icon={Users} label="Holders" value={formatNumber(vault.tokenHolders || 0)} />
+            <StatBadge
+              icon={Coins}
+              label="LP amount"
+              value={currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
+            />
           </div>
         </div>
 

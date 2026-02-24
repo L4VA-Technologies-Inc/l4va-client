@@ -269,6 +269,8 @@ export const LavaMultiSelect = ({
   className,
   searchPlaceholder = 'Search...',
   showSearch = true,
+  showSelectAll = false,
+  selectAllLabel = 'Select All',
   isDisabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -297,9 +299,37 @@ export const LavaMultiSelect = ({
     setSearchQuery('');
   });
 
-  const filteredOptions = options.filter(option => option.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredOptions = useMemo(() => {
+    const query = (searchQuery || '').toLowerCase();
+    return options.filter(option => (option?.label || '').toLowerCase().includes(query));
+  }, [options, searchQuery]);
 
-  const selectedOptions = options.filter(option => value.includes(option.value));
+  const selectedOptions = useMemo(() => options.filter(option => value.includes(option.value)), [options, value]);
+
+  const selectAllCandidateValues = useMemo(() => filteredOptions.map(o => o.value), [filteredOptions]);
+  const isAllSelected = useMemo(() => {
+    if (selectAllCandidateValues.length === 0) return false;
+    return selectAllCandidateValues.every(v => value.includes(v));
+  }, [selectAllCandidateValues, value]);
+  const isSomeSelected = useMemo(() => {
+    if (selectAllCandidateValues.length === 0) return false;
+    return selectAllCandidateValues.some(v => value.includes(v)) && !isAllSelected;
+  }, [selectAllCandidateValues, value, isAllSelected]);
+
+  const handleSelectAllClick = () => {
+    if (!onChange) return;
+    if (selectAllCandidateValues.length === 0) return;
+
+    if (isAllSelected) {
+      const removeSet = new Set(selectAllCandidateValues);
+      onChange(value.filter(v => !removeSet.has(v)));
+      return;
+    }
+
+    const next = new Set(value);
+    selectAllCandidateValues.forEach(v => next.add(v));
+    onChange([...next]);
+  };
 
   return (
     <div ref={dropdownRef} className="relative w-full">
@@ -345,36 +375,69 @@ export const LavaMultiSelect = ({
             {filteredOptions.length === 0 ? (
               <div className="px-4 py-3 text-center text-white/60">No assets found</div>
             ) : (
-              filteredOptions.map(option => {
-                const isSelected = value.includes(option.value);
-                return (
+              <>
+                {showSelectAll && (
                   <button
-                    key={option.value}
-                    className="w-full px-4 py-2.5 text-left hover:bg-white/5 flex items-center gap-3 transition-colors"
+                    className="w-full px-4 py-2.5 text-left hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-steel-750/70"
                     type="button"
-                    onClick={() => handleOptionClick(option.value)}
+                    onClick={handleSelectAllClick}
                   >
                     <div
-                      className={`w-5 h-5 flex items-center justify-center border ${isSelected ? 'border-white bg-white' : 'border-steel-750 bg-steel-850'} rounded`}
+                      className={`w-5 h-5 flex items-center justify-center border rounded ${
+                        isAllSelected
+                          ? 'border-white bg-white'
+                          : isSomeSelected
+                            ? 'border-white bg-white/20'
+                            : 'border-steel-750 bg-steel-850'
+                      }`}
                     >
-                      {isSelected && <Check size={16} strokeWidth={3} className="text-steel-900" />}
+                      {isAllSelected ? (
+                        <Check size={16} strokeWidth={3} className="text-steel-900" />
+                      ) : isSomeSelected ? (
+                        <div className="w-3 h-0.5 bg-white rounded-full" />
+                      ) : null}
                     </div>
                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <span className="truncate flex-1" title={option.label}>
-                        {option.label}
+                      <span className="truncate flex-1" title={selectAllLabel}>
+                        {selectAllLabel}
                       </span>
-                      {option.secondLabel && (
-                        <span
-                          className="text-white/40 text-sm ml-auto max-w-[120px] truncate"
-                          title={option.secondLabel}
-                        >
-                          {option.secondLabel}
-                        </span>
-                      )}
                     </div>
                   </button>
-                );
-              })
+                )}
+
+                {filteredOptions.map(option => {
+                  const isSelected = value.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      className="w-full px-4 py-2.5 text-left hover:bg-white/5 flex items-center gap-3 transition-colors"
+                      type="button"
+                      onClick={() => handleOptionClick(option.value)}
+                    >
+                      <div
+                        className={`w-5 h-5 flex items-center justify-center border ${
+                          isSelected ? 'border-white bg-white' : 'border-steel-750 bg-steel-850'
+                        } rounded`}
+                      >
+                        {isSelected && <Check size={16} strokeWidth={3} className="text-steel-900" />}
+                      </div>
+                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                        <span className="truncate flex-1" title={option.label}>
+                          {option.label}
+                        </span>
+                        {option.secondLabel && (
+                          <span
+                            className="text-white/40 text-sm ml-auto max-w-[120px] truncate"
+                            title={option.secondLabel}
+                          >
+                            {option.secondLabel}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </>
             )}
           </div>
         </div>
