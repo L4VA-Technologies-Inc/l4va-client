@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Copy, Search, Layers, Coins, Wallet } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Search, Layers, Coins, Wallet, HandCoins } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Pagination } from '@/components/shared/Pagination';
@@ -48,6 +48,7 @@ const VaultContributedAssetsList = ({ vault }) => {
   );
 
   const assetTypeOptions = [
+    { value: 'all', label: 'All Tokens' },
     { value: 'nft', label: 'NFTs Only' },
     { value: 'ft', label: 'FTs Only' },
   ];
@@ -106,9 +107,10 @@ const VaultContributedAssetsList = ({ vault }) => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <StatBadge icon={Layers} label="Total Assets" value={formatNumber(statistics?.totalAssets || 0)} />
+            <StatBadge icon={HandCoins} label="Total NFTs" value={formatNumber(statistics?.totalNFTAssets || 0)} />
+            <StatBadge icon={Coins} label="Total FTs" value={formatNumber(statistics?.totalFTAssets || 0)} />
             <StatBadge
-              icon={Coins}
+              icon={Layers}
               label="Assets Avg"
               value={`${currencySymbol}${formatAdaPrice(
                 isAda ? statistics?.assetsAvgAda || 0 : statistics?.assetsAvgUsd || 0
@@ -129,10 +131,14 @@ const VaultContributedAssetsList = ({ vault }) => {
 
             <LavaSelect
               options={assetTypeOptions}
-              value={appliedFilters.filter.type === undefined ? null : appliedFilters.filter.type}
+              value={
+                appliedFilters.filter.type === undefined || appliedFilters.filter.type === null
+                  ? 'all'
+                  : appliedFilters.filter.type
+              }
               onChange={val => {
-                const newValue = val === appliedFilters.filter.type ? null : val;
-                handleApplyFilters({ type: newValue === null ? undefined : newValue });
+                const newValue = val === 'all' ? undefined : val;
+                handleApplyFilters({ type: newValue });
               }}
               placeholder="Filter by Type"
               className="!h-[50px] !rounded-xl !bg-steel-900/40 !border-steel-800 !text-sm font-medium !text-steel-200"
@@ -145,6 +151,8 @@ const VaultContributedAssetsList = ({ vault }) => {
               value={appliedFilters.filter.policyId}
               onChange={val => handleApplyFilters({ policyId: val || [] })}
               placeholder="Filter by Collection"
+              showSelectAll={true}
+              selectAllLabel="All Collections"
               className="!h-[50px] !rounded-xl !bg-steel-900/40 !border-steel-800 !text-sm !text-steel-200 placeholder:!text-steel-500 font-medium"
             />
           </div>
