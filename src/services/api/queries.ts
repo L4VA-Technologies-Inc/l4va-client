@@ -319,6 +319,34 @@ export const useVoteOnProposal = () => {
   });
 };
 
+export const useGovernanceFees = () => {
+  return useQuery({
+    queryKey: ['governance-fees'],
+    queryFn: () => GovernanceApiProvider.getGovernanceFees(),
+  });
+};
+
+export const useBuildVoteFeeTransaction = () => {
+  return useMutation({
+    mutationFn: ({ proposalId, data }: { proposalId: string; data: any }) =>
+      GovernanceApiProvider.buildVoteFeeTransaction(proposalId, data),
+  });
+};
+
+export const useSubmitProposalFeePayment = () => {
+  return useMutation({
+    mutationFn: ({
+      proposalId,
+      transaction,
+      signatures,
+    }: {
+      proposalId: string;
+      transaction: string;
+      signatures: string[];
+    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, { transaction, signatures }),
+  });
+};
+
 export const useViewVault = () => {
   return useMutation({
     mutationFn: (vaultId: string) => VaultsApiProvider.viewVault(vaultId),
