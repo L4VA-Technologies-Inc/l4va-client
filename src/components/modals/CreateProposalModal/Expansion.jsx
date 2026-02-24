@@ -30,10 +30,14 @@ export default function Expansion({ onDataChange, error, vault }) {
   ];
 
   useEffect(() => {
+    // Cannot have both noLimit and noMax true - at least one limit must be set
+    const hasAtLeastOneLimit = !(noLimit && noMax);
+
     const isValid =
       selectedPolicies.length > 0 &&
       (noLimit || duration > 0) &&
       (noMax || (assetMax && parseInt(assetMax) > 0)) &&
+      hasAtLeastOneLimit &&
       priceType &&
       (priceType === 'market' || (limitPrice && parseFloat(limitPrice) > 0));
 
@@ -99,6 +103,7 @@ export default function Expansion({ onDataChange, error, vault }) {
               checked={noLimit}
               onChange={e => setNoLimit(e.target.checked)}
               description="No Limit"
+              disabled={noMax}
             />
           </div>
           {!noLimit ? (
@@ -118,6 +123,9 @@ export default function Expansion({ onDataChange, error, vault }) {
               </p>
             </div>
           )}
+          {noLimit && noMax && (
+            <p className="text-red-500 text-sm mt-2">At least one limit (Duration or Maximum Assets) must be set</p>
+          )}
         </div>
 
         {/* Asset Max */}
@@ -129,12 +137,14 @@ export default function Expansion({ onDataChange, error, vault }) {
               checked={noMax}
               onChange={e => setNoMax(e.target.checked)}
               description="No Max"
+              disabled={noLimit}
             />
           </div>
           {!noMax ? (
             <>
               <LavaSteelInput
                 type="number"
+                min="1"
                 value={assetMax}
                 onChange={setAssetMax}
                 placeholder="Enter maximum number of assets"
@@ -163,6 +173,7 @@ export default function Expansion({ onDataChange, error, vault }) {
               <LavaSteelInput
                 type="number"
                 step="0.00001"
+                min="0"
                 value={limitPrice}
                 onChange={setLimitPrice}
                 placeholder="Enter VT per asset (up to 5 decimals)"
@@ -177,17 +188,29 @@ export default function Expansion({ onDataChange, error, vault }) {
           )}
 
           {priceType === 'market' && (
-            <div className="mt-3 p-4 bg-steel-700 rounded-lg space-y-2">
-              <p className="text-sm text-gray-300">
-                <strong>Market Price Calculation:</strong>
-              </p>
-              <p className="text-sm text-gray-300">Contributors will receive VT based on fair market value:</p>
-              <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
-                VT Amount = (Asset Floor Price ₳) ÷ (VT Price ₳)
+            <div className="mt-3 space-y-2">
+              <div className="p-4 bg-steel-700 rounded-lg space-y-2">
+                <p className="text-sm text-gray-300">
+                  <strong>Market Price Calculation:</strong>
+                </p>
+                <p className="text-sm text-gray-300">Contributors will receive VT based on fair market value:</p>
+                <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
+                  VT Amount = (Asset Floor Price ₳) ÷ (VT Price ₳)
+                </div>
+                <p className="text-xs text-gray-400">
+                  This ensures contributors receive a fair value equivalent in vault tokens based on current market
+                  prices
+                </p>
               </div>
-              <p className="text-xs text-gray-400">
-                This ensures contributors receive a fair value equivalent in vault tokens based on current market prices
-              </p>
+              {!vault?.hasActiveLp && (
+                <div className="p-3 bg-yellow-900/20 border border-yellow-600/50 rounded-lg">
+                  <p className="text-yellow-400 text-sm font-medium">Market Pricing Requirements:</p>
+                  <p className="text-yellow-300/90 text-xs mt-1">
+                    This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP
+                    with liquidity. Please use <strong>Limit Price</strong> instead.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

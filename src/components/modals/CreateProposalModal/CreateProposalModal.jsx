@@ -1,5 +1,6 @@
 import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
+import { useWallet } from '@ada-anvil/weld/react';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -13,7 +14,12 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
-import { useCreateProposal, useGovernanceProposals } from '@/services/api/queries';
+import {
+  useCreateProposal,
+  useGovernanceProposals,
+  useGovernanceFees,
+  useSubmitProposalFeePayment,
+} from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import {
   MIN_TIME_FOR_VOTING,
@@ -46,10 +52,28 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalStartDate, setProposalStartDate] = useState(null);
   const [proposalDuration, setProposalDuration] = useState(null);
   const [error, setError] = useState(false);
+  const [status, setStatus] = useState('idle');
 
+  const wallet = useWallet('handler', 'isConnected');
   const createProposalMutation = useCreateProposal();
+  const submitProposalFeePayment = useSubmitProposalFeePayment();
+  const { data: governanceFees } = useGovernanceFees();
 
   const { refetch } = useGovernanceProposals(vault.id);
+
+  // Get fee for current proposal type
+  const currentProposalFee = useMemo(() => {
+    if (!governanceFees?.data) return 0;
+    const feeMap = {
+      marketplace_action: governanceFees.data.proposalFeeMarketplaceAction,
+      distribution: governanceFees.data.proposalFeeDistribution,
+      expansion: governanceFees.data.proposalFeeExpansion,
+      staking: governanceFees.data.proposalFeeStaking,
+      termination: governanceFees.data.proposalFeeTermination,
+      burning: governanceFees.data.proposalFeeBurning,
+    };
+    return feeMap[selectedOption] || 0;
+  }, [governanceFees, selectedOption]);
 
   // Filter execution options based on vault status
   // During expansion, only Distribution is allowed (doesn't extract from vault)
@@ -111,7 +135,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const handleConfirmCreate = async () => {
+    setShowConfirmation(false);
+    setStatus('creating');
     try {
+      // Step 1: Check if wallet is connected
+      if (!wallet.isConnected || !wallet.handler) {
+        toast.error('Please connect your wallet first');
+        setStatus('idle');
+        return;
+      }
+
+      // Step 2: Build proposal payload
       const proposalPayload = {
         title: proposalTitle,
         description: proposalDescription,
@@ -176,48 +210,85 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         }
       }
 
-      createProposalMutation
-        .mutateAsync({
-          vaultId: vault.id,
-          proposalData: proposalPayload,
-        })
-        .then(async res => {
-          if (res?.data) {
-            await refetch();
-            toast.success('Proposal created successfully!');
-            onClose();
-          }
-        })
-        .catch(err => {
-          console.error('Failed to create proposal:', err);
+      // Step 3: Create proposal
+      const createResponse = await createProposalMutation.mutateAsync({
+        vaultId: vault.id,
+        proposalData: proposalPayload,
+      });
 
-          // Extract error message from API response
-          let errorMessage = 'Failed to create proposal. Please try again.';
+      if (!createResponse?.data) {
+        throw new Error('Failed to create proposal');
+      }
 
-          if (err?.response?.data?.message) {
-            errorMessage = err.response.data.message;
+      const { proposal, requiresPayment, presignedTx } = createResponse.data;
 
-            // Check if it's a swap amount too low error
-            if (errorMessage.includes('Swap amount too low')) {
-              // Already has helpful message with max amount suggestion
-              toast.error(errorMessage, { duration: 8000 });
-              return;
-            }
-            // Check if it's a pool not found error (genuinely no pool)
-            else if (errorMessage.includes('No liquidity pool available')) {
-              toast.error(`${errorMessage}\n\nThis token is not tradeable on DexHunter.`, { duration: 6000 });
-              return;
-            }
-          } else if (err?.message) {
-            errorMessage = err.message;
+      // Step 4: Handle payment if required
+      if (requiresPayment && presignedTx) {
+        try {
+          // Sign fee transaction
+          setStatus('signing');
+          const signature = await wallet.handler.signTx(presignedTx, true);
+
+          if (!signature) {
+            throw new Error('Fee transaction signing was cancelled');
           }
 
-          toast.error(errorMessage, { duration: 6000 });
-        });
-      setShowConfirmation(false);
+          // Submit transaction with signatures to backend
+          setStatus('submitting');
+          const submitResponse = await submitProposalFeePayment.mutateAsync({
+            proposalId: proposal.id,
+            transaction: presignedTx,
+            signatures: [signature],
+          });
+
+          if (!submitResponse?.data?.success) {
+            throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
+          }
+        } catch (feeError) {
+          console.error('Fee transaction failed:', feeError);
+          const errorMsg = feeError.message || 'Failed to process governance fee. Please try again.';
+          toast.error(`${errorMsg}\n\nProposal created but awaiting payment.`, { duration: 6000 });
+          setStatus('idle');
+          await refetch();
+          onClose();
+          return;
+        }
+      }
+
+      // Step 6: Success
+      setStatus('success');
+      await refetch();
+      toast.success('Proposal created successfully!');
+      onClose();
     } catch (error) {
       console.error('Failed to create proposal:', error);
-      toast.error('Failed to create proposal. Please try again.');
+
+      // Extract error message from API response
+      let errorMessage = 'Failed to create proposal. Please try again.';
+
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+
+        // Check if it's a swap amount too low error
+        if (errorMessage.includes('Swap amount too low')) {
+          // Already has helpful message with max amount suggestion
+          toast.error(errorMessage, { duration: 8000 });
+          return;
+        }
+        // Check if it's a pool not found error (genuinely no pool)
+        else if (errorMessage.includes('No liquidity pool available')) {
+          toast.error(`${errorMessage}\n\nThis token is not tradeable on DexHunter.`, {
+            duration: 6000,
+          });
+          return;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage, { duration: 6000 });
+    } finally {
+      setStatus('idle');
     }
   };
 
@@ -236,16 +307,47 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const renderFooter = () => {
     const isInvalid = isValidProposal();
+    const feeInAda = currentProposalFee / 1000000;
+    const isProcessing = status !== 'idle';
+
+    const getButtonText = () => {
+      switch (status) {
+        case 'creating':
+          return 'Creating Proposal...';
+        case 'signing':
+          return 'Signing...';
+        case 'submitting':
+          return 'Submitting...';
+        case 'success':
+          return 'Success!';
+        default:
+          return 'Create';
+      }
+    };
 
     return (
       <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-400">New proposal</div>
+        <div className="text-sm">
+          {currentProposalFee > 0 ? (
+            <div className="flex flex-col">
+              <span className="text-gray-400">New proposal</span>
+              <span className="text-yellow-500 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
+            </div>
+          ) : (
+            <span className="text-gray-400">New proposal</span>
+          )}
+        </div>
         <div className="flex gap-2">
-          <SecondaryButton onClick={onClose} size="sm">
+          <SecondaryButton onClick={onClose} size="sm" disabled={isProcessing}>
             Cancel
           </SecondaryButton>
-          <PrimaryButton onClick={handleCreateProposal} size="sm" className="capitalize" disabled={isInvalid}>
-            Create
+          <PrimaryButton
+            onClick={handleCreateProposal}
+            size="sm"
+            className="capitalize"
+            disabled={isInvalid || isProcessing}
+          >
+            {getButtonText()}
           </PrimaryButton>
         </div>
       </div>
@@ -302,14 +404,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'termination' && (
               <Terminating
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('staking')}
+                onClose={() => setSelectedOption('marketplace_action')}
                 onDataChange={handleDataChange}
               />
             )}
             {selectedOption === 'burning' && (
               <Burning
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('staking')}
+                onClose={() => setSelectedOption('marketplace_action')}
                 onDataChange={handleDataChange}
                 error={error}
               />

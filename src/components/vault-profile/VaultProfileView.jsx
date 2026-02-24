@@ -516,6 +516,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                   <VaultStats
                     assetValue={vault.vaultStatus}
                     ftGains={(() => {
+                      // Only show gains if vault has active LP
+                      if (!vault?.hasActiveLp) return 'N/A';
                       if (isAda) {
                         if (!vault?.gainsAda) return 'N/A';
                         const isNegative = vault.gainsAda < 0;
@@ -527,6 +529,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdv={(() => {
+                      // Only show FDV if vault has active LP
+                      if (!vault?.hasActiveLp) return 'N/A';
                       if (isAda) {
                         return vault?.fdv ? `₳${formatNum(vault.fdv)}` : 'N/A';
                       } else {
@@ -534,15 +538,16 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdvTvl={
-                      vault.vaultStatus !== 'contribution' && vault.vaultStatus !== 'acquire'
-                        ? vault.fdvTvl != null
+                      // Only show FDV/TVL if vault has active LP and is in appropriate phase
+                      !vault?.hasActiveLp || vault.vaultStatus === 'contribution' || vault.vaultStatus === 'acquire'
+                        ? 'N/A'
+                        : vault.fdvTvl != null
                           ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
                             ? '< 0.01'
                             : vault.fdvTvl.toFixed(2)
                           : 'N/A'
-                        : 'N/A'
                     }
-                    vtPrice={vault.vtPrice ?? 'N/A'}
+                    vtPrice={vault?.hasActiveLp ? (vault.vtPrice ?? 'N/A') : 'N/A'}
                     tvl={(() => {
                       if (isAda) {
                         return vault.assetsPrices?.totalValueAda
@@ -554,7 +559,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                           : 'N/A';
                       }
                     })()}
-                    liquidityPoolContribution={vault.liquidityPoolContribution}
                   />
                 </Suspense>
               ) : (
