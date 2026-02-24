@@ -130,6 +130,7 @@ export default function Expansion({ onDataChange, error, vault }) {
             <>
               <LavaSteelInput
                 type="number"
+                min="1"
                 value={assetMax}
                 onChange={setAssetMax}
                 placeholder="Enter maximum number of assets"
@@ -158,6 +159,7 @@ export default function Expansion({ onDataChange, error, vault }) {
               <LavaSteelInput
                 type="number"
                 step="0.00001"
+                min="0"
                 value={limitPrice}
                 onChange={setLimitPrice}
                 placeholder="Enter VT per asset (up to 5 decimals)"

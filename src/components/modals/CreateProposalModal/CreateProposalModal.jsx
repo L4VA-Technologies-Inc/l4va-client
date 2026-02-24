@@ -52,7 +52,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalStartDate, setProposalStartDate] = useState(null);
   const [proposalDuration, setProposalDuration] = useState(null);
   const [error, setError] = useState(false);
-  const [isProcessingFee, setIsProcessingFee] = useState(false);
+  const [status, setStatus] = useState('idle');
 
   const wallet = useWallet('handler', 'isConnected');
   const createProposalMutation = useCreateProposal();
@@ -135,12 +135,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const handleConfirmCreate = async () => {
-    setIsProcessingFee(true);
+    setShowConfirmation(false);
+    setStatus('creating');
     try {
       // Step 1: Check if wallet is connected
       if (!wallet.isConnected || !wallet.handler) {
         toast.error('Please connect your wallet first');
-        setIsProcessingFee(false);
+        setStatus('idle');
         return;
       }
 
@@ -219,16 +220,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         throw new Error('Failed to create proposal');
       }
 
-      const { proposal, requiresPayment, presignedTx, feeAmount } = createResponse.data;
+      const { proposal, requiresPayment, presignedTx } = createResponse.data;
 
       // Step 4: Handle payment if required
       if (requiresPayment && presignedTx) {
         try {
           // Sign fee transaction
-          toast.loading(
-            `Please sign the governance fee transaction in your wallet... (${(feeAmount / 1000000).toFixed(2)} ADA)`,
-            { id: 'fee-tx' }
-          );
+          setStatus('signing');
           const signature = await wallet.handler.signTx(presignedTx, true);
 
           if (!signature) {
@@ -236,7 +234,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           }
 
           // Submit transaction with signatures to backend
-          toast.loading('Submitting fee transaction...', { id: 'fee-tx' });
+          setStatus('submitting');
           const submitResponse = await submitProposalFeePayment.mutateAsync({
             proposalId: proposal.id,
             transaction: presignedTx,
@@ -246,16 +244,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           if (!submitResponse?.data?.success) {
             throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
           }
-
-          toast.success(`Governance fee paid successfully! (${(feeAmount / 1000000).toFixed(2)} ADA)`, {
-            id: 'fee-tx',
-          });
         } catch (feeError) {
           console.error('Fee transaction failed:', feeError);
           const errorMsg = feeError.message || 'Failed to process governance fee. Please try again.';
-          toast.error(`${errorMsg}\n\nProposal created but awaiting payment.`, { id: 'fee-tx', duration: 6000 });
-          setIsProcessingFee(false);
-          setShowConfirmation(false);
+          toast.error(`${errorMsg}\n\nProposal created but awaiting payment.`, { duration: 6000 });
+          setStatus('idle');
           await refetch();
           onClose();
           return;
@@ -263,10 +256,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       }
 
       // Step 6: Success
+      setStatus('success');
       await refetch();
-      toast.success('Proposal created successfully!', { id: 'create-proposal' });
+      toast.success('Proposal created successfully!');
       onClose();
-      setShowConfirmation(false);
     } catch (error) {
       console.error('Failed to create proposal:', error);
 
@@ -279,14 +272,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         // Check if it's a swap amount too low error
         if (errorMessage.includes('Swap amount too low')) {
           // Already has helpful message with max amount suggestion
-          toast.error(errorMessage, { duration: 8000, id: 'create-proposal' });
+          toast.error(errorMessage, { duration: 8000 });
           return;
         }
         // Check if it's a pool not found error (genuinely no pool)
         else if (errorMessage.includes('No liquidity pool available')) {
           toast.error(`${errorMessage}\n\nThis token is not tradeable on DexHunter.`, {
             duration: 6000,
-            id: 'create-proposal',
           });
           return;
         }
@@ -294,9 +286,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         errorMessage = error.message;
       }
 
-      toast.error(errorMessage, { duration: 6000, id: 'create-proposal' });
+      toast.error(errorMessage, { duration: 6000 });
     } finally {
-      setIsProcessingFee(false);
+      setStatus('idle');
     }
   };
 
@@ -316,6 +308,22 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const renderFooter = () => {
     const isInvalid = isValidProposal();
     const feeInAda = currentProposalFee / 1000000;
+    const isProcessing = status !== 'idle';
+
+    const getButtonText = () => {
+      switch (status) {
+        case 'creating':
+          return 'Creating Proposal...';
+        case 'signing':
+          return 'Signing...';
+        case 'submitting':
+          return 'Submitting...';
+        case 'success':
+          return 'Success!';
+        default:
+          return 'Create';
+      }
+    };
 
     return (
       <div className="flex justify-between items-center">
@@ -330,16 +338,16 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           )}
         </div>
         <div className="flex gap-2">
-          <SecondaryButton onClick={onClose} size="sm" disabled={isProcessingFee}>
+          <SecondaryButton onClick={onClose} size="sm" disabled={isProcessing}>
             Cancel
           </SecondaryButton>
           <PrimaryButton
             onClick={handleCreateProposal}
             size="sm"
             className="capitalize"
-            disabled={isInvalid || isProcessingFee}
+            disabled={isInvalid || isProcessing}
           >
-            {isProcessingFee ? 'Processing...' : 'Create'}
+            {getButtonText()}
           </PrimaryButton>
         </div>
       </div>
@@ -396,14 +404,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'termination' && (
               <Terminating
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('staking')}
+                onClose={() => setSelectedOption('marketplace_action')}
                 onDataChange={handleDataChange}
               />
             )}
             {selectedOption === 'burning' && (
               <Burning
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('staking')}
+                onClose={() => setSelectedOption('marketplace_action')}
                 onDataChange={handleDataChange}
                 error={error}
               />
