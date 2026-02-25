@@ -141,6 +141,17 @@ const assetWhitelistItemSchema = yup.object({
     .matches(/^[0-9a-fA-F]{56}$/, 'Policy ID must be a 56-character hex string'),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
+  valuationMethod: yup.string().oneOf(['market', 'custom']).default('market'),
+  customPriceAda: yup.number().when('valuationMethod', {
+    is: 'custom',
+    then: schema =>
+      schema
+        .required('Custom price is required when valuation method is custom')
+        .positive('Custom price must be positive')
+        .max(1000000, 'Custom price cannot exceed 1,000,000 ADA')
+        .typeError('Custom price must be a valid number'),
+    otherwise: schema => schema.nullable(),
+  }),
 });
 
 const acquirerWhitelistItemSchema = yup.object({

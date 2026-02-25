@@ -73,6 +73,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     whitelistedPolicies,
     activeTab,
     search: searchQuery.trim() || '',
+    vaultId: vault?.id, // Pass vault ID for custom pricing
   });
 
   // Calculate estimated value
