@@ -148,6 +148,7 @@ const assetWhitelistItemSchema = yup.object({
       schema
         .required('Custom price is required when valuation method is custom')
         .positive('Custom price must be positive')
+        .max(1000000, 'Custom price cannot exceed 1,000,000 ADA')
         .typeError('Custom price must be a valid number'),
     otherwise: schema => schema.nullable(),
   }),

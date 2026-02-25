@@ -395,7 +395,12 @@ export const LavaWhitelistWithCaps = ({
                       { name: 'custom', label: 'Custom Price' },
                     ]}
                     value={asset.valuationMethod || 'market'}
-                    onChange={value => updateAsset(asset.uniqueId, 'valuationMethod', value)}
+                    onChange={value => {
+                      updateAsset(asset.uniqueId, 'valuationMethod', value);
+                      if (value === 'market') {
+                        updateAsset(asset.uniqueId, 'customPriceAda', null);
+                      }
+                    }}
                   />
                   {(() => {
                     const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
@@ -422,12 +427,17 @@ export const LavaWhitelistWithCaps = ({
                         }
                       }}
                       onBlur={e => {
-                        const value = e.target.value;
-                        if (value) {
-                          const numericValue = parseFloat(value);
-                          if (!isNaN(numericValue)) {
-                            updateAsset(asset.uniqueId, 'customPriceAda', numericValue);
-                          }
+                        const value = e.target.value.trim();
+                        if (value === '') {
+                          // Clear the field so validation can properly trigger
+                          updateAsset(asset.uniqueId, 'customPriceAda', null);
+                          return;
+                        }
+                        const numericValue = parseFloat(value);
+                        if (!isNaN(numericValue)) {
+                          // Enforce max limit of 1M ADA to match backend validation
+                          const clampedValue = Math.min(numericValue, 1000000);
+                          updateAsset(asset.uniqueId, 'customPriceAda', clampedValue);
                         }
                       }}
                       hint="The custom ADA price for this policy"
