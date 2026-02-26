@@ -20,7 +20,7 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
-  const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
+  const maxValue = Math.floor(Math.min(wallet.balanceAda || 0, 10000000));
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
@@ -116,7 +116,7 @@ export const AcquireModal = ({ vault, onClose }) => {
     }
 
     if (Number(value) > maxValue) {
-      value = maxValue.toFixed(2);
+      value = maxValue.toString();
     }
 
     setAcquireAmount(value);
@@ -167,6 +167,11 @@ export const AcquireModal = ({ vault, onClose }) => {
                 </div>
                 <span className="text-2xl font-bold">ADA</span>
               </div>
+              {acquireAmountNum > 0 && acquireAmountNum < 5 && (
+                <div className="mt-3 text-xs text-yellow-400">
+                  Minimum 5 ADA required to cover transaction fees and ensure meaningful vault token allocation
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4 border-t border-[#2f324c] pt-6">
@@ -221,6 +226,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   disabled={
                     status !== 'idle' ||
                     wallet.isUpdatingUtxos ||
+                    acquireAmountNum < 5 ||
                     new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
                       Date.now() + BUTTON_DISABLE_THRESHOLD_MS
                   }
