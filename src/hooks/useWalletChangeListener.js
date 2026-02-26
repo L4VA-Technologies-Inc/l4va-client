@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useAuth } from '@/lib/auth/auth';
@@ -26,20 +25,25 @@ export const useWalletChangeListener = () => {
     const currentStakeAddress = wallet.stakeAddressBech32;
 
     if (!previousStakeAddressRef.current && currentStakeAddress) {
+      const authenticatedStakeAddress = localStorage.getItem('authenticated_stake_address');
+
+      if (authenticatedStakeAddress && authenticatedStakeAddress !== currentStakeAddress) {
+        logout('Wallet changed. Please login again.');
+        return;
+      }
+
       previousStakeAddressRef.current = currentStakeAddress;
       return;
     }
 
     if (!wallet.isConnected && previousStakeAddressRef.current) {
-      toast.error('Wallet disconnected. Please login again.');
-      logout();
+      logout('Wallet disconnected. Please login again.');
       previousStakeAddressRef.current = null;
       return;
     }
 
     if (currentStakeAddress && previousStakeAddressRef.current !== currentStakeAddress) {
-      toast.error('Wallet changed. Please login again.');
-      logout();
+      logout('Wallet changed. Please login again.');
       previousStakeAddressRef.current = null;
     }
   }, [wallet.isConnected, wallet.stakeAddressBech32, user, isAuthenticated, logout]);
@@ -53,8 +57,7 @@ export const useWalletChangeListener = () => {
       const hasCookies = checkWeldCookies();
 
       if (!hasCookies) {
-        toast.error('Wallet session expired. Please login again.');
-        logout();
+        logout('Wallet session expired. Please login again.');
         previousStakeAddressRef.current = null;
       }
     };

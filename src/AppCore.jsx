@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { WeldProvider } from '@ada-anvil/weld/react';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { NovuProvider } from '@novu/react';
+import toast from 'react-hot-toast';
 
 import { routeTree } from './routeTree.gen';
 
@@ -22,6 +24,15 @@ const router = createRouter({
 const AppWithInterceptor = () => {
   useAuthInterceptor();
   useWalletChangeListener();
+
+  useEffect(() => {
+    const message = sessionStorage.getItem('logout_toast');
+    if (message) {
+      sessionStorage.removeItem('logout_toast');
+      toast.error(message);
+    }
+  }, []);
+
   return (
     <ModalProvider>
       <RouterProvider router={router} />

@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
         walletAddress,
       });
       localStorage.setItem('jwt', response.data.accessToken);
+      localStorage.setItem('authenticated_stake_address', stakeAddress);
       queryClient.setQueryData(['profile'], { data: response.data.user });
       return response.data;
     } catch (error) {
@@ -32,10 +33,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = message => {
     localStorage.removeItem('jwt');
+    localStorage.removeItem('authenticated_stake_address');
     localStorage.removeItem('vlrm_balance_cache');
     queryClient.setQueryData(['profile'], null);
+    if (message) {
+      sessionStorage.setItem('logout_toast', message);
+    }
     window.location.href = '/';
   };
 
