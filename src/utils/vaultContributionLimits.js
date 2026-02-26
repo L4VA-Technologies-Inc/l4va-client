@@ -1,4 +1,19 @@
-export const areAllAssetsAtMaxCapacity = (assetsWhitelist = [], contributedAssets = []) => {
+export const areAllAssetsAtMaxCapacity = (assetsWhitelist = [], contributedAssets = [], vault = null) => {
+  // If vault is in expansion phase, check expansion limits instead
+  if (vault?.vaultStatus === 'expansion') {
+    // If expansion has no max limit, assets are never at capacity
+    if (vault.expansionNoMax) return false;
+
+    // Check if expansion asset count has reached the limit
+    if (vault.expansionAssetMax && vault.expansionAssetsCount !== undefined) {
+      return vault.expansionAssetsCount >= vault.expansionAssetMax;
+    }
+
+    // If no expansion data available, consider not at capacity
+    return false;
+  }
+
+  // Original logic for contribution phase
   if (!assetsWhitelist.length) return false;
 
   const contributionsByPolicyId = contributedAssets.reduce((acc, asset) => {

@@ -196,7 +196,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const handleTabChange = tab => setActiveTab(tab);
 
   const renderActionButton = () => {
-    const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets);
+    const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
     const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
 
     // Check if expansion phase is active
@@ -220,12 +220,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     // Check if contribution phase is full
     const isContributionFull = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && allAssetsAtMaxCapacity;
 
+    // Check if expansion phase is full
+    const isExpansionFull = isExpansion && allAssetsAtMaxCapacity;
+
+    // Determine button text based on phase and capacity
+    let buttonText = 'Contribute';
+    if (isExpansion) {
+      buttonText = allAssetsAtMaxCapacity ? 'Expansion Limit Reached' : 'Contribute';
+    } else if (allAssetsAtMaxCapacity) {
+      buttonText = 'Contribution Limit Reached';
+    }
+
     const buttonConfig = {
       Assets: {
-        text: allAssetsAtMaxCapacity ? 'Contribution Limit Reached' : 'Contribute',
+        text: buttonText,
         handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
         available: isContributionPhaseActive || isExpansionActive,
-        disabled: isInvalidStatus || isContributionFull,
+        disabled: isInvalidStatus || isContributionFull || isExpansionFull,
       },
       Token: {
         text: 'Acquire',
