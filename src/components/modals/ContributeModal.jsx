@@ -162,9 +162,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
   const estimatedTickerVal = hasSelectedAssets ? userEstimatedTokens.toLocaleString() : '0';
 
-  // Estimated Amount to Receive = (1 - Vault Allocation %) × Estimated Value
+  // Estimated Amount to Receive = (Tokens for Acquirers % - LP ADA Portion %) × Estimated Value
+  // Example: If 50% tokens for acquirers and 20% LP (10% VT + 10% ADA), then 50% - 10% = 40%
   const estimatedReceived = hasSelectedAssets
-    ? ((1 - vaultAllocation) * estimatedValue).toFixed(2).toLocaleString()
+    ? ((tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
     : '0.00';
   const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
 
