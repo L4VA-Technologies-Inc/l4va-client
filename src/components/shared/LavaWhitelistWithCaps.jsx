@@ -360,7 +360,6 @@ export const LavaWhitelistWithCaps = ({
                   <LavaInput
                     required={true}
                     label="Max asset cap"
-                    style={{ fontSize: '20px' }}
                     value={asset.countCapMax}
                     onChange={e => {
                       const inputValue = e.target.value;
@@ -395,12 +394,7 @@ export const LavaWhitelistWithCaps = ({
                       { name: 'custom', label: 'Custom Price' },
                     ]}
                     value={asset.valuationMethod || 'market'}
-                    onChange={value => {
-                      updateAsset(asset.uniqueId, 'valuationMethod', value);
-                      if (value === 'market') {
-                        updateAsset(asset.uniqueId, 'customPriceAda', null);
-                      }
-                    }}
+                    onChange={value => updateAsset(asset.uniqueId, 'valuationMethod', value)}
                   />
                   {(() => {
                     const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
@@ -427,18 +421,9 @@ export const LavaWhitelistWithCaps = ({
                         }
                       }}
                       onBlur={e => {
-                        const value = e.target.value.trim();
-                        if (value === '') {
-                          // Clear the field so validation can properly trigger
-                          updateAsset(asset.uniqueId, 'customPriceAda', null);
-                          return;
-                        }
-                        const numericValue = parseFloat(value);
-                        if (!isNaN(numericValue)) {
-                          // Enforce max limit of 1M ADA to match backend validation
-                          const clampedValue = Math.min(numericValue, 1000000);
-                          updateAsset(asset.uniqueId, 'customPriceAda', clampedValue);
-                        }
+                        const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
+                        const limitedValue = Math.min(rawValue, maxCapValue);
+                        updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
                       }}
                       hint="The custom ADA price for this policy"
                     />
