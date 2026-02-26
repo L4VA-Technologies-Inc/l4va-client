@@ -33,22 +33,27 @@ export default function Expansion({ onDataChange, error, vault }) {
     // Cannot have both noLimit and noMax true - at least one limit must be set
     const hasAtLeastOneLimit = !(noLimit && noMax);
 
+    const assetMaxNum = parseInt(assetMax) || 0;
+    const limitPriceNum = parseFloat(limitPrice) || 0;
+    const MAX_ASSET_LIMIT = 1000000000000; // 1 trillion
+    const MAX_LIMIT_PRICE = 1000000; // 1 million VT
+
     const isValid =
       selectedPolicies.length > 0 &&
       (noLimit || duration > 0) &&
-      (noMax || (assetMax && parseInt(assetMax) > 0)) &&
+      (noMax || (assetMax && assetMaxNum > 0 && assetMaxNum <= MAX_ASSET_LIMIT)) &&
       hasAtLeastOneLimit &&
       priceType &&
-      (priceType === 'market' || (limitPrice && parseFloat(limitPrice) > 0));
+      (priceType === 'market' || (limitPrice && limitPriceNum > 0 && limitPriceNum <= MAX_LIMIT_PRICE));
 
     onDataChange?.({
       expansionPolicyIds: selectedPolicies,
       expansionDuration: noLimit ? null : duration,
       expansionNoLimit: noLimit,
-      expansionAssetMax: noMax ? null : parseInt(assetMax) || null,
+      expansionAssetMax: noMax ? null : Math.min(assetMaxNum, MAX_ASSET_LIMIT) || null,
       expansionNoMax: noMax,
       expansionPriceType: priceType,
-      expansionLimitPrice: priceType === 'limit' ? parseFloat(limitPrice) : null,
+      expansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
       isValid,
     });
   }, [selectedPolicies, duration, noLimit, assetMax, noMax, priceType, limitPrice, onDataChange]);
@@ -145,14 +150,27 @@ export default function Expansion({ onDataChange, error, vault }) {
               <LavaSteelInput
                 type="number"
                 min="1"
+                max="1000000000000"
                 value={assetMax}
-                onChange={setAssetMax}
+                onChange={value => {
+                  const numValue = parseFloat(value);
+                  if (numValue > 1000000000000) {
+                    setAssetMax('1000000000000');
+                  } else {
+                    setAssetMax(value);
+                  }
+                }}
                 placeholder="Enter maximum number of assets"
                 error={error && !assetMax}
               />
               <p className="text-xs text-gray-400 mt-1">
-                Total number of new assets allowed (whole numbers for NFTs, tokens for FTs)
+                Total number of new assets allowed (max: 1 trillion for FTs, 1 million recommended for NFTs)
               </p>
+              {assetMax && parseFloat(assetMax) > 1000000 && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  Large limit set ({parseFloat(assetMax).toLocaleString()}). Consider if this is intentional.
+                </p>
+              )}
             </>
           ) : (
             <div className="p-3 bg-steel-700 rounded-lg">
@@ -174,14 +192,22 @@ export default function Expansion({ onDataChange, error, vault }) {
                 type="number"
                 step="0.00001"
                 min="0"
+                max="1000000"
                 value={limitPrice}
-                onChange={setLimitPrice}
-                placeholder="Enter VT per asset (up to 5 decimals)"
+                onChange={value => {
+                  const numValue = parseFloat(value);
+                  if (numValue > 1000000) {
+                    setLimitPrice('1000000');
+                  } else {
+                    setLimitPrice(value);
+                  }
+                }}
+                placeholder="Enter VT per asset (up to 5 decimals, max 1M)"
                 error={error && !limitPrice}
                 label="Limit Price (VT per asset)"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Fixed amount of vault tokens contributors will receive per asset
+                Fixed amount of vault tokens contributors will receive per asset (max: 1,000,000 VT)
               </p>
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
             </div>
