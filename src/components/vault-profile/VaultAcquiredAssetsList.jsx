@@ -103,8 +103,19 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             <StatBadge icon={Users} label="Holders" value={formatNumber(vault.tokenHolders || 0)} />
             <StatBadge
               icon={Coins}
-              label="LP amount"
-              value={currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
+              label="Liquidity"
+              value={
+                vault.vaultStatus === 'locked'
+                  ? (() => {
+                      const val = isAda ? data?.data?.totalAdaLiquidityAda : data?.data?.totalAdaLiquidityUsd;
+                      return val != null ? (isAda ? `₳${formatNum(2 * val)}` : `$${formatNum(2 * val)}`) : 'N/A';
+                    })()
+                  : currentLpAdaAmount || currentLpUsdAmount
+                    ? currency === 'ada'
+                      ? `₳${formatNum(2 * currentLpAdaAmount)}`
+                      : `$${formatNum(2 * currentLpUsdAmount)}`
+                    : 'N/A'
+              }
             />
           </div>
         </div>
