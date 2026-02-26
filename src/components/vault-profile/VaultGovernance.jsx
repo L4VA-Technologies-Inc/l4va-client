@@ -255,7 +255,10 @@ export const VaultGovernance = ({ vault }) => {
                               <span className="text-gray-600 text-sm">{proposal.votes.abstain || 0}%</span>
                             </div>
                             <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
-                              <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${proposal.abstain}%` }} />
+                              <div
+                                className="bg-gray-600 h-2 rounded-full"
+                                style={{ width: `${proposal.votes.abstain || 0}%` }}
+                              />
                             </div>
                           </div>
                         ) : null}

@@ -52,10 +52,14 @@ export const ProposalEndDate = ({ startDate, endDate, proposalStatus }) => {
     );
   }
 
+  // Handle 'date' type or any other type
   const prefix = isUpcoming ? 'Starts' : 'Ends';
+  const valueToDisplay =
+    typeof displayValue.value === 'string' ? displayValue.value : JSON.stringify(displayValue.value);
+
   return (
     <span>
-      {prefix} {displayValue.value}
+      {prefix} {valueToDisplay}
     </span>
   );
 };
