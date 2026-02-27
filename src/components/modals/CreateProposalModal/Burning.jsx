@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
@@ -8,17 +8,21 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState([]);
+  const hasModalShownRef = useRef(false);
 
   const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'burn');
 
   useEffect(() => {
-    setIsModalOpen(true);
+    if (!hasModalShownRef.current) {
+      setIsModalOpen(true);
+      hasModalShownRef.current = true;
 
-    onDataChange?.({
-      burnAssets: [],
-      isValid: selectedAssets.length > 0,
-    });
-  }, [onDataChange, selectedAssets.length]);
+      onDataChange?.({
+        burnAssets: [],
+        isValid: false,
+      });
+    }
+  }, [onDataChange]);
 
   useEffect(() => {
     onDataChange?.({
