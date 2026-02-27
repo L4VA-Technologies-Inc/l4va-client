@@ -11,7 +11,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
     toast.success(message);
   };
 
-  const imageUrl = asset.imageUrl ? asset.imageUrl : '/assets/icons/ada.svg';
+  const imageUrl = asset.image ? asset.image : '/assets/icons/ada.svg';
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
 
   const calculateValue = () => {
