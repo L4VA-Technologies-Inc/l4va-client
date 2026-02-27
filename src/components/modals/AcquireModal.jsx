@@ -20,7 +20,9 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
-  const maxValue = Math.floor(Math.min(wallet.balanceAda || 0, 10000000));
+  // Use vault-specific max acquire amount if available, otherwise fallback to 10M ADA
+  const maxAcquireAmount = vault.maxAcquireAmountAda || 10000000;
+  const maxValue = Math.floor(Math.min(wallet.balanceAda || 0, maxAcquireAmount));
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
@@ -158,6 +160,16 @@ export const AcquireModal = ({ vault, onClose }) => {
               {acquireAmountNum > 0 && acquireAmountNum < 5 && (
                 <div className="mt-3 text-xs text-yellow-400">
                   Minimum 5 ADA required to cover transaction fees and ensure meaningful vault token allocation
+                </div>
+              )}
+              {maxAcquireAmount < 10000000 && (
+                <div className="mt-3 text-xs text-zinc-400">
+                  Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} ADA per transaction
+                </div>
+              )}
+              {acquireAmountNum > maxAcquireAmount && (
+                <div className="mt-3 text-xs text-red-400">
+                  Amount exceeds maximum limit of {formatNum(maxAcquireAmount)} ADA per transaction
                 </div>
               )}
             </div>
