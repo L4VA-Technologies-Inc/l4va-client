@@ -6,7 +6,7 @@ export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
 export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 minutes
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 minutes
-export const MIN_TIME_FOR_VOTING = 86400000; // 1 day
+export const MIN_TIME_FOR_VOTING = 600000; // 10 minutes
 export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
 export const MIN_VLRM_REQUIRED = 0; // Minimum VLRM required for vault creation
