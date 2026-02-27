@@ -1,6 +1,4 @@
 import { LazyImage } from '@/components/shared/LazyImage';
-import { getIPFSUrl } from '@/utils/core.utils';
-
 const AssetField = ({ label, value, children }) => (
   <div className="flex justify-between items-center">
     <div className="text-gray-400 text-sm">{label}</div>
@@ -26,7 +24,7 @@ export const AssetsList = ({ assets, title = 'Assets' }) => {
               {asset.imageUrl && (
                 <AssetField label="Asset Image">
                   <LazyImage
-                    src={getIPFSUrl(asset.imageUrl)}
+                    src={asset.imageUrl}
                     alt={asset.name || 'Asset image'}
                     className="rounded-full"
                     width={32}
