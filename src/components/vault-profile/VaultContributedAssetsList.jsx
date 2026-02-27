@@ -106,7 +106,7 @@ const VaultContributedAssetsList = ({ vault }) => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-end">
             <StatBadge icon={HandCoins} label="Total NFTs" value={formatNumber(statistics?.totalNFTAssets || 0)} />
             <StatBadge icon={Coins} label="Total FTs" value={formatNumber(statistics?.totalFTAssets || 0)} />
             <StatBadge
@@ -204,7 +204,7 @@ const VaultContributedAssetsList = ({ vault }) => {
                         <img
                           alt={asset.name || 'NFT'}
                           className="w-12 h-12 rounded-lg object-cover"
-                          src={asset.imageUrl || FALLBACK_IMAGE}
+                          src={asset.image || FALLBACK_IMAGE}
                           onError={e => {
                             e.target.src = FALLBACK_IMAGE;
                           }}

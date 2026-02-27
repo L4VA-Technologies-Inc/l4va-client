@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
-import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
+import { formatAdaPrice } from '@/utils/core.utils';
 
 const ActionField = ({ label, value, children, className }) => (
   <div className="flex justify-between items-center">
@@ -36,7 +36,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   {action.assetImg && (
                     <ActionField label="Token Image">
                       <LazyImage
-                        src={getIPFSUrl(action.assetImg)}
+                        src={action.assetImg}
                         alt={action.assetName || 'Token image'}
                         className="rounded-full"
                         width={32}
@@ -94,7 +94,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   {action.assetImg && (
                     <ActionField label="Asset Image">
                       <LazyImage
-                        src={getIPFSUrl(action.assetImg)}
+                        src={action.assetImg}
                         alt={action.assetName || 'Asset image'}
                         className="rounded-full"
                         width={32}

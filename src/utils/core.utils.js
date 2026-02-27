@@ -290,7 +290,7 @@ export const transformYupErrors = err => {
 
 export const calculateTimeLeft = endTime => {
   // Validate input - return zeros if invalid
-  if (!endTime || endTime === null || endTime === undefined) {
+  if (!endTime) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
@@ -381,16 +381,6 @@ export const formatProposalEndDate = endDate => {
     type: 'date',
     value: formatDateWithTime(end),
   };
-};
-
-// IPFS URL resolver
-export const getIPFSUrl = src => {
-  if (!src) return src;
-  if (src.startsWith('ipfs://')) {
-    const hash = src.replace('ipfs://', '');
-    return `https://ipfs.io/ipfs/${hash}`;
-  }
-  return src;
 };
 
 const VAULT_STATUS_CONFIG = {
