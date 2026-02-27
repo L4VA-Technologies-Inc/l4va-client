@@ -99,7 +99,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-end">
             <StatBadge icon={Users} label="Holders" value={formatNumber(vault.tokenHolders || 0)} />
             <StatBadge
               icon={Coins}

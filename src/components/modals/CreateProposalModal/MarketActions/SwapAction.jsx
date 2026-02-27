@@ -4,7 +4,7 @@ import { Plus, X, ExternalLink, Check, ArrowRight } from 'lucide-react';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { useSwappableAssets } from '@/services/api/queries';
-import { getIPFSUrl, formatAdaPrice } from '@/utils/core.utils';
+import { formatAdaPrice } from '@/utils/core.utils';
 
 /**
  * Check if a quantity is valid using precomputed combinations from backend
@@ -197,7 +197,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                 className="flex items-center gap-3 p-3 bg-steel-850 hover:bg-steel-800 border border-steel-750 rounded-lg transition-colors text-left"
               >
                 <LazyImage
-                  src={getIPFSUrl(asset.image)}
+                  src={asset.image}
                   alt={asset.name}
                   className="w-10 h-10 rounded-full flex-shrink-0"
                   fallbackSrc="/assets/icons/ada.svg"
@@ -238,7 +238,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                 <div key={action.id} className="bg-steel-850 border border-steel-750 rounded-lg p-4">
                   <div className="flex items-start gap-3 mb-4">
                     <LazyImage
-                      src={getIPFSUrl(action.assetImage)}
+                      src={action.assetImage}
                       alt={action.assetName}
                       className="w-12 h-12 rounded-full flex-shrink-0"
                       fallbackSrc="/assets/icons/ada.svg"

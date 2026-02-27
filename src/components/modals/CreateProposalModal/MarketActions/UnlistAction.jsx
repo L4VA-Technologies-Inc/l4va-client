@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useMarketAssets } from '@/services/api/queries';
-import { getIPFSUrl } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -19,7 +18,7 @@ export const UnlistAction = ({ vaultId, onDataChange }) => {
     if (!assetsData?.data) return [];
 
     let assets = assetsData.data.map(asset => {
-      const imageSrc = getIPFSUrl(asset.imageUrl || asset.metadata?.imageUrl || asset.metadata?.image || asset.image);
+      const imageSrc = asset.imageUrl;
       const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'ft');
       const isFungibleToken = asset.type === 'ft' || asset.isFungibleToken || !isNft;
 

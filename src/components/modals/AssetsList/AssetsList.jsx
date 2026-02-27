@@ -6,7 +6,6 @@ import { InfiniteScrollList } from '@/components/shared/InfiniteScrollList.jsx';
 import { SelectedAssetItem } from '@/components/modals/AssetsList/SelectedAssetItem.jsx';
 import { NFTItem } from '@/components/modals/AssetsList/NFTItem.jsx';
 import { FTItem } from '@/components/modals/AssetsList/FTItem.jsx';
-import { getIPFSUrl } from '@/utils/core.utils';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 
 const MAX_NFT_PER_TRANSACTION = 10;
@@ -16,7 +15,7 @@ const MAX_FT_PER_TRANSACTION = 10;
 const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   const enhancedNft = {
     ...nft,
-    src: getIPFSUrl(nft.metadata?.image),
+    src: nft.metadata?.image,
   };
 
   return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
@@ -25,7 +24,7 @@ const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
 const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   const enhancedFt = {
     ...ft,
-    src: getIPFSUrl(ft.metadata?.image),
+    src: ft.metadata?.image,
   };
 
   return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
