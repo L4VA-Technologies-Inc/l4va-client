@@ -12,7 +12,7 @@ import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@
 import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
-  const { name } = vault;
+  const { name, tokensForAcquires, liquidityPoolContribution, ftTokenSupply } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
@@ -26,11 +26,16 @@ export const AcquireModal = ({ vault, onClose }) => {
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-  // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
-  const estVaultTokenPercent = vault.tokensForAcquires * (1 - vault.liquidityPoolContribution / 100 / 2);
+  const userShare =
+    acquireAmountNum > 0 ? acquireAmountNum / (vault.assetsPrices.totalAcquiredAda + acquireAmountNum) : 0;
 
+  const totalAvailableTokenPercent = tokensForAcquires * (1 - liquidityPoolContribution / 100 / 2);
+  const totalAvailableTokenAmount = Math.floor((totalAvailableTokenPercent / 100) * ftTokenSupply);
+
+  // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
+  const estVaultTokenPercent = totalAvailableTokenPercent * userShare;
   // Est Vault Token Amount = Est Vault Token (%) x Token Supply
-  const estVaultTokenAmount = Math.floor((estVaultTokenPercent / 100) * vault.ftTokenSupply);
+  const estVaultTokenAmount = Math.floor(totalAvailableTokenAmount * userShare);
 
   const handleAcquire = async () => {
     setStatus('building');

@@ -202,7 +202,7 @@ export const VaultContribution = ({ vault }) => {
                 ) : (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-dark-100">Current LP amount:</span>
+                      <span className="text-dark-100">Current ADA LP amount:</span>
                       <span className="text-dark-100">
                         {currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
                       </span>
