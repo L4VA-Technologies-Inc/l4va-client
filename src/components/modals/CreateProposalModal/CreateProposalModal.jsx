@@ -127,7 +127,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isValidProposal = () => {
     return (
       !proposalTitle.trim() ||
+      proposalTitle.length > 200 ||
       !proposalDescription.trim() ||
+      proposalDescription.length > 500 ||
       !proposalData.isValid ||
       !proposalStartDate ||
       !proposalDuration
@@ -372,14 +374,18 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               placeholder="Enter proposal title"
               value={proposalTitle}
               onChange={value => setProposalTitle(value)}
-              error={error && !proposalTitle}
+              error={error && (!proposalTitle || proposalTitle.length > 200)}
+              helperText={`${proposalTitle.length}/200 characters`}
+              maxLength={200}
             />
             <LavaSteelTextarea
               label="Proposal Description*"
               placeholder="Enter proposal description"
               value={proposalDescription}
               onChange={value => setProposalDescription(value)}
-              error={error && !proposalDescription}
+              error={error && (!proposalDescription || proposalDescription.length > 500)}
+              helperText={`${proposalDescription.length}/500 characters`}
+              maxLength={500}
             />
             <h3 className="text-lg font-medium">Execution Options</h3>
             <LavaSteelSelect

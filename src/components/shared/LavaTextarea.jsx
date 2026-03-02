@@ -72,6 +72,8 @@ export const LavaSteelTextarea = ({
   minHeight = 'min-h-32',
   onChange,
   error = false,
+  helperText,
+  maxLength,
   name,
   id,
   autoComplete,
@@ -104,9 +106,11 @@ export const LavaSteelTextarea = ({
         placeholder={placeholder}
         value={inputValue}
         onChange={handleChange}
+        maxLength={maxLength}
         name={name}
         autoComplete={autocompleteValue}
       />
+      {helperText && <p className="text-xs text-white/60">{helperText}</p>}
     </div>
   );
 };
