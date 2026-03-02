@@ -22,7 +22,7 @@ import L4vaIcon from '@/icons/l4va.svg?react';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
-import { getIPFSUrl, formatDateTime } from '@/utils/core.utils';
+import { formatDateTime } from '@/utils/core.utils';
 import { IS_PREPROD } from '@/utils/networkValidation';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -351,7 +351,7 @@ const ActivityCard = ({ activity }) => {
                                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-steel-850 border border-steel-750">
                                     {asset.image ? (
                                       <img
-                                        src={getIPFSUrl(asset.image)}
+                                        src={asset.image}
                                         alt={asset.name || 'NFT'}
                                         className="w-full h-full object-cover"
                                         onError={e => {

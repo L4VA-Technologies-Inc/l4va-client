@@ -1,0 +1,276 @@
+import { useEffect, useState } from 'react';
+
+import { LavaSteelSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
+import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
+import { LavaSteelInput } from '@/components/shared/LavaInput';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
+
+export default function Expansion({ onDataChange, error, vault }) {
+  const [selectedPolicies, setSelectedPolicies] = useState([]);
+  const [duration, setDuration] = useState(null);
+  const [noLimit, setNoLimit] = useState(false);
+  const [assetMax, setAssetMax] = useState('');
+  const [noMax, setNoMax] = useState(false);
+  const [priceType, setPriceType] = useState('market');
+  const [limitPrice, setLimitPrice] = useState('');
+
+  // Get whitelisted policies from vault
+  const whitelistedPolicies =
+    vault?.assetsWhitelist?.map(w => ({
+      value: w.policyId,
+      label: w.collectionName || `${w.policyId.substring(0, 10)}...${w.policyId.substring(w.policyId.length - 8)}`,
+      secondLabel: w.collectionName ? w.policyId : null,
+    })) || [];
+
+  const selectedPolicyValues = selectedPolicies.map(p => p.policyId || p);
+
+  const priceTypeOptions = [
+    { value: 'market', label: 'Market Price' },
+    { value: 'limit', label: 'Limit Price' },
+  ];
+
+  useEffect(() => {
+    // Cannot have both noLimit and noMax true - at least one limit must be set
+    const hasAtLeastOneLimit = !(noLimit && noMax);
+
+    const assetMaxNum = parseInt(assetMax) || 0;
+    const limitPriceNum = parseFloat(limitPrice) || 0;
+    const MAX_ASSET_LIMIT = 1000000000000; // 1 trillion
+    const MAX_LIMIT_PRICE = 1000000; // 1 million VT
+
+    const isValid =
+      selectedPolicies.length > 0 &&
+      (noLimit || duration > 0) &&
+      (noMax || (assetMax && assetMaxNum > 0 && assetMaxNum <= MAX_ASSET_LIMIT)) &&
+      hasAtLeastOneLimit &&
+      priceType &&
+      (priceType === 'market' || (limitPrice && limitPriceNum > 0 && limitPriceNum <= MAX_LIMIT_PRICE));
+
+    onDataChange?.({
+      expansionPolicyIds: selectedPolicies,
+      expansionDuration: noLimit ? null : duration,
+      expansionNoLimit: noLimit,
+      expansionAssetMax: noMax ? null : Math.min(assetMaxNum, MAX_ASSET_LIMIT) || null,
+      expansionNoMax: noMax,
+      expansionPriceType: priceType,
+      expansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
+      isValid,
+    });
+  }, [selectedPolicies, duration, noLimit, assetMax, noMax, priceType, limitPrice, onDataChange]);
+
+  const handlePolicyChange = values => {
+    const policyObjects = values.map(value => {
+      const option = whitelistedPolicies.find(opt => opt.value === value);
+      return {
+        policyId: value,
+        label: option?.label || value,
+      };
+    });
+    setSelectedPolicies(policyObjects);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-white">Expansion Configuration</h3>
+
+        <div className="p-4 bg-steel-700 rounded-lg">
+          <p className="text-sm text-gray-300">
+            <strong>Vault Expansion</strong> allows the vault to reopen for new asset contributions in exchange for
+            newly minted vault tokens. Configure the parameters below to set the framework for accepting new assets.
+          </p>
+        </div>
+
+        {/* Policy Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Collections*</label>
+          <LavaMultiSelect
+            options={whitelistedPolicies}
+            placeholder="Select Asset Collections"
+            value={selectedPolicyValues}
+            onChange={handlePolicyChange}
+            className="min-w-full"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Select which whitelisted asset collections will be accepted during expansion
+          </p>
+          {error && selectedPolicies.length === 0 && (
+            <p className="text-red-500 text-sm mt-1">Select at least one policy</p>
+          )}
+        </div>
+
+        {/* Duration */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-300">Expansion Duration*</label>
+            <LavaCheckbox
+              name="expansionNoLimit"
+              checked={noLimit}
+              onChange={e => setNoLimit(e.target.checked)}
+              description="No Limit"
+              disabled={noMax}
+            />
+          </div>
+          {!noLimit ? (
+            <>
+              <LavaIntervalPicker
+                value={duration}
+                onChange={setDuration}
+                placeholder="DD:HH:MM"
+                error={error && !duration}
+              />
+              <p className="text-xs text-gray-400 mt-1">How long the vault will accept new contributions</p>
+            </>
+          ) : (
+            <div className="p-3 bg-steel-700 rounded-lg">
+              <p className="text-sm text-gray-300">
+                Vault will remain open until closed by governance action or asset max is reached
+              </p>
+            </div>
+          )}
+          {noLimit && noMax && (
+            <p className="text-red-500 text-sm mt-2">At least one limit (Duration or Maximum Assets) must be set</p>
+          )}
+        </div>
+
+        {/* Asset Max */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-300">Maximum Assets*</label>
+            <LavaCheckbox
+              name="expansionNoMax"
+              checked={noMax}
+              onChange={e => setNoMax(e.target.checked)}
+              description="No Max"
+              disabled={noLimit}
+            />
+          </div>
+          {!noMax ? (
+            <>
+              <LavaSteelInput
+                type="number"
+                min="1"
+                max="1000000000000"
+                value={assetMax}
+                onChange={value => {
+                  const numValue = parseFloat(value);
+                  if (numValue > 1000000000000) {
+                    setAssetMax('1000000000000');
+                  } else {
+                    setAssetMax(value);
+                  }
+                }}
+                placeholder="Enter maximum number of assets"
+                error={error && !assetMax}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Total number of new assets allowed (max: 1 trillion for FTs, 1 million recommended for NFTs)
+              </p>
+              {assetMax && parseFloat(assetMax) > 1000000 && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  Large limit set ({parseFloat(assetMax).toLocaleString()}). Consider if this is intentional.
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="p-3 bg-steel-700 rounded-lg">
+              <p className="text-sm text-gray-300">
+                Unlimited assets can be accepted until duration ends or governance closes the vault
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Price Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Price per Asset*</label>
+          <LavaSteelSelect options={priceTypeOptions} value={priceType} onChange={setPriceType} />
+
+          {priceType === 'limit' && (
+            <div className="mt-3">
+              <LavaSteelInput
+                type="number"
+                step="0.00001"
+                min="0"
+                max="1000000"
+                value={limitPrice}
+                onChange={value => {
+                  const numValue = parseFloat(value);
+                  if (numValue > 1000000) {
+                    setLimitPrice('1000000');
+                  } else {
+                    setLimitPrice(value);
+                  }
+                }}
+                placeholder="Enter VT per asset (up to 5 decimals, max 1M)"
+                error={error && !limitPrice}
+                label="Limit Price (VT per asset)"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Fixed amount of vault tokens contributors will receive per asset (max: 1,000,000 VT)
+              </p>
+              {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
+            </div>
+          )}
+
+          {priceType === 'market' && (
+            <div className="mt-3 space-y-2">
+              <div className="p-4 bg-steel-700 rounded-lg space-y-2">
+                <p className="text-sm text-gray-300">
+                  <strong>Market Price Calculation:</strong>
+                </p>
+                <p className="text-sm text-gray-300">Contributors will receive VT based on fair market value:</p>
+                <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
+                  VT Amount = (Asset Floor Price ₳) ÷ (VT Price ₳)
+                </div>
+                <p className="text-xs text-gray-400">
+                  This ensures contributors receive a fair value equivalent in vault tokens based on current market
+                  prices
+                </p>
+              </div>
+              {!vault?.hasActiveLp && (
+                <div className="p-3 bg-yellow-900/20 border border-yellow-600/50 rounded-lg">
+                  <p className="text-yellow-400 text-sm font-medium">Market Pricing Requirements:</p>
+                  <p className="text-yellow-300/90 text-xs mt-1">
+                    This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP
+                    with liquidity. Please use <strong>Limit Price</strong> instead.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Summary Box */}
+        <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg">
+          <h4 className="text-sm font-semibold text-primary mb-2">Expansion Summary</h4>
+          <div className="space-y-1 text-sm text-gray-300">
+            <p>
+              <span className="text-gray-400">Collections:</span>{' '}
+              {selectedPolicies.length > 0 ? `${selectedPolicies.length} selected` : 'None selected'}
+            </p>
+            <p>
+              <span className="text-gray-400">Duration:</span>{' '}
+              {noLimit
+                ? 'No limit'
+                : duration
+                  ? `${Math.floor(duration / 86400000)}d ${Math.floor((duration % 86400000) / 3600000)}h ${Math.floor((duration % 3600000) / 60000)}m`
+                  : 'Not set'}
+            </p>
+            <p>
+              <span className="text-gray-400">Max Assets:</span> {noMax ? 'Unlimited' : assetMax || 'Not set'}
+            </p>
+            <p>
+              <span className="text-gray-400">Pricing:</span>{' '}
+              {priceType === 'market'
+                ? 'Market price (fair value)'
+                : limitPrice
+                  ? `${limitPrice} VT per asset`
+                  : 'Not set'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

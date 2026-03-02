@@ -23,6 +23,7 @@ const tabOptions = [
 const ASSET_TYPE_LABELS = {
   contributor: 'Contributor Reward',
   acquirer: 'Acquirer Reward',
+  expansion: 'Expansion Reward',
   owner: 'Owner Reward',
 };
 

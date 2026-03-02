@@ -12,7 +12,7 @@ import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@
 import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
-  const { name } = vault;
+  const { name, tokensForAcquires, liquidityPoolContribution, ftTokenSupply } = vault;
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
@@ -20,27 +20,22 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
-  const maxValue = Math.min(wallet.balanceAda || 0, 10000000);
+  // Use vault-specific max acquire amount if available, otherwise fallback to 10M ADA
+  const maxAcquireAmount = vault.maxAcquireAmountAda || 10000000;
+  const maxValue = Math.floor(Math.min(wallet.balanceAda || 0, maxAcquireAmount));
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
+  const userShare =
+    acquireAmountNum > 0 ? acquireAmountNum / (vault.assetsPrices.totalAcquiredAda + acquireAmountNum) : 0;
+
+  const totalAvailableTokenPercent = tokensForAcquires * (1 - liquidityPoolContribution / 100 / 2);
+  const totalAvailableTokenAmount = Math.floor((totalAvailableTokenPercent / 100) * ftTokenSupply);
+
   // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
-  const estVaultTokenPercent = vault.tokensForAcquires * (1 - vault.liquidityPoolContribution / 100 / 2);
-
+  const estVaultTokenPercent = totalAvailableTokenPercent * userShare;
   // Est Vault Token Amount = Est Vault Token (%) x Token Supply
-  const estVaultTokenAmount = Math.floor((estVaultTokenPercent / 100) * vault.ftTokenSupply);
-
-  // Reserve ADA Amount calculation (based on vault's required reserve)
-  const reserveAdaAmount = vault.requireReservedCostAda || 0;
-
-  // Vault Allocation = Est Vault Token (%) above x [ADA Amount / Reserve ADA Amount]
-  let vaultAllocation = 0;
-  if (reserveAdaAmount > 0 && acquireAmountNum > 0) {
-    vaultAllocation = (estVaultTokenPercent * (acquireAmountNum / reserveAdaAmount)).toFixed(2);
-  }
-
-  // Est. Vault Token Acquired = Vault Allocation x Token Supply
-  const estimatedTickerVal = formatNum(Math.floor((vaultAllocation / 100) * vault.ftTokenSupply));
+  const estVaultTokenAmount = Math.floor(totalAvailableTokenAmount * userShare);
 
   const handleAcquire = async () => {
     setStatus('building');
@@ -116,7 +111,7 @@ export const AcquireModal = ({ vault, onClose }) => {
     }
 
     if (Number(value) > maxValue) {
-      value = maxValue.toFixed(2);
+      value = maxValue.toString();
     }
 
     setAcquireAmount(value);
@@ -124,12 +119,12 @@ export const AcquireModal = ({ vault, onClose }) => {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl p-0 bg-steel-950 text-white border-none">
+      <DialogContent className="sm:max-w-xl p-0 bg-steel-950 text-white border-none">
         <DialogHeader className="py-2 bg-white/5 rounded-t-lg">
           <DialogTitle className="text-2xl text-center font-medium">Acquire {name}</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col p-6 space-y-6 md:space-y-0 md:flex-row">
-          <div className="md:w-1/2 pr-0 md:pr-6 space-y-6">
+        <div className="flex flex-col p-6 space-y-6">
+          <div className="space-y-6">
             <div className="flex justify-between items-center">
               <span>ADA in wallet</span>
               <span className="font-bold">{formatNum(wallet.balanceAda || 0)} ADA</span>
@@ -167,9 +162,31 @@ export const AcquireModal = ({ vault, onClose }) => {
                 </div>
                 <span className="text-2xl font-bold">ADA</span>
               </div>
+              {acquireAmountNum > 0 && acquireAmountNum < 5 && (
+                <div className="mt-3 text-xs text-yellow-400">
+                  Minimum 5 ADA required to cover transaction fees and ensure meaningful vault token allocation
+                </div>
+              )}
+              {maxAcquireAmount < 10000000 && (
+                <div className="mt-3 text-xs text-zinc-400">
+                  Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} ADA per transaction
+                </div>
+              )}
+              {acquireAmountNum > maxAcquireAmount && (
+                <div className="mt-3 text-xs text-red-400">
+                  Amount exceeds maximum limit of {formatNum(maxAcquireAmount)} ADA per transaction
+                </div>
+              )}
             </div>
-
-            <div className="grid grid-cols-3 gap-4 border-t border-[#2f324c] pt-6">
+          </div>
+          <div className="bg-slate-950 p-6 rounded-[10px]">
+            <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1 text-center">
+                {/* ADA Amount to send to acquire Vault Tokens */}
+                <p className="text-dark-100 text-sm">ADA Amount</p>
+                <p className="text-2xl font-medium">{formatNum(acquireAmountNum)}</p>
+              </div>
               <div className="text-center">
                 {/* Total ADA Sent by Vault Token Acquirers up until now */}
                 <p className="text-dark-100 text-sm">Total ADA Sent</p>
@@ -186,60 +203,32 @@ export const AcquireModal = ({ vault, onClose }) => {
                 <p className="text-xl font-medium">{estVaultTokenAmount}</p>
               </div>
             </div>
-          </div>
 
-          <div className="md:w-1/2 md:pl-6 md:border-l border-[#2f324c]">
-            <div className="bg-slate-950 p-6 rounded-[10px]">
-              <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1 text-center">
-                  {/* ADA Amount to send to acquire Vault Tokens */}
-                  <p className="text-dark-100 text-sm">ADA Amount</p>
-                  <p className="text-2xl font-medium">{formatNum(acquireAmountNum)}</p>
-                </div>
-                <div className="space-y-1 text-center ">
-                  {/* 
-                    Estimated % of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.
-                    Note: If more than the reserve amount is sent, the % of vault token received will reduce.
-                  */}
-                  <p className="text-dark-100 text-sm">Est. Vault Token Allocation (%)</p>
-                  <p className="text-2xl font-medium">{vaultAllocation}%</p>
-                </div>
-                <div className="space-y-1 text-center">
-                  {/*  /!* */}
-                  {/*    Estimated quantity of total Vault Token to be acquired, assuming the total ADA sent is equal to the reseve.*/}
-                  {/*    Note: If more than the reserve amount is sent, the quantity of vault token received will reduce.*/}
-                  {/* *!/*/}
-                  <p className="text-dark-100 text-sm">Est. Vault Token Acquired</p>
-                  <p className="text-2xl font-medium truncate">{estimatedTickerVal}</p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center mt-8 gap-2">
-                <PrimaryButton
-                  className="uppercase"
-                  disabled={
-                    status !== 'idle' ||
-                    wallet.isUpdatingUtxos ||
-                    new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
-                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
-                  }
-                  onClick={handleAcquire}
-                  icon={status !== 'idle' ? Spinner : null}
-                >
-                  {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
-                </PrimaryButton>
-                <div className="text-xs text-dark-100">
-                  Transaction cost:{' '}
-                  <span className="text-white font-medium">
-                    ~{((vault.protocolContributorsFeeAda || 0) + 0.77).toFixed(2)} ADA
-                  </span>{' '}
-                  (
-                  {vault.protocolContributorsFeeAda > 0
-                    ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~0.77 ADA Network fees`
-                    : '~0.77 ADA Network fees'}
-                  )
-                </div>
+            <div className="flex flex-col items-center mt-8 gap-2">
+              <PrimaryButton
+                className="uppercase"
+                disabled={
+                  status !== 'idle' ||
+                  wallet.isUpdatingUtxos ||
+                  acquireAmountNum < 5 ||
+                  new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
+                    Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                }
+                onClick={handleAcquire}
+                icon={status !== 'idle' ? Spinner : null}
+              >
+                {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
+              </PrimaryButton>
+              <div className="text-xs text-dark-100">
+                Transaction cost:{' '}
+                <span className="text-white font-medium">
+                  ~{((vault.protocolContributorsFeeAda || 0) + 0.77).toFixed(2)} ADA
+                </span>{' '}
+                (
+                {vault.protocolContributorsFeeAda > 0
+                  ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~0.77 ADA Network fees`
+                  : '~0.77 ADA Network fees'}
+                )
               </div>
             </div>
           </div>

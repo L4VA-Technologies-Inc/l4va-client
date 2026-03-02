@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3, Users } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3 } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -15,19 +15,55 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 const VaultContribution = lazy(() =>
-  import('@/components/vault-profile/VaultContribution').then(module => ({
-    default: module.VaultContribution,
-  }))
+  import('@/components/vault-profile/VaultContribution')
+    .then(module => ({
+      default: module.VaultContribution,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultContribution:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load contribution section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 const VaultStats = lazy(() =>
-  import('@/components/vault-profile/VaultStats').then(module => ({
-    default: module.VaultStats,
-  }))
+  import('@/components/vault-profile/VaultStats')
+    .then(module => ({
+      default: module.VaultStats,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultStats:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load stats section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 const VaultTabs = lazy(() =>
-  import('@/components/vault-profile/VaultTabs').then(module => ({
-    default: module.VaultTabs,
-  }))
+  import('@/components/vault-profile/VaultTabs')
+    .then(module => ({
+      default: module.VaultTabs,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultTabs:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load tabs section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 import { Spinner } from '@/components/Spinner';
 import { VaultSkeleton } from '@/components/vault-profile/VaultSkeleton';
@@ -45,7 +81,7 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_PREPROD } from '@/utils/networkValidation.ts';
+import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -196,18 +232,47 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const handleTabChange = tab => setActiveTab(tab);
 
   const renderActionButton = () => {
-    const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets);
+    const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
+    const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+
+    // Check if expansion phase is active
+    const isExpansionActive =
+      isExpansion &&
+      vault.expansionPhaseStart &&
+      new Date(vault.expansionPhaseStart).getTime() + (vault.expansionDuration || 0) >
+        Date.now() + BUTTON_DISABLE_THRESHOLD_MS;
+
+    // Check if contribution phase is active and accepting contributions
+    const contributionPhaseEndTime = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+    const isContributionPhaseActive =
+      vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
+      contributionPhaseEndTime > Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
+      !allAssetsAtMaxCapacity;
+
+    // Check if vault is in an invalid status for contributions
+    const isInvalidStatus =
+      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION && vault.vaultStatus !== VAULT_STATUSES.EXPANSION;
+
+    // Check if contribution phase is full
+    const isContributionFull = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && allAssetsAtMaxCapacity;
+
+    // Check if expansion phase is full
+    const isExpansionFull = isExpansion && allAssetsAtMaxCapacity;
+
+    // Determine button text based on phase and capacity
+    let buttonText = 'Contribute';
+    if (isExpansion) {
+      buttonText = allAssetsAtMaxCapacity ? 'Expansion Limit Reached' : 'Contribute';
+    } else if (allAssetsAtMaxCapacity) {
+      buttonText = 'Contribution Limit Reached';
+    }
 
     const buttonConfig = {
       Assets: {
-        text: allAssetsAtMaxCapacity ? 'Contribution Limit Reached' : 'Contribute',
-        handleClick: () => openModal('ContributeModal', { vault }),
-        available:
-          vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
-          new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration >
-            Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
-          !allAssetsAtMaxCapacity,
-        disabled: vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION || allAssetsAtMaxCapacity,
+        text: buttonText,
+        handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
+        available: isContributionPhaseActive || isExpansionActive,
+        disabled: isInvalidStatus || isContributionFull || isExpansionFull,
       },
       Token: {
         text: 'Acquire',
@@ -219,7 +284,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       },
       Governance: {
         text: 'Create Proposal',
-        available: vault.vaultStatus === VAULT_STATUSES.LOCKED && vault.canCreateProposal,
+        available:
+          (vault.vaultStatus === VAULT_STATUSES.LOCKED || vault.vaultStatus === VAULT_STATUSES.EXPANSION) &&
+          vault.canCreateProposal,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
       Settings: null,
@@ -300,7 +367,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </div>
             )}
             {/* Statistic */}
-            {vault.liquidityPoolContribution !== 0 && IS_PREPROD && (
+            {vault.liquidityPoolContribution !== 0 && IS_MAINNET && (
               <div className="group relative">
                 <button
                   onClick={() => openModal('ChartModal', { vault })}
@@ -322,17 +389,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 Total views
               </div>
             </div>
-            {vault.vaultMembersCount && (
-              <div className="group relative">
-                <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
-                  <Users className="w-4 h-4 text-orange-500" />
-                  <span>{vault.vaultMembersCount}</span>
-                </span>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  {vault.vaultMembersCount === 1 ? 'Member' : 'Members'}
-                </div>
-              </div>
-            )}
             <div className="group relative">
               <button
                 onClick={handleCopyVaultAddress}
@@ -476,13 +532,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             />
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
-          {deferredReady ? (
-            <Suspense fallback={<ContributionSkeleton />}>
-              <VaultContribution vault={vault} />
-            </Suspense>
-          ) : (
-            <ContributionSkeleton />
-          )}
+          {vault.vaultStatus !== 'locked' ? (
+            deferredReady ? (
+              <Suspense fallback={<ContributionSkeleton />}>
+                <VaultContribution vault={vault} />
+              </Suspense>
+            ) : (
+              <ContributionSkeleton />
+            )
+          ) : null}
           <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay
@@ -505,6 +563,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                   <VaultStats
                     assetValue={vault.vaultStatus}
                     ftGains={(() => {
+                      // Only show gains if vault has active LP
+                      if (!vault?.hasActiveLp) return 'N/A';
                       if (isAda) {
                         if (!vault?.gainsAda) return 'N/A';
                         const isNegative = vault.gainsAda < 0;
@@ -516,6 +576,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdv={(() => {
+                      // Only show FDV if vault has active LP
+                      if (!vault?.hasActiveLp) return 'N/A';
                       if (isAda) {
                         return vault?.fdv ? `₳${formatNum(vault.fdv)}` : 'N/A';
                       } else {
@@ -523,15 +585,16 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                       }
                     })()}
                     fdvTvl={
-                      vault.vaultStatus !== 'contribution' && vault.vaultStatus !== 'acquire'
-                        ? vault.fdvTvl != null
+                      // Only show FDV/TVL if vault has active LP and is in appropriate phase
+                      !vault?.hasActiveLp || vault.vaultStatus === 'contribution' || vault.vaultStatus === 'acquire'
+                        ? 'N/A'
+                        : vault.fdvTvl != null
                           ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
                             ? '< 0.01'
                             : vault.fdvTvl.toFixed(2)
                           : 'N/A'
-                        : 'N/A'
                     }
-                    vtPrice={vault.vtPrice ?? 'N/A'}
+                    vtPrice={vault?.hasActiveLp ? (vault.vtPrice ?? 'N/A') : 'N/A'}
                     tvl={(() => {
                       if (isAda) {
                         return vault.assetsPrices?.totalValueAda
@@ -543,7 +606,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                           : 'N/A';
                       }
                     })()}
-                    liquidityPoolContribution={vault.liquidityPoolContribution}
                   />
                 </Suspense>
               ) : (

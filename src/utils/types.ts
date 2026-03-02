@@ -41,6 +41,7 @@ export enum VaultStatus {
   LOCKED = 'locked',
   GOVERNANCE = 'governance',
   FAILED = 'failed',
+  EXPANSION = 'expansion',
 }
 
 export enum ProposalType {
@@ -50,6 +51,7 @@ export enum ProposalType {
   BURNING = 'burning',
   BUY_SELL = 'buy_sell',
   MARKETPLACE_ACTION = 'marketplace_action',
+  EXPANSION = 'expansion',
 }
 
 export const ProposalTypeLabels = {
@@ -59,6 +61,7 @@ export const ProposalTypeLabels = {
   [ProposalType.BURNING]: 'Burning',
   [ProposalType.BUY_SELL]: 'Buy/Sell',
   [ProposalType.MARKETPLACE_ACTION]: 'Market Actions',
+  [ProposalType.EXPANSION]: 'Vault Expansion',
 };
 
 export enum ClaimStatus {
@@ -138,6 +141,8 @@ export interface IAssetsWhitelist {
   policyId: string;
   countCapMin?: number;
   countCapMax?: number;
+  valuationMethod?: 'market' | 'custom';
+  customPriceAda?: number;
   updatedAt?: string;
   createdAt?: string;
 }

@@ -141,6 +141,7 @@ export const LavaSteelInput = ({
   required = false,
   placeholder = 'Lorem ipsum',
   error = false,
+  helperText,
   name,
   id,
   autoComplete,
@@ -148,6 +149,7 @@ export const LavaSteelInput = ({
   step = 1,
   min,
   max,
+  maxLength,
   onIncrement,
   onDecrement,
   ...props
@@ -237,6 +239,7 @@ export const LavaSteelInput = ({
           min={min}
           max={max}
           step={step}
+          maxLength={maxLength}
           {...props}
         />
         {isNumberType && !disabled && (
@@ -260,6 +263,7 @@ export const LavaSteelInput = ({
           </div>
         )}
       </div>
+      {helperText && <p className="text-xs text-white/60 mt-1">{helperText}</p>}
     </div>
   );
 };
@@ -310,7 +314,7 @@ export const LavaSearchInput = ({
               lava-input
               bg-input-bg h-10 px-4 py-2.5 rounded-lg
               pr-12 font-medium w-full border border-steel-850
-              focus:outline-none focus:ring-[1px] focus:ring-white transition-all duration-200
+              focus:outline-none focus:ring-[1px] focus:ring-steel-750 transition-all duration-200
               ${className}
             `}
         maxLength={maxLength}

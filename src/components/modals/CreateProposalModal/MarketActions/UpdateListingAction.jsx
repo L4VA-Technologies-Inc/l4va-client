@@ -3,7 +3,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { SelectedAssetItemWithPrice } from '@/components/modals/AssetsList/SelectedAssetItemWithPrice.jsx';
 import { useMarketAssets } from '@/services/api/queries';
-import { getIPFSUrl } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -21,7 +20,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
     if (!assetsData?.data) return [];
 
     let assets = assetsData.data.map(asset => {
-      const imageSrc = getIPFSUrl(asset.imageUrl || asset.metadata?.imageUrl || asset.metadata?.image || asset.image);
+      const imageSrc = asset.imageUrl;
       const isNft = asset.type === 'nft' || asset.isNft || (!asset.isFungibleToken && asset.type !== 'ft');
       const isFungibleToken = asset.type === 'ft' || asset.isFungibleToken || !isNft;
 
@@ -192,7 +191,7 @@ export const UpdateListingAction = ({ vaultId, onDataChange }) => {
     asset => {
       const enhancedAsset = {
         ...asset,
-        src: asset.src || getIPFSUrl(asset.metadata?.image || asset.metadata?.imageUrl || asset.imageUrl),
+        src: asset.src || asset.metadata?.image || asset.metadata?.imageUrl || asset.imageUrl,
       };
 
       return (

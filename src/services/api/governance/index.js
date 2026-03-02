@@ -41,4 +41,19 @@ export class GovernanceApiProvider {
     const response = await axiosInstance.get(GovernanceConfigProvider.getSwappableAssets(vaultId));
     return response;
   }
+
+  static async getGovernanceFees() {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getGovernanceFees());
+    return response;
+  }
+
+  static async buildVoteFeeTransaction(proposalId, data) {
+    const response = await axiosInstance.post(GovernanceConfigProvider.buildVoteFeeTransaction(proposalId), data);
+    return response;
+  }
+
+  static async submitProposalFeePayment(proposalId, data) {
+    const response = await axiosInstance.post(GovernanceConfigProvider.submitProposalFeePayment(proposalId), data);
+    return response;
+  }
 }

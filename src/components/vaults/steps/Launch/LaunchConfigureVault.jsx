@@ -81,6 +81,18 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
                         <p>{data.assetsWhitelist?.length ? formatNum(asset.countCapMax) : 'Not set'}</p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="uppercase font-semibold text-dark-100">Valuation Method</p>
+                        <p>{asset.valuationMethod === 'custom' ? 'Custom Price' : 'Market / Floor Price'}</p>
+                      </div>
+                      {asset.valuationMethod === 'custom' && asset.customPriceAda && (
+                        <div>
+                          <p className="uppercase font-semibold text-dark-100">Custom Price</p>
+                          <p>{formatNum(asset.customPriceAda)} ADA</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}

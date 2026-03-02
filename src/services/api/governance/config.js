@@ -26,4 +26,16 @@ export class GovernanceConfigProvider {
   static getSwappableAssets(vaultId) {
     return `/api/v1/governance/vaults/${vaultId}/swappable-assets`;
   }
+
+  static getGovernanceFees() {
+    return `/api/v1/governance/governance-fees`;
+  }
+
+  static buildVoteFeeTransaction(proposalId) {
+    return `/api/v1/governance/proposals/${proposalId}/vote-fee-transaction`;
+  }
+
+  static submitProposalFeePayment(proposalId) {
+    return `/api/v1/governance/proposals/${proposalId}/submit-fee-payment`;
+  }
 }

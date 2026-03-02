@@ -120,6 +120,8 @@ export const VaultGovernance = ({ vault }) => {
     );
   };
 
+  const showProposalList = ['locked', 'burned', 'terminating', 'expansion'].includes(vault.vaultStatus);
+
   return (
     <div className="text-white min-h-screen p-6 rounded-2xl overflow-hidden">
       <div className="flex flex-col items-center mb-6">
@@ -133,7 +135,7 @@ export const VaultGovernance = ({ vault }) => {
         <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
 
-      {vault.vaultStatus === 'locked' || vault.vaultStatus === 'burned' || vault.vaultStatus === 'terminating' ? (
+      {showProposalList ? (
         selectedProposal ? (
           <div>
             <button
@@ -253,7 +255,10 @@ export const VaultGovernance = ({ vault }) => {
                               <span className="text-gray-600 text-sm">{proposal.votes.abstain || 0}%</span>
                             </div>
                             <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
-                              <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${proposal.abstain}%` }} />
+                              <div
+                                className="bg-gray-600 h-2 rounded-full"
+                                style={{ width: `${proposal.votes.abstain || 0}%` }}
+                              />
                             </div>
                           </div>
                         ) : null}

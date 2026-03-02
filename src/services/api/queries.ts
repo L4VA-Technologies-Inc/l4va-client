@@ -8,6 +8,7 @@ import { TransactionsApiProvider } from '@/services/api/transactions';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
+import { SettingsApiProvider } from '@/services/api/settings/index.js';
 
 export const useVaults = (filters: any) => {
   return useQuery({
@@ -62,18 +63,31 @@ export const useVault = (id: string) => {
   });
 };
 
-export const useVaultAssets = (id: string, search = '', page = 1, limit = 10) => {
+export const useVaultAssets = (
+  id: string,
+  search = '',
+  page = 1,
+  limit = 10,
+  filter: { policyId?: string; type?: string; contributorWalletAddress?: string } = {}
+) => {
   return useQuery({
-    queryKey: ['vault-assets', id, search, page, limit],
-    queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit),
+    queryKey: ['vault-assets', id, search, page, limit, filter],
+    queryFn: () => VaultsApiProvider.getVaultAssets(id, search, page, limit, filter),
     enabled: !!id,
   });
 };
 
-export const useVaultAcquiredAssets = (id: string, page = 1, limit = 10) => {
+export const useVaultAcquiredAssets = (
+  id: string,
+  page = 1,
+  limit = 10,
+  search = '',
+  minQuantity?: number,
+  maxQuantity?: number
+) => {
   return useQuery({
-    queryKey: ['vault-acquired-assets', id, page, limit],
-    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit),
+    queryKey: ['vault-acquired-assets', id, page, limit, search, minQuantity, maxQuantity],
+    queryFn: () => VaultsApiProvider.getVaultAcquiredAssets(id, page, limit, search, minQuantity, maxQuantity),
     enabled: !!id,
   });
 };
@@ -197,6 +211,7 @@ export const useWalletSummaryPaginated = ({
   filter = 'all',
   whitelistedPolicies,
   search,
+  vaultId,
 }: {
   address: string;
   page?: number;
@@ -204,11 +219,20 @@ export const useWalletSummaryPaginated = ({
   filter?: 'all' | 'nfts' | 'tokens';
   whitelistedPolicies?: string[];
   search?: string;
+  vaultId?: string;
 }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search],
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId],
     queryFn: () =>
-      TapToolsApiProvider.getWalletSummaryPaginated({ address, page, limit, filter, whitelistedPolicies, search }),
+      TapToolsApiProvider.getWalletSummaryPaginated({
+        address,
+        page,
+        limit,
+        filter,
+        whitelistedPolicies,
+        search,
+        vaultId,
+      }),
     enabled: !!address,
   });
 };
@@ -305,6 +329,34 @@ export const useVoteOnProposal = () => {
   });
 };
 
+export const useGovernanceFees = () => {
+  return useQuery({
+    queryKey: ['governance-fees'],
+    queryFn: () => GovernanceApiProvider.getGovernanceFees(),
+  });
+};
+
+export const useBuildVoteFeeTransaction = () => {
+  return useMutation({
+    mutationFn: ({ proposalId, data }: { proposalId: string; data: any }) =>
+      GovernanceApiProvider.buildVoteFeeTransaction(proposalId, data),
+  });
+};
+
+export const useSubmitProposalFeePayment = () => {
+  return useMutation({
+    mutationFn: ({
+      proposalId,
+      transaction,
+      signatures,
+    }: {
+      proposalId: string;
+      transaction: string;
+      signatures: string[];
+    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, { transaction, signatures }),
+  });
+};
+
 export const useViewVault = () => {
   return useMutation({
     mutationFn: (vaultId: string) => VaultsApiProvider.viewVault(vaultId),
@@ -342,10 +394,11 @@ export const useDeletePreset = () => {
   });
 };
 
-export const useVaultTokenStatistics = (vaultId: string) => {
+export const useMarketWithOHLCV = (vaultId: string, interval: string = '1h') => {
   return useQuery({
-    queryKey: ['vaults', 'token-statistics', vaultId],
-    queryFn: () => VaultsApiProvider.getVaultTokenStatistics(vaultId),
+    queryKey: ['markets', 'ohlcv', vaultId, interval],
+    queryFn: () => VaultsApiProvider.getMarketByIdWithOHLCV(vaultId, interval),
+    enabled: !!vaultId,
   });
 };
 
@@ -365,5 +418,14 @@ export const useVaultActivity = (
     queryKey: ['vault-activity', vaultId, params],
     queryFn: () => VaultsApiProvider.getVaultActivity(vaultId, params),
     enabled: !!vaultId,
+  });
+};
+
+export const useVlrmFeeSettings = () => {
+  return useQuery({
+    queryKey: ['vlrm-fee-settings'],
+    queryFn: () => SettingsApiProvider.getVlrmFeeSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 };

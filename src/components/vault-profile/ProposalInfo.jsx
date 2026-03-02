@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download } from 'lucide-react';
+import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -296,6 +296,70 @@ export const ProposalInfo = ({ proposalId }) => {
           ? [executionOptions, { label: 'Actions', value: marketplaceActionsInfo, type: 'marketplace_actions_list' }]
           : [];
 
+      case 'expansion': {
+        const expansionItems = [executionOptions];
+        const expansionConfig = proposalInfo?.metadata?.expansion;
+
+        if (expansionConfig) {
+          // Whitelisted Collections - show as expandable list
+          if (expansionConfig.policyIds && expansionConfig.policyIds.length > 0) {
+            expansionItems.push({
+              label: 'Whitelisted Collections',
+              value: {
+                policyIds: expansionConfig.policyIds,
+                labels: expansionConfig.labels || [],
+              },
+              type: 'expansion_policy_list',
+            });
+          }
+
+          // Duration
+          if (expansionConfig.noLimit) {
+            expansionItems.push({
+              label: 'Duration',
+              value: 'No time limit',
+            });
+          } else if (expansionConfig.duration) {
+            const days = Math.floor(expansionConfig.duration / (24 * 60 * 60 * 1000));
+            const hours = Math.floor((expansionConfig.duration % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            expansionItems.push({
+              label: 'Duration',
+              value: days > 0 ? `${days} day${days > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`,
+            });
+          }
+
+          // Asset Max / Progress
+          if (expansionConfig.noMax) {
+            expansionItems.push({
+              label: 'Asset Limit',
+              value: 'No limit',
+            });
+          } else if (expansionConfig.assetMax) {
+            const currentCount = expansionConfig.currentAssetCount || 0;
+            const progressPercent = (currentCount / expansionConfig.assetMax) * 100;
+            expansionItems.push({
+              label: 'Asset Limit',
+              value: `${currentCount} / ${expansionConfig.assetMax} assets (${progressPercent.toFixed(1)}%)`,
+            });
+          }
+
+          // Pricing Method
+          if (expansionConfig.priceType === 'limit' && expansionConfig.limitPrice) {
+            expansionItems.push({
+              label: 'Pricing Method',
+              value: `Fixed: ${expansionConfig.limitPrice} VT per asset`,
+            });
+          } else if (expansionConfig.priceType === 'market') {
+            expansionItems.push({
+              label: 'Pricing Method',
+              value: 'Market (current VT price)',
+            });
+          }
+        }
+
+        return expansionItems;
+      }
+
       default:
         return [];
     }
@@ -449,6 +513,52 @@ export const ProposalInfo = ({ proposalId }) => {
 
                       if (item.type === 'non_fungible_tokens_list') {
                         return <AssetsList key={index} assets={item.value} title="Non Fungible Tokens" />;
+                      }
+
+                      if (item.type === 'expansion_policy_list') {
+                        const { policyIds, labels } = item.value;
+                        return (
+                          <div key={index} className="space-y-2">
+                            <h3 className="text-sm font-medium text-gray-400">{item.label}</h3>
+                            <div className="bg-steel-900 rounded-lg p-4 space-y-3">
+                              {policyIds.map((policyId, idx) => {
+                                const label = labels && labels[idx] ? labels[idx] : null;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="p-3 bg-steel-850 rounded hover:bg-steel-800 transition-colors space-y-2"
+                                  >
+                                    {label && <div className="text-sm text-white font-medium">{label}</div>}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono text-gray-400 break-all flex-1">
+                                        {policyId}
+                                      </span>
+                                      <button
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          navigator.clipboard
+                                            .writeText(policyId)
+                                            .then(() => {
+                                              toast.success('Policy ID copied to clipboard');
+                                            })
+                                            .catch(err => {
+                                              console.error('Failed to copy:', err);
+                                              toast.error('Failed to copy to clipboard');
+                                            });
+                                        }}
+                                        className="p-1 hover:bg-steel-700 rounded-md transition-colors flex-shrink-0"
+                                        type="button"
+                                        title="Copy Policy ID"
+                                      >
+                                        <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;

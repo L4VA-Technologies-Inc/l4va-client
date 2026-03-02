@@ -94,6 +94,40 @@ export const formatAdaPrice = value => {
   return `0.0${subscript}${significantDigits}`;
 };
 
+// Format large numeric values with K/M/B/T suffixes
+export const formatLargeNumber = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  if (numValue >= 1e12) return `${(numValue / 1e12).toFixed(2)}T`;
+  if (numValue >= 1e9) return `${(numValue / 1e9).toFixed(2)}B`;
+  if (numValue >= 1e6) return `${(numValue / 1e6).toFixed(2)}M`;
+  if (numValue >= 1e3) return `${(numValue / 1e3).toFixed(2)}K`;
+  return numValue.toFixed(2);
+};
+
+// Format USD currency values
+export const formatUsdCurrency = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(numValue);
+};
+
+// Format percentage with +/- sign
+export const formatPercentage = value => {
+  if (value === null || value === undefined || value === '') return '-';
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numValue)) return '-';
+  const sign = numValue >= 0 ? '+' : '';
+  return `${sign}${numValue.toFixed(2)}%`;
+};
+
 export const formatCompactNumber = num => {
   if (!num) return 0;
   const formatter = Intl.NumberFormat('en', { notation: 'compact' });
@@ -111,9 +145,9 @@ export const formatAmount = amount => {
 };
 
 export const formatNumber = value => {
-  if (!value) return '-';
+  if (!value) return 0;
   const numValue = typeof value === 'number' ? value : parseFloat(value);
-  if (isNaN(numValue)) return '-';
+  if (isNaN(numValue)) return 0;
   if (numValue >= 1e12) {
     const divided = numValue / 1e12;
     return `${divided % 1 === 0 ? divided.toFixed(0) : divided.toFixed(2)}T`;
@@ -256,7 +290,7 @@ export const transformYupErrors = err => {
 
 export const calculateTimeLeft = endTime => {
   // Validate input - return zeros if invalid
-  if (!endTime || endTime === null || endTime === undefined) {
+  if (!endTime) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
 
@@ -349,16 +383,6 @@ export const formatProposalEndDate = endDate => {
   };
 };
 
-// IPFS URL resolver
-export const getIPFSUrl = src => {
-  if (!src) return src;
-  if (src.startsWith('ipfs://')) {
-    const hash = src.replace('ipfs://', '');
-    return `https://ipfs.io/ipfs/${hash}`;
-  }
-  return src;
-};
-
 const VAULT_STATUS_CONFIG = {
   published: {
     countdownName: 'Contribution starts in:',
@@ -402,6 +426,13 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Create Proposal',
     isCountdownActive: false,
   },
+  expansion: {
+    countdownName: 'Expansion ends in:',
+    getCountdownTime: vault =>
+      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    buttonText: 'Contribute',
+    isCountdownActive: true,
+  },
   created: {
     countdownName: 'Contribution starts in:',
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
@@ -417,17 +448,21 @@ const VAULT_STATUS_CONFIG = {
 };
 
 export const getCountdownName = vault => {
-  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+  const status = vault?.vaultStatus?.toLowerCase();
 
-  if (
-    vault.acquireOpenWindowType === 'custom' &&
-    contributionEnd < Date.now() &&
-    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
-  ) {
-    return VAULT_STATUS_CONFIG['custom_acquire']?.countdownName;
+  // Only check for custom acquire window if vault is in contribution status
+  if (status === 'contribution') {
+    const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+
+    if (
+      vault.acquireOpenWindowType === 'custom' &&
+      contributionEnd < Date.now() &&
+      (!vault.acquirePhaseStart || new Date(vault.acquirePhaseStart).getTime() > Date.now())
+    ) {
+      return VAULT_STATUS_CONFIG['custom_acquire']?.countdownName;
+    }
   }
 
-  const status = vault?.vaultStatus?.toLowerCase();
   return VAULT_STATUS_CONFIG[status]?.countdownName;
 };
 
@@ -437,13 +472,21 @@ export const getCountdownTime = vault => {
   const status = vault.vaultStatus?.toLowerCase();
   if (!status || !VAULT_STATUS_CONFIG[status]) return null;
 
-  const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
-  if (
-    vault.acquireOpenWindowType === 'custom' &&
-    contributionEnd < Date.now() &&
-    (vault.acquirePhaseStart ? vault.acquirePhaseStart < Date.now() : true)
-  ) {
-    return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+  // Only check for custom acquire window if vault is in contribution status
+  if (status === 'contribution') {
+    const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
+
+    if (
+      vault.acquireOpenWindowType === 'custom' &&
+      contributionEnd < Date.now() &&
+      (!vault.acquirePhaseStart || new Date(vault.acquirePhaseStart).getTime() > Date.now())
+    ) {
+      return VAULT_STATUS_CONFIG['custom_acquire'].getCountdownTime(vault);
+    }
+  }
+
+  if (status === 'expansion' && vault.expansionNoLimit && vault.expansionAssetMax) {
+    return `Asset Limit`;
   }
 
   return VAULT_STATUS_CONFIG[status].getCountdownTime(vault);

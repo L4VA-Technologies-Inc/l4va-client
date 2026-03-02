@@ -12,7 +12,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useCurrency } from '@/hooks/useCurrency.ts';
-import { formatNumber } from '@/utils/core.utils';
+import { formatLargeNumber, formatUsdCurrency, formatPercentage } from '@/utils/core.utils';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
@@ -20,26 +20,6 @@ const TIME_PERIOD_MAP = {
   '1d': 'price_change_24h',
   '1w': 'price_change_7d',
   '1m': 'price_change_30d',
-};
-
-const formatCurrency = value => {
-  if (!value) return '-';
-  const numValue = typeof value === 'number' ? value : parseFloat(value);
-  if (isNaN(numValue)) return '-';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(numValue);
-};
-
-const formatPercentage = value => {
-  if (!value) return '-';
-  const numValue = typeof value === 'number' ? value : parseFloat(value);
-  if (isNaN(numValue)) return '-';
-  const sign = numValue >= 0 ? '+' : '';
-  return `${sign}${numValue.toFixed(2)}%`;
 };
 
 const LoadingState = () => (
@@ -282,23 +262,25 @@ export const VaultTokensStatistics = () => {
                         </div>
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatCurrency(item.price)}</td>
+                      <td className="px-4 py-3 text-white">{formatUsdCurrency(item.price)}</td>
 
                       <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(priceChange))}>
                         {formatPercentage(priceChange)}
                       </td>
 
                       <td className={clsx('px-4 py-3 font-medium', getDeltaColor(item.delta))}>
-                        {formatNumber(item.delta)}%
+                        {formatLargeNumber(item.delta)}%
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatNumber(item.mcap)}</td>
+                      <td className="px-4 py-3 text-white">{formatLargeNumber(item.mcap)}</td>
 
                       <td className="px-4 py-3 text-white">
-                        {currency === 'ada' ? `₳${formatNumber(item.tvl_ada)}` : `$${formatNumber(item.tvl_usd)}`}
+                        {currency === 'ada'
+                          ? `₳${formatLargeNumber(item.tvl_ada)}`
+                          : `$${formatLargeNumber(item.tvl_usd)}`}
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatNumber(item.circSupply)}</td>
+                      <td className="px-4 py-3 text-white">{formatLargeNumber(item.circSupply)}</td>
 
                       <td className="px-4 py-3">
                         <PrimaryButton size="sm" onClick={() => navigate({ to: `/vaults/${item.vault_id}` })}>

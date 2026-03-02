@@ -4,6 +4,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { LavaRadio } from '@/components/shared/LavaRadio';
 import { useAssets } from '@/hooks/useAssets';
 
 export const LavaWhitelistWithCaps = ({
@@ -160,6 +161,8 @@ export const LavaWhitelistWithCaps = ({
         policyName: 'N/A',
         collectionName: null,
         countCapMax: Math.min(1000, maxCapValue),
+        valuationMethod: 'market',
+        customPriceAda: null,
         uniqueId: Date.now(),
       },
     ];
@@ -357,7 +360,6 @@ export const LavaWhitelistWithCaps = ({
                   <LavaInput
                     required={true}
                     label="Max asset cap"
-                    style={{ fontSize: '20px' }}
                     value={asset.countCapMax}
                     onChange={e => {
                       const inputValue = e.target.value;
@@ -380,6 +382,61 @@ export const LavaWhitelistWithCaps = ({
                     );
                   })()}
                 </div>
+              </div>
+
+              <div className="space-y-4 mt-4">
+                <div>
+                  <LavaRadio
+                    label="*Asset Valuation Method"
+                    name={`valuationMethod_${asset.uniqueId}`}
+                    options={[
+                      { name: 'market', label: 'Market / Floor Price' },
+                      { name: 'custom', label: 'Custom Price' },
+                    ]}
+                    value={asset.valuationMethod || 'market'}
+                    onChange={value => updateAsset(asset.uniqueId, 'valuationMethod', value)}
+                  />
+                  {(() => {
+                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                    return (
+                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].valuationMethod`]}</p>
+                    );
+                  })()}
+                </div>
+
+                {asset.valuationMethod === 'custom' && (
+                  <div>
+                    <LavaInput
+                      required={true}
+                      label="Custom Price (ADA)"
+                      type="text"
+                      placeholder="Enter price in ADA"
+                      style={{ fontSize: '20px' }}
+                      value={asset.customPriceAda || ''}
+                      onChange={e => {
+                        const inputValue = e.target.value;
+                        // Allow decimal numbers
+                        if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                          updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
+                        }
+                      }}
+                      onBlur={e => {
+                        const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
+                        const limitedValue = Math.min(rawValue, maxCapValue);
+                        updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
+                      }}
+                      hint="The custom ADA price for this policy"
+                    />
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors[`assetsWhitelist[${index}].customPriceAda`]}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             </div>
           );

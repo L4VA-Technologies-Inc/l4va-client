@@ -34,7 +34,7 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance.ts';
 import { VaultCreationTutorial } from '@/components/vaults/VaultCreationTutorial';
-import { usePresets, useDeletePreset } from '@/services/api/queries';
+import { usePresets, useDeletePreset, useVlrmFeeSettings } from '@/services/api/queries';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
@@ -75,9 +75,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const { data: presetsData, isLoading: isPresetsLoading } = usePresets();
   const { mutateAsync: deletePreset } = useDeletePreset();
+  const { data: vlrmFeeData } = useVlrmFeeSettings();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
 
-  // Check if user can create vaults (mainnet only)
   useEffect(() => {
     if (IS_MAINNET && user?.address) {
       const authorized = canCreateVault(user.address);
@@ -409,6 +409,19 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const updateField = async (fieldName, value) => {
     setVaultData(prev => ({ ...prev, [fieldName]: value }));
 
+    if (currentStep !== 1) {
+      const advancedPreset = presets.find(
+        preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
+      );
+
+      const advancedPresetId = advancedPreset?.id ? advancedPreset.id.toString() : 'advanced';
+
+      if (selectedPresetId !== advancedPresetId) {
+        setSelectedPresetId(advancedPresetId);
+        isPresetManuallyChanged.current = true;
+      }
+    }
+
     const isValid = await validateField(fieldName, value);
 
     if (isValid) {
@@ -457,8 +470,20 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         }
       }
 
-      if (currentBalance < MIN_VLRM_REQUIRED) {
-        toast.error(`You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`);
+      const vlrmFeeSettings = vlrmFeeData?.data || {
+        vlrm_creator_fee: 100,
+        vlrm_creator_fee_enabled: true,
+      };
+
+      const requiredVlrm = vlrmFeeSettings.vlrm_creator_fee_enabled
+        ? MIN_VLRM_REQUIRED + vlrmFeeSettings.vlrm_creator_fee
+        : MIN_VLRM_REQUIRED;
+
+      if (currentBalance < requiredVlrm) {
+        const feeMessage = vlrmFeeSettings.vlrm_creator_fee_enabled
+          ? `You need at least ${requiredVlrm} VLRM to launch a vault (${MIN_VLRM_REQUIRED} base + ${vlrmFeeSettings.vlrm_creator_fee} creator fee).`
+          : `You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`;
+        toast.error(feeMessage);
         return;
       }
 
@@ -790,23 +815,21 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
     if (!selectedPresetId) return;
 
-    if (selectedPresetId === 'advanced') {
+    const selectedPreset = presets.find(preset => preset?.id?.toString() === selectedPresetId);
+    const isAdvanced =
+      selectedPresetId === 'advanced' ||
+      selectedPreset?.type?.toLowerCase() === 'advanced' ||
+      selectedPreset?.name?.toLowerCase() === 'advanced';
+
+    if (isAdvanced) {
       setVaultData(prev => ({
         ...prev,
-        preset: 'advanced',
-        preset_id: null,
-        tokensForAcquires: null,
-        acquireReserve: null,
-        liquidityPoolContribution: null,
-        creationThreshold: null,
-        voteThreshold: 0,
-        cosigningThreshold: null,
-        executionThreshold: null,
+        preset: selectedPreset?.type || 'advanced',
+        preset_id: selectedPreset?.id ?? null,
       }));
       return;
     }
 
-    const selectedPreset = presets.find(preset => preset?.id?.toString() === selectedPresetId);
     if (!selectedPreset) {
       if (!isPresetsLoading) {
         setSelectedPresetId('advanced');

@@ -56,6 +56,7 @@ export const useInfiniteWalletAssets = ({
   pageSize = 20,
   whitelistedPolicies,
   search,
+  vaultId,
 }: {
   walletAddress: string;
   activeTab: 'NFT' | 'FT' | 'ALL';
@@ -63,6 +64,7 @@ export const useInfiniteWalletAssets = ({
   pageSize?: number;
   whitelistedPolicies?: string[];
   search?: string;
+  vaultId?: string;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allAssets, setAllAssets] = useState<WalletAsset[]>([]);
@@ -85,6 +87,7 @@ export const useInfiniteWalletAssets = ({
     filter: apiFilter,
     whitelistedPolicies,
     search,
+    vaultId,
   });
 
   // Reset when dependencies change
@@ -94,7 +97,7 @@ export const useInfiniteWalletAssets = ({
     setOverview(null);
     setHasNextPage(false);
     loadedPages.current.clear();
-  }, [walletAddress, apiFilter, pageSize, search]);
+  }, [walletAddress, apiFilter, pageSize, search, vaultId]);
 
   // Handle new data from the hook
   useEffect(() => {
