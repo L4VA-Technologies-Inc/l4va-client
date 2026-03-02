@@ -17,7 +17,6 @@ const tabOptions = [
   { id: 'create-vault', name: 'Vault Creation', type: 'create-vault' },
   { id: 'contribute', name: 'Contribution', type: 'contribute' },
   { id: 'acquire', name: 'Acquire', type: 'acquire' },
-  { id: 'distribution', name: 'Distribution', type: 'distribution' },
   { id: 'burn', name: 'Burn', type: 'burn' },
 ];
 
