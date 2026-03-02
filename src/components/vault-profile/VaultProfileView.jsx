@@ -15,19 +15,55 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 const VaultContribution = lazy(() =>
-  import('@/components/vault-profile/VaultContribution').then(module => ({
-    default: module.VaultContribution,
-  }))
+  import('@/components/vault-profile/VaultContribution')
+    .then(module => ({
+      default: module.VaultContribution,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultContribution:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load contribution section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 const VaultStats = lazy(() =>
-  import('@/components/vault-profile/VaultStats').then(module => ({
-    default: module.VaultStats,
-  }))
+  import('@/components/vault-profile/VaultStats')
+    .then(module => ({
+      default: module.VaultStats,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultStats:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load stats section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 const VaultTabs = lazy(() =>
-  import('@/components/vault-profile/VaultTabs').then(module => ({
-    default: module.VaultTabs,
-  }))
+  import('@/components/vault-profile/VaultTabs')
+    .then(module => ({
+      default: module.VaultTabs,
+    }))
+    .catch(error => {
+      console.error('Failed to load VaultTabs:', error);
+      return {
+        default: () => (
+          <div className="p-6 text-center">
+            <div className="text-red-400 mb-2">⚠️ Failed to load tabs section</div>
+            <div className="text-steel-400 text-sm">Please refresh the page to try again</div>
+          </div>
+        ),
+      };
+    })
 );
 import { Spinner } from '@/components/Spinner';
 import { VaultSkeleton } from '@/components/vault-profile/VaultSkeleton';
