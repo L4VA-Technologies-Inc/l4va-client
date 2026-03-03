@@ -169,15 +169,14 @@ const TabsSkeleton = () => (
 );
 
 export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
-  const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
-  const { openModal } = useModalControls();
-
   const router = useRouter();
-
   const navigate = useNavigate();
 
-  const { isAda } = useCurrency();
+  const { isAuthenticated } = useAuth();
+  const { openModal } = useModalControls();
+  const { isAda, currencySymbol } = useCurrency();
+
+  const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
 
   useVaultStatusTracker(vault?.id);
@@ -345,6 +344,53 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         params: { id: ownerId },
       });
     }
+  };
+
+  // Calculate vault statistics
+  const hasActiveLp = vault?.hasActiveLp;
+  const isAcquirePhase = vault?.vaultStatus === 'acquire';
+
+  const ftGains = (() => {
+    if (!hasActiveLp) return 'N/A';
+    const gainsValue = isAda ? vault.gainsAda : vault.gainsUsd;
+    if (gainsValue == null) return 'N/A';
+    const isNegative = gainsValue < 0;
+    return `${isNegative ? '-' : ''}${currencySymbol}${formatNum(Math.abs(gainsValue))}`;
+  })();
+
+  const fdv = (() => {
+    if (!hasActiveLp && !isAcquirePhase) return 'N/A';
+    const fdvValue = isAda ? vault.fdv : vault.fdvUsd;
+    if (fdvValue == null) return 'N/A';
+    return `${currencySymbol}${formatNum(fdvValue)}`;
+  })();
+
+  const fdvTvl = (() => {
+    if (!hasActiveLp && !isAcquirePhase) return 'N/A';
+    if (vault.fdvTvl == null) return 'N/A';
+    if (vault.fdvTvl < 0.01 && vault.fdvTvl > 0) return '< 0.01';
+    return vault.fdvTvl.toFixed(2);
+  })();
+
+  const vtPrice = (() => {
+    if (!hasActiveLp || !vault.vtPrice) return 'N/A';
+    const priceValue = isAda ? vault.vtPrice : vault.vtPriceUsd;
+    return `${currencySymbol}${formatNum(priceValue)}`;
+  })();
+
+  const tvl = (() => {
+    const tvlValue = isAda ? vault.assetsPrices?.totalValueAda : vault.assetsPrices?.totalValueUsd;
+    if (tvlValue == null) return 'N/A';
+    return `${currencySymbol}${formatNum(tvlValue)}`;
+  })();
+
+  const vaultStats = {
+    assetValue: vault.vaultStatus,
+    ftGains,
+    fdv,
+    fdvTvl,
+    vtPrice,
+    tvl,
   };
 
   const renderVaultInfo = () => (
@@ -545,7 +591,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <SwapComponent
               overrideDisplay
               config={{
-                defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultToken: vault.hasActiveLp
+                  ? `${vault.policyId}${vault.assetVaultName}`
+                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
                 style: { width: '100%' },
               }}
             />
@@ -560,53 +608,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <div className="mb-6">
               {deferredReady ? (
                 <Suspense fallback={<StatsSkeleton />}>
-                  <VaultStats
-                    assetValue={vault.vaultStatus}
-                    ftGains={(() => {
-                      // Only show gains if vault has active LP
-                      if (!vault?.hasActiveLp) return 'N/A';
-                      if (isAda) {
-                        if (!vault?.gainsAda) return 'N/A';
-                        const isNegative = vault.gainsAda < 0;
-                        return `${isNegative ? '-' : ''}₳${formatNum(Math.abs(vault.gainsAda))}`;
-                      } else {
-                        if (!vault?.gainsUsd) return 'N/A';
-                        const isNegative = vault.gainsUsd < 0;
-                        return `${isNegative ? '-' : ''}$${formatNum(Math.abs(vault.gainsUsd))}`;
-                      }
-                    })()}
-                    fdv={(() => {
-                      // Only show FDV if vault has active LP
-                      if (!vault?.hasActiveLp) return 'N/A';
-                      if (isAda) {
-                        return vault?.fdv ? `₳${formatNum(vault.fdv)}` : 'N/A';
-                      } else {
-                        return vault?.fdvUsd ? `$${formatNum(vault.fdvUsd)}` : 'N/A';
-                      }
-                    })()}
-                    fdvTvl={
-                      // Only show FDV/TVL if vault has active LP and is in appropriate phase
-                      !vault?.hasActiveLp || vault.vaultStatus === 'contribution' || vault.vaultStatus === 'acquire'
-                        ? 'N/A'
-                        : vault.fdvTvl != null
-                          ? vault.fdvTvl < 0.01 && vault.fdvTvl > 0
-                            ? '< 0.01'
-                            : vault.fdvTvl.toFixed(2)
-                          : 'N/A'
-                    }
-                    vtPrice={vault?.hasActiveLp ? (vault.vtPrice ?? 'N/A') : 'N/A'}
-                    tvl={(() => {
-                      if (isAda) {
-                        return vault.assetsPrices?.totalValueAda
-                          ? `₳${formatNum(vault.assetsPrices?.totalValueAda)}`
-                          : 'N/A';
-                      } else {
-                        return vault.assetsPrices?.totalValueUsd
-                          ? `$${formatNum(vault.assetsPrices?.totalValueUsd)}`
-                          : 'N/A';
-                      }
-                    })()}
-                  />
+                  <VaultStats {...vaultStats} />
                 </Suspense>
               ) : (
                 <StatsSkeleton />

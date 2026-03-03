@@ -94,7 +94,6 @@ export interface IVault {
   privacy?: VaultPrivacy;
   description?: string;
   valueMethod?: ValueMethod;
-  publicationHash?: string;
   contractAddress?: string;
   policyId?: string;
   assetVaultName?: string;
