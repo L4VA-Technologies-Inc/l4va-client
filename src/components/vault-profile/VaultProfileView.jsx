@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3 } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3, Info } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -127,6 +127,19 @@ const StatsSkeleton = () => (
   </div>
 );
 
+const PhaseTransitionInfo = () => (
+  <div className="flex gap-2 p-3 rounded-lg bg-steel-900/50 border border-steel-850">
+    <Info className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+    <div className="text-xs text-steel-300 space-y-1">
+      <p className="font-medium text-steel-200">How vault phases work</p>
+      <p>
+        Phase transitions take time. After the countdown ends, distribution and processing happen on-chain. The next
+        phase will become available once this is complete.
+      </p>
+    </div>
+  </div>
+);
+
 const TabsSkeleton = () => (
   <div className="pt-4 space-y-6">
     <div className="flex gap-6 border-b border-steel-900 pb-0">
@@ -229,6 +242,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
   const handleTabChange = tab => setActiveTab(tab);
+
+  const isPhaseTransitioning = () => {
+    if (!vault) return false;
+    const now = Date.now();
+
+    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
+      const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
+      return now >= contributionEnd;
+    }
+
+    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
+      const acquireEnd = new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
+      return now >= acquireEnd;
+    }
+
+    return false;
+  };
 
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
@@ -570,12 +600,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             </div>
           </div>
           <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
-          <div className="mb-6">
+          <div className="mb-6 space-y-2">
             <VaultCountdown
               className="h-[65px]"
               countdownValue={getCountdownTime(vault)}
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
+            {isPhaseTransitioning() && <PhaseTransitionInfo />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
           {vault.vaultStatus !== 'locked' ? (
