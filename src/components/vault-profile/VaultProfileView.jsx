@@ -655,21 +655,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             )}
           </div>
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
-            {deferredReady ? (
-              <Suspense fallback={<div className="h-12 w-full bg-steel-900 rounded-xl" />}>
-                <SwapComponent
-                  overrideDisplay
-                  config={{
-                    defaultToken: vault.hasActiveLp
-                      ? `${vault.policyId}${vault.assetVaultName}`
-                      : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-                    style: { width: '100%' },
-                  }}
-                />
-              </Suspense>
-            ) : (
-              <div className="h-12 w-full bg-steel-900 rounded-xl" />
-            )}
+            <SwapComponent
+              overrideDisplay
+              config={{
+                defaultToken: vault.hasActiveLp
+                  ? `${vault.policyId}${vault.assetVaultName}`
+                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                style: { width: '100%' },
+              }}
+            />
           </div>
         </div>
       </div>
