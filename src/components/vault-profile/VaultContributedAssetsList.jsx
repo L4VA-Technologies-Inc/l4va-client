@@ -192,103 +192,113 @@ const VaultContributedAssetsList = ({ vault }) => {
                 </tr>
               </thead>
               <tbody>
-                {assets.map((asset, index) => (
-                  <React.Fragment key={asset.id}>
-                    <tr
-                      className={`cursor-pointer transition-all duration-300 ${
-                        expandedAsset === index ? 'bg-steel-750' : 'bg-steel-850 hover:bg-steel-750'
-                      }`}
-                      onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
-                    >
-                      <td className="px-4 py-3">
-                        <img
-                          alt={asset.name || 'NFT'}
-                          className="w-12 h-12 rounded-lg object-cover"
-                          src={asset.image || FALLBACK_IMAGE}
-                          onError={e => {
-                            e.target.src = FALLBACK_IMAGE;
-                          }}
-                        />
-                      </td>
-                      <td className="px-4 py-3 font-medium">
-                        {asset?.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId))}
-                      </td>
-                      <td className="px-4 py-3 uppercase">{asset.type}</td>
-                      <td className="px-4 py-3 capitalize">{asset.status}</td>
-                      <td className="px-4 py-3 capitalize">{asset.originType}</td>
-                      <td className="px-4 py-3">{asset.quantity}</td>
-                      <td className="px-4 py-3">
-                        {currencySymbol}
-                        {formatAdaPrice(
-                          asset.quantity *
-                            parseFloat(isAda ? asset.floorPrice || asset.dexPrice || 0 : asset.floorPriceUsd || 0)
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                          type="button"
+                {assets.map((asset, index) => {
+                  const displayName =
+                    asset?.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
+                  const canWrapName = /\s/.test(displayName);
+                  return (
+                    <React.Fragment key={asset.id}>
+                      <tr
+                        className={`cursor-pointer transition-all duration-300 ${
+                          expandedAsset === index ? 'bg-steel-750' : 'bg-steel-850 hover:bg-steel-750'
+                        }`}
+                        onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
+                      >
+                        <td className="px-4 py-3">
+                          <img
+                            alt={asset.name || 'NFT'}
+                            className="w-12 h-12 rounded-lg object-cover"
+                            src={asset.image || FALLBACK_IMAGE}
+                            onError={e => {
+                              e.target.src = FALLBACK_IMAGE;
+                            }}
+                          />
+                        </td>
+                        <td
+                          className="px-4 py-3 font-medium max-w-[180px]"
+                          title={asset?.name || (asset.assetId === 'lovelace' ? 'ADA' : asset.assetId)}
                         >
-                          {expandedAsset === index ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedAsset === index && (
-                      <tr className="bg-steel-750">
-                        <td colSpan="8" className="px-4 py-2">
-                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
-                            <div>
-                              <p className="font-medium">Policy ID:</p>
-                              <div className="flex items-center gap-2">
-                                <p className="break-all">{substringAddress(asset.policyId)}</p>
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(asset.policyId);
-                                    toast.success('Policy ID copied to clipboard');
-                                  }}
-                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p className="font-medium">Asset ID:</p>
-                              <div className="flex items-center gap-2">
-                                <p className="break-all">{substringAddress(asset.assetId)}</p>
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(asset.assetId);
-                                    toast.success('Asset ID copied to clipboard');
-                                  }}
-                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p className="font-medium">Added At:</p>
-                              <p>{new Date(asset.addedAt).toLocaleDateString()}</p>
-                            </div>
-                            <div>
-                              <p className="font-medium">Updated At:</p>
-                              <p>{new Date(asset.updatedAt).toLocaleDateString()}</p>
-                            </div>
-                            {asset?.description && (
-                              <div className="col-span-2">
-                                <p className="font-medium">Description:</p>
-                                <p>{asset.description}</p>
-                              </div>
-                            )}
-                          </div>
+                          <span className={canWrapName ? 'block break-words line-clamp-3' : 'block truncate'}>
+                            {displayName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 uppercase">{asset.type}</td>
+                        <td className="px-4 py-3 capitalize">{asset.status}</td>
+                        <td className="px-4 py-3 capitalize">{asset.originType}</td>
+                        <td className="px-4 py-3">{asset.quantity}</td>
+                        <td className="px-4 py-3">
+                          {currencySymbol}
+                          {formatAdaPrice(
+                            asset.quantity *
+                              parseFloat(isAda ? asset.floorPrice || asset.dexPrice || 0 : asset.floorPriceUsd || 0)
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                            type="button"
+                          >
+                            {expandedAsset === index ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                      {expandedAsset === index && (
+                        <tr className="bg-steel-750">
+                          <td colSpan="8" className="px-4 py-2">
+                            <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                              <div>
+                                <p className="font-medium">Policy ID:</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="break-all">{substringAddress(asset.policyId)}</p>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(asset.policyId);
+                                      toast.success('Policy ID copied to clipboard');
+                                    }}
+                                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium">Asset ID:</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="break-all">{substringAddress(asset.assetId)}</p>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(asset.assetId);
+                                      toast.success('Asset ID copied to clipboard');
+                                    }}
+                                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="font-medium">Added At:</p>
+                                <p>{new Date(asset.addedAt).toLocaleDateString()}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">Updated At:</p>
+                                <p>{new Date(asset.updatedAt).toLocaleDateString()}</p>
+                              </div>
+                              {asset?.description && (
+                                <div className="col-span-2">
+                                  <p className="font-medium">Description:</p>
+                                  <p>{asset.description}</p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
