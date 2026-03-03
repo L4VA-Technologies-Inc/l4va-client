@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils.js';
 
 export const VaultStats = ({
   assetValue,
-  // ftGains = 'N/A',
+  ftGains = 'N/A',
   fdv = 'N/A',
   fdvTvl = 'N/A',
   tvl = 'N/A',
@@ -20,7 +20,7 @@ export const VaultStats = ({
     },
     {
       label: 'VT GAINS',
-      value: 'N/A', // Placeholder until we have the logic to calculate VT gains
+      value: ftGains,
     },
     {
       label: 'FDV',
