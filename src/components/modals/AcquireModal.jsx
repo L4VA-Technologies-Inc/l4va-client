@@ -28,15 +28,38 @@ export const AcquireModal = ({ vault, onClose }) => {
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-  const userShare =
-    acquireAmountNum > 0 ? acquireAmountNum / (vault.assetsPrices.totalAcquiredAda + acquireAmountNum) : 0;
+  // TVL (Total Value Locked) - the value of contributed assets
+  const tvl = vault.assetsPrices?.totalValueAda || 0;
+  const totalAcquiredAda = vault.assetsPrices?.totalAcquiredAda || 0;
 
+  // Fair value ADA = expected total ADA if FDV equals TVL
+  // e.g., if TVL = 10,000 and tokensForAcquires = 50%, fairValueAda = 5,000
+  const fairValueAda = tvl * (tokensForAcquires / 100);
+
+  // Calculate user share based on fair value projection or actual total acquired
+  // - Before fair value is reached: project based on fair value (more intuitive estimate)
+  // - After fair value exceeded: use actual total (reflects real dilution)
+  let userShare = 0;
+  if (acquireAmountNum > 0 && fairValueAda > 0) {
+    // Total ADA that would be in the pool after this acquisition
+    const totalAfterAcquisition = totalAcquiredAda + acquireAmountNum;
+
+    if (totalAfterAcquisition >= fairValueAda) {
+      // Total would exceed fair value - use actual amounts
+      userShare = acquireAmountNum / totalAfterAcquisition;
+    } else {
+      // Total below fair value - project as if fair value will be reached
+      userShare = acquireAmountNum / fairValueAda;
+    }
+  }
+
+  // Net % available for acquirers (after LP contribution)
   const totalAvailableTokenPercent = tokensForAcquires * (1 - liquidityPoolContribution / 100 / 2);
   const totalAvailableTokenAmount = Math.floor((totalAvailableTokenPercent / 100) * ftTokenSupply);
 
-  // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
+  // Est Vault Token (%) = user's share of the acquirer pool
   const estVaultTokenPercent = totalAvailableTokenPercent * userShare;
-  // Est Vault Token Amount = Est Vault Token (%) x Token Supply
+  // Est Vault Token Amount = estimated token amount user will receive
   const estVaultTokenAmount = Math.floor(totalAvailableTokenAmount * userShare);
 
   const handleAcquire = async () => {
@@ -184,13 +207,23 @@ export const AcquireModal = ({ vault, onClose }) => {
           <div className="bg-slate-950 p-6 rounded-[10px]">
             <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
             <div className="grid grid-cols-2 gap-6">
+              <div className="text-center">
+                {/* User's estimated % of vault tokens based on entered amount */}
+                <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
+                <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
+              </div>
+              <div className="text-center">
+                {/* User's estimated vault token amount */}
+                <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
+                <p className="text-xl font-medium">{formatNum(estVaultTokenAmount)}</p>
+              </div>
               <div className="space-y-1 text-center">
-                {/* ADA Amount to send to acquire Vault Tokens */}
+                {/* Net % of vault tokens available to all acquirers (after LP) */}
                 <p className="text-dark-100 text-sm m-0">Total % available for acquirers</p>
                 <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
               </div>
               <div className="text-center">
-                {/* Total ADA Sent by Vault Token Acquirers up until now */}
+                {/* Total ADA sent by acquirers so far */}
                 <p className="text-dark-100 text-sm">Total ADA sent by acquirers</p>
                 <p className="text-xl font-medium">
                   {currencySymbol}
@@ -198,16 +231,6 @@ export const AcquireModal = ({ vault, onClose }) => {
                     currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd
                   )}
                 </p>
-              </div>
-              <div className="text-center">
-                {/* Total Vault Token % of supply available to Acquirers */}
-                <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
-                <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
-              </div>
-              <div className="text-center">
-                {/* Total Vault Token quantity available to Acquirers */}
-                <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
-                <p className="text-xl font-medium">{estVaultTokenAmount}</p>
               </div>
             </div>
 

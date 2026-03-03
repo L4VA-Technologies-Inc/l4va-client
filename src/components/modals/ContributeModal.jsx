@@ -97,16 +97,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     return total;
   }, [selectedNFTs, isAda]);
 
-  // Calculate LP and contributor allocations (matching distribution-calculation.service.ts logic)
+  // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
   const tokensForAcqPercent = vault.tokensForAcquires / 100;
-  const lpPercent = vault.liquidityPoolContribution / 100;
-
-  // LP gets half of the LP percentage as VT tokens (the other half is ADA)
-  const lpVtAmount = (lpPercent * vault.ftTokenSupply) / 2;
-
-  // Tokens available for contributors = (Total Supply - LP VT) × (1 - Acquirer %)
-  // This matches calculateContributorTokens in distribution-calculation.service.ts
-  const tokensForContributors = (vault.ftTokenSupply - lpVtAmount) * (1 - tokensForAcqPercent);
+  const lpContributionPercent = vault.liquidityPoolContribution / 100;
+  const vaultAllocation = (1 - tokensForAcqPercent) * (1 - lpContributionPercent / 2);
 
   // Only show estimates if assets are selected
   const hasSelectedAssets = selectedNFTs.length > 0 && estimatedValue > 0;
@@ -158,18 +152,23 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const totalContributorValue = currentVaultTVL + estimatedValue;
   const userShareOfContributors = totalContributorValue > 0 ? estimatedValue / totalContributorValue : 0;
 
+  // Total tokens available for contributors (after LP and acquirers allocation)
+  const tokensForContributors = vaultAllocation * vault.ftTokenSupply;
+
   // User's proportional share of contributor tokens
   const userEstimatedTokens = hasSelectedAssets ? Math.floor(userShareOfContributors * tokensForContributors) : 0;
 
-  const vaultAllocationPercent = hasSelectedAssets ? (userShareOfContributors * 100).toFixed(2) : '0.00';
+  const vaultAllocationPercent = hasSelectedAssets
+    ? (userShareOfContributors * vaultAllocation * 100).toFixed(2)
+    : '0.00';
 
   const estimatedTickerVal = hasSelectedAssets ? userEstimatedTokens.toLocaleString() : '0';
 
   // Estimated Amount to Receive = (1 - Tokens for Acquirers % - LP ADA %) × Estimated Value
-  // LP ADA % = LP % / 2 (since LP gets half as VT, half as ADA)
+  // LP ADA % = LP Contribution % / 2 (since LP gets half as VT, half as ADA)
   // This represents the portion of contributed value returned to contributors as ADA
   const estimatedReceived = hasSelectedAssets
-    ? ((1 - tokensForAcqPercent - lpPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
+    ? ((1 - tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
     : '0.00';
   const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
 
