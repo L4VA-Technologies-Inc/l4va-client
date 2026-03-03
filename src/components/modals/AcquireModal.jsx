@@ -7,12 +7,14 @@ import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constant
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { formatNum } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
   const { name, tokensForAcquires, liquidityPoolContribution, ftTokenSupply } = vault;
+  const { currency, currencySymbol } = useCurrency();
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
@@ -184,13 +186,18 @@ export const AcquireModal = ({ vault, onClose }) => {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-1 text-center">
                 {/* ADA Amount to send to acquire Vault Tokens */}
-                <p className="text-dark-100 text-sm">ADA Amount</p>
-                <p className="text-2xl font-medium">{formatNum(acquireAmountNum)}</p>
+                <p className="text-dark-100 text-sm m-0">Total % available for acquirers</p>
+                <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
               </div>
               <div className="text-center">
                 {/* Total ADA Sent by Vault Token Acquirers up until now */}
-                <p className="text-dark-100 text-sm">Total ADA Sent</p>
-                <p className="text-xl font-medium">{formatNum(vault.assetsPrices.totalAcquiredAda)}</p>
+                <p className="text-dark-100 text-sm">Total ADA sent by acquirers</p>
+                <p className="text-xl font-medium">
+                  {currencySymbol}
+                  {formatNum(
+                    currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd
+                  )}
+                </p>
               </div>
               <div className="text-center">
                 {/* Total Vault Token % of supply available to Acquirers */}
