@@ -373,9 +373,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   })();
 
   const vtPrice = (() => {
-    if (!hasActiveLp || !vault.vtPrice) return 'N/A';
+    if (!hasActiveLp) return 'N/A';
     const priceValue = isAda ? vault.vtPrice : vault.vtPriceUsd;
-    return `${currencySymbol}${formatNum(priceValue)}`;
+    if (priceValue == null) return 'N/A';
   })();
 
   const tvl = (() => {
