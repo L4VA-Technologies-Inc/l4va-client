@@ -252,12 +252,12 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="text-xs text-dark-100">
                 Transaction cost:{' '}
                 <span className="text-white font-medium">
-                  ~{((vault.protocolContributorsFeeAda || 0) + 0.77).toFixed(2)} ADA
+                  ~{((vault.protocolContributorsFeeAda || 0) + 1.72).toFixed(2)} ADA
                 </span>{' '}
                 (
                 {vault.protocolContributorsFeeAda > 0
-                  ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~0.77 ADA Network fees`
-                  : '~0.77 ADA Network fees'}
+                  ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
+                  : '~1.72 ADA Network fees'}
                 )
               </div>
             </div>

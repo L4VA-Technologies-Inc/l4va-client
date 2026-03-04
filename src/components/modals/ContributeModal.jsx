@@ -299,12 +299,12 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
           Transaction cost:{' '}
           <span className="text-white font-medium">
-            ~{((vault.protocolContributorsFeeAda || 0) + 1.9).toFixed(2)} ADA
+            ~{((vault.protocolContributorsFeeAda || 0) + 1.72).toFixed(2)} ADA
           </span>{' '}
           (
           {vault.protocolContributorsFeeAda > 0
-            ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.9 ADA Network fees`
-            : '~1.9 ADA Network fees'}
+            ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
+            : '~1.72 ADA Network fees'}
           )
         </div>
       </div>
