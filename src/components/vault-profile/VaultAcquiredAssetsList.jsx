@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Copy, Search, Coins, Users, Wallet } from 'luci
 import toast from 'react-hot-toast';
 
 import { useVaultAcquiredAssets } from '@/services/api/queries';
-import { formatNumber, substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils';
+import { formatNumber, substringAddress, formatNum, formatLargeNumber } from '@/utils/core.utils';
 import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -92,9 +92,9 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               <span className="text-[11px] text-white font-semibold uppercase tracking-wider">Total Acquired</span>
             </div>
             <div className="flex items-baseline gap-1 text-white">
-              <span className="text-3xl md:text-4xl font-bold tracking-tight">
+              <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatAdaPrice(isAda ? data?.data?.totalAcquired || 0 : data?.data?.totalAcquiredUsd || 0)}
+                {formatLargeNumber(isAda ? data?.data?.totalAcquired || 0 : data?.data?.totalAcquiredUsd || 0)}
               </span>
             </div>
           </div>
