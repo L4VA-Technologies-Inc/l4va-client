@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 import { Pagination } from '@/components/shared/Pagination';
 import { useVaultAssets } from '@/services/api/queries';
-import { substringAddress, formatAdaPrice, formatNumber } from '@/utils/core.utils';
+import { substringAddress, formatAdaPrice, formatNumber, formatLargeNumber } from '@/utils/core.utils';
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
@@ -92,16 +92,16 @@ const VaultContributedAssetsList = ({ vault }) => {
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10">
-        <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-steel-800/50">
+        <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-steel-800/50">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2 text-steel-400">
               <Wallet className="w-4 h-4 text-orange-500" />
               <span className="text-[11px] text-white font-semibold uppercase tracking-wider">Total Assets Value</span>
             </div>
             <div className="flex items-baseline gap-1 text-white">
-              <span className="text-3xl md:text-4xl font-bold tracking-tight">
+              <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatAdaPrice(isAda ? statistics?.totalAssetValueAda || 0 : statistics?.totalAssetValueUsd || 0)}
+                {formatLargeNumber(isAda ? statistics?.totalAssetValueAda || 0 : statistics?.totalAssetValueUsd || 0)}
               </span>
             </div>
           </div>
@@ -112,7 +112,7 @@ const VaultContributedAssetsList = ({ vault }) => {
             <StatBadge
               icon={Layers}
               label="Assets Avg"
-              value={`${currencySymbol}${formatAdaPrice(
+              value={`${currencySymbol}${formatLargeNumber(
                 isAda ? statistics?.assetsAvgAda || 0 : statistics?.assetsAvgUsd || 0
               )}`}
             />

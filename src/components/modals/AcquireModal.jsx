@@ -6,6 +6,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -208,23 +209,31 @@ export const AcquireModal = ({ vault, onClose }) => {
             <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
             <div className="grid grid-cols-2 gap-6">
               <div className="text-center">
-                {/* User's estimated % of vault tokens based on entered amount */}
-                <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Est. Vault Token (%)
+                  <HoverHelp hint="Your estimated share of vault tokens as a percentage, based on your ADA amount relative to total ADA from acquirers (or fair value)." />
+                </p>
                 <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
               </div>
               <div className="text-center">
-                {/* User's estimated vault token amount */}
-                <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Est. Vault Token Amount
+                  <HoverHelp hint="Estimated number of vault tokens you will receive for this acquisition." />
+                </p>
                 <p className="text-xl font-medium">{formatNum(estVaultTokenAmount)}</p>
               </div>
               <div className="space-y-1 text-center">
-                {/* Net % of vault tokens available to all acquirers (after LP) */}
-                <p className="text-dark-100 text-sm m-0">Total % available for acquirers</p>
+                <p className="text-dark-100 text-sm m-0 flex items-center justify-center gap-1.5">
+                  Total % available for acquirers
+                  <HoverHelp hint="Net percentage of vault token supply allocated to acquirers after the liquidity pool share is reserved." />
+                </p>
                 <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
               </div>
               <div className="text-center">
-                {/* Total ADA sent by acquirers so far */}
-                <p className="text-dark-100 text-sm">Total ADA sent by acquirers</p>
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Total ADA sent by acquirers
+                  <HoverHelp hint="Total amount all acquirers have sent to this vault so far." />
+                </p>
                 <p className="text-xl font-medium">
                   {currencySymbol}
                   {formatNum(
