@@ -158,7 +158,9 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   // User's proportional share of contributor tokens
   const userEstimatedTokens = hasSelectedAssets ? Math.floor(userShareOfContributors * tokensForContributors) : 0;
 
-  const vaultAllocationPercent = hasSelectedAssets ? (userShareOfContributors * 100).toFixed(2) : '0.00';
+  const vaultAllocationPercent = hasSelectedAssets
+    ? (userShareOfContributors * vaultAllocation * 100).toFixed(2)
+    : '0.00';
 
   const estimatedTickerVal = hasSelectedAssets ? userEstimatedTokens.toLocaleString() : '0';
 
@@ -297,12 +299,12 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
           Transaction cost:{' '}
           <span className="text-white font-medium">
-            ~{((vault.protocolContributorsFeeAda || 0) + 1.9).toFixed(2)} ADA
+            ~{((vault.protocolContributorsFeeAda || 0) + 1.72).toFixed(2)} ADA
           </span>{' '}
           (
           {vault.protocolContributorsFeeAda > 0
-            ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.9 ADA Network fees`
-            : '~1.9 ADA Network fees'}
+            ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
+            : '~1.72 ADA Network fees'}
           )
         </div>
       </div>
@@ -358,32 +360,39 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {/* Estimated Value is based on current estimation. Final value is calculated at the end of the Contribution Window.*/}
             <MetricCard
               label={isExpansionMode ? 'Estimated Asset(s) Value' : 'Estimated Value'}
               value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              hint={
+                isExpansionMode
+                  ? 'Total estimated value of your selected assets at current market prices.'
+                  : 'Total estimated value of your selected assets. Final value is calculated at the end of the contribution window.'
+              }
             />
-            {/* Show protocol fee only if it's greater than 0 */}
             {vault.protocolContributorsFeeAda > 0 && (
               <MetricCard
                 label="Protocol Fee"
                 value={`${currencySymbol}${isAda ? vault.protocolContributorsFeeAda.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : vault.protocolContributorsFeeUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                hint="Fee retained by the protocol for this contribution."
               />
             )}
-            {/* 
-                Estimated % of Vault Token allocation, based on assets contributed to date and current floor prices.
-                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
-             */}
-            {!isExpansionMode && <MetricCard label="Vault Allocation" value={`${vaultAllocationPercent}%`} />}
+            {!isExpansionMode && (
+              <MetricCard
+                label="Vault Allocation"
+                value={`${vaultAllocationPercent}%`}
+                hint="Your estimated share of the vault token allocation for contributors, based on your contribution relative to total contributed value. Final allocation depends on asset values at the end of the contribution window."
+              />
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {/* 
-                Estimated Vault Token received, based on assets contributed to date and current floor prices.
-                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
-            */}
-            {!isExpansionMode && <MetricCard label="Estimated Vault Token Received" value={estimatedTickerVal} />}
+            {!isExpansionMode && (
+              <MetricCard
+                label="Estimated Vault Token Received"
+                value={estimatedTickerVal}
+                hint="Estimated number of vault tokens you will receive. Final amount depends on asset values at the end of the contribution window and total ADA sent in the acquire phase."
+              />
+            )}
 
-            {/* Expansion mode: show VT tokens to receive */}
             {isExpansionMode && (
               <MetricCard
                 label="Vault Token to Receive"
@@ -395,22 +404,23 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
                       })
                     : '0.00'
                 }
+                hint="Vault tokens you will receive for this expansion contribution, based on governance-approved pricing. VT tokens will be claimable after the expansion phase completes."
               />
             )}
 
-            {/* 
-                Estimated amount received, based on assets contributed to date and current floor prices.
-                Note: Final Vault Token and ADA amounts depend on Asset Value at the end of Contribution Window and total ADA sent in Acquire phase.
-             */}
             {!isExpansionMode && (
-              <MetricCard label={estimatedReceivedLabel} value={`${currencySymbol}${estimatedReceived}`} />
+              <MetricCard
+                label={estimatedReceivedLabel}
+                value={`${currencySymbol}${estimatedReceived}`}
+                hint="Estimated amount you will receive back from the vault. Part of contributed value is returned to contributors; the rest goes to acquirers and liquidity. Final amount depends on asset values at the end of the contribution window."
+              />
             )}
 
-            {/* Expansion mode: show current value of VT tokens */}
             {isExpansionMode && (
               <MetricCard
                 label={`Current Value of Vault Token to Receive`}
                 value={`${currencySymbol}${expansionVTValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                hint="Current market value of the vault tokens you will receive for your expansion contribution."
               />
             )}
           </div>

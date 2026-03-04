@@ -6,6 +6,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -28,15 +29,38 @@ export const AcquireModal = ({ vault, onClose }) => {
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-  const userShare =
-    acquireAmountNum > 0 ? acquireAmountNum / (vault.assetsPrices.totalAcquiredAda + acquireAmountNum) : 0;
+  // TVL (Total Value Locked) - the value of contributed assets
+  const tvl = vault.assetsPrices?.totalValueAda || 0;
+  const totalAcquiredAda = vault.assetsPrices?.totalAcquiredAda || 0;
 
+  // Fair value ADA = expected total ADA if FDV equals TVL
+  // e.g., if TVL = 10,000 and tokensForAcquires = 50%, fairValueAda = 5,000
+  const fairValueAda = tvl * (tokensForAcquires / 100);
+
+  // Calculate user share based on fair value projection or actual total acquired
+  // - Before fair value is reached: project based on fair value (more intuitive estimate)
+  // - After fair value exceeded: use actual total (reflects real dilution)
+  let userShare = 0;
+  if (acquireAmountNum > 0 && fairValueAda > 0) {
+    // Total ADA that would be in the pool after this acquisition
+    const totalAfterAcquisition = totalAcquiredAda + acquireAmountNum;
+
+    if (totalAfterAcquisition >= fairValueAda) {
+      // Total would exceed fair value - use actual amounts
+      userShare = acquireAmountNum / totalAfterAcquisition;
+    } else {
+      // Total below fair value - project as if fair value will be reached
+      userShare = acquireAmountNum / fairValueAda;
+    }
+  }
+
+  // Net % available for acquirers (after LP contribution)
   const totalAvailableTokenPercent = tokensForAcquires * (1 - liquidityPoolContribution / 100 / 2);
   const totalAvailableTokenAmount = Math.floor((totalAvailableTokenPercent / 100) * ftTokenSupply);
 
-  // Est Vault Token (%) = Token for Acquirers % * (1-(LP % contribution/2))
+  // Est Vault Token (%) = user's share of the acquirer pool
   const estVaultTokenPercent = totalAvailableTokenPercent * userShare;
-  // Est Vault Token Amount = Est Vault Token (%) x Token Supply
+  // Est Vault Token Amount = estimated token amount user will receive
   const estVaultTokenAmount = Math.floor(totalAvailableTokenAmount * userShare);
 
   const handleAcquire = async () => {
@@ -184,30 +208,38 @@ export const AcquireModal = ({ vault, onClose }) => {
           <div className="bg-slate-950 p-6 rounded-[10px]">
             <h2 className="text-xl text-center font-medium mb-8">Acquire</h2>
             <div className="grid grid-cols-2 gap-6">
+              <div className="text-center">
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Est. Vault Token (%)
+                  <HoverHelp hint="Your estimated share of vault tokens as a percentage, based on your ADA amount relative to total ADA from acquirers (or fair value)." />
+                </p>
+                <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
+              </div>
+              <div className="text-center">
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Est. Vault Token Amount
+                  <HoverHelp hint="Estimated number of vault tokens you will receive for this acquisition." />
+                </p>
+                <p className="text-xl font-medium">{formatNum(estVaultTokenAmount)}</p>
+              </div>
               <div className="space-y-1 text-center">
-                {/* ADA Amount to send to acquire Vault Tokens */}
-                <p className="text-dark-100 text-sm m-0">Total % available for acquirers</p>
+                <p className="text-dark-100 text-sm m-0 flex items-center justify-center gap-1.5">
+                  Total % available for acquirers
+                  <HoverHelp hint="Net percentage of vault token supply allocated to acquirers after the liquidity pool share is reserved." />
+                </p>
                 <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
               </div>
               <div className="text-center">
-                {/* Total ADA Sent by Vault Token Acquirers up until now */}
-                <p className="text-dark-100 text-sm">Total ADA sent by acquirers</p>
+                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                  Total ADA sent by acquirers
+                  <HoverHelp hint="Total amount all acquirers have sent to this vault so far." />
+                </p>
                 <p className="text-xl font-medium">
                   {currencySymbol}
                   {formatNum(
                     currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd
                   )}
                 </p>
-              </div>
-              <div className="text-center">
-                {/* Total Vault Token % of supply available to Acquirers */}
-                <p className="text-dark-100 text-sm">Est. Vault Token (%)</p>
-                <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
-              </div>
-              <div className="text-center">
-                {/* Total Vault Token quantity available to Acquirers */}
-                <p className="text-dark-100 text-sm">Est. Vault Token Amount</p>
-                <p className="text-xl font-medium">{estVaultTokenAmount}</p>
               </div>
             </div>
 
@@ -229,12 +261,12 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="text-xs text-dark-100">
                 Transaction cost:{' '}
                 <span className="text-white font-medium">
-                  ~{((vault.protocolContributorsFeeAda || 0) + 0.77).toFixed(2)} ADA
+                  ~{((vault.protocolContributorsFeeAda || 0) + 1.72).toFixed(2)} ADA
                 </span>{' '}
                 (
                 {vault.protocolContributorsFeeAda > 0
-                  ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~0.77 ADA Network fees`
-                  : '~0.77 ADA Network fees'}
+                  ? `${vault.protocolContributorsFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
+                  : '~1.72 ADA Network fees'}
                 )
               </div>
             </div>
