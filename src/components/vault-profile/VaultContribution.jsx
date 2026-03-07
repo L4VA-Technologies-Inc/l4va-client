@@ -191,12 +191,9 @@ export const VaultContribution = ({ vault }) => {
                   <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
                     <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
                     <span className="text-red-300 text-xs">
-                      LP is required but estimated LP (
-                      {currency === 'ada'
-                        ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                        : `$${formatNum(vault.projectedLpUsdAmount)}`}
-                      ) is below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will
-                      fail and refund users.
+                      LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is below
+                      minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will fail and
+                      refund users.
                     </span>
                   </div>
                 ) : (

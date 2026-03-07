@@ -22,21 +22,10 @@ const StatBadge = ({ icon: Icon, label, value }) => (
   </div>
 );
 
-const calculateAcquireProgress = (totalAcquiredUsd, requireReservedCostUsd) => {
-  if (totalAcquiredUsd <= 0 || !requireReservedCostUsd || requireReservedCostUsd <= 0) return 0;
-  return (totalAcquiredUsd / requireReservedCostUsd) * 100;
-};
-
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, isAda, currency } = useCurrency();
   const limit = 10;
-
-  const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
-
-  const lpProgressMultiplier = Math.min(acquireProgress, 100) / 100;
-  const currentLpAdaAmount = vault.projectedLpAdaAmount * lpProgressMultiplier;
-  const currentLpUsdAmount = vault.projectedLpUsdAmount * lpProgressMultiplier;
 
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -110,10 +99,10 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       const val = isAda ? data?.data?.totalAdaLiquidityAda : data?.data?.totalAdaLiquidityUsd;
                       return val != null ? (isAda ? `₳${formatNum(2 * val)}` : `$${formatNum(2 * val)}`) : 'N/A';
                     })()
-                  : currentLpAdaAmount || currentLpUsdAmount
+                  : vault.projectedLpAdaAmount || vault.projectedLpUsdAmount
                     ? currency === 'ada'
-                      ? `₳${formatNum(2 * currentLpAdaAmount)}`
-                      : `$${formatNum(2 * currentLpUsdAmount)}`
+                      ? `₳${formatNum(2 * vault.projectedLpAdaAmount)}`
+                      : `$${formatNum(2 * vault.projectedLpUsdAmount)}`
                     : 'N/A'
               }
             />
