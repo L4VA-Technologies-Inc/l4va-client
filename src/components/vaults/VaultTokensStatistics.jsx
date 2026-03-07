@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { ArrowUpDown, ChevronDown, ChevronUp, ExternalLink, Filter } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
@@ -12,7 +12,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useCurrency } from '@/hooks/useCurrency.ts';
-import { formatLargeNumber, formatUsdCurrency, formatPercentage } from '@/utils/core.utils';
+import { formatLargeNumber, formatPercentage } from '@/utils/core.utils';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
@@ -47,31 +47,45 @@ export const VaultTokensStatistics = () => {
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
-    sortBy: 'mcap',
+    sortBy: 'price',
     sortOrder: 'DESC',
-    unit: '',
+    ticker: '',
     minPrice: '',
     maxPrice: '',
-    minMcap: '',
-    maxMcap: '',
+    minFdv: '',
+    maxFdv: '',
     minTvl: '',
     maxTvl: '',
     minDelta: '',
     maxDelta: '',
-    tvlCurrency: currency,
   });
 
-  const { data, isLoading, error } = useMarketStatistics(filters);
+  const toNum = v => {
+    if (v === '') return undefined;
+    const n = Number(v);
+    return Number.isNaN(n) ? undefined : n;
+  };
+
+  const apiParams = {
+    page: filters.page,
+    limit: filters.limit,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    ticker: filters.ticker || undefined,
+    currency: currency === 'ada' ? 'ada' : 'usd',
+    minPrice: toNum(filters.minPrice),
+    maxPrice: toNum(filters.maxPrice),
+    minFdv: toNum(filters.minFdv),
+    maxFdv: toNum(filters.maxFdv),
+    minTvl: toNum(filters.minTvl),
+    maxTvl: toNum(filters.maxTvl),
+    minDelta: toNum(filters.minDelta),
+    maxDelta: toNum(filters.maxDelta),
+  };
+
+  const { data, isLoading, error } = useMarketStatistics(apiParams);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const newCurrency = currency === 'ada' ? 'ada' : 'usd';
-    setFilters(prev => ({
-      ...prev,
-      tvlCurrency: newCurrency,
-    }));
-  }, [currency]);
 
   const responseData = data?.data || data;
   const items = responseData?.items || [];
@@ -223,10 +237,10 @@ export const VaultTokensStatistics = () => {
                   <SortableHeader columnKey="ticker">Token</SortableHeader>
                   <SortableHeader columnKey="price">Price</SortableHeader>
                   <SortableHeader columnKey={TIME_PERIOD_MAP[timePeriod]}>% Change</SortableHeader>
-                  <SortableHeader columnKey="delta">Mkt Cap / TVL (%)</SortableHeader>
-                  <SortableHeader columnKey="mcap">Market Cap</SortableHeader>
+                  <SortableHeader columnKey="delta">FDV / TVL (%)</SortableHeader>
+                  <SortableHeader columnKey="fdv">FDV</SortableHeader>
                   <SortableHeader columnKey="tvl">TVL</SortableHeader>
-                  <SortableHeader columnKey="circSupply">Supply</SortableHeader>
+                  <SortableHeader columnKey="supply">Supply</SortableHeader>
                   <th className="px-4 py-3 text-left text-dark-100 text-sm border-b border-steel-750"></th>
                 </tr>
               </thead>
@@ -236,7 +250,7 @@ export const VaultTokensStatistics = () => {
 
                   return (
                     <tr
-                      key={item.unit || index}
+                      key={item.id || index}
                       className="bg-steel-850 hover:bg-steel-750 transition-colors border-b border-steel-750 last:border-b-0"
                     >
                       <td className="px-4 pr-8 sm:pr-0 py-3">
@@ -262,7 +276,11 @@ export const VaultTokensStatistics = () => {
                         </div>
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatUsdCurrency(item.price)}</td>
+                      <td className="px-4 py-3 text-white">
+                        {currency === 'ada'
+                          ? `₳${formatLargeNumber(item.price_ada)}`
+                          : `$${formatLargeNumber(item.price_usd)}`}
+                      </td>
 
                       <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(priceChange))}>
                         {formatPercentage(priceChange)}
@@ -272,7 +290,11 @@ export const VaultTokensStatistics = () => {
                         {formatLargeNumber(item.delta)}%
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatLargeNumber(item.mcap)}</td>
+                      <td className="px-4 py-3 text-white">
+                        {currency === 'ada'
+                          ? `₳${formatLargeNumber(item.fdv_ada)}`
+                          : `$${formatLargeNumber(item.fdv_usd)}`}
+                      </td>
 
                       <td className="px-4 py-3 text-white">
                         {currency === 'ada'
@@ -280,7 +302,7 @@ export const VaultTokensStatistics = () => {
                           : `$${formatLargeNumber(item.tvl_usd)}`}
                       </td>
 
-                      <td className="px-4 py-3 text-white">{formatLargeNumber(item.circSupply)}</td>
+                      <td className="px-4 py-3 text-white">{formatLargeNumber(item.supply)}</td>
 
                       <td className="px-4 py-3">
                         <PrimaryButton size="sm" onClick={() => navigate({ to: `/vaults/${item.vault_id}` })}>
