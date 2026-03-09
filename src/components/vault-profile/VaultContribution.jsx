@@ -214,7 +214,7 @@ export const VaultContribution = ({ vault }) => {
                     <div className="flex justify-between">
                       <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
                       <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                        {lpMinThresholdMet ? '✓ Threshold met' : 'Not yet reached'}
+                        {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
                       </span>
                     </div>
                     {!lpMinThresholdMet && (
