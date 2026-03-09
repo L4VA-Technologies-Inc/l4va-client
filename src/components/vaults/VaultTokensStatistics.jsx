@@ -237,7 +237,7 @@ export const VaultTokensStatistics = () => {
                   <SortableHeader columnKey="ticker">Token</SortableHeader>
                   <SortableHeader columnKey="price">Price</SortableHeader>
                   <SortableHeader columnKey={TIME_PERIOD_MAP[timePeriod]}>% Change</SortableHeader>
-                  <SortableHeader columnKey="delta">FDV / TVL</SortableHeader>
+                  <SortableHeader columnKey="delta">FDV / TVL (%)</SortableHeader>
                   <SortableHeader columnKey="fdv">FDV</SortableHeader>
                   <SortableHeader columnKey="tvl">TVL</SortableHeader>
                   <SortableHeader columnKey="supply">Supply</SortableHeader>
@@ -287,7 +287,7 @@ export const VaultTokensStatistics = () => {
                       </td>
 
                       <td className={clsx('px-4 py-3 font-medium', getDeltaColor(item.delta))}>
-                        {formatLargeNumber(item.delta)}
+                        {formatLargeNumber(item.delta)}%
                       </td>
 
                       <td className="px-4 py-3 text-white">
