@@ -54,9 +54,6 @@ export const VaultContribution = ({ vault }) => {
   const lpMinThresholdPosition = calculateLpMinThresholdPosition(vault.lpMinLiquidityAda, vault.projectedLpAdaAmount);
   const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
   const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
-  const lpProgressMultiplier = Math.min(acquireProgress, 100) / 100;
-  const currentLpAdaAmount = vault.projectedLpAdaAmount * lpProgressMultiplier;
-  const currentLpUsdAmount = vault.projectedLpUsdAmount * lpProgressMultiplier;
 
   const Progress = ({ value, progress }) => {
     const displayValue = formatNumber(value);
@@ -201,7 +198,9 @@ export const VaultContribution = ({ vault }) => {
                     <div className="flex justify-between">
                       <span className="text-dark-100">Current ADA LP amount:</span>
                       <span className="text-dark-100">
-                        {currency === 'ada' ? `₳${formatNum(currentLpAdaAmount)}` : `$${formatNum(currentLpUsdAmount)}`}
+                        {currency === 'ada'
+                          ? `₳${formatNum(vault.projectedLpAdaAmount)}`
+                          : `$${formatNum(vault.projectedLpUsdAmount)}`}
                       </span>
                     </div>
                     <div className="flex justify-between">
