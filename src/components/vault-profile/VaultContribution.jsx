@@ -31,9 +31,13 @@ const calculateAcquireProgress = (totalAcquiredUsd, requireReservedCostUsd) => {
   return (totalAcquiredUsd / requireReservedCostUsd) * 100;
 };
 
-const calculateLpMinThresholdPosition = (lpMinLiquidityAda, projectedLpAdaAmount) => {
-  if (!lpMinLiquidityAda || !projectedLpAdaAmount || projectedLpAdaAmount <= 0) return 0;
-  return (lpMinLiquidityAda / projectedLpAdaAmount) * 100;
+const calculateLpMinThresholdPosition = (lpMinLiquidityAda, requireReservedCostAda, liquidityPoolContribution) => {
+  if (!lpMinLiquidityAda || !requireReservedCostAda || !liquidityPoolContribution || liquidityPoolContribution <= 0)
+    return 0;
+  // Calculate what percentage of reserve is needed to meet LP minimum
+  const lpPercentage = liquidityPoolContribution / 100;
+  const requiredAcquiredAda = lpMinLiquidityAda / lpPercentage;
+  return (requiredAcquiredAda / requireReservedCostAda) * 100;
 };
 
 export const VaultContribution = ({ vault }) => {
@@ -51,7 +55,11 @@ export const VaultContribution = ({ vault }) => {
 
   const reserveThresholdMet = acquireProgress >= 100;
 
-  const lpMinThresholdPosition = calculateLpMinThresholdPosition(vault.lpMinLiquidityAda, vault.projectedLpAdaAmount);
+  const lpMinThresholdPosition = calculateLpMinThresholdPosition(
+    vault.lpMinLiquidityAda,
+    vault.requireReservedCostAda,
+    vault.liquidityPoolContribution
+  );
   const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
   const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
 
