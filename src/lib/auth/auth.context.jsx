@@ -6,7 +6,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { AuthContext } from '@/lib/auth/auth';
 import { useProfile, useLogin } from '@/services/api/queries';
 
-const WELD_INIT_GRACE_MS = 3000;
+const WELD_INIT_GRACE_MS = 8000;
 
 export const AuthProvider = ({ children }) => {
   const queryClient = useQueryClient();
