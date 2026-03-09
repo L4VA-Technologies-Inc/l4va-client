@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { WeldProvider } from '@ada-anvil/weld/react';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { NovuProvider } from '@novu/react';
 import toast from 'react-hot-toast';
@@ -10,7 +9,6 @@ import { ModalProvider } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
-import { useWalletChangeListener } from '@/hooks/useWalletChangeListener';
 
 const router = createRouter({
   routeTree,
@@ -23,7 +21,6 @@ const router = createRouter({
 
 const AppWithInterceptor = () => {
   useAuthInterceptor();
-  useWalletChangeListener();
 
   useEffect(() => {
     const message = sessionStorage.getItem('logout_toast');
@@ -49,9 +46,7 @@ export function AppCore() {
 
   return (
     <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address || 'guest'}>
-      <WeldProvider>
-        <AppWithInterceptor />
-      </WeldProvider>
+      <AppWithInterceptor />
     </NovuProvider>
   );
 }

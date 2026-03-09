@@ -109,8 +109,6 @@ export const LoginModal = () => {
             networkType,
             onDisconnect: handleDisconnect,
           });
-        } else {
-          console.log('Successfully connected to wallet');
         }
       },
       onError: error => {
@@ -138,17 +136,6 @@ export const LoginModal = () => {
 
       if (!res?.user?.address) {
         toast.error('Failed to authenticate: Invalid response from server');
-        return false;
-      }
-      const { isValid, networkType } = validateWalletNetwork(res.user.address, wallet.changeAddressBech32);
-      if (!isValid) {
-        disconnect();
-        logout();
-        closeModal();
-        openModal('MainNetModal', {
-          networkType,
-          onDisconnect: handleDisconnect,
-        });
         return false;
       }
 
