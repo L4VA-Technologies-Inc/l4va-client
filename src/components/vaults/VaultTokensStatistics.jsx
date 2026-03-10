@@ -58,6 +58,8 @@ export const VaultTokensStatistics = () => {
     maxTvl: '',
     minDelta: '',
     maxDelta: '',
+    minFdvPerAsset: '',
+    maxFdvPerAsset: '',
   });
 
   const toNum = v => {
@@ -81,6 +83,8 @@ export const VaultTokensStatistics = () => {
     maxTvl: toNum(filters.maxTvl),
     minDelta: toNum(filters.minDelta),
     maxDelta: toNum(filters.maxDelta),
+    minFdvPerAsset: toNum(filters.minFdvPerAsset),
+    maxFdvPerAsset: toNum(filters.maxFdvPerAsset),
   };
 
   const { data, isLoading, error } = useMarketStatistics(apiParams);
@@ -238,6 +242,7 @@ export const VaultTokensStatistics = () => {
                   <SortableHeader columnKey="price">Price</SortableHeader>
                   <SortableHeader columnKey={TIME_PERIOD_MAP[timePeriod]}>% Change</SortableHeader>
                   <SortableHeader columnKey="delta">FDV / TVL</SortableHeader>
+                  <SortableHeader columnKey="fdv_per_asset">FDV / Asset</SortableHeader>
                   <SortableHeader columnKey="fdv">FDV</SortableHeader>
                   <SortableHeader columnKey="tvl">TVL</SortableHeader>
                   <SortableHeader columnKey="supply">Supply</SortableHeader>
@@ -289,6 +294,8 @@ export const VaultTokensStatistics = () => {
                       <td className={clsx('px-4 py-3 font-medium', getDeltaColor(item.delta))}>
                         {formatLargeNumber(item.delta)}
                       </td>
+
+                      <td className="px-4 py-3 font-medium text-white">{formatLargeNumber(item.fdv_per_asset)}</td>
 
                       <td className="px-4 py-3 text-white">
                         {currency === 'ada'

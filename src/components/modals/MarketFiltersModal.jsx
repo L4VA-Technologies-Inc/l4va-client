@@ -19,6 +19,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
     maxTvl: initialFilters.maxTvl || '',
     minDelta: initialFilters.minDelta || '',
     maxDelta: initialFilters.maxDelta || '',
+    minFdvPerAsset: initialFilters.minFdvPerAsset || '',
+    maxFdvPerAsset: initialFilters.maxFdvPerAsset || '',
   });
 
   const [errors, setErrors] = useState({
@@ -30,6 +32,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
     maxTvl: '',
     minDelta: '',
     maxDelta: '',
+    minFdvPerAsset: '',
+    maxFdvPerAsset: '',
   });
 
   const validateRange = (minKey, maxKey, minValue, maxValue) => {
@@ -76,6 +80,14 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
         } else if (key === 'minDelta' || key === 'maxDelta') {
           const rangeErrors = validateRange('minDelta', 'maxDelta', newFilters.minDelta, newFilters.maxDelta);
           newErrors = { ...newErrors, ...rangeErrors };
+        } else if (key === 'minFdvPerAsset' || key === 'maxFdvPerAsset') {
+          const rangeErrors = validateRange(
+            'minFdvPerAsset',
+            'maxFdvPerAsset',
+            newFilters.minFdvPerAsset,
+            newFilters.maxFdvPerAsset
+          );
+          newErrors = { ...newErrors, ...rangeErrors };
         }
 
         return newErrors;
@@ -95,6 +107,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
       maxTvl: '',
       minDelta: '',
       maxDelta: '',
+      minFdvPerAsset: '',
+      maxFdvPerAsset: '',
     };
 
     setFilters(cleared);
@@ -107,6 +121,8 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
       maxTvl: '',
       minDelta: '',
       maxDelta: '',
+      minFdvPerAsset: '',
+      maxFdvPerAsset: '',
     });
     onApplyFilters(cleared);
     closeModal();
@@ -237,7 +253,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <LavaSteelInput
-              label="Min FDV / TVL (%)"
+              label="Min FDV / TVL"
               type="number"
               min={0}
               placeholder="Min delta..."
@@ -249,7 +265,7 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
           </div>
           <div>
             <LavaSteelInput
-              label="Max FDV / TVL (%)"
+              label="Max FDV / TVL"
               type="number"
               min={0}
               placeholder="Max delta..."
@@ -258,6 +274,33 @@ export const MarketFiltersModal = ({ initialFilters, onApplyFilters }) => {
               error={!!errors.maxDelta}
             />
             {errors.maxDelta && <p className="text-red-600 text-xs mt-1">{errors.maxDelta}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <LavaSteelInput
+              label="Min FDV / Asset"
+              type="number"
+              min={0}
+              placeholder="Min FDV / Asset..."
+              value={filters.minFdvPerAsset}
+              onChange={value => handleFilterChange('minFdvPerAsset', value)}
+              error={!!errors.minFdvPerAsset}
+            />
+            {errors.minFdvPerAsset && <p className="text-red-600 text-xs mt-1">{errors.minFdvPerAsset}</p>}
+          </div>
+          <div>
+            <LavaSteelInput
+              label="Max FDV / Asset"
+              type="number"
+              min={0}
+              placeholder="Max FDV / Asset..."
+              value={filters.maxFdvPerAsset}
+              onChange={value => handleFilterChange('maxFdvPerAsset', value)}
+              error={!!errors.maxFdvPerAsset}
+            />
+            {errors.maxFdvPerAsset && <p className="text-red-600 text-xs mt-1">{errors.maxFdvPerAsset}</p>}
           </div>
         </div>
       </div>
