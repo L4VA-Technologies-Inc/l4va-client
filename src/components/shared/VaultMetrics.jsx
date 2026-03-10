@@ -1,6 +1,7 @@
 import MetricCard from '@/components/shared/MetricCard';
 import { VaultSkeleton } from '@/components/vault-profile/VaultSkeleton';
-import { formatAdaPrice, formatLargeNumber, formatPercentage } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
+import { formatAdaPrice, formatLargeNumber, formatPercentage, formatUsdCurrency } from '@/utils/core.utils';
 
 const MetricsSkeleton = () => (
   <div className="space-y-4">
@@ -27,6 +28,8 @@ const MetricsSkeleton = () => (
 );
 
 const VaultMetrics = ({ marketData, isLoading }) => {
+  const { currency, currencySymbol } = useCurrency();
+
   if (isLoading) {
     return <MetricsSkeleton />;
   }
@@ -41,29 +44,42 @@ const VaultMetrics = ({ marketData, isLoading }) => {
     return marketData.ohlcv.reduce((sum, point) => sum + (point.volume || 0), 0);
   };
 
-  const totalVolume = calculateTotalVolume();
+  const totalVolumeAda = calculateTotalVolume();
+  const adaPrice = marketData.adaPrice != null ? Number(marketData.adaPrice) : null;
+  const totalVolumeUsd =
+    totalVolumeAda != null && adaPrice != null && !Number.isNaN(adaPrice) ? totalVolumeAda * adaPrice : null;
+
+  const priceValue = currency === 'ada' ? marketData.price_ada : marketData.price_usd;
+  const tvlValue = currency === 'ada' ? marketData.tvl_ada : marketData.tvl_usd;
+  const fdvValue = currency === 'ada' ? marketData.fdv_ada : marketData.fdv_usd;
+  const totalVolumeValue = currency === 'ada' ? totalVolumeAda : totalVolumeUsd;
+
+  const fdvTvl = marketData.fdv_tvl != null && marketData.fdv_tvl !== '' ? Number(marketData.fdv_tvl).toFixed(2) : null;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <MetricCard label="Price ADA" value={`₳${formatAdaPrice(marketData.price)}`} />
+        <MetricCard
+          label="Price"
+          value={currency === 'ada' ? `${currencySymbol}${formatAdaPrice(priceValue)}` : formatUsdCurrency(priceValue)}
+        />
         <MetricCard label="Market Cap" value={formatLargeNumber(marketData.mcap)} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard label="TVL ADA" value={`₳${formatLargeNumber(marketData.tvl_ada)}`} />
+        <MetricCard label="TVL" value={`${currencySymbol}${formatLargeNumber(tvlValue)}`} />
         <MetricCard label="24h Price Change" value={formatPercentage(marketData.price_change_24h)} />
         <MetricCard label="7d Price Change" value={formatPercentage(marketData.price_change_7d)} />
         <MetricCard label="30d Price Change" value={formatPercentage(marketData.price_change_30d)} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MetricCard label="FDV" value={formatLargeNumber(marketData.fdv)} />
-        <MetricCard label="Circ Supply" value={formatLargeNumber(marketData.circSupply || 0)} />
-        <MetricCard label="Total Supply" value={formatLargeNumber(marketData.totalSupply || 0)} />
+        <MetricCard label="FDV" value={`${currencySymbol}${formatLargeNumber(fdvValue)}`} />
+        <MetricCard label="FDV/TVL" value={fdvTvl ?? 'N/A'} />
+        <MetricCard label="Supply" value={formatLargeNumber(marketData.supply || 0)} />
         <MetricCard
           label="Total Volume"
-          value={totalVolume !== null && totalVolume !== undefined ? `₳${formatLargeNumber(totalVolume)}` : 'N/A'}
+          value={totalVolumeValue != null ? `${currencySymbol}${formatLargeNumber(totalVolumeValue)}` : 'N/A'}
         />
       </div>
     </div>
