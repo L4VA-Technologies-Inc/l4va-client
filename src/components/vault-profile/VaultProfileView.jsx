@@ -444,7 +444,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </div>
             )}
             {/* Statistic */}
-            {vault.liquidityPoolContribution !== 0 && IS_MAINNET && (
+            {hasActiveLp && IS_MAINNET && (
               <div className="group relative">
                 <button
                   onClick={() => openModal('ChartModal', { vault })}
