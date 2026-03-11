@@ -47,13 +47,8 @@ const suppressedKeywords = [
   'dexhunter',
   'canceled',
   'CanceledError',
-  'Timer',
-  'already exists',
   'DialogContent',
   'DialogTitle',
-  'aria-describedby',
-  'aria-hidden',
-  'screen reader',
 ];
 
 const originalConsole = { ...console };
