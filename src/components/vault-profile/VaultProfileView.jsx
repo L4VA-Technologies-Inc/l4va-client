@@ -404,7 +404,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const vtPrice = (() => {
     if (!hasActiveLp) return 'N/A';
-    const priceValue = isAda ? formatNum(vault.vtPrice) : formatNum(vault.vtPriceUsd);
+    const priceValue = isAda ? formatNum(vault.vtPrice, 4) : formatNum(vault.vtPriceUsd, 4);
     if (priceValue == null) return 'N/A';
     return `${currencySymbol}${priceValue}`;
   })();
