@@ -12,7 +12,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useCurrency } from '@/hooks/useCurrency.ts';
-import { formatLargeNumber, formatPercentage } from '@/utils/core.utils';
+import { formatLargeNumber, formatNum, formatPercentage } from '@/utils/core.utils';
 
 const TIME_PERIODS = ['1h', '1d', '1w', '1m'];
 const TIME_PERIOD_MAP = {
@@ -282,9 +282,7 @@ export const VaultTokensStatistics = () => {
                       </td>
 
                       <td className="px-4 py-3 text-white">
-                        {currency === 'ada'
-                          ? `₳${formatLargeNumber(item.price_ada)}`
-                          : `$${formatLargeNumber(item.price_usd)}`}
+                        {currency === 'ada' ? `₳${formatNum(item.price_ada, 4)}` : `$${formatNum(item.price_usd, 4)}`}
                       </td>
 
                       <td className={clsx('px-4 py-3 font-medium', getPriceChangeColor(priceChange))}>
