@@ -31,7 +31,7 @@ export const useVlrmBalance = () => {
         console.error('Error fetching VLRM balance:', err);
         if (showToast) toast.error('Failed to update VLRM balance');
         setVlrmBalance(0);
-        return 0;
+        throw err;
       } finally {
         setIsLoading(false);
       }
@@ -39,11 +39,11 @@ export const useVlrmBalance = () => {
     [wallet.handler]
   );
 
-  const refreshBalance = useCallback(() => fetchVlrmBalance(true), [fetchVlrmBalance]);
+  const refreshBalance = useCallback(() => fetchVlrmBalance(false), [fetchVlrmBalance]);
 
   useEffect(() => {
     if (wallet.handler) {
-      fetchVlrmBalance();
+      fetchVlrmBalance().catch(() => {});
     }
   }, [fetchVlrmBalance, wallet.handler]);
 
