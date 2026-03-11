@@ -327,7 +327,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
     return (
       <PrimaryButton
-        disabled={!config.available || !isAuthenticated}
+        disabled={!config.available || !isAuthenticated || config.disabled}
         className="uppercase"
         onClick={config.handleClick}
       >
