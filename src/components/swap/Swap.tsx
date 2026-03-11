@@ -1,9 +1,12 @@
 import { CSSProperties, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import Swap from '@dexhunterio/swaps';
 import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
 import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
 import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
+
+import { SwapErrorBoundary } from './SwapErrorBoundary';
 
 interface SwapProps {
   overrideDisplay?: boolean;
@@ -42,6 +45,10 @@ const suppressedKeywords = [
   'settings new token',
   'usdPrice',
   'dexhunter',
+  'canceled',
+  'CanceledError',
+  'DialogContent',
+  'DialogTitle',
 ];
 
 const originalConsole = { ...console };
@@ -103,5 +110,40 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
 
   const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
 
-  return <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...config} />;
+  // Add safe event handlers to prevent crashes
+  const safeConfig = {
+    ...config,
+    onSwapSuccess: (data: any) => {
+      // Show user-friendly toast notification
+      if (data?.data?.length > 0) {
+        toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
+          duration: 5000,
+        });
+      }
+      config?.onSwapSuccess?.(data);
+    },
+    onSwapError: (err: any) => {
+      // Don't log cancellation errors
+      if (!err?.message?.toLowerCase().includes('cancel')) {
+        console.error('Swap error:', err);
+        toast.error('Swap failed. Please try again.', {
+          duration: 4000,
+        });
+      }
+      config?.onSwapError?.(err);
+    },
+    onSwapWarning: (warn: any) => {
+      // Don't log cancellation warnings
+      if (!warn?.message?.toLowerCase().includes('cancel')) {
+        console.warn('Swap warning:', warn);
+      }
+      config?.onSwapWarning?.(warn);
+    },
+  };
+
+  return (
+    <SwapErrorBoundary>
+      <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+    </SwapErrorBoundary>
+  );
 };
