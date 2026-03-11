@@ -295,7 +295,9 @@ export const VaultTokensStatistics = () => {
                         {formatLargeNumber(item.delta)}
                       </td>
 
-                      <td className="px-4 py-3 font-medium text-white">{formatLargeNumber(item.fdv_per_asset)}</td>
+                      <td className="px-4 py-3 font-medium text-white">
+                        {formatLargeNumber(currency === 'ada' ? item.fdv_per_asset_ada : item.fdv_per_asset_usd)}
+                      </td>
 
                       <td className="px-4 py-3 text-white">
                         {currency === 'ada'
