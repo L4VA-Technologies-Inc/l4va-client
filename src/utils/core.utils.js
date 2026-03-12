@@ -124,8 +124,10 @@ export const formatPercentage = value => {
   if (value === null || value === undefined || value === '') return '-';
   const numValue = typeof value === 'number' ? value : parseFloat(value);
   if (isNaN(numValue)) return '-';
-  const sign = numValue >= 0 ? '+' : '';
-  return `${sign}${numValue.toFixed(2)}%`;
+  const percentValue = numValue * 100;
+  const sign = percentValue >= 0 ? '+' : '-';
+  const formatted = formatLargeNumber(Math.abs(percentValue));
+  return `${sign}${formatted}%`;
 };
 
 export const formatCompactNumber = num => {
