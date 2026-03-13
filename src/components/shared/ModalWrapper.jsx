@@ -34,6 +34,12 @@ export const ModalWrapper = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
+  const handleModalKeyDown = e => {
+    if (e.key !== 'Escape') {
+      e.stopPropagation();
+    }
+  };
+
   const getWidthClasses = () => {
     switch (size) {
       case 'sm':
@@ -84,6 +90,7 @@ export const ModalWrapper = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
+        onKeyDown={handleModalKeyDown}
       >
         {header ? (
           <div className="flex items-center justify-between px-4 py-3 bg-white/5 flex-shrink-0 md:rounded-t-lg max-md:rounded-t-xl">
