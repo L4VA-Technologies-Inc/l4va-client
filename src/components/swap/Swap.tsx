@@ -1,4 +1,5 @@
-import { CSSProperties, useEffect, useMemo } from 'react';
+import { CSSProperties, useEffect } from 'react';
+import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import Swap from '@dexhunterio/swaps';
 import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
@@ -7,6 +8,10 @@ import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
 
 import { SwapErrorBoundary } from './SwapErrorBoundary';
+
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
+import { useTrackWidgetSwap } from '@/services/api/queries';
 
 interface SwapProps {
   overrideDisplay?: boolean;
@@ -36,6 +41,34 @@ interface SwapProps {
     defaultSettings?: defaultSettingsProps;
     autoFocus?: boolean;
   };
+}
+
+interface SuccessResponse {
+  data: {
+    amount_in: number;
+    expected_output: number;
+    expected_output_without_slippage: number;
+    fee: number;
+    dex: string;
+    price_impact: number;
+    initial_price: number;
+    final_price: number;
+    pool_id: string;
+    batcher_fee: number;
+    deposits: number;
+    price_distortion: number;
+    pool_fee: number;
+    tx_hash: string;
+    status: 'SUBMITTED';
+    token_id_in: string;
+    token_id_out: string;
+    expected_out_amount: number;
+    submission_time: string;
+    user_address: string;
+    upcoming: boolean;
+    type: 'SELL';
+    is_dexhunter: boolean;
+  }[];
 }
 
 const suppressedKeywords = [
@@ -105,6 +138,11 @@ const ensureSwapOverrideStyles = () => {
 };
 
 export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) => {
+  const { mutate: trackWidgetSwap } = useTrackWidgetSwap();
+  const { isAuthenticated, user } = useAuth();
+  const { openModal } = useModalControls();
+  const wallet = useWallet('isConnected', 'changeAddressBech32');
+
   useEffect(() => {
     ensureSwapStyles();
     if (overrideDisplay) ensureSwapOverrideStyles();
@@ -113,23 +151,58 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
     };
   }, [overrideDisplay]);
 
-  const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
+  const authenticatedAddress = (user as { address?: string } | null)?.address;
+  const normalizeAddress = (address?: string) => (address ? address.trim().toLowerCase() : '');
+  const isWalletMismatch =
+    !!isAuthenticated &&
+    !!wallet.isConnected &&
+    !!authenticatedAddress &&
+    !!wallet.changeAddressBech32 &&
+    normalizeAddress(authenticatedAddress) !== normalizeAddress(wallet.changeAddressBech32);
+  const canUseSwap = !!isAuthenticated && !isWalletMismatch;
 
   // Add safe event handlers to prevent crashes
   const safeConfig = {
     ...config,
-    onSwapSuccess: (data: any) => {
+    // onClickWalletConnect: () => {
+    //   if (!isAuthenticated) {
+    //     toast.error('Please connect and sign in with your wallet first.');
+    //     openModal('LoginModal');
+    //     return;
+    //   }
+    //   if (isWalletMismatch) {
+    //     toast.error('Connected wallet does not match your authenticated account.');
+    //     return;
+    //   }
+    //   config?.onClickWalletConnect?.();
+    //   // SHOULD add click real
+    // },
+    onSwapSuccess: (data: SuccessResponse) => {
+      if (!canUseSwap) {
+        toast.error('Swap is allowed only for the wallet authenticated in your account.');
+        return;
+      }
+
       // Show user-friendly toast notification
-      if (data?.data?.length > 0) {
+      const swapData = (data as { data?: unknown[] })?.data;
+      const hasSwapData = Array.isArray(swapData) && swapData.length > 0;
+      if (hasSwapData) {
+        trackWidgetSwap(data, {
+          onError: error => {
+            console.warn('Failed to track widget swap reward event:', error);
+          },
+        });
+
         toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
           duration: 5000,
         });
       }
       config?.onSwapSuccess?.(data);
     },
-    onSwapError: (err: any) => {
+    onSwapError: (err: unknown) => {
       // Don't log cancellation errors
-      if (!err?.message?.toLowerCase().includes('cancel')) {
+      const message = (err as { message?: string })?.message?.toLowerCase?.() ?? '';
+      if (!message.includes('cancel')) {
         console.error('Swap error:', err);
         toast.error('Swap failed. Please try again.', {
           duration: 4000,
@@ -137,9 +210,10 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
       }
       config?.onSwapError?.(err);
     },
-    onSwapWarning: (warn: any) => {
+    onSwapWarning: (warn: unknown) => {
       // Don't log cancellation warnings
-      if (!warn?.message?.toLowerCase().includes('cancel')) {
+      const message = (warn as { message?: string })?.message?.toLowerCase?.() ?? '';
+      if (!message.includes('cancel')) {
         console.warn('Swap warning:', warn);
       }
       config?.onSwapWarning?.(warn);
@@ -148,7 +222,12 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
 
   return (
     <SwapErrorBoundary>
-      <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+      <Swap
+        partnerName="l4va"
+        partnerCode={import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test'}
+        colors={DEFAULT_COLORS}
+        {...safeConfig}
+      />
     </SwapErrorBoundary>
   );
 };

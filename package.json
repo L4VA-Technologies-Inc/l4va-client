@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@ada-anvil/weld": "^0.5.1",
-    "@dexhunterio/swaps": "^0.0.192",
+    "@dexhunterio/swaps": "^2.0.4",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@novu/react": "^3.8.1",
