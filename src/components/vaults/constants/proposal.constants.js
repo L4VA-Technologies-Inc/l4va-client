@@ -5,7 +5,15 @@ export const buyOptionSchema = yup.object({
   assetName: yup.string().required(),
   sellType: yup.string().required(),
   market: yup.string().required(),
-  price: yup.string().required(),
+  price: yup
+    .number()
+    .transform((value, originalValue) => {
+      const parsed = Number(originalValue);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    })
+    .typeError('Price must be a number')
+    .moreThan(0, 'Price must be greater than 0')
+    .required(),
   exec: yup.string().required(),
   id: yup.number().required(),
 });

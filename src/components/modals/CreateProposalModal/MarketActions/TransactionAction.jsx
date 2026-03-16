@@ -19,7 +19,7 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer - comming soon', disabled: true },
+  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
   { value: 'Buy', label: 'Buy' },
 ];
 
@@ -320,7 +320,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           <LavaSteelSelect
                             options={buyTypeOptions}
                             placeholder="Select type"
-                            value={buyTypeOptions[1].value}
+                            value={option.sellType ?? buyTypeOptions[1].value}
                             onChange={value => handleOptionChange(option.id, 'sellType', value)}
                           />
                         </div>
