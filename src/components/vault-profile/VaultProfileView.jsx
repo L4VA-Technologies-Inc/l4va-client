@@ -582,51 +582,54 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     <>
       {renderPublishedOverlay()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl p-4">
-          <div className="overflow-hidden rounded-lg">
-            <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
-              {vault.vaultImage ? (
-                <img
-                  src={vault.vaultImage}
-                  alt={vault.name}
-                  loading="eager"
-                  decoding="async"
-                  className="object-cover w-full h-auto aspect-square rounded-lg"
-                />
-              ) : (
-                <div className="w-full h-full bg-steel-850 flex items-center justify-center">
-                  <L4vaIcon className="h-16 w-16 text-white" />
-                </div>
-              )}
+        <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl ">
+          <div className="p-4">
+            <div className="overflow-hidden rounded-lg">
+              <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
+                {vault.vaultImage ? (
+                  <img
+                    src={vault.vaultImage}
+                    alt={vault.name}
+                    loading="eager"
+                    decoding="async"
+                    className="object-cover w-full h-auto aspect-square rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-steel-850 flex items-center justify-center">
+                    <L4vaIcon className="h-16 w-16 text-white" />
+                  </div>
+                )}
+              </div>
             </div>
+            <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
+            <div className="mb-6 space-y-2">
+              <VaultCountdown
+                className="h-[65px]"
+                countdownValue={getCountdownTime(vault)}
+                color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
+              />
+              {isPhaseTransitioning() && <PhaseTransitionInfo />}
+            </div>
+            <div className="mb-6">{renderFailureBanner()}</div>
+            {vault.vaultStatus !== 'locked' ? (
+              deferredReady ? (
+                <Suspense fallback={<ContributionSkeleton />}>
+                  <VaultContribution vault={vault} />
+                </Suspense>
+              ) : (
+                <ContributionSkeleton />
+              )
+            ) : null}
           </div>
-          <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
-          <div className="mb-6 space-y-2">
-            <VaultCountdown
-              className="h-[65px]"
-              countdownValue={getCountdownTime(vault)}
-              color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
-            />
-            {isPhaseTransitioning() && <PhaseTransitionInfo />}
-          </div>
-          <div className="mb-6">{renderFailureBanner()}</div>
-          {vault.vaultStatus !== 'locked' ? (
-            deferredReady ? (
-              <Suspense fallback={<ContributionSkeleton />}>
-                <VaultContribution vault={vault} />
-              </Suspense>
-            ) : (
-              <ContributionSkeleton />
-            )
-          ) : null}
-          <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
+          <div className="mx-auto w-full mt-4 lg:block hidden">
             <SwapComponent
               overrideDisplay
               config={{
                 defaultToken: vault.hasActiveLp
                   ? `${vault.policyId}${vault.assetVaultName}`
                   : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-                style: { width: '100%' },
+                // style: { minWidth: '100%' },
+                width: '400px',
               }}
             />
           </div>
@@ -662,7 +665,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 defaultToken: vault.hasActiveLp
                   ? `${vault.policyId}${vault.assetVaultName}`
                   : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-                style: { width: '100%' },
               }}
             />
           </div>
