@@ -298,7 +298,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <p className="text-sm text-gray-400">Asset Name:</p>
+                            <p className="text-sm text-gray-400">Display Name:</p>
                             <a
                               href="https://www.wayup.io/"
                               target="_blank"
@@ -310,7 +310,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           </div>
                           <LavaSteelInput
                             type="text"
-                            placeholder="Enter asset name"
+                            placeholder="Enter display name"
                             value={option.assetName || ''}
                             onChange={value => handleOptionChange(option.id, 'assetName', value)}
                           />
@@ -355,7 +355,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <p className="text-sm text-gray-400">Asset ID:</p>
+                          <p className="text-sm text-gray-400">Asset Unit:</p>
                           <a
                             href="https://www.wayup.io/"
                             target="_blank"
@@ -367,7 +367,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                         </div>
                         <LavaSteelInput
                           type="text"
-                          placeholder="Enter asset ID"
+                          placeholder="Enter asset unit"
                           value={option.assetId || ''}
                           onChange={value => handleOptionChange(option.id, 'assetId', value)}
                           className={
@@ -377,7 +377,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           }
                         />
                         {option.assetId && option.assetId.length > 0 && option.assetId.length < 56 && (
-                          <p className="text-xs text-red-500 mt-1">Asset ID must be at least 56 characters</p>
+                          <p className="text-xs text-red-500 mt-1">Asset Unit must be at least 56 characters</p>
                         )}
                       </div>
                     </>
