@@ -84,8 +84,11 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
               ) : type === 'marketplace' ? (
                 <>
                   <ActionField label="Exec" value={action.exec} />
-                  <ActionField label="Market" value={action.market} />
-                  {action.assetPrice && <ActionField label="Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />}
+                  <ActionField label="Market" value={action.market || 'WayUp'} />
+                  {action.assetPrice && (
+                    <ActionField label="Asset Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />
+                  )}
+                  {action.price && <ActionField label="Buying Max Price" value={`₳${formatAdaPrice(action.price)}`} />}
                   {action.listingPrice && (
                     <ActionField label="Listing Price" value={`₳${formatAdaPrice(action.listingPrice)}`} />
                   )}

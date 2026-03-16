@@ -12,7 +12,7 @@ const marketOptions = [
   { value: 'sell', label: 'Sell' },
   { value: 'unlist', label: 'Unlist' },
   { value: 'update_list', label: 'Update List' },
-  { value: 'buy', label: 'Buy - Coming Soon', disabled: true },
+  { value: 'buy', label: 'Buy' },
   { value: 'swap', label: 'Swap - Coming Soon', disabled: true },
 ];
 

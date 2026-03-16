@@ -202,9 +202,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               newPrice: asset.newPrice,
               market: asset.market || 'WayUp',
             }));
-        } else if (marketActionType === 'buy' || marketActionType === 'sell' || marketActionType === 'buy_sell') {
+        } else if (marketActionType === 'sell' || marketActionType === 'buy_sell') {
           proposalPayload.type = 'buy_sell';
           proposalPayload.metadata = proposalData;
+        } else if (marketActionType === 'buy') {
+          proposalPayload.marketplaceActions = (proposalData.buyingSellingOptions || [])
+            .filter(opt => opt.assetId && opt.assetId.length >= 56 && opt.price && Number(opt.price) > 0)
+            .map(opt => ({
+              assetId: opt.assetId,
+              exec: 'BUY',
+              price: opt.price,
+              market: opt.market || 'WayUp',
+              assetName: opt.assetName,
+            }));
         } else {
           proposalPayload.marketplaceActions = (proposalData.unlistAssets || []).map(asset => ({
             assetId: asset.id,
