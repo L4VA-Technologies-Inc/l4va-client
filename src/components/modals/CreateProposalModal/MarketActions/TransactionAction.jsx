@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { AlertCircle, Plus, Wallet, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect';
@@ -7,6 +7,7 @@ import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { transactionOptionSchema, buyOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
+import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const methodOptions = [
   { value: 'N/A', label: 'Time Limit' },
@@ -58,12 +59,16 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
   const isBuyType = execType === 'BUY';
 
-  const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
+
+  const assetsData = data?.data.assets;
+  const treasuryInfo = data?.data?.treasuryWalletBalance;
+  const treasuryBalance = treasuryInfo?.treasuryWalletBalance?.treasuryBalance?.lovelace / 1000000 || 0;
 
   const remainingAssets = useMemo(() => {
-    if (!assetsData?.data) return [];
+    if (!assetsData) return [];
     const usedAssetNames = options.map(option => option.assetName).filter(Boolean);
-    return assetsData.data.filter(asset => !usedAssetNames.includes(asset.name));
+    return assetsData.filter(asset => !usedAssetNames.includes(asset.name));
   }, [assetsData, options]);
 
   const selectedAssets = useMemo(() => {
@@ -71,8 +76,8 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
   }, [options, isBuyType]);
 
   useEffect(() => {
-    if (assetsData?.data && !isLoading) {
-      const formattedAssets = assetsData.data.map(asset => ({
+    if (assetsData && !isLoading) {
+      const formattedAssets = assetsData.map(asset => ({
         value: asset.name,
         label: asset.name,
         id: asset.id,
@@ -232,13 +237,37 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
   const handleRemoveOption = id => setOptions(options.filter(option => option.id !== id));
 
+  if (IS_MAINNET && !treasuryInfo) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <div>
+            <p className="text-red-400 font-medium">No Treasury Wallet</p>
+            <p className="text-white/60 text-sm mt-1">
+              This vault does not have a treasury wallet configured. Distribution proposals require a treasury wallet
+              with ADA funds.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
+      <div className="bg-steel-800 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-white/60 mb-2">
+          <Wallet className="w-4 h-4" />
+          <span className="text-sm">Treasury Balance</span>
+        </div>
+        <p className="text-2xl font-semibold text-white">{treasuryBalance.toLocaleString()} ADA</p>
+      </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">{title}</h3>
         <div className="flex flex-col sm:flex-row gap-3 sm:w-auto w-[100%]">
           <button
-            className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto border border-steel-750"
+            className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full border border-steel-750"
             type="button"
             disabled={options.length >= 10}
             onClick={handleAddOption}
