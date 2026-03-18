@@ -63,7 +63,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
   const assetsData = data?.data.assets;
   const treasuryInfo = data?.data?.treasuryWalletBalance;
-  const treasuryBalance = treasuryInfo?.treasuryWalletBalance?.treasuryBalance?.lovelace / 1000000 || 0;
+  const treasuryBalance = treasuryInfo?.lovelace / 1000000 || 0;
 
   const remainingAssets = useMemo(() => {
     if (!assetsData) return [];
