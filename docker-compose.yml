@@ -1,0 +1,28 @@
+# L4VA Client - Frontend Application
+
+services:
+  l4va-client:
+    container_name: l4va-client
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+        - VITE_VLRM_TOKEN_ID=${VITE_VLRM_TOKEN_ID}
+        - VITE_SWAP_VLRM_TOKEN_ID=${VITE_SWAP_VLRM_TOKEN_ID}
+        - VITE_BLOCKFROST_API_KEY=${VITE_BLOCKFROST_API_KEY}
+        - VITE_BLOCKFROST_NETWORK=${VITE_BLOCKFROST_NETWORK}
+    ports:
+      - "127.0.0.1:5173:80"
+    networks:
+      - l4va-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  l4va-network:
+    external: true # References the network created by infrastructure compose
