@@ -139,6 +139,10 @@ const assetWhitelistItemSchema = yup.object({
     .string()
     .required('Policy ID is required')
     .matches(/^[0-9a-fA-F]{56}$/, 'Policy ID must be a 56-character hex string'),
+  isVerified: yup
+    .boolean()
+    .required('Only verified collections can be added to a vault')
+    .oneOf([true], 'Only verified collections can be added to a vault'),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
   valuationMethod: yup.string().oneOf(['market', 'custom']).default('market'),

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -14,8 +14,10 @@ export interface WalletAsset {
 export interface GroupedPolicy {
   policyId: string;
   name: string;
+  assetName: string;
   count: number;
   collectionName: string | null;
+  isVerified: boolean;
 }
 
 const PAGE_SIZE = 10;
@@ -86,8 +88,10 @@ const parseBalanceToAssets = (balance: any): WalletAsset[] => {
   }
 };
 
-const groupAssetsByPolicy = (assets: WalletAsset[]): Omit<GroupedPolicy, 'collectionName'>[] => {
-  const grouped = new Map<string, { policyId: string; name: string; count: number }>();
+type GroupedPolicyBase = Omit<GroupedPolicy, 'collectionName' | 'isVerified'>;
+
+const groupAssetsByPolicy = (assets: WalletAsset[]): GroupedPolicyBase[] => {
+  const grouped = new Map<string, { policyId: string; name: string; assetName: string; count: number }>();
 
   assets.forEach(asset => {
     if (grouped.has(asset.policyId)) {
@@ -97,6 +101,7 @@ const groupAssetsByPolicy = (assets: WalletAsset[]): Omit<GroupedPolicy, 'collec
       grouped.set(asset.policyId, {
         policyId: asset.policyId,
         name: asset.name,
+        assetName: asset.assetNameHex,
         count: 1,
       });
     }
@@ -112,8 +117,8 @@ export const useAssets = () => {
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const allGroupedRef = useRef<Omit<GroupedPolicy, 'collectionName'>[]>([]);
-  const collectionNamesCache = useRef<Map<string, string | null>>(new Map());
+  const allGroupedRef = useRef<GroupedPolicyBase[]>([]);
+  const collectionNamesCache = useRef<Map<string, { collectionName: string | null; isVerified: boolean }>>(new Map());
   const currentPageRef = useRef(0);
   const prevBalanceRef = useRef<any>(null);
 
@@ -129,29 +134,36 @@ export const useAssets = () => {
     allGroupedRef.current = allGrouped;
   }
 
-  const fetchCollectionNames = useCallback(async (policyIds: string[]): Promise<Map<string, string | null>> => {
-    const uncachedIds = policyIds.filter(id => !collectionNamesCache.current.has(id));
+  const fetchCollections = useCallback(async (collections: GroupedPolicyBase[]): Promise<GroupedPolicy[]> => {
+    const uncachedCollections = collections.filter(policy => !collectionNamesCache.current.has(policy.policyId));
 
-    if (uncachedIds.length > 0) {
+    if (uncachedCollections.length > 0) {
       try {
-        const response = await VaultsApiProvider.getCollectionNames(uncachedIds);
-        const items: { policyId: string; collectionName: string | null }[] = response.data;
+        const response = await VaultsApiProvider.getCollectionNames(uncachedCollections);
+        const items: { policyId: string; collectionName: string | null; isVerified: boolean }[] = response.data;
+
         items.forEach(item => {
-          collectionNamesCache.current.set(item.policyId, item.collectionName);
+          collectionNamesCache.current.set(item.policyId, {
+            collectionName: item.collectionName,
+            isVerified: item.isVerified ?? false,
+          });
         });
       } catch (error) {
         console.error('Error fetching collection names:', error);
-        uncachedIds.forEach(id => {
-          collectionNamesCache.current.set(id, null);
+        uncachedCollections.forEach(collection => {
+          collectionNamesCache.current.set(collection.policyId, { collectionName: null, isVerified: false });
         });
       }
     }
 
-    const result = new Map<string, string | null>();
-    policyIds.forEach(id => {
-      result.set(id, collectionNamesCache.current.get(id) ?? null);
+    return collections.map(policy => {
+      const cached = collectionNamesCache.current.get(policy.policyId);
+      return {
+        ...policy,
+        collectionName: cached?.collectionName ?? null,
+        isVerified: cached?.isVerified ?? false,
+      };
     });
-    return result;
   }, []);
 
   const loadPage = useCallback(
@@ -161,18 +173,12 @@ export const useAssets = () => {
       const end = (page + 1) * PAGE_SIZE;
       const slice = grouped.slice(start, end);
 
-      const policyIds = slice.map(p => p.policyId);
-      const namesMap = await fetchCollectionNames(policyIds);
+      const collections = await fetchCollections(slice);
 
-      const withNames: GroupedPolicy[] = slice.map(p => ({
-        ...p,
-        collectionName: namesMap.get(p.policyId) ?? null,
-      }));
-
-      setVisiblePolicies(withNames);
+      setVisiblePolicies(collections);
       setHasMore(end < grouped.length);
     },
-    [fetchCollectionNames]
+    [fetchCollections]
   );
 
   // Load initial page when balance arrives
@@ -207,40 +213,28 @@ export const useAssets = () => {
 
       const search = query.toLowerCase();
 
-      // First: filter by name / policyId (local data we always have)
       const localMatches = allGrouped.filter(
-        p => p.name.toLowerCase().includes(search) || p.policyId.toLowerCase().includes(search)
+        p => p.assetName.toLowerCase().includes(search) || p.policyId.toLowerCase().includes(search)
       );
 
-      // Fetch collection names for matched policies
-      const matchedIds = localMatches.map(p => p.policyId);
-      const namesMap = await fetchCollectionNames(matchedIds);
+      const withNames: GroupedPolicy[] = await fetchCollections(localMatches);
 
-      const withNames: GroupedPolicy[] = localMatches.map(p => ({
-        ...p,
-        collectionName: namesMap.get(p.policyId) ?? null,
-      }));
-
-      // Also include policies whose collectionName matches the search
-      // (they might not match by name/policyId but do match by collectionName)
-      const localMatchIds = new Set(matchedIds);
+      const localMatchIds = new Set(localMatches.map(p => p.policyId));
       const remaining = allGrouped.filter(p => !localMatchIds.has(p.policyId));
 
       if (remaining.length > 0) {
-        const remainingIds = remaining.map(p => p.policyId);
-        const remainingNamesMap = await fetchCollectionNames(remainingIds);
+        const remainingWithNames = await fetchCollections(remaining);
 
-        remaining.forEach(p => {
-          const collectionName = remainingNamesMap.get(p.policyId) ?? null;
-          if (collectionName && collectionName.toLowerCase().includes(search)) {
-            withNames.push({ ...p, collectionName });
-          }
-        });
+        const matchedByCollection = remainingWithNames.filter(
+          p => p.collectionName && p.collectionName.toLowerCase().includes(search)
+        );
+
+        withNames.push(...matchedByCollection);
       }
 
       return withNames;
     },
-    [fetchCollectionNames]
+    [fetchCollections]
   );
 
   if (!balanceDecoded) {
