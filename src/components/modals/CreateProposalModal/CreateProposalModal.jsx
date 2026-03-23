@@ -210,7 +210,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             .filter(opt => opt.assetId && opt.assetId.length >= 56 && opt.price && Number(opt.price) > 0)
             .map(opt => ({
               assetId: opt.assetId,
-              exec: 'BUY',
+              exec: opt.exec,
               price: opt.price,
               market: opt.market || 'WayUp',
               assetName: opt.assetName,

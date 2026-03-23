@@ -20,7 +20,7 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
+  { value: 'Offer', label: 'Offer' },
   { value: 'Buy', label: 'Buy' },
 ];
 
@@ -58,6 +58,10 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
   const [abstain, setAbstain] = useState(false);
 
   const isBuyType = execType === 'BUY';
+  const getExecValue = sellType => {
+    if (!isBuyType) return execType;
+    return sellType === 'Offer' ? 'OFFER' : 'BUY';
+  };
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
 
@@ -99,7 +103,9 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
     if (field === 'assetName') {
       if (isBuyType) {
         setOptions(
-          options.map(option => (option.id === id ? { ...option, assetName: value, exec: execType } : option))
+          options.map(option =>
+            option.id === id ? { ...option, assetName: value, exec: getExecValue(option.sellType) } : option
+          )
         );
       } else {
         const selectedAsset = assetOptions.find(option => option.value === value);
@@ -110,7 +116,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                   ...option,
                   [field]: value,
                   assetId: selectedAsset?.id || null,
-                  exec: execType,
+                  exec: getExecValue(option.sellType),
                 }
               : option
           )
@@ -123,21 +129,29 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
             ? {
                 ...option,
                 assetId: value,
-                exec: execType,
+                exec: getExecValue(option.sellType),
               }
             : option
         )
       );
     } else if (field === 'sellType') {
       setOptions(
-        options.map(option => (option.id === id ? { ...option, [field]: value, price: '', exec: execType } : option))
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, price: '', exec: getExecValue(value) } : option
+        )
       );
     } else if (field === 'method') {
       setOptions(
-        options.map(option => (option.id === id ? { ...option, [field]: value, duration: '', exec: execType } : option))
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, duration: '', exec: getExecValue(option.sellType) } : option
+        )
       );
     } else {
-      setOptions(options.map(option => (option.id === id ? { ...option, [field]: value, exec: execType } : option)));
+      setOptions(
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, exec: getExecValue(option.sellType) } : option
+        )
+      );
     }
   };
 
@@ -202,7 +216,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
           id: Date.now() + Math.random(),
           assetName: selectedAsset?.label || '',
           assetId: selectedAsset?.id || (isBuyType ? assetValue : null),
-          exec: execType,
+          exec: getExecValue(isBuyType ? 'Buy' : ''),
           quantity: '',
           sellType: isBuyType ? 'Buy' : '',
           duration: '',
@@ -223,7 +237,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
         id: Date.now(),
         assetName: '',
         assetId: isBuyType ? '' : null,
-        exec: execType,
+        exec: getExecValue(isBuyType ? 'Buy' : ''),
         quantity: '',
         sellType: isBuyType ? 'Buy' : '',
         duration: '',
