@@ -1,4 +1,4 @@
-import { X, Plus, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
@@ -113,7 +113,13 @@ export const LavaWhitelistWithCaps = ({
   );
 
   const handleInputChange = (uniqueId, value) => {
-    updateAsset(uniqueId, 'policyId', value, 'N/A', null);
+    updateAsset(uniqueId, 'policyId', value, {
+      name: '',
+      assetName: '',
+      count: 1,
+      collectionName: null,
+      isVerified: null,
+    });
     triggerSearch(uniqueId, value);
 
     if (value) {
@@ -121,11 +127,92 @@ export const LavaWhitelistWithCaps = ({
     }
   };
 
-  const selectPolicyId = (uniqueId, policyId, policyName, collectionName) => {
-    updateAsset(uniqueId, 'policyId', policyId, policyName, collectionName);
+  const selectPolicyId = (uniqueId, policy) => {
+    updateAsset(uniqueId, 'policyId', policy.policyId, {
+      name: policy.name || '',
+      assetName: policy.assetName || '',
+      count: policy.count || 1,
+      collectionName: policy.collectionName ?? null,
+      isVerified: policy.isVerified ?? false,
+    });
     setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
     setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
   };
+
+  // Backfill verification data for pre-populated items (e.g. edit draft)
+  // so validation and badges work without re-selecting each policy.
+  useEffect(() => {
+    const assetsNeedingVerification = whitelist.filter(
+      asset =>
+        asset &&
+        asset.policyId &&
+        /^[0-9a-fA-F]{56}$/.test(asset.policyId) &&
+        (asset.isVerified === undefined || asset.isVerified === null)
+    );
+
+    if (assetsNeedingVerification.length === 0) return;
+
+    let isCancelled = false;
+
+    const backfillVerification = async () => {
+      try {
+        const updatesByUniqueId = {};
+
+        await Promise.all(
+          assetsNeedingVerification.map(async asset => {
+            const localMatch = walletPolicyIds.find(policy => policy.policyId === asset.policyId);
+            if (localMatch) {
+              updatesByUniqueId[asset.uniqueId] = {
+                isVerified: localMatch.isVerified ?? false,
+                collectionName: localMatch.collectionName ?? asset.collectionName ?? null,
+                name: localMatch.name || asset.name || '',
+                assetName: localMatch.assetName || asset.assetName || '',
+                count: localMatch.count || asset.count || 1,
+              };
+              return;
+            }
+
+            const results = await searchPolicies(asset.policyId);
+            const match = results.find(result => result.policyId === asset.policyId);
+            if (!match) return;
+
+            updatesByUniqueId[asset.uniqueId] = {
+              isVerified: match.isVerified ?? false,
+              collectionName: match.collectionName ?? asset.collectionName ?? null,
+              name: match.name || asset.name || '',
+              assetName: match.assetName || asset.assetName || '',
+              count: match.count || asset.count || 1,
+            };
+          })
+        );
+
+        if (isCancelled || Object.keys(updatesByUniqueId).length === 0) return;
+
+        const nextWhitelist = whitelist.map(asset => {
+          const update = updatesByUniqueId[asset.uniqueId];
+          if (!update || (asset.isVerified !== undefined && asset.isVerified !== null)) return asset;
+          return {
+            ...asset,
+            ...update,
+            policyName: update.name || asset.policyName || 'N/A',
+          };
+        });
+
+        const hasChanges = nextWhitelist.some((asset, index) => asset !== whitelist[index]);
+        if (hasChanges) {
+          setWhitelist(nextWhitelist);
+        }
+      } catch (error) {
+        console.error('Error backfilling asset verification:', error);
+      }
+    };
+
+    backfillVerification();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [whitelist, walletPolicyIds, searchPolicies, setWhitelist]);
 
   const toggleDropdown = uniqueId => {
     const willOpen = !showDropdown[uniqueId];
@@ -143,7 +230,13 @@ export const LavaWhitelistWithCaps = ({
     const asset = whitelist.find(item => item.uniqueId === uniqueId);
 
     if (asset && asset.policyId) {
-      updateAsset(uniqueId, 'policyId', '', 'N/A', null);
+      updateAsset(uniqueId, 'policyId', '', {
+        name: '',
+        assetName: '',
+        count: 1,
+        collectionName: null,
+        isVerified: null,
+      });
       setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
     } else {
       const filteredAssets = whitelist.filter(asset => asset.uniqueId !== uniqueId);
@@ -157,9 +250,13 @@ export const LavaWhitelistWithCaps = ({
       ...whitelist,
       {
         policyId: '',
+        assetName: '',
+        name: '',
+        count: 1,
         countCapMin: 1,
         policyName: 'N/A',
         collectionName: null,
+        isVerified: null,
         countCapMax: Math.min(1000, maxCapValue),
         valuationMethod: 'market',
         customPriceAda: null,
@@ -169,14 +266,18 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(newAssets);
   };
 
-  const updateAsset = (uniqueId, field, val, policyName, collectionName) => {
+  const updateAsset = (uniqueId, field, val, policyData = {}) => {
     const updatedAssets = whitelist.map(asset =>
       asset.uniqueId === uniqueId
         ? {
             ...asset,
             [field]: val,
-            ...(policyName && { policyName }),
-            ...(collectionName && { collectionName }),
+            ...(policyData.name !== undefined && { name: policyData.name }),
+            ...(policyData.name !== undefined && { policyName: policyData.name || 'N/A' }),
+            ...(policyData.assetName !== undefined && { assetName: policyData.assetName }),
+            ...(policyData.count !== undefined && { count: policyData.count }),
+            ...(policyData.collectionName !== undefined && { collectionName: policyData.collectionName }),
+            ...(policyData.isVerified !== undefined && { isVerified: policyData.isVerified }),
           }
         : asset
     );
@@ -205,16 +306,33 @@ export const LavaWhitelistWithCaps = ({
     };
 
     const displayName = policy.collectionName || policy.name;
+    const isVerified = policy.isVerified;
 
     return (
       <button
         key={`${policy.policyId}-${policy.name}`}
         type="button"
-        className="w-full px-4 py-2 text-left hover:bg-steel-700 flex items-center gap-3 border-b border-steel-700 last:border-b-0"
-        onClick={() => selectPolicyId(asset.uniqueId, policy.policyId, policy.name, policy.collectionName)}
+        disabled={!isVerified}
+        className={`w-full px-4 py-2 text-left flex items-center gap-3 border-b border-steel-700 last:border-b-0 ${
+          isVerified ? 'hover:bg-steel-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+        }`}
+        onClick={isVerified ? () => selectPolicyId(asset.uniqueId, policy) : undefined}
       >
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-white truncate">{highlightText(displayName, searchText)}</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="font-medium text-white truncate">{highlightText(displayName, searchText)}</div>
+            {isVerified ? (
+              <span className="inline-flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 shrink-0">
+                <ShieldCheck className="h-3 w-3" />
+                Verified
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/30 shrink-0">
+                <ShieldAlert className="h-3 w-3" />
+                Unverified
+              </span>
+            )}
+          </div>
           <div className="text-sm text-gray-400 truncate font-mono">{highlightText(policy.policyId, searchText)}</div>
         </div>
       </button>
@@ -321,8 +439,27 @@ export const LavaWhitelistWithCaps = ({
               </div>
               {(() => {
                 const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].policyId`]}</p>;
+                const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
+                return <p className="text-red-600 text-sm mt-1">{policyIdError}</p>;
               })()}
+              {(() => {
+                const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
+                if (policyIdError) return null;
+                return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].isVerified`]}</p>;
+              })()}
+              {asset.policyId && asset.isVerified === true && (
+                <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Verified collection</span>
+                </div>
+              )}
+              {asset.policyId && asset.isVerified === false && (
+                <div className="flex items-center gap-1.5 text-sm text-orange-400 -mt-4">
+                  <ShieldAlert className="h-4 w-4" />
+                  <span>Unverified collection — cannot be added to a vault</span>
+                </div>
+              )}
               <div className="flex gap-4">
                 <div className="flex-1">
                   <LavaInput
