@@ -20,7 +20,7 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer' },
+  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
   { value: 'Buy', label: 'Buy' },
 ];
 
