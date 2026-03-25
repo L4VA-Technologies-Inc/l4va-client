@@ -48,7 +48,7 @@ export function AppCore() {
   }
 
   return (
-    <NovuProvider applicationIdentifier={import.meta.env.VITE_NOVU_APP_ID} subscriberId={user?.address || 'guest'}>
+    <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address || 'guest'}>
       <WeldProvider>
         <AppWithInterceptor />
       </WeldProvider>
