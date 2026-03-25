@@ -11,6 +11,10 @@ export class GovernanceConfigProvider {
     return `/api/v1/governance/proposals/${proposalId}`;
   }
 
+  static deleteProposal(proposalId) {
+    return `/api/v1/governance/proposals/${proposalId}`;
+  }
+
   static voteOnProposal(proposalId) {
     return `/api/v1/governance/proposals/${proposalId}/vote`;
   }
