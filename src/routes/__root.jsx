@@ -20,7 +20,7 @@ const RootComponent = () => {
       <MainLayout>
         <Outlet />
       </MainLayout>
-      <Suspense>
+      <Suspense fallback={null}>
         <TanStackRouterDevtools position="bottom-right" />
       </Suspense>
       <Modal />
