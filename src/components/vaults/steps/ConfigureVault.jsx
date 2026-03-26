@@ -47,6 +47,21 @@ export const ConfigureVault = ({
     );
   };
 
+  // Calculate combined unique whitelist addresses
+  const getCombinedWhitelistCount = () => {
+    const contributorAddresses = (data.contributorWhitelist || [])
+      .map(item => item.walletAddress?.toLowerCase())
+      .filter(Boolean);
+    const acquirerAddresses = (data.acquirerWhitelist || [])
+      .map(item => item.walletAddress?.toLowerCase())
+      .filter(Boolean);
+    const uniqueAddresses = new Set([...contributorAddresses, ...acquirerAddresses]);
+    return uniqueAddresses.size;
+  };
+
+  const combinedWhitelistCount = getCombinedWhitelistCount();
+  const isOverLimit = combinedWhitelistCount > 100;
+
   return (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
       <div className="space-y-12">
@@ -190,6 +205,21 @@ export const ConfigureVault = ({
             {errors.acquirerWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.acquirerWhitelist}</p>}
           </div>
         )}
+
+        {/* Combined whitelist warning - Over limit only */}
+        {(data.privacy === VAULT_PRIVACY_TYPES.PRIVATE || data.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE) &&
+          isOverLimit && (
+            <div className="p-4 rounded-lg border border-red-700">
+              <p className="text-sm font-medium text-white">
+                ⚠️ Combined Whitelist: {combinedWhitelistCount} / 100 unique addresses
+              </p>
+              <p className="text-xs mt-1 text-white">
+                {`You've exceeded the maximum limit! Please remove ${combinedWhitelistCount - 100} address${
+                  combinedWhitelistCount - 100 > 1 ? 'es' : ''
+                } to continue.`}
+              </p>
+            </div>
+          )}
       </div>
 
       <div className="space-y-12">
