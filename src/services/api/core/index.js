@@ -43,6 +43,19 @@ export class CoreApiProvider {
     });
   }
 
+  static async uploadProfileImage(file, imageType = '') {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    if (imageType) formData.append('imageType', String(imageType));
+
+    return await axiosInstance.post(CoreConfigProvider.uploadProfileImage(), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
   static async handleCsv(file) {
     const formData = new FormData();
     formData.append('csv', file);

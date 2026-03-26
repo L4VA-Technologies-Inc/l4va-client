@@ -191,6 +191,18 @@ export const useUploadImage = () => {
   });
 };
 
+export const useUploadProfileImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ file, imageType }: { file: File; imageType: 'avatar' | 'banner' }) =>
+      CoreApiProvider.uploadProfileImage(file, imageType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+};
+
 export const useHandleCsv = () => {
   return useMutation({
     mutationFn: file => CoreApiProvider.handleCsv(file),
