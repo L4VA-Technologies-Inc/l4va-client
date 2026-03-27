@@ -1,6 +1,7 @@
 import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import toast from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
@@ -24,7 +25,8 @@ export const LavaWhitelistWithCaps = ({
   const searchTimers = useRef({});
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  const { data, hasMore, isLoadingMore, loadMore, searchPolicies } = useAssets();
+  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies, allPolicies, isBalanceLoaded } =
+    useAssets();
 
   const walletPolicyIds = data?.data || [];
 
@@ -51,6 +53,45 @@ export const LavaWhitelistWithCaps = ({
       Object.values(searchTimers.current).forEach(timer => clearTimeout(timer));
     };
   }, []);
+
+  // Items loaded from a draft (or API) may not have a uniqueId, which causes all
+  // dropdowns to share the same undefined key and open simultaneously. Assign stable
+  // IDs in a single pass before any interaction can occur.
+  useEffect(() => {
+    const hasItemsWithoutId = whitelist.some(item => item && !item.uniqueId);
+    if (!hasItemsWithoutId) return;
+
+    setWhitelist(
+      whitelist.map((item, idx) => (item && !item.uniqueId ? { ...item, uniqueId: Date.now() + idx } : item))
+    );
+  }, [whitelist, setWhitelist]);
+
+  // When the wallet balance first loads, remove any whitelist items whose policy ID
+  // is no longer held by the user (e.g. they spent those NFTs since saving the draft).
+  // We only run this once per mount (tracked by hasFilteredStaleRef) and only after
+  // there are actual whitelist items to check (wallet may load before draft data).
+  const hasFilteredStaleRef = useRef(false);
+  useEffect(() => {
+    if (!isBalanceLoaded) return;
+    if (whitelist.length === 0) return;
+    if (hasFilteredStaleRef.current) return;
+    hasFilteredStaleRef.current = true;
+
+    const walletPolicyIdSet = new Set(allPolicies.map(p => p.policyId));
+
+    const filtered = whitelist.filter(
+      item => !item?.policyId || !/^[0-9a-fA-F]{56}$/.test(item.policyId) || walletPolicyIdSet.has(item.policyId)
+    );
+
+    if (filtered.length < whitelist.length) {
+      const removedCount = whitelist.length - filtered.length;
+      setWhitelist(filtered);
+      toast(
+        `${removedCount} asset${removedCount > 1 ? 's were' : ' was'} removed from the whitelist because ${removedCount > 1 ? "they're" : "it's"} no longer in your wallet.`,
+        { icon: '⚠️', duration: 5000 }
+      );
+    }
+  }, [isBalanceLoaded, allPolicies, whitelist, setWhitelist]);
 
   const handleScroll = useCallback(
     (e, uniqueId) => {
@@ -141,6 +182,8 @@ export const LavaWhitelistWithCaps = ({
 
   // Backfill verification data for pre-populated items (e.g. edit draft)
   // so validation and badges work without re-selecting each policy.
+  // Uses a single batch lookupPolicies call instead of N parallel searchPolicies
+  // calls (each of which would fetch all wallet assets, causing N × 40+ API lookups).
   useEffect(() => {
     const assetsNeedingVerification = whitelist.filter(
       asset =>
@@ -158,33 +201,38 @@ export const LavaWhitelistWithCaps = ({
       try {
         const updatesByUniqueId = {};
 
-        await Promise.all(
-          assetsNeedingVerification.map(async asset => {
-            const localMatch = walletPolicyIds.find(policy => policy.policyId === asset.policyId);
-            if (localMatch) {
-              updatesByUniqueId[asset.uniqueId] = {
-                isVerified: localMatch.isVerified ?? false,
-                collectionName: localMatch.collectionName ?? asset.collectionName ?? null,
-                name: localMatch.name || asset.name || '',
-                assetName: localMatch.assetName || asset.assetName || '',
-                count: localMatch.count || asset.count || 1,
-              };
-              return;
-            }
-
-            const results = await searchPolicies(asset.policyId);
-            const match = results.find(result => result.policyId === asset.policyId);
-            if (!match) return;
-
+        // Resolve from already-loaded wallet data first (no API call needed)
+        const needsApiLookup = [];
+        for (const asset of assetsNeedingVerification) {
+          const localMatch = walletPolicyIds.find(policy => policy.policyId === asset.policyId);
+          if (localMatch) {
             updatesByUniqueId[asset.uniqueId] = {
-              isVerified: match.isVerified ?? false,
-              collectionName: match.collectionName ?? asset.collectionName ?? null,
-              name: match.name || asset.name || '',
-              assetName: match.assetName || asset.assetName || '',
-              count: match.count || asset.count || 1,
+              isVerified: localMatch.isVerified ?? false,
+              collectionName: localMatch.collectionName ?? asset.collectionName ?? null,
+              name: localMatch.name || asset.name || '',
+              assetName: localMatch.assetName || asset.assetName || '',
+              count: localMatch.count || asset.count || 1,
             };
-          })
-        );
+          } else {
+            needsApiLookup.push(asset);
+          }
+        }
+
+        // Single batch API call for all remaining assets instead of N parallel calls
+        if (needsApiLookup.length > 0) {
+          const results = await lookupPolicies(needsApiLookup.map(a => a.policyId));
+          needsApiLookup.forEach((asset, index) => {
+            const result = results[index];
+            if (!result) return;
+            updatesByUniqueId[asset.uniqueId] = {
+              isVerified: result.isVerified ?? false,
+              collectionName: result.collectionName ?? asset.collectionName ?? null,
+              name: result.name || asset.name || '',
+              assetName: result.assetName || asset.assetName || '',
+              count: result.count || asset.count || 1,
+            };
+          });
+        }
 
         if (isCancelled || Object.keys(updatesByUniqueId).length === 0) return;
 
@@ -212,7 +260,7 @@ export const LavaWhitelistWithCaps = ({
     return () => {
       isCancelled = true;
     };
-  }, [whitelist, walletPolicyIds, searchPolicies, setWhitelist]);
+  }, [whitelist, walletPolicyIds, lookupPolicies, setWhitelist]);
 
   const toggleDropdown = uniqueId => {
     const willOpen = !showDropdown[uniqueId];

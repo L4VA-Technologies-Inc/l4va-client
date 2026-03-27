@@ -21,6 +21,7 @@ export interface GroupedPolicy {
 }
 
 const PAGE_SIZE = 10;
+const COLLECTION_BATCH_SIZE = 20;
 
 const hexToString = (hex: string): string => {
   try {
@@ -138,21 +139,25 @@ export const useAssets = () => {
     const uncachedCollections = collections.filter(policy => !collectionNamesCache.current.has(policy.policyId));
 
     if (uncachedCollections.length > 0) {
-      try {
-        const response = await VaultsApiProvider.getCollectionNames(uncachedCollections);
-        const items: { policyId: string; collectionName: string | null; isVerified: boolean }[] = response.data;
+      // Process in batches to stay within the backend's 20-item limit per request
+      for (let i = 0; i < uncachedCollections.length; i += COLLECTION_BATCH_SIZE) {
+        const batch = uncachedCollections.slice(i, i + COLLECTION_BATCH_SIZE);
+        try {
+          const response = await VaultsApiProvider.getCollectionNames(batch);
+          const items: { policyId: string; collectionName: string | null; isVerified: boolean }[] = response.data;
 
-        items.forEach(item => {
-          collectionNamesCache.current.set(item.policyId, {
-            collectionName: item.collectionName,
-            isVerified: item.isVerified ?? false,
+          items.forEach(item => {
+            collectionNamesCache.current.set(item.policyId, {
+              collectionName: item.collectionName,
+              isVerified: item.isVerified ?? false,
+            });
           });
-        });
-      } catch (error) {
-        console.error('Error fetching collection names:', error);
-        uncachedCollections.forEach(collection => {
-          collectionNamesCache.current.set(collection.policyId, { collectionName: null, isVerified: false });
-        });
+        } catch (error) {
+          console.error('Error fetching collection names:', error);
+          batch.forEach(collection => {
+            collectionNamesCache.current.set(collection.policyId, { collectionName: null, isVerified: false });
+          });
+        }
       }
     }
 
@@ -237,15 +242,32 @@ export const useAssets = () => {
     [fetchCollections]
   );
 
+  // Batch-lookup for a list of policy IDs — makes a single fetchCollections call
+  // instead of N parallel searchPolicies calls (which each fetch all wallet assets).
+  const lookupPolicies = useCallback(
+    async (policyIds: string[]): Promise<GroupedPolicy[]> => {
+      if (policyIds.length === 0) return [];
+      const items: GroupedPolicyBase[] = policyIds.map(id => {
+        const existing = allGroupedRef.current.find(p => p.policyId === id);
+        return existing ?? { policyId: id, name: '', assetName: '', count: 1 };
+      });
+      return fetchCollections(items);
+    },
+    [fetchCollections]
+  );
+
   if (!balanceDecoded) {
     return {
       data: { data: [] },
       assets: [],
+      allPolicies: [] as GroupedPolicyBase[],
+      isBalanceLoaded: false,
       isLoading: false,
       hasMore: false,
       isLoadingMore: false,
       loadMore: () => {},
       searchPolicies: async () => [],
+      lookupPolicies: async () => [],
     };
   }
 
@@ -254,10 +276,14 @@ export const useAssets = () => {
       data: visiblePolicies,
     },
     assets: allAssets,
+    // Full wallet policy list (all pages) — used to detect stale draft whitelist items
+    allPolicies: allGrouped,
+    isBalanceLoaded: true,
     isLoading: false,
     hasMore,
     isLoadingMore,
     loadMore,
     searchPolicies,
+    lookupPolicies,
   };
 };

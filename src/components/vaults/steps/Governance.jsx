@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react';
+import { Info, Lock } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
@@ -6,7 +6,13 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { MAX_SUPPLY, TERMINATION_TYPE_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 
-export const Governance = ({ data, errors = {}, updateField }) => {
+export const Governance = ({
+  data,
+  errors = {},
+  updateField,
+  isPresetConfigLocked = false,
+  isAdvancedPresetAvailable = true,
+}) => {
   const handlePercentageChange = value => {
     let numericValue = value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
 
@@ -177,6 +183,14 @@ export const Governance = ({ data, errors = {}, updateField }) => {
           </>
         )}
         <>
+          {isPresetConfigLocked && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-800 border border-steel-700 text-dark-100 text-xs font-russo uppercase">
+              <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+              {isAdvancedPresetAvailable
+                ? 'Values set by preset — select Advanced preset to customise'
+                : 'Advanced mode is disabled — values are managed by the preset'}
+            </div>
+          )}
           <div>
             <LavaInput
               required
@@ -190,6 +204,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               value={data.creationThreshold || ''}
               onBlur={handleNumBlur}
               onChange={handleNumChange}
+              disabled={isPresetConfigLocked}
             />
           </div>
           <div>
@@ -205,6 +220,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               value={data.cosigningThreshold || ''}
               onBlur={handleMinOnePercentBlur}
               onChange={handleMinOnePercentChange}
+              disabled={isPresetConfigLocked}
             />
           </div>
           {/*<div>*/}
@@ -234,6 +250,7 @@ export const Governance = ({ data, errors = {}, updateField }) => {
               value={data.executionThreshold || ''}
               onBlur={handleMinOnePercentBlur}
               onChange={handleMinOnePercentChange}
+              disabled={isPresetConfigLocked}
             />
           </div>
         </>
