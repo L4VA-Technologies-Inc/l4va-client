@@ -29,9 +29,7 @@ axiosInstance.interceptors.response.use(
         },
         extra: {
           response_data: data,
-          request_data: config.data,
           request_params: config.params,
-          request_headers: config.headers,
         },
       });
     } else if (error.request) {

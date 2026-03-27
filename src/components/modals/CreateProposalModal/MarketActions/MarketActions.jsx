@@ -10,10 +10,10 @@ import { SellAction } from '@/components/modals/CreateProposalModal/MarketAction
 
 const marketOptions = [
   { value: 'sell', label: 'Sell' },
-  { value: 'swap', label: 'Swap' },
   { value: 'unlist', label: 'Unlist' },
   { value: 'update_list', label: 'Update List' },
   { value: 'buy', label: 'Buy - Coming Soon', disabled: true },
+  { value: 'swap', label: 'Swap - Coming Soon', disabled: true },
 ];
 
 export const MarketActions = ({ vaultId, onDataChange, error }) => {

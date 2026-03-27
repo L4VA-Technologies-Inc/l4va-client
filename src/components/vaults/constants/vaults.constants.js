@@ -212,6 +212,25 @@ export const vaultSchema = yup.object({
               const hasAcquirerWhitelist = acquirerWhitelist && acquirerWhitelist.length > 0;
               return hasContributorWhitelist || hasAcquirerWhitelist;
             }
+          )
+          .test(
+            'combined-whitelist-limit',
+            'Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})',
+            function (value) {
+              const { acquirerWhitelist } = this.parent;
+              const contributorAddresses = (value || []).map(item => item.walletAddress?.toLowerCase()).filter(Boolean);
+              const acquirerAddresses = (acquirerWhitelist || [])
+                .map(item => item.walletAddress?.toLowerCase())
+                .filter(Boolean);
+              const uniqueAddresses = new Set([...contributorAddresses, ...acquirerAddresses]);
+              const uniqueCount = uniqueAddresses.size;
+              if (uniqueCount > 100) {
+                return this.createError({
+                  message: `Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})`,
+                });
+              }
+              return true;
+            }
           ),
       otherwise: schema =>
         schema.when(['privacy', 'valueMethod'], {
@@ -220,7 +239,28 @@ export const vaultSchema = yup.object({
             schema
               .min(1, 'Contributor whitelist must have at least 1 item')
               .max(100, 'Contributor whitelist can have a maximum of 100 items')
-              .required('Contributor whitelist is required'),
+              .required('Contributor whitelist is required')
+              .test(
+                'combined-whitelist-limit',
+                'Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})',
+                function (value) {
+                  const { acquirerWhitelist } = this.parent;
+                  const contributorAddresses = (value || [])
+                    .map(item => item.walletAddress?.toLowerCase())
+                    .filter(Boolean);
+                  const acquirerAddresses = (acquirerWhitelist || [])
+                    .map(item => item.walletAddress?.toLowerCase())
+                    .filter(Boolean);
+                  const uniqueAddresses = new Set([...contributorAddresses, ...acquirerAddresses]);
+                  const uniqueCount = uniqueAddresses.size;
+                  if (uniqueCount > 100) {
+                    return this.createError({
+                      message: `Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})`,
+                    });
+                  }
+                  return true;
+                }
+              ),
           otherwise: schema => schema.notRequired(),
         }),
     }),
@@ -289,6 +329,25 @@ export const vaultSchema = yup.object({
               const hasAcquirerWhitelist = value && value.length > 0;
               return hasContributorWhitelist || hasAcquirerWhitelist;
             }
+          )
+          .test(
+            'combined-whitelist-limit',
+            'Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})',
+            function (value) {
+              const { contributorWhitelist } = this.parent;
+              const contributorAddresses = (contributorWhitelist || [])
+                .map(item => item.walletAddress?.toLowerCase())
+                .filter(Boolean);
+              const acquirerAddresses = (value || []).map(item => item.walletAddress?.toLowerCase()).filter(Boolean);
+              const uniqueAddresses = new Set([...contributorAddresses, ...acquirerAddresses]);
+              const uniqueCount = uniqueAddresses.size;
+              if (uniqueCount > 100) {
+                return this.createError({
+                  message: `Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})`,
+                });
+              }
+              return true;
+            }
           ),
       otherwise: schema =>
         schema.when('privacy', {
@@ -297,7 +356,28 @@ export const vaultSchema = yup.object({
             schema
               .min(1, 'Acquirer whitelist must have at least 1 item')
               .max(100, 'Acquirer whitelist can have a maximum of 100 items')
-              .required('Acquirer whitelist is required'),
+              .required('Acquirer whitelist is required')
+              .test(
+                'combined-whitelist-limit',
+                'Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})',
+                function (value) {
+                  const { contributorWhitelist } = this.parent;
+                  const contributorAddresses = (contributorWhitelist || [])
+                    .map(item => item.walletAddress?.toLowerCase())
+                    .filter(Boolean);
+                  const acquirerAddresses = (value || [])
+                    .map(item => item.walletAddress?.toLowerCase())
+                    .filter(Boolean);
+                  const uniqueAddresses = new Set([...contributorAddresses, ...acquirerAddresses]);
+                  const uniqueCount = uniqueAddresses.size;
+                  if (uniqueCount > 100) {
+                    return this.createError({
+                      message: `Combined contributor and acquirer whitelist cannot exceed 100 unique addresses (currently ${uniqueCount})`,
+                    });
+                  }
+                  return true;
+                }
+              ),
           otherwise: schema => schema.notRequired(),
         }),
     }),

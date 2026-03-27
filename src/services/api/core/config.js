@@ -23,6 +23,10 @@ export class CoreConfigProvider {
     return '/api/v1/upload';
   }
 
+  static uploadProfileImage() {
+    return '/api/v1/users/profile/image';
+  }
+
   static handleCsv() {
     return '/api/v1/handle-csv';
   }
