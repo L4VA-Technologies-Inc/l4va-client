@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { AlertCircle, Plus, Wallet, X } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-import { transactionOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
+import { transactionOptionSchema, buyOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
+import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const methodOptions = [
   { value: 'N/A', label: 'Time Limit' },
@@ -19,16 +20,18 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer' },
+  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
   { value: 'Buy', label: 'Buy' },
 ];
 
-const validateOptions = options => {
+const validateOptions = (options, isBuyType = false) => {
   if (options.length === 0) return false;
+
+  const schema = isBuyType ? buyOptionSchema : transactionOptionSchema;
 
   try {
     options.forEach(option => {
-      transactionOptionSchema.validateSync(option);
+      schema.validateSync(option);
     });
     return true;
   } catch {
@@ -37,13 +40,15 @@ const validateOptions = options => {
 };
 
 const validateOption = (option, isBuyType = false) => {
-  if (option) {
-    try {
-      transactionOptionSchema.validateSync(option);
-      return !(isBuyType && (!option.assetId || option.assetId.length < 56));
-    } catch {
-      return false;
-    }
+  if (!option) return false;
+
+  const schema = isBuyType ? buyOptionSchema : transactionOptionSchema;
+
+  try {
+    schema.validateSync(option);
+    return true;
+  } catch {
+    return false;
   }
 };
 
@@ -53,13 +58,21 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
   const [abstain, setAbstain] = useState(false);
 
   const isBuyType = execType === 'BUY';
+  const getExecValue = sellType => {
+    if (!isBuyType) return execType;
+    return sellType === 'Offer' ? 'OFFER' : 'BUY';
+  };
 
-  const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
+
+  const assetsData = data?.data.assets;
+  const treasuryInfo = data?.data?.treasuryWalletBalance;
+  const treasuryBalance = treasuryInfo?.lovelace / 1000000 || 0;
 
   const remainingAssets = useMemo(() => {
-    if (!assetsData?.data) return [];
+    if (!assetsData) return [];
     const usedAssetNames = options.map(option => option.assetName).filter(Boolean);
-    return assetsData.data.filter(asset => !usedAssetNames.includes(asset.name));
+    return assetsData.filter(asset => !usedAssetNames.includes(asset.name));
   }, [assetsData, options]);
 
   const selectedAssets = useMemo(() => {
@@ -67,8 +80,8 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
   }, [options, isBuyType]);
 
   useEffect(() => {
-    if (assetsData?.data && !isLoading) {
-      const formattedAssets = assetsData.data.map(asset => ({
+    if (assetsData && !isLoading) {
+      const formattedAssets = assetsData.map(asset => ({
         value: asset.name,
         label: asset.name,
         id: asset.id,
@@ -88,19 +101,27 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
   const handleOptionChange = (id, field, value) => {
     if (field === 'assetName') {
-      const selectedAsset = assetOptions.find(option => option.value === value);
-      setOptions(
-        options.map(option =>
-          option.id === id
-            ? {
-                ...option,
-                [field]: value,
-                assetId: selectedAsset?.id || null,
-                exec: execType,
-              }
-            : option
-        )
-      );
+      if (isBuyType) {
+        setOptions(
+          options.map(option =>
+            option.id === id ? { ...option, assetName: value, exec: getExecValue(option.sellType) } : option
+          )
+        );
+      } else {
+        const selectedAsset = assetOptions.find(option => option.value === value);
+        setOptions(
+          options.map(option =>
+            option.id === id
+              ? {
+                  ...option,
+                  [field]: value,
+                  assetId: selectedAsset?.id || null,
+                  exec: getExecValue(option.sellType),
+                }
+              : option
+          )
+        );
+      }
     } else if (field === 'assetId') {
       setOptions(
         options.map(option =>
@@ -108,22 +129,29 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
             ? {
                 ...option,
                 assetId: value,
-                assetName: value || '',
-                exec: execType,
+                exec: getExecValue(option.sellType),
               }
             : option
         )
       );
     } else if (field === 'sellType') {
       setOptions(
-        options.map(option => (option.id === id ? { ...option, [field]: value, price: '', exec: execType } : option))
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, price: '', exec: getExecValue(value) } : option
+        )
       );
     } else if (field === 'method') {
       setOptions(
-        options.map(option => (option.id === id ? { ...option, [field]: value, duration: '', exec: execType } : option))
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, duration: '', exec: getExecValue(option.sellType) } : option
+        )
       );
     } else {
-      setOptions(options.map(option => (option.id === id ? { ...option, [field]: value, exec: execType } : option)));
+      setOptions(
+        options.map(option =>
+          option.id === id ? { ...option, [field]: value, exec: getExecValue(option.sellType) } : option
+        )
+      );
     }
   };
 
@@ -188,9 +216,9 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
           id: Date.now() + Math.random(),
           assetName: selectedAsset?.label || '',
           assetId: selectedAsset?.id || (isBuyType ? assetValue : null),
-          exec: execType,
+          exec: getExecValue(isBuyType ? 'Buy' : ''),
           quantity: '',
-          sellType: '',
+          sellType: isBuyType ? 'Buy' : '',
           duration: '',
           isMax: false,
           method: 'N/A',
@@ -209,9 +237,9 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
         id: Date.now(),
         assetName: '',
         assetId: isBuyType ? '' : null,
-        exec: execType,
+        exec: getExecValue(isBuyType ? 'Buy' : ''),
         quantity: '',
-        sellType: '',
+        sellType: isBuyType ? 'Buy' : '',
         duration: '',
         isMax: false,
         method: 'N/A',
@@ -223,13 +251,37 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
   const handleRemoveOption = id => setOptions(options.filter(option => option.id !== id));
 
+  if (IS_MAINNET && !treasuryInfo) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <div>
+            <p className="text-red-400 font-medium">No Treasury Wallet</p>
+            <p className="text-white/60 text-sm mt-1">
+              This vault does not have a treasury wallet configured. Distribution proposals require a treasury wallet
+              with ADA funds.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
+      <div className="bg-steel-800 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-white/60 mb-2">
+          <Wallet className="w-4 h-4" />
+          <span className="text-sm">Treasury Balance</span>
+        </div>
+        <p className="text-2xl font-semibold text-white">{treasuryBalance.toLocaleString()} ADA</p>
+      </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">{title}</h3>
         <div className="flex flex-col sm:flex-row gap-3 sm:w-auto w-[100%]">
           <button
-            className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto border border-steel-750"
+            className="flex items-center justify-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors w-full border border-steel-750"
             type="button"
             disabled={options.length >= 10}
             onClick={handleAddOption}
@@ -284,157 +336,209 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                   </button>
                 </div>
                 <div className="relative bg-steel-800 p-4 rounded-[10px]">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="text-sm text-gray-400">{isBuyType ? 'Asset ID:' : 'Asset Name:'}</p>
-                        {isBuyType && (
+                  {isBuyType ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-sm text-gray-400">Display Name:</p>
+                            <a
+                              href="https://www.wayup.io/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
+                            >
+                              WayUp
+                            </a>
+                          </div>
+                          <LavaSteelInput
+                            type="text"
+                            placeholder="Enter display name"
+                            value={option.assetName || ''}
+                            onChange={value => handleOptionChange(option.id, 'assetName', value)}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Buy Type</p>
+                          <LavaSteelSelect
+                            options={buyTypeOptions}
+                            placeholder="Select type"
+                            value={option.sellType ?? buyTypeOptions[1].value}
+                            onChange={value => handleOptionChange(option.id, 'sellType', value)}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Market</p>
+                          <LavaSteelSelect
+                            placeholder="Select market"
+                            value={option.market}
+                            onChange={value => handleOptionChange(option.id, 'market', value)}
+                            options={[{ value: 'WayUp', label: 'WayUp' }]}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Buying Max Price</p>
+                          <LavaSteelInput
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            placeholder="0.00"
+                            value={option.price}
+                            onChange={value => handleAmountChange(option.id, 'price', value)}
+                            onIncrement={() => {
+                              const newValue = (parseFloat(option.price) || 0) + 0.1;
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                            onDecrement={() => {
+                              const newValue = Math.max(0, (parseFloat(option.price) || 0) - 0.1);
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-sm text-gray-400">Asset Unit:</p>
                           <a
                             href="https://www.wayup.io/"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
                           >
-                            Find on WayUp
+                            WayUp
                           </a>
-                        )}
-                      </div>
-                      {isBuyType ? (
-                        <div>
-                          <LavaSteelInput
-                            type="text"
-                            placeholder="Enter asset ID"
-                            value={option.assetId || ''}
-                            onChange={value => handleOptionChange(option.id, 'assetId', value)}
-                            className={
-                              option.assetId && option.assetId.length > 0 && option.assetId.length < 56
-                                ? '!border-red-500/60'
-                                : ''
-                            }
-                          />
-                          {option.assetId && option.assetId.length > 0 && option.assetId.length < 56 && (
-                            <p className="text-xs text-red-500 mt-1">Asset ID must be at least 56 characters</p>
-                          )}
                         </div>
-                      ) : (
-                        <LavaSteelSelect
-                          options={assetOptions.filter(
-                            opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value)
-                          )}
-                          placeholder={isLoading ? 'Loading assets...' : 'Select asset'}
-                          value={option.assetName}
-                          onChange={value => handleOptionChange(option.id, 'assetName', value)}
-                          isDisabled={isLoading}
+                        <LavaSteelInput
+                          type="text"
+                          placeholder="Enter asset unit"
+                          value={option.assetId || ''}
+                          onChange={value => handleOptionChange(option.id, 'assetId', value)}
+                          className={
+                            option.assetId && option.assetId.length > 0 && option.assetId.length < 56
+                              ? '!border-red-500/60'
+                              : ''
+                          }
                         />
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex justify-between gap-2 mb-1">
-                        <p className="text-sm text-gray-400 ">Quantity</p>
-                        {!isBuyType && (
-                          <LavaCheckbox
-                            name={`max-${option.id}`}
-                            checked={option.isMax}
-                            label={`max: ${getAvailableAmount(option.id)}`}
-                            className="whitespace-nowrap"
-                            labelClassName="text-gray-400"
-                            onChange={e => setFTMax(option.id, e.target.checked)}
-                            disabled={!option.assetName}
-                          />
+                        {option.assetId && option.assetId.length > 0 && option.assetId.length < 56 && (
+                          <p className="text-xs text-red-500 mt-1">Asset Unit must be at least 56 characters</p>
                         )}
                       </div>
-                      <LavaSteelInput
-                        type="number"
-                        min={0}
-                        max={isBuyType ? undefined : getAvailableAmount(option.id)}
-                        placeholder="0.00"
-                        value={option.quantity}
-                        onChange={value => {
-                          if (isBuyType) {
-                            const numValue = parseFloat(value);
-                            if (value === '' || numValue >= 0) {
-                              handleOptionChange(option.id, 'quantity', value);
-                            }
-                          } else {
-                            const numValue = parseFloat(value);
-                            if (value === '' || (numValue >= 0 && numValue <= getAvailableAmount(option.id))) {
-                              handleOptionChange(option.id, 'quantity', value);
-                            }
-                          }
-                        }}
-                        onIncrement={() => {
-                          const newValue = (parseFloat(option.quantity) || 0) + 1;
-                          if (isBuyType || newValue <= getAvailableAmount(option.id)) {
-                            handleOptionChange(option.id, 'quantity', newValue.toString());
-                          }
-                        }}
-                        onDecrement={() => {
-                          const newValue = Math.max(0, (parseFloat(option.quantity) || 0) - 1);
-                          handleOptionChange(option.id, 'quantity', newValue.toString());
-                        }}
-                        className={!isBuyType && isOverLimit ? '!border-red-500/60' : ''}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400 mb-2">{isBuyType ? 'Buy Type' : 'Sell Type'}</p>
-                      <LavaSteelSelect
-                        options={isBuyType ? buyTypeOptions : sellTypeOptions}
-                        placeholder="Select type"
-                        value={option.sellType}
-                        onChange={value => handleOptionChange(option.id, 'sellType', value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                    <div>
-                      <p className="text-sm text-gray-400 mb-2">Method</p>
-                      <LavaSteelSelect
-                        options={methodOptions}
-                        placeholder="Select method"
-                        value={option.method}
-                        onChange={value => handleOptionChange(option.id, 'method', value)}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400 -mb-2">Duration</p>
-                      <LavaIntervalPicker
-                        placeholder="Select"
-                        value={option.duration}
-                        variant="steel"
-                        onChange={value => handleOptionChange(option.id, 'duration', value)}
-                        disabled={option.method === 'GTC'}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400 mb-2">Market</p>
-                      <LavaSteelSelect
-                        placeholder="Select market"
-                        value={option.market}
-                        onChange={value => handleOptionChange(option.id, 'market', value)}
-                        options={[{ value: 'WayUp', label: 'WayUp' }]}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400 mb-2">Price</p>
-                      <LavaSteelInput
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        placeholder="0.00"
-                        value={option.price}
-                        onChange={value => handleAmountChange(option.id, 'price', value)}
-                        onIncrement={() => {
-                          const newValue = (parseFloat(option.price) || 0) + 0.1;
-                          handleAmountChange(option.id, 'price', newValue.toFixed(1));
-                        }}
-                        onDecrement={() => {
-                          const newValue = Math.max(0, (parseFloat(option.price) || 0) - 0.1);
-                          handleAmountChange(option.id, 'price', newValue.toFixed(1));
-                        }}
-                        disabled={option.sellType === 'Market'}
-                      />
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Asset Name:</p>
+                          <LavaSteelSelect
+                            options={assetOptions.filter(
+                              opt => opt.value === option.assetName || remainingAssets.some(a => a.name === opt.value)
+                            )}
+                            placeholder={isLoading ? 'Loading assets...' : 'Select asset'}
+                            value={option.assetName}
+                            onChange={value => handleOptionChange(option.id, 'assetName', value)}
+                            isDisabled={isLoading}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between gap-2 mb-1">
+                            <p className="text-sm text-gray-400">Quantity</p>
+                            <LavaCheckbox
+                              name={`max-${option.id}`}
+                              checked={option.isMax}
+                              label={`max: ${getAvailableAmount(option.id)}`}
+                              className="whitespace-nowrap"
+                              labelClassName="text-gray-400"
+                              onChange={e => setFTMax(option.id, e.target.checked)}
+                              disabled={!option.assetName}
+                            />
+                          </div>
+                          <LavaSteelInput
+                            type="number"
+                            min={0}
+                            max={getAvailableAmount(option.id)}
+                            placeholder="0.00"
+                            value={option.quantity}
+                            onChange={value => {
+                              const numValue = parseFloat(value);
+                              if (value === '' || (numValue >= 0 && numValue <= getAvailableAmount(option.id))) {
+                                handleOptionChange(option.id, 'quantity', value);
+                              }
+                            }}
+                            onIncrement={() => {
+                              const newValue = (parseFloat(option.quantity) || 0) + 1;
+                              if (newValue <= getAvailableAmount(option.id)) {
+                                handleOptionChange(option.id, 'quantity', newValue.toString());
+                              }
+                            }}
+                            onDecrement={() => {
+                              const newValue = Math.max(0, (parseFloat(option.quantity) || 0) - 1);
+                              handleOptionChange(option.id, 'quantity', newValue.toString());
+                            }}
+                            className={isOverLimit ? '!border-red-500/60' : ''}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Sell Type</p>
+                          <LavaSteelSelect
+                            options={sellTypeOptions}
+                            placeholder="Select type"
+                            value={option.sellType}
+                            onChange={value => handleOptionChange(option.id, 'sellType', value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Method</p>
+                          <LavaSteelSelect
+                            options={methodOptions}
+                            placeholder="Select method"
+                            value={option.method}
+                            onChange={value => handleOptionChange(option.id, 'method', value)}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 -mb-2">Duration</p>
+                          <LavaIntervalPicker
+                            placeholder="Select"
+                            value={option.duration}
+                            variant="steel"
+                            onChange={value => handleOptionChange(option.id, 'duration', value)}
+                            disabled={option.method === 'GTC'}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Market</p>
+                          <LavaSteelSelect
+                            placeholder="Select market"
+                            value={option.market}
+                            onChange={value => handleOptionChange(option.id, 'market', value)}
+                            options={[{ value: 'WayUp', label: 'WayUp' }]}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">Price</p>
+                          <LavaSteelInput
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            placeholder="0.00"
+                            value={option.price}
+                            onChange={value => handleAmountChange(option.id, 'price', value)}
+                            onIncrement={() => {
+                              const newValue = (parseFloat(option.price) || 0) + 0.1;
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                            onDecrement={() => {
+                              const newValue = Math.max(0, (parseFloat(option.price) || 0) - 0.1);
+                              handleAmountChange(option.id, 'price', newValue.toFixed(1));
+                            }}
+                            disabled={option.sellType === 'Market'}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             );

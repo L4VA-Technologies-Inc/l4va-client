@@ -17,6 +17,11 @@ export class GovernanceApiProvider {
     return response;
   }
 
+  static async deleteProposal(proposalId) {
+    const response = await axiosInstance.delete(GovernanceConfigProvider.deleteProposal(proposalId));
+    return response;
+  }
+
   static async voteOnProposal(proposalId, voteData) {
     const response = await axiosInstance.post(GovernanceConfigProvider.voteOnProposal(proposalId), voteData);
     return response;
