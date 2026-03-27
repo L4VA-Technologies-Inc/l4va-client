@@ -294,6 +294,12 @@ export const useGovernanceProposal = (proposalId: string) => {
   });
 };
 
+export const useDeleteProposal = () => {
+  return useMutation({
+    mutationFn: (proposalId: string) => GovernanceApiProvider.deleteProposal(proposalId),
+  });
+};
+
 export const useVotingPower = (vaultId: string) => {
   return useQuery({
     queryKey: ['voting-power', vaultId],
