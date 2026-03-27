@@ -56,6 +56,19 @@ export const VaultGovernance = ({ vault }) => {
     const canDelete = proposal.status === 'upcoming' && proposal?.creatorId === currentUserId;
     if (!canDelete) return;
 
+    // Check if proposal starts in less than 1 hour
+    if (proposal.startDate) {
+      const now = new Date();
+      const startTime = new Date(proposal.startDate);
+      const timeUntilStart = startTime.getTime() - now.getTime();
+      const oneHourInMs = 60 * 60 * 1000;
+
+      if (timeUntilStart < oneHourInMs) {
+        toast.error('Proposal cannot be deleted within 1 hour of its start time');
+        return;
+      }
+    }
+
     const performDelete = async () => {
       try {
         setDeletingProposalId(proposal.id);
@@ -229,6 +242,21 @@ export const VaultGovernance = ({ vault }) => {
                 {filteredProposals.map(proposal => {
                   const isDeletingProposal = deletingProposalId === proposal.id;
 
+                  // Check if proposal starts in less than 1 hour
+                  const isWithinOneHourOfStart = () => {
+                    if (!proposal.startDate) return false;
+                    const now = new Date();
+                    const startTime = new Date(proposal.startDate);
+                    const timeUntilStart = startTime.getTime() - now.getTime();
+                    const oneHourInMs = 60 * 60 * 1000;
+                    return timeUntilStart < oneHourInMs;
+                  };
+
+                  const deleteButtonDisabled = isDeletingProposal || isDeleteInProgress || isWithinOneHourOfStart();
+                  const deleteHint = isWithinOneHourOfStart()
+                    ? 'Cannot delete within 1 hour of start time'
+                    : 'Delete this proposal';
+
                   return (
                     <div
                       key={proposal.id}
@@ -357,12 +385,12 @@ export const VaultGovernance = ({ vault }) => {
                       <div className="flex justify-end">
                         <div className="flex items-center justify-end gap-3">
                           {proposal.status === 'upcoming' && currentUserId && proposal?.creatorId === currentUserId && (
-                            <HoverHelp hint="Delete this proposal" variant="icon">
+                            <HoverHelp hint={deleteHint} variant="icon">
                               <button
                                 className="p-2 rounded-md text-red-400 hover:text-red-500 hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 type="button"
                                 onClick={() => handleDeleteProposal(proposal)}
-                                disabled={isDeletingProposal || isDeleteInProgress}
+                                disabled={deleteButtonDisabled}
                                 aria-label="Delete proposal"
                               >
                                 <Trash2 className="w-4 h-4" />
