@@ -22,7 +22,6 @@ export const ConfigureVault = ({
   presetOptions = [],
   presetValue = '',
   onPresetChange,
-  isPresetsLoading = false,
   onDeletePreset,
   deletingPresetId,
   onRemoveWhitelistItem,
@@ -89,7 +88,6 @@ export const ConfigureVault = ({
               deletingOptionId={deletingPresetId}
               hint="Choose a preset to auto-fill vault configuration fields."
             />
-            {isPresetsLoading && <p className="text-dark-100 mt-2 text-sm">Loading presets…</p>}
             {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
           </div>
           <div>
