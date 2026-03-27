@@ -19,6 +19,7 @@ import {
   useGovernanceProposals,
   useGovernanceFees,
   useSubmitProposalFeePayment,
+  useDeleteProposal,
 } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import {
@@ -57,6 +58,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const wallet = useWallet('handler', 'isConnected');
   const createProposalMutation = useCreateProposal();
   const submitProposalFeePayment = useSubmitProposalFeePayment();
+  const deleteProposalMutation = useDeleteProposal();
   const { data: governanceFees } = useGovernanceFees();
 
   const { refetch } = useGovernanceProposals(vault.id);
@@ -248,11 +250,27 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           }
         } catch (feeError) {
           console.error('Fee transaction failed:', feeError);
-          const errorMsg = feeError.message || 'Failed to process governance fee. Please try again.';
-          toast.error(`${errorMsg}\n\nProposal created but awaiting payment.`, { duration: 6000 });
+
+          // Check if user declined to sign
+          const userCancelled = feeError?.message === 'user declined sign tx';
+
+          let errorMsg = userCancelled
+            ? 'Payment cancelled. Proposal was not created.'
+            : 'Payment failed. Proposal was not created.';
+
+          // Always delete the unpaid proposal when payment fails
+          try {
+            await deleteProposalMutation.mutateAsync(proposal.id);
+          } catch (deleteError) {
+            console.error('Failed to delete unpaid proposal:', deleteError);
+            errorMsg = userCancelled
+              ? 'Payment cancelled. Your proposal was saved as unpaid and can be deleted from the Governance tab.'
+              : 'Payment failed. Your proposal was saved as unpaid and can be deleted from the Governance tab.';
+          }
+
+          toast.error(errorMsg, { duration: 7000 });
           setStatus('idle');
           await refetch();
-          onClose();
           return;
         }
       }
