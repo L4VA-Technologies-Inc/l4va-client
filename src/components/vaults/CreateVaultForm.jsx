@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
-import { ChevronRight, ChevronLeft, ChevronDown, BookOpen, RotateCcw, AlertTriangle } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  BookOpen,
+  RotateCcw,
+  AlertTriangle,
+  AlertCircle,
+  RefreshCcw,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
@@ -59,11 +68,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const [canCreateVaults, setCanCreateVaults] = useState(true);
 
   const [vaultData, setVaultData] = useState(initialVaultState);
-  const [selectedPresetId, setSelectedPresetId] = useState('advanced');
-  const [isPresetAutoApplied, setPresetAutoApplied] = useState(false);
+  const [selectedPresetId, setSelectedPresetId] = useState(null);
   const [deletingPresetId, setDeletingPresetId] = useState(null);
-  const initialPresetIdRef = useRef(null);
+
+  // Tracks whether the preset has been manually changed by the user (for edit-vault warning modal)
   const isPresetManuallyChanged = useRef(false);
+  // Tracks which vault key we have already resolved presets for, to avoid re-running on query refetches
+  const resolvedForVaultRef = useRef(null);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
@@ -73,10 +84,47 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const { openModal } = useModalControls();
   const { user } = useAuth();
 
-  const { data: presetsData, isLoading: isPresetsLoading } = usePresets();
+  const {
+    data: presetsData,
+    isLoading: isPresetsLoading,
+    isError: isPresetsError,
+    refetch: refetchPresets,
+  } = usePresets();
   const { mutateAsync: deletePreset } = useDeletePreset();
   const { data: vlrmFeeData } = useVlrmFeeSettings();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
+
+  // --- Derived preset state ---
+
+  const isAdvancedPresetAvailable = useMemo(
+    () =>
+      Array.isArray(presets) &&
+      presets.some(p => p?.type?.toLowerCase() === 'advanced' || p?.name?.toLowerCase() === 'advanced'),
+    [presets]
+  );
+
+  // Config-controlled inputs are locked unless an advanced preset exists AND is currently active
+  const isPresetConfigLocked = !isAdvancedPresetAvailable || vaultData.preset !== 'advanced';
+
+  const presetOptions = useMemo(
+    () =>
+      Array.isArray(presets)
+        ? presets
+            .filter(preset => preset?.id !== undefined && preset?.id !== null)
+            .map(preset => ({
+              name: preset.id.toString(),
+              label: preset?.name || preset?.type || 'Preset',
+              type: preset?.type || '',
+              isCustom: preset?.type === 'custom',
+            }))
+        : [],
+    [presets]
+  );
+
+  // Whether the form should be fully blocked (loading or fetch error)
+  const isFormBlocked = isPresetsLoading || isPresetsError;
+
+  // --- Authorization check ---
 
   useEffect(() => {
     if (IS_MAINNET && user?.address) {
@@ -91,115 +139,81 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
   }, [user?.address]);
 
-  const presetOptions = useMemo(() => {
-    const fetchedOptions = Array.isArray(presets)
-      ? presets
-          .filter(preset => preset?.id !== undefined && preset?.id !== null)
-          .map(preset => ({
-            name: preset.id.toString(),
-            label: preset?.name || preset?.type || 'Preset',
-            type: preset?.type || '',
-            isCustom: preset?.type === 'custom',
-          }))
-      : [];
-
-    const hasAdvancedPreset =
-      Array.isArray(presets) &&
-      presets.some(
-        preset =>
-          preset?.type?.toLowerCase?.() === 'advanced' ||
-          preset?.name?.toLowerCase?.() === 'advanced' ||
-          preset?.slug === 'advanced'
-      );
-
-    return hasAdvancedPreset ? fetchedOptions : [...fetchedOptions, { name: 'advanced', label: 'Advanced' }];
-  }, [presets]);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
-
-  const scrollToTutorial = () => {
-    const tutorialElement = document.getElementById('vault-creation-tutorial');
-    if (tutorialElement) {
-      const headerHeight = 72;
-      const offset = headerHeight + 24;
-      const elementPosition = tutorialElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-    }
-  };
+  // --- Vault data initialization (editing a draft / restoring local state) ---
 
   useEffect(() => {
     if (vault) {
       setVaultData(vault);
-      const presetId = vault?.preset_id ? vault.preset_id.toString() : 'advanced';
-      setSelectedPresetId(presetId);
-      initialPresetIdRef.current = presetId;
       isPresetManuallyChanged.current = false;
-      setPresetAutoApplied(true);
-    } else {
-      setSelectedPresetId('advanced');
-      initialPresetIdRef.current = 'advanced';
-      isPresetManuallyChanged.current = false;
+      // Allow the preset resolution effect to re-run for the new vault
+      resolvedForVaultRef.current = null;
     }
   }, [vault]);
 
-  useEffect(() => {
-    if (!vault || !vaultData.preset_id || vaultData.preset || isPresetsLoading) return;
-
-    const foundPreset = presets.find(preset => preset?.id?.toString() === vaultData.preset_id?.toString());
-    if (foundPreset) {
-      setVaultData(prev => ({
-        ...prev,
-        preset: foundPreset.type || 'advanced',
-      }));
-    } else if (!vaultData.preset_id) {
-      setVaultData(prev => ({
-        ...prev,
-        preset: 'advanced',
-      }));
-    }
-  }, [vault, vaultData.preset_id, presets, isPresetsLoading, vaultData.preset]);
+  // --- Single preset resolution effect ---
+  // Runs once per vault identity after presets successfully load.
+  // Handles: new vault default, draft with valid preset, draft with deleted/missing preset.
 
   useEffect(() => {
-    if (isPresetAutoApplied || isPresetsLoading || vault) return;
+    if (isPresetsLoading || isPresetsError || !Array.isArray(presets) || presets.length === 0) return;
 
-    const simplePreset =
-      Array.isArray(presets) &&
-      presets.find(
-        preset =>
-          preset?.type?.toLowerCase?.() === 'simple' ||
-          preset?.name?.toLowerCase?.() === 'simple' ||
-          preset?.slug === 'simple'
-      );
+    const vaultKey = vault?.id?.toString() ?? '__new__';
+    if (resolvedForVaultRef.current === vaultKey) return;
+    resolvedForVaultRef.current = vaultKey;
 
-    const advancedPreset =
-      Array.isArray(presets) &&
-      presets.find(
-        preset =>
-          preset?.type?.toLowerCase?.() === 'advanced' ||
-          preset?.name?.toLowerCase?.() === 'advanced' ||
-          preset?.slug === 'advanced'
-      );
+    const firstPreset = presets[0];
 
-    let defaultPresetId = 'advanced';
-    if (simplePreset?.id) {
-      defaultPresetId = simplePreset.id.toString();
-    } else if (advancedPreset?.id) {
-      defaultPresetId = advancedPreset.id.toString();
+    const applyPresetData = preset => {
+      if (!preset) return;
+      const config = preset.config || {};
+      setVaultData(prev => ({
+        ...prev,
+        preset: preset.type || 'advanced',
+        preset_id: preset.id ?? null,
+        tokensForAcquires: config.tokensForAcquires ?? prev.tokensForAcquires,
+        acquireReserve: config.acquireReserve ?? prev.acquireReserve,
+        liquidityPoolContribution: config.liquidityPoolContribution ?? prev.liquidityPoolContribution,
+        creationThreshold: config.creationThreshold ?? prev.creationThreshold,
+        voteThreshold: 0,
+        cosigningThreshold: config.cosigningThreshold ?? prev.cosigningThreshold,
+        executionThreshold: config.executionThreshold ?? prev.executionThreshold,
+      }));
+      setSelectedPresetId(preset.id.toString());
+    };
+
+    if (vault) {
+      const savedPresetId = vault?.preset_id?.toString();
+      if (savedPresetId) {
+        const foundPreset = presets.find(p => p?.id?.toString() === savedPresetId);
+        if (foundPreset) {
+          // Preset still exists — just sync the type label, keep existing config values
+          setSelectedPresetId(savedPresetId);
+          setVaultData(prev => ({
+            ...prev,
+            preset: foundPreset.type || 'advanced',
+            preset_id: foundPreset.id ?? null,
+          }));
+        } else {
+          // The preset was deleted — fall back to the first available preset
+          toast.error(
+            `The previously selected preset is no longer available. Defaulting to "${firstPreset?.name || firstPreset?.type || 'first'}" preset.`,
+            { id: 'preset-fallback' }
+          );
+          applyPresetData(firstPreset);
+        }
+      } else {
+        // Draft has no preset_id — apply first preset
+        applyPresetData(firstPreset);
+      }
+    } else {
+      // New vault creation — default to first preset from backend
+      applyPresetData(firstPreset);
     }
 
-    setSelectedPresetId(defaultPresetId);
-    setPresetAutoApplied(true);
-  }, [isPresetAutoApplied, isPresetsLoading, presets, vault]);
+    isPresetManuallyChanged.current = false;
+  }, [isPresetsLoading, isPresetsError, presets, vault]);
+
+  // --- Step state sync ---
 
   useEffect(() => {
     scrollToTop();
@@ -215,23 +229,48 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
   }, [vaultData, setVault]);
 
+  // --- Privacy side-effect ---
+
+  const updateValueMethod = useCallback(value => {
+    setVaultData(prevData => ({ ...prevData, valueMethod: value }));
+  }, []);
+
+  useEffect(() => {
+    if (vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
+      updateValueMethod('lbe');
+    }
+  }, [vaultData.privacy, updateValueMethod]);
+
+  // --- Helpers ---
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToTutorial = () => {
+    const tutorialElement = document.getElementById('vault-creation-tutorial');
+    if (tutorialElement) {
+      const headerHeight = 72;
+      const offset = headerHeight + 24;
+      const elementPosition = tutorialElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+  };
+
+  // --- Step navigation ---
+
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
-      let nextStep;
-      if (vaultData.preset !== 'advanced') {
-        nextStep = steps.length;
-      } else {
-        nextStep = currentStep + 1;
-      }
-
+      const isAdvancedMode = isAdvancedPresetAvailable && vaultData.preset === 'advanced';
+      const nextStep = isAdvancedMode ? currentStep + 1 : steps.length;
       await changeStep(nextStep);
     }
   };
 
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
-      const prevStep = currentStep - 1;
-      await changeStep(prevStep, true);
+      await changeStep(currentStep - 1, true);
     }
   };
 
@@ -271,7 +310,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       return true;
     } catch (err) {
       const formattedErrors = transformYupErrors(err);
-
       const filteredErrors = {};
 
       Object.keys(formattedErrors).forEach(errorKey => {
@@ -309,11 +347,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       const match = key.match(regex);
       if (match) {
         const index = parseInt(match[1], 10);
-
-        if (index === deletedIndex) {
-          return;
-        }
-
+        if (index === deletedIndex) return;
         if (index > deletedIndex) {
           const newKey = key.replace(`[${index}]`, `[${index - 1}]`);
           nextErrors[newKey] = currentErrors[key];
@@ -347,7 +381,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
 
     await validateStepNavigation(newStep, updatedVisitedSteps);
-
     setCurrentStep(newStep);
     setSteps(prevSteps => updateStepsCompletionStatus(prevSteps, vaultData, newStep));
   };
@@ -409,46 +442,84 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const updateField = async (fieldName, value) => {
     setVaultData(prev => ({ ...prev, [fieldName]: value }));
 
-    if (currentStep !== 1) {
+    // When editing a field on a non-config step, auto-switch to the advanced preset if available.
+    // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
+    // immediately reflect the advanced mode (unlocks inputs, restores step-by-step navigation).
+    if (currentStep !== 1 && isAdvancedPresetAvailable) {
       const advancedPreset = presets.find(
         preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
       );
-
-      const advancedPresetId = advancedPreset?.id ? advancedPreset.id.toString() : 'advanced';
-
-      if (selectedPresetId !== advancedPresetId) {
-        setSelectedPresetId(advancedPresetId);
+      if (advancedPreset && selectedPresetId !== advancedPreset.id.toString()) {
+        setSelectedPresetId(advancedPreset.id.toString());
+        setVaultData(prev => ({
+          ...prev,
+          preset: advancedPreset.type || 'advanced',
+          preset_id: advancedPreset.id ?? null,
+        }));
         isPresetManuallyChanged.current = true;
       }
     }
 
     const isValid = await validateField(fieldName, value);
-
     if (isValid) {
       clearFieldError(fieldName);
     }
   };
 
+  // Applies a preset's config values to vaultData based on a preset ID string
+  const applySelectedPreset = presetId => {
+    const selectedPreset = presets.find(p => p?.id?.toString() === presetId);
+    if (!selectedPreset) return;
+
+    const isAdvanced =
+      selectedPreset?.type?.toLowerCase() === 'advanced' || selectedPreset?.name?.toLowerCase() === 'advanced';
+
+    if (isAdvanced) {
+      setVaultData(prev => ({
+        ...prev,
+        preset: selectedPreset.type || 'advanced',
+        preset_id: selectedPreset.id ?? null,
+      }));
+      return;
+    }
+
+    const config = selectedPreset.config || {};
+    setVaultData(prev => ({
+      ...prev,
+      preset: selectedPreset.type || prev.preset,
+      preset_id: selectedPreset.id ?? null,
+      tokensForAcquires: config.tokensForAcquires ?? null,
+      acquireReserve: config.acquireReserve ?? null,
+      liquidityPoolContribution: config.liquidityPoolContribution ?? null,
+      creationThreshold: config.creationThreshold ?? null,
+      voteThreshold: 0,
+      cosigningThreshold: config.cosigningThreshold ?? null,
+      executionThreshold: config.executionThreshold ?? null,
+    }));
+  };
+
   const handlePresetChange = value => {
-    const newPresetId = value || 'advanced';
+    if (!value) return;
 
     if (vault && !isPresetManuallyChanged.current) {
       openModal('ChangePresetWarningModal', {
         onConfirm: () => {
-          setSelectedPresetId(newPresetId);
+          setSelectedPresetId(value);
           isPresetManuallyChanged.current = true;
           clearFieldError('preset');
+          applySelectedPreset(value);
         },
       });
       return;
     }
 
-    setSelectedPresetId(newPresetId);
-    if (vault) {
-      isPresetManuallyChanged.current = true;
-    }
+    setSelectedPresetId(value);
+    if (vault) isPresetManuallyChanged.current = true;
     clearFieldError('preset');
+    applySelectedPreset(value);
   };
+
+  // --- Submission ---
 
   const onSubmit = async () => {
     if (currentStep < steps.length) {
@@ -545,7 +616,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const handleStepClick = async stepId => {
     if (stepId === currentStep) return;
-
     const skipValidation = stepId < currentStep;
     await changeStep(stepId, skipValidation);
     scrollToTop();
@@ -584,18 +654,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     });
   };
 
-  const findSimplePresetId = () => {
-    const simplePreset =
-      Array.isArray(presets) &&
-      presets.find(
-        preset =>
-          preset?.type?.toLowerCase?.() === 'simple' ||
-          preset?.name?.toLowerCase?.() === 'simple' ||
-          preset?.slug === 'simple'
-      );
-    return simplePreset?.id ? simplePreset.id.toString() : null;
-  };
-
   const handleDeletePreset = async option => {
     if (!option?.name) return;
     const presetId = option.name;
@@ -609,8 +667,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         await queryClient.invalidateQueries({ queryKey: ['presets'] });
 
         if (selectedPresetId === presetId) {
-          const simplePresetId = findSimplePresetId();
-          setSelectedPresetId(simplePresetId || 'advanced');
+          // Fall back to the first preset that is not the one being deleted
+          const fallbackPreset = presets.find(p => p?.id?.toString() !== presetId);
+          const fallbackId = fallbackPreset?.id?.toString() ?? null;
+          setSelectedPresetId(fallbackId);
+          if (fallbackPreset) {
+            applySelectedPreset(fallbackId);
+          }
         }
 
         toast.success('Preset deleted');
@@ -667,16 +730,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const resetVault = async () => {
     localStorage.removeItem('storageVault');
 
-    const simplePresetId = findSimplePresetId();
-    const simplePreset = presets.find(preset => preset?.id?.toString() === simplePresetId);
-    const presetId = simplePresetId || 'advanced';
-
+    const firstPreset = presets[0] ?? null;
     const resetData = { ...initialVaultState };
 
-    if (simplePreset && simplePreset.config) {
-      const config = simplePreset.config;
-      resetData.preset = simplePreset.type || 'simple';
-      resetData.preset_id = simplePreset.id ?? null;
+    if (firstPreset?.config) {
+      const config = firstPreset.config;
+      resetData.preset = firstPreset.type || 'simple';
+      resetData.preset_id = firstPreset.id ?? null;
       resetData.tokensForAcquires = config.tokensForAcquires ?? null;
       resetData.acquireReserve = config.acquireReserve ?? null;
       resetData.liquidityPoolContribution = config.liquidityPoolContribution ?? null;
@@ -691,9 +751,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     setSteps(CREATE_VAULT_STEPS);
     setErrors({});
     setVisitedSteps(new Set([1]));
-    setSelectedPresetId(presetId);
-    setPresetAutoApplied(false);
-    initialPresetIdRef.current = presetId;
+    setSelectedPresetId(firstPreset?.id?.toString() ?? null);
     isPresetManuallyChanged.current = false;
 
     if (setVault) {
@@ -702,6 +760,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
     toast.success('Vault creation form has been reset');
   };
+
+  // --- Render helpers ---
 
   const renderStepContent = step => {
     switch (step) {
@@ -712,9 +772,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             errors={errors}
             updateField={updateField}
             presetOptions={presetOptions}
-            presetValue={selectedPresetId}
+            presetValue={selectedPresetId || ''}
             onPresetChange={handlePresetChange}
-            isPresetsLoading={isPresetsLoading}
             onDeletePreset={handleDeletePreset}
             deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
@@ -724,9 +783,25 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       case 2:
         return <AssetContribution data={vaultData} errors={errors} updateField={updateField} />;
       case 3:
-        return <AcquireWindow data={vaultData} errors={errors} updateField={updateField} />;
+        return (
+          <AcquireWindow
+            data={vaultData}
+            errors={errors}
+            updateField={updateField}
+            isPresetConfigLocked={isPresetConfigLocked}
+            isAdvancedPresetAvailable={isAdvancedPresetAvailable}
+          />
+        );
       case 4:
-        return <Governance data={vaultData} errors={errors} updateField={updateField} />;
+        return (
+          <Governance
+            data={vaultData}
+            errors={errors}
+            updateField={updateField}
+            isPresetConfigLocked={isPresetConfigLocked}
+            isAdvancedPresetAvailable={isAdvancedPresetAvailable}
+          />
+        );
       case 5:
         return (
           <Launch
@@ -743,20 +818,72 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
   };
 
+  const renderPresetsLoadingState = () => (
+    <div className="my-16 flex flex-col items-center justify-center gap-6 py-20">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 rounded-full border-4 border-steel-700" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-orange-500 animate-spin" />
+      </div>
+      <div className="flex flex-col items-center gap-3">
+        <p className="text-white font-russo uppercase text-sm tracking-widest">Loading presets</p>
+        <div className="flex gap-1.5">
+          {[0, 150, 300].map(delay => (
+            <span
+              key={delay}
+              className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-bounce"
+              style={{ animationDelay: `${delay}ms` }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPresetsErrorState = () => (
+    <div className="my-16 flex flex-col items-center justify-center py-16">
+      <div className="p-6 bg-red-900/20 border border-red-600/30 rounded-lg max-w-lg w-full">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="text-red-400 font-bold text-lg mb-1">Failed to Load Presets</h3>
+            <p className="text-red-300 text-sm mb-4">
+              Vault presets could not be fetched from the server. Vault creation requires presets to be loaded
+              successfully.
+            </p>
+            <button
+              onClick={() => refetchPresets()}
+              className="flex items-center gap-2 text-sm font-semibold text-red-300 hover:text-white transition-colors"
+            >
+              <RefreshCcw className="w-4 h-4" />
+              Try again
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderButtons = () => {
     if (currentStep === 5) {
       return (
         <div className="flex justify-center gap-4 py-8">
-          <SecondaryButton
-            className="uppercase font-semibold"
-            disabled={isSubmitting || isSavingDraft || presets.filter(preset => preset.type === 'custom').length >= 3}
-            onClick={handleOpenSavePresetModal}
-          >
-            Save preset
-          </SecondaryButton>
+          {isAdvancedPresetAvailable && (
+            <SecondaryButton
+              className="uppercase font-semibold"
+              disabled={
+                isSubmitting ||
+                isSavingDraft ||
+                isFormBlocked ||
+                presets.filter(preset => preset.type === 'custom').length >= 3
+              }
+              onClick={handleOpenSavePresetModal}
+            >
+              Save preset
+            </SecondaryButton>
+          )}
           <PrimaryButton
             className="uppercase"
-            disabled={isSubmitting || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
+            disabled={isSubmitting || isFormBlocked || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
             onClick={onSubmit}
             title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
           >
@@ -768,21 +895,31 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     return (
       <div className="flex justify-center gap-4 py-8">
         {currentStep > 1 && (
-          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handlePreviousStep}>
+          <SecondaryButton
+            size="lg"
+            disabled={isSubmitting || isSavingDraft || isFormBlocked}
+            onClick={handlePreviousStep}
+          >
             <ChevronLeft size={24} />
           </SecondaryButton>
         )}
         {vault && vault.vaultStatus === 'draft' && (
-          <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={handleDeleteDraft}>
+          <SecondaryButton
+            size="lg"
+            disabled={isSubmitting || isSavingDraft || isFormBlocked}
+            onClick={handleDeleteDraft}
+          >
             Delete draft
           </SecondaryButton>
         )}
-        <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft} onClick={saveDraft}>
+        <SecondaryButton size="lg" disabled={isSubmitting || isSavingDraft || isFormBlocked} onClick={saveDraft}>
           Save for later
         </SecondaryButton>
         <PrimaryButton
           size="lg"
-          disabled={isSubmitting || isSavingDraft || isImageUploading || (IS_MAINNET && !canCreateVaults)}
+          disabled={
+            isSubmitting || isSavingDraft || isImageUploading || isFormBlocked || (IS_MAINNET && !canCreateVaults)
+          }
           onClick={handleNextStep}
           title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
         >
@@ -798,69 +935,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     );
   };
 
-  const updateValueMethod = useCallback(value => {
-    setVaultData(prevData => ({ ...prevData, valueMethod: value }));
-  }, []);
-
-  useEffect(() => {
-    if (vaultData.privacy !== VAULT_PRIVACY_TYPES.PRIVATE) {
-      updateValueMethod('lbe');
-    }
-  }, [vaultData.privacy, updateValueMethod]);
-
-  useEffect(() => {
-    if (vault) {
-      if (!isPresetManuallyChanged.current) return;
-    }
-
-    if (!selectedPresetId) return;
-
-    const selectedPreset = presets.find(preset => preset?.id?.toString() === selectedPresetId);
-    const isAdvanced =
-      selectedPresetId === 'advanced' ||
-      selectedPreset?.type?.toLowerCase() === 'advanced' ||
-      selectedPreset?.name?.toLowerCase() === 'advanced';
-
-    if (isAdvanced) {
-      setVaultData(prev => ({
-        ...prev,
-        preset: selectedPreset?.type || 'advanced',
-        preset_id: selectedPreset?.id ?? null,
-      }));
-      return;
-    }
-
-    if (!selectedPreset) {
-      if (!isPresetsLoading) {
-        setSelectedPresetId('advanced');
-      }
-      return;
-    }
-
-    const config = selectedPreset.config || {};
-
-    setVaultData(prev => ({
-      ...prev,
-      preset: selectedPreset.type || prev.preset || 'advanced',
-      preset_id: selectedPreset.id ?? null,
-      tokensForAcquires: config.tokensForAcquires ?? null,
-      acquireReserve: config.acquireReserve ?? null,
-      liquidityPoolContribution: config.liquidityPoolContribution ?? null,
-      creationThreshold: config.creationThreshold ?? null,
-      voteThreshold: 0,
-      cosigningThreshold: config.cosigningThreshold ?? null,
-      executionThreshold: config.executionThreshold ?? null,
-    }));
-  }, [isPresetsLoading, presets, selectedPresetId, vault]);
-
   const stepOptions = steps.map(step => ({
     value: step.id.toString(),
     label: `${step.id}. ${step.title}`,
   }));
 
   const handleStepSelect = stepId => {
-    const numericStepId = parseInt(stepId);
-    handleStepClick(numericStepId);
+    handleStepClick(parseInt(stepId));
   };
 
   return (
@@ -950,7 +1031,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           </div>
         ))}
       </div>
-      <>{renderStepContent(currentStep)}</>
+      <>
+        {isPresetsLoading
+          ? renderPresetsLoadingState()
+          : isPresetsError
+            ? renderPresetsErrorState()
+            : renderStepContent(currentStep)}
+      </>
       <>{renderButtons()}</>
       <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
         <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">

@@ -1,4 +1,5 @@
 import { addMilliseconds } from 'date-fns';
+import { Lock } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
@@ -11,7 +12,13 @@ import {
   MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const AcquireWindow = ({ data, errors = {}, updateField }) => {
+export const AcquireWindow = ({
+  data,
+  errors = {},
+  updateField,
+  isPresetConfigLocked = false,
+  isAdvancedPresetAvailable = true,
+}) => {
   const handleChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
@@ -93,6 +100,14 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
         </div>
       </div>
       <div className="space-y-12 min-w-0">
+        {isPresetConfigLocked && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-800 border border-steel-700 text-dark-100 text-xs font-russo uppercase">
+            <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+            {isAdvancedPresetAvailable
+              ? 'Values set by preset — select Advanced preset to customise'
+              : 'Advanced mode is disabled — values are managed by the preset'}
+          </div>
+        )}
         <div>
           <LavaInput
             required
@@ -104,6 +119,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             type="text"
             value={data.tokensForAcquires === 0 ? '0' : data.tokensForAcquires ? String(data.tokensForAcquires) : ''}
             onChange={handleChange}
+            disabled={isPresetConfigLocked}
             hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
           {data.tokensForAcquires === 0 && (
@@ -125,7 +141,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
             hint={RESERVE_HINT}
-            disabled={data.tokensForAcquires === 0}
+            disabled={isPresetConfigLocked || data.tokensForAcquires === 0}
           />
           {data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
             <p className="text-orange-500 mt-1">
@@ -151,6 +167,7 @@ export const AcquireWindow = ({ data, errors = {}, updateField }) => {
                   : ''
             }
             onChange={handleChange}
+            disabled={isPresetConfigLocked}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
           {data.liquidityPoolContribution === 0 && (
