@@ -548,6 +548,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       if (currentBalance < vlrmFeeSettings.vlrm_creator_fee && vlrmFeeSettings.vlrm_creator_fee_enabled) {
         const feeMessage = `You need at least ${vlrmFeeSettings.vlrm_creator_fee} VLRM to launch a vault.`;
         toast.error(feeMessage);
+        setIsVisibleSwipe(true);
         return;
       }
 
