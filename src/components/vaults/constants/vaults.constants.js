@@ -87,8 +87,8 @@ export const VAULT_TYPE_OPTIONS = [
 
 export const VAULT_PRIVACY_OPTIONS = [
   { name: 'public', label: 'Public Vault' },
-  { name: 'private', label: 'Private Vault' },
-  { name: 'semi-private', label: 'Semi-Private Vault' },
+  // { name: 'private', label: 'Private Vault' },
+  // { name: 'semi-private', label: 'Semi-Private Vault' },
 ];
 
 export const VAULT_TAGS_OPTIONS = [
