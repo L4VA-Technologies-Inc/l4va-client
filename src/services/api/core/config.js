@@ -42,4 +42,8 @@ export class CoreConfigProvider {
   static updateTransactionHash(txId) {
     return `/api/v1/contribute/transaction/${txId}/hash`;
   }
+
+  static deleteImage(fileKey) {
+    return `/api/v1/image/delete/${fileKey}`;
+  }
 }

@@ -21,6 +21,7 @@ export const UploadZone = ({
   const [uploadStatus, setUploadStatus] = useState(null);
   const [preview, setPreview] = useState(null);
   const [fileInfo, setFileInfo] = useState(null);
+  const [fileKey, setFileKey] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export const UploadZone = ({
     } else {
       setPreview(null);
       setFileInfo(null);
+      setFileKey(null);
       setUploadStatus(null);
     }
   }, [image]);
@@ -83,6 +85,7 @@ export const UploadZone = ({
       setUploadStatus('success');
 
       setImage(data.url);
+      setFileKey(data.key);
       setFileInfo({
         name: file.name,
         size: file.size,
@@ -127,16 +130,27 @@ export const UploadZone = ({
     }
   };
 
-  const removeImage = e => {
+  const removeImage = async e => {
     if (e) e.stopPropagation();
 
     if (preview && preview.startsWith('blob:')) {
       URL.revokeObjectURL(preview);
     }
 
+    if (fileKey) {
+      try {
+        await CoreApiProvider.deleteImage(fileKey);
+      } catch (err) {
+        console.error('Delete error:', err);
+        toast.error('Failed to delete image');
+        return;
+      }
+    }
+
     setImage(null);
     setPreview(null);
     setFileInfo(null);
+    setFileKey(null);
     setUploadStatus(null);
 
     if (fileInputRef.current) {

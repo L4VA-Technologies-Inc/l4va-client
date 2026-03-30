@@ -86,4 +86,8 @@ export class CoreApiProvider {
     });
     return response;
   }
+
+  static async deleteImage(fileKey) {
+    return await axiosInstance.delete(CoreConfigProvider.deleteImage(fileKey));
+  }
 }
