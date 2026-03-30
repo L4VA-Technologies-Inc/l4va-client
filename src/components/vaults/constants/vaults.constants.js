@@ -4,8 +4,10 @@ import { environments } from '@/constants/core.constants.js';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
-export const MIN_CONTRIBUTION_DURATION_MS = 600000; // 10 minutes
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 600000; // 10 minutes
+export const MIN_CONTRIBUTION_DURATION_MS = 432000000; // 5 days
+export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 432000000; // 5 days
+export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
 export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
 export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
@@ -301,14 +303,16 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Duration is required')
     .required('Duration is required')
-    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 1 hour'),
+    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
+    .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
     .required('Acquire window duration is required')
-    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 1 hour'),
+    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 5 days')
+    .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
   acquireOpenWindowType: yup.string().required('Acquire window type is required'),
   acquireOpenWindowTime: yup.mixed().nullable(),
   acquirerWhitelist: yup
@@ -416,18 +420,19 @@ export const vaultSchema = yup.object({
   creationThreshold: yup
     .number()
     .typeError('Creation threshold is required')
-    .required('Creation threshold is required'),
+    .required('Creation threshold is required')
+    .min(0.5, 'Creation threshold must be at least 0.5%'),
   // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
   cosigningThreshold: yup
     .number()
     .typeError('Vote Quorum Threshold is required')
     .required('Vote Quorum Threshold is required')
-    .min(20, 'Vote Quorum Threshold must be at least 20%'),
+    .min(33, 'Vote Quorum Threshold must be at least 33%'),
   executionThreshold: yup
     .number()
     .typeError('Execution threshold is required')
     .required('Approval threshold is required')
-    .min(50, 'Approval threshold must be at least 50%'),
+    .min(50.1, 'Approval threshold must be at least 50.1%'),
 
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup
