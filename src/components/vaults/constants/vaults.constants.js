@@ -11,7 +11,6 @@ export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
 export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
 export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
-export const MIN_VLRM_REQUIRED = 0; // Minimum VLRM required for vault creation
 export const BUTTON_DISABLE_THRESHOLD_MS = 120000; // Min 2 min before button is enabled
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;

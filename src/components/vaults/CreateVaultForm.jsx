@@ -35,7 +35,6 @@ import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
   CREATE_VAULT_STEPS,
   initialVaultState,
-  MIN_VLRM_REQUIRED,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
@@ -546,14 +545,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         vlrm_creator_fee_enabled: true,
       };
 
-      const requiredVlrm = vlrmFeeSettings.vlrm_creator_fee_enabled
-        ? MIN_VLRM_REQUIRED + vlrmFeeSettings.vlrm_creator_fee
-        : MIN_VLRM_REQUIRED;
-
-      if (currentBalance < requiredVlrm) {
-        const feeMessage = vlrmFeeSettings.vlrm_creator_fee_enabled
-          ? `You need at least ${requiredVlrm} VLRM to launch a vault (${MIN_VLRM_REQUIRED} base + ${vlrmFeeSettings.vlrm_creator_fee} creator fee).`
-          : `You need at least ${MIN_VLRM_REQUIRED} VLRM to launch a vault.`;
+      if (currentBalance < vlrmFeeSettings.vlrm_creator_fee && vlrmFeeSettings.vlrm_creator_fee_enabled) {
+        const feeMessage = `You need at least ${vlrmFeeSettings.vlrm_creator_fee} VLRM to launch a vault.`;
         toast.error(feeMessage);
         return;
       }
