@@ -439,7 +439,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       toast.error(message);
       return true;
     }
-    if (error?.response?.status === 400 || error?.status === 400) {
+    if (
+      error?.response?.status === 400 ||
+      error?.response?.status === 422 ||
+      error?.status === 400 ||
+      error?.status === 422
+    ) {
       toast.error(message);
       return true;
     }
