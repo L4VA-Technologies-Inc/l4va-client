@@ -225,13 +225,10 @@ const VaultContributedAssetsList = ({ vault }) => {
                         <td className="px-4 py-3 uppercase">{asset.type}</td>
                         <td className="px-4 py-3 capitalize">{asset.status}</td>
                         <td className="px-4 py-3 capitalize">{asset.originType}</td>
-                        <td className="px-4 py-3">{asset.quantity}</td>
+                        <td className="px-4 py-3">{formatNumber(asset.quantity)}</td>
                         <td className="px-4 py-3">
                           {currencySymbol}
-                          {formatAdaPrice(
-                            asset.quantity *
-                              parseFloat(isAda ? asset.floorPrice || asset.dexPrice || 0 : asset.floorPriceUsd || 0)
-                          )}
+                          {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button

@@ -14,12 +14,6 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   const imageUrl = asset.image ? asset.image : '/assets/icons/ada.svg';
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
 
-  const calculateValue = () => {
-    const quantity = asset.quantity || 0;
-    const price = isAda ? parseFloat(asset.floorPrice || 0) : parseFloat(asset.floorPriceUsd || 0);
-    return formatAdaPrice(quantity * price);
-  };
-
   return (
     <div
       className={`rounded-2xl border border-steel-750 transition-all duration-300 ${
@@ -72,7 +66,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
               <p className="font-medium text-gray-300">Value:</p>
               <p>
                 {currencySymbol}
-                {calculateValue()}
+                {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
               </p>
             </div>
             <div>
