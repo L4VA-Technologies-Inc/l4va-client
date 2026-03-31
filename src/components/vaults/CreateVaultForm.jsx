@@ -619,8 +619,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     try {
       setIsSavingDraft(true);
       const formattedData = formatVaultData(vaultData);
-      if (vaultData.id) {
-        formattedData.id = vaultData.id;
+      const existingDraftId = vaultData?.id ?? vault?.id;
+      if (existingDraftId) {
+        formattedData.id = existingDraftId;
       }
 
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
