@@ -420,8 +420,17 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   };
 
   const handleServerFieldErrors = error => {
-    const message = error?.response?.data?.message;
+    const responseData = error?.response?.data;
+    const message = responseData?.message;
     if (!message) return false;
+
+    const errorCode = responseData?.code;
+    const errorTitle = responseData?.error;
+
+    if (errorCode === 'UTXO_MINIMUM_NOT_MET' || errorTitle?.toLowerCase().includes('utxo balance insufficient')) {
+      toast.error(message);
+      return true;
+    }
 
     if (message.toLowerCase().includes('ticker')) {
       const tickerError = { vaultTokenTicker: message };
@@ -430,7 +439,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       toast.error(message);
       return true;
     }
-    if (error.status === 400) {
+    if (
+      error?.response?.status === 400 ||
+      error?.response?.status === 422 ||
+      error?.status === 400 ||
+      error?.status === 422
+    ) {
       toast.error(message);
       return true;
     }
@@ -619,8 +633,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     try {
       setIsSavingDraft(true);
       const formattedData = formatVaultData(vaultData);
-      if (vaultData.id) {
-        formattedData.id = vaultData.id;
+      const existingDraftId = vaultData?.id ?? vault?.id;
+      if (existingDraftId) {
+        formattedData.id = existingDraftId;
       }
 
       const { data } = await VaultsApiProvider.saveDraft(formattedData);
