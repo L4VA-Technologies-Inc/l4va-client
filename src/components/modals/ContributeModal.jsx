@@ -17,6 +17,8 @@ import { useCurrency } from '@/hooks/useCurrency';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
+// Maximum safe quantity (matches backend validation)
+const MAX_SAFE_QUANTITY = Number.MAX_SAFE_INTEGER; // 9,007,199,254,740,991
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const { currencySymbol, isAda } = useCurrency();
@@ -191,11 +193,21 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   }, []);
 
   const handleFTAmountChange = useCallback((ft, amount) => {
+    // Allow empty string or valid decimal numbers with max 2 decimal places
     const isValid = amount === '' || /^\d+(\.\d{0,2})?$/.test(amount);
 
     if (!isValid) return;
 
-    if (Number(amount) >= ft.quantity) {
+    const numAmount = Number(amount);
+
+    // Validate against maximum safe quantity
+    if (numAmount > MAX_SAFE_QUANTITY) {
+      toast.error(`Quantity cannot exceed ${MAX_SAFE_QUANTITY.toLocaleString()}`);
+      return;
+    }
+
+    // Cap at available quantity
+    if (numAmount >= ft.quantity) {
       amount = Number(ft.quantity).toFixed(2);
     }
 
