@@ -4,11 +4,11 @@ import { environments } from '@/constants/core.constants.js';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
-export const MIN_CONTRIBUTION_DURATION_MS = 432000000; // 5 days
+export const MIN_CONTRIBUTION_DURATION_MS = 100; // 5 days
 export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 432000000; // 5 days
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = 100; // 5 days
 export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
-export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
+export const MIN_TIME_FOR_VOTING = 100; // 1 Day
 export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
 export const BUTTON_DISABLE_THRESHOLD_MS = 120000; // Min 2 min before button is enabled

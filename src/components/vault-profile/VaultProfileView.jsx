@@ -622,7 +622,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             ) : null}
           </div>
           <div className="mx-auto w-full mt-4 lg:block hidden">
-            <SwapComponent
+            {/* <SwapComponent
               overrideDisplay
               config={{
                 defaultToken: vault.hasActiveLp
@@ -631,7 +631,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 // style: { minWidth: '100%' },
                 width: '400px',
               }}
-            />
+            /> */}
           </div>
         </div>
         <div className="col-span-1 lg:col-span-2 space-y-6">
@@ -659,14 +659,14 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             )}
           </div>
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
-            <SwapComponent
+            {/* <SwapComponent
               overrideDisplay
               config={{
                 defaultToken: vault.hasActiveLp
                   ? `${vault.policyId}${vault.assetVaultName}`
                   : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
               }}
-            />
+            /> */}
           </div>
         </div>
       </div>
