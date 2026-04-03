@@ -10,6 +10,7 @@ import { usePublicProfile } from '@/services/api/queries.js';
 import { Spinner } from '@/components/Spinner.jsx';
 import { UserPublicVaultsList } from '@/components/vaults/UserPublicVaultsList.jsx';
 import { Transactions } from '@/pages/profile/Transactions.jsx';
+import { StakingWidget } from '@/pages/profile/StakingWidget';
 
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
@@ -33,6 +34,11 @@ export const Profile = ({ userId, isEditable }) => {
       <ProfileHero user={userData} isEditable={isEditable} />
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
+        {!userId && (
+          <div className="px-4 sm:px-6">
+            <StakingWidget />
+          </div>
+        )}
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList initialTab={search?.tab} />}
