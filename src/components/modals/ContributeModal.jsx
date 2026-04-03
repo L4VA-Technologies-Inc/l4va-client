@@ -14,10 +14,11 @@ import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { getDecimalAdjustedQuantity, getRawQuantity } from '@/utils/core.utils';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
-// Maximum safe quantity (matches backend validation)
+// Maximum safe quantity for raw blockchain quantities
 const MAX_SAFE_QUANTITY = Number.MAX_SAFE_INTEGER; // 9,007,199,254,740,991
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
@@ -80,17 +81,17 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
   // Calculate estimated value
   // For NFTs: use full asset value
-  // For FTs: calculate proportional value based on selected amount vs total quantity
+  // For FTs: user enters decimal-adjusted amounts, value is already correct from API
   const estimatedValue = useMemo(() => {
     let total = 0;
     selectedNFTs.forEach(asset => {
       if (asset.isFungibleToken) {
-        // For FTs, calculate proportional value based on selected amount
-        const selectedQty = Number(asset.amount) || 0;
-        const totalQty = Number(asset.quantity) || 1;
-        const proportion = selectedQty / totalQty;
-        const assetValue = isAda ? asset.valueAda : asset.valueUsd;
-        total += assetValue * proportion;
+        // User enters decimal-adjusted amount (e.g., 3.5)
+        // asset.priceAda is per decimal-adjusted unit
+        // So we can directly multiply: decimalAmount * pricePerDecimalUnit
+        const selectedDecimalQty = Number(asset.amount) || 0;
+        const pricePerDecimalUnit = isAda ? asset.priceAda : asset.priceUsd;
+        total += selectedDecimalQty * pricePerDecimalUnit;
       } else {
         // For NFTs, use full value
         total += isAda ? asset.valueAda : asset.valueUsd;
@@ -193,22 +194,29 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   }, []);
 
   const handleFTAmountChange = useCallback((ft, amount) => {
-    // Allow empty string or valid decimal numbers with max 2 decimal places
-    const isValid = amount === '' || /^\d+(\.\d{0,2})?$/.test(amount);
+    // Get decimals from metadata, default to 6 if not specified
+    const decimals = ft.metadata?.decimals ?? 6;
+
+    // Allow empty string or valid decimal numbers with decimals matching the token
+    const maxDecimals = Math.min(decimals, 8); // Cap display decimals at 8 for UX
+    const decimalPattern = new RegExp(`^\\d+(\\.\\d{0,${maxDecimals}})?$`);
+    const isValid = amount === '' || decimalPattern.test(amount);
 
     if (!isValid) return;
 
-    const numAmount = Number(amount);
+    const numDecimalAmount = Number(amount);
 
-    // Validate against maximum safe quantity
-    if (numAmount > MAX_SAFE_QUANTITY) {
-      toast.error(`Quantity cannot exceed ${MAX_SAFE_QUANTITY.toLocaleString()}`);
+    // Convert to raw quantity for validation against MAX_SAFE_QUANTITY
+    const rawAmount = getRawQuantity(numDecimalAmount, decimals);
+    if (rawAmount > MAX_SAFE_QUANTITY) {
+      toast.error(`Quantity exceeds maximum safe value`);
       return;
     }
 
-    // Cap at available quantity
-    if (numAmount >= ft.quantity) {
-      amount = Number(ft.quantity).toFixed(2);
+    // Cap at available quantity (compare in decimal form)
+    const availableDecimalQty = getDecimalAdjustedQuantity(ft.quantity, decimals);
+    if (numDecimalAmount >= availableDecimalQty) {
+      amount = availableDecimalQty.toFixed(Math.min(decimals, 8));
     }
 
     setSelectedAmount(prev => ({
@@ -252,13 +260,18 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     try {
       const formattedAssets = selectedNFTs.map(asset => {
         if (asset.isFungibleToken) {
+          // Convert decimal to raw quantity for backend
+          const decimals = asset.metadata?.decimals ?? 6;
+          const rawQuantity = getRawQuantity(Number(asset.amount), decimals);
           return {
             ...asset,
-            quantity: Number(asset.amount),
+            quantity: rawQuantity, // Send raw blockchain quantity
           };
         }
+        // For NFTs, quantity is always 1 (raw blockchain unit)
         return {
           ...asset,
+          quantity: 1,
           metadata: asset.metadata,
         };
       });
