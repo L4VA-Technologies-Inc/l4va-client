@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
+import { clearAuthLocalStorage } from '@/lib/auth/auth';
 import { axiosInstance } from '@/services/api';
 
 export const useAuthInterceptor = function () {
@@ -13,7 +14,7 @@ export const useAuthInterceptor = function () {
       },
       function (error) {
         if (error.response?.status === 401) {
-          localStorage.removeItem('jwt');
+          clearAuthLocalStorage();
           disconnect();
           window.location.href = '/';
         }
