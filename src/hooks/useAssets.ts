@@ -3,6 +3,59 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 
+/** Matches backend `VerificationPlatform` / token_verifications.platform */
+export enum VerificationPlatform {
+  DEXHUNTER = 'dexhunter',
+  ADA_ANVIL = 'ada_anvil',
+  TAPTOOLS = 'taptools',
+  MANUAL = 'manual',
+  JPG_STORE = 'jpg_store',
+}
+
+const VERIFICATION_PLATFORM_LABELS: Record<VerificationPlatform, string> = {
+  [VerificationPlatform.DEXHUNTER]: 'DexHunter',
+  [VerificationPlatform.ADA_ANVIL]: 'ADA Anvil',
+  [VerificationPlatform.TAPTOOLS]: 'TapTools',
+  [VerificationPlatform.MANUAL]: 'Manual',
+  [VerificationPlatform.JPG_STORE]: 'JPG Store',
+};
+
+export function getVerificationPlatformLabel(platform: VerificationPlatform | null | undefined): string | null {
+  if (platform == null) return null;
+  return VERIFICATION_PLATFORM_LABELS[platform] ?? null;
+}
+
+function parseVerificationPlatform(raw: unknown): VerificationPlatform | null {
+  if (typeof raw !== 'string') return null;
+  const value = Object.values(VerificationPlatform).find(v => v === raw);
+  return (value as VerificationPlatform | undefined) ?? null;
+}
+
+type CollectionLookupRaw = {
+  policyId?: string;
+  policy_id?: string;
+  collectionName?: string | null;
+  collection_name?: string | null;
+  isVerified?: boolean;
+  is_verified?: boolean;
+  platform?: unknown;
+  tokenVerification?: { platform?: unknown; is_verified?: boolean };
+};
+
+function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
+  policyId: string;
+  collectionName: string | null;
+  isVerified: boolean;
+  verificationPlatform: VerificationPlatform | null;
+} {
+  const policyId = raw.policyId ?? raw.policy_id ?? '';
+  const collectionName = raw.collectionName ?? raw.collection_name ?? null;
+  const isVerified = raw.isVerified ?? raw.is_verified ?? false;
+  const platformRaw = raw.platform ?? raw.tokenVerification?.platform;
+  const verificationPlatform = isVerified ? parseVerificationPlatform(platformRaw) : null;
+  return { policyId, collectionName, isVerified, verificationPlatform };
+}
+
 export interface WalletAsset {
   id: string;
   policyId: string;
@@ -18,6 +71,8 @@ export interface GroupedPolicy {
   count: number;
   collectionName: string | null;
   isVerified: boolean;
+  /** Present when `isVerified` and API returned a platform */
+  verificationPlatform: VerificationPlatform | null;
 }
 
 const PAGE_SIZE = 10;
@@ -89,7 +144,16 @@ const parseBalanceToAssets = (balance: any): WalletAsset[] => {
   }
 };
 
-type GroupedPolicyBase = Omit<GroupedPolicy, 'collectionName' | 'isVerified'>;
+type GroupedPolicyBase = Omit<GroupedPolicy, 'collectionName' | 'isVerified' | 'verificationPlatform'>;
+
+/** Fingerprint of grouped wallet policies; invalidates search cache when IDs, counts, or labels change. */
+function walletPolicySetKey(grouped: GroupedPolicyBase[]): string {
+  if (grouped.length === 0) return '0';
+  return grouped
+    .map(p => `${p.policyId}\t${p.count}\t${p.name}\t${p.assetName}`)
+    .sort()
+    .join('\n');
+}
 
 const groupAssetsByPolicy = (assets: WalletAsset[]): GroupedPolicyBase[] => {
   const grouped = new Map<string, { policyId: string; name: string; assetName: string; count: number }>();
@@ -119,7 +183,16 @@ export const useAssets = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const allGroupedRef = useRef<GroupedPolicyBase[]>([]);
-  const collectionNamesCache = useRef<Map<string, { collectionName: string | null; isVerified: boolean }>>(new Map());
+  const collectionNamesCache = useRef<
+    Map<
+      string,
+      { collectionName: string | null; isVerified: boolean; verificationPlatform: VerificationPlatform | null }
+    >
+  >(new Map());
+  /** Serializes cache-miss fetches so parallel callers (Strict Mode, open + search) share one wave of HTTP requests */
+  const fetchCollectionsQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+  /** Full-wallet list with collection metadata; avoids re-hydrating on every debounced search keystroke */
+  const searchHydratedRef = useRef<{ key: string; policies: GroupedPolicy[] } | null>(null);
   const currentPageRef = useRef(0);
   const prevBalanceRef = useRef<any>(null);
 
@@ -131,44 +204,63 @@ export const useAssets = () => {
     prevBalanceRef.current = balanceDecoded;
     allGroupedRef.current = allGrouped;
     currentPageRef.current = 0;
+    searchHydratedRef.current = null;
   } else {
     allGroupedRef.current = allGrouped;
+    if (searchHydratedRef.current && searchHydratedRef.current.key !== walletPolicySetKey(allGrouped)) {
+      searchHydratedRef.current = null;
+    }
   }
 
-  const fetchCollections = useCallback(async (collections: GroupedPolicyBase[]): Promise<GroupedPolicy[]> => {
-    const uncachedCollections = collections.filter(policy => !collectionNamesCache.current.has(policy.policyId));
+  const fetchCollections = useCallback((collections: GroupedPolicyBase[]): Promise<GroupedPolicy[]> => {
+    const run = async (): Promise<GroupedPolicy[]> => {
+      const uncachedCollections = collections.filter(policy => !collectionNamesCache.current.has(policy.policyId));
 
-    if (uncachedCollections.length > 0) {
-      // Process in batches to stay within the backend's 20-item limit per request
-      for (let i = 0; i < uncachedCollections.length; i += COLLECTION_BATCH_SIZE) {
-        const batch = uncachedCollections.slice(i, i + COLLECTION_BATCH_SIZE);
-        try {
-          const response = await VaultsApiProvider.getCollectionNames(batch);
-          const items: { policyId: string; collectionName: string | null; isVerified: boolean }[] = response.data;
+      if (uncachedCollections.length > 0) {
+        // Process in batches to stay within the backend's 20-item limit per request
+        for (let i = 0; i < uncachedCollections.length; i += COLLECTION_BATCH_SIZE) {
+          const batch = uncachedCollections.slice(i, i + COLLECTION_BATCH_SIZE);
+          try {
+            const response = await VaultsApiProvider.getCollectionNames(batch);
+            const payload = response.data;
+            const items: CollectionLookupRaw[] = Array.isArray(payload) ? payload : (payload?.data ?? []);
 
-          items.forEach(item => {
-            collectionNamesCache.current.set(item.policyId, {
-              collectionName: item.collectionName,
-              isVerified: item.isVerified ?? false,
+            items.forEach(raw => {
+              const normalized = normalizeCollectionLookupItem(raw);
+              if (!normalized.policyId) return;
+              collectionNamesCache.current.set(normalized.policyId, {
+                collectionName: normalized.collectionName,
+                isVerified: normalized.isVerified,
+                verificationPlatform: normalized.verificationPlatform,
+              });
             });
-          });
-        } catch (error) {
-          console.error('Error fetching collection names:', error);
-          batch.forEach(collection => {
-            collectionNamesCache.current.set(collection.policyId, { collectionName: null, isVerified: false });
-          });
+          } catch (error) {
+            console.error('Error fetching collection names:', error);
+            batch.forEach(collection => {
+              collectionNamesCache.current.set(collection.policyId, {
+                collectionName: null,
+                isVerified: false,
+                verificationPlatform: null,
+              });
+            });
+          }
         }
       }
-    }
 
-    return collections.map(policy => {
-      const cached = collectionNamesCache.current.get(policy.policyId);
-      return {
-        ...policy,
-        collectionName: cached?.collectionName ?? null,
-        isVerified: cached?.isVerified ?? false,
-      };
-    });
+      return collections.map(policy => {
+        const cached = collectionNamesCache.current.get(policy.policyId);
+        return {
+          ...policy,
+          collectionName: cached?.collectionName ?? null,
+          isVerified: cached?.isVerified ?? false,
+          verificationPlatform: cached?.verificationPlatform ?? null,
+        };
+      });
+    };
+
+    const next = fetchCollectionsQueueRef.current.then(() => run());
+    fetchCollectionsQueueRef.current = next.catch(() => {});
+    return next;
   }, []);
 
   const loadPage = useCallback(
@@ -213,31 +305,32 @@ export const useAssets = () => {
 
   const searchPolicies = useCallback(
     async (query: string): Promise<GroupedPolicy[]> => {
-      const allGrouped = allGroupedRef.current;
+      const grouped = allGroupedRef.current;
       if (!query) return [];
 
       const search = query.toLowerCase();
+      const snapshotKey = walletPolicySetKey(grouped);
+      const cached = searchHydratedRef.current;
 
-      const localMatches = allGrouped.filter(
-        p => p.assetName.toLowerCase().includes(search) || p.policyId.toLowerCase().includes(search)
-      );
-
-      const withNames: GroupedPolicy[] = await fetchCollections(localMatches);
-
-      const localMatchIds = new Set(localMatches.map(p => p.policyId));
-      const remaining = allGrouped.filter(p => !localMatchIds.has(p.policyId));
-
-      if (remaining.length > 0) {
-        const remainingWithNames = await fetchCollections(remaining);
-
-        const matchedByCollection = remainingWithNames.filter(
-          p => p.collectionName && p.collectionName.toLowerCase().includes(search)
-        );
-
-        withNames.push(...matchedByCollection);
+      let allWithNames: GroupedPolicy[];
+      if (cached?.key === snapshotKey) {
+        allWithNames = cached.policies;
+      } else {
+        allWithNames = await fetchCollections(grouped);
+        let key = walletPolicySetKey(allGroupedRef.current);
+        if (key !== snapshotKey) {
+          allWithNames = await fetchCollections(allGroupedRef.current);
+          key = walletPolicySetKey(allGroupedRef.current);
+        }
+        searchHydratedRef.current = { key, policies: allWithNames };
       }
 
-      return withNames;
+      return allWithNames.filter(
+        p =>
+          p.assetName.toLowerCase().includes(search) ||
+          p.policyId.toLowerCase().includes(search) ||
+          Boolean(p.collectionName && p.collectionName.toLowerCase().includes(search))
+      );
     },
     [fetchCollections]
   );

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
-import { useAssets } from '@/hooks/useAssets';
+import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
 
 export const LavaWhitelistWithCaps = ({
   required = false,
@@ -160,6 +160,7 @@ export const LavaWhitelistWithCaps = ({
       count: 1,
       collectionName: null,
       isVerified: null,
+      verificationPlatform: null,
     });
     triggerSearch(uniqueId, value);
 
@@ -175,6 +176,7 @@ export const LavaWhitelistWithCaps = ({
       count: policy.count || 1,
       collectionName: policy.collectionName ?? null,
       isVerified: policy.isVerified ?? false,
+      verificationPlatform: policy.verificationPlatform ?? null,
     });
     setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
     setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
@@ -209,6 +211,7 @@ export const LavaWhitelistWithCaps = ({
             updatesByUniqueId[asset.uniqueId] = {
               isVerified: localMatch.isVerified ?? false,
               collectionName: localMatch.collectionName ?? asset.collectionName ?? null,
+              verificationPlatform: localMatch.verificationPlatform ?? null,
               name: localMatch.name || asset.name || '',
               assetName: localMatch.assetName || asset.assetName || '',
               count: localMatch.count || asset.count || 1,
@@ -227,6 +230,7 @@ export const LavaWhitelistWithCaps = ({
             updatesByUniqueId[asset.uniqueId] = {
               isVerified: result.isVerified ?? false,
               collectionName: result.collectionName ?? asset.collectionName ?? null,
+              verificationPlatform: result.verificationPlatform ?? null,
               name: result.name || asset.name || '',
               assetName: result.assetName || asset.assetName || '',
               count: result.count || asset.count || 1,
@@ -284,6 +288,7 @@ export const LavaWhitelistWithCaps = ({
         count: 1,
         collectionName: null,
         isVerified: null,
+        verificationPlatform: null,
       });
       setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
     } else {
@@ -305,6 +310,7 @@ export const LavaWhitelistWithCaps = ({
         policyName: 'N/A',
         collectionName: null,
         isVerified: null,
+        verificationPlatform: null,
         countCapMax: Math.min(1000, maxCapValue),
         valuationMethod: 'market',
         customPriceAda: null,
@@ -326,6 +332,9 @@ export const LavaWhitelistWithCaps = ({
             ...(policyData.count !== undefined && { count: policyData.count }),
             ...(policyData.collectionName !== undefined && { collectionName: policyData.collectionName }),
             ...(policyData.isVerified !== undefined && { isVerified: policyData.isVerified }),
+            ...(policyData.verificationPlatform !== undefined && {
+              verificationPlatform: policyData.verificationPlatform,
+            }),
           }
         : asset
     );
@@ -355,6 +364,7 @@ export const LavaWhitelistWithCaps = ({
 
     const displayName = policy.collectionName || policy.name;
     const isVerified = policy.isVerified;
+    const verificationBadgeLabel = getVerificationPlatformLabel(policy.verificationPlatform);
 
     return (
       <button
@@ -372,7 +382,7 @@ export const LavaWhitelistWithCaps = ({
             {isVerified ? (
               <span className="inline-flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 shrink-0">
                 <ShieldCheck className="h-3 w-3" />
-                Verified
+                {verificationBadgeLabel ? `Verified · ${verificationBadgeLabel}` : 'Verified'}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/30 shrink-0">
@@ -410,6 +420,7 @@ export const LavaWhitelistWithCaps = ({
             ? getFilteredSearchResults(asset.uniqueId)
             : getFilteredBrowseList(asset.uniqueId);
           const currentIsSearching = isSearching[asset.uniqueId];
+          const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
           return (
             <div key={asset.id || asset.uniqueId} className="space-y-6">
@@ -499,7 +510,11 @@ export const LavaWhitelistWithCaps = ({
               {asset.policyId && asset.isVerified === true && (
                 <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
                   <ShieldCheck className="h-4 w-4" />
-                  <span>Verified collection</span>
+                  <span>
+                    {selectedVerificationLabel
+                      ? `Verified collection · ${selectedVerificationLabel}`
+                      : 'Verified collection'}
+                  </span>
                 </div>
               )}
               {asset.policyId && asset.isVerified === false && (
