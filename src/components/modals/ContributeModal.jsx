@@ -213,10 +213,16 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       return;
     }
 
-    // Cap at available quantity (compare in decimal form)
-    const availableDecimalQty = getDecimalAdjustedQuantity(ft.quantity, decimals);
-    if (numDecimalAmount >= availableDecimalQty) {
-      amount = availableDecimalQty.toFixed(Math.min(decimals, 8));
+    // Cap at available quantity (work in raw units to avoid rounding issues)
+    if (rawAmount > ft.quantity) {
+      // Cap to available raw quantity, then convert back to decimal for display
+      const cappedRawAmount = ft.quantity;
+      const cappedDecimalAmount = getDecimalAdjustedQuantity(cappedRawAmount, decimals);
+      // Truncate to display precision (max 8 decimals) without rounding up
+      const displayDecimals = Math.min(decimals, 8);
+      const multiplier = Math.pow(10, displayDecimals);
+      const truncatedAmount = Math.floor(cappedDecimalAmount * multiplier) / multiplier;
+      amount = truncatedAmount.toFixed(displayDecimals);
     }
 
     setSelectedAmount(prev => ({

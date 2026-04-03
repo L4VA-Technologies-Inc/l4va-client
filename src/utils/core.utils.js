@@ -138,16 +138,31 @@ export const formatCompactNumber = num => {
 
 /**
  * Convert decimal-adjusted (UX) quantity to raw blockchain quantity
- * @param {number} decimalQuantity - User-facing quantity with decimals (e.g., 3.5)
+ * Uses string manipulation to avoid floating-point precision errors
+ * @param {number|string} decimalQuantity - User-facing quantity with decimals (e.g., 3.5)
  * @param {number} decimals - Number of decimal places (default 6)
  * @returns {number} Raw blockchain quantity
  * @example getRawQuantity(3.673214, 6) => 3673214
  * @example getRawQuantity(3.5, 6) => 3500000
+ * @example getRawQuantity(0.29, 6) => 290000 (avoids FP error)
  */
 export const getRawQuantity = (decimalQuantity, decimals = 6) => {
   if (!decimalQuantity && decimalQuantity !== 0) return 0;
-  if (!decimals) return decimalQuantity;
-  return Math.floor(decimalQuantity * Math.pow(10, decimals));
+  if (!decimals) return Math.floor(Number(decimalQuantity));
+
+  // Clamp decimals to safe range (0-20)
+  const safeDecimals = Math.max(0, Math.min(decimals, 20));
+
+  // Convert to string and split on decimal point
+  const strValue = String(decimalQuantity);
+  const [integerPart = '0', fractionalPart = ''] = strValue.split('.');
+
+  // Pad or truncate fractional part to match decimals
+  const paddedFraction = fractionalPart.padEnd(safeDecimals, '0').substring(0, safeDecimals);
+
+  // Concatenate and parse as integer (handles leading zeros correctly)
+  const rawString = integerPart + paddedFraction;
+  return parseInt(rawString, 10);
 };
 
 /**
@@ -182,9 +197,11 @@ export const formatTokenQuantity = (rawQuantity, decimals = 6, maxDisplayDecimal
   }
 
   // Otherwise, use locale string with specified decimal places
+  // Cap at 8 for UX consistency and clamp to 20 (platform limit for toLocaleString)
+  const safeMaxDecimals = Math.min(maxDisplayDecimals, decimals, 8, 20);
   return decimalQty.toLocaleString('en', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: Math.min(maxDisplayDecimals, decimals),
+    maximumFractionDigits: safeMaxDecimals,
   });
 };
 
