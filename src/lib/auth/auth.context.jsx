@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { AuthContext } from '@/lib/auth/auth';
+import { AuthContext, clearAuthLocalStorage } from '@/lib/auth/auth';
 import { useProfile, useLogin } from '@/services/api/queries';
 
 export const AuthProvider = ({ children }) => {
@@ -34,9 +34,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = message => {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('authenticated_stake_address');
-    localStorage.removeItem('vlrm_balance_cache');
+    clearAuthLocalStorage();
     queryClient.setQueryData(['profile'], null);
     if (message) {
       sessionStorage.setItem('logout_toast', message);

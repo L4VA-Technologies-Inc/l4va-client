@@ -136,6 +136,75 @@ export const formatCompactNumber = num => {
   return formatter.format(num);
 };
 
+/**
+ * Convert decimal-adjusted (UX) quantity to raw blockchain quantity
+ * Uses string manipulation to avoid floating-point precision errors
+ * @param {number|string} decimalQuantity - User-facing quantity with decimals (e.g., 3.5)
+ * @param {number} decimals - Number of decimal places (default 6)
+ * @returns {number} Raw blockchain quantity
+ * @example getRawQuantity(3.673214, 6) => 3673214
+ * @example getRawQuantity(3.5, 6) => 3500000
+ * @example getRawQuantity(0.29, 6) => 290000 (avoids FP error)
+ */
+export const getRawQuantity = (decimalQuantity, decimals = 6) => {
+  if (!decimalQuantity && decimalQuantity !== 0) return 0;
+  if (!decimals) return Math.floor(Number(decimalQuantity));
+
+  // Clamp decimals to safe range (0-20)
+  const safeDecimals = Math.max(0, Math.min(decimals, 20));
+
+  // Convert to string and split on decimal point
+  const strValue = String(decimalQuantity);
+  const [integerPart = '0', fractionalPart = ''] = strValue.split('.');
+
+  // Pad or truncate fractional part to match decimals
+  const paddedFraction = fractionalPart.padEnd(safeDecimals, '0').substring(0, safeDecimals);
+
+  // Concatenate and parse as integer (handles leading zeros correctly)
+  const rawString = integerPart + paddedFraction;
+  return parseInt(rawString, 10);
+};
+
+/**
+ * Convert raw token quantity to decimal-adjusted quantity
+ * @param {number} rawQuantity - Raw quantity from blockchain
+ * @param {number} decimals - Number of decimal places (default 6)
+ * @returns {number} Decimal-adjusted quantity
+ * @example getDecimalAdjustedQuantity(3673214, 6) => 3.673214
+ * @example getDecimalAdjustedQuantity(3500000, 6) => 3.5
+ */
+export const getDecimalAdjustedQuantity = (rawQuantity, decimals = 6) => {
+  if (!rawQuantity && rawQuantity !== 0) return 0;
+  if (!decimals) return rawQuantity;
+  return rawQuantity / Math.pow(10, decimals);
+};
+
+/**
+ * Format token quantity for display with proper decimal adjustment
+ * @param {number} rawQuantity - Raw quantity from blockchain
+ * @param {number} decimals - Number of decimal places (default 6)
+ * @param {number} maxDisplayDecimals - Maximum decimals to show (default 6)
+ * @returns {string} Formatted quantity string
+ * @example formatTokenQuantity(3673214, 6, 6) => "3.673214"
+ * @example formatTokenQuantity(1000000000, 6, 2) => "1,000.00"
+ */
+export const formatTokenQuantity = (rawQuantity, decimals = 6, maxDisplayDecimals = 6) => {
+  const decimalQty = getDecimalAdjustedQuantity(rawQuantity, decimals);
+
+  // For very large numbers, use compact notation
+  if (decimalQty >= 1000000) {
+    return formatCompactNumber(decimalQty);
+  }
+
+  // Otherwise, use locale string with specified decimal places
+  // Cap at 8 for UX consistency and clamp to 20 (platform limit for toLocaleString)
+  const safeMaxDecimals = Math.min(maxDisplayDecimals, decimals, 8, 20);
+  return decimalQty.toLocaleString('en', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: safeMaxDecimals,
+  });
+};
+
 export const formatAmount = amount => {
   if (amount >= 1000000) {
     return `${(amount / 1000000).toFixed(1)}M`;
