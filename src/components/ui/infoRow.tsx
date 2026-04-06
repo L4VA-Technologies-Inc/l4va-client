@@ -12,6 +12,8 @@ type InfoRowProps = {
   labelClassName?: string;
   symbol?: string;
   customClassName?: string;
+  /** Applied to the value column (e.g. full width + alignment when stacked on small screens) */
+  valueWrapperClassName?: string;
   hideLongString?: boolean;
 };
 
@@ -24,17 +26,18 @@ export const InfoRow = ({
   hideValue = false,
   hideLongString = false,
   customClassName,
+  valueWrapperClassName,
 }: InfoRowProps) => {
   const formattedValue = (text: any) => {
     if (typeof text === 'number') {
       return formatNum(text);
     }
     if (hideLongString) {
-      return `${text.substring(0, 6)}...${text.substring(text.length - 6)}`
+      return `${text.substring(0, 6)}...${text.substring(text.length - 6)}`;
     }
 
     return text;
-  }
+  };
 
   const handleCopy = () => {
     navigator.clipboard
@@ -49,9 +52,9 @@ export const InfoRow = ({
   };
 
   return (
-    <div className={cn('flex justify-between items-center py-2', customClassName)}>
-      <span className={cn('text-dark-100', labelClassName)}>{label}</span>
-      <div className="flex items-center gap-2">
+    <div className={cn('flex w-full min-w-0 justify-between items-center gap-4 py-2', customClassName)}>
+      <span className={cn('text-dark-100 shrink-0', labelClassName)}>{label}</span>
+      <div className={cn('flex min-w-0 flex-1 items-center justify-end gap-2 break-words', valueWrapperClassName)}>
         {!hideValue && (
           <span>
             {formattedValue(value)} {symbol}
