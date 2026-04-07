@@ -67,7 +67,7 @@ export const VaultContribution = ({ vault }) => {
     const displayValue = formatNumber(value);
     return (
       <div
-        className="absolute -top-7.5 flex flex-col items-center z-50"
+        className="absolute -top-7.5 flex flex-col items-center z-10"
         style={{ left: `${Math.min(progress, 100)}%`, transform: 'translateX(-50%)' }}
       >
         <div className="flex px-2 py-1 bg-steel-850 border border-steel-750 rounded-md shadow-lg mb-1">
