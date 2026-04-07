@@ -1,5 +1,6 @@
 import CheckmarkIcon from '@/icons/checkmark.svg?react';
 import { LazyImage } from '@/components/shared/LazyImage';
+import { formatPolicyId } from '@/utils/core.utils';
 
 export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   return (
@@ -40,8 +41,7 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
           onClick={e => e.stopPropagation()}
           className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap"
         >
-          {nft.metadata?.policyId.substring(0, 6)}...
-          {nft.metadata?.policyId.substring(nft.metadata?.policyId.length - 6)}
+          {formatPolicyId(nft.metadata?.policyId)}
         </a>
       </div>
     </div>

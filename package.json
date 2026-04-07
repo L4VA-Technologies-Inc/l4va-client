@@ -54,6 +54,9 @@
   },
   "resolutions": {
     "minimatch": "^9.0.7",
+    "picomatch": "^4.0.4",
+    "brace-expansion": "^2.0.3",
+    "yaml": "^2.8.3",
     "seroval": "^1.4.1",
     "tar": "^7.5.11",
     "jws": "^4.0.0",
@@ -89,7 +92,7 @@
     "typescript": "5.8.3",
     "@tanstack/react-router-devtools": "1.121.34",
     "@tanstack/router-plugin": "1.121.34",
-    "vite": "6.4.1",
+    "vite": "6.4.2",
     "vite-plugin-svgr": "4.3.0"
   }
 }

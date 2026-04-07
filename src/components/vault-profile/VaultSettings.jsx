@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
 import { cn } from '@/lib/utils';
-import { formatAdaPrice } from '@/utils/core.utils.js';
+import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
 
 const collectionDisplayName = asset =>
   asset.collectionName?.trim() || asset.name?.trim() || asset.policyName?.trim() || null;
@@ -78,8 +78,7 @@ export const VaultSettings = ({ vault }) => {
           const isFirst = index === 0;
           const name = collectionDisplayName(asset);
           const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
-          const shortPolicy =
-            asset.policyId.substring(0, 6) + '...' + asset.policyId.substring(asset.policyId.length - 6);
+          const shortPolicy = formatPolicyId(asset.policyId);
           const method = pricingMethodLabel(asset.valuationMethod);
           const isCustom = asset.valuationMethod === 'custom';
           const hasCustomPrice =

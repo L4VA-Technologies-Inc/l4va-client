@@ -4,6 +4,7 @@ import { LavaSteelSelect, LavaMultiSelect } from '@/components/shared/LavaSelect
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
+import { formatPolicyId } from '@/utils/core.utils';
 
 export default function Expansion({ onDataChange, error, vault }) {
   const [selectedPolicies, setSelectedPolicies] = useState([]);
@@ -18,7 +19,7 @@ export default function Expansion({ onDataChange, error, vault }) {
   const whitelistedPolicies =
     vault?.assetsWhitelist?.map(w => ({
       value: w.policyId,
-      label: w.collectionName || `${w.policyId.substring(0, 10)}...${w.policyId.substring(w.policyId.length - 8)}`,
+      label: w.collectionName || formatPolicyId(w.policyId, 10, 8),
       secondLabel: w.collectionName ? w.policyId : null,
     })) || [];
 

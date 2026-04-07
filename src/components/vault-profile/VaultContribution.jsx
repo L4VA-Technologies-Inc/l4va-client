@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import LavaProgressBar from '@/components/shared/LavaProgressBar';
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultSocialLinks } from '@/components/vault-profile/VaultSocialLinks';
-import { formatNum, formatNumber } from '@/utils/core.utils';
+import { formatNum, formatNumber, formatPolicyId } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const calculateProgress = (current, target) => {
@@ -67,7 +67,7 @@ export const VaultContribution = ({ vault }) => {
     const displayValue = formatNumber(value);
     return (
       <div
-        className="absolute -top-7.5 flex flex-col items-center z-50"
+        className="absolute -top-7.5 flex flex-col items-center z-10"
         style={{ left: `${Math.min(progress, 100)}%`, transform: 'translateX(-50%)' }}
       >
         <div className="flex px-2 py-1 bg-steel-850 border border-steel-750 rounded-md shadow-lg mb-1">
@@ -81,7 +81,7 @@ export const VaultContribution = ({ vault }) => {
   return (
     <div className="space-y-4">
       <div className="relative overflow-visible">
-        {isContribution ? (
+        {isContribution && (
           <>
             <h2 className={clsx('font-medium', contributionProgress > 0 ? 'mb-10' : 'mb-2')}>Contribution:</h2>
             <div className="flex flex-col items-center relative overflow-visible">
@@ -118,8 +118,7 @@ export const VaultContribution = ({ vault }) => {
                         <div key={asset.policyId} className="flex flex-col items-center relative">
                           <p className={clsx('truncate text-dark-100 w-full', assetProgress > 0 ? 'mb-10' : 'mb-2')}>
                             <span className="text-white" title={asset.collectionName || asset.policyId}>
-                              {asset.collectionName ||
-                                `${asset.policyId.substring(0, 6)}...${asset.policyId.substring(asset.policyId.length - 6)}`}
+                              {asset.collectionName || formatPolicyId(asset.policyId)}
                             </span>
                           </p>
                           <div className="relative w-full mb-2">
@@ -149,12 +148,6 @@ export const VaultContribution = ({ vault }) => {
               )}
             </div>
           </>
-        ) : (
-          <div className="w-full">
-            <div className="text-sm text-dark-100 font-medium">
-              Total Contributed Assets: <span className="text-[#F97316]">{vault.assetsCount}</span>
-            </div>
-          </div>
         )}
       </div>
 
@@ -255,8 +248,7 @@ export const VaultContribution = ({ vault }) => {
                       title={collection.policyId}
                     >
                       <span className="text-dark-100">
-                        {collection.collectionName ||
-                          `${collection.policyId.substring(0, 6)}...${collection.policyId.substring(collection.policyId.length - 6)}`}
+                        {collection.collectionName || formatPolicyId(collection.policyId)}
                       </span>
                     </div>
                   ))}

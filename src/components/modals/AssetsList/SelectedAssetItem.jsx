@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
-import { formatNum } from '@/utils/core.utils';
+import { formatNum, formatPolicyId } from '@/utils/core.utils';
 
 export const SelectedAssetItem = ({ asset, onRemove }) => (
   <div className="flex items-center gap-3">
@@ -21,8 +21,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="text-dark-100 hover:underline text-sm whitespace-nowrap">
-          {asset.metadata?.policyId.substring(0, 6)}...
-          {asset.metadata?.policyId.substring(asset.metadata?.policyId.length - 6)}
+          {formatPolicyId(asset.metadata?.policyId)}
         </span>
         <button
           className="text-dark-100 hover:text-white p-1 rounded-full hover:bg-steel-700 transition-colors"
