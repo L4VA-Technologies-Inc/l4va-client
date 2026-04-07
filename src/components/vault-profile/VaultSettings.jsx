@@ -5,14 +5,20 @@ import { Copy } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { InfoRow } from '@/components/ui/infoRow';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
-import { ASSET_WHITE_LIST } from '@/components/vaults/constants/vaults.constants.js';
-import { formatPolicyId } from '@/utils/core.utils';
+import { cn } from '@/lib/utils';
+import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
+
+const collectionDisplayName = asset =>
+  asset.collectionName?.trim() || asset.name?.trim() || asset.policyName?.trim() || null;
+
+const pricingMethodLabel = valuationMethod => (valuationMethod === 'custom' ? 'Custom' : 'Market / Floor');
 
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -61,53 +67,73 @@ export const VaultSettings = ({ vault }) => {
   };
 
   const renderAssets = assetsWhitelist => {
-    return (
-      <div className="flex flex-col gap-4">
-        {assetsWhitelist.map((asset, index) => {
-          if (asset.policyId && ASSET_WHITE_LIST[asset.policyId]) {
-            const assetData = ASSET_WHITE_LIST[asset.policyId];
-            const shortPolicy = formatPolicyId(asset.policyId);
+    const whitelistedAssets = (assetsWhitelist ?? []).filter(asset => asset.policyId);
+    if (!whitelistedAssets.length) {
+      return <span className="text-dark-100">No assets in whitelist</span>;
+    }
 
-            return (
-              <div key={index} className="flex w-full items-center justify-end gap-6">
-                <div className="flex items-center gap-2">
-                  <img src={assetData.imgUrl} alt={assetData.assetName} className="w-8 h-8 rounded-full" />
-                  <span>{assetData.assetName}</span>
+    return (
+      <Accordion type="multiple" className="w-full min-w-[200px] text-left">
+        {whitelistedAssets.map((asset, index) => {
+          const isFirst = index === 0;
+          const name = collectionDisplayName(asset);
+          const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
+          const shortPolicy = formatPolicyId(asset.policyId);
+          const method = pricingMethodLabel(asset.valuationMethod);
+          const isCustom = asset.valuationMethod === 'custom';
+          const hasCustomPrice =
+            asset.customPriceAda != null &&
+            asset.customPriceAda !== '' &&
+            !Number.isNaN(Number(asset.customPriceAda)) &&
+            Number(asset.customPriceAda) > 0;
+
+          return (
+            <AccordionItem
+              key={itemValue}
+              value={itemValue}
+              className="w-full min-w-0 border-b border-white/10 last:border-0"
+            >
+              <AccordionTrigger
+                className={cn(
+                  'w-full min-w-0 text-left text-sm font-medium hover:no-underline pr-1 data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300',
+                  isFirst ? 'pt-0 pb-3' : 'py-3'
+                )}
+              >
+                <span className="min-w-0 flex-1 break-words pr-2">{name || 'Unnamed collection'}</span>
+              </AccordionTrigger>
+              <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
+                <div className="text-sm">
+                  <span className="text-dark-100">Pricing method</span>
+                  <span className="mx-2 text-dark-100">·</span>
+                  <span>{method}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span>{shortPolicy}</span>
+                {isCustom && hasCustomPrice && (
+                  <div className="text-sm">
+                    <span className="text-dark-100">Custom price</span>
+                    <span className="mx-2 text-dark-100">·</span>
+                    <span>₳{formatAdaPrice(asset.customPriceAda)}</span>
+                  </div>
+                )}
+                {isCustom && !hasCustomPrice && <div className="text-sm text-dark-100">Custom price not set</div>}
+                <div className="flex items-center gap-2 text-sm text-dark-100">
+                  <span className="font-mono">{shortPolicy}</span>
                   <button
                     className="text-gray-500 hover:text-gray-700"
                     type="button"
-                    onClick={() => handleCopy(asset.policyId)}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleCopy(asset.policyId);
+                    }}
+                    aria-label="Copy policy ID"
                   >
-                    <Copy className="h-5 w-5" />
+                    <Copy className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
-            );
-          }
-
-          if (asset.policyId) {
-            const shortPolicy = formatPolicyId(asset.policyId);
-
-            return (
-              <div key={index} className="flex gap-2 w-full justify-end items-center">
-                <span>{shortPolicy}</span>
-                <button
-                  className="text-gray-500 hover:text-gray-700"
-                  type="button"
-                  onClick={() => handleCopy(asset.policyId)}
-                >
-                  <Copy className="h-5 w-5" />
-                </button>
-              </div>
-            );
-          }
-
-          return null;
+              </AccordionContent>
+            </AccordionItem>
+          );
         })}
-      </div>
+      </Accordion>
     );
   };
 
@@ -135,7 +161,8 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
             <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
             <InfoRow
-              customClassName="items-start"
+              customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+              valueWrapperClassName="w-full justify-start sm:w-auto sm:min-w-0 sm:justify-end"
               label="Asset Whitelist"
               value={renderAssets(vault.assetsWhitelist)}
             />
