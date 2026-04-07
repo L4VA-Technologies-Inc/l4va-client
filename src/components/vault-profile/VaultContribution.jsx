@@ -81,7 +81,7 @@ export const VaultContribution = ({ vault }) => {
   return (
     <div className="space-y-4">
       <div className="relative overflow-visible">
-        {isContribution ? (
+        {isContribution && (
           <>
             <h2 className={clsx('font-medium', contributionProgress > 0 ? 'mb-10' : 'mb-2')}>Contribution:</h2>
             <div className="flex flex-col items-center relative overflow-visible">
@@ -148,12 +148,6 @@ export const VaultContribution = ({ vault }) => {
               )}
             </div>
           </>
-        ) : (
-          <div className="w-full">
-            <div className="text-sm text-dark-100 font-medium">
-              Total Contributed Assets: <span className="text-[#F97316]">{vault.assetsCount}</span>
-            </div>
-          </div>
         )}
       </div>
 
