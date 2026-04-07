@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { Toaster } from 'react-hot-toast';
-import { Suspense } from 'react';
 
 import MainLayout from '@/components/layout/MainLayout';
 import { NotFound } from '@/components/NotFound';
