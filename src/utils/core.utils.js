@@ -349,6 +349,20 @@ export const handleNumberInput = value => {
   return value.replace(/[^0-9]/g, '');
 };
 
+/**
+ * Safely format a policy ID for display
+ * @param {string} policyId - The policy ID to format (can be null/undefined)
+ * @param {number} prefixLen - Number of characters to show at start (default 6)
+ * @param {number} suffixLen - Number of characters to show at end (default 6)
+ * @returns {string} Formatted policy ID or empty string if not provided
+ * @example formatPolicyId('0b8fd6250b719b611625c7d21831...') => '0b8fd6...23f7'
+ */
+export const formatPolicyId = (policyId, prefixLen = 6, suffixLen = 6) => {
+  if (!policyId || typeof policyId !== 'string') return '';
+  if (policyId.length <= prefixLen + suffixLen) return policyId;
+  return `${policyId.substring(0, prefixLen)}...${policyId.substring(policyId.length - suffixLen)}`;
+};
+
 export const transformYupErrors = err => {
   if (!err?.inner) return {};
 

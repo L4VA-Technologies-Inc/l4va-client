@@ -1,4 +1,5 @@
 import { LazyImage } from '@/components/shared/LazyImage';
+import { formatPolicyId } from '@/utils/core.utils';
 const AssetField = ({ label, value, children }) => (
   <div className="flex justify-between items-center">
     <div className="text-gray-400 text-sm">{label}</div>
@@ -36,12 +37,7 @@ export const AssetsList = ({ assets, title = 'Assets' }) => {
               {asset.quantity && <AssetField label="Quantity" value={asset.quantity} />}
               {asset.amount && <AssetField label="Amount" value={asset.amount} />}
               {asset.type && <AssetField label="Type" value={asset.type} />}
-              {asset.policyId && (
-                <AssetField
-                  label="Policy ID"
-                  value={`${asset.policyId.substring(0, 8)}...${asset.policyId.substring(asset.policyId.length - 6)}`}
-                />
-              )}
+              {asset.policyId && <AssetField label="Policy ID" value={formatPolicyId(asset.policyId, 8, 6)} />}
               {asset.assetId && (
                 <AssetField
                   label="Asset ID"

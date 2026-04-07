@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
 import { ASSET_WHITE_LIST } from '@/components/vaults/constants/vaults.constants.js';
+import { formatPolicyId } from '@/utils/core.utils';
 
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -65,8 +66,7 @@ export const VaultSettings = ({ vault }) => {
         {assetsWhitelist.map((asset, index) => {
           if (asset.policyId && ASSET_WHITE_LIST[asset.policyId]) {
             const assetData = ASSET_WHITE_LIST[asset.policyId];
-            const shortPolicy =
-              asset.policyId.substring(0, 6) + '...' + asset.policyId.substring(asset.policyId.length - 6);
+            const shortPolicy = formatPolicyId(asset.policyId);
 
             return (
               <div key={index} className="flex w-full items-center justify-end gap-6">
@@ -89,8 +89,7 @@ export const VaultSettings = ({ vault }) => {
           }
 
           if (asset.policyId) {
-            const shortPolicy =
-              asset.policyId.substring(0, 6) + '...' + asset.policyId.substring(asset.policyId.length - 6);
+            const shortPolicy = formatPolicyId(asset.policyId);
 
             return (
               <div key={index} className="flex gap-2 w-full justify-end items-center">

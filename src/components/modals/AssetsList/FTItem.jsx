@@ -1,6 +1,6 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LazyImage } from '@/components/shared/LazyImage';
-import { formatTokenQuantity } from '@/utils/core.utils';
+import { formatTokenQuantity, formatPolicyId } from '@/utils/core.utils';
 
 export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   // Get decimals from metadata, default to 6 if not specified
@@ -35,9 +35,7 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
           />
         </div>
         <span className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap">
-          {ft.metadata?.policyId
-            ? `${ft.metadata.policyId.substring(0, 6)}...${ft.metadata.policyId.substring(ft.metadata.policyId.length - 6)}`
-            : ''}
+          {formatPolicyId(ft.metadata?.policyId)}
         </span>
       </div>
     </div>
