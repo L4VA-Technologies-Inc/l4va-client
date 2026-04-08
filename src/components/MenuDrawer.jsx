@@ -24,16 +24,15 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
     <>
       <div
         className={clsx(
-          'fixed inset-0 h-screen bg-black/50 z-40 transition-opacity duration-300',
-          isOpen ? 'opacity-100 ' : 'opacity-0 pointer-events-none'
+          'fixed inset-0 bg-black/50 z-40 transition-opacity duration-300',
+          isOpen ? 'opacity-100' : 'opacity-0'
         )}
+        style={{ pointerEvents: isOpen ? 'auto' : 'none', height: '100dvh' }}
         onClick={onClose}
       />
       <div
-        className={clsx(
-          'fixed top-0 right-0 w-80 h-screen bg-steel-900 shadow-xl transform transition-transform duration-300 ease-out z-50',
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        )}
+        className="fixed right-0 w-80 bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-50"
+        style={{ top: 0, bottom: 0, height: '100dvh', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-steel-750">

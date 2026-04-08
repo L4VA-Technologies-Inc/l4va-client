@@ -619,9 +619,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <ContributionSkeleton />
             )
           ) : null}
-          <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
+          <div className="w-full overflow-hidden lg:block hidden">
             <SwapComponent
-              overrideDisplay
               config={{
                 defaultToken: vault.hasActiveLp
                   ? `${vault.policyId}${vault.assetVaultName}`
@@ -657,12 +656,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           </div>
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
             <SwapComponent
-              overrideDisplay
               config={{
                 defaultToken: vault.hasActiveLp
                   ? `${vault.policyId}${vault.assetVaultName}`
                   : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-                style: { width: '100%' },
               }}
             />
           </div>
