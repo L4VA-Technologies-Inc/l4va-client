@@ -1,22 +1,24 @@
-import { CSSProperties, useEffect, useMemo } from 'react';
-import toast from 'react-hot-toast';
 import Swap from '@dexhunterio/swaps';
-import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
-import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
 import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
+import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
+import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
+import React, { useMemo } from 'react';
+import toast from 'react-hot-toast';
+import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
-import { SwapErrorBoundary } from './SwapErrorBoundary';
+import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 
-interface SwapProps {
-  overrideDisplay?: boolean;
+export interface SwapComponentProps {
+  partnerName?: string;
+  partnerCode?: string;
   config?: {
     defaultToken?: string;
     width?: string;
     height?: string;
     theme?: 'light' | 'dark';
     className?: string;
-    style?: CSSProperties;
+    style?: React.CSSProperties;
     orderTypes?: orderTypesProps;
     supportedTokens?: supportedTokensType;
     onSwapSuccess?: (data: any) => void;
@@ -38,37 +40,6 @@ interface SwapProps {
   };
 }
 
-const suppressedKeywords = [
-  'RECONNECTING',
-  'default token',
-  'fetching token',
-  'settings new token',
-  'usdPrice',
-  'dexhunter',
-  'canceled',
-  'CanceledError',
-  'DialogContent',
-  'DialogTitle',
-];
-
-const originalConsole = { ...console };
-
-const createFilter =
-  (originalFn: any) =>
-  (...args: any[]) => {
-    const msg = args.join(' ');
-    if (suppressedKeywords.some(k => msg.includes(k))) return;
-    originalFn(...args);
-  };
-
-console.log = createFilter(originalConsole.log);
-console.warn = createFilter(originalConsole.warn);
-console.info = createFilter(originalConsole.info);
-console.debug = createFilter(originalConsole.debug);
-
-const SWAP_STYLES_ID = 'dexhunter-swap-styles';
-const SWAP_OVERRIDE_STYLES_ID = 'dexhunter-swap-override-styles';
-
 const DEFAULT_COLORS = {
   mainText: 'var(--color-text-primary)' as `#${string}`,
   subText: 'var(--color-dark-100)' as `#${string}`,
@@ -78,43 +49,61 @@ const DEFAULT_COLORS = {
   accent: 'var(--color-orange-500)' as `#${string}`,
 };
 
-const ensureSwapStyles = () => {
-  if (typeof document === 'undefined' || document.getElementById(SWAP_STYLES_ID)) return;
-  const link = document.createElement('link');
-  link.id = SWAP_STYLES_ID;
-  link.rel = 'stylesheet';
-  link.href = '/css/swap-custom.css';
-  link.media = 'all';
-  document.head.appendChild(link);
-};
+const SCOPED_DEXHUNTER_STYLES = dexhunterStyles
+  .split('#dexhunter-container')
+  .join('.dexhunter-scope')
+  .split('*,:before,:after')
+  .join('.dexhunter-scope *, .dexhunter-scope :before, .dexhunter-scope :after')
+  .split('::backdrop')
+  .join('.dexhunter-scope ::backdrop');
 
-const ensureSwapOverrideStyles = () => {
-  if (typeof document === 'undefined' || document.getElementById(SWAP_OVERRIDE_STYLES_ID)) return;
-  const style = document.createElement('style');
-  style.id = SWAP_OVERRIDE_STYLES_ID;
-  style.textContent = `
-    #dexhunter-container { display: block !important; width: 100% !important; }
-    #dexhunter-root { width: 100% !important; max-width: 100% !important; }
-  `;
-  document.head.appendChild(style);
-};
+const RESPONSIVE_OVERRIDE = `
+  .dexhunter-wrapper {
+    width: 100%;
+    min-width: 0;
+    display: block;
+  }
 
-export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) => {
-  useEffect(() => {
-    ensureSwapStyles();
-    if (overrideDisplay) ensureSwapOverrideStyles();
-    return () => {
-      if (overrideDisplay) document.getElementById(SWAP_OVERRIDE_STYLES_ID)?.remove();
-    };
-  }, [overrideDisplay]);
+  .dexhunter-wrapper #dexhunter-container {
+    display: flex !important; 
+    width: 100% !important;
+    min-width: 0 !important;
+  }
 
-  const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
+  .dexhunter-wrapper #dexhunter-root {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
 
-  // Add safe event handlers to prevent crashes
+  .dexhunter-wrapper #swap-main,
+  .dexhunter-wrapper #dexhunter-swap-container,
+  .dexhunter-wrapper #dexhunter-swap-form {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  
+  .dexhunter-wrapper * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+`;
+
+export const SwapComponent: React.FC<SwapComponentProps> = ({ partnerName = 'l4va', partnerCode, config }) => {
+  const resolvedPartnerCode = useMemo(
+    () => partnerCode || import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test',
+    [partnerCode]
+  );
+
   const safeConfig = {
+    theme: 'dark' as const,
+    displayType: 'DEFAULT' as const,
+    width: '100%',
     ...config,
     onSwapSuccess: (data: any) => {
-      // Show user-friendly toast notification
       if (data?.data?.length > 0) {
         toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
           duration: 5000,
@@ -123,27 +112,24 @@ export const SwapComponent = ({ overrideDisplay = false, config }: SwapProps) =>
       config?.onSwapSuccess?.(data);
     },
     onSwapError: (err: any) => {
-      // Don't log cancellation errors
       if (!err?.message?.toLowerCase().includes('cancel')) {
         console.error('Swap error:', err);
-        toast.error('Swap failed. Please try again.', {
-          duration: 4000,
-        });
+        toast.error('Swap failed. Please try again.', { duration: 4000 });
       }
       config?.onSwapError?.(err);
-    },
-    onSwapWarning: (warn: any) => {
-      // Don't log cancellation warnings
-      if (!warn?.message?.toLowerCase().includes('cancel')) {
-        console.warn('Swap warning:', warn);
-      }
-      config?.onSwapWarning?.(warn);
     },
   };
 
   return (
-    <SwapErrorBoundary>
-      <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
-    </SwapErrorBoundary>
+    <div className="dexhunter-wrapper">
+      <style>{SCOPED_DEXHUNTER_STYLES}</style>
+      <style>{RESPONSIVE_OVERRIDE}</style>
+
+      <div className="dexhunter-scope w-full">
+        <SwapErrorBoundary>
+          <Swap partnerName={partnerName} partnerCode={resolvedPartnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+        </SwapErrorBoundary>
+      </div>
+    </div>
   );
 };
