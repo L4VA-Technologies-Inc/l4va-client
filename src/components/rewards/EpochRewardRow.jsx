@@ -4,8 +4,8 @@ import { formatCompactNumber } from '@/utils/core.utils';
 import { formatDateRange } from '@/utils/rewards/normalizers';
 
 export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = null }) => {
-  const hasReward = reward && Number(reward.final_reward) > 0;
-  const isCapped = reward?.was_capped || false;
+  const hasReward = reward && Number(reward.finalReward) > 0;
+  const isCapped = reward?.wasCapped || false;
 
   return (
     <div
@@ -31,13 +31,13 @@ export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = n
         <div className="text-right">
           {hasReward ? (
             <>
-              <div className="text-2xl font-bold text-white mb-1">{formatCompactNumber(reward.final_reward)} $L4VA</div>
-              {(Number(reward.immediate_reward) > 0 || Number(reward.vested_reward) > 0) && (
+              <div className="text-2xl font-bold text-white mb-1">{formatCompactNumber(reward.finalReward)} $L4VA</div>
+              {(Number(reward.immediateReward) > 0 || Number(reward.vestedReward) > 0) && (
                 <div className="text-xs text-gray-500 space-x-3">
-                  {Number(reward.immediate_reward) > 0 && (
-                    <span>Immediate: {formatCompactNumber(reward.immediate_reward)}</span>
+                  {Number(reward.immediateReward) > 0 && (
+                    <span>Immediate: {formatCompactNumber(reward.immediateReward)}</span>
                   )}
-                  {Number(reward.vested_reward) > 0 && <span>Vested: {formatCompactNumber(reward.vested_reward)}</span>}
+                  {Number(reward.vestedReward) > 0 && <span>Vested: {formatCompactNumber(reward.vestedReward)}</span>}
                 </div>
               )}
               {score !== null && score !== undefined && (

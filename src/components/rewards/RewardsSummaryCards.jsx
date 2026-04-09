@@ -7,7 +7,6 @@ export const RewardsSummaryCards = ({
   currentEpochEstimate = 0,
   totalEarned = 0,
   nextUnlock = null,
-  isCapped = false,
   isLoading = false,
 }) => {
   const cards = [
@@ -77,18 +76,6 @@ export const RewardsSummaryCards = ({
               <div className="text-right">
                 <div className="text-sm text-gray-400">In</div>
                 <div className="text-lg font-medium text-blue-400 mt-1">{nextUnlock.daysUntil} days</div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {isCapped && (
-          <Card className="p-4 border-yellow-500/20 bg-yellow-500/5">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-              <div>
-                <div className="text-sm font-semibold text-yellow-400">Cap Applied</div>
-                <div className="text-xs text-gray-400 mt-1">Your rewards have reached the weekly cap</div>
               </div>
             </div>
           </Card>

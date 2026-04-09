@@ -3,14 +3,15 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
-import { useClaimableAmount, useClaimHistory } from '@/hooks/useRewardsClaims';
+import { useClaimableAmount } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
-import { ClaimsSummary } from '@/components/rewards/ClaimsSummary';
+import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { Card } from '@/components/ui/card';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
@@ -19,33 +20,27 @@ export const RewardsOverview = () => {
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
   const { data: claimableData, isLoading: isLoadingClaimable } = useClaimableAmount(walletAddress);
-  const { data: claimHistoryData, isLoading: isLoadingClaimHistory } = useClaimHistory(walletAddress);
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
   console.log('🔍 RewardsOverview Data:', {
     currentEpochData,
     claimableData,
-    claimHistoryData,
     vestingData,
     historyData,
   });
 
   // Data is already normalized by backend
   const vestingSummary = vestingData || null;
-  const claimHistory = claimHistoryData || [];
 
   // Calculate totals
   const claimableAmount = claimableData?.totalClaimableNow || 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
-  const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0) || 0;
+  const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
 
   // Get current epoch estimate from history
   const currentEpochEstimate =
-    historyData?.history?.find(item => item.epochId === currentEpochData?.epoch?.id)?.final_reward || 0;
-
-  // Check if capped
-  const isCapped = historyData?.history?.some(item => item.was_capped) || false;
+    historyData?.history?.find(item => item.epochId === currentEpochData?.epoch?.id)?.finalReward || 0;
 
   // Loading state for summary cards
   const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;
@@ -78,7 +73,31 @@ export const RewardsOverview = () => {
         </div>
 
         {/* Current Epoch Banner */}
-        <CurrentEpochBanner epoch={currentEpochData} isLoading={isLoadingEpoch} />
+        <CurrentEpochBanner epoch={currentEpochData?.epoch} isLoading={isLoadingEpoch} />
+
+        {/* Claim Rewards Section */}
+        <Card className="p-8 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
+          {isLoadingClaimable ? (
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-700 rounded animate-pulse w-1/3" />
+              <div className="h-16 bg-gray-700 rounded animate-pulse w-full" />
+            </div>
+          ) : (
+            <>
+              <div className="text-sm text-gray-400 mb-3">Available to Claim</div>
+              <div className="flex items-baseline gap-3 mb-6">
+                <span className="text-5xl font-bold text-orange-400">{formatCompactNumber(claimableAmount)}</span>
+                <span className="text-xl text-gray-500">$L4VA</span>
+              </div>
+
+              <ClaimButton
+                walletAddress={walletAddress}
+                claimableAmount={claimableAmount}
+                className="w-full md:w-auto px-8 py-3 text-lg"
+              />
+            </>
+          )}
+        </Card>
 
         {/* Summary Cards */}
         <RewardsSummaryCards
@@ -87,22 +106,14 @@ export const RewardsOverview = () => {
           currentEpochEstimate={currentEpochEstimate}
           totalEarned={totalEarned}
           nextUnlock={vestingSummary?.nextUnlock || null}
-          isCapped={isCapped}
           isLoading={isSummaryLoading}
         />
 
-        {/* Claims and Vesting */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ClaimsSummary
-            claimableAmount={claimableAmount}
-            claimHistory={claimHistory}
-            isLoading={isLoadingClaimable || isLoadingClaimHistory}
-          />
-          <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />
-        </div>
+        {/* Vesting Summary */}
+        <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
           <Card
             className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/epochs' })}
@@ -116,13 +127,6 @@ export const RewardsOverview = () => {
           >
             <h3 className="font-semibold text-white mb-1">Vault Breakdown</h3>
             <p className="text-sm text-gray-400">See rewards by vault participation</p>
-          </Card>
-          <Card
-            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
-            onClick={() => navigate({ to: '/rewards/claims' })}
-          >
-            <h3 className="font-semibold text-white mb-1">Claim Rewards</h3>
-            <p className="text-sm text-gray-400">Manage and claim your rewards</p>
           </Card>
         </div>
       </div>

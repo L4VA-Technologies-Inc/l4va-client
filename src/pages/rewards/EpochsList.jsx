@@ -99,7 +99,7 @@ export const EpochsList = () => {
             <Card className="p-4">
               <div className="text-sm text-gray-400">Total Earned</div>
               <div className="text-2xl font-bold text-orange-400 mt-1">
-                {historyData.history.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0).toLocaleString()}{' '}
+                {historyData.history.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0).toLocaleString()}{' '}
                 $L4VA
               </div>
             </Card>
@@ -107,7 +107,7 @@ export const EpochsList = () => {
               <div className="text-sm text-gray-400">Avg Per Epoch</div>
               <div className="text-2xl font-bold text-white mt-1">
                 {(
-                  historyData.history.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0) /
+                  historyData.history.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) /
                   historyData.history.length
                 ).toLocaleString()}{' '}
                 $L4VA

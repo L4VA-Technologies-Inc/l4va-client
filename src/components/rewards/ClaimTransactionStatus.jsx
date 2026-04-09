@@ -1,5 +1,12 @@
 export const ClaimTransactionStatus = ({ status, transactionHash = null }) => {
   const configs = {
+    available: {
+      border: 'border-green-500/30',
+      text: 'text-green-400',
+      dot: 'bg-green-500',
+      label: 'Available',
+      animate: false,
+    },
     pending: {
       bg: 'bg-yellow-500/10',
       border: 'border-yellow-500/30',

@@ -114,19 +114,19 @@ export const EpochDetails = () => {
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Total Reward</div>
                     <div className="text-3xl font-bold text-orange-400">
-                      {formatCompactNumber(walletReward.final_reward)} $L4VA
+                      {formatCompactNumber(walletReward.finalReward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Immediate</div>
                     <div className="text-2xl font-semibold text-green-400">
-                      {formatCompactNumber(walletReward.immediate_reward)} $L4VA
+                      {formatCompactNumber(walletReward.immediateReward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Vested</div>
                     <div className="text-2xl font-semibold text-blue-400">
-                      {formatCompactNumber(walletReward.vested_reward)} $L4VA
+                      {formatCompactNumber(walletReward.vestedReward)} $L4VA
                     </div>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export const EpochDetails = () => {
                   </div>
                 )}
 
-                {walletReward.was_capped && (
+                {walletReward.wasCapped && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                     <div className="text-sm text-yellow-400">⚠️ Weekly cap was applied to your rewards</div>
                   </div>

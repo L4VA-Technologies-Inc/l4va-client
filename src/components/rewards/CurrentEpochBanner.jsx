@@ -49,13 +49,13 @@ export const CurrentEpochBanner = ({ epoch, isLoading = false }) => {
             </div>
           </div>
           <div className="text-gray-300">{formatDateRange(epoch.startDate, epoch.endDate)}</div>
-          {epoch.weekNumber && <div className="text-sm text-gray-500 mt-1">Week {epoch.weekNumber}</div>}
+          {epoch.epochNumber && <div className="text-sm text-gray-500 mt-1">Epoch #{epoch.epochNumber}</div>}
         </div>
-        {epoch.totalEmission && (
+        {epoch.emissionTotal && (
           <div className="text-right">
             <div className="text-sm text-gray-400">Total Emission</div>
             <div className="text-2xl font-bold text-purple-400">
-              {Number(epoch.totalEmission).toLocaleString()} $L4VA
+              {Number(epoch.emissionTotal).toLocaleString()} $L4VA
             </div>
           </div>
         )}
