@@ -1,6 +1,6 @@
 import { Wallet, History, Receipt } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useClaimableAmount, useClaimHistory, useClaimTransactions } from '@/hooks/useRewardsClaims';
 import {
   normalizeClaimHistory,

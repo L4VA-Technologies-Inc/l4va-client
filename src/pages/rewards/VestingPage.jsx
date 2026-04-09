@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Wallet, Lock, Unlock, Layers } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
 import { normalizeVestingSummary, normalizeVestingPositions, formatRewardAmount } from '@/utils/rewards/normalizers';
 import { VestingProgress } from '@/components/rewards/VestingProgress';

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Calendar, Wallet } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
 import { normalizeEpochs } from '@/utils/rewards/normalizers';

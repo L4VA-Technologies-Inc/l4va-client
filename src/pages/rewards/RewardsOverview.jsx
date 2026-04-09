@@ -1,6 +1,6 @@
 import { Wallet } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount, useClaimHistory } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';

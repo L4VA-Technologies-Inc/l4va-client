@@ -1,7 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
 import { formatRewardAmount } from '@/utils/rewards/normalizers';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';

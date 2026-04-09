@@ -1,7 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
+import { useWallet } from '@ada-anvil/weld/react';
 
-import { useWallet } from '@/lib/contexts/wallet.context';
 import { useEpochDetails } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
 import { normalizeEpoch, formatDateRange, formatRewardAmount } from '@/utils/rewards/normalizers';
