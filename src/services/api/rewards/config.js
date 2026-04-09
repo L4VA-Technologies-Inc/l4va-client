@@ -8,15 +8,15 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static epochs() {
-    return '/api/rewards/epochs';
+    return '/api/v1/rewards/epochs';
   }
 
   static currentEpoch() {
-    return '/api/rewards/epochs/current';
+    return '/api/v1/rewards/epochs/current';
   }
 
   static epochDetails(id) {
-    return `/api/rewards/epochs/${id}`;
+    return `/api/v1/rewards/epochs/${id}`;
   }
 
   // ============================================================================
@@ -24,11 +24,11 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static walletScore(walletAddress) {
-    return `/api/rewards/score/${walletAddress}`;
+    return `/api/v1/rewards/score/${walletAddress}`;
   }
 
   static walletHistory(walletAddress) {
-    return `/api/rewards/history/${walletAddress}`;
+    return `/api/v1/rewards/history/${walletAddress}`;
   }
 
   // ============================================================================
@@ -36,15 +36,15 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static vaultScores(vaultId) {
-    return `/api/rewards/vault/${vaultId}/scores`;
+    return `/api/v1/rewards/vault/${vaultId}/scores`;
   }
 
   static walletVaultReward(walletAddress, vaultId) {
-    return `/api/rewards/wallet/${walletAddress}/vault/${vaultId}`;
+    return `/api/v1/rewards/wallet/${walletAddress}/vault/${vaultId}`;
   }
 
   static walletVaults(walletAddress) {
-    return `/api/rewards/wallet/${walletAddress}/vaults`;
+    return `/api/v1/rewards/wallet/${walletAddress}/vaults`;
   }
 
   // ============================================================================
@@ -52,23 +52,23 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static claimsSummary(walletAddress) {
-    return `/api/rewards/claims/${walletAddress}`;
+    return `/api/v1/rewards/claims/${walletAddress}`;
   }
 
   static claimableAmount(walletAddress) {
-    return `/api/rewards/claims/${walletAddress}/claimable`;
+    return `/api/v1/rewards/claims/${walletAddress}/claimable`;
   }
 
   static claimHistory(walletAddress) {
-    return `/api/rewards/claims/${walletAddress}/history`;
+    return `/api/v1/rewards/claims/${walletAddress}/history`;
   }
 
   static claimTransactions(walletAddress) {
-    return `/api/rewards/claims/${walletAddress}/transactions`;
+    return `/api/v1/rewards/claims/${walletAddress}/transactions`;
   }
 
   static submitClaim(walletAddress) {
-    return `/api/rewards/claims/${walletAddress}/claim`;
+    return `/api/v1/rewards/claims/${walletAddress}/claim`;
   }
 
   // ============================================================================
@@ -76,11 +76,11 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static vestingSummary(walletAddress) {
-    return `/api/rewards/vesting/${walletAddress}`;
+    return `/api/v1/rewards/vesting/${walletAddress}`;
   }
 
   static activeVesting(walletAddress) {
-    return `/api/rewards/vesting/${walletAddress}/active`;
+    return `/api/v1/rewards/vesting/${walletAddress}/active`;
   }
 
   // ============================================================================
@@ -88,6 +88,6 @@ export class RewardsConfigProvider {
   // ============================================================================
 
   static weights() {
-    return '/api/rewards/weights';
+    return '/api/v1/rewards/weights';
   }
 }

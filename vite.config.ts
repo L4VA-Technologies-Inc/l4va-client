@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       // Route rewards service endpoints to port 3001
-      '/api/rewards': {
+      '/api/v1/rewards': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
