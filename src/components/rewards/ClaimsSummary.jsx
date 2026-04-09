@@ -2,7 +2,8 @@ import { Link } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import { formatRewardAmount, formatTimeAgo } from '@/utils/rewards/normalizers';
+import { formatTimeAgo } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 export const ClaimsSummary = ({ claimableAmount = 0, claimHistory = [], isLoading = false }) => {
   if (isLoading) {
@@ -38,7 +39,7 @@ export const ClaimsSummary = ({ claimableAmount = 0, claimHistory = [], isLoadin
         <div className="text-sm text-gray-400 mb-2">Available to Claim</div>
         <div className="flex items-baseline gap-2">
           <span className={`text-4xl font-bold ${hasClaimable ? 'text-orange-400' : 'text-gray-500'}`}>
-            {formatRewardAmount(claimableAmount)}
+            {formatCompactNumber(claimableAmount)}
           </span>
           <span className="text-sm text-gray-500">$L4VA</span>
         </div>
@@ -55,7 +56,7 @@ export const ClaimsSummary = ({ claimableAmount = 0, claimHistory = [], isLoadin
           {recentClaims.map(claim => (
             <div key={claim.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
               <div className="flex-1">
-                <div className="font-medium text-white">{formatRewardAmount(claim.amount)} $L4VA</div>
+                <div className="font-medium text-white">{formatCompactNumber(claim.amount)} $L4VA</div>
                 <div className="text-xs text-gray-500 mt-1">{formatTimeAgo(claim.claimedAt)}</div>
               </div>
               <div className="flex items-center gap-2">

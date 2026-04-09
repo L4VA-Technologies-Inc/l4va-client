@@ -5,7 +5,6 @@ import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount, useClaimHistory } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { calculateTotalRewards } from '@/utils/rewards/normalizers';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
 import { ClaimsSummary } from '@/components/rewards/ClaimsSummary';
@@ -13,7 +12,7 @@ import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { Card } from '@/components/ui/card';
 
 export const RewardsOverview = () => {
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
@@ -22,20 +21,29 @@ export const RewardsOverview = () => {
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
+  console.log('🔍 RewardsOverview Data:', {
+    currentEpochData,
+    claimableData,
+    claimHistoryData,
+    vestingData,
+    historyData,
+  });
+
   // Data is already normalized by backend
   const vestingSummary = vestingData || null;
   const claimHistory = claimHistoryData || [];
 
   // Calculate totals
-  const claimableAmount = claimableData?.claimableAmount || 0;
+  const claimableAmount = claimableData?.totalClaimableNow || 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
-  const totalEarned = historyData ? calculateTotalRewards(historyData) : 0;
+  const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0) || 0;
 
   // Get current epoch estimate from history
-  const currentEpochEstimate = historyData?.find(item => item.epochId === currentEpochData?.id)?.totalReward || 0;
+  const currentEpochEstimate =
+    historyData?.history?.find(item => item.epochId === currentEpochData?.epoch?.id)?.final_reward || 0;
 
   // Check if capped
-  const isCapped = historyData?.some(item => item.isCapped || item.capApplied) || false;
+  const isCapped = historyData?.history?.some(item => item.was_capped) || false;
 
   // Loading state for summary cards
   const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;

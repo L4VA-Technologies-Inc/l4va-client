@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { formatRewardAmount } from '@/utils/rewards/normalizers';
 
 export const RewardsSummaryCards = ({
@@ -13,26 +14,26 @@ export const RewardsSummaryCards = ({
   const cards = [
     {
       label: 'Claimable Now',
-      value: formatRewardAmount(claimable),
+      value: formatCompactNumber(claimable),
       suffix: '$L4VA',
       className: 'bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20',
       highlight: true,
     },
     {
       label: 'Locked / Vested',
-      value: formatRewardAmount(locked),
+      value: formatCompactNumber(locked),
       suffix: '$L4VA',
       className: 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20',
     },
     {
       label: 'Current Epoch Estimate',
-      value: formatRewardAmount(currentEpochEstimate),
+      value: formatCompactNumber(currentEpochEstimate),
       suffix: '$L4VA',
       className: 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20',
     },
     {
       label: 'Total Earned',
-      value: formatRewardAmount(totalEarned),
+      value: formatCompactNumber(totalEarned),
       suffix: '$L4VA',
       className: 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20',
     },

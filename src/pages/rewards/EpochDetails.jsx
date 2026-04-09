@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 export const EpochDetails = () => {
   const { id } = useParams({ from: '/rewards/epochs/$id' });
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   const { data: epochData, isLoading: isLoadingEpoch } = useEpochDetails(id);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);

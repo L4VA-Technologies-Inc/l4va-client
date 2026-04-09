@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 export const VaultDetails = () => {
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   const { data: vaultRewardData, isLoading: isLoadingReward } = useWalletVaultReward(walletAddress, vaultId);
   const { data: vaultScoresData, isLoading: isLoadingScores } = useVaultScores(vaultId);

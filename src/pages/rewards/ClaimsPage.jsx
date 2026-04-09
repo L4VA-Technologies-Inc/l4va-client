@@ -8,7 +8,7 @@ import { ClaimTransactionStatus } from '@/components/rewards/ClaimTransactionSta
 import { Card } from '@/components/ui/card';
 
 export const ClaimsPage = () => {
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   const { data: claimableData, isLoading: isLoadingClaimable } = useClaimableAmount(walletAddress);
   const { data: claimHistoryData, isLoading: isLoadingHistory } = useClaimHistory(walletAddress);

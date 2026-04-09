@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 export const EpochsList = () => {
   const navigate = useNavigate();
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs();
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);

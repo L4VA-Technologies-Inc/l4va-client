@@ -9,7 +9,7 @@ import { VestingGrouped } from '@/components/rewards/VestingGrouped';
 import { Card } from '@/components/ui/card';
 
 export const VestingPage = () => {
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
   const [groupBy, setGroupBy] = useState('none'); // 'none', 'epoch', 'vault'
 
   const { data: vestingSummaryData, isLoading: isLoadingSummary } = useVestingSummary(walletAddress);

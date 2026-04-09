@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 
 export const VaultsList = () => {
   const navigate = useNavigate();
-  const { address: walletAddress, isConnected } = useWallet();
+  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   const { data: vaultsData, isLoading } = useWalletVaults(walletAddress);
   // Data is already normalized by backend
