@@ -1,14 +1,15 @@
-import { useParams } from '@tanstack/react-router';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochDetails } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { formatDateRange, formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatDateRange, formatCompactNumber } from '@/utils/rewards/normalizers';
 import { EpochStatusBadge } from '@/components/rewards/EpochStatusBadge';
 import { Card } from '@/components/ui/card';
 
 export const EpochDetails = () => {
+  const navigate = useNavigate();
   const { id } = useParams({ from: '/rewards/epochs/$id' });
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
@@ -17,7 +18,7 @@ export const EpochDetails = () => {
 
   // Data is already normalized by backend
   const epoch = epochData || null;
-  const walletReward = historyData?.find(item => item.epochId === id);
+  const walletReward = historyData?.history?.find(item => item.epochId === id);
 
   if (isLoadingEpoch) {
     return (
@@ -53,10 +54,13 @@ export const EpochDetails = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
-        <a href="/rewards/epochs" className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8">
+        <button
+          onClick={() => navigate({ to: '/rewards/epochs' })}
+          className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
           Back to Epochs
-        </a>
+        </button>
 
         {/* Header */}
         <div className="mb-6">
@@ -110,19 +114,19 @@ export const EpochDetails = () => {
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Total Reward</div>
                     <div className="text-3xl font-bold text-orange-400">
-                      {formatRewardAmount(walletReward.totalReward)} $L4VA
+                      {formatCompactNumber(walletReward.final_reward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Immediate</div>
                     <div className="text-2xl font-semibold text-green-400">
-                      {formatRewardAmount(walletReward.immediateReward)} $L4VA
+                      {formatCompactNumber(walletReward.immediate_reward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Vested</div>
                     <div className="text-2xl font-semibold text-blue-400">
-                      {formatRewardAmount(walletReward.vestedReward)} $L4VA
+                      {formatCompactNumber(walletReward.vested_reward)} $L4VA
                     </div>
                   </div>
                 </div>
@@ -136,7 +140,7 @@ export const EpochDetails = () => {
                   </div>
                 )}
 
-                {(walletReward.isCapped || walletReward.capApplied) && (
+                {walletReward.was_capped && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                     <div className="text-sm text-yellow-400">⚠️ Weekly cap was applied to your rewards</div>
                   </div>

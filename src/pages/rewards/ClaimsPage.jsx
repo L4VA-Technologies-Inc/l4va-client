@@ -2,7 +2,8 @@ import { Wallet, History, Receipt } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useClaimableAmount, useClaimHistory, useClaimTransactions } from '@/hooks/useRewardsClaims';
-import { formatRewardAmount, formatTimeAgo } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
+import { formatTimeAgo } from '@/utils/rewards/normalizers';
 import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { ClaimTransactionStatus } from '@/components/rewards/ClaimTransactionStatus';
 import { Card } from '@/components/ui/card';
@@ -15,7 +16,7 @@ export const ClaimsPage = () => {
   const { data: claimTxData, isLoading: isLoadingTransactions } = useClaimTransactions(walletAddress);
 
   // Data is already normalized by backend
-  const claimableAmount = claimableData?.claimableAmount || 0;
+  const claimableAmount = claimableData?.totalClaimableNow || 0;
   const claimHistory = claimHistoryData || [];
   const claimTransactions = claimTxData || [];
 
@@ -57,7 +58,7 @@ export const ClaimsPage = () => {
             <>
               <div className="text-sm text-gray-400 mb-3">Available to Claim</div>
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-5xl font-bold text-orange-400">{formatRewardAmount(claimableAmount)}</span>
+                <span className="text-5xl font-bold text-orange-400">{formatCompactNumber(claimableAmount)}</span>
                 <span className="text-xl text-gray-500">$L4VA</span>
               </div>
 
@@ -67,7 +68,7 @@ export const ClaimsPage = () => {
                     <div>
                       <span className="text-gray-400">Immediate: </span>
                       <span className="text-white font-medium">
-                        {formatRewardAmount(claimableData.breakdown.immediate)} $L4VA
+                        {formatCompactNumber(claimableData.breakdown.immediate)} $L4VA
                       </span>
                     </div>
                   )}
@@ -75,7 +76,7 @@ export const ClaimsPage = () => {
                     <div>
                       <span className="text-gray-400">Unlocked: </span>
                       <span className="text-white font-medium">
-                        {formatRewardAmount(claimableData.breakdown.unlocked)} $L4VA
+                        {formatCompactNumber(claimableData.breakdown.unlocked)} $L4VA
                       </span>
                     </div>
                   )}
@@ -103,7 +104,7 @@ export const ClaimsPage = () => {
               {claimTransactions.map(tx => (
                 <div key={tx.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                   <div className="flex-1">
-                    <div className="font-medium text-white mb-1">{formatRewardAmount(tx.amount)} $L4VA</div>
+                    <div className="font-medium text-white mb-1">{formatCompactNumber(tx.amount)} $L4VA</div>
                     <div className="text-xs text-gray-500">{formatTimeAgo(tx.createdAt)}</div>
                     {tx.errorMessage && <div className="text-xs text-red-400 mt-1">{tx.errorMessage}</div>}
                   </div>
@@ -137,7 +138,7 @@ export const ClaimsPage = () => {
               {claimHistory.map(claim => (
                 <div key={claim.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg">
                   <div className="flex-1">
-                    <div className="font-medium text-white mb-1">{formatRewardAmount(claim.amount)} $L4VA</div>
+                    <div className="font-medium text-white mb-1">{formatCompactNumber(claim.amount)} $L4VA</div>
                     <div className="text-xs text-gray-500">{formatTimeAgo(claim.claimedAt)}</div>
                     {claim.epochId && <div className="text-xs text-gray-600 mt-1">Epoch: {claim.epochId}</div>}
                   </div>

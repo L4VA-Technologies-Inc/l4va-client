@@ -1,6 +1,7 @@
 import { Lock, Unlock, Calendar } from 'lucide-react';
 
-import { formatRewardAmount, formatDate, formatPercentage } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
+import { formatDate, formatPercentage } from '@/utils/rewards/normalizers';
 
 export const VestingProgress = ({ position }) => {
   const {
@@ -31,7 +32,7 @@ export const VestingProgress = ({ position }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg font-semibold text-white">{formatRewardAmount(totalAmount)} VLRM</span>
+            <span className="text-lg font-semibold text-white">{formatCompactNumber(totalAmount)} VLRM</span>
             {isActive && (
               <div className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 rounded text-xs text-blue-400">
                 Active
@@ -66,7 +67,7 @@ export const VestingProgress = ({ position }) => {
         <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
           <span>Progress: {formatPercentage(progressPercentage)}</span>
           <span>
-            {formatRewardAmount(vestedAmount)} / {formatRewardAmount(totalAmount)} VLRM
+            {formatCompactNumber(vestedAmount)} / {formatCompactNumber(totalAmount)} VLRM
           </span>
         </div>
         <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -84,21 +85,21 @@ export const VestingProgress = ({ position }) => {
             <Unlock className="w-3 h-3" />
             <span className="text-xs">Vested</span>
           </div>
-          <div className="font-medium text-white">{formatRewardAmount(vestedAmount)}</div>
+          <div className="font-medium text-white">{formatCompactNumber(vestedAmount)}</div>
         </div>
         <div>
           <div className="flex items-center gap-1 text-gray-400 mb-1">
             <Calendar className="w-3 h-3" />
             <span className="text-xs">Claimed</span>
           </div>
-          <div className="font-medium text-green-400">{formatRewardAmount(claimedAmount)}</div>
+          <div className="font-medium text-green-400">{formatCompactNumber(claimedAmount)}</div>
         </div>
         <div>
           <div className="flex items-center gap-1 text-gray-400 mb-1">
             <Lock className="w-3 h-3" />
             <span className="text-xs">Remaining</span>
           </div>
-          <div className="font-medium text-blue-400">{formatRewardAmount(remainingAmount)}</div>
+          <div className="font-medium text-blue-400">{formatCompactNumber(remainingAmount)}</div>
         </div>
       </div>
 

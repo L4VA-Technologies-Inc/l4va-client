@@ -1,6 +1,7 @@
 import { EpochStatusBadge } from './EpochStatusBadge';
 
-import { formatRewardAmount, formatDateRange } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
+import { formatDateRange } from '@/utils/rewards/normalizers';
 
 export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = null }) => {
   const hasReward = reward && reward.totalReward > 0;
@@ -30,11 +31,11 @@ export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = n
         <div className="text-right">
           {hasReward ? (
             <>
-              <div className="text-2xl font-bold text-white mb-1">{formatRewardAmount(reward.totalReward)} $L4VA</div>
+              <div className="text-2xl font-bold text-white mb-1">{formatCompactNumber(reward.totalReward)} $L4VA</div>
               {(reward.immediateReward > 0 || reward.vestedReward > 0) && (
                 <div className="text-xs text-gray-500 space-x-3">
-                  {reward.immediateReward > 0 && <span>Immediate: {formatRewardAmount(reward.immediateReward)}</span>}
-                  {reward.vestedReward > 0 && <span>Vested: {formatRewardAmount(reward.vestedReward)}</span>}
+                  {reward.immediateReward > 0 && <span>Immediate: {formatCompactNumber(reward.immediateReward)}</span>}
+                  {reward.vestedReward > 0 && <span>Vested: {formatCompactNumber(reward.vestedReward)}</span>}
                 </div>
               )}
               {score !== null && score !== undefined && (

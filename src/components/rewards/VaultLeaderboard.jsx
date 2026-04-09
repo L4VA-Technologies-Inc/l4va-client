@@ -1,4 +1,4 @@
-import { formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 export const VaultLeaderboard = ({ scores = [], currentWalletAddress = null }) => {
   if (!scores || scores.length === 0) {
@@ -53,7 +53,7 @@ export const VaultLeaderboard = ({ scores = [], currentWalletAddress = null }) =
 
             {/* Score */}
             <div className="text-right">
-              <div className="text-lg font-semibold text-white">{formatRewardAmount(entry.score || 0, 0)}</div>
+              <div className="text-lg font-semibold text-white">{formatCompactNumber(entry.score || 0, 0)}</div>
               <div className="text-xs text-gray-500">Score</div>
             </div>
           </div>

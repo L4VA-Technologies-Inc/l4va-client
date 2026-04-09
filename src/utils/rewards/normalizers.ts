@@ -12,15 +12,6 @@ import { format, formatDistanceToNow } from 'date-fns';
 // Formatting Helpers
 // ============================================================================
 
-export const formatRewardAmount = (amount: number, decimals = 2) => {
-  if (!amount || amount === 0) return '0';
-  if (amount < 0.01) return '< 0.01';
-  return Number(amount).toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-};
-
 export const formatDate = (date: Date | string, formatStr = 'MMM dd, yyyy') => {
   if (!date) return '';
   const dateObj = date instanceof Date ? date : new Date(date);

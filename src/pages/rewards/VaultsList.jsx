@@ -3,7 +3,7 @@ import { Wallet, Vault } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useWalletVaults } from '@/hooks/useRewardsVaults';
-import { formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { Card } from '@/components/ui/card';
 
@@ -90,7 +90,7 @@ export const VaultsList = () => {
           </Card>
           <Card className="p-6">
             <div className="text-sm text-gray-400 mb-1">Total Vault Rewards</div>
-            <div className="text-3xl font-bold text-orange-400">{formatRewardAmount(totalRewards)} $L4VA</div>
+            <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalRewards)} $L4VA</div>
           </Card>
         </div>
 
@@ -122,7 +122,7 @@ export const VaultsList = () => {
                 </div>
 
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-orange-400">{formatRewardAmount(vault.totalReward)}</div>
+                  <div className="text-2xl font-bold text-orange-400">{formatCompactNumber(vault.totalReward)}</div>
                   <div className="text-sm text-gray-500">$L4VA</div>
                 </div>
               </div>

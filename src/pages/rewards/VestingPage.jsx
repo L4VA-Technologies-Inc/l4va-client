@@ -3,7 +3,7 @@ import { Wallet, Lock, Unlock, Layers } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
-import { formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { VestingProgress } from '@/components/rewards/VestingProgress';
 import { VestingGrouped } from '@/components/rewards/VestingGrouped';
 import { Card } from '@/components/ui/card';
@@ -60,7 +60,7 @@ export const VestingPage = () => {
                 <Layers className="w-4 h-4" />
                 <span className="text-sm">Total Vested</span>
               </div>
-              <div className="text-3xl font-bold text-white">{formatRewardAmount(vestingSummary.totalVested)}</div>
+              <div className="text-3xl font-bold text-white">{formatCompactNumber(vestingSummary.totalVested)}</div>
               <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
 
@@ -70,7 +70,7 @@ export const VestingPage = () => {
                 <span className="text-sm">Unlocked</span>
               </div>
               <div className="text-3xl font-bold text-green-400">
-                {formatRewardAmount(vestingSummary.totalUnlocked)}
+                {formatCompactNumber(vestingSummary.totalUnlocked)}
               </div>
               <div className="text-sm text-gray-500 mt-1">
                 {vestingSummary.unlockedPercentage ? vestingSummary.unlockedPercentage.toFixed(1) : '0'}% of total
@@ -82,7 +82,7 @@ export const VestingPage = () => {
                 <Lock className="w-4 h-4" />
                 <span className="text-sm">Locked</span>
               </div>
-              <div className="text-3xl font-bold text-orange-400">{formatRewardAmount(vestingSummary.totalLocked)}</div>
+              <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(vestingSummary.totalLocked)}</div>
               <div className="text-sm text-gray-500 mt-1">
                 {vestingSummary.lockedPercentage ? vestingSummary.lockedPercentage.toFixed(1) : '0'}% of total
               </div>

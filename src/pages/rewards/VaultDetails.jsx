@@ -1,14 +1,15 @@
-import { useParams } from '@tanstack/react-router';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
-import { formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { VaultLeaderboard } from '@/components/rewards/VaultLeaderboard';
 import { Card } from '@/components/ui/card';
 
 export const VaultDetails = () => {
+  const navigate = useNavigate();
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
@@ -33,10 +34,13 @@ export const VaultDetails = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <a href="/rewards/vaults" className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8">
+          <button
+            onClick={() => navigate({ to: '/rewards/vaults' })}
+            className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8 transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to Vaults
-          </a>
+          </button>
           <Card className="p-12">
             <div className="text-center text-gray-400">
               {!isConnected ? 'Please connect your wallet' : 'No vault data found'}
@@ -54,10 +58,13 @@ export const VaultDetails = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Back Button */}
-        <a href="/rewards/vaults" className="text-blue-400 hover:text-blue-300 flex items-center gap-2">
+        <button
+          onClick={() => navigate({ to: '/rewards/vaults' })}
+          className="text-blue-400 hover:text-blue-300 flex items-center gap-2 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
           Back to Vaults
-        </a>
+        </button>
 
         {/* Header */}
         <div className="mb-6">
@@ -82,7 +89,7 @@ export const VaultDetails = () => {
           <div className="text-sm text-gray-400 mb-2">Total Vault Rewards</div>
           <div className="flex items-baseline gap-3">
             <span className="text-5xl font-bold text-orange-400">
-              {formatRewardAmount(vaultRewardData.totalReward)}
+              {formatCompactNumber(vaultRewardData.totalReward)}
             </span>
             <span className="text-xl text-gray-500">$L4VA</span>
           </div>
@@ -98,7 +105,7 @@ export const VaultDetails = () => {
                 <span className="text-sm text-gray-400">Rewards</span>
               </div>
               <div className="text-3xl font-bold text-purple-400">
-                {formatRewardAmount(vaultRewardData.creatorReward)}
+                {formatCompactNumber(vaultRewardData.creatorReward)}
               </div>
               <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
@@ -112,7 +119,7 @@ export const VaultDetails = () => {
                 <span className="text-sm text-gray-400">Rewards</span>
               </div>
               <div className="text-3xl font-bold text-blue-400">
-                {formatRewardAmount(vaultRewardData.participantReward)}
+                {formatCompactNumber(vaultRewardData.participantReward)}
               </div>
               <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
@@ -123,7 +130,7 @@ export const VaultDetails = () => {
             <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
               <div className="text-sm text-gray-400 mb-2">Immediate</div>
               <div className="text-3xl font-bold text-green-400">
-                {formatRewardAmount(vaultRewardData.immediateReward)}
+                {formatCompactNumber(vaultRewardData.immediateReward)}
               </div>
               <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
@@ -133,7 +140,9 @@ export const VaultDetails = () => {
           {vaultRewardData.vestedReward > 0 && (
             <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20">
               <div className="text-sm text-gray-400 mb-2">Vested</div>
-              <div className="text-3xl font-bold text-blue-400">{formatRewardAmount(vaultRewardData.vestedReward)}</div>
+              <div className="text-3xl font-bold text-blue-400">
+                {formatCompactNumber(vaultRewardData.vestedReward)}
+              </div>
               <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
           )}

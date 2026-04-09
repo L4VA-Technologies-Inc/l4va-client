@@ -1,6 +1,5 @@
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
-import { formatRewardAmount } from '@/utils/rewards/normalizers';
 
 export const RewardsSummaryCards = ({
   claimable = 0,
@@ -72,7 +71,7 @@ export const RewardsSummaryCards = ({
               <div>
                 <div className="text-sm text-gray-400">Next Unlock</div>
                 <div className="text-xl font-semibold text-white mt-1">
-                  {formatRewardAmount(nextUnlock.amount)} $L4VA
+                  {formatCompactNumber(nextUnlock.amount)} $L4VA
                 </div>
               </div>
               <div className="text-right">

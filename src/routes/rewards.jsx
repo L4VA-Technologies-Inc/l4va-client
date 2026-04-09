@@ -1,9 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
-import { RewardsOverview } from '@/pages/rewards/RewardsOverview';
-
-const RewardsComponent = () => <RewardsOverview />;
+const RewardsLayout = () => <Outlet />;
 
 export const Route = createFileRoute('/rewards')({
-  component: RewardsComponent,
+  component: RewardsLayout,
 });

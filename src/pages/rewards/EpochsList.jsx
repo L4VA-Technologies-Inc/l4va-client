@@ -20,8 +20,8 @@ export const EpochsList = () => {
 
   // Create a map of epoch rewards for quick lookup
   const rewardsByEpoch = React.useMemo(() => {
-    if (!historyData) return new Map();
-    return new Map(historyData.map(item => [item.epochId, item]));
+    if (!historyData?.history) return new Map();
+    return new Map(historyData.history.map(item => [item.epochId, item]));
   }, [historyData]);
 
   const handleEpochClick = epochId => {
@@ -90,23 +90,25 @@ export const EpochsList = () => {
         </div>
 
         {/* Stats Summary */}
-        {historyData && historyData.length > 0 && (
+        {historyData?.history && historyData.history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card className="p-4">
               <div className="text-sm text-gray-400">Total Epochs</div>
-              <div className="text-2xl font-bold text-white mt-1">{historyData.length}</div>
+              <div className="text-2xl font-bold text-white mt-1">{historyData.history.length}</div>
             </Card>
             <Card className="p-4">
               <div className="text-sm text-gray-400">Total Earned</div>
               <div className="text-2xl font-bold text-orange-400 mt-1">
-                {historyData.reduce((sum, item) => sum + (item.totalReward || 0), 0).toLocaleString()} $L4VA
+                {historyData.history.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0).toLocaleString()}{' '}
+                $L4VA
               </div>
             </Card>
             <Card className="p-4">
               <div className="text-sm text-gray-400">Avg Per Epoch</div>
               <div className="text-2xl font-bold text-white mt-1">
                 {(
-                  historyData.reduce((sum, item) => sum + (item.totalReward || 0), 0) / historyData.length
+                  historyData.history.reduce((sum, item) => sum + (Number(item.final_reward) || 0), 0) /
+                  historyData.history.length
                 ).toLocaleString()}{' '}
                 $L4VA
               </div>

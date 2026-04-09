@@ -1,9 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/rewards/vaults/$vaultId')({
-  component: RouteComponent,
-});
+import { VaultDetails } from '@/pages/rewards/VaultDetails';
 
-function RouteComponent() {
-  return <div>Hello "/rewards/vaults/$vaultId"!</div>;
-}
+export const Route = createFileRoute('/rewards/vaults/$vaultId')({
+  component: VaultDetails,
+});

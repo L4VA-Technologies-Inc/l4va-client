@@ -1,5 +1,6 @@
 import { Wallet } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useNavigate } from '@tanstack/react-router';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount, useClaimHistory } from '@/hooks/useRewardsClaims';
@@ -12,6 +13,7 @@ import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { Card } from '@/components/ui/card';
 
 export const RewardsOverview = () => {
+  const navigate = useNavigate();
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
   // Fetch all rewards data
@@ -101,23 +103,26 @@ export const RewardsOverview = () => {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <Card className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer">
-            <a href="/rewards/epochs" className="block">
-              <h3 className="font-semibold text-white mb-1">Epoch History</h3>
-              <p className="text-sm text-gray-400">View your rewards by epoch</p>
-            </a>
+          <Card
+            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+            onClick={() => navigate({ to: '/rewards/epochs' })}
+          >
+            <h3 className="font-semibold text-white mb-1">Epoch History</h3>
+            <p className="text-sm text-gray-400">View your rewards by epoch</p>
           </Card>
-          <Card className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer">
-            <a href="/rewards/vaults" className="block">
-              <h3 className="font-semibold text-white mb-1">Vault Breakdown</h3>
-              <p className="text-sm text-gray-400">See rewards by vault participation</p>
-            </a>
+          <Card
+            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+            onClick={() => navigate({ to: '/rewards/vaults' })}
+          >
+            <h3 className="font-semibold text-white mb-1">Vault Breakdown</h3>
+            <p className="text-sm text-gray-400">See rewards by vault participation</p>
           </Card>
-          <Card className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer">
-            <a href="/rewards/claims" className="block">
-              <h3 className="font-semibold text-white mb-1">Claim Rewards</h3>
-              <p className="text-sm text-gray-400">Manage and claim your rewards</p>
-            </a>
+          <Card
+            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+            onClick={() => navigate({ to: '/rewards/claims' })}
+          >
+            <h3 className="font-semibold text-white mb-1">Claim Rewards</h3>
+            <p className="text-sm text-gray-400">Manage and claim your rewards</p>
           </Card>
         </div>
       </div>

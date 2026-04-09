@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Lock, Unlock } from 'lucide-react';
 
+import { formatCompactNumber } from '@/utils/core.utils';
 import { Card } from '@/components/ui/card';
-import { formatRewardAmount, formatDate } from '@/utils/rewards/normalizers';
+import { formatDate } from '@/utils/rewards/normalizers';
 
 export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
   if (isLoading) {
@@ -53,7 +54,7 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
           <div className="mb-6">
             <div className="text-sm text-gray-400 mb-2">Total Vested</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-blue-400">{formatRewardAmount(totalVested)}</span>
+              <span className="text-4xl font-bold text-blue-400">{formatCompactNumber(totalVested)}</span>
               <span className="text-sm text-gray-500">$L4VA</span>
             </div>
           </div>
@@ -64,11 +65,11 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
               <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
                 <div className="flex items-center gap-1">
                   <Lock className="w-3 h-3" />
-                  <span>Locked: {formatRewardAmount(totalLocked)}</span>
+                  <span>Locked: {formatCompactNumber(totalLocked)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Unlock className="w-3 h-3" />
-                  <span>Unlocked: {formatRewardAmount(totalUnlocked)}</span>
+                  <span>Unlocked: {formatCompactNumber(totalUnlocked)}</span>
                 </div>
               </div>
               <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -86,7 +87,7 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
                   <div>
                     <div className="text-xs text-gray-400">Next Unlock</div>
                     <div className="text-lg font-semibold text-white mt-1">
-                      {formatRewardAmount(nextUnlock.amount)} $L4VA
+                      {formatCompactNumber(nextUnlock.amount)} $L4VA
                     </div>
                   </div>
                   <div className="text-right">
