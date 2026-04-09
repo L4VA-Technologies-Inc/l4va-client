@@ -54,7 +54,7 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
             <div className="text-sm text-gray-400 mb-2">Total Vested</div>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-blue-400">{formatRewardAmount(totalVested)}</span>
-              <span className="text-sm text-gray-500">VLRM</span>
+              <span className="text-sm text-gray-500">$L4VA</span>
             </div>
           </div>
 
@@ -86,7 +86,7 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
                   <div>
                     <div className="text-xs text-gray-400">Next Unlock</div>
                     <div className="text-lg font-semibold text-white mt-1">
-                      {formatRewardAmount(nextUnlock.amount)} VLRM
+                      {formatRewardAmount(nextUnlock.amount)} $L4VA
                     </div>
                   </div>
                   <div className="text-right">

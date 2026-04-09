@@ -84,7 +84,7 @@ export const VaultDetails = () => {
             <span className="text-5xl font-bold text-orange-400">
               {formatRewardAmount(vaultRewardData.totalReward)}
             </span>
-            <span className="text-xl text-gray-500">VLRM</span>
+            <span className="text-xl text-gray-500">$L4VA</span>
           </div>
         </Card>
 
@@ -100,7 +100,7 @@ export const VaultDetails = () => {
               <div className="text-3xl font-bold text-purple-400">
                 {formatRewardAmount(vaultRewardData.creatorReward)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">VLRM</div>
+              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
           )}
 
@@ -114,7 +114,7 @@ export const VaultDetails = () => {
               <div className="text-3xl font-bold text-blue-400">
                 {formatRewardAmount(vaultRewardData.participantReward)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">VLRM</div>
+              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
           )}
 
@@ -125,7 +125,7 @@ export const VaultDetails = () => {
               <div className="text-3xl font-bold text-green-400">
                 {formatRewardAmount(vaultRewardData.immediateReward)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">VLRM</div>
+              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
           )}
 
@@ -134,7 +134,7 @@ export const VaultDetails = () => {
             <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20">
               <div className="text-sm text-gray-400 mb-2">Vested</div>
               <div className="text-3xl font-bold text-blue-400">{formatRewardAmount(vaultRewardData.vestedReward)}</div>
-              <div className="text-sm text-gray-500 mt-1">VLRM</div>
+              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
           )}
         </div>

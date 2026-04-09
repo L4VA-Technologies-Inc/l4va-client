@@ -4,7 +4,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochDetails } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { normalizeEpoch, formatDateRange, formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatDateRange, formatRewardAmount } from '@/utils/rewards/normalizers';
 import { EpochStatusBadge } from '@/components/rewards/EpochStatusBadge';
 import { Card } from '@/components/ui/card';
 
@@ -15,7 +15,8 @@ export const EpochDetails = () => {
   const { data: epochData, isLoading: isLoadingEpoch } = useEpochDetails(id);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
-  const epoch = epochData ? normalizeEpoch(epochData) : null;
+  // Data is already normalized by backend
+  const epoch = epochData || null;
   const walletReward = historyData?.find(item => item.epochId === id);
 
   if (isLoadingEpoch) {
@@ -84,7 +85,7 @@ export const EpochDetails = () => {
               <div>
                 <div className="text-sm text-gray-400 mb-1">Total Emission</div>
                 <div className="text-2xl font-bold text-purple-400">
-                  {Number(epoch.totalEmission).toLocaleString()} VLRM
+                  {Number(epoch.totalEmission).toLocaleString()} $L4VA
                 </div>
               </div>
             )}
@@ -109,19 +110,19 @@ export const EpochDetails = () => {
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Total Reward</div>
                     <div className="text-3xl font-bold text-orange-400">
-                      {formatRewardAmount(walletReward.totalReward)} VLRM
+                      {formatRewardAmount(walletReward.totalReward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Immediate</div>
                     <div className="text-2xl font-semibold text-green-400">
-                      {formatRewardAmount(walletReward.immediateReward)} VLRM
+                      {formatRewardAmount(walletReward.immediateReward)} $L4VA
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-400 mb-1">Vested</div>
                     <div className="text-2xl font-semibold text-blue-400">
-                      {formatRewardAmount(walletReward.vestedReward)} VLRM
+                      {formatRewardAmount(walletReward.vestedReward)} $L4VA
                     </div>
                   </div>
                 </div>

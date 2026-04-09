@@ -40,7 +40,7 @@ export const ClaimsSummary = ({ claimableAmount = 0, claimHistory = [], isLoadin
           <span className={`text-4xl font-bold ${hasClaimable ? 'text-orange-400' : 'text-gray-500'}`}>
             {formatRewardAmount(claimableAmount)}
           </span>
-          <span className="text-sm text-gray-500">VLRM</span>
+          <span className="text-sm text-gray-500">$L4VA</span>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export const ClaimsSummary = ({ claimableAmount = 0, claimHistory = [], isLoadin
           {recentClaims.map(claim => (
             <div key={claim.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
               <div className="flex-1">
-                <div className="font-medium text-white">{formatRewardAmount(claim.amount)} VLRM</div>
+                <div className="font-medium text-white">{formatRewardAmount(claim.amount)} $L4VA</div>
                 <div className="text-xs text-gray-500 mt-1">{formatTimeAgo(claim.claimedAt)}</div>
               </div>
               <div className="flex items-center gap-2">

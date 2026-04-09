@@ -14,26 +14,26 @@ export const RewardsSummaryCards = ({
     {
       label: 'Claimable Now',
       value: formatRewardAmount(claimable),
-      suffix: 'VLRM',
+      suffix: '$L4VA',
       className: 'bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20',
       highlight: true,
     },
     {
       label: 'Locked / Vested',
       value: formatRewardAmount(locked),
-      suffix: 'VLRM',
+      suffix: '$L4VA',
       className: 'bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20',
     },
     {
       label: 'Current Epoch Estimate',
       value: formatRewardAmount(currentEpochEstimate),
-      suffix: 'VLRM',
+      suffix: '$L4VA',
       className: 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20',
     },
     {
       label: 'Total Earned',
       value: formatRewardAmount(totalEarned),
-      suffix: 'VLRM',
+      suffix: '$L4VA',
       className: 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20',
     },
   ];
@@ -42,7 +42,7 @@ export const RewardsSummaryCards = ({
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card, index) => (
-          <Card key={index} className={`p-6 ${card.className} transition-all hover:scale-105`}>
+          <Card key={index} className={`p-6 ${card.className} transition-all`}>
             {isLoading ? (
               <div className="space-y-3">
                 <div className="h-4 bg-gray-700 rounded animate-pulse w-2/3" />
@@ -71,7 +71,7 @@ export const RewardsSummaryCards = ({
               <div>
                 <div className="text-sm text-gray-400">Next Unlock</div>
                 <div className="text-xl font-semibold text-white mt-1">
-                  {formatRewardAmount(nextUnlock.amount)} VLRM
+                  {formatRewardAmount(nextUnlock.amount)} $L4VA
                 </div>
               </div>
               <div className="text-right">

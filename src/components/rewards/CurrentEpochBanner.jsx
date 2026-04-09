@@ -55,7 +55,7 @@ export const CurrentEpochBanner = ({ epoch, isLoading = false }) => {
           <div className="text-right">
             <div className="text-sm text-gray-400">Total Emission</div>
             <div className="text-2xl font-bold text-purple-400">
-              {Number(epoch.totalEmission).toLocaleString()} VLRM
+              {Number(epoch.totalEmission).toLocaleString()} $L4VA
             </div>
           </div>
         )}

@@ -3,7 +3,7 @@ import { Wallet, Lock, Unlock, Layers } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
-import { normalizeVestingSummary, normalizeVestingPositions, formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatRewardAmount } from '@/utils/rewards/normalizers';
 import { VestingProgress } from '@/components/rewards/VestingProgress';
 import { VestingGrouped } from '@/components/rewards/VestingGrouped';
 import { Card } from '@/components/ui/card';
@@ -15,8 +15,9 @@ export const VestingPage = () => {
   const { data: vestingSummaryData, isLoading: isLoadingSummary } = useVestingSummary(walletAddress);
   const { data: activeVestingData, isLoading: isLoadingActive } = useActiveVesting(walletAddress);
 
-  const vestingSummary = vestingSummaryData ? normalizeVestingSummary(vestingSummaryData) : null;
-  const activePositions = activeVestingData ? normalizeVestingPositions(activeVestingData) : [];
+  // Data is already normalized by backend
+  const vestingSummary = vestingSummaryData || null;
+  const activePositions = activeVestingData || [];
 
   // Wallet not connected state
   if (!isConnected) {
@@ -60,7 +61,7 @@ export const VestingPage = () => {
                 <span className="text-sm">Total Vested</span>
               </div>
               <div className="text-3xl font-bold text-white">{formatRewardAmount(vestingSummary.totalVested)}</div>
-              <div className="text-sm text-gray-500 mt-1">VLRM</div>
+              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
             </Card>
 
             <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">

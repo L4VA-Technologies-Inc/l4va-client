@@ -5,7 +5,6 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { normalizeEpochs } from '@/utils/rewards/normalizers';
 import { EpochRewardRow } from '@/components/rewards/EpochRewardRow';
 import { Card } from '@/components/ui/card';
 
@@ -16,7 +15,8 @@ export const EpochsList = () => {
   const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs();
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
-  const epochs = epochsData ? normalizeEpochs(epochsData) : [];
+  // Data is already normalized by backend
+  const epochs = epochsData?.epochs || [];
 
   // Create a map of epoch rewards for quick lookup
   const rewardsByEpoch = React.useMemo(() => {
@@ -99,7 +99,7 @@ export const EpochsList = () => {
             <Card className="p-4">
               <div className="text-sm text-gray-400">Total Earned</div>
               <div className="text-2xl font-bold text-orange-400 mt-1">
-                {historyData.reduce((sum, item) => sum + (item.totalReward || 0), 0).toLocaleString()} VLRM
+                {historyData.reduce((sum, item) => sum + (item.totalReward || 0), 0).toLocaleString()} $L4VA
               </div>
             </Card>
             <Card className="p-4">
@@ -108,7 +108,7 @@ export const EpochsList = () => {
                 {(
                   historyData.reduce((sum, item) => sum + (item.totalReward || 0), 0) / historyData.length
                 ).toLocaleString()}{' '}
-                VLRM
+                $L4VA
               </div>
             </Card>
           </div>

@@ -5,12 +5,7 @@ import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount, useClaimHistory } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import {
-  normalizeEpoch,
-  normalizeVestingSummary,
-  normalizeClaimHistory,
-  calculateTotalRewards,
-} from '@/utils/rewards/normalizers';
+import { calculateTotalRewards } from '@/utils/rewards/normalizers';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
 import { ClaimsSummary } from '@/components/rewards/ClaimsSummary';
@@ -27,10 +22,9 @@ export const RewardsOverview = () => {
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
-  // Normalize data
-  const currentEpoch = currentEpochData ? normalizeEpoch(currentEpochData) : null;
-  const vestingSummary = vestingData ? normalizeVestingSummary(vestingData) : null;
-  const claimHistory = claimHistoryData ? normalizeClaimHistory(claimHistoryData) : [];
+  // Data is already normalized by backend
+  const vestingSummary = vestingData || null;
+  const claimHistory = claimHistoryData || [];
 
   // Calculate totals
   const claimableAmount = claimableData?.claimableAmount || 0;
@@ -38,7 +32,7 @@ export const RewardsOverview = () => {
   const totalEarned = historyData ? calculateTotalRewards(historyData) : 0;
 
   // Get current epoch estimate from history
-  const currentEpochEstimate = historyData?.find(item => item.epochId === currentEpoch?.id)?.totalReward || 0;
+  const currentEpochEstimate = historyData?.find(item => item.epochId === currentEpochData?.id)?.totalReward || 0;
 
   // Check if capped
   const isCapped = historyData?.some(item => item.isCapped || item.capApplied) || false;
@@ -74,7 +68,7 @@ export const RewardsOverview = () => {
         </div>
 
         {/* Current Epoch Banner */}
-        <CurrentEpochBanner epoch={currentEpoch} isLoading={isLoadingEpoch} />
+        <CurrentEpochBanner epoch={currentEpochData} isLoading={isLoadingEpoch} />
 
         {/* Summary Cards */}
         <RewardsSummaryCards

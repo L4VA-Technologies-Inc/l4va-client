@@ -28,7 +28,7 @@ export const ClaimButton = ({
       {
         onSuccess: data => {
           if (data.success) {
-            toast.success(`Successfully claimed ${data.claimedAmount || claimableAmount} VLRM!`, { duration: 5000 });
+            toast.success(`Successfully claimed ${data.claimedAmount || claimableAmount} $L4VA!`, { duration: 5000 });
             if (onSuccess) {
               onSuccess(data);
             }
@@ -57,7 +57,7 @@ export const ClaimButton = ({
           Processing...
         </>
       ) : (
-        `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} VLRM`
+        `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} $L4VA`
       )}
     </Button>
   );

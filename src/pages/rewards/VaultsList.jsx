@@ -3,7 +3,7 @@ import { Wallet, Vault } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { useWalletVaults } from '@/hooks/useRewardsVaults';
-import { normalizeWalletVaults, formatRewardAmount } from '@/utils/rewards/normalizers';
+import { formatRewardAmount } from '@/utils/rewards/normalizers';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { Card } from '@/components/ui/card';
 
@@ -12,8 +12,8 @@ export const VaultsList = () => {
   const { address: walletAddress, isConnected } = useWallet();
 
   const { data: vaultsData, isLoading } = useWalletVaults(walletAddress);
-  const normalizedData = vaultsData ? normalizeWalletVaults(vaultsData) : null;
-  const vaults = normalizedData?.vaults || [];
+  // Data is already normalized by backend
+  const vaults = vaultsData?.vaults || [];
 
   const handleVaultClick = vaultId => {
     navigate({ to: `/rewards/vaults/${vaultId}` });
@@ -90,7 +90,7 @@ export const VaultsList = () => {
           </Card>
           <Card className="p-6">
             <div className="text-sm text-gray-400 mb-1">Total Vault Rewards</div>
-            <div className="text-3xl font-bold text-orange-400">{formatRewardAmount(totalRewards)} VLRM</div>
+            <div className="text-3xl font-bold text-orange-400">{formatRewardAmount(totalRewards)} $L4VA</div>
           </Card>
         </div>
 
@@ -123,7 +123,7 @@ export const VaultsList = () => {
 
                 <div className="text-right">
                   <div className="text-2xl font-bold text-orange-400">{formatRewardAmount(vault.totalReward)}</div>
-                  <div className="text-sm text-gray-500">VLRM</div>
+                  <div className="text-sm text-gray-500">$L4VA</div>
                 </div>
               </div>
             </Card>

@@ -88,7 +88,7 @@ export const VestingGrouped = ({ positions, groupBy = 'epoch' }) => {
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <div className="text-sm font-medium text-blue-400">
-                    {Number(group.totalAmount).toLocaleString()} VLRM
+                    {Number(group.totalAmount).toLocaleString()} $L4VA
                   </div>
                   <div className="text-xs text-gray-500">Total</div>
                 </div>

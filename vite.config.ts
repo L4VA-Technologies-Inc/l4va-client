@@ -14,11 +14,6 @@ const env = loadEnv('mock', process.cwd(), '');
 export default defineConfig({
   server: {
     proxy: {
-      // Route rewards service endpoints to port 3001
-      '/api/v1/rewards': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
       // Route all other API requests to port 3000
       '/api': env.PUBLIC_VITE_API_URL,
     },

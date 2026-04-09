@@ -30,7 +30,7 @@ export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = n
         <div className="text-right">
           {hasReward ? (
             <>
-              <div className="text-2xl font-bold text-white mb-1">{formatRewardAmount(reward.totalReward)} VLRM</div>
+              <div className="text-2xl font-bold text-white mb-1">{formatRewardAmount(reward.totalReward)} $L4VA</div>
               {(reward.immediateReward > 0 || reward.vestedReward > 0) && (
                 <div className="text-xs text-gray-500 space-x-3">
                   {reward.immediateReward > 0 && <span>Immediate: {formatRewardAmount(reward.immediateReward)}</span>}
