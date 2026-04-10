@@ -3,7 +3,7 @@ import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
 import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
 import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
 import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
@@ -90,8 +90,53 @@ const RESPONSIVE_OVERRIDE = `
   }
 `;
 
+const SCOPED_DEXHUNTER_STYLES_ID = 'dexhunter-scoped-styles';
+const RESPONSIVE_OVERRIDE_ID = 'dexhunter-responsive-override';
+
+let swapStyleMountCount = 0;
+
+const ensureSharedStyleElement = (id: string, cssText: string) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  let styleElement = document.getElementById(id) as HTMLStyleElement | null;
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = id;
+    styleElement.textContent = cssText;
+    document.head.appendChild(styleElement);
+  } else if (styleElement.textContent !== cssText) {
+    styleElement.textContent = cssText;
+  }
+};
+
+const mountSharedSwapStyles = () => {
+  swapStyleMountCount += 1;
+  ensureSharedStyleElement(SCOPED_DEXHUNTER_STYLES_ID, SCOPED_DEXHUNTER_STYLES);
+  ensureSharedStyleElement(RESPONSIVE_OVERRIDE_ID, RESPONSIVE_OVERRIDE);
+};
+
+const unmountSharedSwapStyles = () => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  swapStyleMountCount = Math.max(0, swapStyleMountCount - 1);
+  if (swapStyleMountCount > 0) {
+    return;
+  }
+  document.getElementById(SCOPED_DEXHUNTER_STYLES_ID)?.remove();
+  document.getElementById(RESPONSIVE_OVERRIDE_ID)?.remove();
+};
+
 export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
   const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
+
+  useEffect(() => {
+    mountSharedSwapStyles();
+    return () => {
+      unmountSharedSwapStyles();
+    };
+  }, []);
 
   const safeConfig = {
     theme: 'dark' as const,
@@ -117,9 +162,6 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
 
   return (
     <div className="dexhunter-wrapper">
-      <style>{SCOPED_DEXHUNTER_STYLES}</style>
-      <style>{RESPONSIVE_OVERRIDE}</style>
-
       <div className="dexhunter-scope w-full">
         <SwapErrorBoundary>
           <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
