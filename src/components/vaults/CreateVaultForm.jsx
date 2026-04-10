@@ -1054,7 +1054,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             <Suspense fallback={<div className="px-12 py-10 text-dark-100">Loading swap widget…</div>}>
               <LazySwapComponent
                 config={{
-                  defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                  defaultTokenOut: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
                   supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
                 }}
               />

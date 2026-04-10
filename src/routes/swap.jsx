@@ -9,7 +9,7 @@ export const SwapPage = () => {
 
       <SwapComponent
         config={{
-          defaultToken: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+          defaultTokenOut: import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
           supportedTokens: [import.meta.env.VITE_SWAP_VLRM_TOKEN_ID],
         }}
       />
