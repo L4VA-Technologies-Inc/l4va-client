@@ -593,6 +593,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
   };
 
+  const vaultSwapToken = hasActiveLp
+    ? `${vault.policyId}${vault.assetVaultName}`
+    : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+
   return (
     <>
       {renderPublishedOverlay()}
@@ -637,9 +641,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="w-full overflow-hidden lg:block hidden">
             <SwapComponent
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultToken: vaultSwapToken,
+                supportedTokens: [vaultSwapToken],
                 style: { width: '100%' },
               }}
             />
@@ -672,9 +675,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
             <SwapComponent
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultToken: vaultSwapToken,
+                supportedTokens: [vaultSwapToken],
+                style: { width: '100%' },
               }}
             />
           </div>

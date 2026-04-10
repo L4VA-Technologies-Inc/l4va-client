@@ -10,8 +10,6 @@ import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 
 export interface SwapComponentProps {
-  partnerName?: string;
-  partnerCode?: string;
   config?: {
     defaultToken?: string;
     width?: string;
@@ -92,11 +90,8 @@ const RESPONSIVE_OVERRIDE = `
   }
 `;
 
-export const SwapComponent: React.FC<SwapComponentProps> = ({ partnerName = 'l4va', partnerCode, config }) => {
-  const resolvedPartnerCode = useMemo(
-    () => partnerCode || import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test',
-    [partnerCode]
-  );
+export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
+  const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
 
   const safeConfig = {
     theme: 'dark' as const,
@@ -127,7 +122,7 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ partnerName = 'l4v
 
       <div className="dexhunter-scope w-full">
         <SwapErrorBoundary>
-          <Swap partnerName={partnerName} partnerCode={resolvedPartnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+          <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
         </SwapErrorBoundary>
       </div>
     </div>
