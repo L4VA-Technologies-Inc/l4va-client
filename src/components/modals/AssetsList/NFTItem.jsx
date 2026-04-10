@@ -35,7 +35,11 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
           <span className="font-medium truncate">{nft.displayName || nft.name}</span>
         </div>
         <a
-          href={`https://pool.pm/policy/${nft.metadata?.policyId}`}
+          href={
+            import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+              ? `https://preprod.cardanoscan.io/tokenPolicy/${nft.metadata?.policyId}`
+              : `https://pool.pm/policy/${nft.metadata?.policyId}`
+          }
           target="_blank"
           rel="noopener noreferrer"
           onClick={e => e.stopPropagation()}
