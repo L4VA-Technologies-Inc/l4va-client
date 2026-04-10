@@ -502,6 +502,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             </a>
             <button
               onClick={handleCopyWalletAddress}
+              aria-label="Copy wallet address"
               className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
             >
               <Copy size={16} className="hover:text-orange-500" />
@@ -525,6 +526,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </a>
               <button
                 onClick={handleCopyPolicyId}
+                aria-label="Copy policy ID"
                 className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
               >
                 <Copy size={16} className="hover:text-orange-500" />
