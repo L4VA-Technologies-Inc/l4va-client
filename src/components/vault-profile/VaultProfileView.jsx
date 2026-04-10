@@ -643,7 +643,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="w-full overflow-hidden lg:block hidden">
             <SwapComponent
               config={{
-                defaultToken: vaultSwapToken,
+                defaultTokenOut: vaultSwapToken,
                 style: { width: '100%' },
               }}
             />
@@ -676,7 +676,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
             <SwapComponent
               config={{
-                defaultToken: vaultSwapToken,
+                defaultTokenOut: vaultSwapToken,
                 style: { width: '100%' },
               }}
             />

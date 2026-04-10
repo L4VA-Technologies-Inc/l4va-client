@@ -1,8 +1,4 @@
 import Swap from '@dexhunterio/swaps';
-import { defaultSettingsProps } from '@dexhunterio/swaps/lib/swap/page';
-import { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
-import { supportedTokensType } from '@dexhunterio/swaps/lib/swap/components/tokens';
-import { orderTypesProps } from '@dexhunterio/swaps/lib/store/createSwapSlice';
 import React, { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
@@ -10,31 +6,12 @@ import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 
 export interface SwapComponentProps {
-  config?: {
-    defaultToken?: string;
-    width?: string;
-    height?: string;
-    theme?: 'light' | 'dark';
-    className?: string;
-    style?: React.CSSProperties;
-    orderTypes?: orderTypesProps;
-    supportedTokens?: supportedTokensType;
-    onSwapSuccess?: (data: any) => void;
-    onSwapError?: (err: any) => void;
-    onSwapWarning?: (err: any) => void;
-    selectedWallet?: SelectedWallet;
-    inputs?: string[];
-    onWalletConnect?: (data: any) => void;
-    onClickWalletConnect?: () => void;
-    onViewOrder?: (data: any) => void;
-    displayType?: 'BUTTON' | 'DEFAULT' | 'WIDGET';
-    buttonText?: string;
-    orderTypeOnButtonClick?: 'SWAP' | 'LIMIT' | 'DCA';
-    buttonStyle?: object;
-    buttonClassName?: string;
-    widgetButtonClass?: object;
-    defaultSettings?: defaultSettingsProps;
-    autoFocus?: boolean;
+  config?: Omit<
+    React.ComponentProps<typeof Swap>,
+    'partnerName' | 'partnerCode' | 'colors' | 'onSwapSuccess' | 'onSwapError'
+  > & {
+    onSwapSuccess?: (data: unknown) => void;
+    onSwapError?: (err: unknown) => void;
   };
 }
 
@@ -143,16 +120,17 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
     displayType: 'DEFAULT' as const,
     width: '100%',
     ...config,
-    onSwapSuccess: (data: any) => {
-      if (data?.data?.length > 0) {
+    onSwapSuccess: (data: unknown) => {
+      if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
         toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
           duration: 5000,
         });
       }
       config?.onSwapSuccess?.(data);
     },
-    onSwapError: (err: any) => {
-      if (!err?.message?.toLowerCase().includes('cancel')) {
+    onSwapError: (err: unknown) => {
+      const message = err && typeof err === 'object' && 'message' in err ? String(err.message) : '';
+      if (!message.toLowerCase().includes('cancel')) {
         console.error('Swap error:', err);
         toast.error('Swap failed. Please try again.', { duration: 4000 });
       }
