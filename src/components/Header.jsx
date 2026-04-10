@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@/compon
 import { ConnectButton } from '@/components/ConnectButton';
 import { MenuDrawer } from '@/components/MenuDrawer';
 import { useAuth } from '@/lib/auth/auth';
-import { useModalControls } from '@/lib/modals/modal.context';
+import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
@@ -35,8 +35,8 @@ NavLink.displayName = 'NavLink';
 
 export const Header = () => {
   const { isAuthenticated } = useAuth();
+  const { activeModalData } = useModal();
   const { openModal } = useModalControls();
-  // const { activeModalData } = useModal();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
@@ -174,8 +174,14 @@ export const Header = () => {
   return (
     <header
       className={cn(
-        'h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b border-steel-900/50'
+        'h-[var(--header-height)] flex items-center fixed top-0 left-0 right-0 z-50 border-b border-steel-900/50',
+        !activeModalData && 'backdrop-blur-md'
       )}
+      style={
+        activeModalData
+          ? { backgroundColor: 'color-mix(in srgb, var(--color-primary-background) 85%, transparent)' }
+          : undefined
+      }
     >
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">

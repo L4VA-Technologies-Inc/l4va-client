@@ -339,13 +339,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const handleCopyPolicyId = e => {
     e.preventDefault();
     navigator.clipboard.writeText(vault.policyId);
-    toast.success('Address copied to clipboard');
+    toast.success('Policy ID copied to clipboard');
   };
 
   const handleCopyWalletAddress = e => {
     e.preventDefault();
     navigator.clipboard.writeText(vault.contractAddress);
-    toast.success('Address copied to clipboard');
+    toast.success('Wallet address copied to clipboard');
   };
 
   const handleCopyVaultAddress = async e => {
@@ -489,7 +489,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={`https://pool.pm/${vault.contractAddress}`}
+              href={
+                import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                  ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
+                  : `https://pool.pm/${vault.contractAddress}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"
@@ -498,6 +502,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             </a>
             <button
               onClick={handleCopyWalletAddress}
+              aria-label="Copy wallet address"
               className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
             >
               <Copy size={16} className="hover:text-orange-500" />
@@ -507,11 +512,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           {vault.policyId && (
             <div className="flex items-center gap-2 text-sm text-dark-100">
               <span className="font-medium">Policy ID:</span>
-              <button
-                onClick={handleCopyPolicyId}
-                className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+              <a
+                href={
+                  import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                    ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
+                    : `https://pool.pm/policy/${vault.policyId}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline hover:text-orange-500 transition-colors"
               >
                 {substringAddress(vault.policyId)}
+              </a>
+              <button
+                onClick={handleCopyPolicyId}
+                aria-label="Copy policy ID"
+                className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+              >
                 <Copy size={16} className="hover:text-orange-500" />
               </button>
             </div>
@@ -578,6 +595,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
   };
 
+  const vaultSwapToken = hasActiveLp
+    ? `${vault.policyId}${vault.assetVaultName}`
+    : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+
   return (
     <>
       {renderPublishedOverlay()}
@@ -619,13 +640,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <ContributionSkeleton />
             )
           ) : null}
-          <div className="overflow-hidden mx-auto w-full mt-4 lg:block hidden">
+          <div className="w-full overflow-hidden lg:block hidden">
             <SwapComponent
-              overrideDisplay
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultToken: vaultSwapToken,
                 style: { width: '100%' },
               }}
             />
@@ -657,11 +675,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           </div>
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
             <SwapComponent
-              overrideDisplay
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultToken: vaultSwapToken,
                 style: { width: '100%' },
               }}
             />

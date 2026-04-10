@@ -12,14 +12,16 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-hidden">
           <LazyImage
             src={ft.src}
-            alt={ft.name}
+            alt={ft?.ticker || ft?.displayName || ft?.name}
             className="rounded-full shrink-0"
             width={32}
             height={32}
             fallbackSrc="/assets/icons/ada.svg"
           />
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-medium text-sm sm:text-base truncate">{ft.name}</span>
+            <span className="font-medium text-sm sm:text-base truncate">
+              {ft?.ticker || ft?.displayName || ft?.name}
+            </span>
             <span className="text-dark-100 text-xs sm:text-sm whitespace-nowrap">
               Available: {formatTokenQuantity(ft.quantity, decimals, decimals)}
             </span>
@@ -34,9 +36,19 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
             onChange={value => !isDisabled && onAmountChange(ft, value)}
           />
         </div>
-        <span className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap">
+        <a
+          href={
+            import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+              ? `https://preprod.cardanoscan.io/tokenPolicy/${ft.metadata?.policyId}`
+              : `https://pool.pm/policy/${ft.metadata?.policyId}`
+          }
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className="text-dark-100 hover:underline text-sm shrink-0 whitespace-nowrap"
+        >
           {formatPolicyId(ft.metadata?.policyId)}
-        </span>
+        </a>
       </div>
     </div>
   );

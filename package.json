@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@ada-anvil/weld": "0.5.1",
-    "@dexhunterio/swaps": "0.0.192",
+    "@dexhunterio/swaps": "^2.0.4",
     "@emoji-mart/data": "1.2.1",
     "@emoji-mart/react": "1.1.1",
     "@novu/react": "3.8.1",
@@ -31,7 +31,7 @@
     "@sentry/react": "10.22.0",
     "@tanstack/react-query": "5.81.2",
     "@tanstack/react-router": "1.121.34",
-    "axios": "1.13.5",
+    "axios": "1.15.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "date-fns": "4.1.0",
@@ -53,6 +53,9 @@
     "yup": "1.6.1"
   },
   "resolutions": {
+    "axios": "^1.15.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "minimatch": "^9.0.7",
     "picomatch": "^4.0.4",
     "brace-expansion": "^2.0.3",
@@ -69,7 +72,7 @@
     "markdown-it": "^14.1.1",
     "ajv": "^6.14.0",
     "@eslint/plugin-kit": "^0.3.4",
-    "stream-chat/axios": "^1.13.5"
+    "stream-chat/axios": "^1.15.0"
   },
   "devDependencies": {
     "@eslint/js": "9.29.0",
