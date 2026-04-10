@@ -12,14 +12,16 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-hidden">
           <LazyImage
             src={ft.src}
-            alt={ft.name}
+            alt={ft?.displayName || ft?.ticker || ft?.name}
             className="rounded-full shrink-0"
             width={32}
             height={32}
             fallbackSrc="/assets/icons/ada.svg"
           />
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-medium text-sm sm:text-base truncate">{ft.name}</span>
+            <span className="font-medium text-sm sm:text-base truncate">
+              {ft?.displayName || ft?.ticker || ft?.name}
+            </span>
             <span className="text-dark-100 text-xs sm:text-sm whitespace-nowrap">
               Available: {formatTokenQuantity(ft.quantity, decimals, decimals)}
             </span>
