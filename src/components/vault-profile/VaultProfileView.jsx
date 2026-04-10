@@ -642,7 +642,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <SwapComponent
               config={{
                 defaultToken: vaultSwapToken,
-                supportedTokens: [vaultSwapToken],
                 style: { width: '100%' },
               }}
             />
@@ -676,7 +675,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <SwapComponent
               config={{
                 defaultToken: vaultSwapToken,
-                supportedTokens: [vaultSwapToken],
                 style: { width: '100%' },
               }}
             />
