@@ -38,6 +38,34 @@ export interface SwapComponentProps {
   };
 }
 
+const suppressedKeywords = [
+  'RECONNECTING',
+  'default token',
+  'fetching token',
+  'settings new token',
+  'usdPrice',
+  'dexhunter',
+  'canceled',
+  'CanceledError',
+  'DialogContent',
+  'DialogTitle',
+];
+
+const originalConsole = { ...console };
+
+const createFilter =
+  (originalFn: any) =>
+  (...args: any[]) => {
+    const msg = args.join(' ');
+    if (suppressedKeywords.some(k => msg.includes(k))) return;
+    originalFn(...args);
+  };
+
+console.log = createFilter(originalConsole.log);
+console.warn = createFilter(originalConsole.warn);
+console.info = createFilter(originalConsole.info);
+console.debug = createFilter(originalConsole.debug);
+
 const DEFAULT_COLORS = {
   mainText: 'var(--color-text-primary)' as `#${string}`,
   subText: 'var(--color-dark-100)' as `#${string}`,
