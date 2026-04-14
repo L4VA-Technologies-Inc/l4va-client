@@ -1,9 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
-import { VaultsList } from '@/pages/rewards/VaultsList';
-
-const VaultsListComponent = () => <VaultsList />;
+const VaultsLayout = () => <Outlet />;
 
 export const Route = createFileRoute('/rewards/vaults')({
-  component: VaultsListComponent,
+  component: VaultsLayout,
 });
