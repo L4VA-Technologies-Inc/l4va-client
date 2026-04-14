@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Wallet, Vault, ChevronDown, ChevronUp } from 'lucide-react';
+import { Wallet, Vault, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useState } from 'react';
 
@@ -83,6 +83,13 @@ export const VaultsList = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
+          <button
+            onClick={() => navigate({ to: '/rewards' })}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Rewards Overview</span>
+          </button>
           <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
           <p className="text-gray-400">View your rewards breakdown by vault participation</p>
         </div>
