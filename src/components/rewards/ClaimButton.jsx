@@ -64,11 +64,7 @@ export const ClaimButton = ({
   const isDisabled = disabled || isPending || claimableAmount <= 0;
 
   return (
-    <PrimaryButton
-      onClick={handleClaim}
-      disabled={isDisabled}
-      className={`bg-orange-500 hover:bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 ${className}`}
-    >
+    <PrimaryButton onClick={handleClaim} disabled={isDisabled}>
       {isPending ? (
         <>
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />

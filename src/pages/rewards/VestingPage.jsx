@@ -15,8 +15,22 @@ export const VestingPage = () => {
   const { data: vestingSummaryData, isLoading: isLoadingSummary } = useVestingSummary(walletAddress);
   const { data: activeVestingData, isLoading: isLoadingActive } = useActiveVesting(walletAddress);
 
-  // Data is already normalized by backend
-  const vestingSummary = vestingSummaryData || null;
+  // Transform vesting data to match component expectations
+  const vestingSummary = vestingSummaryData
+    ? {
+        ...vestingSummaryData,
+        totalLocked: vestingSummaryData.totalRemaining,
+        hasVestedRewards: vestingSummaryData.totalVested > 0,
+        unlockedPercentage:
+          vestingSummaryData.totalVested > 0
+            ? (vestingSummaryData.totalUnlocked / vestingSummaryData.totalVested) * 100
+            : 0,
+        lockedPercentage:
+          vestingSummaryData.totalVested > 0
+            ? (vestingSummaryData.totalRemaining / vestingSummaryData.totalVested) * 100
+            : 0,
+      }
+    : null;
   const activePositions = activeVestingData || [];
 
   // Wallet not connected state
@@ -82,7 +96,9 @@ export const VestingPage = () => {
                 <Lock className="w-4 h-4" />
                 <span className="text-sm">Locked</span>
               </div>
-              <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(vestingSummary.totalLocked)}</div>
+              <div className="text-3xl font-bold text-orange-400">
+                {formatCompactNumber(vestingSummary.totalLocked)}
+              </div>
               <div className="text-sm text-gray-500 mt-1">
                 {vestingSummary.lockedPercentage ? vestingSummary.lockedPercentage.toFixed(1) : '0'}% of total
               </div>

@@ -1,7 +1,7 @@
-import { Wallet } from 'lucide-react';
+import { Wallet, Info } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount } from '@/hooks/useRewardsClaims';
@@ -12,12 +12,14 @@ import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
 import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
+import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
@@ -63,11 +65,19 @@ export const RewardsOverview = () => {
     return breakdown;
   }, [walletScoreData]);
 
-  // Data is already normalized by backend
-  const vestingSummary = vestingData || null;
+  // Transform vesting data to match component expectations
+  const vestingSummary = useMemo(() => {
+    if (!vestingData) return null;
+
+    return {
+      ...vestingData,
+      totalLocked: vestingData.totalRemaining, // Map totalRemaining to totalLocked for component
+      activePositions: vestingData.activePositionsCount,
+    };
+  }, [vestingData]);
 
   // Calculate totals
-  const claimableAmount = claimableData?.totalClaimableNow || 0;
+  const claimableAmount = claimableData?.immediateClaimable || 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
 
@@ -101,7 +111,16 @@ export const RewardsOverview = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Rewards Dashboard</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-white">Rewards Dashboard</h1>
+            <button
+              onClick={() => setIsInfoModalOpen(true)}
+              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-colors"
+              aria-label="How rewards work"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
           <p className="text-gray-400">Track your L4VA rewards, claims, and vesting positions</p>
         </div>
 
@@ -165,6 +184,9 @@ export const RewardsOverview = () => {
             <p className="text-sm text-gray-400">See rewards by vault participation</p>
           </Card>
         </div>
+
+        {/* Info Modal */}
+        <RewardsInfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} />
       </div>
     </div>
   );
