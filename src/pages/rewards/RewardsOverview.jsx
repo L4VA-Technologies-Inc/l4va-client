@@ -1,15 +1,17 @@
 import { Wallet } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
+import { useMemo } from 'react';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
-import { useWalletHistory } from '@/hooks/useRewardsScore';
+import { useWalletHistory, useWalletScore } from '@/hooks/useRewardsScore';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
 import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { VestingSummary } from '@/components/rewards/VestingSummary';
+import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
 
@@ -22,13 +24,44 @@ export const RewardsOverview = () => {
   const { data: claimableData, isLoading: isLoadingClaimable } = useClaimableAmount(walletAddress);
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
+  const { data: walletScoreData, isLoading: isLoadingScore } = useWalletScore(walletAddress);
 
   console.log('🔍 RewardsOverview Data:', {
     currentEpochData,
     claimableData,
     vestingData,
     historyData,
+    walletScoreData,
   });
+
+  // Transform activity breakdown for analytics chart
+  const activityBreakdown = useMemo(() => {
+    if (!walletScoreData?.breakdown) return [];
+
+    // Activity type labels with user-friendly names
+    const activityLabels = {
+      asset_contribution: 'Vault Deposits',
+      token_acquire: 'Token Acquisitions',
+      expansion_asset_contribution: 'Expansion Deposits',
+      expansion_token_purchase: 'Expansion Tokens',
+      lp_position_update: 'LP Positions',
+      widget_swap: 'Widget Swaps',
+      governance_proposal: 'Proposals',
+      governance_vote: 'Governance Votes',
+    };
+
+    // Transform breakdown object to array format for RewardsAnalytics
+    const breakdown = Object.entries(walletScoreData.breakdown)
+      .filter(([, amount]) => amount > 0)
+      .map(([activityType, amount]) => ({
+        id: activityType,
+        label: activityLabels[activityType] || activityType,
+        amount: Number(amount),
+      }))
+      .sort((a, b) => b.amount - a.amount); // Sort by amount descending
+
+    return breakdown;
+  }, [walletScoreData]);
 
   // Data is already normalized by backend
   const vestingSummary = vestingData || null;
@@ -108,6 +141,9 @@ export const RewardsOverview = () => {
           nextUnlock={vestingSummary?.nextUnlock || null}
           isLoading={isSummaryLoading}
         />
+
+        {/* Activity Analytics */}
+        {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
 
         {/* Vesting Summary */}
         <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />
