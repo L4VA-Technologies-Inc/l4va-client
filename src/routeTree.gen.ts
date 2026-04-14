@@ -28,6 +28,7 @@ import { Route as RewardsEpochsRouteImport } from './routes/rewards/epochs'
 import { Route as ProposalsIdRouteImport } from './routes/proposals/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 import { Route as RewardsVaultsIndexRouteImport } from './routes/rewards/vaults/index'
+import { Route as RewardsEpochsIndexRouteImport } from './routes/rewards/epochs/index'
 import { Route as RewardsVaultsVaultIdRouteImport } from './routes/rewards/vaults/$vaultId'
 import { Route as RewardsEpochsIdRouteImport } from './routes/rewards/epochs/$id'
 
@@ -126,6 +127,11 @@ const RewardsVaultsIndexRoute = RewardsVaultsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RewardsVaultsRoute,
 } as any)
+const RewardsEpochsIndexRoute = RewardsEpochsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RewardsEpochsRoute,
+} as any)
 const RewardsVaultsVaultIdRoute = RewardsVaultsVaultIdRouteImport.update({
   id: '/$vaultId',
   path: '/$vaultId',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/vaults': typeof VaultsIndexRoute
   '/rewards/epochs/$id': typeof RewardsEpochsIdRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
+  '/rewards/epochs/': typeof RewardsEpochsIndexRoute
   '/rewards/vaults/': typeof RewardsVaultsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -171,7 +178,6 @@ export interface FileRoutesByTo {
   '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
-  '/rewards/epochs': typeof RewardsEpochsRouteWithChildren
   '/rewards/vesting': typeof RewardsVestingRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/profile': typeof ProfileIndexRoute
@@ -179,6 +185,7 @@ export interface FileRoutesByTo {
   '/vaults': typeof VaultsIndexRoute
   '/rewards/epochs/$id': typeof RewardsEpochsIdRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
+  '/rewards/epochs': typeof RewardsEpochsIndexRoute
   '/rewards/vaults': typeof RewardsVaultsIndexRoute
 }
 export interface FileRoutesById {
@@ -203,6 +210,7 @@ export interface FileRoutesById {
   '/vaults/': typeof VaultsIndexRoute
   '/rewards/epochs/$id': typeof RewardsEpochsIdRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
+  '/rewards/epochs/': typeof RewardsEpochsIndexRoute
   '/rewards/vaults/': typeof RewardsVaultsIndexRoute
 }
 export interface FileRouteTypes {
@@ -228,6 +236,7 @@ export interface FileRouteTypes {
     | '/vaults'
     | '/rewards/epochs/$id'
     | '/rewards/vaults/$vaultId'
+    | '/rewards/epochs/'
     | '/rewards/vaults/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -241,7 +250,6 @@ export interface FileRouteTypes {
     | '/tokens'
     | '/profile/$id'
     | '/proposals/$id'
-    | '/rewards/epochs'
     | '/rewards/vesting'
     | '/vaults/$id'
     | '/profile'
@@ -249,6 +257,7 @@ export interface FileRouteTypes {
     | '/vaults'
     | '/rewards/epochs/$id'
     | '/rewards/vaults/$vaultId'
+    | '/rewards/epochs'
     | '/rewards/vaults'
   id:
     | '__root__'
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/vaults/'
     | '/rewards/epochs/$id'
     | '/rewards/vaults/$vaultId'
+    | '/rewards/epochs/'
     | '/rewards/vaults/'
   fileRoutesById: FileRoutesById
 }
@@ -427,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RewardsVaultsIndexRouteImport
       parentRoute: typeof RewardsVaultsRoute
     }
+    '/rewards/epochs/': {
+      id: '/rewards/epochs/'
+      path: '/'
+      fullPath: '/rewards/epochs/'
+      preLoaderRoute: typeof RewardsEpochsIndexRouteImport
+      parentRoute: typeof RewardsEpochsRoute
+    }
     '/rewards/vaults/$vaultId': {
       id: '/rewards/vaults/$vaultId'
       path: '/$vaultId'
@@ -446,10 +463,12 @@ declare module '@tanstack/react-router' {
 
 interface RewardsEpochsRouteChildren {
   RewardsEpochsIdRoute: typeof RewardsEpochsIdRoute
+  RewardsEpochsIndexRoute: typeof RewardsEpochsIndexRoute
 }
 
 const RewardsEpochsRouteChildren: RewardsEpochsRouteChildren = {
   RewardsEpochsIdRoute: RewardsEpochsIdRoute,
+  RewardsEpochsIndexRoute: RewardsEpochsIndexRoute,
 }
 
 const RewardsEpochsRouteWithChildren = RewardsEpochsRoute._addFileChildren(

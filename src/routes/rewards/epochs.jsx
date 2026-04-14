@@ -1,9 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
-import { EpochsList } from '@/pages/rewards/EpochsList';
-
-const EpochsListComponent = () => <EpochsList />;
+const EpochsLayout = () => <Outlet />;
 
 export const Route = createFileRoute('/rewards/epochs')({
-  component: EpochsListComponent,
+  component: EpochsLayout,
 });

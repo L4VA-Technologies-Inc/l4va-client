@@ -4,9 +4,10 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochDetails } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { formatDateRange, formatCompactNumber } from '@/utils/rewards/normalizers';
+import { formatDateRange } from '@/utils/rewards/normalizers';
 import { EpochStatusBadge } from '@/components/rewards/EpochStatusBadge';
 import { Card } from '@/components/ui/card';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 export const EpochDetails = () => {
   const navigate = useNavigate();
