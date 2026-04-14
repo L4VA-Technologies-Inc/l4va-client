@@ -14,6 +14,10 @@ export const VaultsList = () => {
   const { data: vaultsData, isLoading } = useWalletVaults(walletAddress);
   // Data is already normalized by backend
   const vaults = vaultsData?.vaults || [];
+  const totalRewardBeforeCap = vaultsData?.totalRewardBeforeCap || 0;
+  const totalFinalReward = vaultsData?.totalFinalReward || 0;
+  const wasCapped = vaultsData?.wasCapped || false;
+  const capDifference = vaultsData?.capDifference || 0;
 
   const handleVaultClick = vaultId => {
     navigate({ to: `/rewards/vaults/${vaultId}` });
@@ -71,8 +75,6 @@ export const VaultsList = () => {
     );
   }
 
-  const totalRewards = vaults.reduce((sum, vault) => sum + (vault.totalReward || 0), 0);
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-5xl mx-auto">
@@ -83,14 +85,20 @@ export const VaultsList = () => {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="p-6">
             <div className="text-sm text-gray-400 mb-1">Total Vaults</div>
             <div className="text-3xl font-bold text-white">{vaults.length}</div>
           </Card>
           <Card className="p-6">
-            <div className="text-sm text-gray-400 mb-1">Total Vault Rewards</div>
-            <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalRewards)} $L4VA</div>
+            <div className="text-sm text-gray-400 mb-1">Vault Rewards (Uncapped)</div>
+            <div className="text-3xl font-bold text-blue-400">{formatCompactNumber(totalRewardBeforeCap)} $L4VA</div>
+            {wasCapped && <div className="text-xs text-gray-500 mt-1">Before 5% cap</div>}
+          </Card>
+          <Card className="p-6">
+            <div className="text-sm text-gray-400 mb-1">Final Rewards (After Cap)</div>
+            <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalFinalReward)} $L4VA</div>
+            {wasCapped && <div className="text-xs text-red-400 mt-1">-{formatCompactNumber(capDifference)} capped</div>}
           </Card>
         </div>
 
