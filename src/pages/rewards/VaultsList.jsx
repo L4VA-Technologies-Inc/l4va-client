@@ -65,8 +65,8 @@ export const VaultsList = () => {
     );
   }
 
-  // Empty state
-  if (vaults.length === 0) {
+  // Empty state - only show if no epoch filter is active (truly no vaults)
+  if (vaults.length === 0 && selectedEpochIds.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
@@ -108,81 +108,98 @@ export const VaultsList = () => {
             Showing statistics for <span className="text-orange-400 font-medium">Epoch {vaultsData.epochNumber}</span>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-6">
-            <div className="text-sm text-gray-400 mb-1">Total Vaults</div>
-            <div className="text-3xl font-bold text-white">{vaults.length}</div>
-          </Card>
-          <Card className="p-6">
-            <div className="text-sm text-gray-400 mb-1">Vault Rewards (Uncapped)</div>
-            <div className="text-3xl font-bold text-blue-400">{formatCompactNumber(totalRewardBeforeCap)} $L4VA</div>
-            {wasCapped && <div className="text-xs text-gray-500 mt-1">Before 5% cap</div>}
-          </Card>
-          <Card className="p-6">
-            <div className="text-sm text-gray-400 mb-1">Final Rewards (After Cap)</div>
-            <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalFinalReward)} $L4VA</div>
-            {wasCapped && <div className="text-xs text-red-400 mt-1">-{formatCompactNumber(capDifference)} capped</div>}
-          </Card>
-        </div>
 
-        {/* Vaults Analytics */}
-        {vaults.length > 0 && (
-          <div className="mb-6">
-            <VaultsAnalytics vaults={vaults} />
-          </div>
-        )}
+        {vaults.length === 0 && selectedEpochIds.length > 0 ? (
+          <Card className="p-8 mb-6">
+            <div className="text-center text-gray-400">No vault rewards found for the selected epoch</div>
+          </Card>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card className="p-6">
+                <div className="text-sm text-gray-400 mb-1">Total Vaults</div>
+                <div className="text-3xl font-bold text-white">{vaults.length}</div>
+              </Card>
+              <Card className="p-6">
+                <div className="text-sm text-gray-400 mb-1">Vault Rewards (Uncapped)</div>
+                <div className="text-3xl font-bold text-blue-400">
+                  {formatCompactNumber(totalRewardBeforeCap)} $L4VA
+                </div>
+                {wasCapped && <div className="text-xs text-gray-500 mt-1">Before 5% cap</div>}
+              </Card>
+              <Card className="p-6">
+                <div className="text-sm text-gray-400 mb-1">Final Rewards (After Cap)</div>
+                <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalFinalReward)} $L4VA</div>
+                {wasCapped && (
+                  <div className="text-xs text-red-400 mt-1">-{formatCompactNumber(capDifference)} capped</div>
+                )}
+              </Card>
+            </div>
 
-        {/* Vaults List Toggle */}
-        <div className="mb-4">
-          <button
-            onClick={() => setShowVaultsList(!showVaultsList)}
-            className="flex items-center gap-2 text-white hover:text-orange-400 transition-colors"
-          >
-            {showVaultsList ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            <span className="font-semibold">
-              {showVaultsList ? 'Hide' : 'Show'} Detailed Vault List ({vaults.length})
-            </span>
-          </button>
-        </div>
+            {/* Vaults Analytics */}
+            {vaults.length > 0 && (
+              <div className="mb-6">
+                <VaultsAnalytics vaults={vaults} />
+              </div>
+            )}
 
-        {/* Vaults List */}
-        {showVaultsList && (
-          <div className="space-y-4">
-            {vaults.map(vault => (
-              <Card
-                key={vault.vaultId}
-                className="p-5 hover:bg-gray-800/70 transition-colors cursor-pointer"
-                onClick={() => handleVaultClick(vault.vaultId)}
+            {/* Vaults List Toggle */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowVaultsList(!showVaultsList)}
+                className="flex items-center gap-2 text-white hover:text-orange-400 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-white">
-                        {vault.vaultName || `Vault ${vault.vaultId.slice(0, 8)}...`}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        {(vault.role === 'creator' || vault.role === 'both') && <RewardSourceBadge source="creator" />}
-                        {(vault.role === 'participant' || vault.role === 'both') && (
-                          <RewardSourceBadge source="participant" />
+                {showVaultsList ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="font-semibold">
+                  {showVaultsList ? 'Hide' : 'Show'} Detailed Vault List ({vaults.length})
+                </span>
+              </button>
+            </div>
+
+            {/* Vaults List */}
+            {showVaultsList && (
+              <div className="space-y-4">
+                {vaults.map(vault => (
+                  <Card
+                    key={vault.vaultId}
+                    className="p-5 hover:bg-gray-800/70 transition-colors cursor-pointer"
+                    onClick={() => handleVaultClick(vault.vaultId)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-white">
+                            {vault.vaultName || `Vault ${vault.vaultId.slice(0, 8)}...`}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {(vault.role === 'creator' || vault.role === 'both') && (
+                              <RewardSourceBadge source="creator" />
+                            )}
+                            {(vault.role === 'participant' || vault.role === 'both') && (
+                              <RewardSourceBadge source="participant" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-500">{vault.vaultId}</div>
+                        {vault.epochCount && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            {vault.epochCount} epoch{vault.epochCount !== 1 ? 's' : ''}
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-500">{vault.vaultId}</div>
-                    {vault.epochCount && (
-                      <div className="text-xs text-gray-600 mt-1">
-                        {vault.epochCount} epoch{vault.epochCount !== 1 ? 's' : ''}
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-orange-400">{formatCompactNumber(vault.totalReward)}</div>
-                    <div className="text-sm text-gray-500">$L4VA</div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-orange-400">
+                          {formatCompactNumber(vault.totalReward)}
+                        </div>
+                        <div className="text-sm text-gray-500">$L4VA</div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
