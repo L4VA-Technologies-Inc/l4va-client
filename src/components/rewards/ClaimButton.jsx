@@ -1,8 +1,9 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 
+import PrimaryButton from '../shared/PrimaryButton';
+
 import { RewardsApiProvider } from '@/services/api/rewards';
-import { Button } from '@/components/ui/button';
 
 export const ClaimButton = ({
   walletAddress,
@@ -63,7 +64,7 @@ export const ClaimButton = ({
   const isDisabled = disabled || isPending || claimableAmount <= 0;
 
   return (
-    <Button
+    <PrimaryButton
       onClick={handleClaim}
       disabled={isDisabled}
       className={`bg-orange-500 hover:bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 ${className}`}
@@ -76,6 +77,6 @@ export const ClaimButton = ({
       ) : (
         `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} $L4VA`
       )}
-    </Button>
+    </PrimaryButton>
   );
 };
