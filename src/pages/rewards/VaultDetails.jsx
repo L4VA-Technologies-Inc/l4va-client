@@ -13,7 +13,11 @@ export const VaultDetails = () => {
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
 
-  const { data: vaultRewardData, isLoading: isLoadingReward } = useWalletVaultReward(walletAddress, vaultId);
+  const {
+    data: vaultRewardData,
+    isLoading: isLoadingReward,
+    error: rewardError,
+  } = useWalletVaultReward(walletAddress, vaultId);
   const { data: vaultScoresData, isLoading: isLoadingScores } = useVaultScores(vaultId);
 
   if (isLoadingReward) {
@@ -43,7 +47,15 @@ export const VaultDetails = () => {
           </button>
           <Card className="p-12">
             <div className="text-center text-gray-400">
-              {!isConnected ? 'Please connect your wallet' : 'No vault data found'}
+              {!isConnected && <div>Please connect your wallet</div>}
+              {isConnected && !walletAddress && <div>Waiting for wallet address...</div>}
+              {isConnected && walletAddress && rewardError && (
+                <div>
+                  <div className="text-red-400 mb-2">Error loading vault data</div>
+                  <div className="text-sm">{rewardError.message || String(rewardError)}</div>
+                </div>
+              )}
+              {isConnected && walletAddress && !rewardError && !vaultRewardData && 'No vault data found'}
             </div>
           </Card>
         </div>
@@ -53,6 +65,9 @@ export const VaultDetails = () => {
 
   const hasCreatorReward = vaultRewardData.creatorReward > 0;
   const hasParticipantReward = vaultRewardData.participantReward > 0;
+
+  // API now returns camelCase - no transformation needed
+  const leaderboardScores = vaultScoresData?.participants || [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -158,7 +173,7 @@ export const VaultDetails = () => {
               ))}
             </div>
           ) : (
-            <VaultLeaderboard scores={vaultScoresData || []} currentWalletAddress={walletAddress} />
+            <VaultLeaderboard scores={leaderboardScores} currentWalletAddress={walletAddress} />
           )}
         </Card>
       </div>

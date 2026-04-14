@@ -9,8 +9,8 @@ export const VaultLeaderboard = ({ scores = [], currentWalletAddress = null }) =
     );
   }
 
-  // Sort by score descending
-  const sortedScores = [...scores].sort((a, b) => (b.score || 0) - (a.score || 0));
+  // Sort by activityScore descending (camelCase from API)
+  const sortedScores = [...scores].sort((a, b) => (b.activityScore || 0) - (a.activityScore || 0));
 
   return (
     <div className="space-y-2">
@@ -53,8 +53,16 @@ export const VaultLeaderboard = ({ scores = [], currentWalletAddress = null }) =
 
             {/* Score */}
             <div className="text-right">
-              <div className="text-lg font-semibold text-white">{formatCompactNumber(entry.score || 0, 0)}</div>
+              <div className="text-lg font-semibold text-white">{formatCompactNumber(entry.activityScore || 0, 0)}</div>
               <div className="text-xs text-gray-500">Score</div>
+            </div>
+
+            {/* Reward */}
+            <div className="text-right">
+              <div className="text-lg font-semibold text-orange-400">
+                {formatCompactNumber(entry.rewardAmount || 0)}
+              </div>
+              <div className="text-xs text-gray-500">$L4VA</div>
             </div>
           </div>
         );
