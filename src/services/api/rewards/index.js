@@ -156,6 +156,19 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Build and submit a claim transaction (complete flow)
+   * This builds the transaction, signs it server-side, and submits to blockchain.
+   *
+   * @param {string} walletAddress - Wallet address
+   * @param {Object} options - Claim options (epochIds, claimImmediate, claimVested)
+   * @returns {Promise<Object>} Transaction hash and claim details
+   */
+  static async buildClaimTransaction(walletAddress, options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.buildClaim(walletAddress), options);
+    return response.data;
+  }
+
   // ============================================================================
   // Vesting Methods
   // ============================================================================

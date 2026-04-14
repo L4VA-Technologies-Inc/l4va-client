@@ -71,6 +71,10 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/claims/${walletAddress}/claim`;
   }
 
+  static buildClaim(walletAddress) {
+    return `/api/v1/rewards/claims/${walletAddress}/build`;
+  }
+
   // ============================================================================
   // Vesting Endpoints
   // ============================================================================

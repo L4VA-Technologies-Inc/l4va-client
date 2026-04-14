@@ -1,6 +1,7 @@
+import React from 'react';
 import toast from 'react-hot-toast';
 
-import { useSubmitClaim } from '@/hooks/useRewardsClaims';
+import { RewardsApiProvider } from '@/services/api/rewards';
 import { Button } from '@/components/ui/button';
 
 export const ClaimButton = ({
@@ -10,7 +11,7 @@ export const ClaimButton = ({
   disabled = false,
   className = '',
 }) => {
-  const { mutate: submitClaim, isPending } = useSubmitClaim();
+  const [isPending, setIsPending] = React.useState(false);
 
   const handleClaim = async () => {
     if (!walletAddress) {
@@ -23,24 +24,40 @@ export const ClaimButton = ({
       return;
     }
 
-    submitClaim(
-      { walletAddress, payload: {} },
-      {
-        onSuccess: data => {
-          if (data.success) {
-            toast.success(`Successfully claimed ${data.claimedAmount || claimableAmount} $L4VA!`, { duration: 5000 });
-            if (onSuccess) {
-              onSuccess(data);
-            }
-          } else {
-            toast.error(data.message || 'Claim failed');
-          }
-        },
-        onError: error => {
-          toast.error(error?.response?.data?.message || 'Failed to submit claim');
-        },
+    setIsPending(true);
+
+    try {
+      // Build, sign, and submit the claim transaction (all handled server-side)
+      toast.loading('Processing claim transaction...', { id: 'claim-tx' });
+
+      const result = await RewardsApiProvider.buildClaimTransaction(walletAddress, {
+        claimImmediate: true,
+        claimVested: true,
+      });
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to process claim', { id: 'claim-tx' });
+        setIsPending(false);
+        return;
       }
-    );
+
+      toast.success(`Successfully claimed ${result.claimedAmount || claimableAmount} $L4VA! TxHash: ${result.txHash}`, {
+        id: 'claim-tx',
+        duration: 7000,
+      });
+
+      if (onSuccess) {
+        onSuccess({
+          success: true,
+          txHash: result.txHash,
+          claimedAmount: result.claimedAmount,
+        });
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to process claim', { id: 'claim-tx' });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const isDisabled = disabled || isPending || claimableAmount <= 0;
