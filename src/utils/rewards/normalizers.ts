@@ -1,8 +1,6 @@
 /**
  * Utility functions for formatting and aggregating rewards data
  *
- * NOTE: Data normalization (adding computed properties) is now handled
- * by the backend (l4va-api) via RewardsTransformerService.
  * This file only contains formatting and aggregation helpers.
  */
 
