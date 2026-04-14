@@ -7,14 +7,19 @@ import { useWalletVaults } from '@/hooks/useRewardsVaults';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { VaultsAnalytics } from '@/components/rewards/VaultsAnalytics';
+import { EpochSelector } from '@/components/rewards/EpochSelector';
 import { Card } from '@/components/ui/card';
 
 export const VaultsList = () => {
   const navigate = useNavigate();
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
   const [showVaultsList, setShowVaultsList] = useState(false);
+  const [selectedEpochIds, setSelectedEpochIds] = useState([]);
 
-  const { data: vaultsData, isLoading } = useWalletVaults(walletAddress);
+  // For the API, we pass a single epochId (first selected) or null for all
+  const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
+
+  const { data: vaultsData, isLoading } = useWalletVaults(walletAddress, activeEpochId);
   // Data is already normalized by backend
   const vaults = vaultsData?.vaults || [];
   const totalRewardBeforeCap = vaultsData?.totalRewardBeforeCap || 0;
@@ -91,10 +96,18 @@ export const VaultsList = () => {
             <span>Back to Rewards Overview</span>
           </button>
           <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
-          <p className="text-gray-400">View your rewards breakdown by vault participation</p>
+          <div className="flex items-center gap-4">
+            <p className="text-gray-400">View your rewards breakdown by vault participation</p>
+            <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />
+          </div>
         </div>
 
         {/* Summary */}
+        {vaultsData?.epochNumber > 0 && (
+          <div className="mb-4 text-sm text-gray-400">
+            Showing statistics for <span className="text-orange-400 font-medium">Epoch {vaultsData.epochNumber}</span>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="p-6">
             <div className="text-sm text-gray-400 mb-1">Total Vaults</div>

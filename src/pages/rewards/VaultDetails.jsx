@@ -1,24 +1,29 @@
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useState } from 'react';
 
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { VaultLeaderboard } from '@/components/rewards/VaultLeaderboard';
+import { EpochSelector } from '@/components/rewards/EpochSelector';
 import { Card } from '@/components/ui/card';
 
 export const VaultDetails = () => {
   const navigate = useNavigate();
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const [selectedEpochIds, setSelectedEpochIds] = useState([]);
+
+  const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
 
   const {
     data: vaultRewardData,
     isLoading: isLoadingReward,
     error: rewardError,
-  } = useWalletVaultReward(walletAddress, vaultId);
-  const { data: vaultScoresData, isLoading: isLoadingScores } = useVaultScores(vaultId);
+  } = useWalletVaultReward(walletAddress, vaultId, activeEpochId);
+  const { data: vaultScoresData, isLoading: isLoadingScores } = useVaultScores(vaultId, activeEpochId);
 
   if (isLoadingReward) {
     return (
@@ -95,7 +100,16 @@ export const VaultDetails = () => {
                 )}
               </div>
             )}
+            <div className="ml-auto">
+              <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />
+            </div>
           </div>
+          {vaultRewardData.epochNumber > 0 && (
+            <div className="text-sm text-gray-400 mb-1">
+              Showing statistics for{' '}
+              <span className="text-orange-400 font-medium">Epoch {vaultRewardData.epochNumber}</span>
+            </div>
+          )}
           <p className="text-gray-400 font-mono text-sm">{vaultId}</p>
         </div>
 

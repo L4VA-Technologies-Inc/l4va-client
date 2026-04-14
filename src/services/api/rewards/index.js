@@ -75,8 +75,9 @@ export class RewardsApiProvider {
    * @param {string} vaultId - Vault ID
    * @returns {Promise<Array>} Vault scores
    */
-  static async getVaultScores(vaultId) {
-    const response = await axiosInstance.get(RewardsConfigProvider.vaultScores(vaultId));
+  static async getVaultScores(vaultId, epochId) {
+    const params = epochId ? { epochId } : {};
+    const response = await axiosInstance.get(RewardsConfigProvider.vaultScores(vaultId), { params });
     return response.data;
   }
 
@@ -86,8 +87,11 @@ export class RewardsApiProvider {
    * @param {string} vaultId - Vault ID
    * @returns {Promise<Object>} Wallet vault reward details
    */
-  static async getWalletVaultReward(walletAddress, vaultId) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultReward(walletAddress, vaultId));
+  static async getWalletVaultReward(walletAddress, vaultId, epochId) {
+    const params = epochId ? { epochId } : {};
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultReward(walletAddress, vaultId), {
+      params,
+    });
     return response.data;
   }
 
@@ -96,8 +100,9 @@ export class RewardsApiProvider {
    * @param {string} walletAddress - Wallet address
    * @returns {Promise<Object>} Wallet vaults with rewards
    */
-  static async getWalletVaults(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaults(walletAddress));
+  static async getWalletVaults(walletAddress, epochId) {
+    const params = epochId ? { epochId } : {};
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaults(walletAddress), { params });
     return response.data;
   }
 
