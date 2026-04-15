@@ -5,13 +5,7 @@ import PrimaryButton from '../shared/PrimaryButton';
 
 import { RewardsApiProvider } from '@/services/api/rewards';
 
-export const ClaimButton = ({
-  walletAddress,
-  claimableAmount = 0,
-  onSuccess = null,
-  disabled = false,
-  className = '',
-}) => {
+export const ClaimButton = ({ walletAddress, claimableAmount = 0, onSuccess = null, disabled = false }) => {
   const [isPending, setIsPending] = React.useState(false);
 
   const handleClaim = async () => {
@@ -42,7 +36,7 @@ export const ClaimButton = ({
         return;
       }
 
-      toast.success(`Successfully claimed ${result.claimedAmount || claimableAmount} $L4VA! TxHash: ${result.txHash}`, {
+      toast.success(`Successfully claimed ${result.claimedAmount || claimableAmount} $L4VA!`, {
         id: 'claim-tx',
         duration: 7000,
       });
