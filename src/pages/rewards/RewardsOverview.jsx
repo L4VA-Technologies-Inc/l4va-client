@@ -1,4 +1,4 @@
-import { Wallet, Info } from 'lucide-react';
+import { Wallet, Info, History, Vault } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
@@ -9,12 +9,10 @@ import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import { useWalletHistory, useWalletScore } from '@/hooks/useRewardsScore';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
-import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
-import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
@@ -123,12 +121,22 @@ export const RewardsOverview = () => {
           </div>
           <p className="text-gray-400">Track your L4VA rewards, claims, and vesting positions</p>
         </div>
+        <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
+          {/* Current Epoch Banner */}
+          <CurrentEpochBanner epoch={currentEpochData?.epoch} isLoading={isLoadingEpoch} />
 
-        {/* Current Epoch Banner */}
-        <CurrentEpochBanner epoch={currentEpochData?.epoch} isLoading={isLoadingEpoch} />
-
-        {/* Claim Rewards Section */}
-        <Card className="p-8 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
+          {/* Summary Cards */}
+          <RewardsSummaryCards
+            claimable={claimableAmount}
+            locked={totalLocked}
+            currentEpochEstimate={currentEpochEstimate}
+            totalEarned={totalEarned}
+            nextUnlock={vestingSummary?.nextUnlock || null}
+            isLoading={isSummaryLoading}
+          />
+        </div>
+        {/* Claim Rewards Section (This will be removed, because seems like bad UX And I guess I will combine it with something) */}
+        {/* <Card className="p-8 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
           {isLoadingClaimable ? (
             <div className="space-y-4">
               <div className="h-6 bg-gray-700 rounded animate-pulse w-1/3" />
@@ -149,18 +157,7 @@ export const RewardsOverview = () => {
               />
             </>
           )}
-        </Card>
-
-        {/* Summary Cards */}
-        <RewardsSummaryCards
-          claimable={claimableAmount}
-          locked={totalLocked}
-          currentEpochEstimate={currentEpochEstimate}
-          totalEarned={totalEarned}
-          nextUnlock={vestingSummary?.nextUnlock || null}
-          isLoading={isSummaryLoading}
-        />
-
+        </Card> */}
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
 
@@ -169,20 +166,34 @@ export const RewardsOverview = () => {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <Card
-            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+          <div
+            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/epochs' })}
           >
-            <h3 className="font-semibold text-white mb-1">Epoch History</h3>
-            <p className="text-sm text-gray-400">View your rewards by epoch</p>
-          </Card>
-          <Card
-            className="p-4 hover:bg-gray-800/50 transition-colors cursor-pointer"
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-orange-500/20 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+                <History className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white mb-0.5">Epoch History</h3>
+                <p className="text-sm text-steel-400">View your rewards by epoch</p>
+              </div>
+            </div>
+          </div>
+          <div
+            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/vaults' })}
           >
-            <h3 className="font-semibold text-white mb-1">Vault Breakdown</h3>
-            <p className="text-sm text-gray-400">See rewards by vault participation</p>
-          </Card>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-purple-500/20 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Vault className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white mb-0.5">Vault Breakdown</h3>
+                <p className="text-sm text-steel-400">See rewards by vault participation</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Info Modal */}
