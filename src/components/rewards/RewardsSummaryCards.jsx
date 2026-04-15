@@ -19,7 +19,6 @@ export const RewardsSummaryCards = ({
       iconBg: 'bg-orange-500/20',
       iconBorder: 'border-orange-500/20',
       iconColor: 'text-orange-500',
-      highlight: true,
     },
     {
       label: 'Locked / Vested',

@@ -13,6 +13,8 @@ import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
+import { ClaimButton } from '@/components/rewards/ClaimButton';
+import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
@@ -134,30 +136,26 @@ export const RewardsOverview = () => {
             nextUnlock={vestingSummary?.nextUnlock || null}
             isLoading={isSummaryLoading}
           />
-        </div>
-        {/* Claim Rewards Section (This will be removed, because seems like bad UX And I guess I will combine it with something) */}
-        {/* <Card className="p-8 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
-          {isLoadingClaimable ? (
-            <div className="space-y-4">
-              <div className="h-6 bg-gray-700 rounded animate-pulse w-1/3" />
-              <div className="h-16 bg-gray-700 rounded animate-pulse w-full" />
-            </div>
-          ) : (
-            <>
-              <div className="text-sm text-gray-400 mb-3">Available to Claim</div>
-              <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-5xl font-bold text-orange-400">{formatCompactNumber(claimableAmount)}</span>
-                <span className="text-xl text-gray-500">$L4VA</span>
-              </div>
 
-              <ClaimButton
-                walletAddress={walletAddress}
-                claimableAmount={claimableAmount}
-                className="w-full md:w-auto px-8 py-3 text-lg"
-              />
-            </>
+          {/* Claim Section */}
+          {claimableAmount > 0 && (
+            <div className="border-t border-steel-750 p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-1">Ready to Claim</p>
+                  <p className="text-3xl font-bold text-orange-gradient">
+                    {formatCompactNumber(claimableAmount)} $L4VA
+                  </p>
+                </div>
+                <ClaimButton
+                  walletAddress={walletAddress}
+                  claimableAmount={claimableAmount}
+                  className="w-full sm:w-auto px-8 py-3 text-lg"
+                />
+              </div>
+            </div>
           )}
-        </Card> */}
+        </div>
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
 
