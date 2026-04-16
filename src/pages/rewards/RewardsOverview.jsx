@@ -77,7 +77,7 @@ export const RewardsOverview = () => {
   }, [vestingData]);
 
   // Calculate totals
-  const claimableAmount = claimableData?.immediateClaimable || 0;
+  const claimableAmount = claimableData?.totalClaimable || 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
 
