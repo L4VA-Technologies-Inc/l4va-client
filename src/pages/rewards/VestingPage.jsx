@@ -7,7 +7,6 @@ import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { VestingProgress } from '@/components/rewards/VestingProgress';
 import { VestingGrouped } from '@/components/rewards/VestingGrouped';
-import { Card } from '@/components/ui/card';
 
 export const VestingPage = () => {
   const navigate = useNavigate();
@@ -41,13 +40,15 @@ export const VestingPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8">Vesting</h1>
-          <Card className="p-12">
-            <div className="text-center">
-              <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-gray-400">Please connect your wallet to view your vesting positions</p>
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
+            <div className="p-12">
+              <div className="text-center">
+                <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
+                <p className="text-steel-400">Please connect your wallet to view your vesting positions</p>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     );
@@ -60,82 +61,84 @@ export const VestingPage = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate({ to: '/rewards' })}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+            className="flex items-center gap-2 text-steel-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Rewards Overview</span>
           </button>
           <h1 className="text-3xl font-bold text-white mb-2">Vesting</h1>
-          <p className="text-gray-400">Track your vested L4VA rewards over time</p>
+          <p className="text-steel-400">Track your vested L4VA rewards over time</p>
         </div>
 
         {/* Summary Cards */}
         {isLoadingSummary ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-800/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-32 bg-steel-850 border border-steel-750 rounded-2xl animate-pulse" />
             ))}
           </div>
         ) : vestingSummary && vestingSummary.hasVestedRewards ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
-              <div className="flex items-center gap-2 text-gray-400 mb-2">
+            <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+              <div className="flex items-center gap-2 text-steel-400 mb-2">
                 <Layers className="w-4 h-4" />
                 <span className="text-sm">Total Vested</span>
               </div>
               <div className="text-3xl font-bold text-white">{formatCompactNumber(vestingSummary.totalVested)}</div>
-              <div className="text-sm text-gray-500 mt-1">$L4VA</div>
-            </Card>
+              <div className="text-sm text-steel-500 mt-1">$L4VA</div>
+            </div>
 
-            <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-              <div className="flex items-center gap-2 text-gray-400 mb-2">
+            <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+              <div className="flex items-center gap-2 text-steel-400 mb-2">
                 <Unlock className="w-4 h-4" />
                 <span className="text-sm">Unlocked</span>
               </div>
               <div className="text-3xl font-bold text-green-400">
                 {formatCompactNumber(vestingSummary.totalUnlocked)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-steel-500 mt-1">
                 {vestingSummary.unlockedPercentage ? vestingSummary.unlockedPercentage.toFixed(1) : '0'}% of total
               </div>
-            </Card>
+            </div>
 
-            <Card className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
-              <div className="flex items-center gap-2 text-gray-400 mb-2">
+            <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+              <div className="flex items-center gap-2 text-steel-400 mb-2">
                 <Lock className="w-4 h-4" />
                 <span className="text-sm">Locked</span>
               </div>
               <div className="text-3xl font-bold text-orange-400">
                 {formatCompactNumber(vestingSummary.totalLocked)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-steel-500 mt-1">
                 {vestingSummary.lockedPercentage ? vestingSummary.lockedPercentage.toFixed(1) : '0'}% of total
               </div>
-            </Card>
+            </div>
           </div>
         ) : (
-          <Card className="p-12">
-            <div className="text-center">
-              <Lock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">No Vesting Positions</h2>
-              <p className="text-gray-400">Your vested rewards will appear here</p>
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
+            <div className="p-12">
+              <div className="text-center">
+                <Lock className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-white mb-2">No Vesting Positions</h2>
+                <p className="text-steel-400">Your vested rewards will appear here</p>
+              </div>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Active Vesting Positions */}
         {activePositions.length > 0 && (
-          <Card className="p-6">
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white">Active Vesting Positions ({activePositions.length})</h2>
 
               {/* Group By Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Group by:</span>
+                <span className="text-sm text-steel-400">Group by:</span>
                 <select
                   value={groupBy}
                   onChange={e => setGroupBy(e.target.value)}
-                  className="px-3 py-1 bg-gray-800 border border-gray-700 rounded text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="px-3 py-1 bg-steel-800 border border-steel-700 rounded text-sm text-white focus:outline-none focus:border-orange-500"
                 >
                   <option value="none">None</option>
                   <option value="epoch">Epoch</option>
@@ -147,7 +150,7 @@ export const VestingPage = () => {
             {isLoadingActive ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-40 bg-gray-800/50 rounded-lg animate-pulse" />
+                  <div key={i} className="h-40 bg-steel-800 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : groupBy === 'none' ? (
@@ -159,7 +162,7 @@ export const VestingPage = () => {
             ) : (
               <VestingGrouped positions={activePositions} groupBy={groupBy} />
             )}
-          </Card>
+          </div>
         )}
       </div>
     </div>

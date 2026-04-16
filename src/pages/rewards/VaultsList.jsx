@@ -37,13 +37,15 @@ export const VaultsList = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
-          <Card className="p-12">
-            <div className="text-center">
-              <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-gray-400">Please connect your wallet to view your vault rewards</p>
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
+            <div className="p-12">
+              <div className="text-center">
+                <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
+                <p className="text-steel-400">Please connect your wallet to view your vault rewards</p>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     );
@@ -57,7 +59,7 @@ export const VaultsList = () => {
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-800/50 rounded-lg animate-pulse" />
+              <div key={i} className="h-24 bg-steel-850 border border-steel-750 rounded-2xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -71,13 +73,15 @@ export const VaultsList = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
-          <Card className="p-12">
-            <div className="text-center">
-              <Vault className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">No Vault Rewards</h2>
-              <p className="text-gray-400">Participate in vaults to start earning rewards</p>
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
+            <div className="p-12">
+              <div className="text-center">
+                <Vault className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-white mb-2">No Vault Rewards</h2>
+                <p className="text-steel-400">Participate in vaults to start earning rewards</p>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     );
@@ -90,50 +94,50 @@ export const VaultsList = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate({ to: '/rewards' })}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-4"
+            className="flex items-center gap-2 text-steel-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Rewards Overview</span>
           </button>
           <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
           <div className="flex items-center gap-4">
-            <p className="text-gray-400">View your rewards breakdown by vault participation</p>
+            <p className="text-steel-400">View your rewards breakdown by vault participation</p>
             <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />
           </div>
         </div>
 
         {/* Summary */}
         {vaultsData?.epochNumber > 0 && (
-          <div className="mb-4 text-sm text-gray-400">
+          <div className="mb-4 text-sm text-steel-400">
             Showing statistics for <span className="text-orange-400 font-medium">Epoch {vaultsData.epochNumber}</span>
           </div>
         )}
 
         {vaults.length === 0 && selectedEpochIds.length > 0 ? (
-          <Card className="p-8 mb-6">
-            <div className="text-center text-gray-400">No vault rewards found for the selected epoch</div>
-          </Card>
+          <div className="bg-steel-850 border border-steel-750 rounded-2xl p-8 mb-6">
+            <div className="text-center text-steel-400">No vault rewards found for the selected epoch</div>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card className="p-6">
-                <div className="text-sm text-gray-400 mb-1">Total Vaults</div>
+              <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+                <div className="text-sm text-steel-400 mb-1">Total Vaults</div>
                 <div className="text-3xl font-bold text-white">{vaults.length}</div>
-              </Card>
-              <Card className="p-6">
-                <div className="text-sm text-gray-400 mb-1">Vault Rewards (Uncapped)</div>
+              </div>
+              <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+                <div className="text-sm text-steel-400 mb-1">Vault Rewards (Uncapped)</div>
                 <div className="text-3xl font-bold text-blue-400">
                   {formatCompactNumber(totalRewardBeforeCap)} $L4VA
                 </div>
-                {wasCapped && <div className="text-xs text-gray-500 mt-1">Before 5% cap</div>}
-              </Card>
-              <Card className="p-6">
-                <div className="text-sm text-gray-400 mb-1">Final Rewards (After Cap)</div>
+                {wasCapped && <div className="text-xs text-steel-500 mt-1">Before 5% cap</div>}
+              </div>
+              <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
+                <div className="text-sm text-steel-400 mb-1">Final Rewards (After Cap)</div>
                 <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalFinalReward)} $L4VA</div>
                 {wasCapped && (
                   <div className="text-xs text-red-400 mt-1">-{formatCompactNumber(capDifference)} capped</div>
                 )}
-              </Card>
+              </div>
             </div>
 
             {/* Vaults Analytics */}
@@ -160,9 +164,9 @@ export const VaultsList = () => {
             {showVaultsList && (
               <div className="space-y-4">
                 {vaults.map(vault => (
-                  <Card
+                  <div
                     key={vault.vaultId}
-                    className="p-5 hover:bg-gray-800/70 transition-colors cursor-pointer"
+                    className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
                     onClick={() => handleVaultClick(vault.vaultId)}
                   >
                     <div className="flex items-center justify-between">
@@ -180,9 +184,9 @@ export const VaultsList = () => {
                             )}
                           </div>
                         </div>
-                        <div className="text-sm text-gray-500">{vault.vaultId}</div>
+                        <div className="text-sm text-steel-500">{vault.vaultId}</div>
                         {vault.epochCount && (
-                          <div className="text-xs text-gray-600 mt-1">
+                          <div className="text-xs text-steel-600 mt-1">
                             {vault.epochCount} epoch{vault.epochCount !== 1 ? 's' : ''}
                           </div>
                         )}
@@ -192,10 +196,10 @@ export const VaultsList = () => {
                         <div className="text-2xl font-bold text-orange-400">
                           {formatCompactNumber(vault.totalReward)}
                         </div>
-                        <div className="text-sm text-gray-500">$L4VA</div>
+                        <div className="text-sm text-steel-500">$L4VA</div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
