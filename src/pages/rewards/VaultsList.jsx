@@ -8,7 +8,6 @@ import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
 import { VaultsAnalytics } from '@/components/rewards/VaultsAnalytics';
 import { EpochSelector } from '@/components/rewards/EpochSelector';
-import { Card } from '@/components/ui/card';
 
 export const VaultsList = () => {
   const navigate = useNavigate();
@@ -126,14 +125,12 @@ export const VaultsList = () => {
               </div>
               <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
                 <div className="text-sm text-steel-400 mb-1">Vault Rewards (Uncapped)</div>
-                <div className="text-3xl font-bold text-blue-400">
-                  {formatCompactNumber(totalRewardBeforeCap)} $L4VA
-                </div>
-                {wasCapped && <div className="text-xs text-steel-500 mt-1">Before 5% cap</div>}
+                <div className="text-3xl font-bold text-white">{formatCompactNumber(totalRewardBeforeCap)} $L4VA</div>
+                {wasCapped && <div className="text-xs text-steel-400 mt-1">Before 5% cap</div>}
               </div>
               <div className="bg-steel-850 border border-steel-750 rounded-2xl p-6">
                 <div className="text-sm text-steel-400 mb-1">Final Rewards (After Cap)</div>
-                <div className="text-3xl font-bold text-orange-400">{formatCompactNumber(totalFinalReward)} $L4VA</div>
+                <div className="text-3xl font-bold text-white">{formatCompactNumber(totalFinalReward)} $L4VA</div>
                 {wasCapped && (
                   <div className="text-xs text-red-400 mt-1">-{formatCompactNumber(capDifference)} capped</div>
                 )}
