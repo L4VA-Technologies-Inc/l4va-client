@@ -140,6 +140,20 @@ export const useBuildUnstakeTx = () => {
   });
 };
 
+export const useBuildHarvestTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
+      StakeApiProvider.buildHarvest(params),
+  });
+};
+
+export const useBuildCompoundTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
+      StakeApiProvider.buildCompound(params),
+  });
+};
+
 export const useSubmitStakeTx = () => {
   return useMutation({
     mutationFn: (params: { transactionId: string; txCbor: string; signature: string }) =>

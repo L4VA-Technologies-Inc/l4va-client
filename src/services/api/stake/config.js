@@ -7,6 +7,14 @@ export class StakeConfigProvider {
     return '/api/v1/stake/build-unstake';
   }
 
+  static buildHarvest() {
+    return '/api/v1/stake/build-harvest';
+  }
+
+  static buildCompound() {
+    return '/api/v1/stake/build-compound';
+  }
+
   static submit() {
     return '/api/v1/stake/submit';
   }

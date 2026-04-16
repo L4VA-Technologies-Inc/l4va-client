@@ -12,6 +12,16 @@ export class StakeApiProvider {
     return response;
   }
 
+  static async buildHarvest(params) {
+    const response = await axiosInstance.post(StakeConfigProvider.buildHarvest(), params);
+    return response;
+  }
+
+  static async buildCompound(params) {
+    const response = await axiosInstance.post(StakeConfigProvider.buildCompound(), params);
+    return response;
+  }
+
   static async submit(params) {
     const response = await axiosInstance.post(StakeConfigProvider.submit(), params);
     return response;
