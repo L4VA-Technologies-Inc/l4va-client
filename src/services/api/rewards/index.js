@@ -217,17 +217,4 @@ export class RewardsApiProvider {
     const response = await axiosInstance.get(RewardsConfigProvider.activeVesting(walletAddress));
     return response.data;
   }
-
-  // ============================================================================
-  // Configuration Methods
-  // ============================================================================
-
-  /**
-   * Get reward weights configuration
-   * @returns {Promise<Object>} Reward weights
-   */
-  static async getWeights() {
-    const response = await axiosInstance.get(RewardsConfigProvider.weights());
-    return response.data;
-  }
 }

@@ -94,12 +94,4 @@ export class RewardsConfigProvider {
   static activeVesting(walletAddress) {
     return `/api/v1/rewards/vesting/${walletAddress}/active`;
   }
-
-  // ============================================================================
-  // Weights & Configuration
-  // ============================================================================
-
-  static weights() {
-    return '/api/v1/rewards/weights';
-  }
 }
