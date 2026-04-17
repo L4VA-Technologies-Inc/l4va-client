@@ -25,3 +25,27 @@ export const useWalletHistory = (walletAddress: string) => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
+
+/**
+ * Fetch wallet vault timeline for cumulative charts
+ */
+export const useWalletVaultTimeline = (walletAddress: string) => {
+  return useQuery({
+    queryKey: ['rewards', 'timeline', 'vaults', walletAddress],
+    queryFn: () => RewardsApiProvider.getWalletVaultTimeline(walletAddress),
+    enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+/**
+ * Fetch wallet activity timeline for cumulative charts
+ */
+export const useWalletActivityTimeline = (walletAddress: string) => {
+  return useQuery({
+    queryKey: ['rewards', 'timeline', 'activities', walletAddress],
+    queryFn: () => RewardsApiProvider.getWalletActivityTimeline(walletAddress),
+    enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 5,
+  });
+};

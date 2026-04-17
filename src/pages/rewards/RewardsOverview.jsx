@@ -6,11 +6,17 @@ import { useMemo, useState } from 'react';
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
-import { useWalletHistory, useWalletScore } from '@/hooks/useRewardsScore';
+import {
+  useWalletHistory,
+  useWalletScore,
+  useWalletVaultTimeline,
+  useWalletActivityTimeline,
+} from '@/hooks/useRewardsScore';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
 import { VestingSummary } from '@/components/rewards/VestingSummary';
 import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
+import { RewardsCumulativeByVault, RewardsCumulativeByActivity } from '@/components/rewards/RewardsCumulativeCharts';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
 import { ClaimButton } from '@/components/rewards/ClaimButton';
@@ -27,6 +33,8 @@ export const RewardsOverview = () => {
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
   const { data: walletScoreData, isLoading: isLoadingScore } = useWalletScore(walletAddress);
+  const { data: vaultTimelineData, isLoading: isLoadingVaultTimeline } = useWalletVaultTimeline(walletAddress);
+  const { data: activityTimelineData, isLoading: isLoadingActivityTimeline } = useWalletActivityTimeline(walletAddress);
 
   console.log('🔍 RewardsOverview Data:', {
     currentEpochData,
@@ -158,6 +166,14 @@ export const RewardsOverview = () => {
         </div>
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
+
+        {/* Cumulative Rewards Charts */}
+        <RewardsCumulativeByVault
+          timeline={vaultTimelineData?.timeline}
+          isLoading={isLoadingVaultTimeline}
+          onVaultClick={vaultId => navigate({ to: `/vaults/${vaultId}` })}
+        />
+        <RewardsCumulativeByActivity timeline={activityTimelineData?.timeline} isLoading={isLoadingActivityTimeline} />
 
         {/* Vesting Summary */}
         <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />

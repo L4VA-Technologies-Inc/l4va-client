@@ -106,6 +106,26 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Get per-epoch per-vault reward timeline for cumulative charts
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object>} Vault timeline data
+   */
+  static async getWalletVaultTimeline(walletAddress) {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultTimeline(walletAddress));
+    return response.data;
+  }
+
+  /**
+   * Get per-epoch per-activity reward timeline for cumulative charts
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object>} Activity timeline data
+   */
+  static async getWalletActivityTimeline(walletAddress) {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletActivityTimeline(walletAddress));
+    return response.data;
+  }
+
   // ============================================================================
   // Claims Methods
   // ============================================================================

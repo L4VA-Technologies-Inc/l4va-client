@@ -6,7 +6,7 @@
 export { useEpochs, useCurrentEpoch, useEpochDetails } from './useRewardsEpochs';
 
 // Score and history hooks
-export { useWalletScore, useWalletHistory } from './useRewardsScore';
+export { useWalletScore, useWalletHistory, useWalletVaultTimeline, useWalletActivityTimeline } from './useRewardsScore';
 
 // Vault rewards hooks
 export { useVaultScores, useWalletVaultReward, useWalletVaults } from './useRewardsVaults';

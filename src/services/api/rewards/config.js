@@ -47,6 +47,14 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/wallet/${walletAddress}/vaults`;
   }
 
+  static walletVaultTimeline(walletAddress) {
+    return `/api/v1/rewards/wallet/${walletAddress}/timeline/vaults`;
+  }
+
+  static walletActivityTimeline(walletAddress) {
+    return `/api/v1/rewards/wallet/${walletAddress}/timeline/activities`;
+  }
+
   // ============================================================================
   // Claims Endpoints
   // ============================================================================

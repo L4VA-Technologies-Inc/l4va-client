@@ -34,7 +34,7 @@ export const RewardsAnalytics = ({ activityBreakdown }) => {
     >
       <div className="px-5 py-4 border-b border-steel-750 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="text-white font-semibold">Activity Score Breakdown</h3>
+          <h3 className="text-white font-semibold">Current Epoch Activity Score Breakdown</h3>
           <HoverHelp hint={ACTIVITY_HINT} />
         </div>
       </div>
