@@ -126,6 +126,16 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Get current epoch reward estimate with confidence indicator
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object>} Estimate with confidence level
+   */
+  static async getCurrentEpochEstimate(walletAddress) {
+    const response = await axiosInstance.get(RewardsConfigProvider.currentEpochEstimate(walletAddress));
+    return response.data;
+  }
+
   // ============================================================================
   // Claims Methods
   // ============================================================================

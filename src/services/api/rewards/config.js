@@ -55,6 +55,10 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/wallet/${walletAddress}/timeline/activities`;
   }
 
+  static currentEpochEstimate(walletAddress) {
+    return `/api/v1/rewards/wallet/${walletAddress}/current-estimate`;
+  }
+
   // ============================================================================
   // Claims Endpoints
   // ============================================================================

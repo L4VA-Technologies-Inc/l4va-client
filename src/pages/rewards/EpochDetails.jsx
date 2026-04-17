@@ -38,7 +38,7 @@ export const EpochDetails = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <a href="/rewards/epochs" className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8">
+          <a href="/rewards/epochs" className="text-white hover:text-orange-500 flex items-center gap-2 mb-8">
             <ArrowLeft className="w-4 h-4" />
             Back to Epochs
           </a>
@@ -56,7 +56,7 @@ export const EpochDetails = () => {
         {/* Back Button */}
         <button
           onClick={() => navigate({ to: '/rewards/epochs' })}
-          className="text-blue-400 hover:text-blue-300 flex items-center gap-2 mb-8 transition-colors"
+          className="text-white hover:text-orange-500 flex items-center gap-2 mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Epochs

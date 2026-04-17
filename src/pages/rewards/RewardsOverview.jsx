@@ -11,6 +11,7 @@ import {
   useWalletScore,
   useWalletVaultTimeline,
   useWalletActivityTimeline,
+  useCurrentEpochEstimate,
 } from '@/hooks/useRewardsScore';
 import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
 import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
@@ -35,6 +36,7 @@ export const RewardsOverview = () => {
   const { data: walletScoreData, isLoading: isLoadingScore } = useWalletScore(walletAddress);
   const { data: vaultTimelineData, isLoading: isLoadingVaultTimeline } = useWalletVaultTimeline(walletAddress);
   const { data: activityTimelineData, isLoading: isLoadingActivityTimeline } = useWalletActivityTimeline(walletAddress);
+  const { data: estimateData } = useCurrentEpochEstimate(walletAddress);
 
   console.log('🔍 RewardsOverview Data:', {
     currentEpochData,
@@ -89,9 +91,8 @@ export const RewardsOverview = () => {
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
 
-  // Get current epoch estimate from history
-  const currentEpochEstimate =
-    historyData?.history?.find(item => item.epochId === currentEpochData?.epoch?.id)?.finalReward || 0;
+  // Get current epoch estimate
+  const currentEpochEstimate = estimateData?.estimatedReward || 0;
 
   // Loading state for summary cards
   const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;
@@ -140,6 +141,7 @@ export const RewardsOverview = () => {
             claimable={claimableAmount}
             locked={totalLocked}
             currentEpochEstimate={currentEpochEstimate}
+            estimateConfidenceLabel={estimateData?.confidenceLabel}
             totalEarned={totalEarned}
             nextUnlock={vestingSummary?.nextUnlock || null}
             isLoading={isSummaryLoading}

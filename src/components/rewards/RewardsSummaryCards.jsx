@@ -7,6 +7,7 @@ export const RewardsSummaryCards = ({
   claimable = 0,
   locked = 0,
   currentEpochEstimate = 0,
+  estimateConfidenceLabel = null,
   totalEarned = 0,
   isLoading = false,
 }) => {
@@ -32,6 +33,7 @@ export const RewardsSummaryCards = ({
     {
       label: 'Current Epoch Estimate',
       value: formatCompactNumber(currentEpochEstimate),
+      prefix: '~',
       suffix: '$L4VA',
       icon: TrendingUp,
       iconBg: 'bg-green-500/20',
@@ -53,6 +55,7 @@ export const RewardsSummaryCards = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-5 md:p-6">
       {cards.map((card, index) => {
         const Icon = card.icon;
+        const isEstimateCard = card.label === 'Current Epoch Estimate';
 
         return (
           <div key={index} className={`rounded-xl border border-steel-750 bg-steel-900/40 p-4 flex items-center gap-3`}>
@@ -71,11 +74,15 @@ export const RewardsSummaryCards = ({
                 >
                   <Icon className={`w-5 h-5 ${card.iconColor}`} />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-0.5">{card.label}</p>
-                  <p className={`text-xl  font-bold text-white ${card.highlight ? 'text-orange-gradient' : ''}`}>
+                  <p className={`text-xl font-bold text-white ${card.highlight ? 'text-orange-gradient' : ''}`}>
+                    {card.prefix || ''}
                     {card.value} {card.suffix}
                   </p>
+                  {isEstimateCard && estimateConfidenceLabel && (
+                    <p className="text-xs text-steel-500 mt-0.5">{estimateConfidenceLabel}</p>
+                  )}
                 </div>
               </>
             )}

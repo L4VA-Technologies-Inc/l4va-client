@@ -49,3 +49,16 @@ export const useWalletActivityTimeline = (walletAddress: string) => {
     staleTime: 1000 * 60 * 5,
   });
 };
+
+/**
+ * Fetch current epoch reward estimate with confidence indicator
+ */
+export const useCurrentEpochEstimate = (walletAddress: string) => {
+  return useQuery({
+    queryKey: ['rewards', 'current-estimate', walletAddress],
+    queryFn: () => RewardsApiProvider.getCurrentEpochEstimate(walletAddress),
+    enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 2, // 2 minutes - refresh more frequently for live estimate
+    refetchInterval: 1000 * 60 * 3, // Auto-refetch every 3 minutes
+  });
+};
