@@ -5,8 +5,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
 import { formatCompactNumber } from '@/utils/core.utils';
-import { VestingProgress } from '@/components/rewards/VestingProgress';
-import { VestingGrouped } from '@/components/rewards/VestingGrouped';
+import { VestingProgress, VestingGrouped } from '@/components/rewards';
 
 export const VestingPage = () => {
   const navigate = useNavigate();

@@ -5,7 +5,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
-import { EpochRewardRow } from '@/components/rewards/EpochRewardRow';
+import { EpochRewardRow } from '@/components/rewards';
 
 export const EpochsList = () => {
   const navigate = useNavigate();

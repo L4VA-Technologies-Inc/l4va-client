@@ -1,7 +1,5 @@
 import { useSearch } from '@tanstack/react-router';
 
-import { L4VARewards } from './L4VARewards';
-
 import ProfileHero from '@/pages/profile/ProfileHero';
 import { Stats } from '@/pages/profile/Stats';
 import { ProfileSocialLinks } from '@/pages/profile/ProfileSocialLinks';
@@ -36,7 +34,6 @@ export const Profile = ({ userId, isEditable }) => {
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
-        {!userId && <L4VARewards />}
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList initialTab={search?.tab} />}
         {!userId && <Claims />}

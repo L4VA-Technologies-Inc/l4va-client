@@ -5,9 +5,7 @@ import { useState } from 'react';
 
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
 import { formatCompactNumber } from '@/utils/core.utils';
-import { RewardSourceBadge } from '@/components/rewards/RewardSourceBadge';
-import { VaultLeaderboard } from '@/components/rewards/VaultLeaderboard';
-import { EpochSelector } from '@/components/rewards/EpochSelector';
+import { RewardSourceBadge, VaultLeaderboard, EpochSelector } from '@/components/rewards';
 
 export const VaultDetails = () => {
   const navigate = useNavigate();

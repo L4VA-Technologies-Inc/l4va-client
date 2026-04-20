@@ -13,14 +13,17 @@ import {
   useWalletActivityTimeline,
   useCurrentEpochEstimate,
 } from '@/hooks/useRewardsScore';
-import { RewardsSummaryCards } from '@/components/rewards/RewardsSummaryCards';
-import { CurrentEpochBanner } from '@/components/rewards/CurrentEpochBanner';
-import { VestingSummary } from '@/components/rewards/VestingSummary';
-import { RewardsAnalytics } from '@/components/rewards/RewardsAnalytics';
-import { RewardsCumulativeByVault, RewardsCumulativeByActivity } from '@/components/rewards/RewardsCumulativeCharts';
+import {
+  RewardsSummaryCards,
+  CurrentEpochBanner,
+  VestingSummary,
+  RewardsAnalytics,
+  RewardsCumulativeByVault,
+  RewardsCumulativeByActivity,
+  ClaimButton,
+} from '@/components/rewards';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
-import { ClaimButton } from '@/components/rewards/ClaimButton';
 import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsOverview = () => {
