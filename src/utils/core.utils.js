@@ -358,12 +358,18 @@ export const handleNumberInput = value => {
  * @example clampDecimalInput('1,234.50') => '1234.50'
  * @example clampDecimalInput('..12.3.4') => '.12.34' (then normalized by caller if needed)
  */
-export const clampDecimalInput = raw =>
+export const clampDecimalInput = (raw, maxDecimals) =>
   (() => {
     const sanitized = String(raw).replace(/[^\d.]/g, '');
     const firstDotIndex = sanitized.indexOf('.');
     if (firstDotIndex === -1) return sanitized;
-    return sanitized.slice(0, firstDotIndex + 1) + sanitized.slice(firstDotIndex + 1).replace(/\./g, '');
+
+    const head = sanitized.slice(0, firstDotIndex + 1);
+    const tail = sanitized.slice(firstDotIndex + 1).replace(/\./g, '');
+
+    const dec = Number.isFinite(Number(maxDecimals)) ? Math.max(0, Number(maxDecimals)) : undefined;
+    if (dec === undefined) return head + tail;
+    return head + tail.slice(0, dec);
   })();
 
 /**

@@ -128,14 +128,14 @@ export const useSubmitTransaction = () => {
 // Stake mutations
 export const useBuildStakeTx = () => {
   return useMutation({
-    mutationFn: (params: { userAddress: string; assetId: string; amount: number }) =>
+    mutationFn: (params: { userAddress: string; tokens: { assetId: string; amount: number }[] }) =>
       StakeApiProvider.buildStake(params),
   });
 };
 
 export const useBuildUnstakeTx = () => {
   return useMutation({
-    mutationFn: (params: { userAddress: string; assetId: string; utxos?: { txHash: string; outputIndex: number }[] }) =>
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
       StakeApiProvider.buildUnstake(params),
   });
 };

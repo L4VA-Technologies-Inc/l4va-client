@@ -7,7 +7,14 @@ import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Button } from '@/components/ui/button';
-import { useVlrmBalance } from '@/hooks/useVlrmBalance';
+import {
+  useStakeBalances,
+  getTokenLabel,
+  VLRM_TOKEN_ID,
+  L4VA_TOKEN_ID,
+  VLRM_DECIMALS,
+  L4VA_DECIMALS,
+} from '@/hooks/useTokenBalance';
 import { useStakeTransaction } from '@/hooks/useStakeTransaction';
 import { useMyStakedBalance } from '@/services/api/queries';
 import {
@@ -36,9 +43,6 @@ export interface UtxoRefDto {
   outputIndex: number;
 }
 
-const VLRM_TOKEN_ID = (import.meta as any).env.VITE_VLRM_TOKEN_ID as string | undefined;
-const ASSET_ID = VLRM_TOKEN_ID ?? 'VLRM';
-
 const TABS = ['Stake', 'Unstake'] as const;
 
 type TabKey = 'stake' | 'unstake';
@@ -47,10 +51,12 @@ const includesRef = (arr: UtxoRefDto[], ref: UtxoRefDto) => includesUtxoRef(arr,
 
 export const StakingWidget: React.FC = () => {
   const [tab, setTab] = useState<TabKey>('stake');
-  const [amountRaw, setAmountRaw] = useState('');
+  const [vlrmAmountRaw, setVlrmAmountRaw] = useState('');
+  const [l4vaAmountRaw, setL4vaAmountRaw] = useState('');
   const [selected, setSelected] = useState<UtxoRefDto[]>([]);
 
-  const { vlrmBalance, isLoading: isBalanceLoading, refreshBalance } = useVlrmBalance();
+  const { vlrmBalance, l4vaBalance, isLoading: isBalanceLoading, refreshBalances } = useStakeBalances();
+
   const { stake, unstake, harvest, compound, isProcessing } = useStakeTransaction();
   const {
     data: stakedBoxes,
@@ -67,12 +73,24 @@ export const StakingWidget: React.FC = () => {
     return [];
   }, [stakedBoxes]);
 
-  const amount = useMemo(() => {
-    const num = Number(amountRaw);
+  const vlrmAmount = useMemo(() => {
+    const num = Number(vlrmAmountRaw);
     return Number.isFinite(num) ? num : 0;
-  }, [amountRaw]);
+  }, [vlrmAmountRaw]);
 
-  const canStake = amount > 0 && amount <= vlrmBalance && !isProcessing;
+  const l4vaAmount = useMemo(() => {
+    const num = Number(l4vaAmountRaw);
+    return Number.isFinite(num) ? num : 0;
+  }, [l4vaAmountRaw]);
+
+  const canStake = useMemo(() => {
+    if (isProcessing) return false;
+    const hasVlrm = vlrmAmount > 0 && vlrmAmount <= vlrmBalance;
+    const hasL4va = l4vaAmount > 0 && l4vaAmount <= l4vaBalance;
+    const vlrmOk = vlrmAmount === 0 || (vlrmAmount > 0 && vlrmAmount <= vlrmBalance);
+    const l4vaOk = l4vaAmount === 0 || (l4vaAmount > 0 && l4vaAmount <= l4vaBalance);
+    return (hasVlrm || hasL4va) && vlrmOk && l4vaOk;
+  }, [vlrmAmount, l4vaAmount, vlrmBalance, l4vaBalance, isProcessing]);
 
   const selectedPayout = useMemo(() => {
     if (!selected.length) return '0';
@@ -88,15 +106,21 @@ export const StakingWidget: React.FC = () => {
     return values.length ? sumExactDecimals(values) : '0';
   }, [boxes, selected]);
 
-  const handleStake = async (stakeAmount: number) => {
-    const hash = await stake({ assetId: ASSET_ID, amount: stakeAmount });
+  const handleStake = async () => {
+    const tokens: { assetId: string; amount: number }[] = [];
+    if (vlrmAmount > 0 && VLRM_TOKEN_ID) tokens.push({ assetId: VLRM_TOKEN_ID, amount: vlrmAmount });
+    if (l4vaAmount > 0 && L4VA_TOKEN_ID) tokens.push({ assetId: L4VA_TOKEN_ID, amount: l4vaAmount });
+    if (!tokens.length) return;
+
+    const hash = await stake({ tokens });
     if (hash) {
-      setAmountRaw('');
+      setVlrmAmountRaw('');
+      setL4vaAmountRaw('');
     }
   };
 
   const handleUnstake = async (selectedRefs: UtxoRefDto[]) => {
-    const hash = await unstake({ assetId: ASSET_ID, utxos: selectedRefs });
+    const hash = await unstake({ utxos: selectedRefs });
     if (hash) {
       setSelected([]);
     }
@@ -125,7 +149,7 @@ export const StakingWidget: React.FC = () => {
   };
 
   const handleReload = async () => {
-    await Promise.all([refreshBalance?.(), refetchBoxes()]);
+    await Promise.all([refreshBalances(), refetchBoxes()]);
   };
 
   return (
@@ -142,7 +166,7 @@ export const StakingWidget: React.FC = () => {
                     'Stake creates individual on-chain boxes (UTxOs).\n\n' +
                     'Eligibility:\n' +
                     '- Eligible (verified) boxes show a checkbox and can be selected.\n' +
-                    '- Not verified boxes are visible but can’t be selected.\n\n' +
+                    "- Not verified boxes are visible but can't be selected.\n\n" +
                     'Actions (for selected eligible boxes):\n' +
                     '- Unstake: sends deposit + reward to your wallet.\n' +
                     '- Harvest: sends only reward to your wallet; deposit stays staked.\n' +
@@ -151,7 +175,7 @@ export const StakingWidget: React.FC = () => {
                 />
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <div className="text-[18px] sm:text-[20px] font-semibold text-white">VLRM Widget</div>
+                <div className="text-[18px] sm:text-[20px] font-semibold text-white">Staking Widget</div>
                 <Button
                   type="button"
                   variant="ghost"
@@ -180,47 +204,74 @@ export const StakingWidget: React.FC = () => {
         {/* Body */}
         <div className="px-4 sm:px-6 pb-5 sm:pb-6">
           {tab === 'stake' ? (
-            <div className="space-y-5">
-              {/* Balance row */}
-              <div className="flex items-center justify-between text-[12px] text-dark-100">
-                <div className="truncate">
-                  Balance:{' '}
-                  <span className="text-white">{isBalanceLoading ? '…' : `${formatRawNumber(vlrmBalance)} VLRM`}</span>
-                </div>
-                <div className="text-gray-500">eUTxO staking</div>
-              </div>
+            <div className="space-y-4">
               <div className="text-[12px] text-dark-100 leading-relaxed">
-                Stake creates a new on-chain box (UTxO). Manage withdrawals and rewards in the{' '}
+                Stake creates a new on-chain box (UTxO) per token. Fill one or both amounts. Manage withdrawals in the{' '}
                 <span className="text-white">Unstake</span> tab.
               </div>
 
-              {/* Amount input */}
+              {/* VLRM input */}
               <div className="rounded-xl border border-steel-850 bg-input-bg px-4 py-4 focus-within:border-steel-600 transition">
+                <div className="mb-3 flex items-center justify-between text-[12px] text-dark-100">
+                  <div>
+                    Balance:{' '}
+                    <span className="text-white">
+                      {isBalanceLoading ? '…' : `${formatRawNumber(vlrmBalance)} VLRM`}
+                    </span>
+                  </div>
+                  <div className="font-medium text-white tracking-wide">VLRM</div>
+                </div>
                 <div className="flex items-center gap-3">
                   <input
                     inputMode="decimal"
                     autoComplete="off"
                     placeholder="0"
-                    value={amountRaw}
-                    onChange={e => setAmountRaw(clampDecimalInput(e.target.value))}
+                    value={vlrmAmountRaw}
+                    onChange={e => setVlrmAmountRaw(clampDecimalInput(e.target.value, VLRM_DECIMALS))}
                     className="lava-input w-full bg-transparent text-[28px] sm:text-[32px] leading-none tracking-tight text-white placeholder:text-gray-500 outline-none border-none focus:ring-0 h-auto py-0 px-0"
                   />
                   <SecondaryButton
                     size="sm"
                     disabled={isProcessing}
-                    onClick={() => setAmountRaw(String(vlrmBalance || 0))}
+                    onClick={() => setVlrmAmountRaw(String(vlrmBalance || 0))}
                   >
                     MAX
                   </SecondaryButton>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-[12px] text-dark-100">
-                  <div className="truncate">Asset: VLRM</div>
-                  <div className="text-gray-500">Numbers only</div>
+              </div>
+
+              {/* L4VA input */}
+              <div className="rounded-xl border border-steel-850 bg-input-bg px-4 py-4 focus-within:border-steel-600 transition">
+                <div className="mb-3 flex items-center justify-between text-[12px] text-dark-100">
+                  <div>
+                    Balance:{' '}
+                    <span className="text-white">
+                      {isBalanceLoading ? '…' : `${formatRawNumber(l4vaBalance)} L4VA`}
+                    </span>
+                  </div>
+                  <div className="font-medium text-white tracking-wide">L4VA</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder="0"
+                    value={l4vaAmountRaw}
+                    onChange={e => setL4vaAmountRaw(clampDecimalInput(e.target.value, L4VA_DECIMALS))}
+                    className="lava-input w-full bg-transparent text-[28px] sm:text-[32px] leading-none tracking-tight text-white placeholder:text-gray-500 outline-none border-none focus:ring-0 h-auto py-0 px-0"
+                  />
+                  <SecondaryButton
+                    size="sm"
+                    disabled={isProcessing}
+                    onClick={() => setL4vaAmountRaw(String(l4vaBalance || 0))}
+                  >
+                    MAX
+                  </SecondaryButton>
                 </div>
               </div>
 
               {/* Stake CTA */}
-              <PrimaryButton disabled={!canStake} onClick={() => handleStake(amount)} size="lg" className="w-full">
+              <PrimaryButton disabled={!canStake} onClick={handleStake} size="lg" className="w-full">
                 Stake Tokens
               </PrimaryButton>
             </div>
@@ -260,6 +311,7 @@ export const StakingWidget: React.FC = () => {
                       const isSelected = includesRef(selected, ref);
                       const locked = !box.eligible;
                       const stakedAtText = formatDateTimeUtil(new Date(box.stakedAt), { variant: 'compact' }) ?? '-';
+                      const tokenLabel = getTokenLabel(box.unit);
 
                       const isRowClickable = !locked;
                       const rowKey = `${box.txHash}:${box.outputIndex}`;
@@ -294,18 +346,23 @@ export const StakingWidget: React.FC = () => {
                           <div className="flex items-start sm:items-center justify-between gap-4">
                             <div className="min-w-0">
                               <div className="text-[14px] font-semibold text-white truncate">
-                                {formatRawNumber(box.stakedAmount)} VLRM
+                                {formatRawNumber(box.stakedAmount)}{' '}
+                                <span className="text-dark-100 text-[12px] font-normal">{tokenLabel}</span>
                               </div>
                               <div className="mt-1 text-[12px] text-dark-100">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                                   <div>
                                     Reward:{' '}
-                                    <span className="text-green-400">+{formatRawNumber(box.estimatedReward)} VLRM</span>
+                                    <span className="text-green-400">
+                                      +{formatRawNumber(box.estimatedReward)} {tokenLabel}
+                                    </span>
                                   </div>
                                   <span className="hidden sm:inline text-steel-600">•</span>
                                   <div>
                                     Payout:{' '}
-                                    <span className="text-white">{formatRawNumber(box.estimatedPayout)} VLRM</span>
+                                    <span className="text-white">
+                                      {formatRawNumber(box.estimatedPayout)} {tokenLabel}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -332,7 +389,7 @@ export const StakingWidget: React.FC = () => {
                                     <div className="text-[12px] text-dark-100">
                                       Staked At: <span className="text-white">{stakedAtText}</span>
                                     </div>
-                                    <div className="text-[12px] text-gray-500">This box can’t be used yet.</div>
+                                    <div className="text-[12px] text-gray-500">This box can't be used yet.</div>
                                   </div>
                                 </div>
                               )}
@@ -350,9 +407,9 @@ export const StakingWidget: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0">
                     <div className="text-[12px] text-dark-100">Selected Payout</div>
-                    <div className="mt-1 text-[16px] font-semibold text-white truncate">{selectedPayout} VLRM</div>
+                    <div className="mt-1 text-[16px] font-semibold text-white truncate">{selectedPayout}</div>
                     <div className="mt-1 text-[12px] text-dark-100 truncate">
-                      Selected Reward: <span className="text-green-400">+{selectedReward} VLRM</span>
+                      Selected Reward: <span className="text-green-400">+{selectedReward}</span>
                     </div>
                   </div>
 

@@ -88,7 +88,7 @@ export const useStakeTransaction = () => {
   }, []);
 
   const stake = useCallback(
-    async ({ assetId, amount }) => {
+    async ({ tokens }) => {
       setStatus('building');
       try {
         setError(null);
@@ -105,8 +105,7 @@ export const useStakeTransaction = () => {
 
         const buildRes = await buildStakeTx.mutateAsync({
           userAddress,
-          assetId,
-          amount: Number(amount),
+          tokens,
         });
         const buildPayload = assertBuildPayload(buildRes.data);
         return await signAndSubmit(buildPayload);
@@ -122,7 +121,7 @@ export const useStakeTransaction = () => {
   );
 
   const unstake = useCallback(
-    async ({ assetId, utxos }) => {
+    async ({ utxos }) => {
       setStatus('building');
       try {
         setError(null);
@@ -139,7 +138,6 @@ export const useStakeTransaction = () => {
 
         const buildRes = await buildUnstakeTx.mutateAsync({
           userAddress,
-          assetId,
           utxos,
         });
         const buildPayload = assertBuildPayload(buildRes.data);
