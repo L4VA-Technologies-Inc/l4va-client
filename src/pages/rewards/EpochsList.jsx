@@ -23,10 +23,6 @@ export const EpochsList = () => {
     return new Map(historyData.history.map(item => [item.epochId, item]));
   }, [historyData]);
 
-  const handleEpochClick = epochId => {
-    navigate({ to: `/rewards/epochs/${epochId}` });
-  };
-
   // Wallet not connected state
   if (!isConnected) {
     return (
@@ -149,15 +145,7 @@ export const EpochsList = () => {
         <div className="space-y-4">
           {epochs.map(epoch => {
             const reward = rewardsByEpoch.get(epoch.id);
-            return (
-              <EpochRewardRow
-                key={epoch.id}
-                epoch={epoch}
-                reward={reward}
-                score={reward?.score}
-                onClick={() => handleEpochClick(epoch.id)}
-              />
-            );
+            return <EpochRewardRow key={epoch.id} epoch={epoch} reward={reward} score={reward?.score} />;
           })}
         </div>
 
