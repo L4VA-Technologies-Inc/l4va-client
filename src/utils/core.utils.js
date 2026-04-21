@@ -356,7 +356,7 @@ export const handleNumberInput = value => {
  * - Does not apply any rounding or locale formatting
  *
  * @example clampDecimalInput('1,234.50') => '1234.50'
- * @example clampDecimalInput('..12.3.4') => '.12.34' (then normalized by caller if needed)
+ * @example clampDecimalInput('..12.3.4') => '.1234' (then normalized by caller if needed)
  */
 export const clampDecimalInput = (raw, maxDecimals) =>
   (() => {
