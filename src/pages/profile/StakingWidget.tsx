@@ -7,6 +7,7 @@ import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Button } from '@/components/ui/button';
+import { useModalControls } from '@/lib/modals/modal.context';
 import {
   useStakeBalances,
   getTokenLabel,
@@ -54,6 +55,8 @@ export const StakingWidget: React.FC = () => {
   const [vlrmAmountRaw, setVlrmAmountRaw] = useState('');
   const [l4vaAmountRaw, setL4vaAmountRaw] = useState('');
   const [selected, setSelected] = useState<UtxoRefDto[]>([]);
+
+  const { openModal } = useModalControls();
 
   const { vlrmBalance, l4vaBalance, isLoading: isBalanceLoading, refreshBalances } = useStakeBalances();
 
@@ -106,38 +109,63 @@ export const StakingWidget: React.FC = () => {
     return values.length ? sumExactDecimals(values) : '0';
   }, [boxes, selected]);
 
-  const handleStake = async () => {
+  const handleStake = () => {
+    if (!canStake) return;
     const tokens: { assetId: string; amount: number }[] = [];
     if (vlrmAmount > 0 && VLRM_TOKEN_ID) tokens.push({ assetId: VLRM_TOKEN_ID, amount: vlrmAmount });
     if (l4vaAmount > 0 && L4VA_TOKEN_ID) tokens.push({ assetId: L4VA_TOKEN_ID, amount: l4vaAmount });
     if (!tokens.length) return;
 
-    const hash = await stake({ tokens });
-    if (hash) {
-      setVlrmAmountRaw('');
-      setL4vaAmountRaw('');
-    }
+    openModal('StakingConfirmModal', {
+      action: 'stake',
+      tokens: stakeTokens,
+      onConfirm: async () => {
+        const hash = await stake({ tokens });
+        if (hash) {
+          setVlrmAmountRaw('');
+          setL4vaAmountRaw('');
+        }
+      },
+    });
   };
 
-  const handleUnstake = async (selectedRefs: UtxoRefDto[]) => {
-    const hash = await unstake({ utxos: selectedRefs });
-    if (hash) {
-      setSelected([]);
-    }
+  const handleUnstake = (selectedRefs: UtxoRefDto[]) => {
+    openModal('StakingConfirmModal', {
+      action: 'unstake',
+      selectedCount: selectedRefs.length,
+      selectedPayout,
+      selectedReward,
+      onConfirm: async () => {
+        const hash = await unstake({ utxos: selectedRefs });
+        if (hash) setSelected([]);
+      },
+    });
   };
 
-  const handleHarvest = async (selectedRefs: UtxoRefDto[]) => {
-    const hash = await harvest({ utxos: selectedRefs });
-    if (hash) {
-      setSelected([]);
-    }
+  const handleHarvest = (selectedRefs: UtxoRefDto[]) => {
+    openModal('StakingConfirmModal', {
+      action: 'harvest',
+      selectedCount: selectedRefs.length,
+      selectedPayout,
+      selectedReward,
+      onConfirm: async () => {
+        const hash = await harvest({ utxos: selectedRefs });
+        if (hash) setSelected([]);
+      },
+    });
   };
 
-  const handleCompound = async (selectedRefs: UtxoRefDto[]) => {
-    const hash = await compound({ utxos: selectedRefs });
-    if (hash) {
-      setSelected([]);
-    }
+  const handleCompound = (selectedRefs: UtxoRefDto[]) => {
+    openModal('StakingConfirmModal', {
+      action: 'compound',
+      selectedCount: selectedRefs.length,
+      selectedPayout,
+      selectedReward,
+      onConfirm: async () => {
+        const hash = await compound({ utxos: selectedRefs });
+        if (hash) setSelected([]);
+      },
+    });
   };
 
   const toggleRef = (ref: UtxoRefDto) => {
@@ -151,6 +179,13 @@ export const StakingWidget: React.FC = () => {
   const handleReload = async () => {
     await Promise.all([refreshBalances(), refetchBoxes()]);
   };
+
+  const stakeTokens = useMemo(() => {
+    const list: { symbol: string; amount: number }[] = [];
+    if (vlrmAmount > 0) list.push({ symbol: 'VLRM', amount: vlrmAmount });
+    if (l4vaAmount > 0) list.push({ symbol: 'L4VA', amount: l4vaAmount });
+    return list;
+  }, [vlrmAmount, l4vaAmount]);
 
   return (
     <div className="w-full max-w-[920px] mx-auto">

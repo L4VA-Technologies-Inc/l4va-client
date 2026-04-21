@@ -34,12 +34,8 @@ export const Profile = ({ userId, isEditable }) => {
       <ProfileHero user={userData} isEditable={isEditable} />
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
-        {!userId && (
-          <div className="px-4 sm:px-6">
-            <StakingWidget />
-          </div>
-        )}
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
+        {!userId && <StakingWidget />}
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList initialTab={search?.tab} />}
         {!userId && <Claims />}
