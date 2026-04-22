@@ -5,6 +5,7 @@ import { GovernanceApiProvider } from './governance';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { TransactionsApiProvider } from '@/services/api/transactions';
+import { StakeApiProvider } from '@/services/api/stake';
 import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
@@ -121,6 +122,88 @@ export const useBuildTransaction = () => {
 export const useSubmitTransaction = () => {
   return useMutation({
     mutationFn: params => TransactionsApiProvider.submitTransaction(params),
+  });
+};
+
+// Stake mutations
+export const useBuildStakeTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; tokens: { assetId: string; amount: number }[] }) =>
+      StakeApiProvider.buildStake(params),
+  });
+};
+
+export const useBuildUnstakeTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
+      StakeApiProvider.buildUnstake(params),
+  });
+};
+
+export const useBuildHarvestTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
+      StakeApiProvider.buildHarvest(params),
+  });
+};
+
+export const useBuildCompoundTx = () => {
+  return useMutation({
+    mutationFn: (params: { userAddress: string; utxos: { txHash: string; outputIndex: number }[] }) =>
+      StakeApiProvider.buildCompound(params),
+  });
+};
+
+export const useSubmitStakeTx = () => {
+  return useMutation({
+    mutationFn: (params: { transactionId: string; txCbor: string; signature: string }) =>
+      StakeApiProvider.submit(params),
+  });
+};
+
+export type StakedBoxItem = {
+  txHash: string;
+  outputIndex: number;
+  unit: string;
+  policyId: string;
+  stakedAmount: number;
+  stakedAt: number;
+  estimatedReward: number;
+  estimatedPayout: number;
+  eligible: boolean;
+  cooldownEndsAt: number;
+};
+
+const parseStakedBoxesPayload = (body: unknown): StakedBoxItem[] => {
+  // Supported backend shapes:
+  // - [ ...boxes ]  (array directly)
+  // - { data: [ ...boxes ] }
+  // - { boxes: [ ...boxes ] } / { data: { boxes: [ ...boxes ] } }
+  const root = (body as { data?: unknown })?.data ?? body;
+
+  if (Array.isArray(root)) return root as StakedBoxItem[];
+
+  const boxesRaw = (root as { boxes?: unknown })?.boxes;
+  if (Array.isArray(boxesRaw)) return boxesRaw as StakedBoxItem[];
+
+  // common wrapper: { success: true, data: [...] } already handled above,
+  // but also tolerate: { success: true, data: { data: [...] } } or nested.
+  const nestedData = (root as { data?: unknown })?.data;
+  if (Array.isArray(nestedData)) return nestedData as StakedBoxItem[];
+  const nestedBoxes = (nestedData as { boxes?: unknown } | undefined)?.boxes;
+  if (Array.isArray(nestedBoxes)) return nestedBoxes as StakedBoxItem[];
+
+  return [];
+};
+
+export const useMyStakedBalance = () => {
+  return useQuery({
+    queryKey: ['stake', 'balance'],
+    queryFn: async () => {
+      const res = await StakeApiProvider.getMyStakedBalance();
+      return parseStakedBoxesPayload(res.data);
+    },
+    enabled: !!localStorage.getItem('jwt'),
   });
 };
 

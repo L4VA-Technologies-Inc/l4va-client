@@ -350,6 +350,145 @@ export const handleNumberInput = value => {
 };
 
 /**
+ * Clamp a decimal input string to "numbers + one dot" format.
+ * - Keeps digits and a single decimal point
+ * - Prevents multiple dots
+ * - Does not apply any rounding or locale formatting
+ *
+ * @example clampDecimalInput('1,234.50') => '1234.50'
+ * @example clampDecimalInput('..12.3.4') => '.1234' (then normalized by caller if needed)
+ */
+export const clampDecimalInput = (raw, maxDecimals) =>
+  (() => {
+    const sanitized = String(raw).replace(/[^\d.]/g, '');
+    const firstDotIndex = sanitized.indexOf('.');
+    if (firstDotIndex === -1) return sanitized;
+
+    const head = sanitized.slice(0, firstDotIndex + 1);
+    const tail = sanitized.slice(firstDotIndex + 1).replace(/\./g, '');
+
+    const dec = Number.isFinite(Number(maxDecimals)) ? Math.max(0, Number(maxDecimals)) : undefined;
+    if (dec === undefined) return head + tail;
+    return head + tail.slice(0, dec);
+  })();
+
+/**
+ * Format a number without rounding (raw JS string form).
+ * Useful when backend already returns the display-ready number.
+ */
+export const formatRawNumber = n => {
+  if (typeof n === 'number') {
+    if (!Number.isFinite(n)) return '0';
+    // Avoid "-0"
+    if (Object.is(n, -0)) return '0';
+    return String(n);
+  }
+
+  const raw = String(n ?? '').trim();
+  if (!raw) return '0';
+
+  // Preserve display-ready decimal strings as-is (avoid Number(...) coercion)
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(raw)) return '0';
+  if (/^[+-]?0+(?:\.0+)?$/.test(raw)) return '0';
+  return raw.startsWith('+') ? raw.slice(1) : raw;
+};
+
+/**
+ * Check if an array contains a UTxO ref.
+ * @param {{txHash: string, outputIndex: number}[]} arr
+ * @param {{txHash: string, outputIndex: number}} ref
+ */
+export const includesUtxoRef = (arr, ref) =>
+  Array.isArray(arr) && !!ref && arr.some(r => r?.txHash === ref.txHash && r?.outputIndex === ref.outputIndex);
+
+// Convert scientific notation to a plain decimal string.
+// Example: "1.23e-4" -> "0.000123"
+const expandExponential = str => {
+  const s = String(str);
+  if (!/[eE]/.test(s)) return s;
+
+  const match = s.match(/^([+-])?(\d+)(?:\.(\d+))?[eE]([+-]?\d+)$/);
+  if (!match) return s;
+
+  const sign = match[1] || '';
+  const intPart = match[2] || '0';
+  const fracPart = match[3] || '';
+  const exp = parseInt(match[4], 10);
+
+  const digits = `${intPart}${fracPart}`.replace(/^0+/, '') || '0';
+  const decPos = intPart.length;
+  const newPos = decPos + exp;
+
+  if (digits === '0') return '0';
+
+  if (newPos <= 0) {
+    return `${sign}0.${'0'.repeat(-newPos)}${digits}`;
+  }
+
+  if (newPos >= digits.length) {
+    return `${sign}${digits}${'0'.repeat(newPos - digits.length)}`;
+  }
+
+  return `${sign}${digits.slice(0, newPos)}.${digits.slice(newPos)}`;
+};
+
+const toScaledBigInt = (value, scale) => {
+  // Convert a decimal number to an integer at `scale` decimals without floating point summation.
+  // Example: value=112.0021, scale=4 -> 1120021n
+  const s = expandExponential(String(value));
+  const [intPartRaw, fracRaw = ''] = s.split('.');
+  const sign = intPartRaw.startsWith('-') ? -1n : 1n;
+  const intPart = intPartRaw.replace('-', '');
+  const frac = String(fracRaw ?? '')
+    .padEnd(scale, '0')
+    .slice(0, scale);
+  const digits = `${intPart || '0'}${frac}`;
+  const asInt = BigInt(digits || '0');
+  return sign * asInt;
+};
+
+const formatScaledBigInt = (value, scale) => {
+  const negative = value < 0n;
+  const abs = negative ? -value : value;
+  const s = abs.toString();
+
+  if (scale <= 0) return `${negative ? '-' : ''}${s}`;
+
+  const pad = scale + 1;
+  const padded = s.length < pad ? s.padStart(pad, '0') : s;
+  const i = padded.length - scale;
+  const intPart = padded.slice(0, i);
+  const fracPart = padded.slice(i);
+  const trimmedFrac = fracPart.replace(/0+$/, '');
+  return `${negative ? '-' : ''}${intPart}${trimmedFrac ? `.${trimmedFrac}` : ''}`;
+};
+
+/**
+ * Sum decimal numbers exactly (avoids 0.1+0.2 FP artifacts).
+ * Returns a string with no rounding, trimming trailing zeros.
+ *
+ * @param {(number|string)[]} values
+ * @returns {string}
+ */
+export const sumExactDecimals = values => {
+  if (!Array.isArray(values) || values.length === 0) return '0';
+
+  const normalized = values
+    .map(v => expandExponential(String(v)))
+    .filter(v => v && /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(v));
+
+  if (!normalized.length) return '0';
+
+  const scales = normalized.map(s => {
+    const idx = s.indexOf('.');
+    return idx === -1 ? 0 : s.length - idx - 1;
+  });
+  const scale = Math.max(0, ...scales);
+  const sum = normalized.reduce((acc, v) => acc + toScaledBigInt(v, scale), 0n);
+  return formatScaledBigInt(sum, scale);
+};
+
+/**
  * Safely format a policy ID for display
  * @param {string} policyId - The policy ID to format (can be null/undefined)
  * @param {number} prefixLen - Number of characters to show at start (default 6)
@@ -419,18 +558,28 @@ export const formatDateWithTime = dt => {
   return `${date} at ${time}`;
 };
 
-export const formatDateTime = dt => {
+export const formatDateTime = (dt, options = {}) => {
   if (!dt) return null;
 
+  // Default must remain stable across the app (legacy format).
+  const { variant = 'withTimezone' } = options;
   const dateObj = typeof dt === 'string' ? new Date(dt) : dt;
 
-  const date = dateObj.toLocaleDateString();
-  const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (variant === 'withTimezone') {
+    const date = dateObj.toLocaleDateString();
+    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timezoneOffset = formatISO(dateObj).slice(19, 25);
+    const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
+    return `${date} ${time} (${timezoneString})`;
+  }
 
-  const timezoneOffset = formatISO(dateObj).slice(19, 25);
-  const timezoneString = `GMT${timezoneOffset.slice(0, 3)}`;
-
-  return `${date} ${time} (${timezoneString})`;
+  // Default: compact, high-legibility UI format (matches StakingWidget's original look)
+  return dateObj.toLocaleString(undefined, {
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 export const formatProposalEndDate = endDate => {
