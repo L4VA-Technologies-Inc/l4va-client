@@ -1,4 +1,4 @@
-import { Wallet, Info, History, Vault } from 'lucide-react';
+import { Wallet, Info, History, Vault, Receipt } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
@@ -40,14 +40,6 @@ export const RewardsOverview = () => {
   const { data: vaultTimelineData, isLoading: isLoadingVaultTimeline } = useWalletVaultTimeline(walletAddress);
   const { data: activityTimelineData, isLoading: isLoadingActivityTimeline } = useWalletActivityTimeline(walletAddress);
   const { data: estimateData } = useCurrentEpochEstimate(walletAddress);
-
-  console.log('🔍 RewardsOverview Data:', {
-    currentEpochData,
-    claimableData,
-    vestingData,
-    historyData,
-    walletScoreData,
-  });
 
   // Transform activity breakdown for analytics chart
   const activityBreakdown = useMemo(() => {
@@ -184,7 +176,21 @@ export const RewardsOverview = () => {
         <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+          <div
+            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
+            onClick={() => navigate({ to: '/rewards/claims' })}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-green-500/20 border border-green-500/20 flex items-center justify-center flex-shrink-0">
+                <Receipt className="w-5 h-5 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white mb-0.5">Claim History</h3>
+                <p className="text-sm text-steel-400">View your past claim transactions</p>
+              </div>
+            </div>
+          </div>
           <div
             className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/epochs' })}

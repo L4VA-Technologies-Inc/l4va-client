@@ -23,7 +23,7 @@ export { VestingGrouped } from './VestingGrouped';
 
 // Claim Components
 export { ClaimButton } from './ClaimButton';
-export { ClaimTransactionStatus } from './ClaimTransactionStatus';
+export { ClaimHistoryDetails } from './ClaimHistoryDetails';
 
 // Badge Components
 export { RewardSourceBadge } from './RewardSourceBadge';
