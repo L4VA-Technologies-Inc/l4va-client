@@ -593,6 +593,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
   };
 
+  const vaultSwapToken = hasActiveLp
+    ? `${vault.policyId}${vault.assetVaultName}`
+    : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+
   return (
     <>
       {renderPublishedOverlay()}
@@ -637,16 +641,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             ) : null}
           </div>
           <div className="mx-auto w-full mt-4 lg:block hidden">
-            {/* <SwapComponent
-              overrideDisplay
+            <SwapComponent
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
-                // style: { minWidth: '100%' },
-                width: '400px',
+                defaultTokenOut: vaultSwapToken,
+                style: { width: '100%' },
               }}
-            /> */}
+            />
           </div>
         </div>
         <div className="col-span-1 lg:col-span-2 space-y-6">
@@ -674,14 +674,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             )}
           </div>
           <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
-            {/* <SwapComponent
-              overrideDisplay
+            <SwapComponent
               config={{
-                defaultToken: vault.hasActiveLp
-                  ? `${vault.policyId}${vault.assetVaultName}`
-                  : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID,
+                defaultTokenOut: vaultSwapToken,
+                style: { width: '100%' },
               }}
-            /> */}
+            />
           </div>
         </div>
       </div>
