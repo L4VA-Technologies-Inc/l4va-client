@@ -39,7 +39,7 @@ const AppWithInterceptor = () => {
     </ModalProvider>
   );
 };
-
+// hi
 export function AppCore() {
   const { user, isLoading } = useAuth();
 
