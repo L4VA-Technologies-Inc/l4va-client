@@ -33,11 +33,11 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
-  { value: 'distribution', label: 'Distribution - Coming Soon', disabled: false },
-  { value: 'staking', label: 'Staking - Coming Soon', disabled: false },
-  { value: 'termination', label: 'Termination - Coming Soon', disabled: false },
-  { value: 'burning', label: 'Burning - Coming Soon', disabled: false },
-  { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: false },
+  { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
+  { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
+  { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
+  { value: 'burning', label: 'Burning - Coming Soon', disabled: true },
+  { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
 const initialProposalData = {
