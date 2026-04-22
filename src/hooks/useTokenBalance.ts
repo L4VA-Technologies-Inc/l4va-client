@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { parseBalance } from '@ada-anvil/weld';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
@@ -19,34 +20,6 @@ export const L4VA_DECIMALS = parseInt(env.VITE_L4VA_DECIMALS ?? '3', 10);
 // ---------------------------------------------------------------------------
 
 /**
- * Parses a Cardano wallet CBOR balance hex for a specific token.
- */
-const parseCborTokenBalance = (cborHex: string, policyId: string, assetName: string, decimals: number): number => {
-  try {
-    const policyIndex = cborHex.indexOf(policyId);
-    if (policyIndex === -1) return 0;
-
-    const afterPolicy = cborHex.slice(policyIndex + policyId.length);
-    const assetIndex = afterPolicy.indexOf(assetName);
-    if (assetIndex === -1) return 0;
-
-    const afterAsset = afterPolicy.slice(assetIndex + assetName.length);
-    const firstByte = afterAsset.slice(0, 2);
-    let quantity = 0;
-
-    if (parseInt(firstByte, 16) <= 23) quantity = parseInt(firstByte, 16);
-    else if (firstByte === '18') quantity = parseInt(afterAsset.slice(2, 4), 16);
-    else if (firstByte === '19') quantity = parseInt(afterAsset.slice(2, 6), 16);
-    else if (firstByte === '1a') quantity = parseInt(afterAsset.slice(2, 10), 16);
-    else if (firstByte === '1b') quantity = parseInt(afterAsset.slice(2, 18), 16);
-
-    return quantity / Math.pow(10, decimals);
-  } catch {
-    return 0;
-  }
-};
-
-/**
  * Returns a human-readable label for a given on-chain unit (policyId + assetNameHex).
  * Falls back to a truncated unit string for unknown tokens.
  */
@@ -63,41 +36,50 @@ export const getTokenLabel = (unit: string): string => {
 const useTokenBalance = (tokenId: string | undefined, decimals: number, label: string) => {
   const [balance, setBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const wallet = useWallet('handler', 'isConnected');
+  const wallet = useWallet('handler', 'isConnected', 'balanceDecoded');
 
   const policyId = tokenId?.slice(0, 56) ?? '';
   const assetName = tokenId?.slice(56) ?? '';
 
-  const fetchBalance = useCallback(
+  const parseTokenBalance = useCallback(
+    (source: unknown): number => {
+      const raw = parseBalance(source, { policyId, assetName });
+      return raw / Math.pow(10, decimals);
+    },
+    [policyId, assetName, decimals]
+  );
+
+  // Sync balance from weld's reactive decoded state (auto-updates on wallet changes).
+  useEffect(() => {
+    if (wallet.isConnected && tokenId) {
+      setBalance(parseTokenBalance(wallet.balanceDecoded));
+    } else {
+      setBalance(0);
+    }
+  }, [wallet.isConnected, wallet.balanceDecoded, tokenId, parseTokenBalance]);
+
+  // Explicit refresh: forces a fresh read from the wallet extension so the UI
+  // reflects the updated on-chain state immediately after a transaction.
+  const refreshBalance = useCallback(
     async (showToast = false): Promise<number | undefined> => {
       if (!wallet.handler || !tokenId) return;
-
       setIsLoading(true);
       try {
-        const balanceHex = await wallet.handler.getBalance();
-        const parsed = parseCborTokenBalance(balanceHex, policyId, assetName, decimals);
+        const hex = await wallet.handler.getBalance();
+        const parsed = parseTokenBalance(hex);
         setBalance(parsed);
         if (showToast) toast.success(`${label} balance updated`);
         return parsed;
       } catch (err) {
         console.error(`Error fetching ${label} balance:`, err);
         if (showToast) toast.error(`Failed to update ${label} balance`);
-        setBalance(0);
         throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    [wallet.handler, tokenId, policyId, assetName, decimals, label]
+    [wallet.handler, tokenId, parseTokenBalance, label]
   );
-
-  const refreshBalance = useCallback(() => fetchBalance(false), [fetchBalance]);
-
-  useEffect(() => {
-    if (wallet.handler && tokenId) {
-      fetchBalance().catch(() => {});
-    }
-  }, [fetchBalance, wallet.handler, tokenId]);
 
   return { balance, isLoading, refreshBalance };
 };

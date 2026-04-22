@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Sprout, RefreshCcw } from 'lucide-react';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
@@ -17,7 +17,7 @@ interface StakeToken {
 export interface StakingConfirmModalProps {
   isOpen?: boolean;
   onClose?: () => void;
-  onConfirm?: () => void;
+  onConfirm?: () => void | Promise<void>;
   action: StakingAction;
   tokens?: StakeToken[];
   selectedCount?: number;
@@ -77,6 +77,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   selectedReward = '0',
 }) => {
   const { closeModal } = useModalControls();
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const handleClose = () => {
     if (onClose) {
@@ -86,12 +87,39 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
     }
   };
 
-  const handleConfirm = () => {
-    if (onConfirm) onConfirm();
+  const handleRequestClose = () => {
+    if (isConfirming) return;
     handleClose();
   };
 
+  const handleConfirm = async () => {
+    if (isConfirming) return;
+
+    setIsConfirming(true);
+    try {
+      if (onConfirm) {
+        await onConfirm();
+      }
+      handleClose();
+    } catch (error) {
+      // Keep the modal open so async failures are visible to the caller UI.
+      console.error('Staking confirmation failed', error);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   const { title, icon, confirmLabel, accentClass } = ACTION_META[action];
+  const footer = (
+    <div className="flex flex-col md:flex-row gap-3 justify-end">
+      <SecondaryButton className="w-full md:w-auto justify-center" disabled={isConfirming} onClick={handleRequestClose}>
+        Cancel
+      </SecondaryButton>
+      <PrimaryButton className="w-full md:w-auto justify-center" disabled={isConfirming} onClick={handleConfirm}>
+        {confirmLabel}
+      </PrimaryButton>
+    </div>
+  );
 
   const renderDetails = () => {
     switch (action) {
@@ -177,7 +205,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   };
 
   return (
-    <ModalWrapper isOpen={isOpen} onClose={handleClose} title={title} size="md">
+    <ModalWrapper isOpen={isOpen} onClose={handleRequestClose} title={title} size="md" footer={footer}>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3 px-4 py-3 bg-steel-900 rounded-xl border border-steel-750">
           {icon}
@@ -189,15 +217,6 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
         <p className="text-[12px] text-dark-100">
           This action will submit an on-chain transaction and cannot be undone.
         </p>
-
-        <div className="flex flex-col md:flex-row gap-3 justify-end mt-2">
-          <SecondaryButton className="w-full md:w-auto justify-center" onClick={handleClose}>
-            Cancel
-          </SecondaryButton>
-          <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleConfirm}>
-            {confirmLabel}
-          </PrimaryButton>
-        </div>
       </div>
     </ModalWrapper>
   );

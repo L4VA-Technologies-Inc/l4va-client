@@ -17,7 +17,7 @@ import {
   L4VA_DECIMALS,
 } from '@/hooks/useTokenBalance';
 import { useStakeTransaction } from '@/hooks/useStakeTransaction';
-import { useMyStakedBalance } from '@/services/api/queries';
+import { useMyStakedBalance, StakedBoxItem } from '@/services/api/queries';
 import {
   clampDecimalInput,
   formatDateTime as formatDateTimeUtil,
@@ -25,19 +25,6 @@ import {
   includesUtxoRef,
   sumExactDecimals,
 } from '@/utils/core.utils';
-
-export interface StakedBoxItem {
-  txHash: string;
-  outputIndex: number;
-  unit: string;
-  policyId: string;
-  stakedAmount: number;
-  stakedAt: number;
-  estimatedReward: number;
-  estimatedPayout: number;
-  eligible: boolean;
-  cooldownEndsAt: number;
-}
 
 export interface UtxoRefDto {
   txHash: string;
@@ -68,13 +55,7 @@ export const StakingWidget: React.FC = () => {
     refetch: refetchBoxes,
   } = useMyStakedBalance();
 
-  const boxes: StakedBoxItem[] = useMemo(() => {
-    const raw = stakedBoxes as unknown;
-    if (Array.isArray(raw)) return raw as StakedBoxItem[];
-    const maybeBoxes = (raw as { boxes?: unknown } | null)?.boxes;
-    if (Array.isArray(maybeBoxes)) return maybeBoxes as StakedBoxItem[];
-    return [];
-  }, [stakedBoxes]);
+  const boxes: StakedBoxItem[] = useMemo(() => stakedBoxes ?? [], [stakedBoxes]);
 
   const vlrmAmount = useMemo(() => {
     const num = Number(vlrmAmountRaw);
