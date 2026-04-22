@@ -64,11 +64,7 @@ export const ModalWrapper = ({
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 transition-opacity duration-300"
-        aria-hidden="true"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-60 bg-black/60" aria-hidden="true" onClick={onClose} />
       <div
         className={`
           fixed z-70 bg-steel-950 flex flex-col shadow-xl

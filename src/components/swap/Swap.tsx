@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
 import Swap from '@dexhunterio/swaps';
+import React, { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
+
 
 interface SuccessResponse {
   data: {
@@ -38,7 +39,7 @@ export interface SwapComponentProps {
     React.ComponentProps<typeof Swap>,
     'partnerName' | 'partnerCode' | 'colors' | 'onSwapSuccess' | 'onSwapError'
   > & {
-    onSwapSuccess?: (data: SuccessResponse) => void;
+    onSwapSuccess?: (data: unknown) => void;
     onSwapError?: (err: unknown) => void;
   };
 }

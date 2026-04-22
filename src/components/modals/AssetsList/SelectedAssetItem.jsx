@@ -16,7 +16,9 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
           fallbackSrc="/assets/icons/ada.svg"
         />
         <span className="font-medium truncate">
-          {asset.type === 'FT' && asset.amount ? `${formatNum(asset.amount)} ${asset.name}` : asset.name}
+          {!asset.isNft && asset.amount
+            ? `${formatNum(asset.amount)} ${asset?.ticker || asset?.displayName || asset?.name}`
+            : asset.name}
         </span>
       </div>
       <div className="flex items-center gap-3 shrink-0">
