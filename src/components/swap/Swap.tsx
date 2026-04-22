@@ -37,6 +37,8 @@ const RESPONSIVE_OVERRIDE = `
     width: 100%;
     min-width: 0;
     display: block;
+    /* Prevent 300ms tap delay on mobile without breaking scroll */
+    touch-action: manipulation;
   }
 
   .dexhunter-wrapper #dexhunter-container {
@@ -59,11 +61,32 @@ const RESPONSIVE_OVERRIDE = `
     min-width: 0 !important;
     max-width: 100% !important;
   }
-  
-  .dexhunter-wrapper * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
+
+  /*
+   * Ensure #dexhunter-swap-container is always the nearest positioned ancestor
+   * for the token-search Sheet portal (which uses position:absolute inset-0).
+   * overflow:visible prevents any ancestor overflow:hidden from clipping the
+   * portal content or its slide-in animation.
+   */
+  .dexhunter-wrapper #dexhunter-swap-container {
+    position: relative !important;
+    overflow: visible !important;
+  }
+
+  /*
+   * Virtuoso manages inline padding-top/padding-bottom for virtualization.
+   * Do not override those paddings/margins; add a virtual spacer instead so
+   * the last token row is fully visible without scroll jitter.
+   */
+  .dexhunter-wrapper #dexhunter-container [data-testid="virtuoso-item-list"] {
+    position: relative;
+  }
+
+  .dexhunter-wrapper #dexhunter-container [data-testid="virtuoso-item-list"]::after {
+    content: "";
+    display: block;
+    height: calc(36px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
   }
 `;
 
