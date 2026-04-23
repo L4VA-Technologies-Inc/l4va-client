@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
+import { RewardsApiProvider } from '@/services/api/rewards';
 
 interface SuccessResponse {
   data: {
@@ -171,11 +172,19 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
     displayType: 'DEFAULT' as const,
     width: '100%',
     ...config,
-    onSwapSuccess: (data: SuccessResponse) => {
+    onSwapSuccess: async (data: SuccessResponse) => {
       if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
         toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
           duration: 5000,
         });
+
+        // Track widget swap for rewards
+        try {
+          await RewardsApiProvider.trackWidgetSwap(data);
+        } catch (error) {
+          console.error('Failed to track widget swap:', error);
+          // Don't show error to user - tracking is non-critical
+        }
       }
       config?.onSwapSuccess?.(data);
     },
