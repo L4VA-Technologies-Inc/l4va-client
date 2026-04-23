@@ -67,7 +67,7 @@ export const VestingProgress = ({ position }) => {
         <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
           <span>Progress: {formatPercentage(progressPercentage)}</span>
           <span>
-            {formatCompactNumber(vestedAmount)} / {formatCompactNumber(totalAmount)} VLRM
+            {formatCompactNumber(vestedAmount)} / {formatCompactNumber(totalAmount)} L4VA
           </span>
         </div>
         <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
