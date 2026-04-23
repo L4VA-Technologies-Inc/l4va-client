@@ -114,4 +114,10 @@ export class VaultsApiProvider {
     const response = await axiosInstance.post(VaultsConfigProvider.getCollectionNames(), { collections });
     return response;
   }
+
+  static async getAssetsWhitelist({ myVaults = false, page = 1, limit = 10, search = '' } = {}) {
+    return await axiosInstance.get(VaultsConfigProvider.getAssetsWhitelist(), {
+      params: { myVaults, page, limit, search },
+    });
+  }
 }

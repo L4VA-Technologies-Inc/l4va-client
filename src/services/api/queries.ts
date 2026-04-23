@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ClaimsApiProvider } from './claims';
 import { GovernanceApiProvider } from './governance';
@@ -520,6 +520,33 @@ export const useVaultActivity = (
     queryKey: ['vault-activity', vaultId, params],
     queryFn: () => VaultsApiProvider.getVaultActivity(vaultId, params),
     enabled: !!vaultId,
+  });
+};
+
+export const useVaultAssetsWhitelist = ({ myVaults = false, limit = 10, search = '' } = {}) => {
+  return useInfiniteQuery({
+    queryKey: ['vaults', 'assets-whitelist', myVaults, limit, search],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      const response = await VaultsApiProvider.getAssetsWhitelist({
+        myVaults,
+        page: pageParam,
+        limit,
+        search,
+      });
+      const payload = response?.data;
+      return {
+        items: Array.isArray(payload?.items) ? payload.items : [],
+        totalPages: Number(payload?.totalPages) || 1,
+        page: Number(payload?.page) || Number(pageParam) || 1,
+      };
+    },
+    getNextPageParam: lastPage => {
+      if (lastPage.page < lastPage.totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
   });
 };
 
