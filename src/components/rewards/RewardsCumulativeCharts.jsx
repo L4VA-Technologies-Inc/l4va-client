@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Filter } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 import { HoverHelp } from '@/components/shared/HoverHelp';
@@ -134,6 +135,8 @@ function CustomTooltip({ active, payload, label, labelFormatter }) {
 
 function CumulativeAreaChart({ title, hint, timeline, seriesKey, labelMap, isLoading, onSeriesClick }) {
   const [filterDays, setFilterDays] = useState('all');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const filterMenuRef = useRef(null);
 
   const { chartData, seriesKeys, seriesMetadata } = useMemo(
     () => buildCumulativeData(timeline, seriesKey, filterDays),
@@ -150,6 +153,25 @@ function CumulativeAreaChart({ title, hint, timeline, seriesKey, labelMap, isLoa
       onSeriesClick(seriesMetadata[key].vaultId);
     }
   };
+
+  const handleFilterSelect = value => {
+    setFilterDays(value);
+    setShowFilterMenu(false);
+  };
+
+  // Close filter menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
+        setShowFilterMenu(false);
+      }
+    };
+
+    if (showFilterMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showFilterMenu]);
 
   if (isLoading) {
     return (
@@ -189,7 +211,9 @@ function CumulativeAreaChart({ title, hint, timeline, seriesKey, labelMap, isLoa
           <h3 className="text-white font-semibold">{title}</h3>
           <HoverHelp hint={hint} />
         </div>
-        <div className="flex gap-1">
+
+        {/* Desktop time filters */}
+        <div className="hidden md:flex gap-1">
           {TIME_FILTERS.map(f => (
             <button
               key={f.value}
@@ -203,6 +227,35 @@ function CumulativeAreaChart({ title, hint, timeline, seriesKey, labelMap, isLoa
               {f.label}
             </button>
           ))}
+        </div>
+
+        {/* Mobile filter dropdown */}
+        <div className="md:hidden relative" ref={filterMenuRef}>
+          <button
+            onClick={() => setShowFilterMenu(!showFilterMenu)}
+            className="p-2 rounded-md text-steel-400 hover:text-steel-300 hover:bg-steel-800 transition-colors"
+            aria-label="Filter time range"
+          >
+            <Filter className="w-4 h-4" />
+          </button>
+
+          {showFilterMenu && (
+            <div className="absolute right-0 top-full mt-2 bg-steel-800 border border-steel-700 rounded-lg shadow-xl z-50 py-1 min-w-[120px]">
+              {TIME_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => handleFilterSelect(f.value)}
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                    filterDays === f.value
+                      ? 'bg-orange-500/20 text-orange-400'
+                      : 'text-steel-300 hover:bg-steel-750 hover:text-white'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
