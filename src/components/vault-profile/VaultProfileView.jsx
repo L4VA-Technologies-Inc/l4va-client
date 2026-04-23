@@ -191,6 +191,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return window.matchMedia('(max-width: 1023px)').matches;
+  });
 
   useVaultStatusTracker(vault?.id);
   const viewVaultMutation = useViewVault();
@@ -236,6 +242,25 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
 
     return () => cancelIdle(handle);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const updateViewportMode = event => {
+      setIsMobileView(event.matches);
+    };
+
+    setIsMobileView(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updateViewportMode);
+      return () => mediaQuery.removeEventListener('change', updateViewportMode);
+    }
+
+    mediaQuery.addListener(updateViewportMode);
+    return () => mediaQuery.removeListener(updateViewportMode);
   }, []);
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
@@ -595,63 +620,79 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
   };
 
-  const vaultSwapToken = hasActiveLp
-    ? `${vault.policyId}${vault.assetVaultName}`
-    : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+  const activeLpTokenOut = (() => {
+    if (!hasActiveLp) return null;
+
+    const policyId = vault?.policyId || '';
+    const assetName = vault?.assetVaultName || '';
+
+    // Avoid duplicated token id when assetVaultName already includes policyId.
+    if (assetName.startsWith(policyId)) {
+      return assetName;
+    }
+
+    return `${policyId}${assetName}`;
+  })();
+
+  const vaultSwapToken = activeLpTokenOut || import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+  const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
+
+  const renderSwapBlock = () => (
+    <div className="bg-steel-950 rounded-xl p-4 mx-auto w-full mt-4">
+      <SwapComponent
+        key={swapInstanceKey}
+        config={{
+          defaultTokenOut: vaultSwapToken,
+          style: { width: '100%' },
+        }}
+      />
+    </div>
+  );
 
   return (
     <>
       {renderPublishedOverlay()}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl ">
-          <div className="p-4">
-            <div className="overflow-hidden rounded-lg">
-              <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
-                {vault.vaultImage ? (
-                  <img
-                    src={vault.vaultImage}
-                    alt={vault.name}
-                    loading="eager"
-                    decoding="async"
-                    className="object-cover w-full h-auto aspect-square rounded-lg"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-steel-850 flex items-center justify-center">
-                    <L4vaIcon className="h-16 w-16 text-white" />
-                  </div>
-                )}
-              </div>
-            </div>
-            <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
-            <div className="mb-6 space-y-2">
-              <VaultCountdown
-                className="h-[65px]"
-                countdownValue={getCountdownTime(vault)}
-                color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
-              />
-              {isPhaseTransitioning() && <PhaseTransitionInfo />}
-            </div>
-            <div className="mb-6">{renderFailureBanner()}</div>
-            {vault.vaultStatus !== 'locked' ? (
-              deferredReady ? (
-                <Suspense fallback={<ContributionSkeleton />}>
-                  <VaultContribution vault={vault} />
-                </Suspense>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-x-hidden">
+        <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
+          <div className="overflow-hidden rounded-lg">
+            <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
+              {vault.vaultImage ? (
+                <img
+                  src={vault.vaultImage}
+                  alt={vault.name}
+                  loading="eager"
+                  decoding="async"
+                  className="object-cover w-full h-auto aspect-square rounded-lg"
+                />
               ) : (
-                <ContributionSkeleton />
-              )
-            ) : null}
+                <div className="w-full h-full bg-steel-850 flex items-center justify-center">
+                  <L4vaIcon className="h-16 w-16 text-white" />
+                </div>
+              )}
+            </div>
           </div>
-          <div className="mx-auto w-full mt-4 lg:block hidden">
-            <SwapComponent
-              config={{
-                defaultTokenOut: vaultSwapToken,
-                style: { width: '100%' },
-              }}
+          <p className="mb-2 font-medium">{getCountdownName(vault)}</p>
+          <div className="mb-6 space-y-2">
+            <VaultCountdown
+              className="h-[65px]"
+              countdownValue={getCountdownTime(vault)}
+              color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
+            {isPhaseTransitioning() && <PhaseTransitionInfo />}
           </div>
+          <div className="mb-6">{renderFailureBanner()}</div>
+          {vault.vaultStatus !== 'locked' ? (
+            deferredReady ? (
+              <Suspense fallback={<ContributionSkeleton />}>
+                <VaultContribution vault={vault} />
+              </Suspense>
+            ) : (
+              <ContributionSkeleton />
+            )
+          ) : null}
+          {isMobileView === false && renderSwapBlock()}
         </div>
-        <div className="col-span-1 lg:col-span-2 space-y-6">
+        <div className="col-span-1 lg:col-span-2 min-w-0 space-y-6">
           <div className="bg-steel-950 rounded-xl p-4">
             {renderVaultInfo()}
             <div className="mb-6">
@@ -675,14 +716,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <TabsSkeleton />
             )}
           </div>
-          <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
-            <SwapComponent
-              config={{
-                defaultTokenOut: vaultSwapToken,
-                style: { width: '100%' },
-              }}
-            />
-          </div>
+          {isMobileView === true && renderSwapBlock()}
         </div>
       </div>
     </>
