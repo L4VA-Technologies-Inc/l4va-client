@@ -24,8 +24,8 @@ export const VaultsAnalytics = ({ vaults }) => {
     ...vault,
     percent: total > 0 ? (vault.totalReward / total) * 100 : 0,
     color: VAULT_COLORS[i % VAULT_COLORS.length],
-    // Truncate vault ID for display
-    displayLabel: `...${vault.vaultId.slice(-8)}`,
+    // Truncate vault name for display
+    displayLabel: vault.vaultName.length > 12 ? `${vault.vaultName.slice(0, 12)}...` : vault.vaultName,
   }));
 
   let offsetDeg = -90;

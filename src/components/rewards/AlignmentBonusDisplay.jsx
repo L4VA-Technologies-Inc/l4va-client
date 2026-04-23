@@ -81,12 +81,12 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
           <h3 className="text-white font-semibold">Alignment Bonuses</h3>
           <HoverHelp hint={ALIGNMENT_HINT} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-steel-400 text-sm">Total Bonus:</span>
-          <span className={`text-xl font-bold ${totalBonusPercent > 0 ? 'text-orange-500' : 'text-steel-400'}`}>
+        <div className="hidden md:flex items-center text-sm gap-2">
+          <span className="text-steel-400">Total Bonus:</span>
+          <span className={`font-bold ${totalBonusPercent > 0 ? 'text-orange-500' : 'text-steel-400'}`}>
             {isLoading ? '...' : `+${totalBonusPercent}%`}
           </span>
-          <span className="text-steel-500 text-sm">/ {maxBonusPercent}%</span>
+          <span className="text-steel-500">/ {maxBonusPercent}%</span>
         </div>
       </div>
 
@@ -156,6 +156,19 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
               </div>
             </div>
           ))
+        )}
+
+        {/* Mobile total bonus display */}
+        {!isLoading && (
+          <div className="md:hidden pt-4 border-t border-steel-750 flex items-center justify-between">
+            <span className="text-steel-400 text-sm">Total Bonus:</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-bold ${totalBonusPercent > 0 ? 'text-orange-500' : 'text-steel-400'}`}>
+                +{totalBonusPercent}%
+              </span>
+              <span className="text-steel-500 text-sm">/ {maxBonusPercent}%</span>
+            </div>
+          </div>
         )}
       </div>
     </div>

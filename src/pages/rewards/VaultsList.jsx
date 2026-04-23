@@ -162,9 +162,6 @@ export const VaultsList = () => {
                 <p className="text-steel-400 mb-2">
                   Vault rewards for Epoch {currentEpochData?.epochNumber} will be calculated when the epoch ends.
                 </p>
-                <p className="text-sm text-steel-500">
-                  Epoch ends: {new Date(currentEpochData?.epochEnd).toLocaleString()}
-                </p>
               </div>
             ) : (
               <div className="text-center text-steel-400">No vault rewards found for the selected epoch</div>
