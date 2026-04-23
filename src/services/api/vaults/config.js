@@ -78,4 +78,8 @@ export class VaultsConfigProvider {
   static getCollectionNames() {
     return '/api/v1/vaults/collection-names';
   }
+
+  static getAssetsWhitelist() {
+    return '/api/v1/vaults/assets-whitelist';
+  }
 }
