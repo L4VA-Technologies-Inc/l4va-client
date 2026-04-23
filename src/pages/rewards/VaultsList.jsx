@@ -1,9 +1,10 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Wallet, Vault, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
+import { Wallet, Vault, ChevronDown, ChevronUp, ArrowLeft, Clock } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useState } from 'react';
 
 import { useWalletVaults } from '@/hooks/useRewardsVaults';
+import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge, VaultsAnalytics, EpochSelector } from '@/components/rewards';
 
@@ -17,12 +18,17 @@ export const VaultsList = () => {
   const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
 
   const { data: vaultsData, isLoading } = useWalletVaults(walletAddress, activeEpochId);
+  const { data: currentEpochData } = useCurrentEpoch();
+
   // Data is already normalized by backend
   const vaults = vaultsData?.vaults || [];
   const totalRewardBeforeCap = vaultsData?.totalRewardBeforeCap || 0;
   const totalFinalReward = vaultsData?.totalFinalReward || 0;
   const wasCapped = vaultsData?.wasCapped || false;
   const capDifference = vaultsData?.capDifference || 0;
+
+  // Check if we're viewing the current active epoch
+  const isViewingCurrentEpoch = activeEpochId && currentEpochData?.epoch?.id === activeEpochId;
 
   const handleVaultClick = vaultId => {
     navigate({ to: `/rewards/vaults/${vaultId}` });
@@ -80,6 +86,9 @@ export const VaultsList = () => {
 
   // Empty state - only show if no epoch filter is active (truly no vaults)
   if (vaults.length === 0 && selectedEpochIds.length === 0) {
+    // Check if we're in the first epoch (no historical data yet)
+    const isFirstEpoch = currentEpochData && currentEpochData.epoch?.epochNumber === 1;
+
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
@@ -94,9 +103,22 @@ export const VaultsList = () => {
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
             <div className="p-12">
               <div className="text-center">
-                <Vault className="w-16 h-16 text-steel-600 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-white mb-2">No Vault Rewards</h2>
-                <p className="text-steel-400">Participate in vaults to start earning rewards</p>
+                {isFirstEpoch ? (
+                  <>
+                    <Clock className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-white mb-2">First Epoch in Progress</h2>
+                    <p className="text-steel-400 mb-2">
+                      Epoch {currentEpochData?.epochNumber} is currently active. Vault rewards will be calculated when
+                      it ends.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Vault className="w-16 h-16 text-steel-600 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-white mb-2">No Vault Rewards</h2>
+                    <p className="text-steel-400">Participate in vaults to start earning rewards</p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -133,7 +155,20 @@ export const VaultsList = () => {
 
         {vaults.length === 0 && selectedEpochIds.length > 0 ? (
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-8 mb-6">
-            <div className="text-center text-steel-400">No vault rewards found for the selected epoch</div>
+            {isViewingCurrentEpoch ? (
+              <div className="text-center">
+                <Clock className="w-12 h-12 text-steel-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">Current Epoch in Progress</h3>
+                <p className="text-steel-400 mb-2">
+                  Vault rewards for Epoch {currentEpochData?.epochNumber} will be calculated when the epoch ends.
+                </p>
+                <p className="text-sm text-steel-500">
+                  Epoch ends: {new Date(currentEpochData?.epochEnd).toLocaleString()}
+                </p>
+              </div>
+            ) : (
+              <div className="text-center text-steel-400">No vault rewards found for the selected epoch</div>
+            )}
           </div>
         ) : (
           <>
