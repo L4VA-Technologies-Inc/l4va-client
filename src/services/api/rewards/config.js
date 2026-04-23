@@ -27,6 +27,10 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/score/${walletAddress}`;
   }
 
+  static alignmentDetails(walletAddress) {
+    return `/api/v1/rewards/alignment/${walletAddress}`;
+  }
+
   static walletHistory(walletAddress) {
     return `/api/v1/rewards/history/${walletAddress}`;
   }

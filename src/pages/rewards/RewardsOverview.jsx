@@ -13,6 +13,7 @@ import {
   useWalletActivityTimeline,
   useCurrentEpochEstimate,
 } from '@/hooks/useRewardsScore';
+import { useAlignmentDetails } from '@/hooks/useAlignmentDetails';
 import {
   RewardsSummaryCards,
   CurrentEpochBanner,
@@ -22,6 +23,7 @@ import {
   RewardsCumulativeByActivity,
   ClaimButton,
 } from '@/components/rewards';
+import { AlignmentBonusDisplay } from '@/components/rewards/AlignmentBonusDisplay';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
@@ -40,6 +42,7 @@ export const RewardsOverview = () => {
   const { data: vaultTimelineData, isLoading: isLoadingVaultTimeline } = useWalletVaultTimeline(walletAddress);
   const { data: activityTimelineData, isLoading: isLoadingActivityTimeline } = useWalletActivityTimeline(walletAddress);
   const { data: estimateData } = useCurrentEpochEstimate(walletAddress);
+  const { data: alignmentData, isLoading: isLoadingAlignment } = useAlignmentDetails(walletAddress);
 
   // Transform activity breakdown for analytics chart
   const activityBreakdown = useMemo(() => {
@@ -161,6 +164,10 @@ export const RewardsOverview = () => {
             </div>
           )}
         </div>
+
+        {/* Alignment Bonuses */}
+        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} />
+
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
 

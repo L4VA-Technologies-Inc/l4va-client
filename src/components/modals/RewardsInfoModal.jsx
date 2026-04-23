@@ -1,9 +1,4 @@
-import { HoverHelp } from '@/components/shared/HoverHelp';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-
-const TLDR_HINT = `Users earn $L4VA by creating or interacting with vaults. The Oracle Vault is the first vault—it mints ORACLE for "Relics of Magma" NFTs. Total bonuses across staking and alignment are capped at 20%.`;
-
-const STAKING_HINT = `Stake L4VA or VLRM tokens to earn base rewards from treasury budgets. These rewards are independent of protocol activity rewards.`;
 
 export const RewardsInfoModal = ({ isOpen, onClose }) => {
   return (
@@ -12,7 +7,6 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
         <section>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-orange-500 font-semibold">TL;DR</h3>
-            <HoverHelp hint={TLDR_HINT} />
           </div>
           <p className="text-steel-300 text-sm leading-relaxed">
             Users earn $L4VA by creating or interacting with vaults. The Oracle Vault is the first vault on the
@@ -24,7 +18,6 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
         <section>
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-orange-500 font-semibold">Base Staking Rewards</h3>
-            <HoverHelp hint={STAKING_HINT} />
           </div>
           <p className="text-steel-300 text-sm leading-relaxed">
             Stake L4VA or VLRM tokens to earn base rewards from treasury budgets. These rewards are independent of
@@ -33,9 +26,45 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
         </section>
 
         <section>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-orange-500 font-semibold">How to Earn Protocol Rewards</h3>
+          </div>
+          <div className="text-steel-300 text-sm leading-relaxed space-y-2">
+            <p>Earn $L4VA rewards through various protocol activities:</p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Contributing assets into vaults</li>
+              <li>Acquiring</li>
+              <li>Providing liquidity</li>
+              <li>Using the widget for swaps</li>
+              <li>Participating in governance</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-orange-500 font-semibold">Vesting & Unlocking</h3>
+          </div>
+          <p className="text-steel-300 text-sm leading-relaxed">
+            Protocol rewards unlock gradually over time to ensure long-term alignment with the ecosystem. View your
+            locked and unlocked amounts in the Vesting section. Unlocked rewards are ready to claim.
+          </p>
+        </section>
+
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-orange-500 font-semibold">Claiming Your Rewards</h3>
+          </div>
+          <p className="text-steel-300 text-sm leading-relaxed">
+            Once rewards are unlocked from vesting, navigate to the Claims section to submit an on-chain claim
+            transaction. Your unlocked $L4VA will be transferred to your wallet. Unclaimed rewards remain safely in the
+            protocol until you&apos;re ready.
+          </p>
+        </section>
+
+        <section>
           <div className="flex items-center gap-2 mb-4">
             <h3 className="text-orange-500 font-semibold">Protocol Reward Bonuses (Alignment)</h3>
-            <HoverHelp hint="Additive bonuses applied to protocol rewards. Maximum total alignment bonus is 20%." />
           </div>
           <div className="overflow-x-auto rounded-lg border border-steel-750">
             <table className="w-full text-sm">

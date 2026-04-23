@@ -22,3 +22,6 @@ export {
 
 // Vesting hooks
 export { useVestingSummary, useActiveVesting } from './useRewardsVesting';
+
+// Alignment hooks
+export { useAlignmentDetails } from './useAlignmentDetails';

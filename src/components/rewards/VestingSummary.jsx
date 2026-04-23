@@ -1,8 +1,11 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Lock, Unlock, Calendar } from 'lucide-react';
 
+import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { formatDate } from '@/utils/rewards/normalizers';
+
+const VESTING_HINT = `Your rewards unlock gradually over time to ensure long-term alignment. Track locked and unlocked amounts here.`;
 
 export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
   if (isLoading) {
@@ -39,7 +42,10 @@ export const VestingSummary = ({ vestingSummary, isLoading = false }) => {
     <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
       <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-white">Vesting</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white">Vesting</h3>
+            <HoverHelp hint={VESTING_HINT} />
+          </div>
           <Link
             to="/rewards/vesting"
             className="text-sm text-white hover:text-orange-500 transition-colors flex items-center gap-1"

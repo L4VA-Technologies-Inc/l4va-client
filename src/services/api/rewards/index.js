@@ -57,6 +57,16 @@ export class RewardsApiProvider {
   }
 
   /**
+   * Get alignment bonus details for wallet
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object>} Alignment bonus breakdown
+   */
+  static async getAlignmentDetails(walletAddress) {
+    const response = await axiosInstance.get(RewardsConfigProvider.alignmentDetails(walletAddress));
+    return response.data;
+  }
+
+  /**
    * Get wallet reward history
    * @param {string} walletAddress - Wallet address
    * @returns {Promise<Array>} Reward history
