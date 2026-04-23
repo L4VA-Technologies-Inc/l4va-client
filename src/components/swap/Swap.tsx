@@ -4,6 +4,35 @@ import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
+import { RewardsApiProvider } from '@/services/api/rewards';
+
+interface SuccessResponse {
+  data: {
+    amount_in: number;
+    expected_output: number;
+    expected_output_without_slippage: number;
+    fee: number;
+    dex: string;
+    price_impact: number;
+    initial_price: number;
+    final_price: number;
+    pool_id: string;
+    batcher_fee: number;
+    deposits: number;
+    price_distortion: number;
+    pool_fee: number;
+    tx_hash: string;
+    status: 'SUBMITTED';
+    token_id_in: string;
+    token_id_out: string;
+    expected_out_amount: number;
+    submission_time: string;
+    user_address: string;
+    upcoming: boolean;
+    type: 'SELL';
+    is_dexhunter: boolean;
+  }[];
+}
 
 export interface SwapComponentProps {
   config?: Omit<
@@ -143,11 +172,19 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
     displayType: 'DEFAULT' as const,
     width: '100%',
     ...config,
-    onSwapSuccess: (data: unknown) => {
+    onSwapSuccess: async (data: SuccessResponse) => {
       if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
         toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
           duration: 5000,
         });
+
+        // Track widget swap for rewards
+        try {
+          await RewardsApiProvider.trackWidgetSwap(data);
+        } catch (error) {
+          console.error('Failed to track widget swap:', error);
+          // Don't show error to user - tracking is non-critical
+        }
       }
       config?.onSwapSuccess?.(data);
     },

@@ -45,8 +45,9 @@
     "react-hot-toast": "2.5.2",
     "react-virtualized-auto-sizer": "1.0.26",
     "react-window": "2.1.1",
+    "recharts": "^3.8.1",
     "stream-chat": "9.22.1",
-    "stream-chat-react": "12.15.8",  
+    "stream-chat-react": "12.15.8",
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.1.10",
     "tailwindcss-animate": "1.0.7",
@@ -77,6 +78,8 @@
   "devDependencies": {
     "@eslint/js": "9.29.0",
     "@tailwindcss/vite": "4.1.10",
+    "@tanstack/react-router-devtools": "1.121.34",
+    "@tanstack/router-plugin": "1.121.34",
     "@types/node": "24.0.3",
     "@types/react": "19.2.6",
     "@types/react-dom": "19.2.0",
@@ -93,8 +96,6 @@
     "globals": "16.2.0",
     "typedoc": "0.28.14",
     "typescript": "5.8.3",
-    "@tanstack/react-router-devtools": "1.121.34",
-    "@tanstack/router-plugin": "1.121.34",
     "vite": "6.4.2",
     "vite-plugin-svgr": "4.3.0"
   }

@@ -10,6 +10,7 @@ import { CoreApiProvider } from '@/services/api/core';
 import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
 import { SettingsApiProvider } from '@/services/api/settings/index.js';
+import { RewardsApiProvider } from '@/services/api/rewards/index.js';
 
 export const useVaults = (filters: any) => {
   return useQuery({
@@ -528,5 +529,11 @@ export const useVlrmFeeSettings = () => {
     queryFn: () => SettingsApiProvider.getVlrmFeeSettings(),
     staleTime: 5 * 60 * 1000,
     retry: 2,
+  });
+};
+
+export const useTrackWidgetSwap = () => {
+  return useMutation({
+    mutationFn: (payload: unknown) => RewardsApiProvider.trackWidgetSwap(payload),
   });
 };

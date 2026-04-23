@@ -19,6 +19,7 @@ import { DeleteDraftConfirmModal } from '@/components/modals/DeleteDraftConfirmM
 import { DeleteWhitelistConfirmModal } from '@/components/modals/DeleteWhitelistConfirmModal.jsx';
 import { DeleteProposalConfirmModal } from '@/components/modals/DeleteProposalConfirmModal.jsx';
 import { VoteConfirmModal } from '@/components/modals/VoteConfirmModal.jsx';
+import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal.jsx';
 import { StakingConfirmModal } from '@/components/modals/StakingConfirmModal';
 
 export const MODAL_ENTRIES = [
@@ -105,6 +106,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'VoteConfirmModal',
     Component: VoteConfirmModal,
+  },
+  {
+    name: 'RewardsInfoModal',
+    Component: RewardsInfoModal,
   },
   {
     name: 'StakingConfirmModal',
