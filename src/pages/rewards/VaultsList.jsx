@@ -33,6 +33,13 @@ export const VaultsList = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
+          <button
+            onClick={() => navigate({ to: '/rewards' })}
+            className="flex items-center gap-2 text-white hover:text-orange-500 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Rewards Overview</span>
+          </button>
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
             <div className="p-12">
@@ -53,6 +60,13 @@ export const VaultsList = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
+          <button
+            onClick={() => navigate({ to: '/rewards' })}
+            className="flex items-center gap-2 text-white hover:text-orange-500 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Rewards Overview</span>
+          </button>
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -69,6 +83,13 @@ export const VaultsList = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
+          <button
+            onClick={() => navigate({ to: '/rewards' })}
+            className="flex items-center gap-2 text-white hover:text-orange-500 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Rewards Overview</span>
+          </button>
           <h1 className="text-3xl font-bold text-white mb-8">Vault Rewards</h1>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
             <div className="p-12">
