@@ -5,7 +5,6 @@ import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 
-
 interface SuccessResponse {
   data: {
     amount_in: number;
