@@ -1,6 +1,7 @@
-import { Lock, TrendingUp, Trophy, Info } from 'lucide-react';
+import { Lock, TrendingUp, Trophy } from 'lucide-react';
 
 import L4vaIcon from '@/icons/l4va.svg?react';
+import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatCompactNumber } from '@/utils/core.utils';
 
 export const RewardsSummaryCards = ({
@@ -78,20 +79,9 @@ export const RewardsSummaryCards = ({
                   <div className="flex items-center gap-1 mb-0.5">
                     <p className="text-steel-400 text-xs font-medium uppercase tracking-wide">{card.label}</p>
                     {isEstimateCard && estimateConfidenceLabel && (
-                      <div className="group relative">
-                        <Info className="w-4 h-4 text-steel-500 cursor-help hover:text-steel-400 transition-colors" />
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-steel-800 border border-steel-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50 whitespace-nowrap">
-                          <p className="text-xs text-steel-300 font-medium">
-                            Estimate Accuracy: <span className="text-white">{estimateConfidenceLabel}</span>
-                          </p>
-                          <p className="text-[10px] text-steel-400 mt-0.5">
-                            Based on current epoch progress and activity
-                          </p>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-                            <div className="border-4 border-transparent border-t-steel-800" />
-                          </div>
-                        </div>
-                      </div>
+                      <HoverHelp
+                        hint={`Estimate Accuracy: ${estimateConfidenceLabel}\nBased on current epoch progress and activity`}
+                      />
                     )}
                   </div>
                   <p className={`text-xl font-bold text-white ${card.highlight ? 'text-orange-gradient' : ''}`}>
