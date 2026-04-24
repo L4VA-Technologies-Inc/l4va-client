@@ -1,4 +1,4 @@
-import { Wallet, Info, History, Vault, Receipt } from 'lucide-react';
+import { Wallet, Info, History, Receipt } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
@@ -183,7 +183,7 @@ export const RewardsOverview = () => {
         <VestingSummary vestingSummary={vestingSummary} isLoading={isLoadingVesting} />
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
           <div
             className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/claims' })}
@@ -212,7 +212,7 @@ export const RewardsOverview = () => {
               </div>
             </div>
           </div>
-          <div
+          {/* <div
             className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/vaults' })}
           >
@@ -225,7 +225,7 @@ export const RewardsOverview = () => {
                 <p className="text-sm text-steel-400">See rewards by vault participation</p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Info Modal */}
