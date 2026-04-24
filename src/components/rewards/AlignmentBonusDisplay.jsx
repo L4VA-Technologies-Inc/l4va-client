@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react';
+import { Check, Sparkles, X } from 'lucide-react';
 
 import { HoverHelp } from '@/components/shared/HoverHelp';
 
@@ -45,6 +45,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       progress: l4vaBonus.requiredAmount ? Math.min(100, (l4vaBonus.stakedAmount / l4vaBonus.requiredAmount) * 100) : 0,
       stakedAmount: l4vaBonus.stakedAmount || 0,
       requiredAmount: l4vaBonus.requiredAmount || 100000,
+      iconUrl: '/favicon/favicon.png',
     },
     {
       label: 'VLRM Staking',
@@ -54,6 +55,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       progress: vlrmBonus.requiredAmount ? Math.min(100, (vlrmBonus.stakedAmount / vlrmBonus.requiredAmount) * 100) : 0,
       stakedAmount: vlrmBonus.stakedAmount || 0,
       requiredAmount: vlrmBonus.requiredAmount || 20000,
+      iconUrl: 'https://app.l4va.org/api/v1/asset-image/QmdYu513Bu7nfKV5LKP6cmpZ8HHXifQLH6FTTzv3VbbqwP',
     },
     {
       label: 'ORACLE Holding',
@@ -63,6 +65,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       progress: oracleBonus.achieved ? 100 : 0,
       balance: oracleBonus.balance || 0,
       isTiered: true,
+      iconUrl: 'https://app.l4va.org/api/v1/image/d81c44b5-bf67-4945-8c9b-b76591716997',
     },
     {
       label: 'Full Alignment',
@@ -71,6 +74,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       achieved: alignmentFullBonus.achieved,
       progress: alignmentFullBonus.achieved ? 100 : 0,
       isFullAlignment: true,
+      iconLucide: Sparkles,
     },
   ];
 
@@ -106,16 +110,25 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
         ) : (
           bonusItems.map((item, index) => (
             <div key={index} className="flex items-start gap-3">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  item.achieved ? 'bg-green-500/20 border border-green-500/30' : 'bg-steel-800 border border-steel-700'
-                }`}
-              >
-                {item.achieved ? (
-                  <Check className="w-4 h-4 text-green-500" />
-                ) : (
-                  <X className="w-4 h-4 text-steel-500" />
-                )}
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-steel-800 overflow-hidden flex items-center justify-center">
+                  {item.iconUrl ? (
+                    <img src={item.iconUrl} alt={`${item.label} token`} className="w-full h-full object-cover" />
+                  ) : (
+                    <item.iconLucide className="w-4 h-4 text-orange-400" />
+                  )}
+                </div>
+                <div
+                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-steel-900 flex items-center justify-center ${
+                    item.achieved ? 'bg-green-500' : 'bg-steel-600'
+                  }`}
+                >
+                  {item.achieved ? (
+                    <Check className="w-2.5 h-2.5 text-white" />
+                  ) : (
+                    <X className="w-2.5 h-2.5 text-white" />
+                  )}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
