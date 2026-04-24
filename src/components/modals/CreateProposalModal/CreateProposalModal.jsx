@@ -33,7 +33,7 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
-  { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
+  { value: 'distribution', label: 'Distribution', disabled: false },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
   { value: 'burning', label: 'Burning - Coming Soon', disabled: true },
