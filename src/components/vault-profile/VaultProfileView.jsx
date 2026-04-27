@@ -452,8 +452,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
-        <div className="flex w-full justify-between items-center mb-3">
-          <h1 className="text-2xl font-bold">{vault.name}</h1>
+        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
+          <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
           <div className="flex gap-2 items-center">
             {isAuthenticated && (
               <div className="group relative">
@@ -463,7 +463,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 >
                   <User className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                   View owner profile
                 </div>
               </div>
@@ -477,7 +477,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 >
                   <BarChart3 className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                   View vault statistics
                 </div>
               </div>
@@ -487,7 +487,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <EyeIcon className="w-4 h-4 text-orange-500" />
                 <span>{formatCompactNumber(vault.countView)}</span>
               </span>
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                 Total views
               </div>
             </div>
@@ -498,7 +498,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               >
                 <Share className="w-4 h-4 text-orange-500" />
               </button>
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                 Share vault link
               </div>
             </div>
@@ -652,7 +652,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   return (
     <>
       {renderPublishedOverlay()}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-x-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
           <div className="overflow-hidden rounded-lg">
             <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
