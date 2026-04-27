@@ -8,7 +8,7 @@ import { RewardsApiProvider } from '@/services/api/rewards';
 export const useAlignmentDetails = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'alignment', walletAddress],
-    queryFn: () => RewardsApiProvider.getAlignmentDetails(walletAddress),
+    queryFn: () => RewardsApiProvider.getAlignmentDetails(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

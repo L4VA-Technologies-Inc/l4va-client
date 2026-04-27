@@ -25,7 +25,7 @@ export const ClaimButton = ({ walletAddress, claimableAmount = 0, onSuccess = nu
       // Build, sign, and submit the claim transaction (all handled server-side)
       toast.loading('Processing claim transaction...', { id: 'claim-tx' });
 
-      const result = await RewardsApiProvider.buildClaimTransaction(walletAddress, {
+      const result = await RewardsApiProvider.buildClaimTransaction({
         claimImmediate: true,
         claimVested: true,
       });

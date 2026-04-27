@@ -8,7 +8,7 @@ import { RewardsApiProvider } from '@/services/api/rewards';
 export const useVestingSummary = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'vesting', walletAddress, 'summary'],
-    queryFn: () => RewardsApiProvider.getVestingSummary(walletAddress),
+    queryFn: () => RewardsApiProvider.getVestingSummary(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -20,7 +20,7 @@ export const useVestingSummary = (walletAddress: string) => {
 export const useActiveVesting = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'vesting', walletAddress, 'active'],
-    queryFn: () => RewardsApiProvider.getActiveVesting(walletAddress),
+    queryFn: () => RewardsApiProvider.getActiveVesting(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

@@ -8,7 +8,7 @@ import { RewardsApiProvider } from '@/services/api/rewards';
 export const useWalletScore = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'score', walletAddress],
-    queryFn: () => RewardsApiProvider.getWalletScore(walletAddress),
+    queryFn: () => RewardsApiProvider.getWalletScore(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -20,7 +20,7 @@ export const useWalletScore = (walletAddress: string) => {
 export const useWalletHistory = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'history', walletAddress],
-    queryFn: () => RewardsApiProvider.getWalletHistory(walletAddress),
+    queryFn: () => RewardsApiProvider.getWalletHistory(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -32,7 +32,7 @@ export const useWalletHistory = (walletAddress: string) => {
 export const useWalletVaultTimeline = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'timeline', 'vaults', walletAddress],
-    queryFn: () => RewardsApiProvider.getWalletVaultTimeline(walletAddress),
+    queryFn: () => RewardsApiProvider.getWalletVaultTimeline(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 5,
   });
@@ -44,7 +44,7 @@ export const useWalletVaultTimeline = (walletAddress: string) => {
 export const useWalletActivityTimeline = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'timeline', 'activities', walletAddress],
-    queryFn: () => RewardsApiProvider.getWalletActivityTimeline(walletAddress),
+    queryFn: () => RewardsApiProvider.getWalletActivityTimeline(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 5,
   });
@@ -56,7 +56,7 @@ export const useWalletActivityTimeline = (walletAddress: string) => {
 export const useCurrentEpochEstimate = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'current-estimate', walletAddress],
-    queryFn: () => RewardsApiProvider.getCurrentEpochEstimate(walletAddress),
+    queryFn: () => RewardsApiProvider.getCurrentEpochEstimate(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes - refresh more frequently for live estimate
     refetchInterval: 1000 * 60 * 3, // Auto-refetch every 3 minutes

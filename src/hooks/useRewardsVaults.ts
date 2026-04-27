@@ -20,7 +20,7 @@ export const useVaultScores = (vaultId: string, epochId?: string | null) => {
 export const useWalletVaultReward = (walletAddress: string, vaultId: string, epochId?: string | null) => {
   return useQuery({
     queryKey: ['rewards', 'wallet', walletAddress, 'vault', vaultId, epochId ?? null],
-    queryFn: () => RewardsApiProvider.getWalletVaultReward(walletAddress, vaultId, epochId || undefined),
+    queryFn: () => RewardsApiProvider.getWalletVaultReward(vaultId, epochId || undefined),
     enabled: !!walletAddress && !!vaultId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -32,7 +32,7 @@ export const useWalletVaultReward = (walletAddress: string, vaultId: string, epo
 export const useWalletVaults = (walletAddress: string, epochId?: string | null) => {
   return useQuery({
     queryKey: ['rewards', 'wallet', walletAddress, 'vaults', epochId ?? null],
-    queryFn: () => RewardsApiProvider.getWalletVaults(walletAddress, epochId || undefined),
+    queryFn: () => RewardsApiProvider.getWalletVaults(epochId || undefined),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

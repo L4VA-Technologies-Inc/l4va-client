@@ -89,15 +89,29 @@ export const ClaimHistoryDetails = ({ transactions = [], isLoading = false }) =>
                 </div>
                 <p className="text-steel-400 text-sm">
                   {tx.confirmedAt
-                    ? new Date(tx.confirmedAt).toLocaleDateString()
-                    : new Date(tx.createdAt).toLocaleDateString()}
+                    ? new Date(tx.confirmedAt).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : new Date(tx.createdAt).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                 </p>
               </div>
 
               {/* Link */}
-              {tx.transactionId && (
+              {tx.txHash && (
                 <a
-                  href={`${IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io'}/transaction/${tx.transactionId}`}
+                  href={`${IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io'}/transaction/${
+                    tx.txHash
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-shrink-0 text-white hover:text-orange-500 transition-colors"

@@ -8,7 +8,7 @@ import { RewardsApiProvider } from '@/services/api/rewards';
 export const useClaimsSummary = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'claims', walletAddress, 'summary'],
-    queryFn: () => RewardsApiProvider.getClaimsSummary(walletAddress),
+    queryFn: () => RewardsApiProvider.getClaimsSummary(),
     enabled: !!walletAddress,
     staleTime: 1000 * 30, // 30 seconds
   });
@@ -20,7 +20,7 @@ export const useClaimsSummary = (walletAddress: string) => {
 export const useClaimableAmount = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'claims', walletAddress, 'claimable'],
-    queryFn: () => RewardsApiProvider.getClaimableAmount(walletAddress),
+    queryFn: () => RewardsApiProvider.getClaimableAmount(),
     enabled: !!walletAddress,
     staleTime: 1000 * 30, // 30 seconds
   });
@@ -32,7 +32,7 @@ export const useClaimableAmount = (walletAddress: string) => {
 export const useClaimHistory = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'claims', walletAddress, 'history'],
-    queryFn: () => RewardsApiProvider.getClaimHistory(walletAddress),
+    queryFn: () => RewardsApiProvider.getClaimHistory(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -44,36 +44,8 @@ export const useClaimHistory = (walletAddress: string) => {
 export const useClaimTransactions = (walletAddress: string) => {
   return useQuery({
     queryKey: ['rewards', 'claims', walletAddress, 'transactions'],
-    queryFn: () => RewardsApiProvider.getClaimTransactions(walletAddress),
+    queryFn: () => RewardsApiProvider.getClaimTransactions(),
     enabled: !!walletAddress,
     staleTime: 1000 * 60, // 1 minute
-  });
-};
-
-/**
- * Submit a claim request
- */
-export const useSubmitClaim = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ walletAddress, payload }: { walletAddress: string; payload: any }) =>
-      RewardsApiProvider.submitClaim(walletAddress, payload),
-    onSuccess: (data, variables) => {
-      // Invalidate all claim-related queries for the wallet
-      queryClient.invalidateQueries({
-        queryKey: ['rewards', 'claims', variables.walletAddress],
-      });
-
-      // Invalidate vesting queries as they may be affected
-      queryClient.invalidateQueries({
-        queryKey: ['rewards', 'vesting', variables.walletAddress],
-      });
-
-      // Invalidate rewards summary/history
-      queryClient.invalidateQueries({
-        queryKey: ['rewards', 'history', variables.walletAddress],
-      });
-    },
   });
 };

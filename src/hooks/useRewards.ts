@@ -12,13 +12,7 @@ export { useWalletScore, useWalletHistory, useWalletVaultTimeline, useWalletActi
 export { useVaultScores, useWalletVaultReward, useWalletVaults } from './useRewardsVaults';
 
 // Claims hooks
-export {
-  useClaimsSummary,
-  useClaimableAmount,
-  useClaimHistory,
-  useClaimTransactions,
-  useSubmitClaim,
-} from './useRewardsClaims';
+export { useClaimsSummary, useClaimableAmount, useClaimHistory, useClaimTransactions } from './useRewardsClaims';
 
 // Vesting hooks
 export { useVestingSummary, useActiveVesting } from './useRewardsVesting';

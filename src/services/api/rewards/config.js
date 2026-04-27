@@ -23,16 +23,16 @@ export class RewardsConfigProvider {
   // Score & History Endpoints
   // ============================================================================
 
-  static walletScore(walletAddress) {
-    return `/api/v1/rewards/score/${walletAddress}`;
+  static walletScore() {
+    return '/api/v1/rewards/me/score';
   }
 
-  static alignmentDetails(walletAddress) {
-    return `/api/v1/rewards/alignment/${walletAddress}`;
+  static alignmentDetails() {
+    return '/api/v1/rewards/me/alignment';
   }
 
-  static walletHistory(walletAddress) {
-    return `/api/v1/rewards/history/${walletAddress}`;
+  static walletHistory() {
+    return '/api/v1/rewards/me/history';
   }
 
   // ============================================================================
@@ -43,63 +43,59 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/vault/${vaultId}/scores`;
   }
 
-  static walletVaultReward(walletAddress, vaultId) {
-    return `/api/v1/rewards/wallet/${walletAddress}/vault/${vaultId}`;
+  static walletVaultReward(vaultId) {
+    return `/api/v1/rewards/me/vault/${vaultId}`;
   }
 
-  static walletVaults(walletAddress) {
-    return `/api/v1/rewards/wallet/${walletAddress}/vaults`;
+  static walletVaults() {
+    return '/api/v1/rewards/me/vaults';
   }
 
-  static walletVaultTimeline(walletAddress) {
-    return `/api/v1/rewards/wallet/${walletAddress}/timeline/vaults`;
+  static walletVaultTimeline() {
+    return '/api/v1/rewards/me/timeline/vaults';
   }
 
-  static walletActivityTimeline(walletAddress) {
-    return `/api/v1/rewards/wallet/${walletAddress}/timeline/activities`;
+  static walletActivityTimeline() {
+    return '/api/v1/rewards/me/timeline/activities';
   }
 
-  static currentEpochEstimate(walletAddress) {
-    return `/api/v1/rewards/wallet/${walletAddress}/current-estimate`;
+  static currentEpochEstimate() {
+    return '/api/v1/rewards/me/current-estimate';
   }
 
   // ============================================================================
   // Claims Endpoints
   // ============================================================================
 
-  static claimsSummary(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}`;
+  static claimsSummary() {
+    return '/api/v1/rewards/me/claims';
   }
 
-  static claimableAmount(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}/claimable`;
+  static claimableAmount() {
+    return '/api/v1/rewards/me/claims/claimable';
   }
 
-  static claimHistory(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}/history`;
+  static claimHistory() {
+    return '/api/v1/rewards/me/claims/history';
   }
 
-  static claimTransactions(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}/transactions`;
+  static claimTransactions() {
+    return '/api/v1/rewards/me/claims/transactions';
   }
 
-  static submitClaim(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}/claim`;
-  }
-
-  static buildClaim(walletAddress) {
-    return `/api/v1/rewards/claims/${walletAddress}/build`;
+  static buildClaim() {
+    return '/api/v1/rewards/me/claims/build';
   }
 
   // ============================================================================
   // Vesting Endpoints
   // ============================================================================
 
-  static vestingSummary(walletAddress) {
-    return `/api/v1/rewards/vesting/${walletAddress}`;
+  static vestingSummary() {
+    return '/api/v1/rewards/me/vesting';
   }
 
-  static activeVesting(walletAddress) {
-    return `/api/v1/rewards/vesting/${walletAddress}/active`;
+  static activeVesting() {
+    return '/api/v1/rewards/me/vesting/active';
   }
 }

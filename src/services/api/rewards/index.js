@@ -47,32 +47,29 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get wallet score
-   * @param {string} walletAddress - Wallet address
+   * Get wallet score (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Wallet score details
    */
-  static async getWalletScore(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletScore(walletAddress));
+  static async getWalletScore() {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletScore());
     return response.data;
   }
 
   /**
-   * Get alignment bonus details for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get alignment bonus details for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Alignment bonus breakdown
    */
-  static async getAlignmentDetails(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.alignmentDetails(walletAddress));
+  static async getAlignmentDetails() {
+    const response = await axiosInstance.get(RewardsConfigProvider.alignmentDetails());
     return response.data;
   }
 
   /**
-   * Get wallet reward history
-   * @param {string} walletAddress - Wallet address
+   * Get wallet reward history (uses authenticated wallet from JWT)
    * @returns {Promise<Array>} Reward history
    */
-  static async getWalletHistory(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletHistory(walletAddress));
+  static async getWalletHistory() {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletHistory());
     return response.data;
   }
 
@@ -92,57 +89,54 @@ export class RewardsApiProvider {
   }
 
   /**
-   * Get wallet rewards for specific vault
-   * @param {string} walletAddress - Wallet address
+   * Get wallet rewards for specific vault (uses authenticated wallet from JWT)
    * @param {string} vaultId - Vault ID
+   * @param {string} [epochId] - Optional epoch ID
    * @returns {Promise<Object>} Wallet vault reward details
    */
-  static async getWalletVaultReward(walletAddress, vaultId, epochId) {
+  static async getWalletVaultReward(vaultId, epochId) {
     const params = epochId ? { epochId } : {};
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultReward(walletAddress, vaultId), {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultReward(vaultId), {
       params,
     });
     return response.data;
   }
 
   /**
-   * Get all vaults associated with wallet rewards
-   * @param {string} walletAddress - Wallet address
+   * Get all vaults associated with wallet rewards (uses authenticated wallet from JWT)
+   * @param {string} [epochId] - Optional epoch ID
    * @returns {Promise<Object>} Wallet vaults with rewards
    */
-  static async getWalletVaults(walletAddress, epochId) {
+  static async getWalletVaults(epochId) {
     const params = epochId ? { epochId } : {};
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaults(walletAddress), { params });
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaults(), { params });
     return response.data;
   }
 
   /**
-   * Get per-epoch per-vault reward timeline for cumulative charts
-   * @param {string} walletAddress - Wallet address
+   * Get per-epoch per-vault reward timeline for cumulative charts (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Vault timeline data
    */
-  static async getWalletVaultTimeline(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultTimeline(walletAddress));
+  static async getWalletVaultTimeline() {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletVaultTimeline());
     return response.data;
   }
 
   /**
-   * Get per-epoch per-activity reward timeline for cumulative charts
-   * @param {string} walletAddress - Wallet address
+   * Get per-epoch per-activity reward timeline for cumulative charts (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Activity timeline data
    */
-  static async getWalletActivityTimeline(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.walletActivityTimeline(walletAddress));
+  static async getWalletActivityTimeline() {
+    const response = await axiosInstance.get(RewardsConfigProvider.walletActivityTimeline());
     return response.data;
   }
 
   /**
-   * Get current epoch reward estimate with confidence indicator
-   * @param {string} walletAddress - Wallet address
+   * Get current epoch reward estimate with confidence indicator (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Estimate with confidence level
    */
-  static async getCurrentEpochEstimate(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.currentEpochEstimate(walletAddress));
+  static async getCurrentEpochEstimate() {
+    const response = await axiosInstance.get(RewardsConfigProvider.currentEpochEstimate());
     return response.data;
   }
 
@@ -151,66 +145,51 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get claims summary for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get claims summary for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Claims summary
    */
-  static async getClaimsSummary(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.claimsSummary(walletAddress));
+  static async getClaimsSummary() {
+    const response = await axiosInstance.get(RewardsConfigProvider.claimsSummary());
     return response.data;
   }
 
   /**
-   * Get claimable amount for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get claimable amount for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Claimable amount details
    */
-  static async getClaimableAmount(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.claimableAmount(walletAddress));
+  static async getClaimableAmount() {
+    const response = await axiosInstance.get(RewardsConfigProvider.claimableAmount());
     return response.data;
   }
 
   /**
-   * Get claim history for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get claim history for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Array>} Claim history
    */
-  static async getClaimHistory(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.claimHistory(walletAddress));
+  static async getClaimHistory() {
+    const response = await axiosInstance.get(RewardsConfigProvider.claimHistory());
     return response.data;
   }
 
   /**
-   * Get claim transactions for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get claim transactions for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Array>} Claim transactions
    */
-  static async getClaimTransactions(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.claimTransactions(walletAddress));
-    return response.data;
-  }
-
-  /**
-   * Submit a claim request
-   * @param {string} walletAddress - Wallet address
-   * @param {Object} payload - Claim payload with signature
-   * @returns {Promise<Object>} Claim response
-   */
-  static async submitClaim(walletAddress, payload = {}) {
-    const response = await axiosInstance.post(RewardsConfigProvider.submitClaim(walletAddress), payload);
+  static async getClaimTransactions() {
+    const response = await axiosInstance.get(RewardsConfigProvider.claimTransactions());
     return response.data;
   }
 
   /**
    * Build and submit a claim transaction (complete flow)
    * This builds the transaction, signs it server-side, and submits to blockchain.
+   * Uses authenticated wallet from JWT.
    *
-   * @param {string} walletAddress - Wallet address
    * @param {Object} options - Claim options (epochIds, claimImmediate, claimVested)
    * @returns {Promise<Object>} Transaction hash and claim details
    */
-  static async buildClaimTransaction(walletAddress, options = {}) {
-    const response = await axiosInstance.post(RewardsConfigProvider.buildClaim(walletAddress), options);
+  static async buildClaimTransaction(options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.buildClaim(), options);
     return response.data;
   }
 
@@ -219,22 +198,20 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get vesting summary for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get vesting summary for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Vesting summary
    */
-  static async getVestingSummary(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.vestingSummary(walletAddress));
+  static async getVestingSummary() {
+    const response = await axiosInstance.get(RewardsConfigProvider.vestingSummary());
     return response.data;
   }
 
   /**
-   * Get active vesting positions for wallet
-   * @param {string} walletAddress - Wallet address
+   * Get active vesting positions for wallet (uses authenticated wallet from JWT)
    * @returns {Promise<Array>} Active vesting positions
    */
-  static async getActiveVesting(walletAddress) {
-    const response = await axiosInstance.get(RewardsConfigProvider.activeVesting(walletAddress));
+  static async getActiveVesting() {
+    const response = await axiosInstance.get(RewardsConfigProvider.activeVesting());
     return response.data;
   }
 }
