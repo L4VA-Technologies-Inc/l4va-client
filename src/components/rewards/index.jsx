@@ -9,11 +9,13 @@ export { VaultLeaderboard } from './VaultLeaderboard';
 
 // Summary Components
 export { RewardsSummaryCards } from './RewardsSummaryCards';
+export { TotalEarnedCard } from './TotalEarnedCard';
 export { VestingSummary } from './VestingSummary';
 
 // Epoch Components
 export { EpochSelector } from './EpochSelector';
 export { CurrentEpochBanner } from './CurrentEpochBanner';
+export { CurrentEpochInfoCard } from './CurrentEpochBanner';
 export { EpochStatusBadge } from './EpochStatusBadge';
 export { EpochRewardRow } from './EpochRewardRow';
 
