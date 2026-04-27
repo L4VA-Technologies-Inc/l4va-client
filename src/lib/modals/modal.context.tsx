@@ -11,6 +11,7 @@ interface ModalContextType {
 
 interface ModalControlContextType {
   openModal: (name: string, props?: any) => void;
+  updateModal: (name: string, props?: any) => void;
   closeModal: () => void;
 }
 
@@ -20,6 +21,7 @@ const ModalContext = createContext<ModalContextType>({
 
 const ModalControlContext = createContext<ModalControlContextType>({
   openModal: () => {},
+  updateModal: () => {},
   closeModal: () => {},
 });
 
@@ -40,6 +42,22 @@ export function ModalProvider({ children }: ModalProviderProps) {
     });
   }, []);
 
+  const updateModal = useCallback((name: string, props?: any) => {
+    setActiveModalData(currentModal => {
+      if (!currentModal || currentModal.name !== name) {
+        return currentModal;
+      }
+
+      return {
+        ...currentModal,
+        props: {
+          ...(currentModal.props ?? {}),
+          ...(props ?? {}),
+        },
+      };
+    });
+  }, []);
+
   const closeModal = useCallback(() => {
     setActiveModalData(null);
   }, []);
@@ -54,9 +72,10 @@ export function ModalProvider({ children }: ModalProviderProps) {
   const methods = useMemo(
     () => ({
       openModal,
+      updateModal,
       closeModal,
     }),
-    [closeModal, openModal]
+    [closeModal, openModal, updateModal]
   );
 
   return (
