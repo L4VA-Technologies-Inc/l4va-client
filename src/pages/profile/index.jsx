@@ -11,6 +11,7 @@ import { Spinner } from '@/components/Spinner.jsx';
 import { UserPublicVaultsList } from '@/components/vaults/UserPublicVaultsList.jsx';
 import { Transactions } from '@/pages/profile/Transactions.jsx';
 import { StakingWidget } from '@/pages/profile/StakingWidget';
+import { ProfileRewardsLinkCard } from '@/pages/profile/ProfileRewardsLinkCard';
 
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
@@ -35,7 +36,14 @@ export const Profile = ({ userId, isEditable }) => {
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
-        {!userId && <StakingWidget />}
+        {!userId && (
+          <div className="w-full">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 xl:gap-6 items-stretch">
+              <StakingWidget />
+              <ProfileRewardsLinkCard />
+            </div>
+          </div>
+        )}
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList initialTab={search?.tab} />}
         {!userId && <Claims />}
