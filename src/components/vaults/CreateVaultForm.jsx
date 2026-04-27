@@ -1049,7 +1049,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       </>
       <>{renderButtons()}</>
       <Dialog open={isVisibleSwipe} onOpenChange={() => setIsVisibleSwipe(false)}>
-        <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-fit">
+        <DialogContent className="sm:max-w-4xl items-center justify-center pt-8 bg-steel-950 border-none max-h-[90vh] flex w-full">
           {isVisibleSwipe ? (
             <Suspense fallback={<div className="px-12 py-10 text-dark-100">Loading swap widget…</div>}>
               <LazySwapComponent
