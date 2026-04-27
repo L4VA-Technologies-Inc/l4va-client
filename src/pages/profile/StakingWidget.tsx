@@ -169,14 +169,14 @@ export const StakingWidget: React.FC = () => {
   }, [vlrmAmount, l4vaAmount]);
 
   return (
-    <div className="w-full max-w-[920px] mx-auto">
-      <div className="rounded-2xl border border-steel-750 bg-steel-950 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)]">
+    <div className="flex w-full">
+      <div className="w-full rounded-2xl border border-steel-750 bg-steel-950 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)]">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-[13px] tracking-[0.12em] uppercase text-dark-100 flex items-center gap-2">
-                <span>Staking</span>
+              <div className="flex items-center gap-2">
+                <div className="text-[18px] sm:text-[20px] font-semibold text-white">Staking Widget</div>
                 <HoverHelp
                   hint={
                     'Stake creates individual on-chain boxes (UTxOs).\n\n' +
@@ -189,9 +189,6 @@ export const StakingWidget: React.FC = () => {
                     '- Compound: restakes deposit + reward into a new box; nothing is sent to wallet.'
                   }
                 />
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <div className="text-[18px] sm:text-[20px] font-semibold text-white">Staking Widget</div>
                 <Button
                   type="button"
                   variant="ghost"
