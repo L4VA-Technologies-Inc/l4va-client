@@ -6,6 +6,7 @@ const ModalContext = createContext({
 
 const ModalControlContext = createContext({
   openModal: () => {},
+  updateModal: () => {},
   closeModal: () => false,
 });
 
@@ -14,6 +15,22 @@ export function ModalProvider({ children }) {
 
   const openModal = useCallback((name, props) => {
     setActiveModalData({ name, props });
+  }, []);
+
+  const updateModal = useCallback((name, props) => {
+    setActiveModalData(currentModal => {
+      if (!currentModal || currentModal.name !== name) {
+        return currentModal;
+      }
+
+      return {
+        ...currentModal,
+        props: {
+          ...(currentModal.props ?? {}),
+          ...(props ?? {}),
+        },
+      };
+    });
   }, []);
 
   const closeModal = useCallback(() => {
@@ -30,9 +47,10 @@ export function ModalProvider({ children }) {
   const methods = useMemo(
     () => ({
       openModal,
+      updateModal,
       closeModal,
     }),
-    [closeModal, openModal]
+    [closeModal, openModal, updateModal]
   );
 
   return (

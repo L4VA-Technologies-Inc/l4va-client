@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
@@ -43,11 +43,11 @@ export const StakingWidget: React.FC = () => {
   const [l4vaAmountRaw, setL4vaAmountRaw] = useState('');
   const [selected, setSelected] = useState<UtxoRefDto[]>([]);
 
-  const { openModal } = useModalControls();
+  const { openModal, updateModal } = useModalControls();
 
   const { vlrmBalance, l4vaBalance, isLoading: isBalanceLoading, refreshBalances } = useStakeBalances();
 
-  const { stake, unstake, harvest, compound, isProcessing } = useStakeTransaction();
+  const { stake, unstake, harvest, compound, status, isProcessing } = useStakeTransaction();
   const {
     data: stakedBoxes,
     isLoading: isBoxesLoading,
@@ -99,6 +99,7 @@ export const StakingWidget: React.FC = () => {
 
     openModal('StakingConfirmModal', {
       action: 'stake',
+      confirmStatus: status,
       tokens: stakeTokens,
       onConfirm: async () => {
         const hash = await stake({ tokens });
@@ -113,6 +114,7 @@ export const StakingWidget: React.FC = () => {
   const handleUnstake = (selectedRefs: UtxoRefDto[]) => {
     openModal('StakingConfirmModal', {
       action: 'unstake',
+      confirmStatus: status,
       selectedCount: selectedRefs.length,
       selectedPayout,
       selectedReward,
@@ -126,6 +128,7 @@ export const StakingWidget: React.FC = () => {
   const handleHarvest = (selectedRefs: UtxoRefDto[]) => {
     openModal('StakingConfirmModal', {
       action: 'harvest',
+      confirmStatus: status,
       selectedCount: selectedRefs.length,
       selectedPayout,
       selectedReward,
@@ -139,6 +142,7 @@ export const StakingWidget: React.FC = () => {
   const handleCompound = (selectedRefs: UtxoRefDto[]) => {
     openModal('StakingConfirmModal', {
       action: 'compound',
+      confirmStatus: status,
       selectedCount: selectedRefs.length,
       selectedPayout,
       selectedReward,
@@ -148,6 +152,10 @@ export const StakingWidget: React.FC = () => {
       },
     });
   };
+
+  useEffect(() => {
+    updateModal('StakingConfirmModal', { confirmStatus: status });
+  }, [status, updateModal]);
 
   const toggleRef = (ref: UtxoRefDto) => {
     setSelected(prev =>

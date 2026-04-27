@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ArrowDownToLine, ArrowUpFromLine, Sprout, RefreshCcw } from 'lucide-react';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -8,6 +7,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { formatRawNumber } from '@/utils/core.utils';
 
 export type StakingAction = 'stake' | 'unstake' | 'harvest' | 'compound';
+type ConfirmStatus = 'idle' | 'building' | 'signing' | 'submitting';
 
 interface StakeToken {
   symbol: string;
@@ -18,6 +18,7 @@ export interface StakingConfirmModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   onConfirm?: () => void | Promise<void>;
+  confirmStatus?: ConfirmStatus;
   action: StakingAction;
   tokens?: StakeToken[];
   selectedCount?: number;
@@ -25,31 +26,24 @@ export interface StakingConfirmModalProps {
   selectedReward?: string;
 }
 
-const ACTION_META: Record<
-  StakingAction,
-  { title: string; icon: React.ReactNode; confirmLabel: string; accentClass: string }
-> = {
+const ACTION_META: Record<StakingAction, { title: string; confirmLabel: string; accentClass: string }> = {
   stake: {
     title: 'Confirm Stake',
-    icon: <ArrowDownToLine className="w-5 h-5 text-lava-500" />,
     confirmLabel: 'Stake',
     accentClass: 'text-lava-500',
   },
   unstake: {
     title: 'Confirm Unstake',
-    icon: <ArrowUpFromLine className="w-5 h-5 text-amber-400" />,
     confirmLabel: 'Unstake',
     accentClass: 'text-amber-400',
   },
   harvest: {
     title: 'Confirm Harvest',
-    icon: <Sprout className="w-5 h-5 text-green-400" />,
     confirmLabel: 'Harvest',
     accentClass: 'text-green-400',
   },
   compound: {
     title: 'Confirm Compound',
-    icon: <RefreshCcw className="w-5 h-5 text-sky-400" />,
     confirmLabel: 'Compound',
     accentClass: 'text-sky-400',
   },
@@ -71,6 +65,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   onClose,
   onConfirm,
   action,
+  confirmStatus = 'idle',
   tokens = [],
   selectedCount = 0,
   selectedPayout = '0',
@@ -109,14 +104,22 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
     }
   };
 
-  const { title, icon, confirmLabel, accentClass } = ACTION_META[action];
+  const { title, confirmLabel, accentClass } = ACTION_META[action];
+  const confirmButtonLabel =
+    confirmStatus === 'building'
+      ? 'Building...'
+      : confirmStatus === 'signing'
+        ? 'Signing...'
+        : confirmStatus === 'submitting'
+          ? 'Submitting...'
+          : confirmLabel;
   const footer = (
     <div className="flex flex-col md:flex-row gap-3 justify-end">
       <SecondaryButton className="w-full md:w-auto justify-center" disabled={isConfirming} onClick={handleRequestClose}>
         Cancel
       </SecondaryButton>
       <PrimaryButton className="w-full md:w-auto justify-center" disabled={isConfirming} onClick={handleConfirm}>
-        {confirmLabel}
+        {confirmButtonLabel}
       </PrimaryButton>
     </div>
   );
@@ -207,13 +210,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   return (
     <ModalWrapper isOpen={isOpen} onClose={handleRequestClose} title={title} size="md" footer={footer}>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3 px-4 py-3 bg-steel-900 rounded-xl border border-steel-750">
-          {icon}
-          <span className={`text-[14px] font-semibold ${accentClass}`}>{title}</span>
-        </div>
-
         {renderDetails()}
-
         <p className="text-[12px] text-dark-100">
           This action will submit an on-chain transaction and cannot be undone.
         </p>
