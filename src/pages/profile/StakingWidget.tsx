@@ -32,6 +32,8 @@ export interface UtxoRefDto {
 }
 
 const TABS = ['Stake', 'Unstake'] as const;
+const MIN_STAKE_AMOUNT = 100;
+const MAX_SELECTED_BOXES = 25;
 
 type TabKey = 'stake' | 'unstake';
 
@@ -69,12 +71,26 @@ export const StakingWidget: React.FC = () => {
 
   const canStake = useMemo(() => {
     if (isProcessing) return false;
-    const hasVlrm = vlrmAmount > 0 && vlrmAmount <= vlrmBalance;
-    const hasL4va = l4vaAmount > 0 && l4vaAmount <= l4vaBalance;
-    const vlrmOk = vlrmAmount === 0 || (vlrmAmount > 0 && vlrmAmount <= vlrmBalance);
-    const l4vaOk = l4vaAmount === 0 || (l4vaAmount > 0 && l4vaAmount <= l4vaBalance);
+    const hasVlrm = vlrmAmount >= MIN_STAKE_AMOUNT && vlrmAmount <= vlrmBalance;
+    const hasL4va = l4vaAmount >= MIN_STAKE_AMOUNT && l4vaAmount <= l4vaBalance;
+    const vlrmOk = vlrmAmount === 0 || (vlrmAmount >= MIN_STAKE_AMOUNT && vlrmAmount <= vlrmBalance);
+    const l4vaOk = l4vaAmount === 0 || (l4vaAmount >= MIN_STAKE_AMOUNT && l4vaAmount <= l4vaBalance);
     return (hasVlrm || hasL4va) && vlrmOk && l4vaOk;
   }, [vlrmAmount, l4vaAmount, vlrmBalance, l4vaBalance, isProcessing]);
+
+  const stakeValidationMessage = useMemo(() => {
+    const errors: string[] = [];
+
+    if (vlrmAmount > 0 && vlrmAmount < MIN_STAKE_AMOUNT) {
+      errors.push(`VLRM minimum stake is ${MIN_STAKE_AMOUNT}.`);
+    }
+
+    if (l4vaAmount > 0 && l4vaAmount < MIN_STAKE_AMOUNT) {
+      errors.push(`L4VA minimum stake is ${MIN_STAKE_AMOUNT}.`);
+    }
+
+    return errors.join(' ');
+  }, [vlrmAmount, l4vaAmount]);
 
   const selectedPayout = useMemo(() => {
     if (!selected.length) return '0';
@@ -161,7 +177,9 @@ export const StakingWidget: React.FC = () => {
     setSelected(prev =>
       includesRef(prev, ref)
         ? prev.filter(r => !(r.txHash === ref.txHash && r.outputIndex === ref.outputIndex))
-        : [...prev, ref]
+        : prev.length >= MAX_SELECTED_BOXES
+          ? prev
+          : [...prev, ref]
     );
   };
 
@@ -229,6 +247,8 @@ export const StakingWidget: React.FC = () => {
               <div className="text-[12px] text-dark-100 leading-relaxed">
                 Stake creates a new on-chain box (UTxO) per token. Fill one or both amounts. Manage withdrawals in the{' '}
                 <span className="text-white">Unstake</span> tab.
+                <br />
+                Minimum stake per token: <span className="text-white">{MIN_STAKE_AMOUNT}</span> (L4VA or VLRM).
               </div>
 
               {/* VLRM input */}
@@ -292,6 +312,9 @@ export const StakingWidget: React.FC = () => {
               </div>
 
               {/* Stake CTA */}
+              {stakeValidationMessage ? (
+                <div className="text-[12px] text-red-400 leading-relaxed">{stakeValidationMessage}</div>
+              ) : null}
               <PrimaryButton disabled={!canStake} onClick={handleStake} size="lg" className="w-full">
                 Stake Tokens
               </PrimaryButton>
@@ -308,6 +331,11 @@ export const StakingWidget: React.FC = () => {
                   Selected: <span className="text-white">{selected.length}</span>
                 </div>
               </div>
+              {selected.length >= MAX_SELECTED_BOXES ? (
+                <div className="text-[12px] text-yellow-400 leading-relaxed">
+                  You can select up to {MAX_SELECTED_BOXES} boxes. Deselect one to choose another.
+                </div>
+              ) : null}
 
               {/* Positions list */}
               <div className="max-h-[360px] sm:max-h-[320px] overflow-auto rounded-xl border border-steel-750 bg-steel-900">
@@ -331,10 +359,12 @@ export const StakingWidget: React.FC = () => {
                       const ref: UtxoRefDto = { txHash: box.txHash, outputIndex: box.outputIndex };
                       const isSelected = includesRef(selected, ref);
                       const locked = !box.eligible;
+                      const limitReached = selected.length >= MAX_SELECTED_BOXES && !isSelected;
+                      const disabledByLimit = !locked && limitReached;
                       const stakedAtText = formatDateTimeUtil(new Date(box.stakedAt), { variant: 'compact' }) ?? '-';
                       const tokenLabel = getTokenLabel(box.unit);
 
-                      const isRowClickable = !locked;
+                      const isRowClickable = !locked && !disabledByLimit;
                       const rowKey = `${box.txHash}:${box.outputIndex}`;
 
                       const onRowToggle = () => {
@@ -361,7 +391,7 @@ export const StakingWidget: React.FC = () => {
                             isRowClickable
                               ? 'cursor-pointer hover:bg-steel-800 focus-visible:ring-2 focus-visible:ring-white/30'
                               : '',
-                            locked ? 'opacity-50 cursor-not-allowed' : '',
+                            locked || disabledByLimit ? 'opacity-50 cursor-not-allowed' : '',
                           ].join(' ')}
                         >
                           <div className="flex items-start sm:items-center justify-between gap-4">
@@ -397,7 +427,7 @@ export const StakingWidget: React.FC = () => {
                                     checked={isSelected}
                                     onChange={() => toggleRef(ref)}
                                     label=""
-                                    disabled={locked}
+                                    disabled={locked || disabledByLimit}
                                   />
                                 </div>
                               ) : (
