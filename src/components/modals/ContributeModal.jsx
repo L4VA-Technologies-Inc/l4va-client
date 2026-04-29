@@ -400,7 +400,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
                   : 'Total estimated value of your selected assets. Final value is calculated at the end of the contribution window.'
               }
             />
-            {vault.protocolContributorsFeeAda > 0 && (
+            {isExpansionMode && vault.protocolContributorsFeeAda > 0 && (
               <MetricCard
                 label="Protocol Fee"
                 value={`${currencySymbol}${isAda ? vault.protocolContributorsFeeAda.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : vault.protocolContributorsFeeUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
