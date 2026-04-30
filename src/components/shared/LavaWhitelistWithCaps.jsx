@@ -1,4 +1,4 @@
-import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert, Info } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
@@ -245,7 +245,7 @@ export const LavaWhitelistWithCaps = ({
         const nextWhitelist = whitelist.map(asset => {
           const update = updatesByUniqueId[asset.uniqueId];
           if (!update || (asset.isVerified !== undefined && asset.isVerified !== null)) return asset;
-          
+
           const updatedAsset = {
             ...asset,
             ...update,
@@ -601,7 +601,7 @@ export const LavaWhitelistWithCaps = ({
                     name={`valuationMethod_${asset.uniqueId}`}
                     options={
                       asset.isLpToken
-                        ? [{ name: 'lp_token_dynamic', label: 'LP Token Dynamic Price' }]
+                        ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
                         : [
                             { name: 'market', label: 'Market / Floor Price' },
                             { name: 'custom', label: 'Custom Price' },
@@ -616,7 +616,7 @@ export const LavaWhitelistWithCaps = ({
                     disabled={asset.isLpToken}
                   />
                   {asset.isLpToken && (
-                    <p className="text-sm text-blue-400 mt-2">LP tokens use dynamic pricing calculated from pool TVL</p>
+                    <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
                   )}
                   {(() => {
                     const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
