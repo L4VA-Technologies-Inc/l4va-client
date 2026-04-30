@@ -78,7 +78,7 @@ export interface GroupedPolicy {
   /** Present when `isVerified` and API returned a platform */
   verificationPlatform: VerificationPlatform | null;
   /** Whether this is an LP token requiring dynamic pricing */
-  isLpToken?: boolean;
+  isLpToken: boolean;
 }
 
 const PAGE_SIZE = 10;
