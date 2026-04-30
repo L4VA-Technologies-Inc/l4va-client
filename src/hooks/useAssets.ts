@@ -162,7 +162,10 @@ function walletPolicySetKey(grouped: GroupedPolicyBase[]): string {
 }
 
 const groupAssetsByPolicy = (assets: WalletAsset[]): GroupedPolicyBase[] => {
-  const grouped = new Map<string, { policyId: string; name: string; assetName: string; count: number }>();
+  const grouped = new Map<
+    string,
+    { policyId: string; name: string; assetName: string; count: number; isLpToken: boolean }
+  >();
 
   assets.forEach(asset => {
     if (grouped.has(asset.policyId)) {
@@ -174,6 +177,7 @@ const groupAssetsByPolicy = (assets: WalletAsset[]): GroupedPolicyBase[] => {
         name: asset.name,
         assetName: asset.assetNameHex,
         count: 1,
+        isLpToken: false,
       });
     }
   });
@@ -192,7 +196,12 @@ export const useAssets = () => {
   const collectionNamesCache = useRef<
     Map<
       string,
-      { collectionName: string | null; isVerified: boolean; verificationPlatform: VerificationPlatform | null; isLpToken: boolean }
+      {
+        collectionName: string | null;
+        isVerified: boolean;
+        verificationPlatform: VerificationPlatform | null;
+        isLpToken: boolean;
+      }
     >
   >(new Map());
   /** Serializes cache-miss fetches so parallel callers (Strict Mode, open + search) share one wave of HTTP requests */
@@ -351,7 +360,7 @@ export const useAssets = () => {
       if (policyIds.length === 0) return [];
       const items: GroupedPolicyBase[] = policyIds.map(id => {
         const existing = allGroupedRef.current.find(p => p.policyId === id);
-        return existing ?? { policyId: id, name: '', assetName: '', count: 1 };
+        return existing ?? { policyId: id, name: '', assetName: '', count: 1, isLpToken: false };
       });
       return fetchCollections(items);
     },
