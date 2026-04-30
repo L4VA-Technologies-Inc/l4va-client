@@ -40,6 +40,8 @@ type CollectionLookupRaw = {
   is_verified?: boolean;
   platform?: unknown;
   tokenVerification?: { platform?: unknown; is_verified?: boolean };
+  isLpToken?: boolean;
+  is_lp_token?: boolean;
 };
 
 function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
@@ -47,13 +49,15 @@ function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
   collectionName: string | null;
   isVerified: boolean;
   verificationPlatform: VerificationPlatform | null;
+  isLpToken: boolean;
 } {
   const policyId = raw.policyId ?? raw.policy_id ?? '';
   const collectionName = raw.collectionName ?? raw.collection_name ?? null;
   const isVerified = raw.isVerified ?? raw.is_verified ?? false;
   const platformRaw = raw.platform ?? raw.tokenVerification?.platform;
   const verificationPlatform = isVerified ? parseVerificationPlatform(platformRaw) : null;
-  return { policyId, collectionName, isVerified, verificationPlatform };
+  const isLpToken = raw.isLpToken ?? raw.is_lp_token ?? false;
+  return { policyId, collectionName, isVerified, verificationPlatform, isLpToken };
 }
 
 export interface WalletAsset {
@@ -73,6 +77,8 @@ export interface GroupedPolicy {
   isVerified: boolean;
   /** Present when `isVerified` and API returned a platform */
   verificationPlatform: VerificationPlatform | null;
+  /** Whether this is an LP token requiring dynamic pricing */
+  isLpToken?: boolean;
 }
 
 const PAGE_SIZE = 10;
@@ -186,7 +192,7 @@ export const useAssets = () => {
   const collectionNamesCache = useRef<
     Map<
       string,
-      { collectionName: string | null; isVerified: boolean; verificationPlatform: VerificationPlatform | null }
+      { collectionName: string | null; isVerified: boolean; verificationPlatform: VerificationPlatform | null; isLpToken: boolean }
     >
   >(new Map());
   /** Serializes cache-miss fetches so parallel callers (Strict Mode, open + search) share one wave of HTTP requests */
@@ -232,6 +238,7 @@ export const useAssets = () => {
                 collectionName: normalized.collectionName,
                 isVerified: normalized.isVerified,
                 verificationPlatform: normalized.verificationPlatform,
+                isLpToken: normalized.isLpToken,
               });
             });
           } catch (error) {
@@ -241,6 +248,7 @@ export const useAssets = () => {
                 collectionName: null,
                 isVerified: false,
                 verificationPlatform: null,
+                isLpToken: false,
               });
             });
           }
@@ -254,6 +262,7 @@ export const useAssets = () => {
           collectionName: cached?.collectionName ?? null,
           isVerified: cached?.isVerified ?? false,
           verificationPlatform: cached?.verificationPlatform ?? null,
+          isLpToken: cached?.isLpToken ?? false,
         };
       });
     };
