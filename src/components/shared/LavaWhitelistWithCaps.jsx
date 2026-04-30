@@ -252,8 +252,8 @@ export const LavaWhitelistWithCaps = ({
             policyName: update.name || asset.policyName || 'N/A',
           };
 
-          // Auto-set LP token valuation method
-          if (update.isLpToken && !updatedAsset.valuationMethod) {
+          // LP token detection should override any previously selected non-LP valuation method
+          if (update.isLpToken) {
             updatedAsset.valuationMethod = 'lp_token_dynamic';
           }
 
