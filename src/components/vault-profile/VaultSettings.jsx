@@ -18,7 +18,11 @@ import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
 const collectionDisplayName = asset =>
   asset.collectionName?.trim() || asset.name?.trim() || asset.policyName?.trim() || null;
 
-const pricingMethodLabel = valuationMethod => (valuationMethod === 'custom' ? 'Custom' : 'Market / Floor');
+const pricingMethodLabel = valuationMethod => {
+  if (valuationMethod === 'custom') return 'Custom';
+  if (valuationMethod === 'lp_token_dynamic') return 'LP Token Price';
+  return 'Market / Floor';
+};
 
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
