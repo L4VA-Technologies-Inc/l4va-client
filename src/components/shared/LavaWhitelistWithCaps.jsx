@@ -1,4 +1,4 @@
-import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert, Info } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
