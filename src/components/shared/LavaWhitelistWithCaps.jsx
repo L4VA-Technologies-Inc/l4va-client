@@ -215,6 +215,7 @@ export const LavaWhitelistWithCaps = ({
               name: localMatch.name || asset.name || '',
               assetName: localMatch.assetName || asset.assetName || '',
               count: localMatch.count || asset.count || 1,
+              isLpToken: localMatch.isLpToken ?? false,
             };
           } else {
             needsApiLookup.push(asset);
@@ -234,6 +235,7 @@ export const LavaWhitelistWithCaps = ({
               name: result.name || asset.name || '',
               assetName: result.assetName || asset.assetName || '',
               count: result.count || asset.count || 1,
+              isLpToken: result.isLpToken ?? false,
             };
           });
         }
@@ -243,11 +245,19 @@ export const LavaWhitelistWithCaps = ({
         const nextWhitelist = whitelist.map(asset => {
           const update = updatesByUniqueId[asset.uniqueId];
           if (!update || (asset.isVerified !== undefined && asset.isVerified !== null)) return asset;
-          return {
+          
+          const updatedAsset = {
             ...asset,
             ...update,
             policyName: update.name || asset.policyName || 'N/A',
           };
+
+          // Auto-set LP token valuation method
+          if (update.isLpToken && !updatedAsset.valuationMethod) {
+            updatedAsset.valuationMethod = 'lp_token_dynamic';
+          }
+
+          return updatedAsset;
         });
 
         const hasChanges = nextWhitelist.some((asset, index) => asset !== whitelist[index]);
@@ -589,13 +599,25 @@ export const LavaWhitelistWithCaps = ({
                   <LavaRadio
                     label="*Asset Valuation Method"
                     name={`valuationMethod_${asset.uniqueId}`}
-                    options={[
-                      { name: 'market', label: 'Market / Floor Price' },
-                      { name: 'custom', label: 'Custom Price' },
-                    ]}
-                    value={asset.valuationMethod || 'market'}
-                    onChange={value => updateAsset(asset.uniqueId, 'valuationMethod', value)}
+                    options={
+                      asset.isLpToken
+                        ? [{ name: 'lp_token_dynamic', label: 'LP Token Dynamic Price' }]
+                        : [
+                            { name: 'market', label: 'Market / Floor Price' },
+                            { name: 'custom', label: 'Custom Price' },
+                          ]
+                    }
+                    value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
+                    onChange={value => {
+                      if (!asset.isLpToken) {
+                        updateAsset(asset.uniqueId, 'valuationMethod', value);
+                      }
+                    }}
+                    disabled={asset.isLpToken}
                   />
+                  {asset.isLpToken && (
+                    <p className="text-sm text-blue-400 mt-2">LP tokens use dynamic pricing calculated from pool TVL</p>
+                  )}
                   {(() => {
                     const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                     return (
@@ -604,7 +626,7 @@ export const LavaWhitelistWithCaps = ({
                   })()}
                 </div>
 
-                {asset.valuationMethod === 'custom' && (
+                {asset.valuationMethod === 'custom' && !asset.isLpToken && (
                   <div>
                     <LavaInput
                       required={true}
