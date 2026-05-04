@@ -165,11 +165,7 @@ export const RewardsOverview = () => {
                     {formatCompactNumber(claimableAmount)} $L4VA
                   </p>
                 </div>
-                <ClaimButton
-                  claimableAmount={claimableAmount}
-                  onSuccess={handleClaimSuccess}
-                  className="w-full sm:w-auto px-8 py-3 text-lg"
-                />
+                <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
               </div>
             </div>
           )}
