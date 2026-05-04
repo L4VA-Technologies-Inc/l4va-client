@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ExternalLink, Eye, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ExternalLink, Eye } from 'lucide-react';
 import clsx from 'clsx';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
@@ -9,10 +9,10 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims, useBuildTerminationClaim, useSubmitTerminationClaim } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
-import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { ClaimsApiProvider } from '@/services/api/claims';
+import { LavaTable } from '@/components/shared/LavaTable';
 
 const tabOptions = [
   { id: 'distribution', name: 'Distribution', type: 'distribution' },
@@ -70,20 +70,13 @@ export const Claims = () => {
     const selectedTab = tabOptions.find(t => t.name === tab);
     if (selectedTab) {
       setActiveTab(selectedTab);
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        page: 1,
-        type: selectedTab.type,
-      }));
+      setFilters(prevFilters => ({ ...prevFilters, page: 1, type: selectedTab.type }));
     }
   };
 
   const handlePageChange = page => {
     setCurrentPage(page);
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      page: page,
-    }));
+    setFilters(prevFilters => ({ ...prevFilters, page }));
   };
 
   const handleClaim = async claim => {
@@ -91,11 +84,9 @@ export const Claims = () => {
       setProcessedClaim(claim.id);
       setStatus('building');
 
-      // Find the claim to check its type
       const isTerminationClaim = claim?.type === 'termination';
 
       if (isTerminationClaim) {
-        // Termination claim flow: send VT to admin wallet
         const buildResponse = await buildTerminationClaim.mutateAsync(claim.id);
         const { transactionId, presignedTx } = buildResponse.data;
 
@@ -118,7 +109,6 @@ export const Claims = () => {
 
         toast.success('Termination claim processed!');
       } else {
-        // Regular claim flow
         const { data } = await ClaimsApiProvider.receiveClaim(claim.id);
 
         setStatus('signing');
@@ -156,13 +146,11 @@ export const Claims = () => {
     const ftShares = claim.metadata?.ftShares || [];
     const hasFtDistribution = ftShares.length > 0;
 
-    // Build reward display
     let rewardDisplay = null;
     if (claim.adaAmount && claim.adaAmount > 0) {
       rewardDisplay = `${(claim.adaAmount / 1000000).toLocaleString()} ADA`;
     }
 
-    // Add FT information for termination claims
     let ftDisplay = null;
     if (isTerminationClaim && hasFtDistribution) {
       const ftCount = ftShares.length;
@@ -186,19 +174,12 @@ export const Claims = () => {
     };
   });
 
-  const filteredClaims = formattedClaims.filter(claim => {
-    const allowedStatuses = ['pending', 'claimed', 'failed', 'available'];
-    return allowedStatuses.includes(claim.status);
-  });
+  const filteredClaims = formattedClaims.filter(claim =>
+    ['pending', 'claimed', 'failed', 'available'].includes(claim.status)
+  );
 
-  const getCardClasses = claim =>
-    clsx('flex flex-col gap-3 rounded-xl p-4 mb-4 shadow border border-steel-750', {
-      'bg-steel-750': selectedClaims.includes(claim.id),
-      'bg-steel-850': !selectedClaims.includes(claim.id) && claim.status !== 'claimed',
-    });
-
-  const getTableRowClasses = claim =>
-    clsx('transition-all duration-300 cursor-pointer', {
+  const getRowClassName = claim =>
+    clsx('transition-all duration-300', {
       'bg-steel-750': selectedClaims.includes(claim.id),
       'bg-steel-850 hover:bg-steel-750': !selectedClaims.includes(claim.id) && claim.status !== 'claimed',
     });
@@ -230,7 +211,6 @@ export const Claims = () => {
           </PrimaryButton>
         );
       }
-
       return (
         <PrimaryButton
           size="sm"
@@ -260,7 +240,12 @@ export const Claims = () => {
   };
 
   const ClaimCard = ({ claim }) => (
-    <div className={getCardClasses(claim)}>
+    <div
+      className={clsx('flex flex-col gap-3 rounded-xl p-4 mb-4 shadow border border-steel-750', {
+        'bg-steel-750': selectedClaims.includes(claim.id),
+        'bg-steel-850': !selectedClaims.includes(claim.id) && claim.status !== 'claimed',
+      })}
+    >
       <div className="flex items-center gap-3">
         <img
           alt={`${claim.vault} preview`}
@@ -302,6 +287,90 @@ export const Claims = () => {
     </div>
   );
 
+  const isCancellation = activeTab.id === 'cancellation';
+
+  const columns = useMemo(
+    () => [
+      {
+        key: 'vault',
+        header: 'Vault',
+        render: claim => (
+          <div className="flex items-center gap-3">
+            {claim.image ? (
+              <img
+                src={claim.image || '/favicon/favicon.ico'}
+                alt={claim.image || '-'}
+                className="w-12 h-12 rounded-full"
+                onError={e => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
+            )}
+            <div
+              className="flex items-center gap-1 font-medium text-white uppercase hover:text-orange-500 transition-colors cursor-pointer"
+              onClick={() => {
+                if (!claim.link || claim.link === '#') return;
+                navigate({ to: claim.link });
+              }}
+            >
+              {claim.vault || '-'} <ExternalLink size={16} />
+            </div>
+          </div>
+        ),
+        cellClassName: 'pr-8 sm:pr-0',
+      },
+      {
+        key: 'date',
+        header: 'Date',
+        accessor: 'date',
+        cellClassName: 'text-steel-300',
+      },
+      {
+        key: 'reward',
+        header: isCancellation ? 'Asset' : 'Reward',
+        render: claim => {
+          if (claim.reward || claim.ftReward) {
+            return (
+              <div className="flex flex-col gap-1">
+                {claim.reward && <span className="font-medium text-white">{claim.reward}</span>}
+                {claim.ftReward && <span className="font-medium text-green-400 text-sm">{claim.ftReward}</span>}
+              </div>
+            );
+          }
+          if (!claim.reward && isCancellation && claim.assets) {
+            return (
+              <button
+                onClick={() => openModal('NftModal', { assets: claim.assets })}
+                className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
+              >
+                Show All NFTs
+                <Eye size={16} />
+              </button>
+            );
+          }
+          return <span className="font-medium text-white">-</span>;
+        },
+      },
+      {
+        key: 'vt_tokens',
+        header: 'Vault Tokens',
+        accessor: 'vt_tokens',
+        cellClassName: 'font-medium text-white',
+        hidden: isCancellation,
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        render: claim => <ClaimStatusIndicator claim={claim} />,
+      },
+    ],
+    [isCancellation, navigate, openModal, status, processedClaim, wallet, handleClaim]
+  );
+
+  const totalPages = Math.ceil(pagination.total / pagination.limit);
+
   return (
     <div className="space-y-6">
       <h2 className="font-russo text-4xl uppercase text-white">My Distributions</h2>
@@ -315,109 +384,23 @@ export const Claims = () => {
           />
         </div>
       </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-          <span className="ml-2 text-steel-300">Loading your claims...</span>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12 text-red-400">
-          <p>Error loading claims: {error.message}</p>
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-2xl border border-steel-750 hidden md:block">
-            <table className="w-full">
-              <thead>
-                <tr className="text-dark-100 text-sm border-b border-steel-750">
-                  <th className="px-4 py-3 text-left">Vault</th>
-                  <th className="px-4 py-3 text-left">Date</th>
-                  <th className="px-4 py-3 text-left">{activeTab.id !== 'cancellation' ? 'Reward' : 'Asset'}</th>
-                  {activeTab.id !== 'cancellation' && <th className="px-4 py-3 text-left">Vault Tokens</th>}
-                  <th className="px-4 py-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClaims.map(claim => (
-                  <tr key={claim.id} className={getTableRowClasses(claim)}>
-                    <td className="px-4 pr-8 sm:pr-0 py-3">
-                      <div className="flex items-center gap-3">
-                        {claim.image ? (
-                          <img
-                            src={claim.image || '/favicon/favicon.ico'}
-                            alt={claim.image || '-'}
-                            className="w-12 h-12 rounded-full"
-                            onError={e => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
-                        )}
-                        <div>
-                          <div
-                            className="flex items-center gap-1 font-medium text-white uppercase hover:text-orange-500 transition-colors"
-                            onClick={() => navigate({ to: `/vaults/${claim.link}` })}
-                          >
-                            {claim.vault || '-'} <ExternalLink size={16} />
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-steel-300">{claim.date}</td>
-                    {claim.reward || claim.ftReward ? (
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          {claim.reward && <span className="font-medium text-white">{claim.reward}</span>}
-                          {claim.ftReward && (
-                            <span className="font-medium text-green-400 text-sm">{claim.ftReward}</span>
-                          )}
-                        </div>
-                      </td>
-                    ) : !claim.reward && activeTab.id === 'cancellation' && claim.assets ? (
-                      <td className="px-4 py-3 font-medium text-white">
-                        <button
-                          onClick={() => openModal('NftModal', { assets: claim.assets })}
-                          className="inline-flex items-center gap-2 hover:text-orange-500 transition-colors"
-                        >
-                          Show All NFTs
-                          <Eye size={16} />
-                        </button>
-                      </td>
-                    ) : (
-                      <td className="px-4 py-3 font-medium text-white">-</td>
-                    )}
-                    {activeTab.id !== 'cancellation' && (
-                      <td className="px-4 py-3 font-medium text-white">{claim.vt_tokens}</td>
-                    )}
-                    <td className="px-4 py-3">
-                      <ClaimStatusIndicator claim={claim} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="block md:hidden">
-            {filteredClaims.map(claim => (
-              <ClaimCard key={claim.id} claim={claim} />
-            ))}
-          </div>
 
-          {filteredClaims.length && Math.ceil(pagination.total / pagination.limit) > 1 ? (
-            <div className="mt-8">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(pagination.total / pagination.limit)}
-                onPageChange={handlePageChange}
-                className="justify-center"
-              />
-            </div>
-          ) : null}
-
-          {filteredClaims.length === 0 && <NoDataPlaceholder message="No claims found" />}
-        </>
-      )}
+      <LavaTable
+        columns={columns}
+        data={filteredClaims}
+        rowKey="id"
+        isLoading={isLoading}
+        error={error ? `Error loading claims: ${error.message}` : null}
+        emptyMessage="No claims found"
+        emptyComponent={<NoDataPlaceholder message="No claims found" />}
+        getRowClassName={getRowClassName}
+        mobileRender={claim => <ClaimCard claim={claim} />}
+        pagination={
+          filteredClaims.length && totalPages > 1
+            ? { currentPage, totalPages, onPageChange: handlePageChange }
+            : undefined
+        }
+      />
     </div>
   );
 };
