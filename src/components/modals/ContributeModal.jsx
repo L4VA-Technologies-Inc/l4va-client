@@ -198,8 +198,6 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       // Get decimals from metadata, default to 6 if not specified
       const decimals = ft.metadata?.decimals ?? 6;
 
-      console.log(ft, amount, decimals);
-
       // Allow empty string or valid decimal numbers with decimals matching the token
       const maxDecimals = Math.min(decimals, 8); // Cap display decimals at 8 for UX
       const decimalPattern = new RegExp(`^\\d+(\\.\\d{0,${maxDecimals}})?$`);
