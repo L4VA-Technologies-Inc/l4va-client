@@ -3,6 +3,7 @@ import { ExternalLink, Eye, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
+import { useNavigate } from '@tanstack/react-router';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -53,6 +54,7 @@ export const Claims = () => {
   const submitTerminationClaim = useSubmitTerminationClaim();
 
   const { openModal } = useModalControls();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (data?.data?.items) {
@@ -329,8 +331,6 @@ export const Claims = () => {
               <thead>
                 <tr className="text-dark-100 text-sm border-b border-steel-750">
                   <th className="px-4 py-3 text-left">Vault</th>
-                  <th className="px-4 py-3 text-left">Preview</th>
-                  <th className="px-4 py-3 text-left">Link</th>
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">{activeTab.id !== 'cancellation' ? 'Reward' : 'Asset'}</th>
                   {activeTab.id !== 'cancellation' && <th className="px-4 py-3 text-left">Vault Tokens</th>}
@@ -340,28 +340,29 @@ export const Claims = () => {
               <tbody>
                 {filteredClaims.map(claim => (
                   <tr key={claim.id} className={getTableRowClasses(claim)}>
-                    <td className="px-4 py-3 font-medium text-white">{claim.vault}</td>
-                    <td className="px-4 py-3">
-                      {claim.image ? (
-                        <img
-                          alt={`${claim.vault} preview`}
-                          className="w-12 h-12 rounded-lg object-cover"
-                          src={claim.image}
-                        />
-                      ) : (
-                        <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={claim.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1"
-                      >
-                        View Vault
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                    <td className="px-4 pr-8 sm:pr-0 py-3">
+                      <div className="flex items-center gap-3">
+                        {claim.image ? (
+                          <img
+                            src={claim.image || '/favicon/favicon.ico'}
+                            alt={claim.image || '-'}
+                            className="w-12 h-12 rounded-full"
+                            onError={e => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <L4vaIcon className="w-12 h-12 rounded-lg object-cover" />
+                        )}
+                        <div>
+                          <div
+                            className="flex items-center gap-1 font-medium text-white uppercase hover:text-orange-500 transition-colors"
+                            onClick={() => navigate({ to: `/vaults/${claim.link}` })}
+                          >
+                            {claim.vault || '-'} <ExternalLink size={16} />
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-steel-300">{claim.date}</td>
                     {claim.reward || claim.ftReward ? (
