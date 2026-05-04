@@ -193,64 +193,93 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     });
   }, []);
 
-  const handleFTAmountChange = useCallback((ft, amount) => {
-    // Get decimals from metadata, default to 6 if not specified
-    const decimals = ft.metadata?.decimals ?? 6;
+  const handleFTAmountChange = useCallback(
+    (ft, amount) => {
+      // Get decimals from metadata, default to 6 if not specified
+      const decimals = ft.metadata?.decimals ?? 6;
 
-    // Allow empty string or valid decimal numbers with decimals matching the token
-    const maxDecimals = Math.min(decimals, 8); // Cap display decimals at 8 for UX
-    const decimalPattern = new RegExp(`^\\d+(\\.\\d{0,${maxDecimals}})?$`);
-    const isValid = amount === '' || decimalPattern.test(amount);
+      console.log(ft, amount, decimals);
 
-    if (!isValid) return;
+      // Allow empty string or valid decimal numbers with decimals matching the token
+      const maxDecimals = Math.min(decimals, 8); // Cap display decimals at 8 for UX
+      const decimalPattern = new RegExp(`^\\d+(\\.\\d{0,${maxDecimals}})?$`);
+      const isValid = amount === '' || decimalPattern.test(amount);
 
-    const numDecimalAmount = Number(amount);
+      if (!isValid) return;
 
-    // Convert to raw quantity for validation against MAX_SAFE_QUANTITY
-    const rawAmount = getRawQuantity(numDecimalAmount, decimals);
-    if (rawAmount > MAX_SAFE_QUANTITY) {
-      toast.error(`Quantity exceeds maximum safe value`);
-      return;
-    }
+      const numDecimalAmount = Number(amount);
 
-    // Cap at available quantity (work in raw units to avoid rounding issues)
-    if (rawAmount > ft.quantity) {
-      // Cap to available raw quantity, then convert back to decimal for display
-      const cappedRawAmount = ft.quantity;
-      const cappedDecimalAmount = getDecimalAdjustedQuantity(cappedRawAmount, decimals);
-      // Truncate to display precision (max 8 decimals) without rounding up
-      const displayDecimals = Math.min(decimals, 8);
-      const multiplier = Math.pow(10, displayDecimals);
-      const truncatedAmount = Math.floor(cappedDecimalAmount * multiplier) / multiplier;
-      amount = truncatedAmount.toFixed(displayDecimals);
-    }
-
-    setSelectedAmount(prev => ({
-      ...prev,
-      [ft.tokenId]: amount,
-    }));
-
-    setSelectedNFTs(prevSelected => {
-      const existingIndex = prevSelected.findIndex(nft => nft.tokenId === ft.tokenId);
-
-      if (amount && amount !== '0') {
-        if (existingIndex >= 0) {
-          return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount } : item));
-        } else {
-          const ftCount = prevSelected.filter(a => a.isFungibleToken).length;
-          if (ftCount >= MAX_FT_PER_TRANSACTION) {
-            return prevSelected;
-          }
-          return [...prevSelected, { ...ft, amount }];
-        }
-      } else {
-        if (existingIndex >= 0) {
-          return prevSelected.filter(item => item.tokenId !== ft.tokenId);
-        }
-        return prevSelected;
+      // Convert to raw quantity for validation against MAX_SAFE_QUANTITY
+      const rawAmount = getRawQuantity(numDecimalAmount, decimals);
+      if (rawAmount > MAX_SAFE_QUANTITY) {
+        toast.error(`Quantity exceeds maximum safe value`);
+        return;
       }
-    });
-  }, []);
+
+      // Check whitelist cap limits (if in contribution mode, not expansion)
+      if (!isExpansionMode && assetsWhitelist?.length) {
+        const ftPolicyId = ft.metadata?.policyId;
+        const whitelistItem = assetsWhitelist.find(item => item.policyId === ftPolicyId);
+
+        if (whitelistItem) {
+          const contributedAssets = vaultAssetsData?.data?.items || [];
+          const contributionStatus = getContributionStatus(assetsWhitelist, contributedAssets);
+          const policyStatus = contributionStatus.find(status => status.policyId === ftPolicyId);
+
+          if (policyStatus) {
+            // Check against remaining capacity
+            if (rawAmount > policyStatus.remainingCapacity) {
+              const maxAllowed = getDecimalAdjustedQuantity(policyStatus.remainingCapacity, decimals);
+              const displayDecimals = Math.min(decimals, 8);
+              toast.error(
+                `Cannot contribute more than ${maxAllowed.toFixed(displayDecimals)} tokens. Vault cap: ${getDecimalAdjustedQuantity(policyStatus.countCapMax, decimals).toFixed(displayDecimals)}, Already contributed: ${getDecimalAdjustedQuantity(policyStatus.currentContributions, decimals).toFixed(displayDecimals)}`
+              );
+              return;
+            }
+          }
+        }
+      }
+
+      // Cap at available quantity (work in raw units to avoid rounding issues)
+      if (rawAmount > ft.quantity) {
+        // Cap to available raw quantity, then convert back to decimal for display
+        const cappedRawAmount = ft.quantity;
+        const cappedDecimalAmount = getDecimalAdjustedQuantity(cappedRawAmount, decimals);
+        // Truncate to display precision (max 8 decimals) without rounding up
+        const displayDecimals = Math.min(decimals, 8);
+        const multiplier = Math.pow(10, displayDecimals);
+        const truncatedAmount = Math.floor(cappedDecimalAmount * multiplier) / multiplier;
+        amount = truncatedAmount.toFixed(displayDecimals);
+      }
+
+      setSelectedAmount(prev => ({
+        ...prev,
+        [ft.tokenId]: amount,
+      }));
+
+      setSelectedNFTs(prevSelected => {
+        const existingIndex = prevSelected.findIndex(nft => nft.tokenId === ft.tokenId);
+
+        if (amount && amount !== '0') {
+          if (existingIndex >= 0) {
+            return prevSelected.map(item => (item.tokenId === ft.tokenId ? { ...item, amount } : item));
+          } else {
+            const ftCount = prevSelected.filter(a => a.isFungibleToken).length;
+            if (ftCount >= MAX_FT_PER_TRANSACTION) {
+              return prevSelected;
+            }
+            return [...prevSelected, { ...ft, amount }];
+          }
+        } else {
+          if (existingIndex >= 0) {
+            return prevSelected.filter(item => item.tokenId !== ft.tokenId);
+          }
+          return prevSelected;
+        }
+      });
+    },
+    [isExpansionMode, assetsWhitelist, vaultAssetsData]
+  );
 
   const removeNFT = tokenId => {
     setSelectedNFTs(selectedNFTs.filter(nft => nft.tokenId !== tokenId));
