@@ -1,15 +1,17 @@
 import React from 'react';
+import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
 import PrimaryButton from '../shared/PrimaryButton';
 
 import { RewardsApiProvider } from '@/services/api/rewards';
 
-export const ClaimButton = ({ walletAddress, claimableAmount = 0, onSuccess = null, disabled = false }) => {
-  const [isPending, setIsPending] = React.useState(false);
+export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = false }) => {
+  const [status, setStatus] = React.useState('idle');
+  const wallet = useWallet('handler', 'isConnected');
 
   const handleClaim = async () => {
-    if (!walletAddress) {
+    if (!wallet.isConnected || !wallet.handler) {
       toast.error('Please connect your wallet');
       return;
     }
@@ -19,24 +21,52 @@ export const ClaimButton = ({ walletAddress, claimableAmount = 0, onSuccess = nu
       return;
     }
 
-    setIsPending(true);
+    // Track reservationId outside try/catch so we can cancel on signing rejection
+    let reservationId = null;
 
     try {
-      // Build, sign, and submit the claim transaction (all handled server-side)
-      toast.loading('Processing claim transaction...', { id: 'claim-tx' });
+      setStatus('building');
+      toast.loading('Preparing claim transaction...', { id: 'claim-tx' });
 
-      const result = await RewardsApiProvider.buildClaimTransaction({
+      const prepared = await RewardsApiProvider.prepareClaimTransaction({
         claimImmediate: true,
         claimVested: true,
       });
 
-      if (!result.success) {
-        toast.error(result.error || 'Failed to process claim', { id: 'claim-tx' });
-        setIsPending(false);
-        return;
+      reservationId = prepared.reservationId;
+
+      // ── Step 2: Ask user to sign via CIP-30 wallet ─────────────────────────
+      setStatus('signing');
+      toast.loading('Please sign in your wallet...', { id: 'claim-tx' });
+
+      let userWitness;
+      try {
+        userWitness = await wallet.handler.signTx(prepared.txCbor, true);
+      } catch (signError) {
+        console.error('Error during wallet signing:', signError);
+        // User declined or closed the wallet popup — release the reservation immediately
+        RewardsApiProvider.cancelClaimTransaction({ reservationId }).catch(() => {});
+        reservationId = null;
+        throw new Error('Transaction signing was cancelled');
       }
 
-      toast.success(`Successfully claimed ${result.claimedAmount || claimableAmount} $L4VA!`, {
+      if (!userWitness) {
+        RewardsApiProvider.cancelClaimTransaction({ reservationId }).catch(() => {});
+        reservationId = null;
+        throw new Error('Transaction signing was cancelled');
+      }
+
+      // ── Step 3: Assemble + submit + confirm reservation ────────────────────
+      setStatus('submitting');
+      toast.loading('Submitting claim transaction...', { id: 'claim-tx' });
+
+      const result = await RewardsApiProvider.submitClaimTransaction({
+        reservationId: prepared.reservationId,
+        txCbor: prepared.txCbor,
+        userWitness,
+      });
+
+      toast.success(`Successfully claimed ${result.claimedAmount ?? claimableAmount} $L4VA!`, {
         id: 'claim-tx',
         duration: 7000,
       });
@@ -49,24 +79,21 @@ export const ClaimButton = ({ walletAddress, claimableAmount = 0, onSuccess = nu
         });
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || error?.message || 'Failed to process claim', { id: 'claim-tx' });
+      const message = error?.response?.data?.message || error?.message || 'Failed to process claim';
+      toast.error(message, { id: 'claim-tx' });
     } finally {
-      setIsPending(false);
+      setStatus('idle');
     }
   };
 
+  const isPending = status !== 'idle';
   const isDisabled = disabled || isPending || claimableAmount <= 0;
+
+  const idleLabel = `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} $L4VA`;
 
   return (
     <PrimaryButton onClick={handleClaim} disabled={isDisabled}>
-      {isPending ? (
-        <>
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-          Processing...
-        </>
-      ) : (
-        `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} $L4VA`
-      )}
+      {isPending ? status.charAt(0).toUpperCase() + status.slice(1) + '...' : idleLabel}
     </PrimaryButton>
   );
 };
