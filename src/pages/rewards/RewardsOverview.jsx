@@ -1,7 +1,8 @@
 import { Wallet, Info, History, Receipt } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount } from '@/hooks/useRewardsClaims';
@@ -43,6 +44,15 @@ export const RewardsOverview = () => {
   const { data: activityTimelineData, isLoading: isLoadingActivityTimeline } = useWalletActivityTimeline(walletAddress);
   const { data: estimateData } = useCurrentEpochEstimate(walletAddress);
   const { data: alignmentData, isLoading: isLoadingAlignment } = useAlignmentDetails(walletAddress);
+
+  const queryClient = useQueryClient();
+
+  const handleClaimSuccess = useCallback(() => {
+    // Invalidate all data that changes after a claim
+    queryClient.invalidateQueries({ queryKey: ['rewards', 'claims', walletAddress] });
+    queryClient.invalidateQueries({ queryKey: ['rewards', 'vesting', walletAddress] });
+    queryClient.invalidateQueries({ queryKey: ['rewards', 'history', walletAddress] });
+  }, [queryClient, walletAddress]);
 
   // Transform activity breakdown for analytics chart
   const activityBreakdown = useMemo(() => {
@@ -156,8 +166,8 @@ export const RewardsOverview = () => {
                   </p>
                 </div>
                 <ClaimButton
-                  walletAddress={walletAddress}
                   claimableAmount={claimableAmount}
+                  onSuccess={handleClaimSuccess}
                   className="w-full sm:w-auto px-8 py-3 text-lg"
                 />
               </div>
