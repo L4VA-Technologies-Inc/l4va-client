@@ -16,7 +16,7 @@ export const LavaWhitelistWithCaps = ({
   setWhitelist,
   maxItems = 10,
   errors = {},
-  maxCapValue = 1000000000,
+  maxCapValue = 1000000000000, // 1 Trillion
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
   const [searchResults, setSearchResults] = useState({});
