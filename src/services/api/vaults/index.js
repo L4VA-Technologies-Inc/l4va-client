@@ -92,6 +92,11 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async cancelVaultByOwner(vaultId) {
+    const response = await axiosInstance.delete(VaultsConfigProvider.cancelVaultByOwner(vaultId));
+    return response;
+  }
+
   static async getMarketStatistics(params = {}) {
     return await axiosInstance.get(VaultsConfigProvider.getMarketStatistics(), {
       params,

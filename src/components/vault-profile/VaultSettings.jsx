@@ -2,7 +2,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { Copy } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 
 import { InfoRow } from '@/components/ui/infoRow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -12,6 +12,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
+import { CancelVaultConfirmModal } from '@/components/modals/CancelVaultConfirmModal';
 import { cn } from '@/lib/utils';
 import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
 
@@ -22,10 +23,13 @@ const pricingMethodLabel = valuationMethod => (valuationMethod === 'custom' ? 'C
 
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [isCancelVaultPending, setIsCancelVaultPending] = useState(false);
   const { currency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
   const navigate = useNavigate();
+  const router = useRouter();
 
   const handleBurneVault = async vaultId => {
     try {
@@ -65,6 +69,26 @@ export const VaultSettings = ({ vault }) => {
         toast.error('Failed to copy to clipboard');
       });
   };
+
+  const handleCancelVault = async () => {
+    if (!vault?.id || isCancelVaultPending) return;
+
+    setIsCancelVaultPending(true);
+    try {
+      await VaultsApiProvider.cancelVaultByOwner(vault.id);
+      toast.success('Vault cancelled successfully');
+      setShowCancelConfirmation(false);
+      await router.invalidate();
+      navigate({ to: '/vaults' });
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to cancel vault. Please try again.');
+    } finally {
+      setIsCancelVaultPending(false);
+    }
+  };
+
+  const isOwner = user?.id === vault.owner.id;
+  const canCancelVaultByOwner = isOwner && vault?.canCancelVault;
 
   const renderAssets = assetsWhitelist => {
     const whitelistedAssets = (assetsWhitelist ?? []).filter(asset => asset.policyId);
@@ -194,15 +218,26 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Proposal Execution Threshold %" symbol="%" value={vault.executionThreshold} />
           </div>
         </div>
-        {user?.id === vault.owner.id && (
-          <div className="flex justify-center">
-            <Button
-              disabled={vault.vaultStatus !== 'failed'}
-              className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
-              onClick={() => setShowConfirmation(true)}
-            >
-              Burn Vault
-            </Button>
+        {isOwner && (
+          <div className="flex justify-center gap-3 flex-wrap">
+            {canCancelVaultByOwner && (
+              <Button
+                disabled={isCancelVaultPending}
+                className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
+                onClick={() => setShowCancelConfirmation(true)}
+              >
+                Cancel Vault
+              </Button>
+            )}
+            {vault.vaultStatus === 'failed' && (
+              <Button
+                disabled={vault.vaultStatus !== 'failed'}
+                className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
+                onClick={() => setShowConfirmation(true)}
+              >
+                Burn Vault
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -211,6 +246,13 @@ export const VaultSettings = ({ vault }) => {
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}
         onConfirm={() => handleBurneVault(vault.id)}
+      />
+      <CancelVaultConfirmModal
+        isOpen={showCancelConfirmation}
+        onClose={() => setShowCancelConfirmation(false)}
+        onConfirm={handleCancelVault}
+        isLoading={isCancelVaultPending}
+        vaultName={vault?.name}
       />
     </>
   );
