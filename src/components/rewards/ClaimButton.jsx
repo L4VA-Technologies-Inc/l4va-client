@@ -33,6 +33,10 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
         claimVested: true,
       });
 
+      if (!prepared?.reservationId || !prepared?.txCbor) {
+        throw new Error('Invalid response from server: missing transaction data');
+      }
+
       reservationId = prepared.reservationId;
 
       // ── Step 2: Ask user to sign via CIP-30 wallet ─────────────────────────
