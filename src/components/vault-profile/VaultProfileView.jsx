@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3, Info } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3, Info, Pencil } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -185,7 +185,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const router = useRouter();
   const navigate = useNavigate();
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
   const { isAda, currencySymbol } = useCurrency();
 
@@ -465,6 +465,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 </button>
                 <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                   View owner profile
+                </div>
+              </div>
+            )}
+            {isAuthenticated && user?.id === vault.owner?.id && vault.vaultStatus === VAULT_STATUSES.PUBLISHED && (
+              <div className="group relative">
+                <button
+                  onClick={() => openModal('EditUpcomingVaultModal', { vault })}
+                  aria-label="Edit vault settings"
+                  className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
+                >
+                  <Pencil className="w-4 h-4 text-orange-500" />
+                </button>
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  Edit vault settings
                 </div>
               </div>
             )}

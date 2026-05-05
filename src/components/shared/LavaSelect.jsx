@@ -279,6 +279,7 @@ export const LavaMultiSelect = ({
   isInitialLoading = false,
   isFetching = false,
   isFetchingMore = false,
+  direction = 'down',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -385,7 +386,9 @@ export const LavaMultiSelect = ({
 
       {isOpen && (
         <div
-          className={`absolute left-0 z-10 mt-1 w-full rounded-lg bg-steel-850 shadow-lg border border-steel-750 max-h-80 overflow-hidden flex flex-col`}
+          className={`absolute left-0 z-10 w-full rounded-lg bg-steel-850 shadow-lg border border-steel-750 max-h-80 overflow-hidden flex flex-col ${
+            direction === 'up' ? 'bottom-full mb-1' : 'mt-1'
+          }`}
         >
           {showSearch && (
             <div className="p-2 border-b border-steel-750" onClick={e => e.stopPropagation()}>

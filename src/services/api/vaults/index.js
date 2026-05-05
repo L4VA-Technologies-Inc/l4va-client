@@ -125,4 +125,9 @@ export class VaultsApiProvider {
       params: { myVaults, page, limit, search },
     });
   }
+
+  static async editUpcomingVaultSettings(vaultId, data) {
+    const response = await axiosInstance.patch(VaultsConfigProvider.editUpcomingVaultSettings(vaultId), data);
+    return response;
+  }
 }

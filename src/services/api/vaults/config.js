@@ -86,4 +86,8 @@ export class VaultsConfigProvider {
   static getAssetsWhitelist() {
     return '/api/v1/vaults/assets-whitelist';
   }
+
+  static editUpcomingVaultSettings(id) {
+    return `/api/v1/vaults/${id}/upcoming-settings`;
+  }
 }
