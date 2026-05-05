@@ -70,6 +70,13 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
         userWitness,
       });
 
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to submit claim transaction');
+      }
+
+      // Transaction confirmed — clear reservationId so error cleanup won't cancel it
+      reservationId = null;
+
       toast.success(`Successfully claimed ${result.claimedAmount ?? claimableAmount} $L4VA!`, {
         id: 'claim-tx',
         duration: 7000,
@@ -83,6 +90,11 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
         });
       }
     } catch (error) {
+      // Best-effort cleanup: if reservation still exists, cancel it to prevent blocking future claims
+      if (reservationId) {
+        RewardsApiProvider.cancelClaimTransaction({ reservationId }).catch(() => {});
+      }
+
       const message = error?.response?.data?.message || error?.message || 'Failed to process claim';
       toast.error(message, { id: 'claim-tx' });
     } finally {
