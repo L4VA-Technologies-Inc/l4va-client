@@ -193,6 +193,35 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Phase 1: Reserve claims atomically and get unsigned tx CBOR for wallet signing.
+   * @param {Object} options - { userKeyHash, epochIds?, claimImmediate?, claimVested? }
+   * @returns {Promise<{ reservationId, txCbor, totalClaimableAmount, ... }>}
+   */
+  static async prepareClaimTransaction(options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.prepareClaim(), options);
+    return response.data;
+  }
+
+  /**
+   * Phase 2: Submit signed claim transaction to blockchain and confirm reservation.
+   * @param {Object} body - { reservationId, txCbor, userWitness }
+   * @returns {Promise<{ success, txHash, claimedAmount, ... }>}
+   */
+  static async submitClaimTransaction(body) {
+    const response = await axiosInstance.post(RewardsConfigProvider.submitClaim(), body);
+    return response.data;
+  }
+
+  /**
+   * Cancel a pending reservation (user declined signing).
+   * @param {Object} body - { reservationId }
+   */
+  static async cancelClaimTransaction(body) {
+    const response = await axiosInstance.post(RewardsConfigProvider.cancelClaim(), body);
+    return response.data;
+  }
+
   // ============================================================================
   // Vesting Methods
   // ============================================================================

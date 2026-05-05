@@ -87,6 +87,18 @@ export class RewardsConfigProvider {
     return '/api/v1/rewards/me/claims/build';
   }
 
+  static prepareClaim() {
+    return '/api/v1/rewards/me/claims/prepare';
+  }
+
+  static submitClaim() {
+    return '/api/v1/rewards/me/claims/submit';
+  }
+
+  static cancelClaim() {
+    return '/api/v1/rewards/me/claims/cancel';
+  }
+
   // ============================================================================
   // Vesting Endpoints
   // ============================================================================
