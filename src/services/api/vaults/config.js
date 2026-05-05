@@ -63,6 +63,10 @@ export class VaultsConfigProvider {
     return `/api/v1/vaults/${id}`;
   }
 
+  static cancelVaultByOwner(id) {
+    return `/api/v1/vaults/${id}/cancel`;
+  }
+
   static getMarketStatistics() {
     return '/api/v1/markets';
   }
