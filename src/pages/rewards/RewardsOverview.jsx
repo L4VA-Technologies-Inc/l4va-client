@@ -1,4 +1,4 @@
-import { Wallet, Info, History, Receipt } from 'lucide-react';
+import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
@@ -99,6 +99,9 @@ export const RewardsOverview = () => {
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
 
+  // Claiming enabled flag — defaults to true so the button shows while epoch data is loading
+  const claimsEnabled = currentEpochData?.claimsEnabled ?? true;
+
   // Get current epoch estimate
   const currentEpochEstimate = estimateData?.estimatedReward || 0;
 
@@ -165,7 +168,14 @@ export const RewardsOverview = () => {
                     {formatCompactNumber(claimableAmount)} $L4VA
                   </p>
                 </div>
-                <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
+                {claimsEnabled ? (
+                  <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
+                    <Clock className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm font-medium">Claiming coming soon</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
