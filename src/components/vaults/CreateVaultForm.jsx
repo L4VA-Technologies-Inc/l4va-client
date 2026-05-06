@@ -613,8 +613,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         }
 
         if (!handleServerFieldErrors(err)) {
-          toast.error('Failed to launch vault, it will be saved as draft');
-          await saveDraft();
+          toast.error('Failed to launch vault. Your progress has been saved as a draft.');
+          await navigate({ to: '/profile', search: { tab: 'draft' } });
         }
       } finally {
         setIsSubmitting(false);
