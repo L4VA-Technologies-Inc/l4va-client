@@ -92,6 +92,11 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async cancelVaultByOwner(vaultId) {
+    const response = await axiosInstance.delete(VaultsConfigProvider.cancelVaultByOwner(vaultId));
+    return response;
+  }
+
   static async getMarketStatistics(params = {}) {
     return await axiosInstance.get(VaultsConfigProvider.getMarketStatistics(), {
       params,
@@ -119,5 +124,10 @@ export class VaultsApiProvider {
     return await axiosInstance.get(VaultsConfigProvider.getAssetsWhitelist(), {
       params: { myVaults, page, limit, search },
     });
+  }
+
+  static async editUpcomingVaultSettings(vaultId, data) {
+    const response = await axiosInstance.patch(VaultsConfigProvider.editUpcomingVaultSettings(vaultId), data);
+    return response;
   }
 }
