@@ -190,6 +190,7 @@ export const vaultSchema = yup.object({
     .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
     .nullable(),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
+  tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional(),
   vaultImage: yup.string().required('Vault image is required'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
   tags: yup.array().of(yup.string()).default([]),
@@ -460,6 +461,7 @@ export const editUpcomingVaultSchema = yup.object({
   vaultImage: yup.string().required('Vault image is required'),
   ftTokenImg: yup.string().required('Token image is required'),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional().nullable(),
+  tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional().nullable(),
   tokensForAcquires: yup
     .number()
     .typeError('Tokens for acquirers is required')
@@ -518,6 +520,7 @@ export const initialVaultState = {
   privacy: 'public',
   vaultTokenTicker: '',
   description: '',
+  tokenDescription: '',
   vaultImage: '',
   socialLinks: [],
   tags: [],
@@ -564,6 +567,7 @@ export const stepFields = {
     'privacy',
     'vaultTokenTicker',
     'description',
+    'tokenDescription',
     'vaultImage',
     'ftTokenImg',
     'socialLinks',
