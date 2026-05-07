@@ -1,7 +1,6 @@
 import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
-import toast from 'react-hot-toast';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput } from '@/components/shared/LavaInput';
@@ -25,8 +24,7 @@ export const LavaWhitelistWithCaps = ({
   const searchTimers = useRef({});
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies, allPolicies, isBalanceLoaded } =
-    useAssets();
+  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = useAssets();
 
   const walletPolicyIds = data?.data || [];
 
