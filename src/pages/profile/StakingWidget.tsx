@@ -21,7 +21,7 @@ import { useMyStakedBalance, StakedBoxItem } from '@/services/api/queries';
 import {
   clampDecimalInput,
   formatDateTime as formatDateTimeUtil,
-  formatRawNumber,
+  formatNum,
   includesUtxoRef,
   sumExactDecimals,
 } from '@/utils/core.utils';
@@ -36,8 +36,21 @@ const MIN_STAKE_AMOUNT = 100;
 const MAX_SELECTED_BOXES = 25;
 
 type TabKey = 'stake' | 'unstake';
+type SelectedTokenTotals = {
+  symbol: string;
+  reward: string;
+  payout: string;
+  maximumFractionDigits: number;
+};
 
 const includesRef = (arr: UtxoRefDto[], ref: UtxoRefDto) => includesUtxoRef(arr, ref);
+const formatTokenInputValue = (raw: string, maximumFractionDigits: number) => {
+  if (!raw) return '';
+  if (raw === '.') return raw;
+  if (raw.endsWith('.')) return `${formatNum(raw.slice(0, -1), maximumFractionDigits)}.`;
+  return String(formatNum(raw, maximumFractionDigits));
+};
+const getTokenMaxFractionDigits = (symbol: string) => (symbol === 'L4VA' ? L4VA_DECIMALS : VLRM_DECIMALS);
 
 export const StakingWidget: React.FC = () => {
   const [tab, setTab] = useState<TabKey>('stake');
@@ -92,18 +105,27 @@ export const StakingWidget: React.FC = () => {
     return errors.join(' ');
   }, [vlrmAmount, l4vaAmount]);
 
-  const selectedPayout = useMemo(() => {
-    if (!selected.length) return '0';
+  const selectedTokenTotals = useMemo<SelectedTokenTotals[]>(() => {
+    if (!selected.length) return [];
     const key = new Set(selected.map(s => `${s.txHash}:${s.outputIndex}`));
-    const values = boxes.filter(b => key.has(`${b.txHash}:${b.outputIndex}`)).map(b => b.estimatedPayout);
-    return values.length ? sumExactDecimals(values) : '0';
-  }, [boxes, selected]);
+    const selectedBoxes = boxes.filter(b => key.has(`${b.txHash}:${b.outputIndex}`));
 
-  const selectedReward = useMemo(() => {
-    if (!selected.length) return '0';
-    const key = new Set(selected.map(s => `${s.txHash}:${s.outputIndex}`));
-    const values = boxes.filter(b => key.has(`${b.txHash}:${b.outputIndex}`)).map(b => b.estimatedReward);
-    return values.length ? sumExactDecimals(values) : '0';
+    const grouped = selectedBoxes.reduce<
+      Record<string, { reward: Array<number | string>; payout: Array<number | string> }>
+    >((acc, box) => {
+      const symbol = getTokenLabel(box.unit);
+      if (!acc[symbol]) acc[symbol] = { reward: [], payout: [] };
+      acc[symbol].reward.push(box.estimatedReward);
+      acc[symbol].payout.push(box.estimatedPayout);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([symbol, values]) => ({
+      symbol,
+      reward: values.reward.length ? sumExactDecimals(values.reward) : '0',
+      payout: values.payout.length ? sumExactDecimals(values.payout) : '0',
+      maximumFractionDigits: getTokenMaxFractionDigits(symbol),
+    }));
   }, [boxes, selected]);
 
   const handleStake = () => {
@@ -132,8 +154,7 @@ export const StakingWidget: React.FC = () => {
       action: 'unstake',
       confirmStatus: status,
       selectedCount: selectedRefs.length,
-      selectedPayout,
-      selectedReward,
+      selectedTotals: selectedTokenTotals,
       onConfirm: async () => {
         const hash = await unstake({ utxos: selectedRefs });
         if (hash) setSelected([]);
@@ -146,8 +167,7 @@ export const StakingWidget: React.FC = () => {
       action: 'harvest',
       confirmStatus: status,
       selectedCount: selectedRefs.length,
-      selectedPayout,
-      selectedReward,
+      selectedTotals: selectedTokenTotals,
       onConfirm: async () => {
         const hash = await harvest({ utxos: selectedRefs });
         if (hash) setSelected([]);
@@ -160,8 +180,7 @@ export const StakingWidget: React.FC = () => {
       action: 'compound',
       confirmStatus: status,
       selectedCount: selectedRefs.length,
-      selectedPayout,
-      selectedReward,
+      selectedTotals: selectedTokenTotals,
       onConfirm: async () => {
         const hash = await compound({ utxos: selectedRefs });
         if (hash) setSelected([]);
@@ -256,9 +275,7 @@ export const StakingWidget: React.FC = () => {
                 <div className="mb-3 flex items-center justify-between text-[12px] text-dark-100">
                   <div>
                     Balance:{' '}
-                    <span className="text-white">
-                      {isBalanceLoading ? '…' : `${formatRawNumber(vlrmBalance)} VLRM`}
-                    </span>
+                    <span className="text-white">{isBalanceLoading ? '…' : `${formatNum(vlrmBalance, 4)} VLRM`}</span>
                   </div>
                   <div className="font-medium text-white tracking-wide">VLRM</div>
                 </div>
@@ -267,7 +284,7 @@ export const StakingWidget: React.FC = () => {
                     inputMode="decimal"
                     autoComplete="off"
                     placeholder="0"
-                    value={vlrmAmountRaw}
+                    value={formatTokenInputValue(vlrmAmountRaw, VLRM_DECIMALS)}
                     onChange={e => setVlrmAmountRaw(clampDecimalInput(e.target.value, VLRM_DECIMALS))}
                     className="lava-input w-full bg-transparent text-[28px] sm:text-[32px] leading-none tracking-tight text-white placeholder:text-gray-500 outline-none border-none focus:ring-0 h-auto py-0 px-0"
                   />
@@ -286,9 +303,7 @@ export const StakingWidget: React.FC = () => {
                 <div className="mb-3 flex items-center justify-between text-[12px] text-dark-100">
                   <div>
                     Balance:{' '}
-                    <span className="text-white">
-                      {isBalanceLoading ? '…' : `${formatRawNumber(l4vaBalance)} L4VA`}
-                    </span>
+                    <span className="text-white">{isBalanceLoading ? '…' : `${formatNum(l4vaBalance, 3)} L4VA`}</span>
                   </div>
                   <div className="font-medium text-white tracking-wide">L4VA</div>
                 </div>
@@ -297,7 +312,7 @@ export const StakingWidget: React.FC = () => {
                     inputMode="decimal"
                     autoComplete="off"
                     placeholder="0"
-                    value={l4vaAmountRaw}
+                    value={formatTokenInputValue(l4vaAmountRaw, L4VA_DECIMALS)}
                     onChange={e => setL4vaAmountRaw(clampDecimalInput(e.target.value, L4VA_DECIMALS))}
                     className="lava-input w-full bg-transparent text-[28px] sm:text-[32px] leading-none tracking-tight text-white placeholder:text-gray-500 outline-none border-none focus:ring-0 h-auto py-0 px-0"
                   />
@@ -363,6 +378,7 @@ export const StakingWidget: React.FC = () => {
                       const disabledByLimit = !locked && limitReached;
                       const stakedAtText = formatDateTimeUtil(new Date(box.stakedAt), { variant: 'compact' }) ?? '-';
                       const tokenLabel = getTokenLabel(box.unit);
+                      const tokenMaxFractionDigits = getTokenMaxFractionDigits(tokenLabel);
 
                       const isRowClickable = !locked && !disabledByLimit;
                       const rowKey = `${box.txHash}:${box.outputIndex}`;
@@ -397,7 +413,7 @@ export const StakingWidget: React.FC = () => {
                           <div className="flex items-start sm:items-center justify-between gap-4">
                             <div className="min-w-0">
                               <div className="text-[14px] font-semibold text-white truncate">
-                                {formatRawNumber(box.stakedAmount)}{' '}
+                                {formatNum(box.stakedAmount, tokenMaxFractionDigits)}{' '}
                                 <span className="text-dark-100 text-[12px] font-normal">{tokenLabel}</span>
                               </div>
                               <div className="mt-1 text-[12px] text-dark-100">
@@ -405,14 +421,14 @@ export const StakingWidget: React.FC = () => {
                                   <div>
                                     Reward:{' '}
                                     <span className="text-green-400">
-                                      +{formatRawNumber(box.estimatedReward)} {tokenLabel}
+                                      +{formatNum(box.estimatedReward, tokenMaxFractionDigits)} {tokenLabel}
                                     </span>
                                   </div>
                                   <span className="hidden sm:inline text-steel-600">•</span>
                                   <div>
                                     Payout:{' '}
                                     <span className="text-white">
-                                      {formatRawNumber(box.estimatedPayout)} {tokenLabel}
+                                      {formatNum(box.estimatedPayout, tokenMaxFractionDigits)} {tokenLabel}
                                     </span>
                                   </div>
                                 </div>
@@ -457,11 +473,41 @@ export const StakingWidget: React.FC = () => {
               <div className="rounded-xl border border-steel-750 bg-steel-950 px-4 sm:px-5 py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-[12px] text-dark-100">Selected Payout</div>
-                    <div className="mt-1 text-[16px] font-semibold text-white truncate">{selectedPayout}</div>
-                    <div className="mt-1 text-[12px] text-dark-100 truncate">
-                      Selected Reward: <span className="text-green-400">+{selectedReward}</span>
-                    </div>
+                    {selectedTokenTotals.length <= 1 ? (
+                      <>
+                        <div className="text-[12px] text-dark-100">Selected Payout</div>
+                        <div className="mt-1 text-[16px] font-semibold text-white truncate">
+                          {selectedTokenTotals[0]
+                            ? `${formatNum(selectedTokenTotals[0].payout, selectedTokenTotals[0].maximumFractionDigits)} ${selectedTokenTotals[0].symbol}`
+                            : '0'}
+                        </div>
+                        <div className="mt-1 text-[12px] text-dark-100 truncate">
+                          Selected Reward:{' '}
+                          <span className="text-green-400">
+                            +
+                            {selectedTokenTotals[0]
+                              ? `${formatNum(selectedTokenTotals[0].reward, selectedTokenTotals[0].maximumFractionDigits)} ${selectedTokenTotals[0].symbol}`
+                              : '0'}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-[12px] text-dark-100">Selected Totals</div>
+                        <div className="mt-1 space-y-1">
+                          {selectedTokenTotals.map(t => (
+                            <div key={t.symbol} className="text-[12px] text-dark-100 truncate">
+                              <span className="text-white">
+                                {formatNum(t.payout, t.maximumFractionDigits)} {t.symbol}
+                              </span>
+                              <span className="mx-2 text-steel-600">•</span>
+                              Reward{' '}
+                              <span className="text-green-400">+{formatNum(t.reward, t.maximumFractionDigits)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 sm:flex sm:items-center gap-3">

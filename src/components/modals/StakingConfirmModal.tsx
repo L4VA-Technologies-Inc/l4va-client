@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { L4VA_DECIMALS, VLRM_DECIMALS } from '@/hooks/useTokenBalance';
 import { useModalControls } from '@/lib/modals/modal.context';
-import { formatRawNumber } from '@/utils/core.utils';
+import { formatNum } from '@/utils/core.utils';
 
 export type StakingAction = 'stake' | 'unstake' | 'harvest' | 'compound';
 type ConfirmStatus = 'idle' | 'building' | 'signing' | 'submitting';
@@ -14,6 +15,15 @@ interface StakeToken {
   amount: number;
 }
 
+interface SelectedTokenTotal {
+  symbol: string;
+  reward: string;
+  payout: string;
+  maximumFractionDigits?: number;
+}
+
+const getTokenMaxFractionDigits = (symbol: string) => (symbol === 'L4VA' ? L4VA_DECIMALS : VLRM_DECIMALS);
+
 export interface StakingConfirmModalProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -22,8 +32,7 @@ export interface StakingConfirmModalProps {
   action: StakingAction;
   tokens?: StakeToken[];
   selectedCount?: number;
-  selectedPayout?: string;
-  selectedReward?: string;
+  selectedTotals?: SelectedTokenTotal[];
 }
 
 const ACTION_META: Record<StakingAction, { title: string; confirmLabel: string; accentClass: string }> = {
@@ -68,8 +77,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   confirmStatus = 'idle',
   tokens = [],
   selectedCount = 0,
-  selectedPayout = '0',
-  selectedReward = '0',
+  selectedTotals = [],
 }) => {
   const { closeModal } = useModalControls();
   const [isConfirming, setIsConfirming] = useState(false);
@@ -137,7 +145,7 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
                 <Row
                   key={t.symbol}
                   label={t.symbol}
-                  value={`${formatRawNumber(t.amount)} ${t.symbol}`}
+                  value={`${formatNum(t.amount, getTokenMaxFractionDigits(t.symbol))} ${t.symbol}`}
                   valueClass={accentClass}
                 />
               ))}
@@ -157,10 +165,20 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
               <Row label="Selected boxes" value={selectedCount} />
-              <Row label="Total reward" value={`+${selectedReward}`} valueClass="text-green-400" />
-              <div className="border-t border-steel-750 pt-2">
-                <Row label="You will receive" value={selectedPayout} valueClass={accentClass} />
-              </div>
+              {selectedTotals.map(total => (
+                <div key={total.symbol} className="border-t border-steel-750 pt-2">
+                  <Row
+                    label={`Total reward (${total.symbol})`}
+                    value={`+${formatNum(total.reward, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass="text-green-400"
+                  />
+                  <Row
+                    label={`You will receive (${total.symbol})`}
+                    value={`${formatNum(total.payout, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass={accentClass}
+                  />
+                </div>
+              ))}
             </div>
           </>
         );
@@ -178,9 +196,15 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
               <Row label="Selected boxes" value={selectedCount} />
               <Row label="Deposit stays staked" value="Yes" valueClass="text-dark-100" />
-              <div className="border-t border-steel-750 pt-2">
-                <Row label="Rewards to wallet" value={`+${selectedReward}`} valueClass={accentClass} />
-              </div>
+              {selectedTotals.map(total => (
+                <div key={total.symbol} className="border-t border-steel-750 pt-2">
+                  <Row
+                    label={`Rewards to wallet (${total.symbol})`}
+                    value={`+${formatNum(total.reward, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass={accentClass}
+                  />
+                </div>
+              ))}
             </div>
           </>
         );
@@ -197,10 +221,20 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
               <Row label="Selected boxes" value={selectedCount} />
-              <Row label="Reward" value={`+${selectedReward}`} valueClass="text-green-400" />
-              <div className="border-t border-steel-750 pt-2">
-                <Row label="Total restaked" value={selectedPayout} valueClass={accentClass} />
-              </div>
+              {selectedTotals.map(total => (
+                <div key={total.symbol} className="border-t border-steel-750 pt-2">
+                  <Row
+                    label={`Reward (${total.symbol})`}
+                    value={`+${formatNum(total.reward, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass="text-green-400"
+                  />
+                  <Row
+                    label={`Total restaked (${total.symbol})`}
+                    value={`${formatNum(total.payout, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass={accentClass}
+                  />
+                </div>
+              ))}
             </div>
           </>
         );
