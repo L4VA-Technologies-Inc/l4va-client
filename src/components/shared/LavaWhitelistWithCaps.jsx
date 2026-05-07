@@ -500,7 +500,7 @@ export const LavaWhitelistWithCaps = ({
                       </>
                     ) : (
                       <div className="flex items-center justify-center py-6 text-dark-100">
-                        {isSearchMode ? 'No matching policies found' : 'No policies available'}
+                        {isSearchMode ? 'No matching policies found in your wallet' : 'No policies available'}
                       </div>
                     )}
                   </div>
