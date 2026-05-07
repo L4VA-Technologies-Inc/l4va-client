@@ -66,33 +66,6 @@ export const LavaWhitelistWithCaps = ({
     );
   }, [whitelist, setWhitelist]);
 
-  // When the wallet balance first loads, remove any whitelist items whose policy ID
-  // is no longer held by the user (e.g. they spent those NFTs since saving the draft).
-  // We only run this once per mount (tracked by hasFilteredStaleRef) and only after
-  // there are actual whitelist items to check (wallet may load before draft data).
-  const hasFilteredStaleRef = useRef(false);
-  useEffect(() => {
-    if (!isBalanceLoaded) return;
-    if (whitelist.length === 0) return;
-    if (hasFilteredStaleRef.current) return;
-    hasFilteredStaleRef.current = true;
-
-    const walletPolicyIdSet = new Set(allPolicies.map(p => p.policyId));
-
-    const filtered = whitelist.filter(
-      item => !item?.policyId || !/^[0-9a-fA-F]{56}$/.test(item.policyId) || walletPolicyIdSet.has(item.policyId)
-    );
-
-    if (filtered.length < whitelist.length) {
-      const removedCount = whitelist.length - filtered.length;
-      setWhitelist(filtered);
-      toast(
-        `${removedCount} asset${removedCount > 1 ? 's were' : ' was'} removed from the whitelist because ${removedCount > 1 ? "they're" : "it's"} no longer in your wallet.`,
-        { icon: '⚠️', duration: 5000 }
-      );
-    }
-  }, [isBalanceLoaded, allPolicies, whitelist, setWhitelist]);
-
   const handleScroll = useCallback(
     (e, uniqueId) => {
       const asset = whitelist.find(item => item.uniqueId === uniqueId);
