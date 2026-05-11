@@ -1,5 +1,7 @@
 import { useState, useId } from 'react';
 
+import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
+
 const getAutocompleteValue = name => {
   if (!name) return undefined;
 
@@ -19,6 +21,7 @@ const getAutocompleteValue = name => {
 export const LavaTextarea = ({
   name,
   label,
+  hint,
   value,
   onChange,
   placeholder = 'Enter text',
@@ -36,10 +39,13 @@ export const LavaTextarea = ({
   return (
     <>
       {label ? (
-        <label htmlFor={textareaId} className="uppercase font-bold">
-          {required ? '*' : ''}
-          {label}
-        </label>
+        <div className="uppercase font-bold flex items-center gap-2">
+          <label htmlFor={textareaId}>
+            {required ? '*' : ''}
+            {label}
+          </label>
+          {hint && <HoverHelp hint={hint} />}
+        </div>
       ) : null}
       <div className="mt-4">
         <textarea
@@ -65,6 +71,7 @@ export const LavaTextarea = ({
 
 export const LavaSteelTextarea = ({
   label,
+  hint,
   required = false,
   placeholder = 'Lorem ipsum',
   value,
@@ -91,10 +98,13 @@ export const LavaSteelTextarea = ({
   return (
     <div>
       {label ? (
-        <label htmlFor={textareaId} className="font-semibold mb-4 flex">
-          {required ? '*' : ''}
-          {label}
-        </label>
+        <div className="font-semibold mb-4 flex items-center gap-2">
+          <label htmlFor={textareaId}>
+            {required ? '*' : ''}
+            {label}
+          </label>
+          {hint && <HoverHelp hint={hint} />}
+        </div>
       ) : null}
       <textarea
         id={textareaId}

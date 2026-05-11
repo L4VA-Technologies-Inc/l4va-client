@@ -93,13 +93,13 @@ export const LavaInput = ({
   return (
     <>
       {label ? (
-        <label htmlFor={inputId} className="font-bold flex items-center gap-2">
-          <span className="uppercase">
+        <div className="font-bold flex items-center gap-2">
+          <label htmlFor={inputId} className="uppercase">
             {required ? '*' : ''}
             {label}
-          </span>
+          </label>
           {hint && <HoverHelp hint={hint} />}
-        </label>
+        </div>
       ) : null}
       <div className="mt-4">
         <div className="relative flex items-center">
@@ -204,11 +204,13 @@ export const LavaSteelInput = ({
   return (
     <div>
       {label ? (
-        <label htmlFor={inputId} className="font-semibold mb-4 flex items-center gap-2">
-          {required ? '*' : ''}
-          {label}
+        <div className="font-semibold mb-4 flex items-center gap-2">
+          <label htmlFor={inputId}>
+            {required ? '*' : ''}
+            {label}
+          </label>
           {hint && <HoverHelp hint={hint} />}
-        </label>
+        </div>
       ) : null}
       <div className="relative">
         <input

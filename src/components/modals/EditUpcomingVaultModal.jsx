@@ -37,6 +37,7 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
     vaultImage: vault?.vaultImage ?? null,
     ftTokenImg: vault?.ftTokenImg ?? null,
     description: vault?.description ?? '',
+    tokenDescription: vault?.tokenDescription ?? '',
     tokensForAcquires: vault?.tokensForAcquires ?? null,
     acquireReserve: vault?.acquireReserve ?? null,
     liquidityPoolContribution: vault?.liquidityPoolContribution ?? null,
@@ -137,13 +138,14 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
     vaultImage: formData.vaultImage || null,
     ftTokenImg: formData.ftTokenImg || null,
     description: formData.description || null,
+    tokenDescription: formData.tokenDescription || null,
     tokensForAcquires: formData.tokensForAcquires,
     acquireReserve: formData.acquireReserve,
     liquidityPoolContribution: formData.liquidityPoolContribution,
     creationThreshold: formData.creationThreshold !== '' ? parseFloat(formData.creationThreshold) : null,
     cosigningThreshold: formData.cosigningThreshold !== '' ? parseFloat(formData.cosigningThreshold) : null,
     executionThreshold: formData.executionThreshold !== '' ? parseFloat(formData.executionThreshold) : null,
-    socialLinks: formData.socialLinks.map(({ ...rest }) => rest),
+    socialLinks: formData.socialLinks.map(({ name, url }) => ({ name, url })),
     tags: formData.tags,
   });
 
@@ -236,9 +238,26 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
             value={formData.description}
             error={Boolean(errors.description)}
             helperText={errors.description}
+            hint="This is the Vault description."
             onChange={value => {
               setFormData(prev => ({ ...prev, description: value }));
               clearFieldError('description');
+            }}
+          />
+        </div>
+
+        <div>
+          <LavaSteelTextarea
+            label="Vault token description"
+            name="tokenDescription"
+            placeholder="Add a description for your Vault token"
+            value={formData.tokenDescription}
+            error={Boolean(errors.tokenDescription)}
+            helperText={errors.tokenDescription}
+            hint="This is the Vault Token description used when registering Vault metadata."
+            onChange={value => {
+              setFormData(prev => ({ ...prev, tokenDescription: value }));
+              clearFieldError('tokenDescription');
             }}
           />
         </div>
