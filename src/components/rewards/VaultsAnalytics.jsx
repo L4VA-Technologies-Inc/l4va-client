@@ -20,13 +20,17 @@ export const VaultsAnalytics = ({ vaults }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const total = vaults.reduce((sum, v) => sum + v.totalReward, 0);
-  const segments = vaults.map((vault, i) => ({
-    ...vault,
-    percent: total > 0 ? (vault.totalReward / total) * 100 : 0,
-    color: VAULT_COLORS[i % VAULT_COLORS.length],
-    // Truncate vault name for display
-    displayLabel: vault.vaultName.length > 12 ? `${vault.vaultName.slice(0, 12)}...` : vault.vaultName,
-  }));
+  const segments = vaults.map((vault, i) => {
+    const vaultName = vault.vaultName ?? `${vault.vaultId.slice(0, 8)}...`;
+
+    return {
+      ...vault,
+      percent: total > 0 ? (vault.totalReward / total) * 100 : 0,
+      color: VAULT_COLORS[i % VAULT_COLORS.length],
+      // Truncate vault name for display
+      displayLabel: vaultName.length > 12 ? `${vaultName.slice(0, 12)}...` : vaultName,
+    };
+  });
 
   let offsetDeg = -90;
 
