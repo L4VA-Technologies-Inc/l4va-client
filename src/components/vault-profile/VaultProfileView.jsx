@@ -652,7 +652,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
 
   const renderSwapBlock = () => (
-    <div className="bg-steel-950 rounded-xl p-4 mx-auto w-full mt-4">
+    <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
       <SwapComponent
         key={swapInstanceKey}
         config={{
