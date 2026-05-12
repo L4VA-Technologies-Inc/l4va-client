@@ -11,7 +11,7 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
           <p className="text-steel-300 text-sm leading-relaxed">
             Users earn $L4VA by creating or interacting with vaults. The Oracle Vault is the first vault on the
             protocol—it mints ORACLE for &quot;Relics of Magma&quot; NFTs. Total bonuses across staking and alignment
-            are are capped at 20%.
+            are capped at 20%.
           </p>
         </section>
 
