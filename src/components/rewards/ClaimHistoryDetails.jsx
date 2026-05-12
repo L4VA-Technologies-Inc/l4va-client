@@ -5,7 +5,7 @@ import { IS_PREPROD } from '@/utils/networkValidation';
 
 /**
  * Displays user's claim transaction history
- * Shows only completed/claimed transactions with amounts and on-chain links
+ * Shows pending and completed/confirmed claim transactions with amounts and on-chain links
  */
 export const ClaimHistoryDetails = ({ transactions = [], isLoading = false }) => {
   if (isLoading) {
