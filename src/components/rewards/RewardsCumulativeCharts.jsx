@@ -109,25 +109,27 @@ function CustomTooltip({ active, payload, label, labelFormatter }) {
   if (!active || !payload?.length) return null;
 
   const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
+  const visibleItems = payload.filter(entry => entry.value > 0).sort((a, b) => b.value - a.value);
 
   return (
-    <div className="bg-steel-900 border border-steel-700 rounded-lg px-4 py-3 shadow-xl">
+    <div className="bg-steel-900 border border-steel-700 rounded-lg px-4 py-3 shadow-xl max-w-sm z-[9999] relative">
       <p className="text-steel-400 text-xs mb-2">{labelFormatter ? labelFormatter(label) : label}</p>
-      {payload
-        .filter(entry => entry.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .map((entry, i) => (
+      <div className="space-y-1.5 max-h-52 overflow-scroll">
+        {visibleItems.map((entry, i) => (
           <div key={i} className="flex items-center justify-between gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-steel-300">{entry.name}</span>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+              <span className="text-steel-300 truncate" title={entry.name}>
+                {entry.name}
+              </span>
             </div>
-            <span className="text-white font-medium">{formatAmount(entry.value)}</span>
+            <span className="text-white font-medium flex-shrink-0 tabular-nums">{formatAmount(entry.value)}</span>
           </div>
         ))}
+      </div>
       <div className="border-t border-steel-700 mt-2 pt-2 flex justify-between text-sm">
         <span className="text-steel-400">Total</span>
-        <span className="text-orange-400 font-semibold">{formatAmount(total)} $L4VA</span>
+        <span className="text-orange-400 font-semibold tabular-nums">{formatAmount(total)} $L4VA</span>
       </div>
     </div>
   );
@@ -285,7 +287,12 @@ function CumulativeAreaChart({ title, hint, timeline, seriesKey, labelMap, isLoa
               tickLine={false}
               width={55}
             />
-            <Tooltip content={<CustomTooltip />} labelFormatter={formatDate} />
+            <Tooltip
+              content={<CustomTooltip />}
+              labelFormatter={formatDate}
+              wrapperStyle={{ zIndex: 9999, outline: 'none' }}
+              cursor={{ stroke: '#4a5568', strokeWidth: 1, strokeDasharray: '5 5' }}
+            />
             <Legend
               formatter={value => getLabel(value)}
               wrapperStyle={{
