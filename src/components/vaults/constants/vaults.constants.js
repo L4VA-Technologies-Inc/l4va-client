@@ -146,7 +146,7 @@ const assetWhitelistItemSchema = yup.object({
     .oneOf([true], 'Only verified collections can be added to a vault'),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
-  valuationMethod: yup.string().oneOf(['market', 'custom']).default('market'),
+  valuationMethod: yup.string().oneOf(['market', 'custom', 'lp_token_dynamic']).default('market'),
   customPriceAda: yup.number().when('valuationMethod', {
     is: 'custom',
     then: schema =>
