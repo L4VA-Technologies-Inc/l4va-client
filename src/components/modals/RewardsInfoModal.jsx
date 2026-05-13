@@ -34,8 +34,8 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Contributing assets into vaults</li>
               <li>Acquiring</li>
-              <li>Providing liquidity</li>
-              <li>Using the widget for swaps</li>
+              <li>Providing liquidity for vault tokens (VT/ADA or VT/USDCx pools)</li>
+              <li>Swapping vault tokens using the widget</li>
               <li>Participating in governance</li>
             </ul>
           </div>
