@@ -9,11 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "docs:generate": "typedoc --options typedoc.json",
-    "docs:serve": "npx serve documentation"
+    "docs:serve": "npx serve documentation",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@ada-anvil/weld": "0.5.1",
-    "@dexhunterio/swaps": "^2.0.4",
+    "@dexhunterio/swaps": "2.0.5",
     "@emoji-mart/data": "1.2.1",
     "@emoji-mart/react": "1.1.1",
     "@novu/react": "3.8.1",
@@ -94,6 +95,8 @@
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-react-refresh": "0.4.20",
     "globals": "16.2.0",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "typedoc": "0.28.14",
     "typescript": "5.8.3",
     "vite": "6.4.2",

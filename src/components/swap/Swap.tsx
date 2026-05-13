@@ -2,37 +2,13 @@ import Swap from '@dexhunterio/swaps';
 import React, { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
+import { useWallet } from '@ada-anvil/weld/react';
+import type { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 import { RewardsApiProvider } from '@/services/api/rewards';
-
-interface SuccessResponse {
-  data: {
-    amount_in: number;
-    expected_output: number;
-    expected_output_without_slippage: number;
-    fee: number;
-    dex: string;
-    price_impact: number;
-    initial_price: number;
-    final_price: number;
-    pool_id: string;
-    batcher_fee: number;
-    deposits: number;
-    price_distortion: number;
-    pool_fee: number;
-    tx_hash: string;
-    status: 'SUBMITTED';
-    token_id_in: string;
-    token_id_out: string;
-    expected_out_amount: number;
-    submission_time: string;
-    user_address: string;
-    upcoming: boolean;
-    type: 'SELL';
-    is_dexhunter: boolean;
-  }[];
-}
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 export interface SwapComponentProps {
   config?: Omit<
@@ -158,6 +134,10 @@ const unmountSharedSwapStyles = () => {
 };
 
 export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
+  const { isAuthenticated } = useAuth();
+  const { key: walletKey, isConnected } = useWallet('key', 'isConnected');
+  const { openModal } = useModalControls();
+
   const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
 
   useEffect(() => {
@@ -167,42 +147,46 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
     };
   }, []);
 
-  const safeConfig = {
-    theme: 'dark' as const,
-    displayType: 'DEFAULT' as const,
-    width: '100%',
-    ...config,
-    onSwapSuccess: async (data: SuccessResponse) => {
-      if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
-        toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
-          duration: 5000,
-        });
-
-        // Track widget swap for rewards
-        try {
-          await RewardsApiProvider.trackWidgetSwap(data);
-        } catch (error) {
-          console.error('Failed to track widget swap:', error);
-          // Don't show error to user - tracking is non-critical
-        }
-      }
-      config?.onSwapSuccess?.(data);
-    },
-    onSwapError: (err: unknown) => {
-      const message = err && typeof err === 'object' && 'message' in err ? String(err.message) : '';
-      if (!message.toLowerCase().includes('cancel')) {
-        console.error('Swap error:', err);
-        toast.error('Swap failed. Please try again.', { duration: 4000 });
-      }
-      config?.onSwapError?.(err);
-    },
-  };
-
   return (
     <div className="dexhunter-wrapper">
       <div className="dexhunter-scope w-full">
         <SwapErrorBoundary>
-          <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+          <Swap
+            key={walletKey || 'no-wallet'}
+            partnerName="l4va"
+            partnerCode={partnerCode}
+            colors={DEFAULT_COLORS}
+            onClickWalletConnect={() => {
+              // Block if not authenticated
+
+              console.log('here');
+
+              if (!isAuthenticated) {
+                toast.error('Please connect and sign in with your wallet first.', { duration: 4000 });
+                openModal('LoginModal');
+                return;
+              }
+            }}
+            selectedWallet={isConnected && walletKey && isAuthenticated ? (walletKey as SelectedWallet) : undefined}
+            onSwapError={err => {
+              console.log(err);
+            }}
+            onSwapSuccess={data => {
+              toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
+                duration: 5000,
+              });
+
+              try {
+                RewardsApiProvider.trackWidgetSwap(data);
+              } catch (error) {
+                console.error('Failed to track widget swap:', error);
+              }
+            }}
+            theme="dark"
+            displayType="DEFAULT"
+            width="100%"
+            {...config}
+          />
         </SwapErrorBoundary>
       </div>
     </div>
