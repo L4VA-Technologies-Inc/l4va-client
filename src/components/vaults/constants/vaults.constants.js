@@ -135,7 +135,7 @@ export const socialLinkSchema = yup.object({
   url: yup.string().url('Invalid URL').required('URL is required'),
 });
 
-const assetWhitelistItemSchema = yup.object({
+export const assetWhitelistItemSchema = yup.object({
   policyId: yup
     .string()
     .required('Policy ID is required')
@@ -158,6 +158,8 @@ const assetWhitelistItemSchema = yup.object({
     otherwise: schema => schema.nullable(),
   }),
 });
+
+export const assetWhitelistProposalItemSchema = assetWhitelistItemSchema.omit(['countCapMin', 'countCapMax']);
 
 const acquirerWhitelistItemSchema = yup.object({
   walletAddress: yup

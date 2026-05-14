@@ -1,5 +1,5 @@
 import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ export const LavaWhitelistWithCaps = ({
   maxCapValue = 1000000000000, // 1 Trillion
   isExpandable = false,
   onExpandableChange,
+  reservedPolicyIds = [],
+  showCountCaps = true,
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
   const [searchResults, setSearchResults] = useState({});
@@ -30,6 +32,19 @@ export const LavaWhitelistWithCaps = ({
   const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = useAssets();
 
   const walletPolicyIds = data?.data || [];
+
+  const reservedPolicyIdSet = useMemo(
+    () => new Set(reservedPolicyIds.map(policyId => policyId?.toLowerCase()).filter(Boolean)),
+    [reservedPolicyIds]
+  );
+
+  const getUsedPolicyIds = currentUniqueId =>
+    new Set([
+      ...reservedPolicyIdSet,
+      ...whitelist
+        .filter(item => item.uniqueId !== currentUniqueId && item.policyId)
+        .map(item => item.policyId.toLowerCase()),
+    ]);
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -83,18 +98,14 @@ export const LavaWhitelistWithCaps = ({
   );
 
   const getFilteredBrowseList = currentUniqueId => {
-    const usedPolicyIds = new Set(
-      whitelist.filter(item => item.uniqueId !== currentUniqueId && item.policyId).map(item => item.policyId)
-    );
-    return walletPolicyIds.filter(policy => !usedPolicyIds.has(policy.policyId));
+    const usedPolicyIds = getUsedPolicyIds(currentUniqueId);
+    return walletPolicyIds.filter(policy => !usedPolicyIds.has(policy.policyId.toLowerCase()));
   };
 
   const getFilteredSearchResults = currentUniqueId => {
-    const usedPolicyIds = new Set(
-      whitelist.filter(item => item.uniqueId !== currentUniqueId && item.policyId).map(item => item.policyId)
-    );
+    const usedPolicyIds = getUsedPolicyIds(currentUniqueId);
     const results = searchResults[currentUniqueId] || [];
-    return results.filter(policy => !usedPolicyIds.has(policy.policyId));
+    return results.filter(policy => !usedPolicyIds.has(policy.policyId.toLowerCase()));
   };
 
   const triggerSearch = useCallback(
@@ -283,25 +294,26 @@ export const LavaWhitelistWithCaps = ({
 
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
-    const newAssets = [
-      ...whitelist,
-      {
-        policyId: '',
-        assetName: '',
-        name: '',
-        count: 1,
-        countCapMin: 1,
-        policyName: 'N/A',
-        collectionName: null,
-        isVerified: null,
-        verificationPlatform: null,
-        countCapMax: Math.min(1000, maxCapValue),
-        valuationMethod: 'market',
-        customPriceAda: null,
-        uniqueId: Date.now(),
-      },
-    ];
-    setWhitelist(newAssets);
+    const newAsset = {
+      policyId: '',
+      assetName: '',
+      name: '',
+      count: 1,
+      policyName: 'N/A',
+      collectionName: null,
+      isVerified: null,
+      verificationPlatform: null,
+      valuationMethod: 'market',
+      customPriceAda: null,
+      uniqueId: Date.now(),
+    };
+
+    if (showCountCaps) {
+      newAsset.countCapMin = 1;
+      newAsset.countCapMax = Math.min(1000, maxCapValue);
+    }
+
+    setWhitelist([...whitelist, newAsset]);
   };
 
   const updateAsset = (uniqueId, field, val, policyData = {}) => {
@@ -518,66 +530,68 @@ export const LavaWhitelistWithCaps = ({
                   <span>Unverified collection — cannot be added to a vault</span>
                 </div>
               )}
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <LavaInput
-                    required={true}
-                    label="Min asset cap"
-                    type="text"
-                    pattern="[0-9]*"
-                    style={{ fontSize: '20px' }}
-                    value={asset.countCapMin}
-                    onChange={e => {
-                      const inputValue = e.target.value;
-                      const numericValue = Number(inputValue.replace(/,/g, ''));
-                      if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                        updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+              {showCountCaps && (
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <LavaInput
+                      required={true}
+                      label="Min asset cap"
+                      type="text"
+                      pattern="[0-9]*"
+                      style={{ fontSize: '20px' }}
+                      value={asset.countCapMin}
+                      onChange={e => {
+                        const inputValue = e.target.value;
+                        const numericValue = Number(inputValue.replace(/,/g, ''));
+                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                          updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+                        }
+                      }}
+                      onBlur={e =>
+                        updateAsset(
+                          asset.uniqueId,
+                          'countCapMin',
+                          e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
+                        )
                       }
-                    }}
-                    onBlur={e =>
-                      updateAsset(
-                        asset.uniqueId,
-                        'countCapMin',
-                        e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
-                      )
-                    }
-                    hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                  />
-                  {(() => {
-                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                    return (
-                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
-                    );
-                  })()}
-                </div>
+                      hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
+                    />
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
+                      );
+                    })()}
+                  </div>
 
-                <div className="flex-1">
-                  <LavaInput
-                    required={true}
-                    label="Max asset cap"
-                    value={asset.countCapMax}
-                    onChange={e => {
-                      const inputValue = e.target.value;
-                      const numericValue = Number(inputValue.replace(/,/g, ''));
-                      if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                        updateAsset(asset.uniqueId, 'countCapMax', inputValue);
-                      }
-                    }}
-                    onBlur={e => {
-                      const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
-                      const limitedValue = Math.min(rawValue, maxCapValue);
-                      updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
-                    }}
-                    hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                  />
-                  {(() => {
-                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                    return (
-                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
-                    );
-                  })()}
+                  <div className="flex-1">
+                    <LavaInput
+                      required={true}
+                      label="Max asset cap"
+                      value={asset.countCapMax}
+                      onChange={e => {
+                        const inputValue = e.target.value;
+                        const numericValue = Number(inputValue.replace(/,/g, ''));
+                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                          updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                        }
+                      }}
+                      onBlur={e => {
+                        const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                        const limitedValue = Math.min(rawValue, maxCapValue);
+                        updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                      }}
+                      hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
+                    />
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
+                      );
+                    })()}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-4 mt-4">
                 <div>
