@@ -1,6 +1,7 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatTokenQuantity, formatPolicyId } from '@/utils/core.utils';
+import { IS_PREPROD } from '@/utils/networkValidation';
 
 export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   // Get decimals from metadata, default to 6 if not specified
@@ -38,7 +39,7 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
         </div>
         <a
           href={
-            import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+            IS_PREPROD
               ? `https://preprod.cardanoscan.io/tokenPolicy/${ft.metadata?.policyId}`
               : `https://pool.pm/policy/${ft.metadata?.policyId}`
           }

@@ -9,6 +9,7 @@ import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
 import { RewardsApiProvider } from '@/services/api/rewards';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { IS_PREPROD } from '@/utils/networkValidation';
 
 export interface SwapComponentProps {
   config?: Omit<
@@ -159,12 +160,16 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
             onClickWalletConnect={() => {
               // Block if not authenticated
 
-              console.log('here');
-
               if (!isAuthenticated) {
                 toast.error('Please connect and sign in with your wallet first.', { duration: 4000 });
                 openModal('LoginModal');
                 return;
+              }
+
+              if (IS_PREPROD) {
+                toast.error('Wallet connection is currently unavailable on Testnet. Please use mainnet.', {
+                  duration: 5000,
+                });
               }
             }}
             selectedWallet={isConnected && walletKey && isAuthenticated ? (walletKey as SelectedWallet) : undefined}

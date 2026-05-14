@@ -81,7 +81,7 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET } from '@/utils/networkValidation.ts';
+import { IS_MAINNET, IS_PREPROD } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -529,7 +529,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <span className="font-medium">Wallet:</span>
             <a
               href={
-                import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                IS_PREPROD
                   ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
                   : `https://pool.pm/${vault.contractAddress}`
               }
@@ -553,7 +553,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <span className="font-medium">Policy ID:</span>
               <a
                 href={
-                  import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                  IS_PREPROD
                     ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
                     : `https://pool.pm/policy/${vault.policyId}`
                 }

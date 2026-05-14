@@ -1,6 +1,7 @@
 import CheckmarkIcon from '@/icons/checkmark.svg?react';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatPolicyId } from '@/utils/core.utils';
+import { IS_PREPROD } from '@/utils/networkValidation';
 
 export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
   return (
@@ -36,7 +37,7 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
         </div>
         <a
           href={
-            import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+            IS_PREPROD
               ? `https://preprod.cardanoscan.io/tokenPolicy/${nft.metadata?.policyId}`
               : `https://pool.pm/policy/${nft.metadata?.policyId}`
           }
