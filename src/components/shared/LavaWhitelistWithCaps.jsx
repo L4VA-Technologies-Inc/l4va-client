@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
@@ -16,6 +17,8 @@ export const LavaWhitelistWithCaps = ({
   maxItems = 10,
   errors = {},
   maxCapValue = 1000000000000, // 1 Trillion
+  isExpandable = false,
+  onExpandableChange,
 }) => {
   const [showDropdown, setShowDropdown] = useState({});
   const [searchResults, setSearchResults] = useState({});
@@ -394,6 +397,17 @@ export const LavaWhitelistWithCaps = ({
           <Plus className="h-4 w-4" />
         </button>
       </div>
+      {onExpandableChange && (
+        <div className="mb-4">
+          <LavaCheckbox
+            checked={Boolean(isExpandable)}
+            description="Allows the vault whitelist to be expanded after creation."
+            label="Expandable whitelist"
+            name="isExpandable"
+            onChange={e => onExpandableChange(e.target.checked)}
+          />
+        </div>
+      )}
       <div className="space-y-4">
         {whitelist.map(asset => {
           const isSearchMode = !!asset.policyId;

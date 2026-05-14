@@ -221,6 +221,7 @@ export interface CreateVaultFormData {
   type: VaultType;
   privacy: VaultPrivacy;
   description?: string;
+  isExpandable?: boolean;
   vaultImage: string;
   socialLinks: ILink[];
   valueMethod: ValueMethod;
