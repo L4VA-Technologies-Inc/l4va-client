@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { assetWhitelistProposalItemSchema } from '@/components/vaults/constants/vaults.constants';
@@ -67,6 +68,8 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
   const [newAssets, setNewAssets] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
 
+  const canExpandWhitelist = Boolean(vault?.isExpandable);
+
   const existingAssets = useMemo(
     () => (vault?.assetsWhitelist ?? []).filter(asset => asset?.policyId),
     [vault?.assetsWhitelist]
@@ -84,6 +87,15 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
   const remainingSlots = Math.max(0, MAX_TOTAL_ASSETS - totalAssetCount);
 
   useEffect(() => {
+    if (!canExpandWhitelist) {
+      setFieldErrors({});
+      onDataChange?.({
+        assetsWhitelist: [],
+        isValid: false,
+      });
+      return;
+    }
+
     const completedAssets = newAssets.filter(asset => asset?.policyId);
     const { fieldErrors: nextFieldErrors, hasErrors } = validateNewAssets(completedAssets, existingPolicyIds);
     const hasCapacity = totalAssetCount <= MAX_TOTAL_ASSETS;
@@ -95,7 +107,28 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
       assetsWhitelist: completedAssets.map(formatAssetForProposal),
       isValid,
     });
-  }, [newAssets, existingPolicyIds, totalAssetCount, onDataChange]);
+  }, [newAssets, existingPolicyIds, totalAssetCount, onDataChange, canExpandWhitelist]);
+
+  if (!canExpandWhitelist) {
+    return (
+      <div className="space-y-6">
+        <header className="space-y-2">
+          <h3 className="text-lg font-medium text-white">Update Asset Whitelist</h3>
+        </header>
+
+        <div className="flex gap-4 rounded-xl border border-orange-500/35 bg-orange-500/10 p-5 text-left" role="alert">
+          <AlertCircle className="h-6 w-6 shrink-0 text-orange-400" aria-hidden />
+          <div className="space-y-2 min-w-0">
+            <p className="text-sm font-semibold text-white">Whitelist updates are not available for this vault</p>
+            <p className="text-sm leading-relaxed text-gray-300">
+              This vault does not allow expanding the asset whitelist. Only vaults marked as expandable can create asset
+              whitelist update proposals.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
