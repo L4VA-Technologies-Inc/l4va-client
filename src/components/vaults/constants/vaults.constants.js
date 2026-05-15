@@ -187,7 +187,7 @@ export const vaultSchema = yup.object({
   privacy: yup.string().required('Privacy setting is required'),
   vaultTokenTicker: yup
     .string()
-    .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
     .nullable(),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
   tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional(),
@@ -456,7 +456,7 @@ export const vaultSchema = yup.object({
 export const editUpcomingVaultSchema = yup.object({
   vaultTokenTicker: yup
     .string()
-    .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
     .required('Ticker is required'),
   vaultImage: yup.string().required('Vault image is required'),
   ftTokenImg: yup.string().required('Token image is required'),

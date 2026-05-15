@@ -134,7 +134,7 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
   };
 
   const buildPayload = () => ({
-    vaultTokenTicker: formData.vaultTokenTicker ? String(formData.vaultTokenTicker).toUpperCase() : null,
+    vaultTokenTicker: formData.vaultTokenTicker ? String(formData.vaultTokenTicker) : null,
     vaultImage: formData.vaultImage || null,
     ftTokenImg: formData.ftTokenImg || null,
     description: formData.description || null,
@@ -220,9 +220,7 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
             placeholder="Add ticker"
             value={formData.vaultTokenTicker}
             onChange={value => {
-              const normalized = String(value || '')
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, '');
+              const normalized = String(value || '').replace(/[^A-Za-z0-9]/g, '');
               setFormData(prev => ({ ...prev, vaultTokenTicker: normalized }));
               clearFieldError('vaultTokenTicker');
             }}
