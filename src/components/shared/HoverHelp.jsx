@@ -54,6 +54,12 @@ export const HoverHelp = ({ hint, className = '', variant = 'help', children = n
     setIsVisible(true);
   };
 
+  const hideIfFocusLeft = e => {
+    if (!triggerRef.current?.contains(e.relatedTarget)) {
+      setIsVisible(false);
+    }
+  };
+
   useLayoutEffect(() => {
     if (!isVisible) return;
 
@@ -94,8 +100,10 @@ export const HoverHelp = ({ hint, className = '', variant = 'help', children = n
       className={`inline-flex ${isIconVariant ? '' : 'font-normal'} ${className}`}
       onMouseEnter={show}
       onMouseLeave={() => setIsVisible(false)}
-      onFocus={show}
-      onBlur={() => setIsVisible(false)}
+      onFocus={isIconVariant ? undefined : show}
+      onBlur={isIconVariant ? undefined : () => setIsVisible(false)}
+      onFocusIn={isIconVariant ? show : undefined}
+      onFocusOut={isIconVariant ? hideIfFocusLeft : undefined}
       tabIndex={isIconVariant ? -1 : 0}
       role={isIconVariant ? undefined : 'button'}
     >
