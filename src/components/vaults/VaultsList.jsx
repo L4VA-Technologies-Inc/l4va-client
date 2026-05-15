@@ -65,6 +65,7 @@ export const VaultList = ({
       onApplyStage: onTabChange,
       initialFilters: appliedFilters,
       activeStage: activeTab,
+      myVaults: Boolean(appliedFilters?.myVaults),
     });
 
   const scrollUp = () => {

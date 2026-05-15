@@ -6,8 +6,9 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
+import { LavaMultiSelect } from '@/components/shared/LavaSelect.jsx';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
+import { useVaultAssetsWhitelist } from '@/services/api/queries';
 
 export const VaultFiltersModal = ({
   isOpen,
@@ -16,7 +17,9 @@ export const VaultFiltersModal = ({
   initialFilters = {},
   onApplyStage,
   activeStage,
+  myVaults = false,
 }) => {
+  const [assetWhitelistSearch, setAssetWhitelistSearch] = useState('');
   const [filters, setFilters] = useState({
     page: 1,
     limit: 12,
@@ -30,7 +33,11 @@ export const VaultFiltersModal = ({
     vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
-    assetWhitelist: initialFilters.assetWhitelist || '',
+    assetWhitelist: Array.isArray(initialFilters.assetWhitelist)
+      ? initialFilters.assetWhitelist
+      : initialFilters.assetWhitelist
+        ? [initialFilters.assetWhitelist]
+        : [],
     contributionWindow: {
       from: initialFilters.contributionWindow?.from
         ? new Date(initialFilters.contributionWindow.from).toISOString()
@@ -43,25 +50,21 @@ export const VaultFiltersModal = ({
     },
   });
 
+  const {
+    data: assetsWhitelistData,
+    fetchNextPage,
+    hasNextPage,
+    isLoading: isInitialLoading,
+    isFetching,
+    isFetchingNextPage,
+  } = useVaultAssetsWhitelist({ myVaults, limit: 10, search: assetWhitelistSearch });
+
   const OPTIONS = {
     vaultStages: ['Upcoming', 'Contribute', 'Acquire', 'Locked', 'Terminated'],
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
-    assetWhitelist: [
-      { name: 'None', policyId: null },
-      { name: 'Snake', policyId: 'f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a' },
-      { name: 'Chaddy', policyId: 'ed8145e0a4b8b54967e8f7700a5ee660196533ded8a55db620cc6a37' },
-      { name: 'Pxlz', policyId: '755457ffd6fffe7b20b384d002be85b54a0b3820181f19c5f9032c2e' },
-      { name: 'Berry', policyId: 'fd948c7248ecef7654f77a0264a188dccc76bae5b73415fc51824cf3' },
-      { name: 'O', policyId: 'add6529cc60380af5d51566e32925287b5b04328332652ccac8de0a9' },
-      { name: 'Goats', policyId: '4e529151fe66164ebcf52f81033eb0ec55cc012cb6c436104b30fa36' },
-      { name: 'Diamond', policyId: '0b89a746fd2d859e0b898544487c17d9ac94b187ea4c74fd0bfbab16' },
-      { name: 'GOLD', policyId: '436ca2e51fa2887fa306e8f6aa0c8bda313dd5882202e21ae2972ac8' },
-      { name: 'SLVR', policyId: '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a' },
-      { name: 'Insurance Asset', policyId: '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646' },
-      { name: 'Real Estate Equity', policyId: '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601' },
-    ],
+    assetWhitelist: assetsWhitelistData?.pages?.flatMap(page => (Array.isArray(page?.items) ? page.items : [])) || [],
   };
 
   const toggleArrayFilter = (key, value) => {
@@ -120,7 +123,7 @@ export const VaultFiltersModal = ({
       vaultStage: '',
       governance: '',
       verified: [],
-      assetWhitelist: '',
+      assetWhitelist: [],
       contributionWindow: {
         from: '',
         to: '',
@@ -143,7 +146,7 @@ export const VaultFiltersModal = ({
       maxInitialVaultOffered: value => Number(value) > 0,
       minTvl: value => Number(value) > 0,
       maxTvl: value => Number(value) > 0,
-      assetWhitelist: value => value !== '',
+      assetWhitelist: value => Array.isArray(value) && value.length > 0,
     };
 
     const activeFilters = {};
@@ -340,13 +343,29 @@ export const VaultFiltersModal = ({
         <div>
           <h3 className="text-lg font-medium mb-3">Asset Whitelist</h3>
           <div>
-            <LavaSteelSelect
-              options={OPTIONS.assetWhitelist.map(w => ({
-                label: w.name,
-                value: w.policyId,
-              }))}
+            <LavaMultiSelect
+              options={OPTIONS.assetWhitelist
+                .filter(w => Boolean(w?.policyId))
+                .map(w => ({
+                  label: w.name,
+                  value: w.policyId,
+                }))}
               value={filters.assetWhitelist}
-              onChange={val => setSingleFilter('assetWhitelist', val)}
+              onChange={val => setFilters(prev => ({ ...prev, assetWhitelist: val }))}
+              placeholder="Select asset collections"
+              showSelectAll
+              selectAllLabel="Select all assets"
+              className="font-bold"
+              hasMore={Boolean(hasNextPage)}
+              isInitialLoading={isInitialLoading}
+              isFetching={isFetching}
+              isFetchingMore={isFetchingNextPage}
+              onSearchChange={setAssetWhitelistSearch}
+              onReachListEnd={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
             />
           </div>
         </div>

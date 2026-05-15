@@ -4,6 +4,7 @@ import { ChevronDown, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { LavaSearchInput } from '@/components/shared/LavaInput';
+import { Spinner } from '@/components/Spinner';
 
 export const LavaSelect = ({
   label,
@@ -272,17 +273,27 @@ export const LavaMultiSelect = ({
   showSelectAll = false,
   selectAllLabel = 'Select All',
   isDisabled = false,
+  onSearchChange,
+  onReachListEnd,
+  hasMore = false,
+  isInitialLoading = false,
+  isFetching = false,
+  isFetchingMore = false,
+  direction = 'down',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
 
+  const resetSearch = () => {
+    setSearchQuery('');
+    onSearchChange?.('');
+  };
+
   const toggleDropdown = () => {
     if (!isDisabled) {
       setIsOpen(!isOpen);
-      if (!isOpen) {
-        setSearchQuery('');
-      }
+      resetSearch();
     }
   };
 
@@ -296,13 +307,16 @@ export const LavaMultiSelect = ({
 
   useClickOutside(dropdownRef, () => {
     setIsOpen(false);
-    setSearchQuery('');
+    resetSearch();
   });
 
   const filteredOptions = useMemo(() => {
+    if (onSearchChange) {
+      return options;
+    }
     const query = (searchQuery || '').toLowerCase();
     return options.filter(option => (option?.label || '').toLowerCase().includes(query));
-  }, [options, searchQuery]);
+  }, [options, searchQuery, onSearchChange]);
 
   const selectedOptions = useMemo(() => options.filter(option => value.includes(option.value)), [options, value]);
 
@@ -331,6 +345,21 @@ export const LavaMultiSelect = ({
     onChange([...next]);
   };
 
+  const handleListScroll = event => {
+    if (!onReachListEnd || !hasMore || isFetchingMore) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const threshold = 24;
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+
+    if (isNearBottom) {
+      onReachListEnd();
+    }
+  };
+
+  const showCenteredLoader = filteredOptions.length === 0 && (isInitialLoading || (isFetching && !isFetchingMore));
+  const showBottomLoader = filteredOptions.length > 0 && isFetchingMore;
+
   return (
     <div ref={dropdownRef} className="relative w-full">
       <button
@@ -357,22 +386,31 @@ export const LavaMultiSelect = ({
 
       {isOpen && (
         <div
-          className={`absolute left-0 z-10 mt-1 w-full rounded-lg bg-steel-850 shadow-lg border border-steel-750 max-h-80 overflow-hidden flex flex-col`}
+          className={`absolute left-0 z-10 w-full rounded-lg bg-steel-850 shadow-lg border border-steel-750 max-h-80 overflow-hidden flex flex-col ${
+            direction === 'up' ? 'bottom-full mb-1' : 'mt-1'
+          }`}
         >
           {showSearch && (
             <div className="p-2 border-b border-steel-750" onClick={e => e.stopPropagation()}>
               <LavaSearchInput
                 placeholder={searchPlaceholder}
                 value={searchQuery}
-                onChange={setSearchQuery}
+                onChange={value => {
+                  setSearchQuery(value);
+                  onSearchChange?.(value);
+                }}
                 className="!h-9 bg-steel-850 !border-steel-750"
                 debounceTime={300}
               />
             </div>
           )}
 
-          <div className="overflow-y-auto max-h-60">
-            {filteredOptions.length === 0 ? (
+          <div className="overflow-y-auto max-h-60" onScroll={handleListScroll}>
+            {showCenteredLoader ? (
+              <div className="px-4 py-6 flex justify-center">
+                <Spinner />
+              </div>
+            ) : filteredOptions.length === 0 ? (
               <div className="px-4 py-3 text-center text-white/60">No assets found</div>
             ) : (
               <>
@@ -437,6 +475,11 @@ export const LavaMultiSelect = ({
                     </button>
                   );
                 })}
+                {showBottomLoader && (
+                  <div className="px-4 py-2.5 flex justify-center border-t border-steel-750/70 scale-75">
+                    <Spinner />
+                  </div>
+                )}
               </>
             )}
           </div>

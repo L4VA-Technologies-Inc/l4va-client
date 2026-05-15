@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, User, FolderOpen, ArrowLeftRight, RefreshCwIcon } from 'lucide-react';
+import { LogOut, User, FolderOpen, ArrowLeftRight, RefreshCwIcon, Gift } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
@@ -100,6 +100,10 @@ export const ProfileModal = () => {
         <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/vaults')}>
           <FolderOpen size={20} />
           My vaults
+        </SecondaryButton>
+        <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/rewards')}>
+          <Gift size={20} />
+          My rewards
         </SecondaryButton>
         <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
           <ArrowLeftRight size={20} />

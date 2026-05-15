@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 
+import { IS_PREPROD } from '@/utils/networkValidation';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatAdaPrice } from '@/utils/core.utils';
 
@@ -67,7 +68,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                   {action.txHash && (
                     <ActionField label="Transaction">
                       <a
-                        href={`https://cardanoscan.io/transaction/${action.txHash}`}
+                        href={`${IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io'}/transaction/${action.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-orange-500 hover:text-orange-400 transition-colors text-sm"

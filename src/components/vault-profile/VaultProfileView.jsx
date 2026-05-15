@@ -1,4 +1,4 @@
-import { Copy, EyeIcon, User, Share, BarChart3, Info } from 'lucide-react';
+import { Copy, EyeIcon, User, Share, BarChart3, Info, Pencil } from 'lucide-react';
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
@@ -81,7 +81,7 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET } from '@/utils/networkValidation.ts';
+import { IS_MAINNET, IS_PREPROD } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -185,12 +185,18 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const router = useRouter();
   const navigate = useNavigate();
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
   const { isAda, currencySymbol } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return window.matchMedia('(max-width: 1023px)').matches;
+  });
 
   useVaultStatusTracker(vault?.id);
   const viewVaultMutation = useViewVault();
@@ -236,6 +242,25 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
 
     return () => cancelIdle(handle);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const updateViewportMode = event => {
+      setIsMobileView(event.matches);
+    };
+
+    setIsMobileView(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updateViewportMode);
+      return () => mediaQuery.removeEventListener('change', updateViewportMode);
+    }
+
+    mediaQuery.addListener(updateViewportMode);
+    return () => mediaQuery.removeListener(updateViewportMode);
   }, []);
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
@@ -427,8 +452,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
-        <div className="flex w-full justify-between items-center mb-3">
-          <h1 className="text-2xl font-bold">{vault.name}</h1>
+        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
+          <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
           <div className="flex gap-2 items-center">
             {isAuthenticated && (
               <div className="group relative">
@@ -438,8 +463,22 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 >
                   <User className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                   View owner profile
+                </div>
+              </div>
+            )}
+            {isAuthenticated && user?.id === vault.owner?.id && vault.vaultStatus === VAULT_STATUSES.PUBLISHED && (
+              <div className="group relative">
+                <button
+                  onClick={() => openModal('EditUpcomingVaultModal', { vault })}
+                  aria-label="Edit vault settings"
+                  className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
+                >
+                  <Pencil className="w-4 h-4 text-orange-500" />
+                </button>
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  Edit vault settings
                 </div>
               </div>
             )}
@@ -452,7 +491,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 >
                   <BarChart3 className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                   View vault statistics
                 </div>
               </div>
@@ -462,7 +501,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <EyeIcon className="w-4 h-4 text-orange-500" />
                 <span>{formatCompactNumber(vault.countView)}</span>
               </span>
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                 Total views
               </div>
             </div>
@@ -473,7 +512,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               >
                 <Share className="w-4 h-4 text-orange-500" />
               </button>
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
                 Share vault link
               </div>
             </div>
@@ -490,7 +529,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <span className="font-medium">Wallet:</span>
             <a
               href={
-                import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                IS_PREPROD
                   ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
                   : `https://pool.pm/${vault.contractAddress}`
               }
@@ -514,7 +553,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <span className="font-medium">Policy ID:</span>
               <a
                 href={
-                  import.meta.env.VITE_CARDANO_NETWORK === 'preprod'
+                  IS_PREPROD
                     ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
                     : `https://pool.pm/policy/${vault.policyId}`
                 }
@@ -595,15 +634,40 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     );
   };
 
-  const vaultSwapToken = hasActiveLp
-    ? `${vault.policyId}${vault.assetVaultName}`
-    : import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+  const activeLpTokenOut = (() => {
+    if (!hasActiveLp) return null;
+
+    const policyId = vault?.policyId || '';
+    const assetName = vault?.assetVaultName || '';
+
+    // Avoid duplicated token id when assetVaultName already includes policyId.
+    if (assetName.startsWith(policyId)) {
+      return assetName;
+    }
+
+    return `${policyId}${assetName}`;
+  })();
+
+  const vaultSwapToken = activeLpTokenOut || import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
+  const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
+
+  const renderSwapBlock = () => (
+    <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+      <SwapComponent
+        key={swapInstanceKey}
+        config={{
+          defaultTokenOut: vaultSwapToken,
+          style: { width: '100%' },
+        }}
+      />
+    </div>
+  );
 
   return (
     <>
       {renderPublishedOverlay()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="col-span-1 space-y-4 bg-steel-950 rounded-xl p-4">
+        <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
           <div className="overflow-hidden rounded-lg">
             <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
               {vault.vaultImage ? (
@@ -640,16 +704,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <ContributionSkeleton />
             )
           ) : null}
-          <div className="w-full overflow-hidden lg:block hidden">
-            <SwapComponent
-              config={{
-                defaultTokenOut: vaultSwapToken,
-                style: { width: '100%' },
-              }}
-            />
-          </div>
+          {isMobileView === false && renderSwapBlock()}
         </div>
-        <div className="col-span-1 lg:col-span-2 space-y-6">
+        <div className="col-span-1 lg:col-span-2 min-w-0 space-y-6">
           <div className="bg-steel-950 rounded-xl p-4">
             {renderVaultInfo()}
             <div className="mb-6">
@@ -673,14 +730,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               <TabsSkeleton />
             )}
           </div>
-          <div className="bg-steel-950 rounded-xl p-4 overflow-hidden mx-auto w-full mt-4 lg:hidden block">
-            <SwapComponent
-              config={{
-                defaultTokenOut: vaultSwapToken,
-                style: { width: '100%' },
-              }}
-            />
-          </div>
+          {isMobileView === true && renderSwapBlock()}
         </div>
       </div>
     </>

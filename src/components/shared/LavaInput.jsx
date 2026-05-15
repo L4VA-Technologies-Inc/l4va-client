@@ -1,4 +1,4 @@
-import { HelpCircle, Search, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 import { useEffect, useState, useId } from 'react';
 
 import { formatNum } from '@/utils/core.utils';
@@ -93,13 +93,13 @@ export const LavaInput = ({
   return (
     <>
       {label ? (
-        <label htmlFor={inputId} className="font-bold flex items-center gap-2">
-          <span className="uppercase">
+        <div className="font-bold flex items-center gap-2">
+          <label htmlFor={inputId} className="uppercase">
             {required ? '*' : ''}
             {label}
-          </span>
+          </label>
           {hint && <HoverHelp hint={hint} />}
-        </label>
+        </div>
       ) : null}
       <div className="mt-4">
         <div className="relative flex items-center">
@@ -204,18 +204,13 @@ export const LavaSteelInput = ({
   return (
     <div>
       {label ? (
-        <label htmlFor={inputId} className="font-semibold mb-4 flex items-center gap-2">
-          {required ? '*' : ''}
-          {label}
-          {hint && (
-            <div className="group relative">
-              <HelpCircle className="w-5 h-5 text-white/60 cursor-help" />
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                {hint}
-              </div>
-            </div>
-          )}
-        </label>
+        <div className="font-semibold mb-4 flex items-center gap-2">
+          <label htmlFor={inputId}>
+            {required ? '*' : ''}
+            {label}
+          </label>
+          {hint && <HoverHelp hint={hint} />}
+        </div>
       ) : null}
       <div className="relative">
         <input
@@ -263,7 +258,7 @@ export const LavaSteelInput = ({
           </div>
         )}
       </div>
-      {helperText && <p className="text-xs text-white/60 mt-1">{helperText}</p>}
+      {helperText && <p className={`text-xs mt-1 ${error ? 'text-red-600' : 'text-gray-400'}`}>{helperText}</p>}
     </div>
   );
 };

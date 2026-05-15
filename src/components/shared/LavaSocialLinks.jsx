@@ -89,7 +89,12 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
                 <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
-                <SelectContent className="border-white/20 bg-input-bg">
+                <SelectContent
+                  position="item-aligned"
+                  side="bottom"
+                  align="start"
+                  className="border-white/20 bg-input-bg z-[80]"
+                >
                   {socialPlatforms.map(platform => (
                     <SelectItem key={platform.id} className="hover:bg-white/5" value={platform.id}>
                       <div className="flex items-center gap-2">

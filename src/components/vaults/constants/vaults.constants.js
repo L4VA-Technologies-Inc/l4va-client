@@ -130,7 +130,7 @@ export const TERMINATION_TYPE_OPTIONS = [
   // { name: 'programmed', label: 'Programmed' },
 ];
 
-const socialLinkSchema = yup.object({
+export const socialLinkSchema = yup.object({
   name: yup.string().required('Name is required'),
   url: yup.string().url('Invalid URL').required('URL is required'),
 });
@@ -187,9 +187,10 @@ export const vaultSchema = yup.object({
   privacy: yup.string().required('Privacy setting is required'),
   vaultTokenTicker: yup
     .string()
-    .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
     .nullable(),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
+  tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional(),
   vaultImage: yup.string().required('Vault image is required'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
   tags: yup.array().of(yup.string()).default([]),
@@ -452,6 +453,64 @@ export const vaultSchema = yup.object({
     }),
 });
 
+export const editUpcomingVaultSchema = yup.object({
+  vaultTokenTicker: yup
+    .string()
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
+    .required('Ticker is required'),
+  vaultImage: yup.string().required('Vault image is required'),
+  ftTokenImg: yup.string().required('Token image is required'),
+  description: yup.string().max(500, 'Description must be less than 500 characters').optional().nullable(),
+  tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional().nullable(),
+  tokensForAcquires: yup
+    .number()
+    .typeError('Tokens for acquirers is required')
+    .required('Tokens for acquirers is required')
+    .min(0)
+    .max(100, 'Cannot exceed 100%'),
+  acquireReserve: yup
+    .number()
+    .typeError('Acquire reserve is required')
+    .required('Acquire reserve is required')
+    .min(0)
+    .max(100, 'Cannot exceed 100%'),
+  liquidityPoolContribution: yup
+    .number()
+    .typeError('Liquidity pool contribution is required')
+    .required('Liquidity pool contribution is required')
+    .min(0)
+    .max(100, 'Cannot exceed 100%')
+    .test(
+      'no-lp-when-no-acquirers',
+      'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
+      function (value) {
+        const { tokensForAcquires } = this.parent;
+        if (Number(tokensForAcquires) === 0) return value === 0;
+        return true;
+      }
+    ),
+  creationThreshold: yup
+    .number()
+    .typeError('Creation threshold is required')
+    .required('Creation threshold is required')
+    .min(0.5, 'Creation threshold must be at least 0.5%')
+    .max(100, 'Cannot exceed 100%'),
+  cosigningThreshold: yup
+    .number()
+    .typeError('Vote Quorum Threshold is required')
+    .required('Vote Quorum Threshold is required')
+    .min(33, 'Vote Quorum Threshold must be at least 33%')
+    .max(100, 'Cannot exceed 100%'),
+  executionThreshold: yup
+    .number()
+    .typeError('Execution threshold is required')
+    .required('Approval threshold is required')
+    .min(50.1, 'Approval threshold must be at least 50.1%')
+    .max(100, 'Cannot exceed 100%'),
+  socialLinks: yup.array().of(socialLinkSchema).default([]),
+  tags: yup.array().of(yup.string()).default([]),
+});
+
 export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
@@ -461,6 +520,7 @@ export const initialVaultState = {
   privacy: 'public',
   vaultTokenTicker: '',
   description: '',
+  tokenDescription: '',
   vaultImage: '',
   socialLinks: [],
   tags: [],
@@ -507,6 +567,7 @@ export const stepFields = {
     'privacy',
     'vaultTokenTicker',
     'description',
+    'tokenDescription',
     'vaultImage',
     'ftTokenImg',
     'socialLinks',

@@ -10,7 +10,7 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 
 export default defineConfig([
-  { ignores: ['dist', 'src/components/ui'] },
+  { ignores: ['dist', 'src/components/ui', 'documentation'] },
   {
     extends: [js.configs.recommended],
     files: ['**/*.{js,jsx}'],

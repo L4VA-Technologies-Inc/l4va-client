@@ -2,8 +2,14 @@ import Swap from '@dexhunterio/swaps';
 import React, { useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import dexhunterStyles from '@dexhunterio/swaps/lib/assets/style.css?inline';
+import { useWallet } from '@ada-anvil/weld/react';
+import type { SelectedWallet } from '@dexhunterio/swaps/lib/typescript/cardano-api';
 
 import { SwapErrorBoundary } from '@/components/swap/SwapErrorBoundary.tsx';
+import { RewardsApiProvider } from '@/services/api/rewards';
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
+import { IS_PREPROD } from '@/utils/networkValidation';
 
 export interface SwapComponentProps {
   config?: Omit<
@@ -37,6 +43,8 @@ const RESPONSIVE_OVERRIDE = `
     width: 100%;
     min-width: 0;
     display: block;
+    /* Prevent 300ms tap delay on mobile without breaking scroll */
+    touch-action: manipulation;
   }
 
   .dexhunter-wrapper #dexhunter-container {
@@ -59,11 +67,32 @@ const RESPONSIVE_OVERRIDE = `
     min-width: 0 !important;
     max-width: 100% !important;
   }
-  
-  .dexhunter-wrapper * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
+
+  /*
+   * Ensure #dexhunter-swap-container is always the nearest positioned ancestor
+   * for the token-search Sheet portal (which uses position:absolute inset-0).
+   * overflow:visible prevents any ancestor overflow:hidden from clipping the
+   * portal content or its slide-in animation.
+   */
+  .dexhunter-wrapper #dexhunter-swap-container {
+    position: relative !important;
+    overflow: visible !important;
+  }
+
+  /*
+   * Virtuoso manages inline padding-top/padding-bottom for virtualization.
+   * Do not override those paddings/margins; add a virtual spacer instead so
+   * the last token row is fully visible without scroll jitter.
+   */
+  .dexhunter-wrapper #dexhunter-container [data-testid="virtuoso-item-list"] {
+    position: relative;
+  }
+
+  .dexhunter-wrapper #dexhunter-container [data-testid="virtuoso-item-list"]::after {
+    content: "";
+    display: block;
+    height: calc(36px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
   }
 `;
 
@@ -106,6 +135,10 @@ const unmountSharedSwapStyles = () => {
 };
 
 export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
+  const { isAuthenticated } = useAuth();
+  const { key: walletKey, isConnected } = useWallet('key', 'isConnected');
+  const { openModal } = useModalControls();
+
   const partnerCode = useMemo(() => import.meta.env.VITE_DEXHUNTER_PARTNER_CODE || 'l4va_test', []);
 
   useEffect(() => {
@@ -115,34 +148,50 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
     };
   }, []);
 
-  const safeConfig = {
-    theme: 'dark' as const,
-    displayType: 'DEFAULT' as const,
-    width: '100%',
-    ...config,
-    onSwapSuccess: (data: unknown) => {
-      if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
-        toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
-          duration: 5000,
-        });
-      }
-      config?.onSwapSuccess?.(data);
-    },
-    onSwapError: (err: unknown) => {
-      const message = err && typeof err === 'object' && 'message' in err ? String(err.message) : '';
-      if (!message.toLowerCase().includes('cancel')) {
-        console.error('Swap error:', err);
-        toast.error('Swap failed. Please try again.', { duration: 4000 });
-      }
-      config?.onSwapError?.(err);
-    },
-  };
-
   return (
     <div className="dexhunter-wrapper">
       <div className="dexhunter-scope w-full">
         <SwapErrorBoundary>
-          <Swap partnerName="l4va" partnerCode={partnerCode} colors={DEFAULT_COLORS} {...safeConfig} />
+          <Swap
+            key={walletKey || 'no-wallet'}
+            partnerName="l4va"
+            partnerCode={partnerCode}
+            colors={DEFAULT_COLORS}
+            onClickWalletConnect={() => {
+              // Block if not authenticated
+
+              if (!isAuthenticated) {
+                toast.error('Please connect and sign in with your wallet first.', { duration: 4000 });
+                openModal('LoginModal');
+                return;
+              }
+
+              if (IS_PREPROD) {
+                toast.error('Wallet connection is currently unavailable on Testnet. Please use mainnet.', {
+                  duration: 5000,
+                });
+              }
+            }}
+            selectedWallet={isConnected && walletKey && isAuthenticated ? (walletKey as SelectedWallet) : undefined}
+            onSwapError={err => {
+              console.log(err);
+            }}
+            onSwapSuccess={data => {
+              toast.success('Swap transaction submitted successfully! Your transaction is being processed.', {
+                duration: 5000,
+              });
+
+              try {
+                RewardsApiProvider.trackWidgetSwap(data);
+              } catch (error) {
+                console.error('Failed to track widget swap:', error);
+              }
+            }}
+            theme="dark"
+            displayType="DEFAULT"
+            width="100%"
+            {...config}
+          />
         </SwapErrorBoundary>
       </div>
     </div>

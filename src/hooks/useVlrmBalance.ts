@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 
-const VLRM_TOKEN_ID = (import.meta as any).env.VITE_VLRM_TOKEN_ID;
+const VLRM_TOKEN_ID = import.meta.env.VITE_VLRM_TOKEN_ID || '';
 const VLRM_POLICY_ID = VLRM_TOKEN_ID.slice(0, 56);
 const VLRM_ASSET_NAME = VLRM_TOKEN_ID.slice(56);
 

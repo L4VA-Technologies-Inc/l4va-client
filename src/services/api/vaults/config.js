@@ -63,6 +63,10 @@ export class VaultsConfigProvider {
     return `/api/v1/vaults/${id}`;
   }
 
+  static cancelVaultByOwner(id) {
+    return `/api/v1/vaults/${id}/cancel`;
+  }
+
   static getMarketStatistics() {
     return '/api/v1/markets';
   }
@@ -77,5 +81,13 @@ export class VaultsConfigProvider {
 
   static getCollectionNames() {
     return '/api/v1/vaults/collection-names';
+  }
+
+  static getAssetsWhitelist() {
+    return '/api/v1/vaults/assets-whitelist';
+  }
+
+  static editUpcomingVaultSettings(id) {
+    return `/api/v1/vaults/${id}/upcoming-settings`;
   }
 }

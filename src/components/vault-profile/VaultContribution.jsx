@@ -40,6 +40,130 @@ const calculateLpMinThresholdPosition = (lpMinLiquidityAda, requireReservedCostA
   return (requiredAcquiredAda / requireReservedCostAda) * 100;
 };
 
+const ProgressBubble = ({ value, progress }) => {
+  const displayValue = formatNumber(value);
+  return (
+    <div
+      className="absolute -top-7.5 flex flex-col items-center z-10"
+      style={{ left: `${Math.min(progress, 100)}%`, transform: 'translateX(-50%)' }}
+    >
+      <div className="flex px-2 py-1 bg-steel-850 border border-steel-750 rounded-md shadow-lg mb-1">
+        <span className="text-xs text-white font-semibold whitespace-nowrap">{displayValue}</span>
+      </div>
+      <div className="w-3 h-3 rounded-full bg-steel-750 border-2 border-primary shadow-sm"></div>
+    </div>
+  );
+};
+
+const ContributionProgress = ({
+  title,
+  contributionProgress,
+  minContributeAssets,
+  maxContributeAssets,
+  assetList,
+  assetsCount,
+  assetsByPolicy,
+  showMoreInfo,
+  setShowMoreInfo,
+}) => {
+  const hasMax = maxContributeAssets != null && maxContributeAssets > 0;
+
+  return (
+    <>
+      <h2 className={clsx('font-medium', hasMax && assetsCount > 0 ? 'mb-10' : 'mb-2')}>{title}:</h2>
+      <div className="flex flex-col items-center relative overflow-visible">
+        {hasMax ? (
+          <>
+            <div className="relative w-full mb-2 overflow-visible">
+              <LavaProgressBar
+                className="h-3 rounded-full bg-steel-750"
+                segments={[
+                  {
+                    progress: contributionProgress,
+                    className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                  },
+                ]}
+              />
+              {assetsCount > 0 && <ProgressBubble value={assetsCount} progress={contributionProgress} />}
+            </div>
+            <div className="flex justify-between w-full text-xs text-dark-100">
+              <span>min {minContributeAssets}</span>
+              <span>max {maxContributeAssets}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
+              Total Contributed: <span className="text-white font-medium">{assetsCount}</span>
+            </div>
+            <div className="text-sm text-dark-100 mb-2">
+              No asset limit - contributions accepted until the current phase expires
+            </div>
+          </>
+        )}
+        <AnimatePresence>
+          {showMoreInfo && (
+            <motion.div
+              className="flex flex-col mt-3 gap-6 w-full overflow-visible"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+            >
+              {assetList.map(asset => {
+                const assetCount = getAssetCountByPolicy(assetsByPolicy, asset.policyId);
+                const hasAssetMax = asset.countCapMax != null && asset.countCapMax > 0;
+                const assetProgress = hasAssetMax ? (assetCount / asset.countCapMax) * 100 : 0;
+                return (
+                  <div key={asset.policyId} className="flex flex-col items-center relative">
+                    <p
+                      className={clsx(
+                        'truncate text-dark-100 w-full',
+                        hasAssetMax && assetCount > 0 ? 'mb-10' : 'mb-2'
+                      )}
+                    >
+                      <span className="text-white" title={asset.collectionName || asset.policyId}>
+                        {asset.collectionName || formatPolicyId(asset.policyId)}
+                      </span>
+                    </p>
+                    {hasAssetMax ? (
+                      <>
+                        <div className="relative w-full mb-2">
+                          <LavaProgressBar
+                            className="h-3 rounded-full bg-steel-750"
+                            segments={[
+                              {
+                                progress: assetProgress,
+                                className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                              },
+                            ]}
+                          />
+                          {assetCount > 0 && <ProgressBubble value={assetCount} progress={assetProgress} />}
+                        </div>
+                        <div className="flex justify-between w-full text-xs text-dark-100">
+                          <span>min {asset.countCapMin}</span>
+                          <span>max {asset.countCapMax}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-sm text-dark-100 w-full">
+                        Contributed: <span className="text-white font-medium">{assetCount}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {assetList?.length > 0 && (
+          <button onClick={() => setShowMoreInfo(!showMoreInfo)}>{showMoreInfo ? 'Less' : 'More'} info</button>
+        )}
+      </div>
+    </>
+  );
+};
+
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
   const { currency } = useCurrency();
@@ -63,91 +187,21 @@ export const VaultContribution = ({ vault }) => {
   const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
   const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
 
-  const Progress = ({ value, progress }) => {
-    const displayValue = formatNumber(value);
-    return (
-      <div
-        className="absolute -top-7.5 flex flex-col items-center z-10"
-        style={{ left: `${Math.min(progress, 100)}%`, transform: 'translateX(-50%)' }}
-      >
-        <div className="flex px-2 py-1 bg-steel-850 border border-steel-750 rounded-md shadow-lg mb-1">
-          <span className="text-xs text-white font-semibold whitespace-nowrap">{displayValue}</span>
-        </div>
-        <div className="w-3 h-3 rounded-full bg-steel-750 border-2 border-primary shadow-sm"></div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-4">
       <div className="relative overflow-visible">
         {isContribution && (
-          <>
-            <h2 className={clsx('font-medium', contributionProgress > 0 ? 'mb-10' : 'mb-2')}>Contribution:</h2>
-            <div className="flex flex-col items-center relative overflow-visible">
-              <div className="relative w-full mb-2 overflow-visible">
-                <LavaProgressBar
-                  className="h-3 rounded-full bg-steel-750"
-                  segments={[
-                    {
-                      progress: contributionProgress,
-                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
-                    },
-                  ]}
-                />
-                {contributionProgress > 0 && <Progress value={vault.assetsCount} progress={contributionProgress} />}
-              </div>
-              <div className="flex justify-between w-full text-xs text-dark-100">
-                <span>min {minContributeAssets}</span>
-                <span>max {vault.maxContributeAssets}</span>
-              </div>
-              <AnimatePresence>
-                {showMoreInfo && (
-                  <motion.div
-                    className="flex flex-col mt-3 gap-6 w-full overflow-visible"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  >
-                    {vault.assetsWhitelist.map(asset => {
-                      const assetCount = getAssetCountByPolicy(vault.assetsPrices.assetsByPolicy, asset.policyId);
-                      const assetProgress = asset.countCapMax > 0 ? (assetCount / asset.countCapMax) * 100 : 0;
-
-                      return (
-                        <div key={asset.policyId} className="flex flex-col items-center relative">
-                          <p className={clsx('truncate text-dark-100 w-full', assetProgress > 0 ? 'mb-10' : 'mb-2')}>
-                            <span className="text-white" title={asset.collectionName || asset.policyId}>
-                              {asset.collectionName || formatPolicyId(asset.policyId)}
-                            </span>
-                          </p>
-                          <div className="relative w-full mb-2">
-                            <LavaProgressBar
-                              className="h-3 rounded-full bg-steel-750"
-                              segments={[
-                                {
-                                  progress: assetProgress,
-                                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
-                                },
-                              ]}
-                            />
-                            {assetProgress > 0 && <Progress value={assetCount} progress={assetProgress} />}
-                          </div>
-                          <div className="flex justify-between w-full text-xs text-dark-100">
-                            <span>min {asset.countCapMin}</span>
-                            <span>max {asset.countCapMax}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {vault.assetsWhitelist?.length > 0 && (
-                <button onClick={() => setShowMoreInfo(!showMoreInfo)}>{showMoreInfo ? 'Less' : 'More'} info</button>
-              )}
-            </div>
-          </>
+          <ContributionProgress
+            title="Contribution"
+            contributionProgress={contributionProgress}
+            minContributeAssets={minContributeAssets}
+            maxContributeAssets={vault.maxContributeAssets}
+            assetList={vault.assetsWhitelist || []}
+            assetsCount={vault.assetsCount}
+            assetsByPolicy={vault.assetsPrices.assetsByPolicy}
+            showMoreInfo={showMoreInfo}
+            setShowMoreInfo={setShowMoreInfo}
+          />
         )}
       </div>
 
@@ -235,50 +289,21 @@ export const VaultContribution = ({ vault }) => {
             </div>
           </div>
         ) : isExpansion ? (
-          <div className="w-full">
-            <h2 className="font-medium mb-2">Expansion Phase:</h2>
-            {vault.expansionWhitelist && vault.expansionWhitelist.length > 0 && (
-              <div className="mb-3">
-                <div className="text-xs text-dark-100 mb-1">Whitelisted Collections:</div>
-                <div className="flex flex-wrap gap-2">
-                  {vault.expansionWhitelist.map((collection, index) => (
-                    <div
-                      key={collection.policyId || index}
-                      className="px-2 py-1 bg-steel-850 border border-steel-750 rounded text-xs"
-                      title={collection.policyId}
-                    >
-                      <span className="text-dark-100">
-                        {collection.collectionName || formatPolicyId(collection.policyId)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {vault.expansionAssetMax && vault.expansionAssetMax > 0 ? (
-              <>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-dark-100">Assets:</span>
-                  <span className="text-dark-100">
-                    {vault.expansionAssetsCount || 0} / {vault.expansionAssetMax}
-                  </span>
-                </div>
-                <LavaProgressBar
-                  className="h-2 rounded-full bg-steel-750 mb-2"
-                  segments={[
-                    {
-                      progress: calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax),
-                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
-                    },
-                  ]}
-                />
-              </>
-            ) : (
-              <div className="text-sm text-dark-100 mb-2">
-                No asset limit - contributions accepted until expansion duration expires
-              </div>
-            )}
-          </div>
+          <ContributionProgress
+            title="Expansion"
+            contributionProgress={
+              vault.expansionAssetMax > 0
+                ? calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax)
+                : 0
+            }
+            minContributeAssets={0}
+            maxContributeAssets={vault.expansionAssetMax}
+            assetList={vault.expansionAssetsByPolicy || []}
+            assetsCount={vault.expansionAssetsCount || 0}
+            assetsByPolicy={vault.expansionAssetsByPolicy || []}
+            showMoreInfo={showMoreInfo}
+            setShowMoreInfo={setShowMoreInfo}
+          />
         ) : null}
       </div>
 

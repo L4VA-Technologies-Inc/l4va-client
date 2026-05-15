@@ -125,6 +125,19 @@ export const ConfigureVault = ({
             placeholder="Add a description for your Vault"
             value={data.description || ''}
             onChange={handleChange}
+            hint="This is the Vault description."
+          />
+        </div>
+
+        <div>
+          <LavaTextarea
+            error={errors.tokenDescription}
+            label="Vault token description"
+            name="tokenDescription"
+            placeholder="Add a description for your Vault token"
+            value={data.tokenDescription || ''}
+            onChange={handleChange}
+            hint="This is the Vault Token description used when registering Vault metadata."
           />
         </div>
 

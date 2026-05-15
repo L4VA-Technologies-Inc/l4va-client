@@ -84,7 +84,13 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
                     <div className="flex items-center gap-2">
                       <div>
                         <p className="uppercase font-semibold text-dark-100">Valuation Method</p>
-                        <p>{asset.valuationMethod === 'custom' ? 'Custom Price' : 'Market / Floor Price'}</p>
+                        <p>
+                          {asset.valuationMethod === 'custom'
+                            ? 'Custom Price'
+                            : asset.valuationMethod === 'lp_token_dynamic'
+                              ? 'LP Token Dynamic'
+                              : 'Market / Floor Price'}
+                        </p>
                       </div>
                       {asset.valuationMethod === 'custom' && asset.customPriceAda && (
                         <div>
