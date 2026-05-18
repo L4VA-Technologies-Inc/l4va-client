@@ -39,7 +39,7 @@ export const Profile = ({ userId, isEditable }) => {
         {!userId && (
           <div className="w-full">
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 xl:gap-6 items-stretch">
-              <StakingWidget />
+              <StakingWidget focusOnMount={search?.section === 'staking'} />
               <ProfileRewardsLinkCard />
             </div>
           </div>
