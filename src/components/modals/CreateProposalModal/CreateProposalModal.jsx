@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 
