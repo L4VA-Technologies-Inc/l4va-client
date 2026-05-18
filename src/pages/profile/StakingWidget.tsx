@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
@@ -52,7 +52,12 @@ const formatTokenInputValue = (raw: string, maximumFractionDigits: number) => {
 };
 const getTokenMaxFractionDigits = (symbol: string) => (symbol === 'L4VA' ? L4VA_DECIMALS : VLRM_DECIMALS);
 
-export const StakingWidget: React.FC = () => {
+type StakingWidgetProps = {
+  focusOnMount?: boolean;
+};
+
+export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = false }) => {
+  const widgetRef = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<TabKey>('stake');
   const [vlrmAmountRaw, setVlrmAmountRaw] = useState('');
   const [l4vaAmountRaw, setL4vaAmountRaw] = useState('');
@@ -61,6 +66,29 @@ export const StakingWidget: React.FC = () => {
   const { openModal, updateModal } = useModalControls();
 
   const { vlrmBalance, l4vaBalance, isLoading: isBalanceLoading, refreshBalances } = useStakeBalances();
+
+  useEffect(() => {
+    if (!focusOnMount) return;
+
+    setTab('stake');
+
+    const timer = setTimeout(() => {
+      const element = widgetRef.current;
+      if (!element) return;
+
+      const headerHeight = 72;
+      const additionalOffset = 24;
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerHeight - additionalOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [focusOnMount]);
 
   const { stake, unstake, harvest, compound, status, isProcessing } = useStakeTransaction();
   const {
@@ -214,7 +242,7 @@ export const StakingWidget: React.FC = () => {
   }, [vlrmAmount, l4vaAmount]);
 
   return (
-    <div className="flex w-full">
+    <div ref={widgetRef} className="flex w-full">
       <div className="w-full rounded-2xl border border-steel-750 bg-steel-950 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)]">
         {/* Header */}
         <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4">

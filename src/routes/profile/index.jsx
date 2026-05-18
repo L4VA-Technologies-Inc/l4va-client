@@ -21,5 +21,6 @@ export const Route = createFileRoute('/profile/')({
   component: ProfileComponent,
   validateSearch: search => ({
     tab: search?.tab || undefined,
+    section: search?.section || undefined,
   }),
 });

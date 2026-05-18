@@ -1,4 +1,5 @@
-import { Check, Sparkles, X } from 'lucide-react';
+import { Check, ChevronRight, Sparkles, X } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 
 import { HoverHelp } from '@/components/shared/HoverHelp';
 
@@ -15,6 +16,8 @@ const ORACLE_TIERS = [
 
 const ALIGNMENT_HINT = `Boost your protocol rewards by up to 20%. Stack multiple bonuses for maximum multiplier.`;
 
+const ORACLE_VAULT_ID = '5ac2ac4f-9079-40cb-94ae-a265bfba3bcd';
+
 const getOracleTier = balance => {
   for (const tier of ORACLE_TIERS) {
     if (balance >= tier.min) return tier;
@@ -23,6 +26,17 @@ const getOracleTier = balance => {
 };
 
 export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
+  const navigate = useNavigate();
+
+  const handleItemClick = item => {
+    if (item.vaultId) {
+      navigate({ to: `/vaults/${item.vaultId}` });
+      return;
+    }
+
+    navigate({ to: '/profile', search: { section: 'staking' } });
+  };
+
   if (!alignmentData && !isLoading) return null;
 
   const bonuses = alignmentData?.bonuses || {};
@@ -39,6 +53,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
   const bonusItems = [
     {
       label: 'L4VA Staking',
+      clickable: true,
       requirement: `Stake at least ${l4vaBonus.requiredAmount?.toLocaleString() || '100,000'} L4VA`,
       bonus: l4vaBonus.bonusPercent || 5,
       achieved: l4vaBonus.achieved,
@@ -49,6 +64,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
     },
     {
       label: 'VLRM Staking',
+      clickable: true,
       requirement: `Stake at least ${vlrmBonus.requiredAmount?.toLocaleString() || '20,000'} VLRM`,
       bonus: vlrmBonus.bonusPercent || 5,
       achieved: vlrmBonus.achieved,
@@ -59,6 +75,8 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
     },
     {
       label: 'ORACLE Holding',
+      clickable: true,
+      vaultId: ORACLE_VAULT_ID,
       requirement: oracleTier ? oracleTier.label : 'Hold at least 100 ORACLE',
       bonus: oracleBonus.bonusPercent || 0,
       achieved: oracleBonus.achieved,
@@ -132,8 +150,25 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className={`font-medium ${item.achieved ? 'text-white' : 'text-steel-400'}`}>{item.label}</span>
-                  <span className={`text-sm font-semibold ${item.achieved ? 'text-orange-500' : 'text-steel-500'}`}>
+                  {item.clickable ? (
+                    <button
+                      type="button"
+                      onClick={() => handleItemClick(item)}
+                      className={`group flex items-center gap-1 font-medium transition-colors text-left ${
+                        item.achieved ? 'text-white hover:text-orange-400' : 'text-steel-400 hover:text-orange-500'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight className="w-4 h-4 shrink-0 text-steel-500 transition-colors group-hover:text-orange-500" />
+                    </button>
+                  ) : (
+                    <span className={`font-medium ${item.achieved ? 'text-white' : 'text-steel-400'}`}>
+                      {item.label}
+                    </span>
+                  )}
+                  <span
+                    className={`text-sm font-semibold shrink-0 ${item.achieved ? 'text-orange-500' : 'text-steel-500'}`}
+                  >
                     {item.bonus > 0 ? `+${item.bonus}%` : item.isTiered ? '+0.5% to +5%' : `+${item.bonus}%`}
                   </span>
                 </div>
