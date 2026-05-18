@@ -29,10 +29,12 @@ import {
 } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
+import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: false },
@@ -166,6 +168,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.expansionNoMax = proposalData.expansionNoMax || false;
         proposalPayload.expansionPriceType = proposalData.expansionPriceType || 'market';
         proposalPayload.expansionLimitPrice = proposalData.expansionLimitPrice;
+      } else if (selectedOption === 'asset_whitelist_update') {
+        proposalPayload.assetsWhitelist = proposalData.assetsWhitelist || [];
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -450,6 +454,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'expansion' && (
               <Expansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'asset_whitelist_update' && (
+              <AssetWhitelistUpdate vault={vault} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">
