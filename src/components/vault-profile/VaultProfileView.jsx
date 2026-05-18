@@ -13,6 +13,7 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
+import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
@@ -453,7 +454,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
         <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
-          <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
+            {vault.isOfficialPartner && (
+              <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+            )}
+          </div>
           <div className="flex gap-2 items-center">
             {isAuthenticated && (
               <div className="group relative">

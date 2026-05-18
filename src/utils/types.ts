@@ -117,6 +117,7 @@ export interface IVault {
   socialLinks?: ILink[];
   assetsWhitelist?: IAssetsWhitelist[];
   contributorWhitelist?: IContributorWhitelist[];
+  isOfficialPartner?: boolean;
 }
 
 export interface ITag {
@@ -202,6 +203,7 @@ export interface VaultShortResponse {
   socialLinks?: ILink[];
   ftTokenImg?: string;
   vaultTokenTicker?: string;
+  isOfficialPartner?: boolean;
 }
 
 export interface PaginatedResponse<T> {
