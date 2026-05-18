@@ -47,7 +47,7 @@ export const Header = () => {
     { label: 'USD', value: 'usdt' },
   ];
 
-  const { notifications, fetching, readAll, hasMore, isLoading, fetchMore } = useNotifications();
+  const { notifications, fetching, readAll, hasMore, isLoading, fetchMore, refetch } = useNotifications();
   const observerTarget = useRef(null);
   const router = useRouter();
 
@@ -73,6 +73,13 @@ export const Header = () => {
 
     return () => observer.disconnect();
   }, [hasMore, isLoading, fetchMore]);
+
+  // Fetch notifications when dropdown opens
+  useEffect(() => {
+    if (isNotificationsOpen && refetch) {
+      refetch();
+    }
+  }, [isNotificationsOpen, refetch]);
 
   //const hasBannerShownRef = useRef(false);
 
@@ -119,9 +126,11 @@ export const Header = () => {
       isAuthenticated && (
         <DropdownMenu
           open={isNotificationsOpen}
-          onOpenChange={() => {
-            setIsNotificationsOpen(!isNotificationsOpen);
-            readAll();
+          onOpenChange={open => {
+            setIsNotificationsOpen(open);
+            if (open) {
+              readAll();
+            }
           }}
         >
           <DropdownMenuTrigger asChild>
