@@ -68,7 +68,7 @@ export type GoldenVerifiedBadgeProps = {
 };
 
 export const GoldenVerifiedBadge = ({
-  hint,
+  hint = OFFICIAL_PARTNER_BADGE_HINT,
   size = 'md',
   className = '',
   label = 'Verified',
@@ -90,7 +90,7 @@ export const GoldenVerifiedBadge = ({
         tabIndex={0}
         role="img"
         aria-label={label}
-        className="inline-flex cursor-help rounded-full transition-transform duration-150 ease-out group-hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent"
+        className="inline-flex cursor-pointer rounded-full transition-transform duration-150 ease-out group-hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-1 focus-visible:ring-offset-transparent"
       >
         {icon}
       </span>
