@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 
@@ -35,7 +35,7 @@ const executionOptions = [
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
-  { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
+  { value: 'termination', label: 'Termination - Coming Soon', disabled: false },
   { value: 'burning', label: 'Burning - Coming Soon', disabled: true },
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
@@ -47,7 +47,9 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('marketplace_action');
+  const [selectedOption, setSelectedOption] = useState(
+    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -97,13 +99,6 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
     return executionOptions;
   }, [vault.vaultStatus]);
-
-  // Set default option based on vault status
-  useState(() => {
-    if (vault.vaultStatus === VAULT_STATUSES.EXPANSION && selectedOption !== 'distribution') {
-      setSelectedOption('distribution');
-    }
-  });
 
   const handleCreateProposal = () => {
     // Validate voting duration constraints
@@ -422,19 +417,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
-            {vault.vaultStatus === VAULT_STATUSES.EXPANSION && (
-              <p className="text-sm text-yellow-500">
-                During expansion, only Distribution proposals are allowed. Other proposal types require asset extraction
-                from the vault.
-              </p>
-            )}
           </div>
 
           <div className="space-y-4">
             {selectedOption === 'staking' && (
               <Staking vaultId={vault?.id} onDataChange={handleDataChange} error={error} />
             )}
-            {selectedOption === 'distribution' && <Distributing vaultId={vault?.id} onDataChange={handleDataChange} />}
+            {selectedOption === 'distribution' && (
+              <Distributing
+                isDisabled={executionOptions.find(opt => opt.value === 'distribution')?.disabled}
+                vaultId={vault?.id}
+                onDataChange={handleDataChange}
+              />
+            )}
             {selectedOption === 'termination' && (
               <Terminating
                 vaultId={vault?.id}

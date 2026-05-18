@@ -6,7 +6,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatAdaPrice } from '@/utils/core.utils';
 
-export default function Distributing({ onDataChange, vaultId }) {
+export default function Distributing({ isDisabled, onDataChange, vaultId }) {
   const [adaAmount, setAdaAmount] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
@@ -66,6 +66,20 @@ export default function Distributing({ onDataChange, vaultId }) {
       setDistributeAll(true);
     }
   }, [enteredAda, maxDistributableAda, distributeAll]);
+
+  if (isDisabled) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400" />
+          <div>
+            <p className="text-red-400 font-medium">Distribution Not Available</p>
+            <p className="text-white/60 text-sm mt-1">Distribution proposals are not available currently</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
