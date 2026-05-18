@@ -74,13 +74,6 @@ export const Header = () => {
     return () => observer.disconnect();
   }, [hasMore, isLoading, fetchMore]);
 
-  // Fetch notifications when dropdown opens
-  useEffect(() => {
-    if (isNotificationsOpen && refetch) {
-      refetch();
-    }
-  }, [isNotificationsOpen, refetch]);
-
   //const hasBannerShownRef = useRef(false);
 
   // banner modal for future releases
@@ -129,6 +122,7 @@ export const Header = () => {
           onOpenChange={open => {
             setIsNotificationsOpen(open);
             if (open) {
+              refetch?.();
               readAll();
             }
           }}
