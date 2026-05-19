@@ -461,6 +461,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                     value={proposalStartDate}
                     onChange={value => setProposalStartDate(new Date(value))}
                     error={error && !proposalStartDate}
+                    variant={'steel'}
                   />
                 </div>
                 <div className="flex-1 relative">
@@ -473,6 +474,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                     minMs={MIN_TIME_FOR_VOTING}
                     maxMs={MAX_TIME_FOR_VOTING}
                     error={error && !proposalDuration}
+                    variant={'steel'}
                   />
                 </div>
               </div>
