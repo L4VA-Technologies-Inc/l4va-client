@@ -283,7 +283,11 @@ export const vaultSchema = yup.object({
   contributionOpenWindowType: yup
     .string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
-    .required('Contribution window type is required'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema => schema.required('Contribution window type is required'),
+    }),
   contributionOpenWindowTime: yup
     .number()
     .typeError('Time is required')
@@ -295,16 +299,41 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .of(assetWhitelistItemSchema)
-    .required('Assets whitelist is required')
-    .min(1, 'Assets whitelist must have at least 1 item')
-    .max(10, 'Assets whitelist can have a maximum of 10 items')
-    .default([]),
+    .default([])
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Assets whitelist is required')
+          .min(1, 'Assets whitelist must have at least 1 item')
+          .max(10, 'Assets whitelist can have a maximum of 10 items'),
+    }),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')
-    .required('Duration is required')
-    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
-    .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Duration is required')
+          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
+          .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    }),
+  isAcquireOnly: yup.boolean().default(false),
+  minAcquireThreshold: yup
+    .number()
+    .typeError('Minimum ADA threshold must be a number')
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema =>
+        schema
+          .required('Minimum ADA threshold is required')
+          .positive('Must be a positive number')
+          .integer('Must be a whole number of ADA'),
+      otherwise: schema => schema.nullable(),
+    }),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
@@ -543,6 +572,8 @@ export const initialVaultState = {
   tokensForAcquires: null,
   acquireReserve: null,
   liquidityPoolContribution: null,
+  isAcquireOnly: false,
+  minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
 
   // Step 4: Governance
   ftTokenSupply: MIN_SUPPLY,
@@ -591,6 +622,7 @@ export const stepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
+    'minAcquireThreshold',
   ],
   4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'cosigningThreshold', 'executionThreshold'],
   5: [],

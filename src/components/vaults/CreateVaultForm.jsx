@@ -165,17 +165,21 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     const applyPresetData = preset => {
       if (!preset) return;
       const config = preset.config || {};
+      const isAcquireOnly = preset.type?.toLowerCase() === 'acquire_only';
       setVaultData(prev => ({
         ...prev,
         preset: preset.type || 'advanced',
         preset_id: preset.id ?? null,
-        tokensForAcquires: config.tokensForAcquires ?? prev.tokensForAcquires,
+        tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
         acquireReserve: config.acquireReserve ?? prev.acquireReserve,
-        liquidityPoolContribution: config.liquidityPoolContribution ?? prev.liquidityPoolContribution,
+        liquidityPoolContribution: isAcquireOnly
+          ? 0
+          : (config.liquidityPoolContribution ?? prev.liquidityPoolContribution),
         creationThreshold: config.creationThreshold ?? prev.creationThreshold,
         voteThreshold: 0,
         cosigningThreshold: config.cosigningThreshold ?? prev.cosigningThreshold,
         executionThreshold: config.executionThreshold ?? prev.executionThreshold,
+        isAcquireOnly,
       }));
       setSelectedPresetId(preset.id.toString());
     };
@@ -191,6 +195,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             ...prev,
             preset: foundPreset.type || 'advanced',
             preset_id: foundPreset.id ?? null,
+            isAcquireOnly: foundPreset.type?.toLowerCase() === 'acquire_only',
           }));
         } else {
           // The preset was deleted — fall back to the first available preset
@@ -261,15 +266,31 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
+      const isAcquireOnly = vaultData.preset === 'acquire_only';
       const isAdvancedMode = isAdvancedPresetAvailable && vaultData.preset === 'advanced';
-      const nextStep = isAdvancedMode ? currentStep + 1 : steps.length;
+      let nextStep;
+      if (isAdvancedMode || isAcquireOnly) {
+        nextStep = currentStep + 1;
+        // Skip contribution step for acquire-only vaults
+        if (isAcquireOnly && nextStep === 2) {
+          nextStep = 3;
+        }
+      } else {
+        nextStep = steps.length;
+      }
       await changeStep(nextStep);
     }
   };
 
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
-      await changeStep(currentStep - 1, true);
+      const isAcquireOnly = vaultData.preset === 'acquire_only';
+      let prevStep = currentStep - 1;
+      // Skip contribution step for acquire-only vaults
+      if (isAcquireOnly && prevStep === 2) {
+        prevStep = 1;
+      }
+      await changeStep(prevStep, true);
     }
   };
 
@@ -487,11 +508,14 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     const isAdvanced =
       selectedPreset?.type?.toLowerCase() === 'advanced' || selectedPreset?.name?.toLowerCase() === 'advanced';
 
+    const isAcquireOnly = selectedPreset?.type?.toLowerCase() === 'acquire_only';
+
     if (isAdvanced) {
       setVaultData(prev => ({
         ...prev,
         preset: selectedPreset.type || 'advanced',
         preset_id: selectedPreset.id ?? null,
+        isAcquireOnly: false,
       }));
       return;
     }
@@ -501,13 +525,16 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       ...prev,
       preset: selectedPreset.type || prev.preset,
       preset_id: selectedPreset.id ?? null,
-      tokensForAcquires: config.tokensForAcquires ?? null,
+      tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? null),
       acquireReserve: config.acquireReserve ?? null,
-      liquidityPoolContribution: config.liquidityPoolContribution ?? null,
+      liquidityPoolContribution: isAcquireOnly ? 0 : (config.liquidityPoolContribution ?? null),
       creationThreshold: config.creationThreshold ?? null,
       voteThreshold: 0,
       cosigningThreshold: config.cosigningThreshold ?? null,
       executionThreshold: config.executionThreshold ?? null,
+      isAcquireOnly,
+      // Reset minAcquireThreshold when switching away from acquire-only
+      minAcquireThreshold: isAcquireOnly ? (prev.minAcquireThreshold ?? null) : null,
     }));
   };
 
@@ -624,6 +651,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const handleStepClick = async stepId => {
     if (stepId === currentStep) return;
+    // Prevent navigating to the contribution step for acquire-only vaults
+    if (stepId === 2 && vaultData.preset === 'acquire_only') return;
     const skipValidation = stepId < currentStep;
     await changeStep(stepId, skipValidation);
     scrollToTop();

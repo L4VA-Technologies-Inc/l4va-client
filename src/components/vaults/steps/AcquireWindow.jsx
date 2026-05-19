@@ -19,6 +19,8 @@ export const AcquireWindow = ({
   isPresetConfigLocked = false,
   isAdvancedPresetAvailable = true,
 }) => {
+  const isAcquireOnly = data.isAcquireOnly === true;
+
   const handleChange = e => {
     const { name, value } = e.target;
     const numericValue = value.replace(/[^0-9.]/g, '');
@@ -98,14 +100,45 @@ export const AcquireWindow = ({
             )}
           </div>
         </div>
+        {isAcquireOnly && (
+          <div>
+            <Label className="uppercase font-bold" htmlFor="minAcquireThreshold">
+              *MINIMUM ADA THRESHOLD
+            </Label>
+            <div className="mt-4">
+              <LavaInput
+                required
+                error={errors.minAcquireThreshold}
+                label=""
+                id="minAcquireThreshold"
+                name="minAcquireThreshold"
+                placeholder="e.g. 10000"
+                suffix="ADA"
+                type="text"
+                value={
+                  data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
+                    ? String(data.minAcquireThreshold)
+                    : ''
+                }
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
+                }}
+                hint="The minimum total ADA that must be received during the acquire window for this vault to lock. If not met, the vault fails and all ADA is refunded."
+              />
+            </div>
+          </div>
+        )}
       </div>
       <div className="space-y-12 min-w-0">
-        {isPresetConfigLocked && (
+        {(isPresetConfigLocked || isAcquireOnly) && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-800 border border-steel-700 text-dark-100 text-xs font-russo uppercase">
             <Lock className="w-3.5 h-3.5 flex-shrink-0" />
-            {isAdvancedPresetAvailable
-              ? 'Values set by preset — select Advanced preset to customise'
-              : 'Advanced mode is disabled — values are managed by the preset'}
+            {isAcquireOnly
+              ? 'Acquire-Only: Tokens for Acquirers is fixed at 100% and LP is 0%'
+              : isAdvancedPresetAvailable
+                ? 'Values set by preset — select Advanced preset to customise'
+                : 'Advanced mode is disabled — values are managed by the preset'}
           </div>
         )}
         <div>
@@ -119,15 +152,9 @@ export const AcquireWindow = ({
             type="text"
             value={data.tokensForAcquires === 0 ? '0' : data.tokensForAcquires ? String(data.tokensForAcquires) : ''}
             onChange={handleChange}
-            disabled={isPresetConfigLocked}
+            disabled={isPresetConfigLocked || isAcquireOnly}
             hint="The percentage (%) of net vault tokens minted (total vault tokens minus LP Contribution) which will be received by Acquirers when vault locks."
           />
-          {data.tokensForAcquires === 0 && (
-            <p className="text-orange-500 mt-1">
-              Warning: 0% Tokens for Acquirers means this vault will NOT be offered to acquirers to send ADA and Reserve
-              % will not apply.
-            </p>
-          )}
         </div>
         <div>
           <LavaInput
@@ -141,9 +168,9 @@ export const AcquireWindow = ({
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
             hint={RESERVE_HINT}
-            disabled={isPresetConfigLocked || data.tokensForAcquires === 0}
+            disabled={isPresetConfigLocked || isAcquireOnly || data.tokensForAcquires === 0}
           />
-          {data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
+          {!isAcquireOnly && data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
             <p className="text-orange-500 mt-1">
               Warning: Reserve % of &lt; 100% means that assets contributed will be valued at less than 100% of market
               price (floor price for NFTs / spot price for CNTs at end of Contribution window).
@@ -167,10 +194,10 @@ export const AcquireWindow = ({
                   : ''
             }
             onChange={handleChange}
-            disabled={isPresetConfigLocked}
+            disabled={isPresetConfigLocked || isAcquireOnly}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
-          {data.liquidityPoolContribution === 0 && (
+          {!isAcquireOnly && data.liquidityPoolContribution === 0 && (
             <p className="text-orange-500 mt-1">
               Warning: 0% LP Contribution means there will NOT be a liquidity pool launched for this Vault.
             </p>
