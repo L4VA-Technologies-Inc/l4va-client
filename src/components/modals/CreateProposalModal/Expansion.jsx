@@ -115,6 +115,7 @@ export default function Expansion({ onDataChange, error, vault }) {
           {!noLimit ? (
             <>
               <LavaIntervalPicker
+                variant={'steel'}
                 value={duration}
                 onChange={setDuration}
                 placeholder="DD:HH:MM"
