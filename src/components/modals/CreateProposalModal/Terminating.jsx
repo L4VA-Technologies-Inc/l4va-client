@@ -93,6 +93,12 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
 
   const TerminatingAssets = getTerminatingAssets();
 
+  const validation = terminationData?.data?.validation ?? {
+    canCreateProposal: true,
+    warnings: [],
+    blockingReason: null,
+  };
+
   return (
     <div>
       <AssetsModalConfirm
@@ -156,30 +162,26 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
           <div className="bg-steel-800 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-white font-medium">Liquidity Pool Validation</h4>
-              {!terminationData.data.validation.canCreateProposal && (
-                <span className="text-red-500 text-sm font-semibold">⚠ Blocked</span>
+              {!validation.canCreateProposal && <span className="text-red-500 text-sm font-semibold">⚠ Blocked</span>}
+              {validation.canCreateProposal && validation.warnings.length > 0 && (
+                <span className="text-yellow-500 text-sm font-semibold">⚠ Warning</span>
               )}
-              {terminationData.data.validation.canCreateProposal &&
-                terminationData.data.validation.warnings.length > 0 && (
-                  <span className="text-yellow-500 text-sm font-semibold">⚠ Warning</span>
-                )}
-              {terminationData.data.validation.canCreateProposal &&
-                terminationData.data.validation.warnings.length === 0 && (
-                  <span className="text-green-500 text-sm font-semibold">✓ Valid</span>
-                )}
+              {validation.canCreateProposal && validation.warnings.length === 0 && (
+                <span className="text-green-500 text-sm font-semibold">✓ Valid</span>
+              )}
             </div>
 
             {/* Blocking reason */}
-            {terminationData.data.validation.blockingReason && (
+            {validation.blockingReason && (
               <div className="bg-red-900/20 border border-red-500/30 rounded p-3">
-                <p className="text-red-400 text-sm">{terminationData.data.validation.blockingReason}</p>
+                <p className="text-red-400 text-sm">{validation.blockingReason}</p>
               </div>
             )}
 
             {/* Warning messages */}
-            {!terminationData.data.validation.blockingReason && terminationData.data.validation.warnings.length > 0 && (
+            {!validation.blockingReason && validation.warnings.length > 0 && (
               <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-3">
-                {terminationData.data.validation.warnings.map((warning, idx) => (
+                {validation.warnings.map((warning, idx) => (
                   <p key={idx} className="text-yellow-400 text-sm">
                     {warning}
                   </p>
@@ -222,7 +224,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
 
             {/* Info text */}
             <div className="text-white/50 text-xs mt-2">
-              {terminationData.data.validation.canCreateProposal
+              {validation.canCreateProposal
                 ? 'Recoverable LP will be automatically returned during termination. VyFi LP can be recovered from the admin wallet.'
                 : 'Please remove unrecoverable liquidity manually before creating a termination proposal.'}
             </div>
