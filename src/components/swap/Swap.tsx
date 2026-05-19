@@ -161,7 +161,6 @@ export const SwapComponent: React.FC<SwapComponentProps> = ({ config }) => {
               // Block if not authenticated
 
               if (!isAuthenticated) {
-                toast.error('Please connect and sign in with your wallet first.', { duration: 4000 });
                 openModal('LoginModal');
                 return;
               }

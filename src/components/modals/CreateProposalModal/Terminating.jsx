@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
@@ -6,12 +7,14 @@ import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 export default function Terminating({ onClose, vaultId, onDataChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: assetsData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'terminate');
+  const { data: terminationData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'terminate');
 
   const getTerminatingAssets = () => {
-    if (!assetsData?.data || isLoading) return [];
+    if (!terminationData?.data || isLoading) return [];
 
-    const nftAssets = assetsData.data
+    const assetsData = terminationData.data.assets || [];
+
+    const nftAssets = assetsData
       .filter(asset => asset.type === 'nft')
       .map(asset => ({
         collection: asset.name || `${asset.policy_id?.substring(0, 8)}...`,
@@ -24,7 +27,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
         imageUrl: asset.imageUrl,
       }));
 
-    const ftAssets = assetsData.data
+    const ftAssets = assetsData
       .filter(asset => asset.type === 'ft')
       .map(asset => ({
         collection:
@@ -67,12 +70,17 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
   }, [onDataChange]);
 
   useEffect(() => {
-    if (!isLoading && assetsData.data) {
+    if (!isLoading && terminationData?.data) {
+      const assets = terminationData.data.assets || [];
+      const validation = terminationData.data.validation || {};
+      const canTerminate = validation.canCreateProposal ?? true;
+
       onDataChange({
-        terminateAssets: assetsData.data.length > 0 ? assetsData.data.map(asset => asset.id) : [],
+        terminateAssets: assets.length > 0 ? assets.map(asset => asset.id) : [],
+        isValid: canTerminate, // Block proposal creation if LP validation fails
       });
     }
-  }, [assetsData, isLoading, onDataChange]);
+  }, [terminationData, isLoading, onDataChange]);
 
   const handleClose = () => {
     setIsModalOpen(false);
@@ -84,6 +92,12 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
   };
 
   const TerminatingAssets = getTerminatingAssets();
+
+  const validation = terminationData?.data?.validation ?? {
+    canCreateProposal: true,
+    warnings: [],
+    blockingReason: null,
+  };
 
   return (
     <div>
@@ -142,6 +156,80 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
             })
           )}
         </div>
+
+        {/* LP Pool Validation Info */}
+        {!isLoading && terminationData?.data?.lpInfo?.hasLp && (
+          <div className="bg-steel-800 rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-white font-medium">Liquidity Pool Validation</h4>
+              {!validation.canCreateProposal && <span className="text-red-500 text-sm font-semibold">⚠ Blocked</span>}
+              {validation.canCreateProposal && validation.warnings.length > 0 && (
+                <span className="text-yellow-500 text-sm font-semibold">⚠ Warning</span>
+              )}
+              {validation.canCreateProposal && validation.warnings.length === 0 && (
+                <span className="text-green-500 text-sm font-semibold">✓ Valid</span>
+              )}
+            </div>
+
+            {/* Blocking reason */}
+            {validation.blockingReason && (
+              <div className="bg-red-900/20 border border-red-500/30 rounded p-3">
+                <p className="text-red-400 text-sm">{validation.blockingReason}</p>
+              </div>
+            )}
+
+            {/* Warning messages */}
+            {!validation.blockingReason && validation.warnings.length > 0 && (
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded p-3">
+                {validation.warnings.map((warning, idx) => (
+                  <p key={idx} className="text-yellow-400 text-sm">
+                    {warning}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Pool details */}
+            {terminationData.data.lpInfo.pools && terminationData.data.lpInfo.pools.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-white/60 text-sm">Liquidity Pools ({terminationData.data.lpInfo.pools.length}):</p>
+                {terminationData.data.lpInfo.pools.map((pool, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-2 rounded ${
+                      pool.isRecoverable
+                        ? 'bg-green-900/10 border border-green-500/20'
+                        : 'bg-red-900/10 border border-red-500/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {pool.isRecoverable ? (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-500" />
+                      )}
+                      <span className="text-white font-medium">{pool.dex}</span>
+                    </div>
+                    <div className="flex gap-3 text-sm">
+                      <span className="text-white/60">{pool.adaAmount.toFixed(2)} ADA</span>
+                      <span className="text-white/60">{pool.vtAmount.toFixed(0)} VT</span>
+                      <span className={`font-medium ${pool.isRecoverable ? 'text-green-400' : 'text-red-400'}`}>
+                        {pool.isRecoverable ? 'Recoverable' : 'Unrecoverable'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Info text */}
+            <div className="text-white/50 text-xs mt-2">
+              {validation.canCreateProposal
+                ? 'Recoverable LP will be automatically returned during termination. VyFi LP can be recovered from the admin wallet.'
+                : 'Please remove unrecoverable liquidity manually before creating a termination proposal.'}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
