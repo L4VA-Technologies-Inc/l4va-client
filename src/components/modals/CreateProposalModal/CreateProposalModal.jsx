@@ -210,6 +210,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               market: opt.market || 'WayUp',
               assetName: opt.assetName,
             }));
+        } else if (marketActionType === 'cancel_offer') {
+          proposalPayload.marketplaceActions = (proposalData.cancelOfferAssets || []).map(asset => ({
+            assetId: asset.id,
+            exec: 'CANCEL_OFFER',
+            market: asset.listing_market || asset.market || 'WayUp',
+          }));
         } else {
           proposalPayload.marketplaceActions = (proposalData.unlistAssets || []).map(asset => ({
             assetId: asset.id,

@@ -158,6 +158,7 @@ export const ProposalInfo = ({ proposalId }) => {
       BUY: [],
       UNLIST: [],
       UPDATE_LISTING: [],
+      CANCEL_OFFER: [],
     };
 
     // Group actions by type
@@ -195,6 +196,12 @@ export const ProposalInfo = ({ proposalId }) => {
       messages.push(
         count === 1 ? `Updated listing price for ${names}.` : `Updated listing prices for ${count} assets: ${names}.`
       );
+    }
+
+    if (actionGroups.CANCEL_OFFER.length > 0) {
+      const count = actionGroups.CANCEL_OFFER.length;
+      const names = actionGroups.CANCEL_OFFER.map(a => a.assetName).join(', ');
+      messages.push(count === 1 ? `Cancelled offer for ${names}.` : `Cancelled offers for ${count} assets: ${names}.`);
     }
 
     return messages.length > 0 ? messages.join(' ') : 'All marketplace actions have been successfully executed.';

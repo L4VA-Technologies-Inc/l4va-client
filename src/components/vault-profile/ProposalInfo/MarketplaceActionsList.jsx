@@ -86,7 +86,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace' }) => {
                 <>
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market || 'WayUp'} />
-                  {action.assetPrice && (
+                  {action.assetPrice && String(action.exec || '').toLowerCase() !== 'offer' && (
                     <ActionField label="Floor Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />
                   )}
                   {action.price && (
