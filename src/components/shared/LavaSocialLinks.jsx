@@ -6,7 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
-import { validateUrlRealTime, autoFormatUrl, debounce } from '@/utils/urlValidation';
+import {
+  validateSocialUrlForPlatform,
+  autoFormatUrl,
+  debounce,
+  getSocialPlatformUrlPrefix,
+  getUrlForPlatformChange,
+  sanitizeSocialUrlInput,
+} from '@/utils/urlValidation';
 
 export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} }) => {
   const [realTimeErrors, setRealTimeErrors] = useState({});
@@ -19,7 +26,7 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
       ...socialLinks,
       {
         name: SOCIAL_PLATFORMS.FACEBOOK,
-        url: '',
+        url: getSocialPlatformUrlPrefix(SOCIAL_PLATFORMS.FACEBOOK),
         id: Date.now(),
       },
     ];
@@ -31,38 +38,49 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
     setSocialLinks(updatedLinks);
   };
 
+  const setLinkValidationError = (linkId, url, platformId) => {
+    const validation = validateSocialUrlForPlatform(url, platformId);
+    setRealTimeErrors(prev => ({
+      ...prev,
+      [linkId]: validation.isEmpty ? null : validation.error,
+    }));
+  };
+
   const debouncedValidateUrl = useCallback(
-    debounce((linkId, url) => {
-      const validation = validateUrlRealTime(url);
-      setRealTimeErrors(prev => ({
-        ...prev,
-        [linkId]: validation.isEmpty ? null : validation.error,
-      }));
+    debounce((linkId, url, platformId) => {
+      setLinkValidationError(linkId, url, platformId);
     }, 300),
     []
   );
 
-  const handleUrlChange = (linkId, url) => {
-    updateLink(linkId, 'url', url);
-    debouncedValidateUrl(linkId, url);
+  const handleUrlChange = (linkId, url, platformId) => {
+    const sanitizedUrl = sanitizeSocialUrlInput(url);
+    updateLink(linkId, 'url', sanitizedUrl);
+    debouncedValidateUrl(linkId, sanitizedUrl, platformId);
   };
 
-  const handleUrlBlur = (linkId, url) => {
+  const handleUrlBlur = (linkId, url, platformId) => {
     if (url && url.trim() && !url.startsWith('http')) {
       const formattedUrl = autoFormatUrl(url);
       updateLink(linkId, 'url', formattedUrl);
-      debouncedValidateUrl(linkId, formattedUrl);
+      debouncedValidateUrl(linkId, formattedUrl, platformId);
+    }
+  };
+
+  const handlePlatformChange = (linkId, platformId, currentUrl, currentPlatformId) => {
+    const nextUrl = getUrlForPlatformChange(currentUrl, platformId, currentPlatformId);
+    const updatedLinks = socialLinks.map(link =>
+      link.id === linkId ? { ...link, name: platformId, url: nextUrl } : link
+    );
+    setSocialLinks(updatedLinks);
+    if (nextUrl?.trim()) {
+      setLinkValidationError(linkId, nextUrl, platformId);
     }
   };
 
   const removeLink = id => {
     const filteredLinks = socialLinks.filter(link => link.id !== id);
     setSocialLinks(filteredLinks);
-  };
-
-  const getPlaceholderForPlatform = platformId => {
-    const platform = socialPlatforms.find(p => p.id === platformId);
-    return platform ? platform.placeholder : '';
   };
 
   const getErrorForLink = (index, field, linkId) => {
@@ -85,7 +103,10 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
         {socialLinks.map((link, index) => (
           <div key={link.id} className="flex flex-col rounded-lg bg-input-bg border border-steel-850">
             <div className="flex items-center gap-2 p-3">
-              <Select value={link.name} onValueChange={value => updateLink(link.id, 'name', value)}>
+              <Select
+                value={link.name}
+                onValueChange={value => handlePlatformChange(link.id, value, link.url, link.name)}
+              >
                 <SelectTrigger className="bg-transparent border-none shadow-none w-32 p-0">
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
@@ -107,11 +128,11 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
               </Select>
               <Input
                 className={`py-4 pl-5 border-none shadow-none ${getErrorForLink(index, 'url', link.id) ? 'focus-visible:ring-red-600' : ''}`}
-                placeholder={getPlaceholderForPlatform(link.name)}
+                placeholder={getSocialPlatformUrlPrefix(link.name)}
                 style={{ fontSize: '20px' }}
                 value={link.url}
-                onChange={e => handleUrlChange(link.id, e.target.value)}
-                onBlur={e => handleUrlBlur(link.id, e.target.value)}
+                onChange={e => handleUrlChange(link.id, e.target.value, link.name)}
+                onBlur={e => handleUrlBlur(link.id, e.target.value, link.name)}
                 maxLength={200}
               />
               <Button className="h-8 w-8 rounded-full" size="icon" variant="ghost" onClick={() => removeLink(link.id)}>

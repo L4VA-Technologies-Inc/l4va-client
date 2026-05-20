@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
+import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
@@ -132,7 +133,22 @@ export const TERMINATION_TYPE_OPTIONS = [
 
 export const socialLinkSchema = yup.object({
   name: yup.string().required('Name is required'),
-  url: yup.string().url('Invalid URL').required('URL is required'),
+  url: yup
+    .string()
+    .required('URL is required')
+    .test('valid-social-url', 'Invalid URL', function validateSocialUrl(value) {
+      if (!value) {
+        return true;
+      }
+
+      const validation = validateSocialUrlForPlatform(value, this.parent.name);
+
+      if (!validation.isValid) {
+        return this.createError({ message: validation.error });
+      }
+
+      return true;
+    }),
 });
 
 const assetWhitelistItemSchema = yup.object({
