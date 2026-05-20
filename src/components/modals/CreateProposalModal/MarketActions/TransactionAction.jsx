@@ -20,7 +20,7 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
+  { value: 'Offer', label: 'Offer' },
   { value: 'Buy', label: 'Buy' },
 ];
 
@@ -359,7 +359,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-400 mb-2">Buy Type</p>
+                          <p className="text-sm text-gray-400 mb-2">Exec Type</p>
                           <LavaSteelSelect
                             options={buyTypeOptions}
                             placeholder="Select type"
@@ -377,7 +377,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-400 mb-2">Buying Max Price</p>
+                          <p className="text-sm text-gray-400 mb-2">Max Price to Buy/Offer</p>
                           <LavaSteelInput
                             type="number"
                             min={0}
