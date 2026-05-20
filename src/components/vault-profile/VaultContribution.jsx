@@ -172,12 +172,16 @@ export const VaultContribution = ({ vault }) => {
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
   const isLocked = vault.vaultStatus === VAULT_STATUSES.LOCKED;
   const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+  const isAcquireOnly = vault.isAcquireOnly;
 
   const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);
   const acquireProgress = calculateAcquireProgress(vault.assetsPrices.totalAcquiredUsd, vault.requireReservedCostUsd);
   const minContributeAssets = findMinValue(vault.assetsWhitelist, 'countCapMin');
 
   const reserveThresholdMet = acquireProgress >= 100;
+
+  // For acquire-only vaults, only show progress bar if reserve threshold exists
+  const hasReserveThreshold = vault.requireReservedCostAda > 0 || vault.requireReservedCostUsd > 0;
 
   const lpMinThresholdPosition = calculateLpMinThresholdPosition(
     vault.lpMinLiquidityAda,
@@ -190,7 +194,7 @@ export const VaultContribution = ({ vault }) => {
   return (
     <div className="space-y-4">
       <div className="relative overflow-visible">
-        {isContribution && (
+        {isContribution && !isAcquireOnly && (
           <ContributionProgress
             title="Contribution"
             contributionProgress={contributionProgress}
@@ -206,77 +210,85 @@ export const VaultContribution = ({ vault }) => {
       </div>
 
       <div className="relative">
-        {isContribution ? null : isAcquire ? (
-          <div>
-            <h2 className="font-medium mb-2">Acquire:</h2>
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-dark-100">
-                Reserve:{' '}
-                {currency === 'ada'
-                  ? `₳${formatNum(vault.requireReservedCostAda)}`
-                  : `$${formatNum(vault.requireReservedCostUsd)}`}
-              </span>
-              <span className="text-dark-100">{Math.floor(acquireProgress)}%</span>
-            </div>
-            <div className="relative">
-              <LavaProgressBar
-                className="h-2 rounded-full bg-steel-750 mb-4"
-                segments={[
-                  {
-                    progress: Math.min(acquireProgress, 100),
-                    className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
-                  },
-                  ...(reserveThresholdMet
-                    ? [
-                        {
-                          progress: acquireProgress - 100,
-                          className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-            </div>
-            {vault.liquidityPoolContribution > 0 && (
-              <div className="flex flex-col gap-1 text-xs mt-2">
-                {!canMeetLpMinimum ? (
-                  <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
-                    <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
-                    <span className="text-red-300 text-xs">
-                      LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is below
-                      minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will fail and
-                      refund users.
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-dark-100">Current ADA LP amount:</span>
-                      <span className="text-dark-100">
-                        {currency === 'ada'
-                          ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                          : `$${formatNum(vault.projectedLpUsdAmount)}`}
+        {isContribution && !isAcquireOnly ? null : isAcquire ? (
+          hasReserveThreshold ? (
+            <div>
+              <h2 className="font-medium mb-2">Acquire:</h2>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-dark-100">
+                  Reserve:{' '}
+                  {currency === 'ada'
+                    ? `₳${formatNum(vault.requireReservedCostAda)}`
+                    : `$${formatNum(vault.requireReservedCostUsd)}`}
+                </span>
+                <span className="text-dark-100">{Math.floor(acquireProgress)}%</span>
+              </div>
+              <div className="relative">
+                <LavaProgressBar
+                  className="h-2 rounded-full bg-steel-750 mb-4"
+                  segments={[
+                    {
+                      progress: Math.min(acquireProgress, 100),
+                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                    },
+                    ...(reserveThresholdMet
+                      ? [
+                          {
+                            progress: acquireProgress - 100,
+                            className: 'bg-gradient-to-r from-[#FB2C3600] to-[#FB2C36]',
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              </div>
+              {vault.liquidityPoolContribution > 0 && (
+                <div className="flex flex-col gap-1 text-xs mt-2">
+                  {!canMeetLpMinimum ? (
+                    <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
+                      <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
+                      <span className="text-red-300 text-xs">
+                        LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
+                        below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will fail
+                        and refund users.
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
-                      <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                        {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
-                      </span>
-                    </div>
-                    {!lpMinThresholdMet && (
-                      <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
-                        <span className="text-yellow-300 text-xs">
-                          LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
-                          {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-dark-100">Current ADA LP amount:</span>
+                        <span className="text-dark-100">
+                          {currency === 'ada'
+                            ? `₳${formatNum(vault.projectedLpAdaAmount)}`
+                            : `$${formatNum(vault.projectedLpUsdAmount)}`}
                         </span>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                      <div className="flex justify-between">
+                        <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                        <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                          {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                        </span>
+                      </div>
+                      {!lpMinThresholdMet && (
+                        <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                          <span className="text-yellow-300 text-xs">
+                            LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
+                            {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-sm text-dark-100">
+              {isAcquireOnly
+                ? 'Acquire-only vault - no minimum threshold required'
+                : 'Acquire phase active - contributions accepted until phase expires'}
+            </div>
+          )
         ) : isLocked && vault.assetsPrices.totalAcquiredAda && vault.assetsPrices.totalAcquiredUsd ? (
           <div className="w-full">
             <div className="text-sm text-dark-100 font-medium">
