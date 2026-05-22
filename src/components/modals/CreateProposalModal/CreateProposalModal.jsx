@@ -14,6 +14,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx';
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
+import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
 import {
   useCreateProposal,
   useGovernanceProposals,
@@ -33,6 +34,7 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'acquire_expansion', label: 'Acquire Expansion' },
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
@@ -47,9 +49,7 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
-  );
+  const [selectedOption, setSelectedOption] = useState('acquire_expansion');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -72,6 +72,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       marketplace_action: governanceFees.data.proposalFeeMarketplaceAction,
       distribution: governanceFees.data.proposalFeeDistribution,
       expansion: governanceFees.data.proposalFeeExpansion,
+      acquire_expansion: governanceFees.data.proposalFeeExpansion, // Use same fee as expansion
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
@@ -166,6 +167,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.expansionNoMax = proposalData.expansionNoMax || false;
         proposalPayload.expansionPriceType = proposalData.expansionPriceType || 'market';
         proposalPayload.expansionLimitPrice = proposalData.expansionLimitPrice;
+      } else if (selectedOption === 'acquire_expansion') {
+        proposalPayload.acquireExpansionDuration = proposalData.acquireExpansionDuration;
+        proposalPayload.acquireExpansionNoLimit = proposalData.acquireExpansionNoLimit || false;
+        proposalPayload.acquireExpansionMaxAda = proposalData.acquireExpansionMaxAda;
+        proposalPayload.acquireExpansionNoMax = proposalData.acquireExpansionNoMax || false;
+        proposalPayload.acquireExpansionPriceType = proposalData.acquireExpansionPriceType || 'market';
+        proposalPayload.acquireExpansionLimitPrice = proposalData.acquireExpansionLimitPrice;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -450,6 +458,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'expansion' && (
               <Expansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'acquire_expansion' && (
+              <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">

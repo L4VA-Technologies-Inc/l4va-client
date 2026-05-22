@@ -52,6 +52,7 @@ export enum ProposalType {
   BUY_SELL = 'buy_sell',
   MARKETPLACE_ACTION = 'marketplace_action',
   EXPANSION = 'expansion',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export const ProposalTypeLabels = {
@@ -62,6 +63,7 @@ export const ProposalTypeLabels = {
   [ProposalType.BUY_SELL]: 'Buy/Sell',
   [ProposalType.MARKETPLACE_ACTION]: 'Market Actions',
   [ProposalType.EXPANSION]: 'Vault Expansion',
+  [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
 };
 
 export enum ClaimStatus {
