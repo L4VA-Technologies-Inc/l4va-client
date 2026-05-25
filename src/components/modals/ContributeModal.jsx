@@ -167,12 +167,15 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
   const estimatedTickerVal = hasSelectedAssets ? userEstimatedTokens.toLocaleString() : '0';
 
-  // Estimated Amount to Receive = (1 - Tokens for Acquirers % - LP ADA %) × Estimated Value
-  // LP ADA % = LP Contribution % / 2 (since LP gets half as VT, half as ADA)
-  // This represents the portion of contributed value returned to contributors as ADA
-  const estimatedReceived = hasSelectedAssets
-    ? ((1 - tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
-    : '0.00';
+  // Estimated ADA to Receive (only shown when acquire phase exists)
+  // Contributors receive ADA from acquirers (minus LP allocation)
+  // Formula: Estimated Value × (Tokens for Acquirers % - LP ADA %)
+  // Where LP ADA % = LP Contribution % / 2
+  const hasAcquirePhase = tokensForAcqPercent > 0;
+  const estimatedReceived =
+    hasSelectedAssets && hasAcquirePhase
+      ? ((tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
+      : '0.00';
   const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
 
   const toggleNFT = useCallback(asset => {
@@ -439,7 +442,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
               />
             )}
 
-            {!isExpansionMode && (
+            {!isExpansionMode && hasAcquirePhase && (
               <MetricCard
                 label={estimatedReceivedLabel}
                 value={`${currencySymbol}${estimatedReceived}`}
