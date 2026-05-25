@@ -317,6 +317,24 @@ export const VaultContribution = ({ vault }) => {
             showMoreInfo={showMoreInfo}
             setShowMoreInfo={setShowMoreInfo}
           />
+        ) : isAcquireExpansion ? (
+          <>
+            <ContributionProgress
+              title="Expansion"
+              contributionProgress={
+                vault.expansionAssetMax > 0
+                  ? calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax)
+                  : 0
+              }
+              minContributeAssets={0}
+              maxContributeAssets={vault.expansionAssetMax}
+              assetList={vault.expansionAssetsByPolicy || []}
+              assetsCount={vault.expansionAssetsCount || 0}
+              assetsByPolicy={vault.expansionAssetsByPolicy || []}
+              showMoreInfo={showMoreInfo}
+              setShowMoreInfo={setShowMoreInfo}
+            />
+          </>
         ) : null}
       </div>
 

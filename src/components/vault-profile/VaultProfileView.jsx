@@ -269,23 +269,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleTabChange = tab => setActiveTab(tab);
 
-  const isPhaseTransitioning = () => {
-    if (!vault) return false;
-    const now = Date.now();
-
-    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
-      const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
-      return now >= contributionEnd;
-    }
-
-    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
-      const acquireEnd = new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
-      return now >= acquireEnd;
-    }
-
-    return false;
-  };
-
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
     const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
@@ -334,14 +317,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       Token: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
-        available:
-          (vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
-            new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
-              Date.now() + BUTTON_DISABLE_THRESHOLD_MS) ||
-          (vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION &&
-            vault.expansionPhaseStart &&
-            new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration >
-              Date.now() + BUTTON_DISABLE_THRESHOLD_MS),
+        available: vault.isAcquireWindowActive,
       },
       Governance: {
         text: 'Create Proposal',
@@ -706,7 +682,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               countdownValue={getCountdownTime(vault)}
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
-            {isPhaseTransitioning() && <PhaseTransitionInfo />}
+            {vault.isPhaseTransitioning && <PhaseTransitionInfo />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
           {vault.vaultStatus !== 'locked' ? (
