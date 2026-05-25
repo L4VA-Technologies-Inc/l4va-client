@@ -42,6 +42,7 @@ export const VAULT_STATUSES = {
   ACQUIRE: 'acquire',
   LOCKED: 'locked',
   EXPANSION: 'expansion',
+  ACQUIRE_EXPANSION: 'acquire_expansion',
   TERMINATING: 'terminating',
   FAILED: 'failed',
 };

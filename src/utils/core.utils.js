@@ -667,6 +667,13 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Contribute',
     isCountdownActive: true,
   },
+  acquire_expansion: {
+    countdownName: 'Acquire Expansion ends in:',
+    getCountdownTime: vault =>
+      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    buttonText: 'Acquire',
+    isCountdownActive: true,
+  },
   created: {
     countdownName: 'Contribution starts in:',
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),

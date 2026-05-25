@@ -172,6 +172,7 @@ export const VaultContribution = ({ vault }) => {
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
   const isLocked = vault.vaultStatus === VAULT_STATUSES.LOCKED;
   const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+  const isAcquireExpansion = vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
   const isAcquireOnly = vault.isAcquireOnly;
 
   const contributionProgress = calculateProgress(vault.assetsCount, vault.maxContributeAssets);

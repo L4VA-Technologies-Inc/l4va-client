@@ -304,9 +304,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       contributionPhaseEndTime > Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
       !allAssetsAtMaxCapacity;
 
-    // Check if vault is in an invalid status for contributions
+    // Check if vault is in an invalid status for contributions/expansions
     const isInvalidStatus =
-      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION && vault.vaultStatus !== VAULT_STATUSES.EXPANSION;
+      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION &&
+      vault.vaultStatus !== VAULT_STATUSES.EXPANSION &&
+      vault.vaultStatus !== VAULT_STATUSES.ACQUIRE_EXPANSION;
 
     // Check if contribution phase is full
     const isContributionFull = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && allAssetsAtMaxCapacity;
@@ -333,14 +335,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
         available:
-          vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
-          new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
-            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
+          (vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
+            new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
+              Date.now() + BUTTON_DISABLE_THRESHOLD_MS) ||
+          (vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION &&
+            vault.expansionPhaseStart &&
+            new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration >
+              Date.now() + BUTTON_DISABLE_THRESHOLD_MS),
       },
       Governance: {
         text: 'Create Proposal',
         available:
-          (vault.vaultStatus === VAULT_STATUSES.LOCKED || vault.vaultStatus === VAULT_STATUSES.EXPANSION) &&
+          (vault.vaultStatus === VAULT_STATUSES.LOCKED ||
+            vault.vaultStatus === VAULT_STATUSES.EXPANSION ||
+            vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION) &&
           vault.canCreateProposal,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },

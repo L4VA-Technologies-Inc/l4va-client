@@ -42,6 +42,7 @@ export enum VaultStatus {
   GOVERNANCE = 'governance',
   FAILED = 'failed',
   EXPANSION = 'expansion',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export enum ProposalType {

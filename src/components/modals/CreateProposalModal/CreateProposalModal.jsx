@@ -81,9 +81,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, [governanceFees, selectedOption]);
 
   // Filter execution options based on vault status
-  // During expansion, only Distribution is allowed (doesn't extract from vault)
+  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
   const availableExecutionOptions = useMemo(() => {
-    const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
+    const isExpansion =
+      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
 
     if (isExpansion) {
       return executionOptions.map(option => {
