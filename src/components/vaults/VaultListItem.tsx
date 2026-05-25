@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { InfoRow } from '@/components/ui/infoRow';
-import { formatCompactNumber } from '@/utils/core.utils';
+import { formatCompactNumber, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
@@ -64,7 +64,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
 
           <div className="hidden md:block">
             <p className="text-sm text-dark-100">Stage</p>
-            <p className="font-bold capitalize">{vault.vaultStatus}</p>
+            <p className="font-bold">{formatVaultStatus(vault.vaultStatus)}</p>
           </div>
           {shouldShowCountdown && (
             <div className="hidden md:block">
