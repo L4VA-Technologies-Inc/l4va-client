@@ -87,14 +87,14 @@ const ContributionProgress = ({
               {assetsCount > 0 && <ProgressBubble value={assetsCount} progress={contributionProgress} />}
             </div>
             <div className="flex justify-between w-full text-xs text-dark-100">
-              <span>min {minContributeAssets}</span>
-              <span>max {maxContributeAssets}</span>
+              <span>min {formatNum(minContributeAssets, 0)}</span>
+              <span>max {formatNum(maxContributeAssets, 0)}</span>
             </div>
           </>
         ) : (
           <>
             <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
-              Total Contributed: <span className="text-white font-medium">{assetsCount}</span>
+              Total Contributed: <span className="text-white font-medium">{formatNum(assetsCount, 0)}</span>
             </div>
             <div className="text-sm text-dark-100 mb-2">
               No asset limit - contributions accepted until the current phase expires
@@ -141,13 +141,13 @@ const ContributionProgress = ({
                           {assetCount > 0 && <ProgressBubble value={assetCount} progress={assetProgress} />}
                         </div>
                         <div className="flex justify-between w-full text-xs text-dark-100">
-                          <span>min {asset.countCapMin}</span>
-                          <span>max {asset.countCapMax}</span>
+                          <span>min {formatNum(asset.countCapMin, 0)}</span>
+                          <span>max {formatNum(asset.countCapMax, 0)}</span>
                         </div>
                       </>
                     ) : (
                       <div className="text-sm text-dark-100 w-full">
-                        Contributed: <span className="text-white font-medium">{assetCount}</span>
+                        Contributed: <span className="text-white font-medium">{formatNum(assetCount, 0)}</span>
                       </div>
                     )}
                   </div>

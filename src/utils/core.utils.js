@@ -205,6 +205,31 @@ export const formatTokenQuantity = (rawQuantity, decimals = 6, maxDisplayDecimal
   });
 };
 
+/**
+ * Format full token quantity (no compact notation) for tooltips and exact display
+ */
+export const formatTokenQuantityExact = (rawQuantity, decimals = 6) => {
+  const decimalQty = getDecimalAdjustedQuantity(rawQuantity, decimals);
+  const displayDecimals = Math.min(decimals, 8);
+  const multiplier = Math.pow(10, displayDecimals);
+  const truncated = Math.floor(decimalQty * multiplier) / multiplier;
+  return truncated.toLocaleString('en', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: displayDecimals,
+  });
+};
+
+/**
+ * Max spendable decimal amount string for token inputs (truncated, never rounded up)
+ */
+export const getMaxDecimalTokenAmount = (rawQuantity, decimals = 6) => {
+  const decimalQty = getDecimalAdjustedQuantity(rawQuantity, decimals);
+  const displayDecimals = Math.min(decimals, 8);
+  const multiplier = Math.pow(10, displayDecimals);
+  const truncated = Math.floor(decimalQty * multiplier) / multiplier;
+  return truncated.toFixed(displayDecimals);
+};
+
 export const formatAmount = amount => {
   if (amount >= 1000000) {
     return `${(amount / 1000000).toFixed(1)}M`;
