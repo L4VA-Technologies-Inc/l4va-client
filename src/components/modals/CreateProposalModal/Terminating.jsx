@@ -3,6 +3,7 @@ import { CheckCircle, XCircle } from 'lucide-react';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { formatNum } from '@/utils/core.utils.js';
 
 export default function Terminating({ onClose, vaultId, onDataChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -211,8 +212,8 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
                       <span className="text-white font-medium">{pool.dex}</span>
                     </div>
                     <div className="flex gap-3 text-sm">
-                      <span className="text-white/60">{pool.adaAmount.toFixed(2)} ADA</span>
-                      <span className="text-white/60">{pool.vtAmount.toFixed(0)} VT</span>
+                      <span className="text-white/60">{formatNum(pool.adaAmount, 2)} ADA</span>
+                      <span className="text-white/60">{formatNum(pool.vtAmount, 0)} VT</span>
                       <span className={`font-medium ${pool.isRecoverable ? 'text-green-400' : 'text-red-400'}`}>
                         {pool.isRecoverable ? 'Recoverable' : 'Unrecoverable'}
                       </span>

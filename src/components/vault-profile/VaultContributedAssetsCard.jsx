@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
-import { substringAddress, formatAdaPrice } from '@/utils/core.utils.js';
+import { substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils.js';
 
 const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   const handleCopy = (e, text, message) => {
@@ -60,7 +60,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
             </div>
             <div>
               <p className="font-medium text-gray-300">Quantity:</p>
-              <p>{asset.quantity}</p>
+              <p>{formatNum(asset.quantity, 6)}</p>
             </div>
             <div>
               <p className="font-medium text-gray-300">Value:</p>
