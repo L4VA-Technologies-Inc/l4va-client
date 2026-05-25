@@ -106,7 +106,7 @@ export const AssetsList = ({
         <div className="space-y-1 h-full flex flex-col">
           <div className="flex justify-between text-dark-100 text-sm px-2">
             <span>Asset</span>
-            <span>Amount</span>
+            <span>{activeTab === 'FT' ? 'Amount' : 'Policy'}</span>
           </div>
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
