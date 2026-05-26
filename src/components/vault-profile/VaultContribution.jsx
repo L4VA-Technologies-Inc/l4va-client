@@ -55,6 +55,59 @@ const ProgressBubble = ({ value, progress }) => {
   );
 };
 
+const AcquireExpansionProgress = ({ vault, currency }) => {
+  const hasMax = !vault.acquireExpansionNoMax && vault.acquireExpansionMaxAda > 0;
+  const currentAda = vault.acquireExpansionCurrentAda || 0;
+  const currentUsd = vault.acquireExpansionCurrentUsd || 0;
+  const maxAda = vault.acquireExpansionMaxAda || 0;
+  const maxUsd = vault.acquireExpansionMaxUsd || 0;
+
+  const progress = hasMax ? calculateProgress(currentAda, maxAda) : 0;
+
+  return (
+    <div>
+      <h2 className="font-medium mb-2">Acquire Expansion:</h2>
+      {hasMax ? (
+        <>
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-dark-100">
+              Raised: {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+            </span>
+            <span className="text-dark-100">{Math.floor(progress)}%</span>
+          </div>
+          <div className="relative mb-4">
+            <LavaProgressBar
+              className="h-2 rounded-full bg-steel-750"
+              segments={[
+                {
+                  progress: Math.min(progress, 100),
+                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                },
+              ]}
+            />
+          </div>
+          <div className="flex justify-between w-full text-xs text-dark-100">
+            <span>min 0 ADA</span>
+            <span>max {currency === 'ada' ? `₳${formatNum(maxAda)}` : `$${formatNum(maxUsd)}`}</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
+            Total Raised:{' '}
+            <span className="text-white font-medium">
+              {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+            </span>
+          </div>
+          <div className="text-sm text-dark-100 mb-2">
+            No ADA limit - contributions accepted until the current phase expires
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const ContributionProgress = ({
   title,
   contributionProgress,
@@ -318,23 +371,7 @@ export const VaultContribution = ({ vault }) => {
             setShowMoreInfo={setShowMoreInfo}
           />
         ) : isAcquireExpansion ? (
-          <>
-            <ContributionProgress
-              title="Expansion"
-              contributionProgress={
-                vault.expansionAssetMax > 0
-                  ? calculateProgress(vault.expansionAssetsCount || 0, vault.expansionAssetMax)
-                  : 0
-              }
-              minContributeAssets={0}
-              maxContributeAssets={vault.expansionAssetMax}
-              assetList={vault.expansionAssetsByPolicy || []}
-              assetsCount={vault.expansionAssetsCount || 0}
-              assetsByPolicy={vault.expansionAssetsByPolicy || []}
-              showMoreInfo={showMoreInfo}
-              setShowMoreInfo={setShowMoreInfo}
-            />
-          </>
+          <AcquireExpansionProgress vault={vault} currency={currency} />
         ) : null}
       </div>
 
