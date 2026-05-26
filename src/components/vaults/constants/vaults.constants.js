@@ -575,6 +575,7 @@ export const initialVaultState = {
   liquidityPoolContribution: null,
   isAcquireOnly: false,
   minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
+  allowAcquireExpansion: false,
 
   // Step 4: Governance
   ftTokenSupply: MIN_SUPPLY,
@@ -607,6 +608,7 @@ export const stepFields = {
     'assetsWhitelist',
     'contributorWhitelist',
     'acquirerWhitelist',
+    'allowAcquireExpansion',
   ],
   2: [
     'valueMethod',
