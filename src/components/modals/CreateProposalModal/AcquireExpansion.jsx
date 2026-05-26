@@ -28,12 +28,16 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     const MAX_ADA_LIMIT = 1000000000; // 1 billion ADA
     const MAX_LIMIT_PRICE = 1000000; // 1 million VT per 1 ADA
 
+    // Calculate minimum limit price based on vault decimals to prevent multiplier = 0
+    const decimals = vault?.ft_token_decimals || 6;
+    const minLimitPrice = Math.pow(10, -decimals);
+
     const isValid =
       (noLimit || duration > 0) &&
       (noMax || (maxAda && maxAdaNum > 0 && maxAdaNum <= MAX_ADA_LIMIT)) &&
       hasAtLeastOneLimit &&
       priceType &&
-      (priceType === 'market' || (limitPrice && limitPriceNum > 0 && limitPriceNum <= MAX_LIMIT_PRICE));
+      (priceType === 'market' || (limitPrice && limitPriceNum >= minLimitPrice && limitPriceNum <= MAX_LIMIT_PRICE));
 
     // Convert ADA to lovelace for backend (1 ADA = 1,000,000 lovelace)
     const maxAdaLovelace = noMax ? null : Math.floor(Math.min(maxAdaNum, MAX_ADA_LIMIT) * 1000000) || null;
@@ -47,7 +51,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
       acquireExpansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
       isValid,
     });
-  }, [duration, noLimit, maxAda, noMax, priceType, limitPrice, onDataChange]);
+  }, [duration, noLimit, maxAda, noMax, priceType, limitPrice, onDataChange, vault?.ft_token_decimals]);
 
   return (
     <div className="space-y-6">
@@ -176,14 +180,39 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 error={error && !limitPrice}
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
-              {limitPrice && parseFloat(limitPrice) > 0 && (
-                <div className="mt-2 p-3 bg-steel-800 rounded">
-                  <p className="text-xs text-gray-400">Example calculation:</p>
-                  <p className="text-sm text-primary font-mono mt-1">
-                    100 ₳ = {(parseFloat(limitPrice) * 100).toLocaleString()} VT
-                  </p>
-                </div>
-              )}
+              {(() => {
+                const decimals = vault?.ft_token_decimals || 6;
+                const minLimitPrice = Math.pow(10, -decimals);
+                const limitPriceNum = parseFloat(limitPrice) || 0;
+
+                if (limitPrice && limitPriceNum > 0 && limitPriceNum < minLimitPrice) {
+                  return (
+                    <div className="mt-2 p-3 bg-red-900/20 border border-red-600/50 rounded">
+                      <p className="text-red-400 text-sm font-medium">⚠️ Price Too Low</p>
+                      <p className="text-red-300/90 text-xs mt-1">
+                        With {decimals} decimals, minimum limit price is {minLimitPrice} VT per 1 ADA. Lower values
+                        would result in 0 tokens minted.
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (limitPrice && limitPriceNum > 0) {
+                  return (
+                    <div className="mt-2 p-3 bg-steel-800 rounded">
+                      <p className="text-xs text-gray-400">Example calculation:</p>
+                      <p className="text-sm text-primary font-mono mt-1">
+                        100 ₳ = {(limitPriceNum * 100).toLocaleString()} VT
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Min: {minLimitPrice} VT/ADA ({decimals} decimals)
+                      </p>
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
             </div>
           )}
 
