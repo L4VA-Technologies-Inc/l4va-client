@@ -387,8 +387,8 @@ export const ProposalInfo = ({ proposalId }) => {
               value: 'No limit',
             });
           } else if (acquireExpansionConfig.maxAda) {
-            const maxAdaAmount = acquireExpansionConfig.maxAda / 1_000_000; // Convert lovelace to ADA
-            const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1_000_000;
+            const maxAdaAmount = acquireExpansionConfig.maxAda / 1000000; // Convert lovelace to ADA
+            const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
             const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
             acquireExpansionItems.push({
               label: 'ADA Limit',
