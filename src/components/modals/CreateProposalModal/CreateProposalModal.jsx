@@ -35,7 +35,7 @@ const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
-  { value: 'distribution', label: 'Distribution - Coming Soon', disabled: false },
+  { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
   { value: 'burning', label: 'Burning - Coming Soon', disabled: true },
@@ -49,7 +49,9 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState('acquire_expansion');
+  const [selectedOption, setSelectedOption] = useState(
+    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
