@@ -325,14 +325,11 @@ export const vaultSchema = yup.object({
   isAcquireOnly: yup.boolean().default(false),
   minAcquireThreshold: yup
     .number()
+    .nullable()
     .typeError('Minimum ADA threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema =>
-        schema
-          .required('Minimum ADA threshold is required')
-          .positive('Must be a positive number')
-          .integer('Must be a whole number of ADA'),
+      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
       otherwise: schema => schema.nullable(),
     }),
 
@@ -625,7 +622,6 @@ export const stepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
-    'minAcquireThreshold',
   ],
   4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'cosigningThreshold', 'executionThreshold'],
   5: [],

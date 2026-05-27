@@ -204,9 +204,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                       <p className="text-sm text-primary font-mono mt-1">
                         100 ₳ = {(limitPriceNum * 100).toLocaleString()} VT
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Min: {minLimitPrice} VT/ADA ({decimals} decimals)
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Min: {minLimitPrice} VT/ADA</p>
                     </div>
                   );
                 }

@@ -103,11 +103,10 @@ export const AcquireWindow = ({
         {isAcquireOnly && (
           <div>
             <Label className="uppercase font-bold" htmlFor="minAcquireThreshold">
-              *MINIMUM ADA THRESHOLD
+              MINIMUM ADA THRESHOLD (OPTIONAL)
             </Label>
             <div className="mt-4">
               <LavaInput
-                required
                 error={errors.minAcquireThreshold}
                 label=""
                 id="minAcquireThreshold"
@@ -124,7 +123,7 @@ export const AcquireWindow = ({
                   const raw = e.target.value.replace(/[^0-9]/g, '');
                   updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
                 }}
-                hint="The minimum total ADA that must be received during the acquire window for this vault to lock. If not met, the vault fails and all ADA is refunded."
+                hint="Optional. If set, the vault will only lock if this minimum amount of ADA is acquired. If not set, the vault will lock if ANY amount of ADA is acquired. If no ADA is acquired, the vault will fail and all ADA is refunded."
               />
             </div>
           </div>
