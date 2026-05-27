@@ -9,9 +9,9 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
             <h3 className="text-orange-500 font-semibold">Overview</h3>
           </div>
           <p className="text-steel-300 text-sm leading-relaxed">
-            Users earn $L4VA by creating or interacting with vaults. The Oracle Vault is the first vault on the
-            protocol—it mints ORACLE for &quot;Relics of Magma&quot; NFTs. Total bonuses across staking and alignment
-            are capped at 20%.
+            Users earn $L4VA by creating or interacting with vaults. The Oracle Vault is the first vault on the protocol
+            — it mints ORACLE for &quot;Relics of Magma&quot; NFTs. Total bonuses across staking and alignment are
+            capped at 20%.
           </p>
         </section>
 
@@ -46,8 +46,10 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
             <h3 className="text-orange-500 font-semibold">Vesting & Unlocking</h3>
           </div>
           <p className="text-steel-300 text-sm leading-relaxed">
-            Protocol rewards unlock gradually over time to ensure long-term alignment with the ecosystem. View your
-            locked and unlocked amounts in the Vesting section. Unlocked rewards are ready to claim.
+            Protocol rewards are split into 50% immediate and 50% vested over 4 weeks. To unlock the vested portion,
+            continue holding your vault tokens either directly in your wallet or through eligible LP positions. The
+            system tracks your effective VT balance over time, and vested rewards unlock based on how much of the
+            required VT balance you maintain during the vesting period.
           </p>
         </section>
 
