@@ -29,7 +29,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     const MAX_LIMIT_PRICE = 1000000; // 1 million VT per 1 ADA
 
     // Calculate minimum limit price based on vault decimals to prevent multiplier = 0
-    const decimals = vault?.ft_token_decimals || 6;
+    const decimals = vault?.ftTokenDecimals || 6;
     const minLimitPrice = Math.pow(10, -decimals);
 
     const isValid =
@@ -181,7 +181,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
               {(() => {
-                const decimals = vault?.ft_token_decimals || 6;
+                const decimals = vault?.ftTokenDecimals || 6;
                 const minLimitPrice = Math.pow(10, -decimals);
                 const limitPriceNum = parseFloat(limitPrice) || 0;
 

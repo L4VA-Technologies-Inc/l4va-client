@@ -8,7 +8,6 @@ import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
 import MetricCard from '@/components/shared/MetricCard.jsx';
 import { useTransaction } from '@/hooks/useTransaction.js';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
-import { BUTTON_DISABLE_THRESHOLD_MS } from '@/components/vaults/constants/vaults.constants.js';
 import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
 import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
@@ -315,12 +314,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
                 selectedNFTs.length === 0 ||
                 status !== 'idle' ||
                 wallet.isUpdatingUtxos ||
-                (isExpansionMode
-                  ? vault.expansionPhaseStart &&
-                    new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration <
-                      Date.now() + BUTTON_DISABLE_THRESHOLD_MS
-                  : new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration <
-                    Date.now() + BUTTON_DISABLE_THRESHOLD_MS)
+                !vault.isContributionWindowActive
               }
               onClick={handleContribute}
               size="sm"

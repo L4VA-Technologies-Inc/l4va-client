@@ -6,11 +6,7 @@ import toast from 'react-hot-toast';
 import { SwapComponent } from '../swap/Swap';
 
 import { useCurrency } from '@/hooks/useCurrency';
-import {
-  BUTTON_DISABLE_THRESHOLD_MS,
-  VAULT_STATUSES,
-  VAULT_TAGS_OPTIONS,
-} from '@/components/vaults/constants/vaults.constants';
+import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
@@ -290,20 +286,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
     const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
 
-    // Check if expansion phase is active
-    const isExpansionActive =
-      isExpansion &&
-      vault.expansionPhaseStart &&
-      new Date(vault.expansionPhaseStart).getTime() + (vault.expansionDuration || 0) >
-        Date.now() + BUTTON_DISABLE_THRESHOLD_MS;
-
-    // Check if contribution phase is active and accepting contributions
-    const contributionPhaseEndTime = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
-    const isContributionPhaseActive =
-      vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
-      contributionPhaseEndTime > Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
-      !allAssetsAtMaxCapacity;
-
     // Check if vault is in an invalid status for contributions/expansions
     const isInvalidStatus =
       vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION &&
@@ -328,7 +310,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       Assets: {
         text: buttonText,
         handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
-        available: isContributionPhaseActive || isExpansionActive,
+        available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
         disabled: isInvalidStatus || isContributionFull || isExpansionFull,
       },
       Token: {

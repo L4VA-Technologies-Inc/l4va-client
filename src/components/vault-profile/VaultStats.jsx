@@ -1,5 +1,6 @@
 import { InfoRow } from '@/components/ui/infoRow.js';
 import { cn } from '@/lib/utils.js';
+import { formatVaultStatus } from '@/utils/core.utils.js';
 
 export const VaultStats = ({
   assetValue,
@@ -9,16 +10,6 @@ export const VaultStats = ({
   tvl = 'N/A',
   vtPrice = 'N/A',
 }) => {
-  // Format vault status for display
-  const formatVaultStatus = status => {
-    if (!status) return 'N/A';
-    // Convert snake_case to Title Case (e.g., "acquire_expansion" -> "Acquire Expansion")
-    return status
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
   const stats = [
     {
       label: 'VAULT STAGE',
