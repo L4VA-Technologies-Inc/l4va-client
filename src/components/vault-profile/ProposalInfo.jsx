@@ -368,7 +368,7 @@ export const ProposalInfo = ({ proposalId }) => {
           ? [
               executionOptions,
               {
-                label: 'Assets to add',
+                label: 'Policies to add',
                 value: whitelistItems,
                 type: 'asset_whitelist_update_list',
               },

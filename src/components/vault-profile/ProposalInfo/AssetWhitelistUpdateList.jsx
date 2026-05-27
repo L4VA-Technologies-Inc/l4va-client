@@ -26,14 +26,14 @@ const handleCopy = value => {
     });
 };
 
-export const AssetWhitelistUpdateList = ({ assets = [], label = 'Assets to add', showCountCaps = false }) => {
+export const AssetWhitelistUpdateList = ({ assets = [], label = 'Policies to add', showCountCaps = false }) => {
   const whitelistedAssets = assets.filter(asset => asset?.policyId);
 
   if (!whitelistedAssets.length) {
     return (
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-gray-400">{label}</h3>
-        <span className="text-dark-100 text-sm">No assets in whitelist update</span>
+        <span className="text-dark-100 text-sm">No policies in whitelist update</span>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export const AssetWhitelistUpdateList = ({ assets = [], label = 'Assets to add',
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-medium text-gray-400">{label}</h3>
         <span className="text-sm text-white">
-          {whitelistedAssets.length} asset{whitelistedAssets.length === 1 ? '' : 's'}
+          {whitelistedAssets.length} polic{whitelistedAssets.length === 1 ? 'y' : 'ies'}
         </span>
       </div>
       <Accordion type="multiple" className="w-full min-w-0 rounded-lg bg-steel-900 p-4 text-left">

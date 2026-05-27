@@ -62,7 +62,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
             <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Expandable whitelist</p>
             <HoverHelp hint="Allows the vault whitelist to be expanded after creation." />
           </div>
-          <p>{data.isExpandable ? 'Yes' : 'No'}</p>
+          <p>{data.isExpandableAssetWhitelist ? 'Yes' : 'No'}</p>
         </div>
         <div>
           <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>

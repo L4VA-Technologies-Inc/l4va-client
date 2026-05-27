@@ -68,7 +68,7 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
   const [newAssets, setNewAssets] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  const canExpandWhitelist = Boolean(vault?.isExpandable);
+  const canExpandWhitelist = Boolean(vault?.isExpandableAssetWhitelist);
 
   const existingAssets = useMemo(
     () => (vault?.assetsWhitelist ?? []).filter(asset => asset?.policyId),
@@ -82,7 +82,11 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
 
   const existingAssetCount = existingAssets.length;
   const maxNewAssets = Math.max(0, MAX_TOTAL_ASSETS - existingAssetCount);
-  const newAssetCount = newAssets.filter(asset => asset?.policyId).length;
+  // Count unique policies only (one policy per collection, regardless of asset names)
+  const uniqueNewPolicies = new Set(
+    newAssets.filter(asset => asset?.policyId).map(asset => asset.policyId.toLowerCase())
+  );
+  const newAssetCount = uniqueNewPolicies.size;
   const totalAssetCount = existingAssetCount + newAssetCount;
   const remainingSlots = Math.max(0, MAX_TOTAL_ASSETS - totalAssetCount);
 
@@ -143,8 +147,9 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
         <div className="space-y-2">
           <p className="text-sm font-medium text-white">Whitelist capacity</p>
           <p className="text-sm leading-relaxed text-gray-300">
-            A vault can include up to {MAX_TOTAL_ASSETS} collections in total. That limit includes collections already
-            on the whitelist and any new entries added in this proposal.
+            A vault can include up to {MAX_TOTAL_ASSETS} unique policy IDs (collections) in total. Each policy can only
+            be added once, regardless of asset names. The limit includes collections already on the whitelist and any
+            new policies added in this proposal.
           </p>
         </div>
 
@@ -154,11 +159,11 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
             <p className="mt-1 text-xl font-semibold text-white">{existingAssetCount}</p>
           </div>
           <div className="rounded-lg bg-steel-850 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">In this proposal</p>
+            <p className="text-xs uppercase tracking-wide text-gray-400">Adding in proposal</p>
             <p className="mt-1 text-xl font-semibold text-white">{newAssetCount}</p>
           </div>
           <div className="rounded-lg bg-steel-850 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">Total used</p>
+            <p className="text-xs uppercase tracking-wide text-gray-400">Total policies</p>
             <p className="mt-1 text-xl font-semibold text-white">
               {totalAssetCount}
               <span className="text-sm font-normal text-gray-400"> / {MAX_TOTAL_ASSETS}</span>
@@ -168,22 +173,23 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
 
         <p className="text-sm text-gray-400">
           {remainingSlots === 0
-            ? 'No slots remaining before the vault reaches its whitelist limit.'
-            : `${remainingSlots} slot${remainingSlots === 1 ? '' : 's'} remaining before the vault reaches its limit.`}
+            ? 'No policy slots remaining before the vault reaches its whitelist limit.'
+            : `${remainingSlots} policy slot${remainingSlots === 1 ? '' : 's'} remaining before the vault reaches its limit.`}
         </p>
       </section>
 
       <section className="space-y-4 border-t border-white/10 pt-6">
         {maxNewAssets === 0 ? (
           <p className="text-sm text-orange-400">
-            This vault already has the maximum of {MAX_TOTAL_ASSETS} whitelisted assets.
+            This vault already has the maximum of {MAX_TOTAL_ASSETS} whitelisted policies.
           </p>
         ) : (
           <>
             <div className="space-y-1">
               <h4 className="text-sm font-medium text-white">New collections</h4>
               <p className="text-xs leading-relaxed text-gray-400">
-                Add at least one verified collection below. You can add up to {maxNewAssets} more in this proposal.
+                Add at least one verified collection below. Each policy can only be added once. You can add up to{' '}
+                {maxNewAssets} more in this proposal.
               </p>
             </div>
 
@@ -201,10 +207,12 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
         )}
 
         {error && newAssetCount === 0 && (
-          <p className="text-sm text-red-500">Add at least one asset to update the whitelist.</p>
+          <p className="text-sm text-red-500">Add at least one policy to update the whitelist.</p>
         )}
         {error && totalAssetCount > MAX_TOTAL_ASSETS && (
-          <p className="text-sm text-red-500">The vault whitelist cannot exceed {MAX_TOTAL_ASSETS} assets in total.</p>
+          <p className="text-sm text-red-500">
+            The vault whitelist cannot exceed {MAX_TOTAL_ASSETS} unique policies in total.
+          </p>
         )}
       </section>
     </div>

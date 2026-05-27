@@ -203,7 +203,7 @@ export const VaultSettings = ({ vault }) => {
               label="Asset Whitelist"
               value={renderAssets(vault.assetsWhitelist)}
             />
-            <InfoRow label="Expandable whitelist" value={vault.isExpandable ? 'Yes' : 'No'} />
+            <InfoRow label="Expandable whitelist" value={vault.isExpandableAssetWhitelist ? 'Yes' : 'No'} />
             <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
             <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
