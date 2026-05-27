@@ -269,6 +269,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleTabChange = tab => setActiveTab(tab);
 
+  const isPhaseTransitioning = () => {
+    if (!vault) return false;
+    const now = Date.now();
+
+    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
+      const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
+      return now >= contributionEnd;
+    }
+
+    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
+      const acquireEnd = new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
+      return now >= acquireEnd;
+    }
+
+    return false;
+  };
+
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
     const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
@@ -682,7 +699,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               countdownValue={getCountdownTime(vault)}
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
-            {vault.isPhaseTransitioning && <PhaseTransitionInfo />}
+            {isPhaseTransitioning() && <PhaseTransitionInfo />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
           {vault.vaultStatus !== 'locked' ? (
