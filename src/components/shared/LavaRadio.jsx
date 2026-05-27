@@ -13,6 +13,8 @@ const presetHelpfulHint = {
   acquirers_50:
     'Simple vault where Contributors send assets to receive 50% pro-rata of Vault Token MINUS LP contribution AND pro-rata of ADA sent by acquirers MINUS ADA LP contribution. Acquirers send ADA to receive 50% of pro-rata vault token MINUS Vault Token LP contribution.',
   advanced: 'Customizable vault based on user settings for all fields.',
+  acquire_only:
+    'Acquire-Only vault with no Contribution phase. Acquirers send ADA directly to receive pro-rata Vault Tokens (100%). ADA goes straight to the vault treasury. Vault locks once the acquire window closes and the minimum ADA threshold is met.',
 };
 
 export const LavaRadio = ({

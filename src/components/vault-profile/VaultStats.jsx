@@ -1,5 +1,6 @@
 import { InfoRow } from '@/components/ui/infoRow.js';
 import { cn } from '@/lib/utils.js';
+import { formatVaultStatus } from '@/utils/core.utils.js';
 
 export const VaultStats = ({
   assetValue,
@@ -12,7 +13,7 @@ export const VaultStats = ({
   const stats = [
     {
       label: 'VAULT STAGE',
-      value: assetValue ? assetValue.toUpperCase() : 'N/A',
+      value: formatVaultStatus(assetValue),
     },
     {
       label: 'VT PRICE',

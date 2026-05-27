@@ -12,8 +12,6 @@ export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
 export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
 export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
-export const BUTTON_DISABLE_THRESHOLD_MS = 120000; // Min 2 min before button is enabled
-
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
 
 // Cardano address regex based on environment
@@ -43,6 +41,7 @@ export const VAULT_STATUSES = {
   ACQUIRE: 'acquire',
   LOCKED: 'locked',
   EXPANSION: 'expansion',
+  ACQUIRE_EXPANSION: 'acquire_expansion',
   TERMINATING: 'terminating',
   FAILED: 'failed',
 };
@@ -299,7 +298,11 @@ export const vaultSchema = yup.object({
   contributionOpenWindowType: yup
     .string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
-    .required('Contribution window type is required'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema => schema.required('Contribution window type is required'),
+    }),
   contributionOpenWindowTime: yup
     .number()
     .typeError('Time is required')
@@ -311,16 +314,38 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .of(assetWhitelistItemSchema)
-    .required('Assets whitelist is required')
-    .min(1, 'Assets whitelist must have at least 1 item')
-    .max(10, 'Assets whitelist can have a maximum of 10 items')
-    .default([]),
+    .default([])
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Assets whitelist is required')
+          .min(1, 'Assets whitelist must have at least 1 item')
+          .max(10, 'Assets whitelist can have a maximum of 10 items'),
+    }),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')
-    .required('Duration is required')
-    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
-    .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Duration is required')
+          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
+          .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    }),
+  isAcquireOnly: yup.boolean().default(false),
+  minAcquireThreshold: yup
+    .number()
+    .nullable()
+    .typeError('Minimum ADA threshold must be a number')
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      otherwise: schema => schema.nullable(),
+    }),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
@@ -559,6 +584,9 @@ export const initialVaultState = {
   tokensForAcquires: null,
   acquireReserve: null,
   liquidityPoolContribution: null,
+  isAcquireOnly: false,
+  minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
+  allowAcquireExpansion: false,
 
   // Step 4: Governance
   ftTokenSupply: MIN_SUPPLY,
@@ -591,6 +619,7 @@ export const stepFields = {
     'assetsWhitelist',
     'contributorWhitelist',
     'acquirerWhitelist',
+    'allowAcquireExpansion',
   ],
   2: [
     'valueMethod',
