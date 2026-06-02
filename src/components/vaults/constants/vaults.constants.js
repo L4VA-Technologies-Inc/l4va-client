@@ -5,14 +5,17 @@ import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
-export const MIN_CONTRIBUTION_DURATION_MS = 432000000; // 5 days
-export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 432000000; // 5 days
-export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
-export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
-export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
+
+// Duration constants based on environment
+export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
+export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
+export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
+export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 1 Day (mainnet)
+export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
+export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
 
 // Cardano address regex based on environment
 let cardanoAddressRegex;

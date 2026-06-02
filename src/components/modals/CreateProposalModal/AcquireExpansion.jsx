@@ -5,6 +5,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const [duration, setDuration] = useState(null);
@@ -88,6 +89,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 onChange={setDuration}
                 placeholder="DD:HH:MM"
                 error={error && !duration}
+                minMs={MIN_EXPANSION_DURATION_MS}
               />
             </>
           ) : (
