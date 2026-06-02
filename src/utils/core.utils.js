@@ -705,6 +705,11 @@ const VAULT_STATUS_CONFIG = {
 export const getCountdownName = vault => {
   const status = vault?.vaultStatus?.toLowerCase();
 
+  // Acquire-only vaults skip contribution — show "Acquire starts in:" instead
+  if (vault?.isAcquireOnly && (status === 'published' || status === 'created')) {
+    return 'Acquire starts in:';
+  }
+
   // Only check for custom acquire window if vault is in contribution status
   if (status === 'contribution') {
     const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;

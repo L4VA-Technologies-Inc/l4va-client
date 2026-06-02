@@ -105,6 +105,11 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   // Config-controlled inputs are locked unless an advanced preset exists AND is currently active
   const isPresetConfigLocked = !isAdvancedPresetAvailable || vaultData.preset !== 'advanced';
 
+  const isAcquireOnly = vaultData.preset === 'acquire_only';
+
+  // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
+  const visibleSteps = isAcquireOnly ? steps.filter(s => s.id !== 2) : steps;
+
   const presetOptions = useMemo(
     () =>
       Array.isArray(presets)
@@ -477,7 +482,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     // When editing a field on a non-config step, auto-switch to the advanced preset if available.
     // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
     // immediately reflect the advanced mode (unlocks inputs, restores step-by-step navigation).
-    if (currentStep !== 1 && isAdvancedPresetAvailable) {
+    // Do NOT auto-switch if the current preset is acquire_only — LP% is intentionally editable there.
+    if (currentStep !== 1 && isAdvancedPresetAvailable && vaultData.preset !== 'acquire_only') {
       const advancedPreset = presets.find(
         preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
       );
@@ -971,9 +977,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     );
   };
 
-  const stepOptions = steps.map(step => ({
+  const stepOptions = visibleSteps.map((step, index) => ({
     value: step.id.toString(),
-    label: `${step.id}. ${step.title}`,
+    label: `${index + 1}. ${step.title}`,
   }));
 
   const handleStepSelect = stepId => {
@@ -1027,9 +1033,11 @@ export const CreateVaultForm = ({ vault, setVault }) => {
               <p className="text-sm text-dark-100 uppercase font-russo">
                 {isStepFullyComplete(currentStep, vaultData) ? 'completed' : 'in progress'}
               </p>
-              <p className="text-lg font-bold text-white">{steps.find(step => step.id === currentStep)?.title || ''}</p>
+              <p className="text-lg font-bold text-white">
+                {visibleSteps.find(step => step.id === currentStep)?.title || ''}
+              </p>
             </div>
-            {steps.find(step => step.id === currentStep)?.hasErrors && (
+            {visibleSteps.find(step => step.id === currentStep)?.hasErrors && (
               <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold">!</span>
               </div>
@@ -1038,7 +1046,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         </div>
       </div>
       <div className="hidden md:flex relative items-center mb-8">
-        {steps.map((step, index) => (
+        {visibleSteps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
               className="focus:outline-none flex flex-col items-center"
@@ -1051,12 +1059,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
                 </div>
               )}
               <div className="relative z-10">
-                <LavaStepCircle isActive={currentStep === step.id} number={step.id} status={step.status} />
+                <LavaStepCircle isActive={currentStep === step.id} number={index + 1} status={step.status} />
               </div>
               <p className="uppercase font-russo text-sm text-dark-100 mt-8">{step.status}</p>
               <p className="font-bold text-2xl whitespace-nowrap">{step.title}</p>
             </button>
-            {index < steps.length - 1 && (
+            {index < visibleSteps.length - 1 && (
               <div
                 className={`absolute top-[25%] -right-[15%] lg:-right-[25%] w-[30%] lg:w-[45%] h-[3px] 
                   ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}
