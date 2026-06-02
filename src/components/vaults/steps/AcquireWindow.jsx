@@ -134,7 +134,7 @@ export const AcquireWindow = ({
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-800 border border-steel-700 text-dark-100 text-xs font-russo uppercase">
             <Lock className="w-3.5 h-3.5 flex-shrink-0" />
             {isAcquireOnly
-              ? 'Acquire-Only: Tokens for Acquirers is fixed at 100% and LP is 0%'
+              ? 'Acquire-Only: Tokens for Acquirers is fixed at 100%'
               : isAdvancedPresetAvailable
                 ? 'Values set by preset — select Advanced preset to customise'
                 : 'Advanced mode is disabled — values are managed by the preset'}
@@ -193,7 +193,7 @@ export const AcquireWindow = ({
                   : ''
             }
             onChange={handleChange}
-            disabled={isPresetConfigLocked}
+            disabled={isAcquireOnly ? false : isPresetConfigLocked}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
           {data.liquidityPoolContribution === 0 && (
