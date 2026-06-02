@@ -4,6 +4,7 @@ import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSelect } from '@/components/shared/LavaSelect';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { Chip } from '@/components/shared/Chip';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
@@ -101,6 +102,16 @@ export const ConfigureVault = ({
             />
             {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
           </div>
+        </div>
+
+        <div>
+          <LavaCheckbox
+            name="allowAcquireExpansion"
+            checked={data.allowAcquireExpansion || false}
+            onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
+            label="Allow Acquire Expansion"
+            description="If enabled, vault token holders can create governance proposals to open additional acquire windows (ADA → Vault Token minting) after the vault is locked."
+          />
         </div>
 
         <div>

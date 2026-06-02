@@ -3,8 +3,6 @@ import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-import { BUTTON_DISABLE_THRESHOLD_MS } from '../vaults/constants/vaults.constants';
-
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum } from '@/utils/core.utils';
@@ -247,11 +245,7 @@ export const AcquireModal = ({ vault, onClose }) => {
               <PrimaryButton
                 className="uppercase"
                 disabled={
-                  status !== 'idle' ||
-                  wallet.isUpdatingUtxos ||
-                  acquireAmountNum < 5 ||
-                  new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration <
-                    Date.now() + BUTTON_DISABLE_THRESHOLD_MS
+                  status !== 'idle' || wallet.isUpdatingUtxos || acquireAmountNum < 5 || !vault.isAcquireWindowActive
                 }
                 onClick={handleAcquire}
                 icon={status !== 'idle' ? Spinner : null}
