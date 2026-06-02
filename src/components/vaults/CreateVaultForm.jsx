@@ -172,9 +172,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         preset_id: preset.id ?? null,
         tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
         acquireReserve: config.acquireReserve ?? prev.acquireReserve,
-        liquidityPoolContribution: isAcquireOnly
-          ? 0
-          : (config.liquidityPoolContribution ?? prev.liquidityPoolContribution),
+        liquidityPoolContribution: config.liquidityPoolContribution ?? prev.liquidityPoolContribution,
         creationThreshold: config.creationThreshold ?? prev.creationThreshold,
         voteThreshold: 0,
         cosigningThreshold: config.cosigningThreshold ?? prev.cosigningThreshold,
@@ -527,7 +525,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       preset_id: selectedPreset.id ?? null,
       tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? null),
       acquireReserve: config.acquireReserve ?? null,
-      liquidityPoolContribution: isAcquireOnly ? 0 : (config.liquidityPoolContribution ?? null),
+      liquidityPoolContribution: config.liquidityPoolContribution ?? null,
       creationThreshold: config.creationThreshold ?? null,
       voteThreshold: 0,
       cosigningThreshold: config.cosigningThreshold ?? null,

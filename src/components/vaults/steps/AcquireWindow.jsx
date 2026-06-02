@@ -193,10 +193,10 @@ export const AcquireWindow = ({
                   : ''
             }
             onChange={handleChange}
-            disabled={isPresetConfigLocked || isAcquireOnly}
+            disabled={isPresetConfigLocked}
             hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
           />
-          {!isAcquireOnly && data.liquidityPoolContribution === 0 && (
+          {data.liquidityPoolContribution === 0 && (
             <p className="text-orange-500 mt-1">
               Warning: 0% LP Contribution means there will NOT be a liquidity pool launched for this Vault.
             </p>
