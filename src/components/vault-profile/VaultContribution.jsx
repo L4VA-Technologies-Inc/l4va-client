@@ -337,10 +337,61 @@ export const VaultContribution = ({ vault }) => {
               )}
             </div>
           ) : (
-            <div className="text-sm text-dark-100">
-              {isAcquireOnly
-                ? 'Acquire-only vault - no minimum threshold required'
-                : 'Acquire phase active - contributions accepted until phase expires'}
+            <div>
+              {isAcquireOnly ? (
+                <>
+                  {vault.liquidityPoolContribution === 0 && (
+                    <div className="text-sm text-dark-100 mb-3">Acquire-only vault - no minimum threshold required</div>
+                  )}
+                  {vault.liquidityPoolContribution > 0 && (
+                    <div className="flex flex-col gap-1 text-xs">
+                      {!canMeetLpMinimum ? (
+                        <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded">
+                          <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
+                          <span className="text-red-300 text-xs">
+                            LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
+                            below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will
+                            fail and refund users.
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-dark-100">% Liquidity Pool Contribution</span>
+                            <span className="text-white font-medium">{vault.liquidityPoolContribution}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-dark-100">Current ADA LP amount:</span>
+                            <span className="text-dark-100">
+                              {currency === 'ada'
+                                ? `₳${formatNum(vault.projectedLpAdaAmount)}`
+                                : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                            <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                              {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                            </span>
+                          </div>
+                          {!lpMinThresholdMet && (
+                            <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                              <span className="text-yellow-300 text-xs">
+                                ⚠️ LP minimum not yet met. More acquire contributions needed to reach ₳
+                                {vault.lpMinLiquidityAda} minimum for liquidity pool creation.
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-sm text-dark-100">
+                  Acquire phase active - contributions accepted until phase expires
+                </div>
+              )}
             </div>
           )
         ) : isLocked && vault.assetsPrices.totalAcquiredAda && vault.assetsPrices.totalAcquiredUsd ? (
