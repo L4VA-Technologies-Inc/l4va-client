@@ -5,6 +5,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { Button } from '@/components/ui/button';
 import { LavaInput, LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
 import { cn } from '@/lib/utils';
 
@@ -563,132 +564,137 @@ export const LavaWhitelistWithCaps = ({
                 </div>
               )}
               {showCountCaps && (
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <LavaInput
-                      required={true}
-                      label="Min asset cap"
-                      type="text"
-                      pattern="[0-9]*"
-                      style={{ fontSize: '20px' }}
-                      value={asset.countCapMin}
-                      onChange={e => {
-                        const inputValue = e.target.value;
-                        const numericValue = Number(inputValue.replace(/,/g, ''));
-                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                          updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+                <>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <LavaInput
+                        required={true}
+                        label="Min asset cap"
+                        type="text"
+                        pattern="[0-9]*"
+                        style={{ fontSize: '20px' }}
+                        value={asset.countCapMin}
+                        onChange={e => {
+                          const inputValue = e.target.value;
+                          const numericValue = Number(inputValue.replace(/,/g, ''));
+                          if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                            updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+                          }
+                        }}
+                        onBlur={e =>
+                          updateAsset(
+                            asset.uniqueId,
+                            'countCapMin',
+                            e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
+                          )
                         }
-                      }}
-                      onBlur={e =>
-                        updateAsset(
-                          asset.uniqueId,
-                          'countCapMin',
-                          e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
-                        )
-                      }
-                      hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                    />
-                    {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                      return (
-                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
-                      );
-                    })()}
+                        hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
+                      />
+                      {(() => {
+                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                        return (
+                          <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
+                        );
+                      })()}
+                    </div>
+
+                    <div className="flex-1">
+                      <LavaInput
+                        required={true}
+                        label="Max asset cap"
+                        value={asset.countCapMax}
+                        onChange={e => {
+                          const inputValue = e.target.value;
+                          const numericValue = Number(inputValue.replace(/,/g, ''));
+                          if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                            updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                          }
+                        }}
+                        onBlur={e => {
+                          const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                          const limitedValue = Math.min(rawValue, maxCapValue);
+                          updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                        }}
+                        hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
+                      />
+                      {(() => {
+                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                        return (
+                          <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
+                        );
+                      })()}
+                    </div>
                   </div>
 
-                <div className="flex-1">
-                  <LavaInput
-                    required={true}
-                    label="Max asset cap"
-                    value={asset.countCapMax}
-                    onChange={e => {
-                      const inputValue = e.target.value;
-                      const numericValue = Number(inputValue.replace(/,/g, ''));
-                      if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                        updateAsset(asset.uniqueId, 'countCapMax', inputValue);
-                      }
-                    }}
-                    onBlur={e => {
-                      const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
-                      const limitedValue = Math.min(rawValue, maxCapValue);
-                      updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
-                    }}
-                    hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                  />
-                  {(() => {
-                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                    return (
-                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              <div className="space-y-4 mt-4">
-                <div>
-                  <LavaRadio
-                    label="*Asset Valuation Method"
-                    name={`valuationMethod_${asset.uniqueId}`}
-                    options={
-                      asset.isLpToken
-                        ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
-                        : [
-                            { name: 'market', label: 'Market / Floor Price' },
-                            { name: 'custom', label: 'Custom Price' },
-                          ]
-                    }
-                    value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
-                    onChange={value => {
-                      if (!asset.isLpToken) {
-                        updateAsset(asset.uniqueId, 'valuationMethod', value);
-                      }
-                    }}
-                    disabled={asset.isLpToken}
-                  />
-                  {asset.isLpToken && (
-                    <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
-                  )}
-                  {(() => {
-                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                    return (
-                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].valuationMethod`]}</p>
-                    );
-                  })()}
-                </div>
-
-                {asset.valuationMethod === 'custom' && !asset.isLpToken && (
-                  <div>
-                    {renderInput({
-                      required: true,
-                      label: 'Custom Price (ADA)',
-                      type: 'text',
-                      placeholder: 'Enter price in ADA',
-                      style: isSteel ? undefined : { fontSize: '20px' },
-                      value: asset.customPriceAda || '',
-                      onChange: e => {
-                        const inputValue = e.target.value;
-                        if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                          updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <LavaRadio
+                        label="*Asset Valuation Method"
+                        name={`valuationMethod_${asset.uniqueId}`}
+                        options={
+                          asset.isLpToken
+                            ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
+                            : [
+                                { name: 'market', label: 'Market / Floor Price' },
+                                { name: 'custom', label: 'Custom Price' },
+                              ]
                         }
-                      },
-                      onBlur: e => {
-                        const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
-                        const limitedValue = Math.min(rawValue, maxCapValue);
-                        updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
-                      },
-                      hint: 'The custom ADA price for this policy',
-                    })}
-                    {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                      return (
-                        <p className="text-red-600 text-sm mt-1">
-                          {errors[`assetsWhitelist[${index}].customPriceAda`]}
-                        </p>
-                      );
-                    })()}
+                        value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
+                        onChange={value => {
+                          if (!asset.isLpToken) {
+                            updateAsset(asset.uniqueId, 'valuationMethod', value);
+                          }
+                        }}
+                        disabled={asset.isLpToken}
+                      />
+                      {asset.isLpToken && (
+                        <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
+                      )}
+                      {(() => {
+                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                        return (
+                          <p className="text-red-600 text-sm mt-1">
+                            {errors[`assetsWhitelist[${index}].valuationMethod`]}
+                          </p>
+                        );
+                      })()}
+                    </div>
+
+                    {asset.valuationMethod === 'custom' && !asset.isLpToken && (
+                      <div>
+                        {renderInput({
+                          required: true,
+                          label: 'Custom Price (ADA)',
+                          type: 'text',
+                          placeholder: 'Enter price in ADA',
+                          style: isSteel ? undefined : { fontSize: '20px' },
+                          value: asset.customPriceAda || '',
+                          onChange: e => {
+                            const inputValue = e.target.value;
+                            if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                              updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
+                            }
+                          },
+                          onBlur: e => {
+                            const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
+                            const limitedValue = Math.min(rawValue, maxCapValue);
+                            updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
+                          },
+                          hint: 'The custom ADA price for this policy',
+                        })}
+                        {(() => {
+                          const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                          return (
+                            <p className="text-red-600 text-sm mt-1">
+                              {errors[`assetsWhitelist[${index}].customPriceAda`]}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           );
         })}
