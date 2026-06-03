@@ -567,29 +567,28 @@ export const LavaWhitelistWithCaps = ({
                 <>
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <LavaInput
-                        required={true}
-                        label="Min asset cap"
-                        type="text"
-                        pattern="[0-9]*"
-                        style={{ fontSize: '20px' }}
-                        value={asset.countCapMin}
-                        onChange={e => {
+                      {renderInput({
+                        required: true,
+                        label: 'Min asset cap',
+                        type: 'text',
+                        pattern: '[0-9]*',
+                        style: isSteel ? undefined : { fontSize: '20px' },
+                        value: asset.countCapMin,
+                        onChange: e => {
                           const inputValue = e.target.value;
                           const numericValue = Number(inputValue.replace(/,/g, ''));
                           if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
                             updateAsset(asset.uniqueId, 'countCapMin', inputValue);
                           }
-                        }}
-                        onBlur={e =>
+                        },
+                        onBlur: e =>
                           updateAsset(
                             asset.uniqueId,
                             'countCapMin',
                             e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
-                          )
-                        }
-                        hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                      />
+                          ),
+                        hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
+                      })}
                       {(() => {
                         const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                         return (
@@ -599,24 +598,24 @@ export const LavaWhitelistWithCaps = ({
                     </div>
 
                     <div className="flex-1">
-                      <LavaInput
-                        required={true}
-                        label="Max asset cap"
-                        value={asset.countCapMax}
-                        onChange={e => {
+                      {renderInput({
+                        required: true,
+                        label: 'Max asset cap',
+                        value: asset.countCapMax,
+                        onChange: e => {
                           const inputValue = e.target.value;
                           const numericValue = Number(inputValue.replace(/,/g, ''));
                           if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
                             updateAsset(asset.uniqueId, 'countCapMax', inputValue);
                           }
-                        }}
-                        onBlur={e => {
+                        },
+                        onBlur: e => {
                           const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
                           const limitedValue = Math.min(rawValue, maxCapValue);
                           updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
-                        }}
-                        hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                      />
+                        },
+                        hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
+                      })}
                       {(() => {
                         const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                         return (

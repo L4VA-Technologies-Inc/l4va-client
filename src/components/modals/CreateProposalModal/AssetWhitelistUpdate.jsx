@@ -101,9 +101,26 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
     }
 
     const completedAssets = newAssets.filter(asset => asset?.policyId);
-    const { fieldErrors: nextFieldErrors, hasErrors } = validateNewAssets(completedAssets, existingPolicyIds);
+    const { fieldErrors: rawFieldErrors, hasErrors } = validateNewAssets(completedAssets, existingPolicyIds);
     const hasCapacity = totalAssetCount <= MAX_TOTAL_ASSETS;
     const isValid = completedAssets.length > 0 && !hasErrors && hasCapacity;
+
+    // Remap errors to indices in `newAssets` so the UI shows them on the correct row
+    const nextFieldErrors = {};
+    Object.entries(rawFieldErrors).forEach(([key, message]) => {
+      const match = key.match(/^assetsWhitelist\[(\d+)\]\.(.+)$/);
+      if (!match) {
+        nextFieldErrors[key] = message;
+        return;
+      }
+      const completedIndex = Number(match[1]);
+      const path = match[2];
+      const asset = completedAssets[completedIndex];
+      const originalIndex = newAssets.findIndex(a => a?.uniqueId === asset?.uniqueId);
+      if (originalIndex >= 0) {
+        nextFieldErrors[`assetsWhitelist[${originalIndex}].${path}`] = message;
+      }
+    });
 
     setFieldErrors(nextFieldErrors);
 
