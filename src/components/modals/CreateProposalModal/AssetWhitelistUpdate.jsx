@@ -152,86 +152,49 @@ export default function AssetWhitelistUpdate({ onDataChange, error, vault }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <header className="space-y-2">
-        <h3 className="text-lg font-medium text-white">Update Asset Whitelist</h3>
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="text-lg font-medium text-white">Update Asset Whitelist</h3>
+          <span className="text-sm text-gray-400 shrink-0">
+            {totalAssetCount}/{MAX_TOTAL_ASSETS} policies
+            {remainingSlots > 0 && <span className="ml-2 text-green-400">· {remainingSlots} remaining</span>}
+          </span>
+        </div>
         <p className="text-sm text-gray-400">
-          Propose additional verified collections for this vault&apos;s asset whitelist.
+          Add verified collection policy IDs below. This will create a proposal to expand the vault's whitelist,
+          allowing holders to deposit assets from these collections during expansion and buy into the vault using the
+          extended asset list once approved.
         </p>
       </header>
 
-      <section className="space-y-4 rounded-xl border border-white/10 bg-steel-700/50 p-5">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-white">Whitelist capacity</p>
-          <p className="text-sm leading-relaxed text-gray-300">
-            A vault can include up to {MAX_TOTAL_ASSETS} unique policy IDs (collections) in total. Each policy can only
-            be added once, regardless of asset names. The limit includes collections already on the whitelist and any
-            new policies added in this proposal.
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-steel-850 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">On whitelist</p>
-            <p className="mt-1 text-xl font-semibold text-white">{existingAssetCount}</p>
-          </div>
-          <div className="rounded-lg bg-steel-850 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">Adding in proposal</p>
-            <p className="mt-1 text-xl font-semibold text-white">{newAssetCount}</p>
-          </div>
-          <div className="rounded-lg bg-steel-850 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">Total policies</p>
-            <p className="mt-1 text-xl font-semibold text-white">
-              {totalAssetCount}
-              <span className="text-sm font-normal text-gray-400"> / {MAX_TOTAL_ASSETS}</span>
-            </p>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-400">
-          {remainingSlots === 0
-            ? 'No policy slots remaining before the vault reaches its whitelist limit.'
-            : `${remainingSlots} policy slot${remainingSlots === 1 ? '' : 's'} remaining before the vault reaches its limit.`}
-        </p>
-      </section>
-
-      <section className="space-y-4 border-t border-white/10 pt-6">
-        {maxNewAssets === 0 ? (
+      {maxNewAssets === 0 ? (
+        <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3">
           <p className="text-sm text-orange-400">
             This vault already has the maximum of {MAX_TOTAL_ASSETS} whitelisted policies.
           </p>
-        ) : (
-          <>
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium text-white">New collections</h4>
-              <p className="text-xs leading-relaxed text-gray-400">
-                Add at least one verified collection below. Each policy can only be added once. You can add up to{' '}
-                {maxNewAssets} more in this proposal.
-              </p>
-            </div>
+        </div>
+      ) : (
+        <LavaWhitelistWithCaps
+          required
+          label="Collections"
+          whitelist={newAssets}
+          setWhitelist={setNewAssets}
+          maxItems={maxNewAssets}
+          errors={fieldErrors}
+          reservedPolicyIds={existingAssets.map(asset => asset.policyId)}
+          showCountCaps={false}
+        />
+      )}
 
-            <LavaWhitelistWithCaps
-              required
-              label="Collection"
-              whitelist={newAssets}
-              setWhitelist={setNewAssets}
-              maxItems={maxNewAssets}
-              errors={fieldErrors}
-              reservedPolicyIds={existingAssets.map(asset => asset.policyId)}
-              showCountCaps={false}
-            />
-          </>
-        )}
-
-        {error && newAssetCount === 0 && (
-          <p className="text-sm text-red-500">Add at least one policy to update the whitelist.</p>
-        )}
-        {error && totalAssetCount > MAX_TOTAL_ASSETS && (
-          <p className="text-sm text-red-500">
-            The vault whitelist cannot exceed {MAX_TOTAL_ASSETS} unique policies in total.
-          </p>
-        )}
-      </section>
+      {error && newAssetCount === 0 && (
+        <p className="text-sm text-red-500">Add at least one policy to update the whitelist.</p>
+      )}
+      {error && totalAssetCount > MAX_TOTAL_ASSETS && (
+        <p className="text-sm text-red-500">
+          The vault whitelist cannot exceed {MAX_TOTAL_ASSETS} unique policies in total.
+        </p>
+      )}
     </div>
   );
 }
