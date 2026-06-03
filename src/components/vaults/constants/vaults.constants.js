@@ -1,19 +1,21 @@
 import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
+import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
-export const MIN_CONTRIBUTION_DURATION_MS = 432000000; // 5 days
-export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = 432000000; // 5 days
-export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
-export const MIN_TIME_FOR_VOTING = 86400000; // 1 Day
-export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
-
-export const BUTTON_DISABLE_THRESHOLD_MS = 120000; // Min 2 min before button is enabled
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
+
+// Duration constants based on environment
+export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
+export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
+export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
+export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 1 Day (mainnet)
+export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
+export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
 
 // Cardano address regex based on environment
 let cardanoAddressRegex;
@@ -42,6 +44,7 @@ export const VAULT_STATUSES = {
   ACQUIRE: 'acquire',
   LOCKED: 'locked',
   EXPANSION: 'expansion',
+  ACQUIRE_EXPANSION: 'acquire_expansion',
   TERMINATING: 'terminating',
   FAILED: 'failed',
 };
@@ -132,7 +135,22 @@ export const TERMINATION_TYPE_OPTIONS = [
 
 export const socialLinkSchema = yup.object({
   name: yup.string().required('Name is required'),
-  url: yup.string().url('Invalid URL').required('URL is required'),
+  url: yup
+    .string()
+    .required('URL is required')
+    .test('valid-social-url', 'Invalid URL', function validateSocialUrl(value) {
+      if (!value) {
+        return true;
+      }
+
+      const validation = validateSocialUrlForPlatform(value, this.parent.name);
+
+      if (!validation.isValid) {
+        return this.createError({ message: validation.error });
+      }
+
+      return true;
+    }),
 });
 
 export const assetWhitelistItemSchema = yup.object({
@@ -189,7 +207,7 @@ export const vaultSchema = yup.object({
   privacy: yup.string().required('Privacy setting is required'),
   vaultTokenTicker: yup
     .string()
-    .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
     .nullable(),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
   tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional(),
@@ -286,7 +304,11 @@ export const vaultSchema = yup.object({
   contributionOpenWindowType: yup
     .string()
     .oneOf(['custom', 'upon-vault-launch'], 'Invalid contribution window type')
-    .required('Contribution window type is required'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema => schema.required('Contribution window type is required'),
+    }),
   contributionOpenWindowTime: yup
     .number()
     .typeError('Time is required')
@@ -298,16 +320,38 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .of(assetWhitelistItemSchema)
-    .required('Assets whitelist is required')
-    .min(1, 'Assets whitelist must have at least 1 item')
-    .max(10, 'Assets whitelist can have a maximum of 10 items')
-    .default([]),
+    .default([])
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Assets whitelist is required')
+          .min(1, 'Assets whitelist must have at least 1 item')
+          .max(10, 'Assets whitelist can have a maximum of 10 items'),
+    }),
   contributionDuration: yup
     .number()
     .typeError('Duration is required')
-    .required('Duration is required')
-    .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
-    .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Duration is required')
+          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
+          .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+    }),
+  isAcquireOnly: yup.boolean().default(false),
+  minAcquireThreshold: yup
+    .number()
+    .nullable()
+    .typeError('Minimum ADA threshold must be a number')
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      otherwise: schema => schema.nullable(),
+    }),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
@@ -459,7 +503,7 @@ export const vaultSchema = yup.object({
 export const editUpcomingVaultSchema = yup.object({
   vaultTokenTicker: yup
     .string()
-    .matches(/^[A-Z0-9]{1,9}$/, 'Ticker must be 1-9 uppercase letters or numbers')
+    .matches(/^[A-Za-z0-9]{1,9}$/, 'Ticker must be 1-9 letters or numbers')
     .required('Ticker is required'),
   vaultImage: yup.string().required('Vault image is required'),
   ftTokenImg: yup.string().required('Token image is required'),
@@ -547,6 +591,9 @@ export const initialVaultState = {
   tokensForAcquires: null,
   acquireReserve: null,
   liquidityPoolContribution: null,
+  isAcquireOnly: false,
+  minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
+  allowAcquireExpansion: false,
 
   // Step 4: Governance
   ftTokenSupply: MIN_SUPPLY,
@@ -579,6 +626,7 @@ export const stepFields = {
     'assetsWhitelist',
     'contributorWhitelist',
     'acquirerWhitelist',
+    'allowAcquireExpansion',
   ],
   2: [
     'valueMethod',

@@ -186,7 +186,9 @@ export const VaultGovernance = ({ vault }) => {
     );
   };
 
-  const showProposalList = ['locked', 'burned', 'terminating', 'expansion'].includes(vault.vaultStatus);
+  const showProposalList = ['locked', 'burned', 'terminating', 'expansion', 'acquire_expansion'].includes(
+    vault.vaultStatus
+  );
 
   return (
     <div className="text-white min-h-screen p-6 rounded-2xl overflow-hidden">

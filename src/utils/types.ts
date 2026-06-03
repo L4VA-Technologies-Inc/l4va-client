@@ -42,6 +42,7 @@ export enum VaultStatus {
   GOVERNANCE = 'governance',
   FAILED = 'failed',
   EXPANSION = 'expansion',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export enum ProposalType {
@@ -53,6 +54,7 @@ export enum ProposalType {
   MARKETPLACE_ACTION = 'marketplace_action',
   EXPANSION = 'expansion',
   ASSET_WHITELIST_UPDATE = 'asset_whitelist_update',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export const ProposalTypeLabels = {
@@ -64,6 +66,7 @@ export const ProposalTypeLabels = {
   [ProposalType.MARKETPLACE_ACTION]: 'Market Actions',
   [ProposalType.EXPANSION]: 'Vault Expansion',
   [ProposalType.ASSET_WHITELIST_UPDATE]: 'Update Asset Whitelist',
+  [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
 };
 
 export enum ClaimStatus {
@@ -119,6 +122,7 @@ export interface IVault {
   socialLinks?: ILink[];
   assetsWhitelist?: IAssetsWhitelist[];
   contributorWhitelist?: IContributorWhitelist[];
+  isOfficialPartner?: boolean;
 }
 
 export interface ITag {
@@ -204,6 +208,7 @@ export interface VaultShortResponse {
   socialLinks?: ILink[];
   ftTokenImg?: string;
   vaultTokenTicker?: string;
+  isOfficialPartner?: boolean;
 }
 
 export interface PaginatedResponse<T> {

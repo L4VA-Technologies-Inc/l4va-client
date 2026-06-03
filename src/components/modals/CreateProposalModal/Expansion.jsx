@@ -5,6 +5,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { formatPolicyId } from '@/utils/core.utils';
+import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 
 export default function Expansion({ onDataChange, error, vault }) {
   const [selectedPolicies, setSelectedPolicies] = useState([]);
@@ -115,10 +116,12 @@ export default function Expansion({ onDataChange, error, vault }) {
           {!noLimit ? (
             <>
               <LavaIntervalPicker
+                variant={'steel'}
                 value={duration}
                 onChange={setDuration}
                 placeholder="DD:HH:MM"
                 error={error && !duration}
+                minMs={MIN_EXPANSION_DURATION_MS}
               />
               <p className="text-xs text-gray-400 mt-1">How long the vault will accept new contributions</p>
             </>

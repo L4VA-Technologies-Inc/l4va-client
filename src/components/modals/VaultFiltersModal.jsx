@@ -6,8 +6,11 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { LavaMultiSelect } from '@/components/shared/LavaSelect.jsx';
+import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
+import { LavaSteelInput } from '@/components/shared/LavaInput.jsx';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
+import { GoldenVerifiedBadge } from '@/components/shared/GoldenVerifiedBadge';
 import { useVaultAssetsWhitelist } from '@/services/api/queries';
 
 export const VaultFiltersModal = ({
@@ -25,11 +28,17 @@ export const VaultFiltersModal = ({
     limit: 12,
     tags: initialFilters.tags || [],
     reserveMet: initialFilters.reserveMet ?? null,
+    isOfficialPartner: Boolean(initialFilters.isOfficialPartner),
     minInitialVaultOffered: initialFilters.minInitialVaultOffered || 0,
     maxInitialVaultOffered: initialFilters.maxInitialVaultOffered || 0,
     minTvl: initialFilters.minTvl || 0,
     maxTvl: initialFilters.maxTvl || 0,
+    minFdv: initialFilters.minFdv || 0,
+    maxFdv: initialFilters.maxFdv || 0,
+    maxFdvTvl: initialFilters.maxFdvTvl || 0,
+    minFdvTvl: initialFilters.minFdvTvl || 0,
     tvlCurrency: initialFilters.tvlCurrency || 'ADA',
+    fdvCurrency: initialFilters.fdvCurrency || 'ADA',
     vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
@@ -115,11 +124,17 @@ export const VaultFiltersModal = ({
       limit: clearedFilters.limit,
       tags: [],
       reserveMet: null,
+      isOfficialPartner: false,
       minInitialVaultOffered: 0,
       maxInitialVaultOffered: 0,
       minTvl: 0,
       maxTvl: 0,
+      minFdv: 0,
+      maxFdv: 0,
+      minFdvTvl: 0,
+      maxFdvTvl: 0,
       tvlCurrency: 'ADA',
+      fdvCurrency: 'ADA',
       vaultStage: '',
       governance: '',
       verified: [],
@@ -142,18 +157,23 @@ export const VaultFiltersModal = ({
     const filterRules = {
       tags: value => Array.isArray(value) && value.length > 0,
       reserveMet: value => typeof value === 'boolean',
+      isOfficialPartner: value => value === true,
       minInitialVaultOffered: value => Number(value) > 0,
       maxInitialVaultOffered: value => Number(value) > 0,
       minTvl: value => Number(value) > 0,
       maxTvl: value => Number(value) > 0,
+      minFdv: value => Number(value) > 0,
+      maxFdv: value => Number(value) > 0,
+      minFdvTvl: value => Number(value) > 0,
+      maxFdvTvl: value => Number(value) > 0,
       assetWhitelist: value => Array.isArray(value) && value.length > 0,
     };
 
     const activeFilters = {};
 
     Object.entries(filterRules).forEach(([key, isValid]) => {
-      if (key === 'reserveMet') {
-        if (typeof filters[key] === 'boolean') {
+      if (key === 'reserveMet' || key === 'isOfficialPartner') {
+        if (isValid(filters[key])) {
           activeFilters[key] = filters[key];
         }
       } else if (filters[key] && isValid(filters[key])) {
@@ -162,12 +182,16 @@ export const VaultFiltersModal = ({
     });
 
     const hasTvlFilters = Number(filters.minTvl) > 0 || Number(filters.maxTvl) > 0;
-    const currencyChanged = filters.tvlCurrency !== 'ADA';
+    const hasFdvFilters = Number(filters.minFdv) > 0 || Number(filters.maxFdv) > 0;
+    const tvlCurrencyChanged = filters.tvlCurrency !== 'ADA';
+    const fdvCurrencyChanged = filters.fdvCurrency !== 'ADA';
 
-    if (hasTvlFilters) {
+    if (hasTvlFilters || tvlCurrencyChanged) {
       activeFilters.tvlCurrency = filters.tvlCurrency;
-    } else if (currencyChanged) {
-      activeFilters.tvlCurrency = filters.tvlCurrency;
+    }
+
+    if (hasFdvFilters || fdvCurrencyChanged) {
+      activeFilters.fdvCurrency = filters.fdvCurrency;
     }
 
     ['contributionWindow', 'acquireWindow'].forEach(windowKey => {
@@ -188,6 +212,47 @@ export const VaultFiltersModal = ({
     onApplyFilters(activeFilters);
     onClose();
   };
+
+  const TVL_CURRENCY_OPTIONS = [
+    { label: 'ADA', value: 'ADA' },
+    { label: 'USD', value: 'USD' },
+  ];
+
+  const setRangeFilter = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const renderRangeSection = ({ title, minKey, maxKey, showCurrency = true, currencyKey = 'tvlCurrency' }) => (
+    <div>
+      <h3 className="text-lg font-medium mb-3">{title}</h3>
+      <div
+        className={`grid grid-cols-1 gap-4 items-end ${showCurrency ? 'sm:grid-cols-4' : 'sm:grid-cols-[1fr_auto_1fr]'}`}
+      >
+        <LavaSteelInput
+          type="number"
+          min={0}
+          placeholder="Min"
+          value={filters[minKey]}
+          onChange={value => setRangeFilter(minKey, value)}
+        />
+        <div className="hidden sm:flex items-center justify-center pb-2">to</div>
+        <LavaSteelInput
+          type="number"
+          min={0}
+          placeholder="Max"
+          value={filters[maxKey]}
+          onChange={value => setRangeFilter(maxKey, value)}
+        />
+        {showCurrency && (
+          <LavaSteelSelect
+            options={TVL_CURRENCY_OPTIONS}
+            value={filters[currencyKey]}
+            onChange={value => setRangeFilter(currencyKey, value)}
+          />
+        )}
+      </div>
+    </div>
+  );
 
   const renderOptions = (options, activeValue, onClick, isMultiple = false) => (
     <div className="flex flex-wrap gap-2">
@@ -261,6 +326,19 @@ export const VaultFiltersModal = ({
         <div>
           <h3 className="text-lg font-medium mb-3">Reserve Met</h3>
           {renderOptions(OPTIONS.reserve, 'reserveMet', setSingleFilter)}
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Official partner</h3>
+          <div className="flex items-center gap-3">
+            <LavaCheckbox
+              name="isOfficialPartner"
+              checked={filters.isOfficialPartner}
+              label="Official L4VA partner vaults only"
+              onChange={e => setFilters(prev => ({ ...prev, isOfficialPartner: e.target.checked }))}
+            />
+            <GoldenVerifiedBadge label="Official L4VA partner" />
+          </div>
         </div>
 
         <div>
@@ -411,89 +489,9 @@ export const VaultFiltersModal = ({
         {/*  <div></div>*/}
 
         {/*</div>*/}
-        <div>
-          <h3 className="text-lg font-medium mb-3">TVL</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Min"
-                value={filters.minTvl}
-                onChange={e => setSingleFilter('minTvl', e.target.value)}
-                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              />
-              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const currentValue = Number(filters.minTvl) || 0;
-                    setSingleFilter('minTvl', (currentValue + 1).toString());
-                  }}
-                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
-                >
-                  <ChevronUp size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const currentValue = Number(filters.minTvl) || 0;
-                    if (currentValue > 0) {
-                      setSingleFilter('minTvl', (currentValue - 1).toString());
-                    }
-                  }}
-                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
-                >
-                  <ChevronDown size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center justify-center">to</div>
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Max"
-                value={filters.maxTvl}
-                onChange={e => setSingleFilter('maxTvl', e.target.value)}
-                className="w-full pr-8 px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white placeholder-gray-500"
-              />
-              <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const currentValue = Number(filters.maxTvl) || 0;
-                    setSingleFilter('maxTvl', (currentValue + 1).toString());
-                  }}
-                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
-                >
-                  <ChevronUp size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const currentValue = Number(filters.maxTvl) || 0;
-                    if (currentValue > 0) {
-                      setSingleFilter('maxTvl', (currentValue - 1).toString());
-                    }
-                  }}
-                  className="p-0.5 hover:bg-steel-700 rounded transition-colors"
-                >
-                  <ChevronDown size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <select
-                value={filters.tvlCurrency}
-                onChange={e => setSingleFilter('tvlCurrency', e.target.value)}
-                className="w-full px-3 py-2 bg-steel-850 border border-steel-750 rounded-lg text-white appearance-none cursor-pointer"
-              >
-                <option value="ADA">ADA</option>
-                <option value="USD">USD</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-        </div>
+        {renderRangeSection({ title: 'TVL', minKey: 'minTvl', maxKey: 'maxTvl' })}
+        {renderRangeSection({ title: 'FDV', minKey: 'minFdv', maxKey: 'maxFdv', currencyKey: 'fdvCurrency' })}
+        {renderRangeSection({ title: 'FDV / TVL', minKey: 'minFdvTvl', maxKey: 'maxFdvTvl', showCurrency: false })}
         {/* {renderRangeField('Market Cap', 'marketCap')} */}
         {/* <div>
           <h3 className="text-lg font-medium mb-3">Governance</h3>

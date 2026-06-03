@@ -8,7 +8,7 @@ import { useCurrency } from '@/hooks/useCurrency.js';
 export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   const handleNavClick = (link, e) => {
     if (onNavClick) {
-      onNavClick(link.to, e);
+      onNavClick(link.to, e, link.isAuth);
     }
     onClose();
   };

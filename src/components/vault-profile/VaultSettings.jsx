@@ -22,7 +22,7 @@ const collectionDisplayName = asset =>
 
 const pricingMethodLabel = valuationMethod => {
   if (valuationMethod === 'custom') return 'Custom';
-  if (valuationMethod === 'lp_token_dynamic') return 'LP Token Dynamic';
+  if (valuationMethod === 'lp_token_dynamic') return 'LP Token Price';
   return 'Market / Floor';
 };
 

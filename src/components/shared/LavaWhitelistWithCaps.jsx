@@ -3,10 +3,29 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 
 import { Button } from '@/components/ui/button';
-import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-import { LavaInput } from '@/components/shared/LavaInput';
+import { LavaInput, LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
+import { cn } from '@/lib/utils';
+
+const variants = {
+  default: {
+    dropdown:
+      'absolute top-full left-0 right-0 z-50 mt-1 bg-steel-800 border border-steel-600 rounded-lg shadow-lg max-h-64 overflow-y-auto',
+    policyInputClassName: 'pr-20',
+    policyInputStyle: { fontSize: '20px' },
+    addButton: 'border-2 border-white/20 rounded-lg p-2',
+    itemSpacing: 'space-y-6',
+  },
+  steel: {
+    dropdown:
+      'absolute top-full left-0 right-0 z-50 mt-1 bg-steel-850 border border-steel-750 rounded-lg shadow-lg max-h-64 overflow-y-auto',
+    policyInputClassName: 'pr-20',
+    policyInputStyle: undefined,
+    addButton: 'border border-steel-750 rounded-lg p-2',
+    itemSpacing: 'space-y-4',
+  },
+};
 
 export const LavaWhitelistWithCaps = ({
   required = false,
@@ -17,11 +36,27 @@ export const LavaWhitelistWithCaps = ({
   maxItems = 10,
   errors = {},
   maxCapValue = 1000000000000, // 1 Trillion
+  variant = 'default',
   isExpandable = false,
   onExpandableChange,
   reservedPolicyIds = [],
   showCountCaps = true,
 }) => {
+  const styles = variants[variant];
+  const isSteel = variant === 'steel';
+
+  const renderInput = ({ onChange, onBlur, style, ...rest }) => {
+    if (isSteel) {
+      return (
+        <LavaSteelInput
+          {...rest}
+          onChange={onChange ? value => onChange({ target: { value } }) : undefined}
+          onBlur={onBlur}
+        />
+      );
+    }
+    return <LavaInput {...rest} style={style} onChange={onChange} onBlur={onBlur} />;
+  };
   const [showDropdown, setShowDropdown] = useState({});
   const [searchResults, setSearchResults] = useState({});
   const [isSearching, setIsSearching] = useState({});
@@ -401,7 +436,7 @@ export const LavaWhitelistWithCaps = ({
           {label}
         </div>
         <button
-          className={`border-2 border-white/20 rounded-lg p-2 ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={cn(styles.addButton, whitelist.length >= maxItems && 'opacity-50 cursor-not-allowed')}
           disabled={whitelist.length >= maxItems}
           type="button"
           onClick={addNewAsset}
@@ -430,23 +465,23 @@ export const LavaWhitelistWithCaps = ({
           const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
           return (
-            <div key={asset.id || asset.uniqueId} className="space-y-6">
+            <div key={asset.id || asset.uniqueId} className={styles.itemSpacing}>
               <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
-                <LavaInput
-                  placeholder={itemPlaceholder}
-                  style={{ fontSize: '20px' }}
-                  value={asset.policyId}
-                  className="pr-20"
-                  onChange={e => handleInputChange(asset.uniqueId, e.target.value)}
-                  onFocus={() => {
+                {renderInput({
+                  placeholder: itemPlaceholder,
+                  style: styles.policyInputStyle,
+                  value: asset.policyId,
+                  className: styles.policyInputClassName,
+                  onChange: e => handleInputChange(asset.uniqueId, e.target.value),
+                  onFocus: () => {
                     if (walletPolicyIds.length > 0 || asset.policyId) {
                       setShowDropdown(prev => ({ ...prev, [asset.uniqueId]: true }));
                       if (asset.policyId) {
                         triggerSearch(asset.uniqueId, asset.policyId);
                       }
                     }
-                  }}
-                />
+                  },
+                })}
                 {wallet.isConnected && walletPolicyIds.length > 0 && (
                   <Button
                     type="button"
@@ -471,10 +506,7 @@ export const LavaWhitelistWithCaps = ({
                   <X className="h-4 w-4" />
                 </Button>
                 {showDropdown[asset.uniqueId] && (
-                  <div
-                    className="absolute top-full left-0 right-0 z-50 mt-1 bg-steel-800 border border-steel-600 rounded-lg shadow-lg max-h-64 overflow-y-auto"
-                    onScroll={e => handleScroll(e, asset.uniqueId)}
-                  >
+                  <div className={styles.dropdown} onScroll={e => handleScroll(e, asset.uniqueId)}>
                     {currentIsSearching ? (
                       <div className="flex items-center justify-center py-6">
                         <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
@@ -564,34 +596,33 @@ export const LavaWhitelistWithCaps = ({
                     })()}
                   </div>
 
-                  <div className="flex-1">
-                    <LavaInput
-                      required={true}
-                      label="Max asset cap"
-                      value={asset.countCapMax}
-                      onChange={e => {
-                        const inputValue = e.target.value;
-                        const numericValue = Number(inputValue.replace(/,/g, ''));
-                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                          updateAsset(asset.uniqueId, 'countCapMax', inputValue);
-                        }
-                      }}
-                      onBlur={e => {
-                        const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
-                        const limitedValue = Math.min(rawValue, maxCapValue);
-                        updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
-                      }}
-                      hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
-                    />
-                    {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                      return (
-                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
-                      );
-                    })()}
-                  </div>
+                <div className="flex-1">
+                  <LavaInput
+                    required={true}
+                    label="Max asset cap"
+                    value={asset.countCapMax}
+                    onChange={e => {
+                      const inputValue = e.target.value;
+                      const numericValue = Number(inputValue.replace(/,/g, ''));
+                      if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                        updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                      }
+                    }}
+                    onBlur={e => {
+                      const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                      const limitedValue = Math.min(rawValue, maxCapValue);
+                      updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                    }}
+                    hint={`Maximum value: ${maxCapValue.toLocaleString()}`}
+                  />
+                  {(() => {
+                    const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                    return (
+                      <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
+                    );
+                  })()}
                 </div>
-              )}
+              </div>
 
               <div className="space-y-4 mt-4">
                 <div>
@@ -627,27 +658,26 @@ export const LavaWhitelistWithCaps = ({
 
                 {asset.valuationMethod === 'custom' && !asset.isLpToken && (
                   <div>
-                    <LavaInput
-                      required={true}
-                      label="Custom Price (ADA)"
-                      type="text"
-                      placeholder="Enter price in ADA"
-                      style={{ fontSize: '20px' }}
-                      value={asset.customPriceAda || ''}
-                      onChange={e => {
+                    {renderInput({
+                      required: true,
+                      label: 'Custom Price (ADA)',
+                      type: 'text',
+                      placeholder: 'Enter price in ADA',
+                      style: isSteel ? undefined : { fontSize: '20px' },
+                      value: asset.customPriceAda || '',
+                      onChange: e => {
                         const inputValue = e.target.value;
-                        // Allow decimal numbers
                         if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
                           updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
                         }
-                      }}
-                      onBlur={e => {
+                      },
+                      onBlur: e => {
                         const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
                         const limitedValue = Math.min(rawValue, maxCapValue);
                         updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
-                      }}
-                      hint="The custom ADA price for this policy"
-                    />
+                      },
+                      hint: 'The custom ADA price for this policy',
+                    })}
                     {(() => {
                       const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                       return (

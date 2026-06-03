@@ -376,6 +376,62 @@ export const ProposalInfo = ({ proposalId }) => {
           : [executionOptions];
       }
 
+      case 'acquire_expansion': {
+        const acquireExpansionItems = [executionOptions];
+        const acquireExpansionConfig = proposalInfo?.metadata?.acquireExpansion;
+
+        if (acquireExpansionConfig) {
+          // Duration
+          if (acquireExpansionConfig.noLimit) {
+            acquireExpansionItems.push({
+              label: 'Duration',
+              value: 'No time limit',
+            });
+          } else if (acquireExpansionConfig.duration) {
+            const days = Math.floor(acquireExpansionConfig.duration / (24 * 60 * 60 * 1000));
+            const hours = Math.floor((acquireExpansionConfig.duration % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            acquireExpansionItems.push({
+              label: 'Duration',
+              value: days > 0 ? `${days} day${days > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`,
+            });
+          }
+
+          // Max ADA / Progress
+          if (acquireExpansionConfig.noMax) {
+            acquireExpansionItems.push({
+              label: 'ADA Limit',
+              value: 'No limit',
+            });
+          } else if (acquireExpansionConfig.maxAda) {
+            const maxAdaAmount = acquireExpansionConfig.maxAda / 1000000; // Convert lovelace to ADA
+            const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
+            const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
+            acquireExpansionItems.push({
+              label: 'ADA Limit',
+              value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
+            });
+          }
+
+          // Pricing Method
+          if (acquireExpansionConfig.priceType === 'limit' && acquireExpansionConfig.limitPrice) {
+            acquireExpansionItems.push({
+              label: 'Pricing Method',
+              value: `Fixed: ${acquireExpansionConfig.limitPrice} VT per 1 ₳`,
+            });
+          } else if (acquireExpansionConfig.priceType === 'market') {
+            const marketPriceDisplay = acquireExpansionConfig.marketPriceSnapshot
+              ? ` (${acquireExpansionConfig.marketPriceSnapshot.toFixed(6)} VT/₳ at proposal creation)`
+              : '';
+            acquireExpansionItems.push({
+              label: 'Pricing Method',
+              value: `Market (current LP price)${marketPriceDisplay}`,
+            });
+          }
+        }
+
+        return acquireExpansionItems;
+      }
+
       default:
         return [];
     }
