@@ -30,10 +30,12 @@ import {
 } from '@/components/vaults/constants/vaults.constants.js';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
+import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
@@ -75,6 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       distribution: governanceFees.data.proposalFeeDistribution,
       expansion: governanceFees.data.proposalFeeExpansion,
       acquire_expansion: governanceFees.data.proposalFeeExpansion, // Use same fee as expansion
+      asset_whitelist_update: governanceFees.data.proposalFeeAssetWhitelistUpdate,
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
@@ -170,6 +173,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.expansionNoMax = proposalData.expansionNoMax || false;
         proposalPayload.expansionPriceType = proposalData.expansionPriceType || 'market';
         proposalPayload.expansionLimitPrice = proposalData.expansionLimitPrice;
+      } else if (selectedOption === 'asset_whitelist_update') {
+        proposalPayload.assetsWhitelist = proposalData.assetsWhitelist || [];
       } else if (selectedOption === 'acquire_expansion') {
         proposalPayload.acquireExpansionDuration = proposalData.acquireExpansionDuration;
         proposalPayload.acquireExpansionNoLimit = proposalData.acquireExpansionNoLimit || false;
@@ -461,6 +466,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'expansion' && (
               <Expansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'asset_whitelist_update' && (
+              <AssetWhitelistUpdate vault={vault} onDataChange={handleDataChange} error={error} />
             )}
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />

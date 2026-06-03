@@ -11,6 +11,7 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     buy_sell: 'Marketplace transactions are being prepared and executed...',
     staking: 'Staking transaction is being prepared and executed...',
     termination: 'Termination process is being prepared and executed...',
+    asset_whitelist_update: 'Asset whitelist update is being prepared and executed...',
     expansion: 'Vault expansion is being prepared and executed...',
     acquire_expansion: 'Acquire expansion is being prepared and executed...',
     default: 'Proposal actions are being prepared and executed...',
@@ -21,6 +22,7 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     burning: 'Assets have been successfully burned and removed from the vault.',
     distribution: 'ADA has been successfully distributed to all eligible VT holders.',
     staking: 'Assets have been successfully staked according to the proposal.',
+    asset_whitelist_update: 'New assets have been successfully added to the vault whitelist.',
     expansion: 'Vault expansion has been successfully opened. New assets can now be contributed.',
     acquire_expansion: 'Acquire expansion has been successfully opened. The vault is now accepting ADA contributions.',
     termination: {

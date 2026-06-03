@@ -153,7 +153,7 @@ export const socialLinkSchema = yup.object({
     }),
 });
 
-const assetWhitelistItemSchema = yup.object({
+export const assetWhitelistItemSchema = yup.object({
   policyId: yup
     .string()
     .required('Policy ID is required')
@@ -176,6 +176,8 @@ const assetWhitelistItemSchema = yup.object({
     otherwise: schema => schema.nullable(),
   }),
 });
+
+export const assetWhitelistProposalItemSchema = assetWhitelistItemSchema.omit(['countCapMin', 'countCapMax']);
 
 const acquirerWhitelistItemSchema = yup.object({
   walletAddress: yup
@@ -209,6 +211,7 @@ export const vaultSchema = yup.object({
     .nullable(),
   description: yup.string().max(500, 'Description must be less than 500 characters').optional(),
   tokenDescription: yup.string().max(300, 'Token description must be less than 300 characters').optional(),
+  isExpandableAssetWhitelist: yup.boolean().optional().default(false),
   vaultImage: yup.string().required('Vault image is required'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
   tags: yup.array().of(yup.string()).default([]),
@@ -565,6 +568,7 @@ export const initialVaultState = {
   vaultTokenTicker: '',
   description: '',
   tokenDescription: '',
+  isExpandableAssetWhitelist: false,
   vaultImage: '',
   socialLinks: [],
   tags: [],

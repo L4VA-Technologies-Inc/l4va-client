@@ -9,6 +9,7 @@ import SecondaryButton from '../shared/SecondaryButton';
 import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
 import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
+import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
@@ -360,6 +361,21 @@ export const ProposalInfo = ({ proposalId }) => {
         return expansionItems;
       }
 
+      case 'asset_whitelist_update': {
+        const whitelistItems = proposalInfo?.metadata?.assetsWhitelist ?? [];
+
+        return whitelistItems.length > 0
+          ? [
+              executionOptions,
+              {
+                label: 'Policies to add',
+                value: whitelistItems,
+                type: 'asset_whitelist_update_list',
+              },
+            ]
+          : [executionOptions];
+      }
+
       case 'acquire_expansion': {
         const acquireExpansionItems = [executionOptions];
         const acquireExpansionConfig = proposalInfo?.metadata?.acquireExpansion;
@@ -615,6 +631,10 @@ export const ProposalInfo = ({ proposalId }) => {
                             </div>
                           </div>
                         );
+                      }
+
+                      if (item.type === 'asset_whitelist_update_list') {
+                        return <AssetWhitelistUpdateList key={index} assets={item.value} label={item.label} />;
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;
