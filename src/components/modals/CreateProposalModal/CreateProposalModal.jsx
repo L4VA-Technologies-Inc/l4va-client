@@ -77,6 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       distribution: governanceFees.data.proposalFeeDistribution,
       expansion: governanceFees.data.proposalFeeExpansion,
       acquire_expansion: governanceFees.data.proposalFeeExpansion, // Use same fee as expansion
+      asset_whitelist_update: governanceFees.data.proposalFeeAssetWhitelistUpdate,
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
