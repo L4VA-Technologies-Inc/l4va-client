@@ -565,6 +565,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       !(
         vault.contributionOpenWindowType === 'custom' &&
         new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0
+      ) &&
+      !(
+        vault.isAcquireOnly &&
+        vault.acquireOpenWindowType === 'custom' &&
+        new Date(vault.acquireOpenWindowTime).getTime() - Date.now() > 0
       )
     ) {
       return (
