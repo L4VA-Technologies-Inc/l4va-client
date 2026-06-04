@@ -757,6 +757,15 @@ export const getCountdownTime = vault => {
   const status = vault.vaultStatus?.toLowerCase();
   if (!status || !VAULT_STATUS_CONFIG[status]) return null;
 
+  // Acquire-only vaults in published/created status with custom acquire window
+  if (
+    vault?.isAcquireOnly &&
+    (status === 'published' || status === 'created') &&
+    vault.acquireOpenWindowType === 'custom'
+  ) {
+    return vault.acquireOpenWindowTime;
+  }
+
   // Only check for custom acquire window if vault is in contribution status
   if (status === 'contribution') {
     const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
