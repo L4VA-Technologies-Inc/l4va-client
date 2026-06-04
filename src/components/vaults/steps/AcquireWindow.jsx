@@ -123,8 +123,24 @@ export const AcquireWindow = ({
                   const raw = e.target.value.replace(/[^0-9]/g, '');
                   updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
                 }}
-                hint="Optional. If set, the vault will only lock if this minimum amount of ADA is acquired. If not set, the vault will lock if ANY amount of ADA is acquired. If no ADA is acquired, the vault will fail and all ADA is refunded."
+                hint={
+                  data.liquidityPoolContribution > 0
+                    ? `Optional. Sets the minimum ADA required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ADA to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ADA is refunded. If not set, only the LP minimum must be met.`
+                    : 'Optional. If set, the vault will only lock if this minimum amount of ADA is acquired. If not set, the vault will lock if ANY amount of ADA is acquired. If no ADA is acquired, the vault will fail and all ADA is refunded.'
+                }
               />
+              {data.liquidityPoolContribution > 0 && (
+                <p className="text-orange-500 mt-2 text-sm">
+                  Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that
+                  must be met:
+                  <br />
+                  1. Your minimum ADA threshold (if set)
+                  <br />
+                  2. LP minimum liquidity requirement (calculated automatically)
+                  <br />
+                  The vault will fail if EITHER threshold is not reached during the acquire window.
+                </p>
+              )}
             </div>
           </div>
         )}
