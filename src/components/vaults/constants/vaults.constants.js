@@ -357,10 +357,20 @@ export const vaultSchema = yup.object({
   acquireWindowDuration: yup
     .number()
     .typeError('Acquire window duration is required')
-    .required('Acquire window duration is required')
-    .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 5 days')
-    .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
-  acquireOpenWindowType: yup.string().required('Acquire window type is required'),
+    .when('tokensForAcquires', {
+      is: 0,
+      then: schema => schema.nullable().notRequired(),
+      otherwise: schema =>
+        schema
+          .required('Acquire window duration is required')
+          .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 5 days')
+          .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
+    }),
+  acquireOpenWindowType: yup.string().when('tokensForAcquires', {
+    is: 0,
+    then: schema => schema.nullable().notRequired(),
+    otherwise: schema => schema.required('Acquire window type is required'),
+  }),
   acquireOpenWindowTime: yup.mixed().nullable(),
   acquirerWhitelist: yup
     .array()

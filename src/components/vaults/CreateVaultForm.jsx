@@ -106,9 +106,15 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const isPresetConfigLocked = !isAdvancedPresetAvailable || vaultData.preset !== 'advanced';
 
   const isAcquireOnly = vaultData.preset === 'acquire_only';
+  const isContributionOnly = vaultData.tokensForAcquires === 0;
 
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
-  const visibleSteps = isAcquireOnly ? steps.filter(s => s.id !== 2) : steps;
+  // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
+  const visibleSteps = steps.filter(s => {
+    if (isAcquireOnly && s.id === 2) return false;
+    if (isContributionOnly && s.id === 3) return false;
+    return true;
+  });
 
   const presetOptions = useMemo(
     () =>
@@ -270,13 +276,18 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       const isAcquireOnly = vaultData.preset === 'acquire_only';
+      const isContributionOnly = vaultData.tokensForAcquires === 0;
       const isAdvancedMode = isAdvancedPresetAvailable && vaultData.preset === 'advanced';
       let nextStep;
-      if (isAdvancedMode || isAcquireOnly) {
+      if (isAdvancedMode || isAcquireOnly || isContributionOnly) {
         nextStep = currentStep + 1;
         // Skip contribution step for acquire-only vaults
         if (isAcquireOnly && nextStep === 2) {
           nextStep = 3;
+        }
+        // Skip acquire step for contribution-only vaults
+        if (isContributionOnly && nextStep === 3) {
+          nextStep = 4;
         }
       } else {
         nextStep = steps.length;
@@ -288,10 +299,15 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
       const isAcquireOnly = vaultData.preset === 'acquire_only';
+      const isContributionOnly = vaultData.tokensForAcquires === 0;
       let prevStep = currentStep - 1;
       // Skip contribution step for acquire-only vaults
       if (isAcquireOnly && prevStep === 2) {
         prevStep = 1;
+      }
+      // Skip acquire step for contribution-only vaults
+      if (isContributionOnly && prevStep === 3) {
+        prevStep = 2;
       }
       await changeStep(prevStep, true);
     }
