@@ -16,6 +16,13 @@ export const useWalletChangeListener = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const previousStakeAddressRef = useRef(null);
 
+  // Proactively clear DexHunter localStorage when auth/wallet becomes invalid
+  useEffect(() => {
+    if (!isAuthenticated || !wallet.isConnected) {
+      localStorage.removeItem('dexhunter-selected-wallet');
+    }
+  }, [isAuthenticated, wallet.isConnected]);
+
   useEffect(() => {
     if (!isAuthenticated || !user) {
       previousStakeAddressRef.current = null;
