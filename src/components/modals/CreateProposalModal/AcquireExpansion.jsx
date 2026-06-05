@@ -29,9 +29,10 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     const MAX_ADA_LIMIT = 1000000000; // 1 billion ADA
     const MAX_LIMIT_PRICE = 1000000; // 1 million VT per 1 ADA
 
-    // Calculate minimum limit price based on vault decimals to prevent multiplier = 0
+    // Calculate minimum limit price based on vault decimals to prevent on-chain multiplier = 0
+    // multiplier = floor(limitPrice * 10^decimals / 10^6) >= 1  =>  limitPrice >= 10^(6 - decimals)
     const decimals = vault?.ftTokenDecimals || 6;
-    const minLimitPrice = Math.pow(10, -decimals);
+    const minLimitPrice = Math.pow(10, 6 - decimals);
 
     const isValid =
       (noLimit || duration > 0) &&
@@ -166,8 +167,8 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               </label>
               <LavaSteelInput
                 type="number"
-                step="0.000001"
-                min="0"
+                step={Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
+                min={Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
                 max="1000000"
                 value={limitPrice}
                 onChange={value => {
@@ -184,7 +185,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
               {(() => {
                 const decimals = vault?.ftTokenDecimals || 6;
-                const minLimitPrice = Math.pow(10, -decimals);
+                const minLimitPrice = Math.pow(10, 6 - decimals);
                 const limitPriceNum = parseFloat(limitPrice) || 0;
 
                 if (limitPrice && limitPriceNum > 0 && limitPriceNum < minLimitPrice) {
