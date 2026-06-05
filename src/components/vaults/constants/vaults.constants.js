@@ -352,6 +352,12 @@ export const vaultSchema = yup.object({
       then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
       otherwise: schema => schema.nullable(),
     }),
+  allowAcquireExpansion: yup.boolean().optional().default(false),
+    .when('isAcquireOnly', {
+      is: true,
+      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      otherwise: schema => schema.nullable(),
+    }),
 
   // Step 3: Acquire Window
   acquireWindowDuration: yup
