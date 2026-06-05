@@ -328,6 +328,20 @@ export const formatString = string => {
   return `${string.substring(0, 3)}...${string.substring(length - 3)}`;
 };
 
+/**
+ * Format vault status from snake_case to Title Case
+ * @param {string} status - The vault status (e.g., "acquire_expansion")
+ * @returns {string} - Formatted status (e.g., "Acquire Expansion")
+ */
+export const formatVaultStatus = status => {
+  if (!status) return 'N/A';
+  // Convert snake_case to Title Case (e.g., "acquire_expansion" -> "Acquire Expansion")
+  return status
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export const getDisplayName = user => {
   const { name, address } = user;
   if (name) {
@@ -692,6 +706,13 @@ const VAULT_STATUS_CONFIG = {
     buttonText: 'Contribute',
     isCountdownActive: true,
   },
+  acquire_expansion: {
+    countdownName: 'Acquire Expansion ends in:',
+    getCountdownTime: vault =>
+      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    buttonText: 'Acquire',
+    isCountdownActive: true,
+  },
   created: {
     countdownName: 'Contribution starts in:',
     getCountdownTime: vault => new Date(vault.contributionOpenWindowTime).getTime(),
@@ -708,6 +729,11 @@ const VAULT_STATUS_CONFIG = {
 
 export const getCountdownName = vault => {
   const status = vault?.vaultStatus?.toLowerCase();
+
+  // Acquire-only vaults skip contribution — show "Acquire starts in:" instead
+  if (vault?.isAcquireOnly && (status === 'published' || status === 'created')) {
+    return 'Acquire starts in:';
+  }
 
   // Only check for custom acquire window if vault is in contribution status
   if (status === 'contribution') {
@@ -730,6 +756,15 @@ export const getCountdownTime = vault => {
 
   const status = vault.vaultStatus?.toLowerCase();
   if (!status || !VAULT_STATUS_CONFIG[status]) return null;
+
+  // Acquire-only vaults in published/created status with custom acquire window
+  if (
+    vault?.isAcquireOnly &&
+    (status === 'published' || status === 'created') &&
+    vault.acquireOpenWindowType === 'custom'
+  ) {
+    return vault.acquireOpenWindowTime;
+  }
 
   // Only check for custom acquire window if vault is in contribution status
   if (status === 'contribution') {

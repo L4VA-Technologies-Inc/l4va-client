@@ -6,11 +6,7 @@ import toast from 'react-hot-toast';
 import { SwapComponent } from '../swap/Swap';
 
 import { useCurrency } from '@/hooks/useCurrency';
-import {
-  BUTTON_DISABLE_THRESHOLD_MS,
-  VAULT_STATUSES,
-  VAULT_TAGS_OPTIONS,
-} from '@/components/vaults/constants/vaults.constants';
+import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
@@ -290,23 +286,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
     const isExpansion = vault.vaultStatus === VAULT_STATUSES.EXPANSION;
 
-    // Check if expansion phase is active
-    const isExpansionActive =
-      isExpansion &&
-      vault.expansionPhaseStart &&
-      new Date(vault.expansionPhaseStart).getTime() + (vault.expansionDuration || 0) >
-        Date.now() + BUTTON_DISABLE_THRESHOLD_MS;
-
-    // Check if contribution phase is active and accepting contributions
-    const contributionPhaseEndTime = new Date(vault.contributionPhaseStart).getTime() + vault.contributionDuration;
-    const isContributionPhaseActive =
-      vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION &&
-      contributionPhaseEndTime > Date.now() + BUTTON_DISABLE_THRESHOLD_MS &&
-      !allAssetsAtMaxCapacity;
-
-    // Check if vault is in an invalid status for contributions
+    // Check if vault is in an invalid status for contributions/expansions
     const isInvalidStatus =
-      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION && vault.vaultStatus !== VAULT_STATUSES.EXPANSION;
+      vault.vaultStatus !== VAULT_STATUSES.CONTRIBUTION &&
+      vault.vaultStatus !== VAULT_STATUSES.EXPANSION &&
+      vault.vaultStatus !== VAULT_STATUSES.ACQUIRE_EXPANSION;
 
     // Check if contribution phase is full
     const isContributionFull = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && allAssetsAtMaxCapacity;
@@ -326,21 +310,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       Assets: {
         text: buttonText,
         handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
-        available: isContributionPhaseActive || isExpansionActive,
+        available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
         disabled: isInvalidStatus || isContributionFull || isExpansionFull,
       },
       Token: {
         text: 'Acquire',
         handleClick: () => openModal('AcquireModal', { vault }),
-        available:
-          vault.vaultStatus === VAULT_STATUSES.ACQUIRE &&
-          new Date(vault.acquirePhaseStart).getTime() + vault.acquireWindowDuration >
-            Date.now() + BUTTON_DISABLE_THRESHOLD_MS,
+        available: vault.isAcquireWindowActive,
       },
       Governance: {
         text: 'Create Proposal',
         available:
-          (vault.vaultStatus === VAULT_STATUSES.LOCKED || vault.vaultStatus === VAULT_STATUSES.EXPANSION) &&
+          (vault.vaultStatus === VAULT_STATUSES.LOCKED ||
+            vault.vaultStatus === VAULT_STATUSES.EXPANSION ||
+            vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION) &&
           vault.canCreateProposal,
         handleClick: () => openModal('CreateProposalModal', { vault }),
       },
@@ -402,52 +385,35 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     }
   };
 
-  // Calculate vault statistics
-  const hasActiveLp = vault?.hasActiveLp;
-  const isAcquirePhase = vault?.vaultStatus === 'acquire';
-
-  const ftGains = (() => {
-    if (!hasActiveLp) return 'N/A';
-    const gainsValue = isAda ? vault.gainsAda : vault.gainsUsd;
-    if (gainsValue == null) return 'N/A';
-    const isNegative = gainsValue < 0;
-    return `${isNegative ? '-' : ''}${currencySymbol}${formatNum(Math.abs(gainsValue))}`;
-  })();
-
-  const fdv = (() => {
-    if (!hasActiveLp && !isAcquirePhase) return 'N/A';
-    const fdvValue = isAda ? vault.fdv : vault.fdvUsd;
-    if (fdvValue == null) return 'N/A';
-    return `${currencySymbol}${formatNum(fdvValue)}`;
-  })();
-
-  const fdvTvl = (() => {
-    if (!hasActiveLp && !isAcquirePhase) return 'N/A';
-    if (vault.fdvTvl == null) return 'N/A';
-    if (vault.fdvTvl < 0.01 && vault.fdvTvl > 0) return '< 0.01';
-    return vault.fdvTvl.toFixed(2);
-  })();
-
-  const vtPrice = (() => {
-    if (!hasActiveLp) return 'N/A';
-    const priceValue = isAda ? formatNum(vault.vtPrice, 4) : formatNum(vault.vtPriceUsd, 4);
-    if (priceValue == null) return 'N/A';
-    return `${currencySymbol}${priceValue}`;
-  })();
-
-  const tvl = (() => {
-    const tvlValue = isAda ? vault.assetsPrices?.totalValueAda : vault.assetsPrices?.totalValueUsd;
-    if (tvlValue == null) return 'N/A';
-    return `${currencySymbol}${formatNum(tvlValue)}`;
-  })();
-
+  // Calculate vault statistics - values computed on the backend in vault.vaultStats
   const vaultStats = {
     assetValue: vault.vaultStatus,
-    ftGains,
-    fdv,
-    fdvTvl,
-    vtPrice,
-    tvl,
+    ftGains: (() => {
+      const val = isAda ? vault.vaultStats?.ftGainsAda : vault.vaultStats?.ftGainsUsd;
+      if (val == null) return 'N/A';
+      return `${val < 0 ? '-' : ''}${currencySymbol}${formatNum(Math.abs(val))}`;
+    })(),
+    fdv: (() => {
+      const val = isAda ? vault.vaultStats?.fdvAda : vault.vaultStats?.fdvUsd;
+      if (val == null) return 'N/A';
+      return `${currencySymbol}${formatNum(val)}`;
+    })(),
+    fdvTvl: (() => {
+      const val = vault.vaultStats?.fdvTvl;
+      if (val == null) return 'N/A';
+      if (val < 0.01 && val > 0) return '< 0.01';
+      return val.toFixed(2);
+    })(),
+    vtPrice: (() => {
+      const val = isAda ? vault.vaultStats?.vtPriceAda : vault.vaultStats?.vtPriceUsd;
+      if (val == null) return 'N/A';
+      return `${currencySymbol}${formatNum(val, 4)}`;
+    })(),
+    tvl: (() => {
+      const val = isAda ? vault.vaultStats?.tvlAda : vault.vaultStats?.tvlUsd;
+      if (val == null) return 'N/A';
+      return `${currencySymbol}${formatNum(val)}`;
+    })(),
   };
 
   const renderVaultInfo = () => (
@@ -489,7 +455,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               </div>
             )}
             {/* Statistic */}
-            {hasActiveLp && IS_MAINNET && (
+            {vault?.hasActiveLp && IS_MAINNET && (
               <div className="group relative">
                 <button
                   onClick={() => openModal('ChartModal', { vault })}
@@ -599,6 +565,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       !(
         vault.contributionOpenWindowType === 'custom' &&
         new Date(vault.contributionOpenWindowTime).getTime() - Date.now() > 0
+      ) &&
+      !(
+        vault.isAcquireOnly &&
+        vault.acquireOpenWindowType === 'custom' &&
+        new Date(vault.acquireOpenWindowTime).getTime() - Date.now() > 0
       )
     ) {
       return (
@@ -641,7 +612,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   };
 
   const activeLpTokenOut = (() => {
-    if (!hasActiveLp) return null;
+    if (!vault?.hasActiveLp) return null;
 
     const policyId = vault?.policyId || '';
     const assetName = vault?.assetVaultName || '';

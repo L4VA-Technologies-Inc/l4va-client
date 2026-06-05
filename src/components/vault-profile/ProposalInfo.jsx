@@ -9,6 +9,7 @@ import SecondaryButton from '../shared/SecondaryButton';
 import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
 import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
+import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
@@ -360,6 +361,77 @@ export const ProposalInfo = ({ proposalId }) => {
         return expansionItems;
       }
 
+      case 'asset_whitelist_update': {
+        const whitelistItems = proposalInfo?.metadata?.assetsWhitelist ?? [];
+
+        return whitelistItems.length > 0
+          ? [
+              executionOptions,
+              {
+                label: 'Policies to add',
+                value: whitelistItems,
+                type: 'asset_whitelist_update_list',
+              },
+            ]
+          : [executionOptions];
+      }
+
+      case 'acquire_expansion': {
+        const acquireExpansionItems = [executionOptions];
+        const acquireExpansionConfig = proposalInfo?.metadata?.acquireExpansion;
+
+        if (acquireExpansionConfig) {
+          // Duration
+          if (acquireExpansionConfig.noLimit) {
+            acquireExpansionItems.push({
+              label: 'Duration',
+              value: 'No time limit',
+            });
+          } else if (acquireExpansionConfig.duration) {
+            const days = Math.floor(acquireExpansionConfig.duration / (24 * 60 * 60 * 1000));
+            const hours = Math.floor((acquireExpansionConfig.duration % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+            acquireExpansionItems.push({
+              label: 'Duration',
+              value: days > 0 ? `${days} day${days > 1 ? 's' : ''}` : `${hours} hour${hours > 1 ? 's' : ''}`,
+            });
+          }
+
+          // Max ADA / Progress
+          if (acquireExpansionConfig.noMax) {
+            acquireExpansionItems.push({
+              label: 'ADA Limit',
+              value: 'No limit',
+            });
+          } else if (acquireExpansionConfig.maxAda) {
+            const maxAdaAmount = acquireExpansionConfig.maxAda / 1000000; // Convert lovelace to ADA
+            const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
+            const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
+            acquireExpansionItems.push({
+              label: 'ADA Limit',
+              value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
+            });
+          }
+
+          // Pricing Method
+          if (acquireExpansionConfig.priceType === 'limit' && acquireExpansionConfig.limitPrice) {
+            acquireExpansionItems.push({
+              label: 'Pricing Method',
+              value: `Fixed: ${acquireExpansionConfig.limitPrice} VT per 1 ₳`,
+            });
+          } else if (acquireExpansionConfig.priceType === 'market') {
+            const marketPriceDisplay = acquireExpansionConfig.marketPriceSnapshot
+              ? ` (${acquireExpansionConfig.marketPriceSnapshot.toFixed(6)} VT/₳ at proposal creation)`
+              : '';
+            acquireExpansionItems.push({
+              label: 'Pricing Method',
+              value: `Market (current LP price)${marketPriceDisplay}`,
+            });
+          }
+        }
+
+        return acquireExpansionItems;
+      }
+
       default:
         return [];
     }
@@ -559,6 +631,10 @@ export const ProposalInfo = ({ proposalId }) => {
                             </div>
                           </div>
                         );
+                      }
+
+                      if (item.type === 'asset_whitelist_update_list') {
+                        return <AssetWhitelistUpdateList key={index} assets={item.value} label={item.label} />;
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;

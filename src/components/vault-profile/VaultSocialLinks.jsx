@@ -2,7 +2,7 @@ import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 
 export const VaultSocialLinks = ({ socialLinks = [] }) => {
   if (socialLinks.length === 0) {
-    return <p className="text-dark-100 text-sm">No social links</p>;
+    return null;
   }
 
   return (

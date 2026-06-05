@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }) => {
 
     // Clear DexHunter Swap component state
     localStorage.removeItem('dexhunter-selected-wallet');
-    localStorage.removeItem('dexhunter_terms_accepted');
 
     if (message) {
       sessionStorage.setItem('logout_toast', message);

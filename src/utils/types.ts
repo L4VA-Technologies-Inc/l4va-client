@@ -42,6 +42,7 @@ export enum VaultStatus {
   GOVERNANCE = 'governance',
   FAILED = 'failed',
   EXPANSION = 'expansion',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export enum ProposalType {
@@ -52,6 +53,8 @@ export enum ProposalType {
   BUY_SELL = 'buy_sell',
   MARKETPLACE_ACTION = 'marketplace_action',
   EXPANSION = 'expansion',
+  ASSET_WHITELIST_UPDATE = 'asset_whitelist_update',
+  ACQUIRE_EXPANSION = 'acquire_expansion',
 }
 
 export const ProposalTypeLabels = {
@@ -62,6 +65,8 @@ export const ProposalTypeLabels = {
   [ProposalType.BUY_SELL]: 'Buy/Sell',
   [ProposalType.MARKETPLACE_ACTION]: 'Market Actions',
   [ProposalType.EXPANSION]: 'Vault Expansion',
+  [ProposalType.ASSET_WHITELIST_UPDATE]: 'Update Asset Whitelist',
+  [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
 };
 
 export enum ClaimStatus {
@@ -223,6 +228,7 @@ export interface CreateVaultFormData {
   type: VaultType;
   privacy: VaultPrivacy;
   description?: string;
+  isExpandableAssetWhitelist?: boolean;
   vaultImage: string;
   socialLinks: ILink[];
   valueMethod: ValueMethod;

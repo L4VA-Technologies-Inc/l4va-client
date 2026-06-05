@@ -4,6 +4,7 @@ import { LavaSocialLinks } from '@/components/shared/LavaSocialLinks';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaTextarea } from '@/components/shared/LavaTextarea';
 import { LavaSelect } from '@/components/shared/LavaSelect';
+import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { Chip } from '@/components/shared/Chip';
 import { LavaWhitelistWithCaps } from '@/components/shared/LavaWhitelistWithCaps';
 import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
@@ -104,6 +105,16 @@ export const ConfigureVault = ({
         </div>
 
         <div>
+          <LavaCheckbox
+            name="allowAcquireExpansion"
+            checked={data.allowAcquireExpansion || false}
+            onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
+            label="Allow Acquire Expansion"
+            description="If enabled, vault token holders can create governance proposals to open additional acquire windows (ADA → Vault Token minting) after the vault is locked."
+          />
+        </div>
+
+        <div>
           <LavaInput
             required
             error={errors.vaultTokenTicker}
@@ -149,6 +160,8 @@ export const ConfigureVault = ({
             whitelist={data.assetsWhitelist || []}
             errors={errors}
             vaultType={data.type}
+            isExpandable={data.isExpandableAssetWhitelist}
+            onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
           />
           {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
         </div>

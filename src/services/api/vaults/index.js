@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/services/api';
 import { VaultsConfigProvider } from '@/services/api/vaults/config';
-import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 export class VaultsApiProvider {
   static async createVault(vaultData) {
@@ -38,8 +37,7 @@ export class VaultsApiProvider {
   }
 
   static async saveDraft(vaultData) {
-    const formatted = formatVaultData(vaultData);
-    const response = await axiosInstance.post(VaultsConfigProvider.saveDraft(), formatted);
+    const response = await axiosInstance.post(VaultsConfigProvider.saveDraft(), vaultData);
     return response;
   }
 
