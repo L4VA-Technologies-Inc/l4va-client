@@ -339,7 +339,7 @@ export const vaultSchema = yup.object({
       otherwise: schema =>
         schema
           .required('Duration is required')
-          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration must be at least 5 days')
+          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration is below the minimum allowed')
           .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
     }),
   isAcquireOnly: yup.boolean().default(false),
