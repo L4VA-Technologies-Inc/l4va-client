@@ -372,7 +372,7 @@ export const vaultSchema = yup.object({
       otherwise: schema =>
         schema
           .required('Acquire window duration is required')
-          .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Must be at least 5 days')
+          .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Duration is below the minimum allowed')
           .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
     }),
   acquireOpenWindowType: yup.string().when('tokensForAcquires', {
