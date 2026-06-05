@@ -52,7 +52,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
       acquireExpansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
       isValid,
     });
-  }, [duration, noLimit, maxAda, noMax, priceType, limitPrice, onDataChange, vault?.ft_token_decimals]);
+  }, [duration, noLimit, maxAda, noMax, priceType, limitPrice, onDataChange, vault?.ftTokenDecimals]);
 
   return (
     <div className="space-y-6">
