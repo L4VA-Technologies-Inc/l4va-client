@@ -345,21 +345,11 @@ export const vaultSchema = yup.object({
   isAcquireOnly: yup.boolean().default(false),
   minAcquireThreshold: yup
     .number()
-    .nullable()
     .typeError('Minimum ADA threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
-      otherwise: schema => schema.nullable(),
-    }),
-  allowAcquireExpansion: yup
-    .boolean()
-    .optional()
-    .default(false)
-    .when('isAcquireOnly', {
-      is: true,
-      then: schema => schema.positive('Must be a positive number').integer('Must be a whole number of ADA'),
-      otherwise: schema => schema.nullable(),
+      then: schema => schema.nullable().positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      otherwise: schema => schema.nullable().notRequired(),
     }),
 
   // Step 3: Acquire Window
