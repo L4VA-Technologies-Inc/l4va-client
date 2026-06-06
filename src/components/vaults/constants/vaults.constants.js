@@ -348,7 +348,7 @@ export const vaultSchema = yup.object({
     .typeError('Minimum ADA threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.required().positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      then: schema => schema.nullable().positive('Must be a positive number').integer('Must be a whole number of ADA'),
       otherwise: schema => schema.nullable().notRequired(),
     }),
 
