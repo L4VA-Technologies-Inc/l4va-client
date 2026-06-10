@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-import { formatCompactNumber, formatString } from '@/utils/core.utils';
+import { formatCompactNumber, formatString, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
 import L4vaIcon from '@/icons/l4va.svg?react';
@@ -90,7 +90,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             </div>
             <div>
               <p className="text-sm text-dark-100">Stage</p>
-              <p className="capitalize font-bold">{vault.vaultStatus}</p>
+              <p className="font-bold">{formatVaultStatus(vault.vaultStatus)}</p>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useAcquire } from '@/services/api/queries.js';
+import { formatNum } from '@/utils/core.utils.js';
 
 const Acquire = () => {
   const { data } = useAcquire();
@@ -52,11 +53,11 @@ const Acquire = () => {
                     </div>
                   </td>
                   <td className="px-4 py-4 text-right text-xl bg-steel-950">
-                    {Number(acquire.total_assets_cost_ada).toFixed(2)}
+                    {formatNum(Number(acquire.total_assets_cost_ada), 6)}
                   </td>
                   <td className="px-4 py-4 text-right text-xl bg-steel-950">-</td>
                   <td className="px-4 py-4 text-right text-xl bg-steel-950">
-                    {Number(acquire.total_assets_cost_ada).toFixed(2)}
+                    {formatNum(Number(acquire.total_assets_cost_ada), 6)}
                   </td>
                   <td className="px-4 py-4 text-right text-xl bg-steel-950">{formatTimeLeft(acquire.timeLeft)}</td>
                   <td className="px-4 py-4 text-center text-xl bg-steel-950">{acquire.privacy}</td>

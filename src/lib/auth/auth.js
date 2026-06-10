@@ -6,6 +6,9 @@ export function clearAuthLocalStorage() {
   localStorage.removeItem('authenticated_stake_address');
   localStorage.removeItem('vlrm_balance_cache');
   localStorage.removeItem('storageVault');
+
+  // Clear DexHunter swap component state
+  localStorage.removeItem('dexhunter-selected-wallet');
 }
 
 export const AuthContext = createContext(null);

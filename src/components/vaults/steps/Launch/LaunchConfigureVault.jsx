@@ -58,6 +58,13 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <LavaSocialLinksPreview socialLinks={data.socialLinks} />
         </div>
         <div>
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Expandable whitelist</p>
+            <HoverHelp hint="Allows the vault whitelist to be expanded after creation." />
+          </div>
+          <p>{data.isExpandableAssetWhitelist ? 'Yes' : 'No'}</p>
+        </div>
+        <div>
           <p className="uppercase font-semibold text-dark-100">Asset whitelist</p>
           {data.assetsWhitelist?.length ? (
             <div className="space-y-6">

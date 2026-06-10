@@ -190,7 +190,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     <td className="px-4 py-3 font-medium">ADA</td>
                     <td className="px-4 py-3 capitalize">{asset.type}</td>
                     <td className="px-4 py-3 capitalize">{asset.status}</td>
-                    <td className="px-4 py-3">{asset.quantity}</td>
+                    <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                     <td className="px-4 py-3 text-center">
                       <button
                         className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
