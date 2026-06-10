@@ -17,7 +17,6 @@ import { LavaTable } from '@/components/shared/LavaTable';
 const tabOptions = [
   { id: 'distribution', name: 'Distribution', type: 'distribution' },
   { id: 'terminate', name: 'Distribution to Terminate', type: 'termination' },
-  { id: 'l4va', name: '$L4VA', type: 'l4va' },
   { id: 'cancellation', name: 'Cancellation', type: 'cancellation' },
 ];
 
@@ -366,7 +365,7 @@ export const Claims = () => {
         render: claim => <ClaimStatusIndicator claim={claim} />,
       },
     ],
-    [isCancellation, navigate, openModal, status, processedClaim, wallet, handleClaim]
+    [isCancellation, navigate, openModal]
   );
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);
