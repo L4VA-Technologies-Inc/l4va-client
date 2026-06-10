@@ -22,57 +22,77 @@ const tabOptions = [
 
 const DEFAULT_TAB = 'all';
 
-const TransactionCard = ({ transaction, onCopy, onNavigate }) => (
-  <div className="bg-steel-850 border border-steel-750 rounded-xl p-4 space-y-3 text-white mb-4">
-    <div className="flex items-center justify-between">
-      <span className="text-steel-300 text-sm">Transaction ID</span>
-      <button
-        onClick={() => onCopy(transaction.id)}
-        className="flex items-center gap-2 hover:text-orange-500 transition-colors text-sm"
-      >
-        {substringAddress(transaction.id)}
-        <Copy size={14} />
-      </button>
-    </div>
+const getTransactionTypeDisplay = (type, isExpansion) => {
+  if (!isExpansion) return type;
 
-    <div className="flex items-center justify-between">
-      <span className="text-steel-300 text-sm">Tx Hash</span>
-      <button
-        onClick={() => onCopy(transaction.tx_hash)}
-        className="flex items-center gap-2 hover:text-orange-500 transition-colors text-sm"
-      >
-        {substringAddress(transaction.tx_hash)}
-        <Copy size={14} />
-      </button>
-    </div>
+  if (type === 'acquire') return 'expansion acquire';
+  if (type === 'contribute') return 'expansion contribution';
 
-    <div className="flex items-center justify-between">
-      <span className="text-steel-300 text-sm">Vault</span>
-      {transaction.vault ? (
+  return type;
+};
+
+const TransactionCard = ({ transaction, onCopy, onNavigate }) => {
+  const displayType = getTransactionTypeDisplay(transaction.type, transaction.is_expansion);
+
+  return (
+    <div className="bg-steel-850 border border-steel-750 rounded-xl p-4 space-y-3 text-white mb-4">
+      <div className="flex items-center justify-between">
+        <span className="text-steel-300 text-sm">Transaction ID</span>
         <button
-          onClick={() => onNavigate(`/vaults/${transaction.vault.id}`)}
-          className="flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors text-sm"
+          onClick={() => onCopy(transaction.id)}
+          className="flex items-center gap-2 hover:text-orange-500 transition-colors text-sm"
         >
-          {transaction.vault.name}
-          <ExternalLink size={14} />
+          {substringAddress(transaction.id)}
+          <Copy size={14} />
         </button>
-      ) : (
-        <span className="text-steel-400 text-sm">—</span>
-      )}
-    </div>
+      </div>
 
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between pt-2 border-t border-steel-750">
-        <span className="text-steel-300 text-sm">Type</span>
-        <span className="capitalize font-medium">{transaction.type}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-steel-300 text-sm">Tx Hash</span>
+        <button
+          onClick={() => onCopy(transaction.tx_hash)}
+          className="flex items-center gap-2 hover:text-orange-500 transition-colors text-sm"
+        >
+          {substringAddress(transaction.tx_hash)}
+          <Copy size={14} />
+        </button>
       </div>
-      <div className="flex items-center justify-between pt-2 border-t border-steel-750">
-        <span className="text-steel-300 text-sm">Status</span>
-        <span className="capitalize font-medium">{transaction.status}</span>
+
+      <div className="flex items-center justify-between">
+        <span className="text-steel-300 text-sm">Vault</span>
+        {transaction.vault ? (
+          <button
+            onClick={() => onNavigate(`/vaults/${transaction.vault.id}`)}
+            className="flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors text-sm"
+          >
+            {transaction.vault.name}
+            <ExternalLink size={14} />
+          </button>
+        ) : (
+          <span className="text-steel-400 text-sm">—</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between pt-2 border-t border-steel-750">
+          <span className="text-steel-300 text-sm">Type</span>
+          <div className="flex items-center gap-2">
+            <span className="capitalize font-medium">{displayType}</span>
+            {transaction.is_expansion && (
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                Expansion
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-2 border-t border-steel-750">
+          <span className="text-steel-300 text-sm">Status</span>
+          <span className="capitalize font-medium">{transaction.status}</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const Transactions = () => {
   const tabParam = DEFAULT_TAB;
@@ -154,7 +174,7 @@ export const Transactions = () => {
         t.id,
         t.tx_hash || '',
         t.vault?.name || '',
-        t.type,
+        getTransactionTypeDisplay(t.type, t.is_expansion),
         t.status,
         formatDateTime(t.created_at),
       ]);
@@ -234,8 +254,15 @@ export const Transactions = () => {
       {
         key: 'type',
         header: 'Type',
-        render: transaction => transaction.type,
-        cellClassName: 'font-medium text-white capitalize',
+        render: transaction => {
+          const displayType = getTransactionTypeDisplay(transaction.type, transaction.is_expansion);
+          return (
+            <div className="flex items-center gap-2">
+              <span className="capitalize">{displayType}</span>
+            </div>
+          );
+        },
+        cellClassName: 'font-medium text-white',
       },
       {
         key: 'status',
