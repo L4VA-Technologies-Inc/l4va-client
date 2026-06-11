@@ -42,11 +42,11 @@ export const VaultDetails = () => {
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <button
-              onClick={() => navigate({ to: '/rewards/vaults' })}
+              onClick={() => navigate({ to: '/rewards' })}
               className="flex items-center gap-2 text-steel-400 hover:text-white transition-colors mb-4"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back to Vaults</span>
+              <span>Back to Rewards</span>
             </button>
             <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
             <div className="flex items-center gap-4">
@@ -90,11 +90,11 @@ export const VaultDetails = () => {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate({ to: '/rewards/vaults' })}
+            onClick={() => navigate({ to: '/rewards' })}
             className="flex items-center gap-2 text-steel-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Vaults</span>
+            <span>Back to Rewards</span>
           </button>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-white">Vault Rewards</h1>
