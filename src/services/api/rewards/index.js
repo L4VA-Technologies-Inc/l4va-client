@@ -103,17 +103,6 @@ export class RewardsApiProvider {
   }
 
   /**
-   * Get all vaults associated with wallet rewards (uses authenticated wallet from JWT)
-   * @param {string} [epochId] - Optional epoch ID
-   * @returns {Promise<Object>} Wallet vaults with rewards
-   */
-  static async getWalletVaults(epochId) {
-    const params = epochId ? { epochId } : {};
-    const response = await axiosInstance.get(RewardsConfigProvider.walletVaults(), { params });
-    return response.data;
-  }
-
-  /**
    * Get per-epoch per-vault reward timeline for cumulative charts (uses authenticated wallet from JWT)
    * @returns {Promise<Object>} Vault timeline data
    */

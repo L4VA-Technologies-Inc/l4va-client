@@ -9,7 +9,7 @@ export { useEpochs, useCurrentEpoch, useEpochDetails } from './useRewardsEpochs'
 export { useWalletScore, useWalletHistory, useWalletVaultTimeline, useWalletActivityTimeline } from './useRewardsScore';
 
 // Vault rewards hooks
-export { useVaultScores, useWalletVaultReward, useWalletVaults } from './useRewardsVaults';
+export { useVaultScores, useWalletVaultReward } from './useRewardsVaults';
 
 // Claims hooks
 export { useClaimsSummary, useClaimableAmount, useClaimHistory, useClaimTransactions } from './useRewardsClaims';

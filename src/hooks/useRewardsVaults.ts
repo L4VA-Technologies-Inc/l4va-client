@@ -25,15 +25,3 @@ export const useWalletVaultReward = (walletAddress: string, vaultId: string, epo
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
-
-/**
- * Fetch all vaults associated with wallet rewards
- */
-export const useWalletVaults = (walletAddress: string, epochId?: string | null) => {
-  return useQuery({
-    queryKey: ['rewards', 'wallet', walletAddress, 'vaults', epochId ?? null],
-    queryFn: () => RewardsApiProvider.getWalletVaults(epochId || undefined),
-    enabled: !!walletAddress,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-};

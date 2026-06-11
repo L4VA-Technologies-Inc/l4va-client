@@ -496,7 +496,7 @@ export const useDeletePreset = () => {
   });
 };
 
-export const useMarketWithOHLCV = (vaultId: string, interval: string = '1h') => {
+export const useMarketWithOHLCV = (vaultId: string, interval: string = '1d') => {
   return useQuery({
     queryKey: ['markets', 'ohlcv', vaultId, interval],
     queryFn: () => VaultsApiProvider.getMarketByIdWithOHLCV(vaultId, interval),

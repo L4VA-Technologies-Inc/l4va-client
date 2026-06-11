@@ -40,7 +40,7 @@ export const Chip = ({
 
   return (
     <div className={`${baseClasses} ${selectedClasses}`} onClick={handleClick}>
-      <span>{label}</span>
+      <span className="capitalize">{label}</span>
       {variant === 'removable' && onRemove && (
         <button
           type="button"

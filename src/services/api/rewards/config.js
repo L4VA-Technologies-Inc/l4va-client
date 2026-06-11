@@ -47,10 +47,6 @@ export class RewardsConfigProvider {
     return `/api/v1/rewards/me/vault/${vaultId}`;
   }
 
-  static walletVaults() {
-    return '/api/v1/rewards/me/vaults';
-  }
-
   static walletVaultTimeline() {
     return '/api/v1/rewards/me/timeline/vaults';
   }

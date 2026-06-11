@@ -1,15 +1,19 @@
+import { useState } from 'react';
+
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import VaultChart from '@/components/shared/VaultChart';
 import VaultMetrics from '@/components/shared/VaultMetrics';
+import { IntervalSelector } from '@/components/shared/IntervalSelector';
 import { useMarketWithOHLCV } from '@/services/api/queries.js';
 
 export const ChartModal = () => {
   const { activeModalData } = useModal();
   const { closeModal } = useModalControls();
   const { vault } = activeModalData?.props || {};
+  const [interval, setInterval] = useState('1d');
 
-  const { data, isLoading, isError, error } = useMarketWithOHLCV(vault?.id);
+  const { data, isLoading, isError, error } = useMarketWithOHLCV(vault?.id, interval);
 
   const notFound =
     isError &&
@@ -29,6 +33,10 @@ export const ChartModal = () => {
             Failed to load market data. Please try again later.
           </div>
         )}
+
+        <div className="flex justify-center mb-4">
+          <IntervalSelector activeInterval={interval} onIntervalChange={setInterval} />
+        </div>
 
         <VaultChart ohlcvData={marketData?.ohlcv} isLoading={isLoading && !notFound} isNotFound={notFound} />
       </div>
