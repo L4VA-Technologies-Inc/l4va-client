@@ -159,6 +159,7 @@ export const ProposalInfo = ({ proposalId }) => {
       BUY: [],
       UNLIST: [],
       UPDATE_LISTING: [],
+      OFFER: [],
       CANCEL_OFFER: [],
     };
 
@@ -197,6 +198,12 @@ export const ProposalInfo = ({ proposalId }) => {
       messages.push(
         count === 1 ? `Updated listing price for ${names}.` : `Updated listing prices for ${count} assets: ${names}.`
       );
+    }
+
+    if (actionGroups.OFFER.length > 0) {
+      const count = actionGroups.OFFER.length;
+      const names = actionGroups.OFFER.map(a => a.assetName).join(', ');
+      messages.push(count === 1 ? `Placed an offer for ${names}.` : `Placed offers for ${count} assets: ${names}.`);
     }
 
     if (actionGroups.CANCEL_OFFER.length > 0) {

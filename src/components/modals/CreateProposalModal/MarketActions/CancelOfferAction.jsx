@@ -10,21 +10,21 @@ const mapOfferToAsset = asset => {
   const imageSrc = asset.imageUrl;
 
   return {
+    ...asset,
     id: asset.id,
     tokenId:
       asset.id || asset.tokenId || `${asset.policy_id || asset.policyId}_${asset.asset_id || asset.assetNameHex || ''}`,
     name: asset.name || asset.displayName || asset.ticker || asset.metadata?.onchainMetadata?.name || 'Unknown',
-    quantity: asset.quantity || parseFloat(asset.quantity) || 0,
+    quantity: Number(asset.quantity ?? 0) || 0,
     isNft: true,
     isFungibleToken: false,
     src: imageSrc,
     metadata: {
+      ...asset.metadata,
       policyId: asset.policy_id || asset.policyId || asset.metadata?.policyId,
       image: imageSrc,
       assetName: asset.asset_id || asset.assetNameHex || asset.metadata?.assetName,
-      ...asset.metadata,
     },
-    ...asset,
   };
 };
 

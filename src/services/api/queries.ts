@@ -418,7 +418,7 @@ export const useSwappableAssets = (vaultId: string) => {
 };
 
 export const useOffersToCancel = (vaultId: string, { limit = 20, search = '' } = {}) => {
-  const trimmedSearch = search.trim();
+  const trimmedSearch = typeof search === 'string' ? search.trim() : '';
 
   return useInfiniteQuery({
     queryKey: ['offers-to-cancel', vaultId, limit, trimmedSearch],
