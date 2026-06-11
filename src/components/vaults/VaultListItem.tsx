@@ -30,9 +30,16 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
     return isLessThanOneDay && isLessThanTenPercent;
   }, [vault.phaseStartTime, vault.phaseEndTime, vault.timeRemaining]);
 
+  const linkSearch = useMemo(() => {
+    if (vault.vaultStatus === 'acquire' || vault.vaultStatus === 'acquire_expansion') {
+      return { tab: 'Token' };
+    }
+    return undefined;
+  }, [vault.vaultStatus]);
+
   return (
     <div className="relative mb-6">
-      <Link className="block" to={`/vaults/${id}`}>
+      <Link className="block" to={`/vaults/${id}`} search={linkSearch}>
         <div className="hidden md:block absolute bottom-9 left-2.5 w-[98px] h-[98px] rounded-2xl overflow-hidden">
           {vaultImage ? (
             <img alt={`${name} vault avatar`} src={vaultImage} className="object-cover w-full h-full" />

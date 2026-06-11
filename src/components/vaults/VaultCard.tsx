@@ -32,9 +32,16 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
     return isLessThanOneDay && isLessThanTenPercent;
   }, [vault.phaseStartTime, vault.phaseEndTime, vault.timeRemaining]);
 
+  const linkSearch = useMemo(() => {
+    if (vault.vaultStatus === 'acquire' || vault.vaultStatus === 'acquire_expansion') {
+      return { tab: 'Token' };
+    }
+    return undefined;
+  }, [vault.vaultStatus]);
+
   return (
     <div className="w-full max-w-md rounded-xl bg-steel-950 overflow-hidden flex flex-col">
-      <Link className="block flex-1 flex flex-col" to={`/vaults/${id}`}>
+      <Link className="block flex-1 flex flex-col" to={`/vaults/${id}`} search={linkSearch}>
         <div className="relative h-52">
           {vaultImage ? (
             <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} loading="lazy" />
