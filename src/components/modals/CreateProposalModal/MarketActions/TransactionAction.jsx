@@ -421,12 +421,8 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             <p className="text-sm text-gray-400">Display Name:</p>
-                            {metadata.isLoading && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
-                            {!metadata.isLoading && metadata.displayName && metadata.unit === option.assetId && (
-                              <CheckCircle className="w-3 h-3 text-green-500" />
-                            )}
                             {metadata.displayName && metadata.unit === option.assetId && option.assetId.length > 56 && (
                               <a
                                 href={`https://www.wayup.io/collection/${option.assetId.substring(0, 56)}/asset/${option.assetId.substring(56)}`}
@@ -438,16 +434,24 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                               </a>
                             )}
                           </div>
-                          <LavaSteelInput
-                            type="text"
-                            placeholder={metadata.isLoading ? 'Loading...' : 'Auto-filled'}
-                            value={metadata.unit === option.assetId ? metadata.displayName || '' : ''}
-                            onChange={() => {}} // No-op, field is read-only
-                            disabled={true}
-                            className="!bg-steel-900/50"
-                          />
-                          {metadata.error && metadata.unit === option.assetId && (
-                            <p className="text-xs text-red-500 mt-1">{metadata.error}</p>
+                          {metadata.isLoading ? (
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-steel-900/50 border border-steel-700/50 rounded-lg">
+                              <Loader2 className="w-4 h-4 animate-spin text-orange-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-400">Loading asset metadata...</span>
+                            </div>
+                          ) : metadata.displayName && metadata.unit === option.assetId ? (
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-green-900/20 border border-green-500/30 rounded-lg">
+                              <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-200 break-words">{metadata.displayName}</span>
+                            </div>
+                          ) : metadata.error && metadata.unit === option.assetId ? (
+                            <div className="px-3 py-2.5 bg-red-900/20 border border-red-500/30 rounded-lg">
+                              <p className="text-xs text-red-400">{metadata.error}</p>
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2.5 bg-steel-900/50 border border-steel-750 rounded-lg">
+                              <span className="text-sm text-gray-500 italic">Enter asset unit</span>
+                            </div>
                           )}
                         </div>
                         <div>
