@@ -116,11 +116,19 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     const decimalMultiplier = Math.pow(10, decimals);
 
     if (vault.expansionPriceType === 'limit') {
-      // Limit price: expansionLimitPrice is VT per asset; total VT = VT per asset * number of assets
+      // Limit price: expansionLimitPrice is VT per normalized asset unit
+      // NFTs count as 1 each; FTs use the entered decimal-adjusted quantity
       if (!vault.expansionLimitPrice || vault.expansionLimitPrice === 0) return 0;
-      const assetCount = selectedNFTs.length;
-      if (assetCount === 0) return 0;
-      return vault.expansionLimitPrice * assetCount * decimalMultiplier;
+      let totalNormalizedQuantity = 0;
+      for (const asset of selectedNFTs) {
+        if (asset.isFungibleToken) {
+          totalNormalizedQuantity += parseFloat(asset.amount || '0');
+        } else {
+          totalNormalizedQuantity += 1;
+        }
+      }
+      if (totalNormalizedQuantity === 0) return 0;
+      return vault.expansionLimitPrice * totalNormalizedQuantity * decimalMultiplier;
     } else {
       // Market price: VT amount = Asset Value (ADA) / Current VT Price (ADA per VT)
       const currentVtPrice = vault.vtPrice;
