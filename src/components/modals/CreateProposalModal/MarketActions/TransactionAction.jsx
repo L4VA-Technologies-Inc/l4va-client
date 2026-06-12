@@ -193,6 +193,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
     if (Number(value) <= 0) {
       setOptions(options.map(option => (option.id === id ? { ...option, [field]: '' } : option)));
+      return;
     }
 
     setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
@@ -377,7 +378,9 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-400 mb-2">Max Price to Buy/Offer</p>
+                          <p className="text-sm text-gray-400 mb-2">
+                            {option.sellType === 'Offer' ? 'Offer Price (ADA)' : 'Max Buy Price (ADA)'}
+                          </p>
                           <LavaSteelInput
                             type="number"
                             min={0}

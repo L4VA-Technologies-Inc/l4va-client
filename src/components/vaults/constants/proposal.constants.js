@@ -12,7 +12,7 @@ export const buyOptionSchema = yup.object({
       return Number.isNaN(parsed) ? undefined : parsed;
     })
     .typeError('Price must be a number')
-    .moreThan(0, 'Price must be greater than 0')
+    .min(5, 'Minimum price is 5 ADA')
     .required(),
   exec: yup.string().required(),
   id: yup.number().required(),

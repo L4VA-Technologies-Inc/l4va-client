@@ -218,7 +218,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           proposalPayload.metadata = proposalData;
         } else if (marketActionType === 'buy') {
           proposalPayload.marketplaceActions = (proposalData.buyingSellingOptions || [])
-            .filter(opt => opt.assetId && opt.assetId.length >= 56 && opt.price && Number(opt.price) > 0)
+            .filter(opt => opt.assetId && opt.assetId.length >= 56 && opt.price && Number(opt.price) >= 5)
             .map(opt => ({
               assetId: opt.assetId,
               exec: opt.exec,
