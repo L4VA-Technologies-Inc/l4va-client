@@ -132,12 +132,18 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
       [optionId]: metadata,
     }));
 
-    // Update the option with displayName for submission
-    if (metadata.displayName) {
-      setOptions(prevOptions =>
-        prevOptions.map(opt => (opt.id === optionId ? { ...opt, displayName: metadata.displayName } : opt))
-      );
-    }
+    // Update the option with assetName (for validation) and displayName (for historical reference)
+    setOptions(prevOptions =>
+      prevOptions.map(opt =>
+        opt.id === optionId
+          ? {
+              ...opt,
+              assetName: metadata.displayName || '',
+              displayName: metadata.displayName || '',
+            }
+          : opt
+      )
+    );
   }, []);
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
