@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Plus, Wallet, X } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { AlertCircle, Plus, Wallet, X, Loader2, CheckCircle } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect';
-import { useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { useVaultAssetsForProposalByType, useAssetMetadata } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { transactionOptionSchema, buyOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
@@ -20,7 +20,7 @@ const sellTypeOptions = [
 ];
 
 const buyTypeOptions = [
-  { value: 'Offer', label: 'Offer - coming soon', disabled: true },
+  { value: 'Offer', label: 'Offer' },
   { value: 'Buy', label: 'Buy' },
 ];
 
@@ -52,16 +52,99 @@ const validateOption = (option, isBuyType = false) => {
   }
 };
 
+// Component to handle asset metadata fetching for a single buy option
+const BuyOptionMetadataHandler = ({ option, onMetadataChange }) => {
+  const [debouncedUnit, setDebouncedUnit] = useState('');
+
+  // Validate unit format: more than 56 hex characters (policy + asset name required)
+  const isValidUnit = Boolean(option.assetId && /^[a-fA-F0-9]{57,}$/.test(option.assetId));
+
+  // Clear display name immediately when unit changes
+  useEffect(() => {
+    onMetadataChange(option.id, {
+      displayName: '',
+      unit: option.assetId || '',
+      isLoading: false,
+      error: null,
+    });
+  }, [option.assetId, option.id, onMetadataChange]);
+
+  // Debounce the unit value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUnit(option.assetId || '');
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [option.assetId]);
+
+  // Fetch metadata when debounced unit is valid
+  const { data, isLoading, error } = useAssetMetadata(debouncedUnit, isValidUnit);
+
+  // Update parent component when metadata changes
+  useEffect(() => {
+    // Only update if the response is for the current unit (prevent stale data)
+    const currentUnit = option.assetId || '';
+
+    if (data?.data && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: data.data.displayName,
+        unit: currentUnit,
+        isLoading: false,
+        error: null,
+      });
+    } else if (error && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: '',
+        unit: currentUnit,
+        isLoading: false,
+        error: error.message || 'Failed to fetch asset metadata',
+      });
+    } else if (isLoading && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: '',
+        unit: currentUnit,
+        isLoading: true,
+        error: null,
+      });
+    }
+  }, [data, isLoading, error, option.id, option.assetId, debouncedUnit, onMetadataChange]);
+
+  return null; // This component doesn't render anything
+};
+
 const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Transaction Options' }) => {
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
+  const [assetMetadataMap, setAssetMetadataMap] = useState({}); // Map of optionId -> metadata
 
   const isBuyType = execType === 'BUY';
   const getExecValue = sellType => {
     if (!isBuyType) return execType;
     return sellType === 'Offer' ? 'OFFER' : 'BUY';
   };
+
+  // Handle metadata changes for buy options
+  const handleMetadataChange = useCallback((optionId, metadata) => {
+    setAssetMetadataMap(prev => ({
+      ...prev,
+      [optionId]: metadata,
+    }));
+
+    // Update the option with assetName (for validation) and displayName (for historical reference)
+    setOptions(prevOptions =>
+      prevOptions.map(opt =>
+        opt.id === optionId
+          ? {
+              ...opt,
+              assetName: metadata.displayName || '',
+              displayName: metadata.displayName || '',
+            }
+          : opt
+      )
+    );
+  }, []);
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
 
@@ -193,6 +276,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
 
     if (Number(value) <= 0) {
       setOptions(options.map(option => (option.id === id ? { ...option, [field]: '' } : option)));
+      return;
     }
 
     setOptions(options.map(option => (option.id === id ? { ...option, [field]: value } : option)));
@@ -313,8 +397,11 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
         <div className="space-y-8">
           {options.map((option, index) => {
             const isOverLimit = parseFloat(option.quantity) > getAvailableAmount(option.id);
+            const metadata = assetMetadataMap[option.id] || {};
+
             return (
               <div key={option.id}>
+                {isBuyType && <BuyOptionMetadataHandler option={option} onMetadataChange={handleMetadataChange} />}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                   <p className="font-medium">
                     Option {index + 1}{' '}
@@ -340,26 +427,41 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             <p className="text-sm text-gray-400">Display Name:</p>
-                            <a
-                              href="https://www.wayup.io/"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
-                            >
-                              WayUp
-                            </a>
+                            {metadata.displayName && metadata.unit === option.assetId && option.assetId.length > 56 && (
+                              <a
+                                href={`https://www.wayup.io/collection/${option.assetId.substring(0, 56)}/asset/${option.assetId.substring(56)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
+                              >
+                                WayUp
+                              </a>
+                            )}
                           </div>
-                          <LavaSteelInput
-                            type="text"
-                            placeholder="Enter display name"
-                            value={option.assetName || ''}
-                            onChange={value => handleOptionChange(option.id, 'assetName', value)}
-                          />
+                          {metadata.isLoading ? (
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-steel-900/50 border border-steel-700/50 rounded-lg">
+                              <Loader2 className="w-4 h-4 animate-spin text-orange-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-400">Loading asset metadata...</span>
+                            </div>
+                          ) : metadata.displayName && metadata.unit === option.assetId ? (
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-green-900/20 border border-green-500/30 rounded-lg">
+                              <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-sm text-gray-200 break-words">{metadata.displayName}</span>
+                            </div>
+                          ) : metadata.error && metadata.unit === option.assetId ? (
+                            <div className="px-3 py-2.5 bg-red-900/20 border border-red-500/30 rounded-lg">
+                              <p className="text-xs text-red-400">{metadata.error}</p>
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2.5 bg-steel-900/50 border border-steel-750 rounded-lg">
+                              <span className="text-sm text-gray-500 italic">Enter asset unit</span>
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm text-gray-400 mb-2">Buy Type</p>
+                          <p className="text-sm text-gray-400 mb-2">Exec Type</p>
                           <LavaSteelSelect
                             options={buyTypeOptions}
                             placeholder="Select type"
@@ -377,7 +479,9 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                           />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-400 mb-2">Buying Max Price</p>
+                          <p className="text-sm text-gray-400 mb-2">
+                            {option.sellType === 'Offer' ? 'Offer Price (ADA)' : 'Max Buy Price (ADA)'}
+                          </p>
                           <LavaSteelInput
                             type="number"
                             min={0}
@@ -397,17 +501,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <p className="text-sm text-gray-400">Asset Unit:</p>
-                          <a
-                            href="https://www.wayup.io/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
-                          >
-                            WayUp
-                          </a>
-                        </div>
+                        <p className="text-sm text-gray-400 mb-2">Asset Unit:</p>
                         <LavaSteelInput
                           type="text"
                           placeholder="Enter asset unit"
