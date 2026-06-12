@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Plus, Wallet, X } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { AlertCircle, Plus, Wallet, X, Loader2, CheckCircle } from 'lucide-react';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaMultiSelect, LavaSteelSelect } from '@/components/shared/LavaSelect';
-import { useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { useVaultAssetsForProposalByType, useAssetMetadata } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { transactionOptionSchema, buyOptionSchema } from '@/components/vaults/constants/proposal.constants.js';
@@ -52,16 +52,93 @@ const validateOption = (option, isBuyType = false) => {
   }
 };
 
+// Component to handle asset metadata fetching for a single buy option
+const BuyOptionMetadataHandler = ({ option, onMetadataChange }) => {
+  const [debouncedUnit, setDebouncedUnit] = useState('');
+
+  // Validate unit format: more than 56 hex characters (policy + asset name required)
+  const isValidUnit = Boolean(option.assetId && /^[a-fA-F0-9]{57,}$/.test(option.assetId));
+
+  // Clear display name immediately when unit changes
+  useEffect(() => {
+    onMetadataChange(option.id, {
+      displayName: '',
+      unit: option.assetId || '',
+      isLoading: false,
+      error: null,
+    });
+  }, [option.assetId, option.id, onMetadataChange]);
+
+  // Debounce the unit value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUnit(option.assetId || '');
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [option.assetId]);
+
+  // Fetch metadata when debounced unit is valid
+  const { data, isLoading, error } = useAssetMetadata(debouncedUnit, isValidUnit);
+
+  // Update parent component when metadata changes
+  useEffect(() => {
+    // Only update if the response is for the current unit (prevent stale data)
+    const currentUnit = option.assetId || '';
+
+    if (data?.data && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: data.data.displayName,
+        unit: currentUnit,
+        isLoading: false,
+        error: null,
+      });
+    } else if (error && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: '',
+        unit: currentUnit,
+        isLoading: false,
+        error: error.message || 'Failed to fetch asset metadata',
+      });
+    } else if (isLoading && debouncedUnit === currentUnit) {
+      onMetadataChange(option.id, {
+        displayName: '',
+        unit: currentUnit,
+        isLoading: true,
+        error: null,
+      });
+    }
+  }, [data, isLoading, error, option.id, option.assetId, debouncedUnit, onMetadataChange]);
+
+  return null; // This component doesn't render anything
+};
+
 const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Transaction Options' }) => {
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
+  const [assetMetadataMap, setAssetMetadataMap] = useState({}); // Map of optionId -> metadata
 
   const isBuyType = execType === 'BUY';
   const getExecValue = sellType => {
     if (!isBuyType) return execType;
     return sellType === 'Offer' ? 'OFFER' : 'BUY';
   };
+
+  // Handle metadata changes for buy options
+  const handleMetadataChange = useCallback((optionId, metadata) => {
+    setAssetMetadataMap(prev => ({
+      ...prev,
+      [optionId]: metadata,
+    }));
+
+    // Update the option with displayName for submission
+    if (metadata.displayName) {
+      setOptions(prevOptions =>
+        prevOptions.map(opt => (opt.id === optionId ? { ...opt, displayName: metadata.displayName } : opt))
+      );
+    }
+  }, []);
 
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'buy-sell');
 
@@ -314,8 +391,11 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
         <div className="space-y-8">
           {options.map((option, index) => {
             const isOverLimit = parseFloat(option.quantity) > getAvailableAmount(option.id);
+            const metadata = assetMetadataMap[option.id] || {};
+
             return (
               <div key={option.id}>
+                {isBuyType && <BuyOptionMetadataHandler option={option} onMetadataChange={handleMetadataChange} />}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                   <p className="font-medium">
                     Option {index + 1}{' '}
@@ -343,21 +423,32 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                         <div>
                           <div className="flex items-center gap-2 mb-2">
                             <p className="text-sm text-gray-400">Display Name:</p>
-                            <a
-                              href="https://www.wayup.io/"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
-                            >
-                              WayUp
-                            </a>
+                            {metadata.isLoading && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
+                            {!metadata.isLoading && metadata.displayName && metadata.unit === option.assetId && (
+                              <CheckCircle className="w-3 h-3 text-green-500" />
+                            )}
+                            {metadata.displayName && metadata.unit === option.assetId && option.assetId.length > 56 && (
+                              <a
+                                href={`https://www.wayup.io/collection/${option.assetId.substring(0, 56)}/asset/${option.assetId.substring(56)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
+                              >
+                                WayUp
+                              </a>
+                            )}
                           </div>
                           <LavaSteelInput
                             type="text"
-                            placeholder="Enter display name"
-                            value={option.assetName || ''}
-                            onChange={value => handleOptionChange(option.id, 'assetName', value)}
+                            placeholder={metadata.isLoading ? 'Loading...' : 'Auto-filled'}
+                            value={metadata.unit === option.assetId ? metadata.displayName || '' : ''}
+                            onChange={() => {}} // No-op, field is read-only
+                            disabled={true}
+                            className="!bg-steel-900/50"
                           />
+                          {metadata.error && metadata.unit === option.assetId && (
+                            <p className="text-xs text-red-500 mt-1">{metadata.error}</p>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm text-gray-400 mb-2">Exec Type</p>
@@ -400,17 +491,7 @@ const TransactionAction = ({ vaultId, onDataChange, error, execType, title = 'Tr
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <p className="text-sm text-gray-400">Asset Unit:</p>
-                          <a
-                            href="https://www.wayup.io/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-orange-500 hover:text-orange-400 hover:underline"
-                          >
-                            WayUp
-                          </a>
-                        </div>
+                        <p className="text-sm text-gray-400 mb-2">Asset Unit:</p>
                         <LavaSteelInput
                           type="text"
                           placeholder="Enter asset unit"

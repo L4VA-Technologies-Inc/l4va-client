@@ -31,6 +31,10 @@ export class GovernanceConfigProvider {
     return `/api/v1/governance/vaults/${vaultId}/swappable-assets`;
   }
 
+  static getAssetMetadata(unit) {
+    return `/api/v1/governance/assets/metadata/${unit}`;
+  }
+
   static getOffersToCancel(vaultId) {
     return `/api/v1/governance/vaults/${vaultId}/offers-to-cancel`;
   }

@@ -417,6 +417,16 @@ export const useSwappableAssets = (vaultId: string) => {
   });
 };
 
+export const useAssetMetadata = (unit: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['asset-metadata', unit],
+    queryFn: () => GovernanceApiProvider.getAssetMetadata(unit),
+    enabled: enabled && !!unit && unit.length >= 56,
+    retry: 1,
+    staleTime: 1000 * 60 * 60, // 1 hour - asset metadata rarely changes
+  });
+};
+
 export const useOffersToCancel = (vaultId: string, { limit = 20, search = '' } = {}) => {
   const trimmedSearch = typeof search === 'string' ? search.trim() : '';
 

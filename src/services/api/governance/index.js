@@ -47,6 +47,11 @@ export class GovernanceApiProvider {
     return response;
   }
 
+  static async getAssetMetadata(unit) {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetMetadata(unit));
+    return response;
+  }
+
   static async getOffersToCancel(vaultId, { page = 1, limit = 20, search } = {}) {
     const params = { page, limit };
     const trimmedSearch = typeof search === 'string' ? search.trim() : '';
