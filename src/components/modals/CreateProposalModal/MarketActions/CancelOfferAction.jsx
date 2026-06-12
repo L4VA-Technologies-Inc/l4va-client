@@ -99,7 +99,6 @@ export const CancelOfferAction = ({ vaultId, onDataChange }) => {
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       showTabs={false}
-      title="Available Assets To Cancel"
-    />
+      title="Offers Available to Cancel"
   );
 };
