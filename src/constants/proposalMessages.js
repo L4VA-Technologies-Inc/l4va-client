@@ -14,6 +14,8 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     asset_whitelist_update: 'Asset whitelist update is being prepared and executed...',
     expansion: 'Vault expansion is being prepared and executed...',
     acquire_expansion: 'Acquire expansion is being prepared and executed...',
+    relics_staking: 'Relics staking transactions are being prepared and executed...',
+    relics_unstaking: 'Relics unstaking transactions are being prepared and executed...',
     default: 'Proposal actions are being prepared and executed...',
   },
 
@@ -25,6 +27,8 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     asset_whitelist_update: 'New assets have been successfully added to the vault whitelist.',
     expansion: 'Vault expansion has been successfully opened. New assets can now be contributed.',
     acquire_expansion: 'Acquire expansion has been successfully opened. The vault is now accepting ADA contributions.',
+    relics_staking: 'Relics NFTs have been successfully staked on Anvil platform. Rewards will accumulate over time.',
+    relics_unstaking: 'Relics NFTs have been successfully unstaked and VLRM rewards transferred to treasury.',
     termination: {
       default: 'Vault termination has been successfully completed.',
       dao: 'Vault has been successfully terminated by governance vote.',

@@ -9,6 +9,7 @@ import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
+import { VaultRewards } from '@/components/vault-profile/VaultRewards.jsx';
 import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
@@ -21,6 +22,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
     Token: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
     Activity: <VaultActivity vault={vault} />,
+    Rewards: <VaultRewards vault={vault} />,
   };
 
   const tabContent = {

@@ -47,6 +47,26 @@ export class GovernanceApiProvider {
     return response;
   }
 
+  static async getRelicsStakingAssets(vaultId, platform = 'anvil-relics') {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getAssetsToStakeRelics(vaultId), {
+      params: { platform },
+    });
+    return response;
+  }
+
+  static async getVaultStakedAssets(vaultId, platform = null) {
+    const params = platform ? { platform } : {};
+    const response = await axiosInstance.get(GovernanceConfigProvider.getVaultStakedAssets(vaultId), {
+      params,
+    });
+    return response;
+  }
+
+  static async getVaultStakingStats(vaultId) {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getVaultStakingStats(vaultId));
+    return response;
+  }
+
   static async getAssetMetadata(unit) {
     const response = await axiosInstance.get(GovernanceConfigProvider.getAssetMetadata(unit));
     return response;

@@ -50,4 +50,17 @@ export class GovernanceConfigProvider {
   static submitProposalFeePayment(proposalId) {
     return `/api/v1/governance/proposals/${proposalId}/submit-fee-payment`;
   }
+
+  // Relics Staking endpoints
+  static getAssetsToStakeRelics(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/governance/assets-to-stake-relics`;
+  }
+
+  static getVaultStakedAssets(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/staked-assets`;
+  }
+
+  static getVaultStakingStats(vaultId) {
+    return `/api/v1/governance/vaults/${vaultId}/staking-stats`;
+  }
 }

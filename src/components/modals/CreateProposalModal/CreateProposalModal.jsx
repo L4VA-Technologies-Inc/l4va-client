@@ -15,6 +15,7 @@ import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
+import { RelicsStakingProposalForm } from '@/components/proposals/RelicsStakingProposalForm.jsx';
 import {
   useCreateProposal,
   useGovernanceProposals,
@@ -37,6 +38,8 @@ const executionOptions = [
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
+  { value: 'relics_staking', label: 'Relics Staking' },
+  { value: 'relics_unstaking', label: 'Relics Unstaking' },
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
@@ -81,6 +84,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
+      relics_staking: governanceFees.data.proposalFeeStaking || 0,
+      relics_unstaking: governanceFees.data.proposalFeeStaking || 0,
     };
     return feeMap[selectedOption] || 0;
   }, [governanceFees, selectedOption]);
@@ -191,6 +196,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.metadata = {
           burnAssets: proposalData.burnAssets || [],
         };
+      } else if (selectedOption === 'relics_staking' || selectedOption === 'relics_unstaking') {
+        proposalPayload.relicsStakingActions = proposalData.relicsStakingActions || [];
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
@@ -478,6 +485,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {(selectedOption === 'relics_staking' || selectedOption === 'relics_unstaking') && (
+              <RelicsStakingProposalForm
+                vault={vault}
+                proposalType={selectedOption}
+                onPayloadChange={handleDataChange}
+              />
             )}
 
             <div className="mt-8">

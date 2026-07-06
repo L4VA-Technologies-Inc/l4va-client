@@ -427,6 +427,49 @@ export const useAssetMetadata = (unit: string, enabled: boolean = true) => {
   });
 };
 
+// Relics Staking Queries
+export const useRelicsStakingData = (vaultId: string) => {
+  return useQuery({
+    queryKey: ['vault-relics-staking', vaultId],
+    queryFn: async () => {
+      const [eligibleAssets, stakedAssets, stats] = await Promise.all([
+        GovernanceApiProvider.getRelicsStakingAssets(vaultId),
+        GovernanceApiProvider.getVaultStakedAssets(vaultId),
+        GovernanceApiProvider.getVaultStakingStats(vaultId),
+      ]);
+      return {
+        eligibleAssets: eligibleAssets.data,
+        stakedAssets: stakedAssets.data,
+        stats: stats.data,
+      };
+    },
+    enabled: !!vaultId,
+    staleTime: 30000, // 30 seconds
+  });
+};
+
+export const useEligibleRelicsAssets = (vaultId: string, platform = 'anvil-relics') => {
+  return useQuery({
+    queryKey: ['vault-relics-eligible', vaultId, platform],
+    queryFn: async () => {
+      const response = await GovernanceApiProvider.getRelicsStakingAssets(vaultId, platform);
+      return response.data;
+    },
+    enabled: !!vaultId,
+  });
+};
+
+export const useStakedRelicsAssets = (vaultId: string, platform?: string) => {
+  return useQuery({
+    queryKey: ['vault-relics-staked', vaultId, platform],
+    queryFn: async () => {
+      const response = await GovernanceApiProvider.getVaultStakedAssets(vaultId, platform || null);
+      return response.data;
+    },
+    enabled: !!vaultId,
+  });
+};
+
 export const useOffersToCancel = (vaultId: string, { limit = 20, search = '' } = {}) => {
   const trimmedSearch = typeof search === 'string' ? search.trim() : '';
 
