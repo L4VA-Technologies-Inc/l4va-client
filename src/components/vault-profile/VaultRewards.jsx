@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Coins, TrendingUp, Package, RefreshCw, Plus, Gift, Sprout } from 'lucide-react';
+import { Coins, TrendingUp, Package, Plus, Gift, Sprout } from 'lucide-react';
+
 import { useRelicsStakingData } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -9,16 +10,9 @@ import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultRewards = ({ vault }) => {
-  const { data, isLoading, refetch } = useRelicsStakingData(vault.id);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { data, isLoading } = useRelicsStakingData(vault.id);
   const [activeSection, setActiveSection] = useState('relics'); // 'relics', 'lp-farms', 'l4va'
   const { openModal } = useModalControls();
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-  };
 
   const handleCreateProposal = action => {
     // Navigate to create proposal modal with pre-filled action
@@ -48,14 +42,6 @@ export const VaultRewards = ({ vault }) => {
           <h2 className="text-2xl font-bold text-white">Vault Rewards</h2>
           <p className="text-steel-400 text-sm mt-1">Track all rewards earned by this vault</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="px-4 py-2 rounded-xl bg-steel-800 hover:bg-steel-750 text-steel-300 hover:text-white transition-colors flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
       </div>
 
       {/* Section Navigation Pills */}
@@ -120,7 +106,6 @@ export const VaultRewards = ({ vault }) => {
 // ============================================================================
 
 const RelicsStakingSection = ({
-  vault,
   stats,
   eligibleAssets,
   stakedAssets,

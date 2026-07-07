@@ -40,10 +40,9 @@ const executionOptions = [
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
 
   // Staking Operations Group
-  { value: 'group_staking', label: '─── Staking Operations ───', disabled: true, isGroupLabel: true },
-  { value: 'stake_assets', label: '📈 Stake Assets' },
-  { value: 'unstake_assets', label: '📉 Unstake Assets' },
-  { value: 'harvest_rewards', label: '🌾 Harvest Rewards' },
+  { value: 'stake_assets', label: 'Stake Assets' },
+  { value: 'unstake_assets', label: 'Unstake Assets' },
+  { value: 'harvest_rewards', label: 'Harvest Rewards' },
 
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
