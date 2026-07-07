@@ -1,19 +1,27 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Minus, CheckCircle2, Package } from 'lucide-react';
+
 import { useEligibleRelicsAssets, useStakedRelicsAssets } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
-import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 
-export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange }) => {
-  const isStaking = proposalType === 'relics_staking';
+export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadChange }) => {
+  const isStaking = action === 'stake';
+  const isHarvesting = action === 'harvest';
 
-  // Fetch data based on proposal type
-  const { data: eligibleAssets, isLoading: loadingEligible } = useEligibleRelicsAssets(vault.id, 'anvil-relics');
-  const { data: stakedAssets, isLoading: loadingStaked } = useStakedRelicsAssets(vault.id, 'anvil-relics');
+  // Fetch data based on action type
+  const { data: eligibleAssets, isLoading: loadingEligible } = useEligibleRelicsAssets(vault.id, platform, {
+    enabled: isStaking,
+  });
+  const { data: stakedAssets, isLoading: loadingStaked } = useStakedRelicsAssets(vault.id, platform, {
+    enabled: !isStaking,
+  });
 
   const isLoading = isStaking ? loadingEligible : loadingStaked;
-  const assets = isStaking ? eligibleAssets?.assets || [] : stakedAssets?.assets || [];
+  const assets = useMemo(
+    () => (isStaking ? eligibleAssets?.assets || [] : stakedAssets?.assets || []),
+    [isStaking, eligibleAssets?.assets, stakedAssets?.assets]
+  );
 
   // Form state
   const [selectedAssetIds, setSelectedAssetIds] = useState([]);
@@ -54,28 +62,43 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
   };
 
   // Build payload when selections change
-  useMemo(() => {
+  useEffect(() => {
     const payload = {
-      relicsStakingActions: [
+      stakingActions: [
         {
-          action: isStaking ? 'stake' : 'unstake',
-          platform: 'anvil-relics',
+          action,
+          platform,
           stakeCollectionId: 54, // Relics collection ID on Anvil
           ...(isStaking && stakeAll
             ? { stakeAll: true }
             : isStaking
-            ? { assetIds: selectedAssetIds }
-            : { stakeIds: selectedAssetIds.map(id => {
-                const asset = assets.find(a => a.id === id);
-                return asset?.stake_id;
-              }).filter(Boolean) }),
-          ...(isStaking ? {} : { claimRewards: true }), // Always claim rewards on unstake
+              ? { assetIds: selectedAssetIds }
+              : isHarvesting
+                ? {
+                    stakeIds: selectedAssetIds
+                      .map(id => {
+                        const asset = assets.find(a => a.id === id);
+                        return asset?.stake_id;
+                      })
+                      .filter(Boolean),
+                    claimOnly: true,
+                  }
+                : {
+                    stakeIds: selectedAssetIds
+                      .map(id => {
+                        const asset = assets.find(a => a.id === id);
+                        return asset?.stake_id;
+                      })
+                      .filter(Boolean),
+                    claimRewards: true,
+                  }),
         },
       ],
+      isValid: isStaking ? stakeAll || selectedAssetIds.length > 0 : selectedAssetIds.length > 0,
     };
 
     onPayloadChange?.(payload);
-  }, [selectedAssetIds, stakeAll, isStaking, assets, onPayloadChange]);
+  }, [selectedAssetIds, stakeAll, action, platform, isStaking, isHarvesting, assets, onPayloadChange]);
 
   if (isLoading) {
     return (
@@ -86,16 +109,22 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
   }
 
   if (!assets.length) {
+    const getMessage = () => {
+      if (isStaking) {
+        return 'No eligible Relics NFTs available for staking. Extract assets from vault to treasury first.';
+      }
+      if (isHarvesting) {
+        return 'No staked Relics NFTs available. Stake assets first to earn rewards.';
+      }
+      return 'No staked Relics NFTs available for unstaking.';
+    };
+
     return (
       <div className="bg-steel-850 border border-steel-750 rounded-xl p-8 text-center">
         <div className="w-16 h-16 rounded-full bg-steel-800 flex items-center justify-center mx-auto mb-4">
           <Package className="w-8 h-8 text-steel-500" />
         </div>
-        <p className="text-steel-400">
-          {isStaking
-            ? 'No eligible Relics NFTs available for staking. Extract assets from vault to treasury first.'
-            : 'No staked Relics NFTs available for unstaking.'}
-        </p>
+        <p className="text-steel-400">{getMessage()}</p>
       </div>
     );
   }
@@ -107,6 +136,29 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
 
   return (
     <div className="space-y-4">
+      {/* Action Info Banner */}
+      <div
+        className={`border rounded-xl p-4 ${
+          isStaking
+            ? 'bg-purple-500/10 border-purple-500/30'
+            : isHarvesting
+              ? 'bg-green-500/10 border-green-500/30'
+              : 'bg-blue-500/10 border-blue-500/30'
+        }`}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl">{isStaking ? '📈' : isHarvesting ? '🌾' : '📉'}</span>
+          <p className="font-semibold text-white">
+            {isStaking ? 'Stake Assets' : isHarvesting ? 'Harvest Rewards' : 'Unstake Assets'}
+          </p>
+        </div>
+        <p className="text-sm text-steel-400">
+          {isStaking && 'Lock your NFTs to earn staking rewards on Anvil Protocol.'}
+          {isHarvesting && 'Claim accumulated rewards without unstaking your NFTs.'}
+          {!isStaking && !isHarvesting && 'Withdraw your NFTs and automatically claim all earned rewards.'}
+        </p>
+      </div>
+
       {/* Stake All Option (for staking only) */}
       {isStaking && (
         <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
@@ -120,9 +172,7 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-white">Stake All Eligible Assets</p>
-                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">
-                  Recommended
-                </span>
+                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">Recommended</span>
               </div>
               <p className="text-sm text-steel-400 mt-1">
                 Stake all {assets.length} Relics NFTs in a single proposal. Assets will be batched into transactions of
@@ -210,9 +260,7 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
                 <div className="absolute top-2 right-2">
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? 'bg-purple-500 border-purple-500'
-                        : 'bg-steel-800 border-steel-600'
+                      isSelected ? 'bg-purple-500 border-purple-500' : 'bg-steel-800 border-steel-600'
                     }`}
                   >
                     {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
@@ -222,11 +270,7 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
                 {/* Asset Image */}
                 {asset.metadata?.image && (
                   <div className="w-full aspect-square rounded-lg overflow-hidden mb-2">
-                    <img
-                      src={asset.metadata.image}
-                      alt={asset.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={asset.metadata.image} alt={asset.name} className="w-full h-full object-cover" />
                   </div>
                 )}
 
@@ -254,8 +298,8 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
           </div>
           <p className="text-xl font-semibold text-white mb-2">Staking All {assets.length} Relics NFTs</p>
           <p className="text-steel-400 text-sm">
-            Assets will be automatically batched into {numBatches} transaction{numBatches > 1 ? 's' : ''} for
-            efficient execution
+            Assets will be automatically batched into {numBatches} transaction{numBatches > 1 ? 's' : ''} for efficient
+            execution
           </p>
         </div>
       )}
@@ -264,7 +308,8 @@ export const RelicsStakingProposalForm = ({ vault, proposalType, onPayloadChange
       {!stakeAll && totalSelected === 0 && (
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
           <p className="text-orange-400 text-sm">
-            Please select at least one {isStaking ? 'asset' : 'stake'} or enable "Stake All"
+            Please select at least one {isStaking ? 'asset' : isHarvesting ? 'staked position' : 'stake'}{' '}
+            {isStaking && 'or enable "Stake All"'}
           </p>
         </div>
       )}

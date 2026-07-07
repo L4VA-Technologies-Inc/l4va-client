@@ -38,14 +38,20 @@ const executionOptions = [
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
-  { value: 'relics_staking', label: 'Relics Staking' },
-  { value: 'relics_unstaking', label: 'Relics Unstaking' },
+
+  // Staking Operations Group
+  { value: 'group_staking', label: '─── Staking Operations ───', disabled: true, isGroupLabel: true },
+  { value: 'stake_assets', label: '📈 Stake Assets' },
+  { value: 'unstake_assets', label: '📉 Unstake Assets' },
+  { value: 'harvest_rewards', label: '🌾 Harvest Rewards' },
+
   { value: 'distribution', label: 'Distribution - Coming Soon', disabled: true },
-  { value: 'staking', label: 'Staking - Coming Soon', disabled: true },
   { value: 'termination', label: 'Termination - Coming Soon', disabled: true },
   { value: 'burning', label: 'Burning - Coming Soon', disabled: true },
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
+
+const platformOptions = [{ value: 'anvil-relics', label: 'Anvil Protocol (Relics)' }];
 
 const initialProposalData = {
   isValid: true,
@@ -57,6 +63,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [selectedOption, setSelectedOption] = useState(
     vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
   );
+  const [selectedPlatform, setSelectedPlatform] = useState('anvil-relics');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -84,8 +91,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
-      relics_staking: governanceFees.data.proposalFeeStaking || 0,
-      relics_unstaking: governanceFees.data.proposalFeeStaking || 0,
+      // New staking operations use same fee
+      stake_assets: governanceFees.data.proposalFeeStaking || 0,
+      unstake_assets: governanceFees.data.proposalFeeStaking || 0,
+      harvest_rewards: governanceFees.data.proposalFeeStaking || 0,
     };
     return feeMap[selectedOption] || 0;
   }, [governanceFees, selectedOption]);
@@ -196,8 +205,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.metadata = {
           burnAssets: proposalData.burnAssets || [],
         };
-      } else if (selectedOption === 'relics_staking' || selectedOption === 'relics_unstaking') {
-        proposalPayload.relicsStakingActions = proposalData.relicsStakingActions || [];
+      } else if (['stake_assets', 'unstake_assets', 'harvest_rewards'].includes(selectedOption)) {
+        proposalPayload.stakingActions = proposalData.stakingActions || [];
+        proposalPayload.type = selectedOption;
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
@@ -357,7 +367,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     }
     setProposalData(initialProposalData);
     setSelectedOption(value);
+    // Reset platform to default when changing execution option
+    setSelectedPlatform('anvil-relics');
   };
+
+  const isStakingOperation = ['stake_assets', 'unstake_assets', 'harvest_rewards'].includes(selectedOption);
 
   const renderFooter = () => {
     const isInvalid = isValidProposal();
@@ -446,6 +460,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+
+            {/* Platform selector for staking operations */}
+            {isStakingOperation && (
+              <LavaSteelSelect
+                label="Platform"
+                options={platformOptions}
+                placeholder="Select staking platform"
+                value={selectedPlatform}
+                onChange={setSelectedPlatform}
+              />
+            )}
           </div>
 
           <div className="space-y-4">
@@ -486,10 +511,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
             )}
-            {(selectedOption === 'relics_staking' || selectedOption === 'relics_unstaking') && (
+            {isStakingOperation && (
               <RelicsStakingProposalForm
                 vault={vault}
-                proposalType={selectedOption}
+                action={
+                  selectedOption === 'stake_assets'
+                    ? 'stake'
+                    : selectedOption === 'unstake_assets'
+                      ? 'unstake'
+                      : 'harvest'
+                }
+                platform={selectedPlatform}
                 onPayloadChange={handleDataChange}
               />
             )}
