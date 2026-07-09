@@ -35,7 +35,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
 
   const handleTabSelect = useCallback(
     selectedTab => {
-      if (selectedTab === 'Activity' && !user) {
+      if ((selectedTab === 'Activity' || selectedTab === 'Rewards') && !user) {
         openModal('LoginModal');
         return;
       }
