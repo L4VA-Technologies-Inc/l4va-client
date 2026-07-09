@@ -111,12 +111,12 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
   if (!assets.length) {
     const getMessage = () => {
       if (isStaking) {
-        return 'No eligible Relics NFTs available for staking. Extract assets from vault to treasury first.';
+        return 'No eligible Relics NFTs available for staking';
       }
       if (isHarvesting) {
-        return 'No staked Relics NFTs available. Stake assets first to earn rewards.';
+        return 'No staked Relics NFTs available. Stake assets first to earn rewards';
       }
-      return 'No staked Relics NFTs available for unstaking.';
+      return 'No staked Relics NFTs available for unstaking';
     };
 
     return (
@@ -153,7 +153,7 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
           </p>
         </div>
         <p className="text-sm text-steel-400">
-          {isStaking && 'Lock your NFTs to earn staking rewards on Anvil Protocol.'}
+          {isStaking && 'Lock your NFTs to earn staking rewards.'}
           {isHarvesting && 'Claim accumulated rewards without unstaking your NFTs.'}
           {!isStaking && !isHarvesting && 'Withdraw your NFTs and automatically claim all earned rewards.'}
         </p>
@@ -175,8 +175,8 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
                 <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded-full">Recommended</span>
               </div>
               <p className="text-sm text-steel-400 mt-1">
-                Stake all {assets.length} Relics NFTs in a single proposal. Assets will be batched into transactions of
-                50 NFTs each.
+                Stake all {assets.length} NFTs in a single proposal. Assets will be batched into transactions of 50 NFTs
+                each.
               </p>
               {stakeAll && numBatches > 1 && (
                 <p className="text-xs text-purple-400 mt-2">
@@ -296,7 +296,7 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
           <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
             <Package className="w-8 h-8 text-purple-500" />
           </div>
-          <p className="text-xl font-semibold text-white mb-2">Staking All {assets.length} Relics NFTs</p>
+          <p className="text-xl font-semibold text-white mb-2">Staking All {assets.length} NFTs</p>
           <p className="text-steel-400 text-sm">
             Assets will be automatically batched into {numBatches} transaction{numBatches > 1 ? 's' : ''} for efficient
             execution

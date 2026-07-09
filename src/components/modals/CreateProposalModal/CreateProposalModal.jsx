@@ -50,18 +50,31 @@ const executionOptions = [
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
-const platformOptions = [{ value: 'anvil-relics', label: 'Anvil Protocol (Relics)' }];
+const platformOptions = [
+  {
+    value: 'anvil-relics',
+    label: 'Relics',
+  },
+];
 
 const initialProposalData = {
   isValid: true,
 };
 
-export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
+export const CreateProposalModal = ({ onClose, isOpen, vault, defaultAction }) => {
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
-  );
+
+  // Map defaultAction to proposal type
+  const getInitialSelectedOption = () => {
+    if (vault.vaultStatus === VAULT_STATUSES.EXPANSION) return 'distribution';
+    if (defaultAction === 'stake') return 'stake_assets';
+    if (defaultAction === 'unstake') return 'unstake_assets';
+    if (defaultAction === 'harvest') return 'harvest_rewards';
+    return 'marketplace_action';
+  };
+
+  const [selectedOption, setSelectedOption] = useState(getInitialSelectedOption());
   const [selectedPlatform, setSelectedPlatform] = useState('anvil-relics');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
@@ -460,15 +473,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               onChange={handleChangeExecutionOption}
             />
 
-            {/* Platform selector for staking operations */}
+            {/* Collection selector for staking operations */}
             {isStakingOperation && (
-              <LavaSteelSelect
-                label="Platform"
-                options={platformOptions}
-                placeholder="Select staking platform"
-                value={selectedPlatform}
-                onChange={setSelectedPlatform}
-              />
+              <div>
+                <LavaSteelSelect
+                  label="Collection"
+                  options={platformOptions}
+                  placeholder="Select collection to stake"
+                  value={selectedPlatform}
+                  onChange={setSelectedPlatform}
+                />
+              </div>
             )}
           </div>
 

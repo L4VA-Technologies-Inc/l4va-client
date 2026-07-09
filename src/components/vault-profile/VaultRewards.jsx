@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Coins, TrendingUp, Package, Plus, Gift, Sprout } from 'lucide-react';
+import { Coins, TrendingUp, Package, Plus, Sprout } from 'lucide-react';
 
 import { useRelicsStakingData } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
@@ -11,14 +11,14 @@ import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultRewards = ({ vault }) => {
   const { data, isLoading } = useRelicsStakingData(vault.id);
-  const [activeSection, setActiveSection] = useState('relics'); // 'relics', 'lp-farms', 'l4va'
+  const [activeSection, setActiveSection] = useState('nft-staking'); // 'nft-staking', 'lp-farms'
   const { openModal } = useModalControls();
 
   const handleCreateProposal = action => {
-    // Navigate to create proposal modal with pre-filled action
+    // Navigate to create proposal modal with pre-filled action type
     openModal('CreateProposalModal', {
       vault,
-      proposalType: action === 'stake' ? 'relics_staking' : 'relics_unstaking',
+      defaultAction: action, // 'stake', 'unstake', or 'harvest'
     });
   };
 
@@ -47,16 +47,16 @@ export const VaultRewards = ({ vault }) => {
       {/* Section Navigation Pills */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         <button
-          onClick={() => setActiveSection('relics')}
+          onClick={() => setActiveSection('nft-staking')}
           className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap ${
-            activeSection === 'relics'
+            activeSection === 'nft-staking'
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
               : 'bg-steel-800 text-steel-400 hover:text-white border border-steel-750'
           }`}
         >
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4" />
-            Relics Staking
+            NFT Staking
           </div>
         </button>
         <button
@@ -69,21 +69,11 @@ export const VaultRewards = ({ vault }) => {
             LP Farms <span className="text-xs">(Coming Soon)</span>
           </div>
         </button>
-        <button
-          onClick={() => setActiveSection('l4va')}
-          disabled
-          className="px-4 py-2 rounded-xl font-medium bg-steel-850 text-steel-500 border border-steel-750 cursor-not-allowed whitespace-nowrap"
-        >
-          <div className="flex items-center gap-2">
-            <Gift className="w-4 h-4" />
-            L4VA Rewards <span className="text-xs">(Coming Soon)</span>
-          </div>
-        </button>
       </div>
 
       {/* Active Section Content */}
-      {activeSection === 'relics' && (
-        <RelicsStakingSection
+      {activeSection === 'nft-staking' && (
+        <NftStakingSection
           vault={vault}
           stats={stats}
           eligibleAssets={eligibleAssets}
@@ -96,16 +86,15 @@ export const VaultRewards = ({ vault }) => {
 
       {/* Future sections will go here */}
       {activeSection === 'lp-farms' && <LpFarmsSection />}
-      {activeSection === 'l4va' && <L4vaRewardsSection />}
     </div>
   );
 };
 
 // ============================================================================
-// RELICS STAKING SECTION
+// NFT STAKING SECTION
 // ============================================================================
 
-const RelicsStakingSection = ({
+const NftStakingSection = ({
   stats,
   eligibleAssets,
   stakedAssets,
@@ -128,7 +117,7 @@ const RelicsStakingSection = ({
             </div>
           </div>
           <p className="text-2xl font-bold text-white">{stats?.totalStaked || 0} NFTs</p>
-          <p className="text-steel-500 text-xs mt-1">On Anvil Platform</p>
+          <p className="text-steel-500 text-xs mt-1">Earning Rewards</p>
         </div>
 
         {/* VLRM Earned */}
@@ -185,7 +174,7 @@ const RelicsStakingSection = ({
         <div className="bg-steel-850 border border-steel-750 rounded-xl overflow-hidden">
           <div className="p-5 border-b border-steel-750">
             <h3 className="text-lg font-semibold text-white">Staked Assets ({stakedAssets.count})</h3>
-            <p className="text-sm text-steel-400 mt-1">Relics NFTs currently staked on Anvil platform</p>
+            <p className="text-sm text-steel-400 mt-1">Relics NFTs currently earning VLRM rewards</p>
           </div>
           <div className="divide-y divide-steel-750">
             {stakedAssets.assets.map(asset => (
@@ -209,7 +198,7 @@ const RelicsStakingSection = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-white">Eligible Assets ({eligibleAssets.count})</h3>
-                <p className="text-sm text-steel-400 mt-1">Relics NFTs extracted to treasury, ready for staking</p>
+                <p className="text-sm text-steel-400 mt-1">NFTs available for staking proposals</p>
               </div>
             </div>
           </summary>
@@ -281,20 +270,6 @@ const LpFarmsSection = () => {
       <h3 className="text-xl font-semibold text-white mb-2">LP Farming Rewards</h3>
       <p className="text-steel-400 max-w-md mx-auto">
         Track rewards earned from vault token liquidity pools (VT/ADA, VT/USDCx farms). Coming in future release.
-      </p>
-    </div>
-  );
-};
-
-const L4vaRewardsSection = () => {
-  return (
-    <div className="bg-steel-850 border border-steel-750 rounded-xl p-12 text-center">
-      <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-4">
-        <Gift className="w-8 h-8 text-orange-500" />
-      </div>
-      <h3 className="text-xl font-semibold text-white mb-2">L4VA Protocol Rewards</h3>
-      <p className="text-steel-400 max-w-md mx-auto">
-        View L4VA rewards allocated to vault treasury from protocol activities. Integration coming soon.
       </p>
     </div>
   );
