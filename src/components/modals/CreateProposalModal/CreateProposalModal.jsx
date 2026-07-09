@@ -411,7 +411,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault, defaultAction }) =
           {currentProposalFee > 0 ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
-              <span className="text-yellow-500 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
+              <span className="text-orange-500/80 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
             </div>
           ) : (
             <span className="text-gray-400">New proposal</span>
