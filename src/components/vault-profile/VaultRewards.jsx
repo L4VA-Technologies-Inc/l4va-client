@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Coins, TrendingUp, Package, Plus, Sprout } from 'lucide-react';
+import { Coins, TrendingUp, Package, Plus, Sprout, ExternalLink } from 'lucide-react';
 
 import { useRelicsStakingData } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
@@ -46,9 +46,10 @@ export const VaultRewards = ({ vault }) => {
 
       {/* Section Navigation Pills */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        <button
+        <SecondaryButton
           onClick={() => setActiveSection('nft-staking')}
-          className={`px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap ${
+          size="sm"
+          className={`rounded-xl whitespace-nowrap ${
             activeSection === 'nft-staking'
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
               : 'bg-steel-800 text-steel-400 hover:text-white border border-steel-750'
@@ -58,17 +59,17 @@ export const VaultRewards = ({ vault }) => {
             <Package className="w-4 h-4" />
             NFT Staking
           </div>
-        </button>
-        <button
-          onClick={() => setActiveSection('lp-farms')}
+        </SecondaryButton>
+        <SecondaryButton
           disabled
-          className="px-4 py-2 rounded-xl font-medium bg-steel-850 text-steel-500 border border-steel-750 cursor-not-allowed whitespace-nowrap"
+          size="sm"
+          className="rounded-xl bg-steel-850 text-steel-500 border border-steel-750 cursor-not-allowed whitespace-nowrap"
         >
           <div className="flex items-center gap-2">
             <Sprout className="w-4 h-4" />
             LP Farms <span className="text-xs">(Coming Soon)</span>
           </div>
-        </button>
+        </SecondaryButton>
       </div>
 
       {/* Active Section Content */}
@@ -157,7 +158,7 @@ const NftStakingSection = ({
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Staking Proposal
+          Staking
         </PrimaryButton>
         <SecondaryButton
           onClick={() => onCreateProposal('unstake')}
@@ -165,17 +166,21 @@ const NftStakingSection = ({
           className="flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Unstaking Proposal
+          Unstaking
+        </SecondaryButton>
+        <SecondaryButton
+          onClick={() => onCreateProposal('harvest')}
+          disabled={!hasStakedAssets}
+          className="flex items-center gap-2"
+        >
+          <Coins className="w-4 h-4" />
+          Harvest
         </SecondaryButton>
       </div>
 
       {/* Staked Assets List */}
       {hasStakedAssets ? (
         <div className="bg-steel-850 border border-steel-750 rounded-xl overflow-hidden">
-          <div className="p-5 border-b border-steel-750">
-            <h3 className="text-lg font-semibold text-white">Staked Assets ({stakedAssets.count})</h3>
-            <p className="text-sm text-steel-400 mt-1">Relics NFTs currently earning VLRM rewards</p>
-          </div>
           <div className="divide-y divide-steel-750">
             {stakedAssets.assets.map(asset => (
               <StakedAssetRow key={asset.id} asset={asset} />
@@ -215,6 +220,9 @@ const NftStakingSection = ({
 
 // Staked Asset Row Component
 const StakedAssetRow = ({ asset }) => {
+  const stakeTxHash = asset.stake_tx_hash;
+  const stakeTxUrl = stakeTxHash ? `https://cardanoscan.io/transaction/${stakeTxHash}` : null;
+
   return (
     <div className="p-4 hover:bg-steel-800 transition-colors">
       <div className="flex items-center justify-between">
@@ -230,8 +238,18 @@ const StakedAssetRow = ({ asset }) => {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-steel-400 text-sm">Stake ID</p>
-          <p className="text-white font-mono text-sm">{asset.stake_id || 'N/A'}</p>
+          {stakeTxUrl && (
+            <a
+              href={stakeTxUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="View stake transaction on Cardanoscan"
+              className="mt-1 inline-flex items-center text-dark-100 hover:text-orange-500 transition-colors"
+              title="View stake transaction on Cardanoscan"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
         </div>
       </div>
     </div>
