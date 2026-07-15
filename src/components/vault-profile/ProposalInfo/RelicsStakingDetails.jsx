@@ -100,7 +100,8 @@ export const RelicsStakingDetails = ({ proposal }) => {
               <h4 className="text-lg font-semibold text-white">Execution Results</h4>
             </div>
             <p className="text-sm text-steel-400 mt-1">
-              {executedUnstakes.length} stake{executedUnstakes.length > 1 ? 's' : ''} unstaked successfully
+              {executedUnstakes.length} {isHarvesting ? 'claim' : 'stake'}
+              {executedUnstakes.length > 1 ? 's' : ''} {isHarvesting ? 'harvested' : 'unstaked'} successfully
             </p>
           </div>
 
