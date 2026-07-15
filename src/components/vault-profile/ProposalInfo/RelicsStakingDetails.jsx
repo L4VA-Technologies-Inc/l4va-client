@@ -163,7 +163,7 @@ export const RelicsStakingDetails = ({ proposal }) => {
           </div>
           <p className="text-white font-medium">Proposal Passed</p>
           <p className="text-steel-400 text-sm mt-1">
-            {isStaking ? 'Staking' : 'Unstaking'} will be executed automatically
+            {isStaking ? 'Staking' : isHarvesting ? 'Harvesting' : 'Unstaking'} will be executed automatically
           </p>
         </div>
       )}
