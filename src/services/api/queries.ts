@@ -448,25 +448,33 @@ export const useRelicsStakingData = (vaultId: string) => {
   });
 };
 
-export const useEligibleRelicsAssets = (vaultId: string, platform = 'anvil-relics') => {
+export const useEligibleRelicsAssets = (
+  vaultId: string,
+  platform = 'anvil-relics',
+  options: { enabled?: boolean } = {}
+) => {
+  const enabled = (options.enabled ?? true) && !!vaultId;
+
   return useQuery({
     queryKey: ['vault-relics-eligible', vaultId, platform],
     queryFn: async () => {
       const response = await GovernanceApiProvider.getRelicsStakingAssets(vaultId, platform);
       return response.data;
     },
-    enabled: !!vaultId,
+    enabled,
   });
 };
 
-export const useStakedRelicsAssets = (vaultId: string, platform?: string) => {
+export const useStakedRelicsAssets = (vaultId: string, platform?: string, options: { enabled?: boolean } = {}) => {
+  const enabled = (options.enabled ?? true) && !!vaultId;
+
   return useQuery({
     queryKey: ['vault-relics-staked', vaultId, platform],
     queryFn: async () => {
       const response = await GovernanceApiProvider.getVaultStakedAssets(vaultId, platform || null);
       return response.data;
     },
-    enabled: !!vaultId,
+    enabled,
   });
 };
 
