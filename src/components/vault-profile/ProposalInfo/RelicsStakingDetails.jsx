@@ -1,4 +1,5 @@
 import { Package, ExternalLink, Coins, CheckCircle2 } from 'lucide-react';
+
 import { formatNum } from '@/utils/core.utils';
 
 export const RelicsStakingDetails = ({ proposal }) => {
@@ -85,10 +86,7 @@ export const RelicsStakingDetails = ({ proposal }) => {
                     <p className="text-steel-400 text-xs mb-2">Stake IDs:</p>
                     <div className="flex flex-wrap gap-2">
                       {batch.stakeIds.map((stakeId, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-1 bg-steel-800 text-steel-300 rounded text-xs font-mono"
-                        >
+                        <span key={i} className="px-2 py-1 bg-steel-800 text-steel-300 rounded text-xs font-mono">
                           {stakeId}
                         </span>
                       ))}
