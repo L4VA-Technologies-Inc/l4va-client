@@ -53,7 +53,7 @@ export class GovernanceConfigProvider {
 
   // Relics Staking endpoints
   static getAssetsToStakeRelics(vaultId) {
-    return `/api/v1/governance/vaults/${vaultId}/governance/assets-to-stake-relics`;
+    return `/api/v1/governance/vaults/${vaultId}/assets-to-stake-relics`;
   }
 
   static getVaultStakedAssets(vaultId) {
