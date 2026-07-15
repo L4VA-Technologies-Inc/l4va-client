@@ -4,12 +4,15 @@ import { formatNum } from '@/utils/core.utils';
 
 export const RelicsStakingDetails = ({ proposal }) => {
   const isStaking = proposal.proposalType === 'stake_assets';
+  const isHarvesting = proposal.proposalType === 'harvest_rewards';
   const relicsData = proposal.metadata?.relicsStaking;
 
   if (!relicsData) {
     return (
       <div className="bg-steel-850 border border-steel-750 rounded-xl p-6 text-center">
-        <p className="text-steel-400">No {isStaking ? 'staking' : 'unstaking'} details available</p>
+        <p className="text-steel-400">
+          No {isStaking ? 'staking' : isHarvesting ? 'harvesting' : 'unstaking'} details available
+        </p>
       </div>
     );
   }
