@@ -3,7 +3,7 @@ import { Package, ExternalLink, Coins, CheckCircle2 } from 'lucide-react';
 import { formatNum } from '@/utils/core.utils';
 
 export const RelicsStakingDetails = ({ proposal }) => {
-  const isStaking = proposal.proposalType === 'relics_staking';
+  const isStaking = proposal.proposalType === 'stake_assets';
   const relicsData = proposal.metadata?.relicsStaking;
 
   if (!relicsData) {
@@ -30,17 +30,6 @@ export const RelicsStakingDetails = ({ proposal }) => {
               {platform === 'anvil-relics' ? 'Anvil Relics Staking' : platform}
             </p>
           </div>
-          {platform === 'anvil-relics' && (
-            <a
-              href="https://relics-staking.ada-anvil.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-steel-800 hover:bg-steel-750 text-steel-300 hover:text-white rounded-lg transition-colors text-sm flex items-center gap-1.5"
-            >
-              View Platform
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
         </div>
       </div>
 

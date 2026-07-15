@@ -447,8 +447,9 @@ export const ProposalInfo = ({ proposalId }) => {
         return acquireExpansionItems;
       }
 
-      case 'relics_staking':
-      case 'relics_unstaking': {
+      case 'stake_assets':
+      case 'unstake_assets':
+      case 'harvest_rewards': {
         // Return special type for relics staking details component
         return [
           executionOptions,
