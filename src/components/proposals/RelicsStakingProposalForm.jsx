@@ -1,13 +1,27 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Minus, CheckCircle2, Package } from 'lucide-react';
+import { Search, Plus, Minus, CheckCircle2, Package, Info } from 'lucide-react';
 
-import { useEligibleRelicsAssets, useStakedRelicsAssets } from '@/services/api/queries';
+import { useEligibleRelicsAssets, useStakedRelicsAssets, useGovernanceFees } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import SecondaryButton from '@/components/shared/SecondaryButton';
+
+/**
+ * Calculate governance fee for staking based on NFT count
+ * Uses configurable fee per batch of up to 50 NFTs
+ */
+const calculateStakingFee = (nftCount, feePerBatch) => {
+  if (!nftCount || nftCount <= 0 || !feePerBatch) return 0;
+  const batches = Math.ceil(nftCount / 50);
+  return batches * feePerBatch;
+};
 
 export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadChange }) => {
   const isStaking = action === 'stake';
   const isHarvesting = action === 'harvest';
+
+  // Fetch governance fees to get configurable staking fee
+  const { data: governanceFees } = useGovernanceFees();
+  const feePerBatch = governanceFees?.data?.proposalFeeStaking || 0;
 
   // Fetch data based on action type
   const { data: eligibleAssets, isLoading: loadingEligible } = useEligibleRelicsAssets(vault.id, platform, {
@@ -51,6 +65,17 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
   const deselectAll = () => {
     setSelectedAssetIds([]);
   };
+
+  // Calculate governance fee for staking actions
+  const governanceFee = useMemo(() => {
+    if (isStaking && selectedAssetIds.length > 0) {
+      return calculateStakingFee(selectedAssetIds.length, feePerBatch);
+    }
+    return 0;
+  }, [isStaking, selectedAssetIds.length, feePerBatch]);
+
+  const governanceFeeAda = governanceFee / 1000000;
+  const batches = isStaking && selectedAssetIds.length > 0 ? Math.ceil(selectedAssetIds.length / 50) : 0;
 
   // Build payload when selections change
   useEffect(() => {
@@ -156,6 +181,36 @@ export const RelicsStakingProposalForm = ({ vault, action, platform, onPayloadCh
           </SecondaryButton>
         )}
       </div>
+
+      {/* Governance Fee Info - Only for staking */}
+      {isStaking && selectedAssetIds.length > 0 && (
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5">
+              <Info className="w-5 h-5 text-orange-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-orange-400 font-medium text-sm mb-1">Governance Fee</p>
+              <p className="text-steel-300 text-sm">
+                <span className="text-orange-400 font-semibold">{governanceFeeAda} ADA</span>
+                {batches > 1 ? (
+                  <span className="text-steel-400">
+                    {' '}
+                    ({batches} batches × {(feePerBatch / 1000000).toFixed(0)} ADA - {selectedAssetIds.length} NFTs
+                    selected)
+                  </span>
+                ) : (
+                  <span className="text-steel-400"> (up to 50 NFTs)</span>
+                )}
+              </p>
+              <p className="text-steel-400 text-xs mt-1">
+                Fee: {(feePerBatch / 1000000).toFixed(0)} ADA per batch of up to 50 NFTs. This fee will be collected
+                when creating the proposal.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Assets Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto pr-2">

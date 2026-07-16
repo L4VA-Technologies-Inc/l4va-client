@@ -91,9 +91,35 @@ export const CreateProposalModal = ({ onClose, isOpen, vault, defaultAction }) =
 
   const { refetch } = useGovernanceProposals(vault.id);
 
+  /**
+   * Calculate governance fee for staking based on NFT count
+   * Uses configurable fee per batch of up to 50 NFTs
+   */
+  const calculateStakingFee = useCallback((nftCount, feePerBatch) => {
+    if (!nftCount || nftCount <= 0 || !feePerBatch) return 0;
+    const batches = Math.ceil(nftCount / 50);
+    return batches * feePerBatch;
+  }, []);
+
   // Get fee for current proposal type
   const currentProposalFee = useMemo(() => {
     if (!governanceFees?.data) return 0;
+
+    const feePerBatch = governanceFees.data.proposalFeeStaking;
+
+    // For staking proposals, calculate fee based on NFT count
+    if (selectedOption === 'stake_assets') {
+      const stakingActions = proposalData?.stakingActions;
+      if (stakingActions && stakingActions.length > 0) {
+        const assetCount = stakingActions[0].assetIds?.length || 0;
+        if (assetCount > 0) {
+          return calculateStakingFee(assetCount, feePerBatch);
+        }
+      }
+      // If no assets selected yet, return 0
+      return 0;
+    }
+
     const feeMap = {
       marketplace_action: governanceFees.data.proposalFeeMarketplaceAction,
       distribution: governanceFees.data.proposalFeeDistribution,
@@ -103,13 +129,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault, defaultAction }) =
       staking: governanceFees.data.proposalFeeStaking,
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
-      // New staking operations use same fee
-      stake_assets: governanceFees.data.proposalFeeStaking || 0,
+      // New staking operations
       unstake_assets: governanceFees.data.proposalFeeStaking || 0,
       harvest_rewards: governanceFees.data.proposalFeeStaking || 0,
     };
     return feeMap[selectedOption] || 0;
-  }, [governanceFees, selectedOption]);
+  }, [governanceFees, selectedOption, proposalData, calculateStakingFee]);
 
   // Filter execution options based on vault status
   // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
@@ -405,13 +430,38 @@ export const CreateProposalModal = ({ onClose, isOpen, vault, defaultAction }) =
       }
     };
 
+    // Get NFT count for staking proposals
+    const getNftCount = () => {
+      if (selectedOption === 'stake_assets') {
+        const stakingActions = proposalData?.stakingActions;
+        if (stakingActions && stakingActions.length > 0) {
+          return stakingActions[0].assetIds?.length || 0;
+        }
+      }
+      return 0;
+    };
+
+    const nftCount = getNftCount();
+    const batches = nftCount > 0 ? Math.ceil(nftCount / 50) : 0;
+    const feePerBatchAda = governanceFees?.data?.proposalFeeStaking
+      ? (governanceFees.data.proposalFeeStaking / 1000000).toFixed(0)
+      : '10';
+
     return (
       <div className="flex justify-between items-center">
         <div className="text-sm">
           {currentProposalFee > 0 ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
-              <span className="text-orange-500/80 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
+              <span className="text-orange-500/80 text-xs">
+                Governance fee: {feeInAda.toFixed(2)} ADA
+                {selectedOption === 'stake_assets' && batches > 0 && (
+                  <span className="text-steel-400">
+                    {' '}
+                    ({batches} batch{batches > 1 ? 'es' : ''} × {feePerBatchAda} ADA)
+                  </span>
+                )}
+              </span>
             </div>
           ) : (
             <span className="text-gray-400">New proposal</span>
