@@ -7,10 +7,7 @@ import {
   formatPolicyId,
   getMaxDecimalTokenAmount,
 } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
-
-const getPolicyExplorerUrl = policyId =>
-  IS_PREPROD ? `https://preprod.cardanoscan.io/tokenPolicy/${policyId}` : `https://pool.pm/policy/${policyId}`;
+import { getPolicyUrl } from '@/utils/explorer.utils';
 
 const PolicyIdRow = ({ policyId }) => {
   if (!policyId) return null;
@@ -19,7 +16,7 @@ const PolicyIdRow = ({ policyId }) => {
     <div className="flex items-center gap-1.5 min-w-0 border-t border-steel-750/50 pt-2.5 mt-1 ml-10 sm:ml-11">
       <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">Policy</span>
       <a
-        href={getPolicyExplorerUrl(policyId)}
+        href={getPolicyUrl(policyId)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}

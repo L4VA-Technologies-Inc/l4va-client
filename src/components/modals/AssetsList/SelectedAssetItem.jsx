@@ -2,10 +2,7 @@ import { X } from 'lucide-react';
 
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatNum, formatPolicyId } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
-
-const getPolicyExplorerUrl = policyId =>
-  IS_PREPROD ? `https://preprod.cardanoscan.io/tokenPolicy/${policyId}` : `https://pool.pm/policy/${policyId}`;
+import { getPolicyUrl } from '@/utils/explorer.utils';
 
 export const SelectedAssetItem = ({ asset, onRemove }) => (
   <div className="flex items-center gap-3">
@@ -28,7 +25,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
       <div className="flex items-center gap-3 shrink-0">
         {asset.metadata?.policyId && (
           <a
-            href={getPolicyExplorerUrl(asset.metadata.policyId)}
+            href={getPolicyUrl(asset.metadata.policyId)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}

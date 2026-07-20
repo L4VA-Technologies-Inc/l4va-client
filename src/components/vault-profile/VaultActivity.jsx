@@ -23,7 +23,7 @@ import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
 import { formatDateTime } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { getTransactionUrl } from '@/utils/explorer.utils';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -149,7 +149,7 @@ const getProposalStatus = activityType => {
   }
 };
 
-const ActivityCard = ({ activity }) => {
+const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
@@ -203,8 +203,7 @@ const ActivityCard = ({ activity }) => {
 
   const openCardanoScan = () => {
     if (activity.tx_hash) {
-      const baseUrl = IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io';
-      window.open(`${baseUrl}/transaction/${activity.tx_hash}`, '_blank');
+      window.open(getTransactionUrl(activity.tx_hash, vault?.chainType), '_blank');
     }
   };
 
@@ -656,7 +655,7 @@ export const VaultActivity = ({ vault }) => {
             <>
               <div className="grid grid-cols-1 gap-4">
                 {items.map((activity, index) => (
-                  <ActivityCard key={activity.id || index} activity={activity} />
+                  <ActivityCard key={activity.id || index} activity={activity} vault={vault} />
                 ))}
               </div>
 

@@ -74,11 +74,12 @@ import {
   getCountdownTime,
   substringAddress,
 } from '@/utils/core.utils';
+import { getAddressUrl, getPolicyUrl } from '@/utils/explorer.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET, IS_PREPROD } from '@/utils/networkValidation.ts';
+import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -516,11 +517,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={
-                IS_PREPROD
-                  ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
-                  : `https://pool.pm/${vault.contractAddress}`
-              }
+              href={getAddressUrl(vault.contractAddress, vault.chainType)}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"
@@ -540,11 +537,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <div className="flex items-center gap-2 text-sm text-dark-100">
               <span className="font-medium">Policy ID:</span>
               <a
-                href={
-                  IS_PREPROD
-                    ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
-                    : `https://pool.pm/policy/${vault.policyId}`
-                }
+                href={getPolicyUrl(vault.policyId)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline hover:text-orange-500 transition-colors"

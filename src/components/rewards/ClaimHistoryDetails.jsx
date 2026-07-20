@@ -1,7 +1,7 @@
 import { CheckCircle2, Clock, ExternalLink } from 'lucide-react';
 
 import { formatCompactNumber } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { getTransactionUrl } from '@/utils/explorer.utils';
 
 /**
  * Displays user's claim transaction history
@@ -109,9 +109,7 @@ export const ClaimHistoryDetails = ({ transactions = [], isLoading = false }) =>
               {/* Link */}
               {tx.txHash && (
                 <a
-                  href={`${IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io'}/transaction/${
-                    tx.txHash
-                  }`}
+                  href={getTransactionUrl(tx.txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-shrink-0 text-white hover:text-orange-500 transition-colors"
