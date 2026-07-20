@@ -1,12 +1,15 @@
 import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 
 import { Button } from '@/components/ui/button';
 import { LavaInput, LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
+import { useEvmAssets } from '@/hooks/useEvmAssets';
+import { useNetwork } from '@/hooks/useNetwork';
 import { cn } from '@/lib/utils';
 
 const variants = {
@@ -63,9 +66,26 @@ export const LavaWhitelistWithCaps = ({
   const [isSearching, setIsSearching] = useState({});
   const dropdownRefs = useRef({});
   const searchTimers = useRef({});
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
 
-  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = useAssets();
+  const { isRobinHood } = useNetwork();
+  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
+  const { isConnected: isEvmConnected } = useAccount();
+
+  // Source assets from the wallet matching the selected network. Both hooks are
+  // called unconditionally (rules of hooks) and the inactive one returns an empty
+  // stub, so only the active chain's wallet is queried.
+  const cardanoAssets = useAssets();
+  const evmAssets = useEvmAssets();
+  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = isRobinHood
+    ? evmAssets
+    : cardanoAssets;
+
+  const isWalletConnected = isRobinHood ? isEvmConnected : wallet.isConnected;
+
+  // On EVM the identifier is a token contract address, not a Cardano policy id.
+  // Only override the default label so explicit caller placeholders still win.
+  const effectivePlaceholder =
+    isRobinHood && itemPlaceholder === '*Enter Policy ID' ? '*Enter contract address' : itemPlaceholder;
 
   const walletPolicyIds = data?.data || [];
 
@@ -297,6 +317,70 @@ export const LavaWhitelistWithCaps = ({
     };
   }, [whitelist, walletPolicyIds, lookupPolicies, setWhitelist]);
 
+  // EVM equivalent of the backfill above. EVM contract addresses (0x + 40 hex)
+  // never match the Cardano policy-id regex, so resolve them here: pull metadata
+  // from the held-token list and mark every valid address verified (there is no
+  // marketplace verification analogue on EVM). This also lets users paste any
+  // contract address manually and have it accepted.
+  useEffect(() => {
+    if (!isRobinHood) return;
+
+    const assetsNeedingVerification = whitelist.filter(
+      asset =>
+        asset &&
+        asset.policyId &&
+        /^0x[0-9a-fA-F]{40}$/.test(asset.policyId) &&
+        (asset.isVerified === undefined || asset.isVerified === null)
+    );
+
+    if (assetsNeedingVerification.length === 0) return;
+
+    let isCancelled = false;
+
+    const backfillEvmVerification = async () => {
+      try {
+        const results = await lookupPolicies(assetsNeedingVerification.map(a => a.policyId));
+        if (isCancelled) return;
+
+        const updatesByUniqueId = {};
+        assetsNeedingVerification.forEach((asset, index) => {
+          const result = results[index];
+          updatesByUniqueId[asset.uniqueId] = {
+            isVerified: true,
+            collectionName: result?.collectionName ?? asset.collectionName ?? null,
+            name: result?.name || asset.name || '',
+            assetName: result?.assetName || asset.assetName || '',
+            count: result?.count || asset.count || 1,
+          };
+        });
+
+        const nextWhitelist = whitelist.map(asset => {
+          const update = updatesByUniqueId[asset.uniqueId];
+          if (!update || (asset.isVerified !== undefined && asset.isVerified !== null)) return asset;
+          return {
+            ...asset,
+            ...update,
+            verificationPlatform: null,
+            policyName: update.name || asset.policyName || 'N/A',
+          };
+        });
+
+        const hasChanges = nextWhitelist.some((asset, index) => asset !== whitelist[index]);
+        if (hasChanges) {
+          setWhitelist(nextWhitelist);
+        }
+      } catch (error) {
+        console.error('Error backfilling EVM asset verification:', error);
+      }
+    };
+
+    backfillEvmVerification();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isRobinHood, whitelist, lookupPolicies, setWhitelist]);
+
   const toggleDropdown = uniqueId => {
     const willOpen = !showDropdown[uniqueId];
     setShowDropdown(prev => ({ ...prev, [uniqueId]: willOpen }));
@@ -469,7 +553,7 @@ export const LavaWhitelistWithCaps = ({
             <div key={asset.id || asset.uniqueId} className={styles.itemSpacing}>
               <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
                 {renderInput({
-                  placeholder: itemPlaceholder,
+                  placeholder: effectivePlaceholder,
                   style: styles.policyInputStyle,
                   value: asset.policyId,
                   className: styles.policyInputClassName,
@@ -483,7 +567,7 @@ export const LavaWhitelistWithCaps = ({
                     }
                   },
                 })}
-                {wallet.isConnected && walletPolicyIds.length > 0 && (
+                {isWalletConnected && walletPolicyIds.length > 0 && (
                   <Button
                     type="button"
                     className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
