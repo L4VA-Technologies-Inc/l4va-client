@@ -26,7 +26,7 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 
 const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const { currencySymbol, isAda } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -101,7 +101,13 @@ const VaultContributedAssetsList = ({ vault }) => {
             <div className="flex items-baseline gap-1 text-white">
               <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatLargeNumber(isAda ? statistics?.totalAssetValueAda || 0 : statistics?.totalAssetValueUsd || 0)}
+                {formatLargeNumber(
+                  pickByCurrency({
+                    ada: statistics?.totalAssetValueAda || 0,
+                    usd: statistics?.totalAssetValueUsd || 0,
+                    eth: statistics?.totalAssetValueEth || 0,
+                  })
+                )}
               </span>
             </div>
           </div>
@@ -113,7 +119,11 @@ const VaultContributedAssetsList = ({ vault }) => {
               icon={Layers}
               label="Assets Avg"
               value={`${currencySymbol}${formatLargeNumber(
-                isAda ? statistics?.assetsAvgAda || 0 : statistics?.assetsAvgUsd || 0
+                pickByCurrency({
+                  ada: statistics?.assetsAvgAda || 0,
+                  usd: statistics?.assetsAvgUsd || 0,
+                  eth: statistics?.assetsAvgEth || 0,
+                })
               )}`}
             />
           </div>
@@ -176,7 +186,7 @@ const VaultContributedAssetsList = ({ vault }) => {
         </div>
       ) : (
         <>
-          <VaultContributedAssetsCard assets={assets} currencySymbol={currencySymbol} isAda={isAda} />
+          <VaultContributedAssetsCard assets={assets} currencySymbol={currencySymbol} pickByCurrency={pickByCurrency} />
           <div className="md:block overflow-x-auto rounded-2xl border border-steel-750 hidden">
             <table className="w-full">
               <thead>
@@ -228,7 +238,13 @@ const VaultContributedAssetsList = ({ vault }) => {
                         <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                         <td className="px-4 py-3">
                           {currencySymbol}
-                          {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
+                          {formatAdaPrice(
+                            pickByCurrency({
+                              ada: asset.valueAda || 0,
+                              usd: asset.valueUsd || 0,
+                              eth: asset.valueEth || 0,
+                            })
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button

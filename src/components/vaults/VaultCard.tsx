@@ -17,7 +17,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, vaultImage, ftTokenImg, socialLinks = [] } = vault;
-  const { currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -90,9 +90,13 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
                 {vault.totalValueAda && vault.totalValueUsd
-                  ? currency === 'ada'
-                    ? `₳${formatCompactNumber(vault.totalValueAda)}`
-                    : `$${formatCompactNumber(vault.totalValueUsd)}`
+                  ? `${currencySymbol}${formatCompactNumber(
+                      pickByCurrency({
+                        ada: vault.totalValueAda,
+                        usd: vault.totalValueUsd,
+                        eth: vault.totalValueEth ?? 0,
+                      })
+                    )}`
                   : 'N/A'}
               </p>
             </div>

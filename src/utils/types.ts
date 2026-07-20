@@ -205,6 +205,7 @@ export interface VaultShortResponse {
   tvl?: number;
   totalValueAda?: number;
   totalValueUsd?: number;
+  totalValueEth?: number;
   baseAllocation?: number;
   total?: number;
   invested?: number;

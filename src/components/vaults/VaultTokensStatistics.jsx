@@ -23,7 +23,7 @@ const TIME_PERIOD_MAP = {
 
 export const VaultTokensStatistics = () => {
   const { openModal } = useModalControls();
-  const { currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
   const [timePeriod, setTimePeriod] = useState('1d');
   const [filters, setFilters] = useState({
     page: 1,
@@ -55,7 +55,7 @@ export const VaultTokensStatistics = () => {
     sortBy: filters.sortBy,
     sortOrder: filters.sortOrder,
     ticker: filters.ticker || undefined,
-    currency: currency === 'ada' ? 'ada' : 'usd',
+    currency: pickByCurrency({ ada: 'ada', usd: 'usd', eth: 'eth' }),
     minPrice: toNum(filters.minPrice),
     maxPrice: toNum(filters.maxPrice),
     minFdv: toNum(filters.minFdv),
@@ -161,7 +161,11 @@ export const VaultTokensStatistics = () => {
         key: 'price',
         header: 'Price',
         sortable: true,
-        render: item => (currency === 'ada' ? `₳${formatNum(item.price_ada, 4)}` : `$${formatNum(item.price_usd, 4)}`),
+        render: item =>
+          `${currencySymbol}${formatNum(
+            pickByCurrency({ ada: item.price_ada, usd: item.price_usd, eth: item.price_eth }),
+            4
+          )}`,
         cellClassName: 'text-white',
       },
       {
@@ -190,7 +194,10 @@ export const VaultTokensStatistics = () => {
         key: 'fdv_per_asset',
         header: 'FDV / Asset',
         sortable: true,
-        render: item => formatLargeNumber(currency === 'ada' ? item.fdv_per_asset_ada : item.fdv_per_asset_usd),
+        render: item =>
+          formatLargeNumber(
+            pickByCurrency({ ada: item.fdv_per_asset_ada, usd: item.fdv_per_asset_usd, eth: item.fdv_per_asset_eth })
+          ),
         cellClassName: 'font-medium text-white',
       },
       {
@@ -198,7 +205,9 @@ export const VaultTokensStatistics = () => {
         header: 'FDV',
         sortable: true,
         render: item =>
-          currency === 'ada' ? `₳${formatLargeNumber(item.fdv_ada)}` : `$${formatLargeNumber(item.fdv_usd)}`,
+          `${currencySymbol}${formatLargeNumber(
+            pickByCurrency({ ada: item.fdv_ada, usd: item.fdv_usd, eth: item.fdv_eth })
+          )}`,
         cellClassName: 'text-white',
       },
       {
@@ -206,7 +215,9 @@ export const VaultTokensStatistics = () => {
         header: 'TVL',
         sortable: true,
         render: item =>
-          currency === 'ada' ? `₳${formatLargeNumber(item.tvl_ada)}` : `$${formatLargeNumber(item.tvl_usd)}`,
+          `${currencySymbol}${formatLargeNumber(
+            pickByCurrency({ ada: item.tvl_ada, usd: item.tvl_usd, eth: item.tvl_eth })
+          )}`,
         cellClassName: 'text-white',
       },
       {
@@ -226,7 +237,7 @@ export const VaultTokensStatistics = () => {
         ),
       },
     ],
-    [timePeriod, navigate, currency, getPriceChangeValue]
+    [timePeriod, navigate, currencySymbol, pickByCurrency, getPriceChangeValue]
   );
 
   if (error) {

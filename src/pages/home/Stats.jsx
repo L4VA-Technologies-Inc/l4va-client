@@ -15,13 +15,13 @@ const StatCard = ({ value, label }) => (
 );
 
 const ProgressBar = ({ items, title }) => {
-  const { currency, currencySymbol } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   const total = items.reduce((sum, item) => sum + item.percentage, 0);
 
   const itemsWithValues = items.map(item => ({
     ...item,
-    actualValue: currency === 'ada' ? item.valueAda : item.valueUsd,
+    actualValue: pickByCurrency({ ada: item.valueAda, usd: item.valueUsd, eth: item.valueEth }),
   }));
 
   return (
@@ -79,32 +79,34 @@ const ProgressBar = ({ items, title }) => {
 const Stats = () => {
   const { data } = useStatistics();
   const statistics = data?.data;
-  const { isAda } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
-  const formatCurrency = (adaValue, usdValue) => {
-    if (isAda) {
-      return `₳${formatNum(adaValue)}`;
-    } else {
-      return `$${formatNum(usdValue)}`;
-    }
+  const formatCurrency = (adaValue, usdValue, ethValue) => {
+    return `${currencySymbol}${formatNum(pickByCurrency({ ada: adaValue, usd: usdValue, eth: ethValue }))}`;
   };
 
-  const getTotalValue = (adaValue, usdValue) => {
-    return isAda ? adaValue : usdValue;
+  const getTotalValue = (adaValue, usdValue, ethValue) => {
+    return pickByCurrency({ ada: adaValue, usd: usdValue, eth: ethValue });
   };
 
   const stats = statistics
     ? [
         { label: 'Total Vaults', value: statistics.totalVaults?.toString() || '0' },
         { label: 'Assets', value: statistics.totalAssets?.toString() || '0' },
-        { label: 'Acquired', value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd) },
-        { label: 'TVL', value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd) },
+        {
+          label: 'Acquired',
+          value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd, statistics.totalAcquiredEth),
+        },
+        {
+          label: 'TVL',
+          value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd, statistics.totalValueEth),
+        },
       ]
     : [
         { label: 'Total Vaults', value: '0' },
         { label: 'Assets', value: '0' },
-        { label: 'Acquired', value: '₳0' },
-        { label: 'TVL', value: '₳0' },
+        { label: 'Acquired', value: `${currencySymbol}0` },
+        { label: 'TVL', value: `${currencySymbol}0` },
       ];
 
   const statusData = statistics?.vaultsByStage
@@ -113,6 +115,7 @@ const Stats = () => {
         percentage: value.percentage,
         valueAda: value.valueAda,
         valueUsd: value.valueUsd,
+        valueEth: value.valueEth,
       }))
     : [];
 
@@ -122,13 +125,15 @@ const Stats = () => {
         percentage: value.percentage,
         valueAda: value.valueAda,
         valueUsd: value.valueUsd,
+        valueEth: value.valueEth,
       }))
     : [];
 
   const totalAmount = statistics?.vaultsByType
     ? getTotalValue(
         Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueAda, 0),
-        Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueUsd, 0)
+        Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueUsd, 0),
+        Object.values(statistics.vaultsByStage).reduce((sum, stage) => sum + stage.valueEth, 0)
       )
     : 0;
 

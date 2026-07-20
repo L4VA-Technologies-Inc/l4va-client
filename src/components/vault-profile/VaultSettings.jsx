@@ -30,7 +30,7 @@ export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [isCancelVaultPending, setIsCancelVaultPending] = useState(false);
-  const { currency } = useCurrency();
+  const { pickByCurrency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
   const navigate = useNavigate();
@@ -209,13 +209,21 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
             <InfoRow
               label="Asset Value @ Lock"
-              symbol={currency === 'ada' ? 'ADA' : 'USD'}
-              value={currency === 'ada' ? vault.assetsPrices.totalValueAda : vault.assetsPrices.totalValueUsd}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={pickByCurrency({
+                ada: vault.assetsPrices.totalValueAda,
+                usd: vault.assetsPrices.totalValueUsd,
+                eth: vault.assetsPrices.totalValueEth,
+              })}
             />
             <InfoRow
               label="Acquire Amount @ Lock"
-              symbol={currency === 'ada' ? 'ADA' : 'USD'}
-              value={currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={pickByCurrency({
+                ada: vault.assetsPrices.totalAcquiredAda,
+                usd: vault.assetsPrices.totalAcquiredUsd,
+                eth: vault.assetsPrices.totalAcquiredEth,
+              })}
             />
             <InfoRow
               label="Implied Vault Valuation @ Lock"

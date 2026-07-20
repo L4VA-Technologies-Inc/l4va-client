@@ -55,12 +55,14 @@ const ProgressBubble = ({ value, progress }) => {
   );
 };
 
-const AcquireExpansionProgress = ({ vault, currency }) => {
+const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency }) => {
   const hasMax = !vault.acquireExpansionNoMax && vault.acquireExpansionMaxAda > 0;
   const currentAda = vault.acquireExpansionCurrentAda || 0;
   const currentUsd = vault.acquireExpansionCurrentUsd || 0;
+  const currentEth = vault.acquireExpansionCurrentEth || 0;
   const maxAda = vault.acquireExpansionMaxAda || 0;
   const maxUsd = vault.acquireExpansionMaxUsd || 0;
+  const maxEth = vault.acquireExpansionMaxEth || 0;
 
   const progress = hasMax ? calculateProgress(currentAda, maxAda) : 0;
 
@@ -71,7 +73,8 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
         <>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">
-              Raised: {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+              Raised:{' '}
+              {`${currencySymbol}${formatNum(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
             <span className="text-dark-100">{Math.floor(progress)}%</span>
           </div>
@@ -88,7 +91,9 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
           </div>
           <div className="flex justify-between w-full text-xs text-dark-100">
             <span>min 0 ADA</span>
-            <span>max {currency === 'ada' ? `₳${formatNum(maxAda)}` : `$${formatNum(maxUsd)}`}</span>
+            <span>
+              max {`${currencySymbol}${formatNum(pickByCurrency({ ada: maxAda, usd: maxUsd, eth: maxEth }))}`}
+            </span>
           </div>
         </>
       ) : (
@@ -96,7 +101,7 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
           <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
             Total Raised:{' '}
             <span className="text-white font-medium">
-              {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+              {`${currencySymbol}${formatNum(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
           </div>
           <div className="text-sm text-dark-100 mb-2">
@@ -219,7 +224,7 @@ const ContributionProgress = ({
 
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
-  const { currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
@@ -271,9 +276,13 @@ export const VaultContribution = ({ vault }) => {
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-dark-100">
                   Reserve:{' '}
-                  {currency === 'ada'
-                    ? `₳${formatNum(vault.requireReservedCostAda)}`
-                    : `$${formatNum(vault.requireReservedCostUsd)}`}
+                  {`${currencySymbol}${formatNum(
+                    pickByCurrency({
+                      ada: vault.requireReservedCostAda,
+                      usd: vault.requireReservedCostUsd,
+                      eth: vault.requireReservedCostEth,
+                    })
+                  )}`}
                 </span>
                 <span className="text-dark-100">{Math.floor(acquireProgress)}%</span>
               </div>
@@ -312,9 +321,13 @@ export const VaultContribution = ({ vault }) => {
                       <div className="flex justify-between">
                         <span className="text-dark-100">Current ADA LP amount:</span>
                         <span className="text-dark-100">
-                          {currency === 'ada'
-                            ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                            : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                          {`${currencySymbol}${formatNum(
+                            pickByCurrency({
+                              ada: vault.projectedLpAdaAmount,
+                              usd: vault.projectedLpUsdAmount,
+                              eth: vault.projectedLpEthAmount,
+                            })
+                          )}`}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -363,9 +376,13 @@ export const VaultContribution = ({ vault }) => {
                           <div className="flex justify-between">
                             <span className="text-dark-100">Current ADA LP amount:</span>
                             <span className="text-dark-100">
-                              {currency === 'ada'
-                                ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                                : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                              {`${currencySymbol}${formatNum(
+                                pickByCurrency({
+                                  ada: vault.projectedLpAdaAmount,
+                                  usd: vault.projectedLpUsdAmount,
+                                  eth: vault.projectedLpEthAmount,
+                                })
+                              )}`}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -399,9 +416,13 @@ export const VaultContribution = ({ vault }) => {
             <div className="text-sm text-dark-100 font-medium">
               Total Acquired Amount:{' '}
               <span className="text-[#F97316]">
-                {currency === 'ada'
-                  ? `₳${formatNumber(vault.assetsPrices.totalAcquiredAda || 0)}`
-                  : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
+                {`${currencySymbol}${formatNumber(
+                  pickByCurrency({
+                    ada: vault.assetsPrices.totalAcquiredAda || 0,
+                    usd: vault.assetsPrices.totalAcquiredUsd || 0,
+                    eth: vault.assetsPrices.totalAcquiredEth || 0,
+                  })
+                )}`}
               </span>
             </div>
           </div>
@@ -422,7 +443,7 @@ export const VaultContribution = ({ vault }) => {
             setShowMoreInfo={setShowMoreInfo}
           />
         ) : isAcquireExpansion ? (
-          <AcquireExpansionProgress vault={vault} currency={currency} />
+          <AcquireExpansionProgress vault={vault} currencySymbol={currencySymbol} pickByCurrency={pickByCurrency} />
         ) : null}
       </div>
 

@@ -1,10 +1,9 @@
 import { useCountAnimation } from '@/hooks/useCountAnimation';
 import { useStatistics } from '@/services/api/queries';
 import { useCurrency } from '@/hooks/useCurrency';
-import { formatNum } from '@/utils/core.utils.js';
 
-const Counter = ({ value, prefix = '' }) => {
-  const animatedValue = useCountAnimation(value);
+const Counter = ({ value, prefix = '', decimals = 0 }) => {
+  const animatedValue = useCountAnimation(value, 2000, decimals);
   return (
     <span>
       {prefix}
@@ -16,12 +15,14 @@ const Counter = ({ value, prefix = '' }) => {
 const HeroStats = () => {
   const { data } = useStatistics();
   const stats = data?.data;
-  const { currency, currencySymbol } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
-  const formatCurrencyValue = (adaValue, usdValue) => {
-    const value = currency === 'ada' ? adaValue : usdValue;
-    return formatNum(value || 0);
+  const formatCurrencyValue = (adaValue, usdValue, ethValue) => {
+    return pickByCurrency({ ada: adaValue, usd: usdValue, eth: ethValue }) || 0;
   };
+
+  // Only ETH prices need fractional precision; ADA/USD stay whole numbers as before.
+  const currencyDecimals = pickByCurrency({ ada: 0, usd: 0, eth: 4 });
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
@@ -37,7 +38,11 @@ const HeroStats = () => {
         <div className="text-center md:text-left">
           <p>TVL</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
-            <Counter value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd)} prefix={currencySymbol} />
+            <Counter
+              value={formatCurrencyValue(stats?.totalValueAda, stats?.totalValueUsd, stats?.totalValueEth)}
+              prefix={currencySymbol}
+              decimals={currencyDecimals}
+            />
           </p>
         </div>
       </div>
@@ -46,8 +51,13 @@ const HeroStats = () => {
           <p>Total Contributed</p>
           <p className="text-orange-500 text-2xl sm:text-4xl">
             <Counter
-              value={formatCurrencyValue(stats?.totalContributedAda, stats?.totalContributedUsd)}
+              value={formatCurrencyValue(
+                stats?.totalContributedAda,
+                stats?.totalContributedUsd,
+                stats?.totalContributedEth
+              )}
               prefix={currencySymbol}
+              decimals={currencyDecimals}
             />
           </p>
         </div>

@@ -184,7 +184,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
-  const { isAda, currencySymbol } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
@@ -389,12 +389,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const vaultStats = {
     assetValue: vault.vaultStatus,
     ftGains: (() => {
-      const val = isAda ? vault.vaultStats?.ftGainsAda : vault.vaultStats?.ftGainsUsd;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.ftGainsAda,
+        usd: vault.vaultStats?.ftGainsUsd,
+        eth: vault.vaultStats?.ftGainsEth,
+      });
       if (val == null) return 'N/A';
       return `${val < 0 ? '-' : ''}${currencySymbol}${formatNum(Math.abs(val))}`;
     })(),
     fdv: (() => {
-      const val = isAda ? vault.vaultStats?.fdvAda : vault.vaultStats?.fdvUsd;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.fdvAda,
+        usd: vault.vaultStats?.fdvUsd,
+        eth: vault.vaultStats?.fdvEth,
+      });
       if (val == null) return 'N/A';
       return `${currencySymbol}${formatNum(val)}`;
     })(),
@@ -405,12 +413,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       return val.toFixed(2);
     })(),
     vtPrice: (() => {
-      const val = isAda ? vault.vaultStats?.vtPriceAda : vault.vaultStats?.vtPriceUsd;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.vtPriceAda,
+        usd: vault.vaultStats?.vtPriceUsd,
+        eth: vault.vaultStats?.vtPriceEth,
+      });
       if (val == null) return 'N/A';
       return `${currencySymbol}${formatNum(val, 4)}`;
     })(),
     tvl: (() => {
-      const val = isAda ? vault.vaultStats?.tvlAda : vault.vaultStats?.tvlUsd;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.tvlAda,
+        usd: vault.vaultStats?.tvlUsd,
+        eth: vault.vaultStats?.tvlEth,
+      });
       if (val == null) return 'N/A';
       return `${currencySymbol}${formatNum(val)}`;
     })(),
