@@ -81,7 +81,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
   const { isRobinHood } = useNetwork();
-  const { createEvmVault, isPending: isEvmPending } = useCreateEvmVault();
+  const { createEvmVault } = useCreateEvmVault();
   const { isConnected: isEvmConnected } = useAccount();
 
   const navigate = useNavigate();
