@@ -52,7 +52,14 @@ export const useCreateEvmVault = () => {
         setIsPreparing(false);
       }
 
-      const { vaultId: dbVaultId, evmVaultConfig: cfg, adminNonce, deadline, adminSignature } = prepareRes;
+      const {
+        vaultId: dbVaultId,
+        transactionId,
+        evmVaultConfig: cfg,
+        adminNonce,
+        deadline,
+        adminSignature,
+      } = prepareRes;
 
       if (!cfg || !adminSignature) {
         throw new Error('Backend did not return EVM vault config or signature');
@@ -86,6 +93,7 @@ export const useCreateEvmVault = () => {
       try {
         await VaultsApiProvider.launchVault({
           vaultId: dbVaultId,
+          txId: transactionId,
           txHash: hash,
           chainType: 'robinhood',
         });
