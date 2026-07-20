@@ -12,6 +12,7 @@ import { LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { GoldenVerifiedBadge } from '@/components/shared/GoldenVerifiedBadge';
 import { useVaultAssetsWhitelist } from '@/services/api/queries';
+import { ChainType, ChainTypeLabels } from '@/utils/types';
 
 export const VaultFiltersModal = ({
   isOpen,
@@ -42,6 +43,11 @@ export const VaultFiltersModal = ({
     vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
+    chainType: initialFilters.chainType
+      ? Array.isArray(initialFilters.chainType)
+        ? initialFilters.chainType
+        : [initialFilters.chainType]
+      : [ChainType.CARDANO, ChainType.ROBINHOOD],
     assetWhitelist: Array.isArray(initialFilters.assetWhitelist)
       ? initialFilters.assetWhitelist
       : initialFilters.assetWhitelist
@@ -73,6 +79,10 @@ export const VaultFiltersModal = ({
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
+    chainTypes: [
+      { label: ChainTypeLabels[ChainType.CARDANO], value: ChainType.CARDANO },
+      { label: ChainTypeLabels[ChainType.ROBINHOOD], value: ChainType.ROBINHOOD },
+    ],
     assetWhitelist: assetsWhitelistData?.pages?.flatMap(page => (Array.isArray(page?.items) ? page.items : [])) || [],
   };
 
@@ -138,6 +148,7 @@ export const VaultFiltersModal = ({
       vaultStage: '',
       governance: '',
       verified: [],
+      chainType: [ChainType.CARDANO, ChainType.ROBINHOOD],
       assetWhitelist: [],
       contributionWindow: {
         from: '',
@@ -167,6 +178,7 @@ export const VaultFiltersModal = ({
       minFdvTvl: value => Number(value) > 0,
       maxFdvTvl: value => Number(value) > 0,
       assetWhitelist: value => Array.isArray(value) && value.length > 0,
+      chainType: value => Array.isArray(value) && value.length > 0 && value.length < 2,
     };
 
     const activeFilters = {};
@@ -175,6 +187,11 @@ export const VaultFiltersModal = ({
       if (key === 'reserveMet' || key === 'isOfficialPartner') {
         if (isValid(filters[key])) {
           activeFilters[key] = filters[key];
+        }
+      } else if (key === 'chainType') {
+        // Only add chainType if exactly one chain is selected (not all chains)
+        if (isValid(filters[key])) {
+          activeFilters[key] = filters[key][0];
         }
       } else if (filters[key] && isValid(filters[key])) {
         activeFilters[key] = filters[key];
@@ -344,6 +361,22 @@ export const VaultFiltersModal = ({
         <div>
           <h3 className="text-lg font-medium mb-3">Vault Stage</h3>
           {renderOptions(OPTIONS.vaultStages, 'vaultStage', setSingleFilter)}
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Chain Type</h3>
+          <div className="flex flex-wrap gap-2">
+            {OPTIONS.chainTypes.map(chain => (
+              <Chip
+                key={chain.value}
+                label={chain.label}
+                value={chain.value}
+                selected={filters.chainType.includes(chain.value)}
+                onSelect={() => toggleArrayFilter('chainType', chain.value)}
+                size="lg"
+              />
+            ))}
+          </div>
         </div>
 
         <div>

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -47,6 +48,8 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
+import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -76,6 +79,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const resolvedForVaultRef = useRef(null);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
+
+  const { isRobinHood } = useNetwork();
+  const { createEvmVault } = useCreateEvmVault();
+  const { isConnected: isEvmConnected } = useAccount();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -585,6 +592,56 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     if (currentStep < steps.length) {
       await handleNextStep();
     } else {
+      // ---- EVM (Robinhood) path ---------------------------------------------
+      if (isRobinHood) {
+        setIsSubmitting(true);
+        try {
+          await vaultSchema.validate(vaultData, { abortEarly: false });
+          const formattedData = formatVaultData(vaultData);
+          setErrors({});
+
+          const { dbVaultId } = await createEvmVault(formattedData);
+          toast.success('Vault launched on Robinhood Chain!');
+
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['vault', dbVaultId] }),
+            queryClient.invalidateQueries({ queryKey: ['vaults'] }),
+          ]);
+          localStorage.removeItem('storageVault');
+          navigate({ to: `/vaults/${dbVaultId}` });
+          await changeStep(1, true);
+          setSteps(CREATE_VAULT_STEPS);
+          setErrors({});
+        } catch (err) {
+          if (err?.name === 'ValidationError') {
+            const formattedErrors = transformYupErrors(err);
+            setErrors(formattedErrors);
+            updateStepErrorIndicators(formattedErrors);
+            toast.error('Please fix the validation errors before submitting');
+            return;
+          }
+          // Walk the viem error cause chain to detect wallet rejection
+          const isUserRejected =
+            err?.name === 'UserRejectedRequestError' ||
+            err?.cause?.name === 'UserRejectedRequestError' ||
+            err?.cause?.cause?.name === 'UserRejectedRequestError' ||
+            err?.message?.includes('User rejected the request') ||
+            err?.details?.includes('User denied');
+          if (isUserRejected) {
+            toast.error('Vault launch cancelled by user');
+            return;
+          }
+          if (!handleServerFieldErrors(err)) {
+            console.error(err);
+            toast.error('Failed to launch vault on Robinhood Chain.');
+          }
+        } finally {
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
+      // ---- Cardano path (original) ------------------------------------------
       const BALANCE_STALENESS_MS = 5 * 60 * 1000;
       const isBalanceOutdated = !lastUpdated || Date.now() - lastUpdated.getTime() > BALANCE_STALENESS_MS;
 
@@ -646,6 +703,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
+        console.log(err);
         if (err?.name === 'ValidationError') {
           const formattedErrors = transformYupErrors(err);
           setErrors(formattedErrors);
@@ -942,11 +1000,20 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           )}
           <PrimaryButton
             className="uppercase"
-            disabled={isSubmitting || isFormBlocked || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
+            disabled={
+              isSubmitting ||
+              isFormBlocked ||
+              !(isRobinHood ? isEvmConnected : wallet.isConnected) ||
+              (IS_MAINNET && !canCreateVaults)
+            }
             onClick={onSubmit}
             title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
           >
-            {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
+            {isSubmitting
+              ? 'Launching...'
+              : !(isRobinHood ? isEvmConnected : wallet.isConnected)
+                ? 'Connect wallet to launch'
+                : 'Confirm & launch'}
           </PrimaryButton>
         </div>
       );
