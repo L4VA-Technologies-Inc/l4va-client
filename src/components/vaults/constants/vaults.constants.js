@@ -157,11 +157,31 @@ export const assetWhitelistItemSchema = yup.object({
   policyId: yup
     .string()
     .required('Policy ID is required')
-    .matches(/^[0-9a-fA-F]{56}$/, 'Policy ID must be a 56-character hex string'),
+    .test('valid-policy-id', 'Invalid Policy ID', function validatePolicyId(value) {
+      if (!value) return true; // let .required() handle empty
+
+      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+
+      if (isRobinHood) {
+        // EVM: contract address — 0x followed by 40 hex chars
+        if (/^0x[0-9a-fA-F]{40}$/.test(value)) return true;
+        return this.createError({ message: 'Contract address must be a 0x-prefixed 40-character hex string' });
+      }
+
+      // Cardano: policy ID — 56 hex chars (no prefix)
+      if (/^[0-9a-fA-F]{56}$/.test(value)) return true;
+      return this.createError({ message: 'Policy ID must be a 56-character hex string' });
+    }),
   isVerified: yup
     .boolean()
-    .required('Only verified collections can be added to a vault')
-    .oneOf([true], 'Only verified collections can be added to a vault'),
+    .nullable()
+    .test('verified-or-evm', 'Only verified collections can be added to a vault', function validateVerified(value) {
+      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      // EVM contracts don't go through the Cardano verification system
+      if (isRobinHood) return true;
+      if (value !== true) return this.createError({ message: 'Only verified collections can be added to a vault' });
+      return true;
+    }),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
   valuationMethod: yup.string().oneOf(['market', 'custom', 'lp_token_dynamic']).default('market'),

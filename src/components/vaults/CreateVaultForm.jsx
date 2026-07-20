@@ -47,6 +47,8 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
+import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -76,6 +78,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const resolvedForVaultRef = useRef(null);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
+
+  const { isRobinHood } = useNetwork();
+  const { createEvmVault, isPending: isEvmPending } = useCreateEvmVault();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -585,6 +590,45 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     if (currentStep < steps.length) {
       await handleNextStep();
     } else {
+      // ---- EVM (Robinhood) path ---------------------------------------------
+      if (isRobinHood) {
+        setIsSubmitting(true);
+        try {
+          await vaultSchema.validate(vaultData, { abortEarly: false });
+          const formattedData = formatVaultData(vaultData);
+          setErrors({});
+
+          const { dbVaultId } = await createEvmVault(formattedData);
+          toast.success('Vault launched on Robinhood Chain!');
+
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['vault', dbVaultId] }),
+            queryClient.invalidateQueries({ queryKey: ['vaults'] }),
+          ]);
+          localStorage.removeItem('storageVault');
+          navigate({ to: `/vaults/${dbVaultId}` });
+          await changeStep(1, true);
+          setSteps(CREATE_VAULT_STEPS);
+          setErrors({});
+        } catch (err) {
+          if (err?.name === 'ValidationError') {
+            const formattedErrors = transformYupErrors(err);
+            setErrors(formattedErrors);
+            updateStepErrorIndicators(formattedErrors);
+            toast.error('Please fix the validation errors before submitting');
+            return;
+          }
+          if (!handleServerFieldErrors(err)) {
+            console.error(err);
+            toast.error('Failed to launch vault on Robinhood Chain.');
+          }
+        } finally {
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
+      // ---- Cardano path (original) ------------------------------------------
       const BALANCE_STALENESS_MS = 5 * 60 * 1000;
       const isBalanceOutdated = !lastUpdated || Date.now() - lastUpdated.getTime() > BALANCE_STALENESS_MS;
 
