@@ -578,11 +578,25 @@ export const ProposalInfo = ({ proposalId }) => {
                       }
 
                       if (item.type === 'marketplace_actions_list') {
-                        return <MarketplaceActionsList key={index} actions={item.value} type="marketplace" chainType={proposalInfo?.vault?.chainType} />;
+                        return (
+                          <MarketplaceActionsList
+                            key={index}
+                            actions={item.value}
+                            type="marketplace"
+                            chainType={proposalInfo?.vault?.chainType}
+                          />
+                        );
                       }
 
                       if (item.type === 'buy_sell_list') {
-                        return <MarketplaceActionsList key={index} actions={item.value} type="buy_sell" chainType={proposalInfo?.vault?.chainType} />;
+                        return (
+                          <MarketplaceActionsList
+                            key={index}
+                            actions={item.value}
+                            type="buy_sell"
+                            chainType={proposalInfo?.vault?.chainType}
+                          />
+                        );
                       }
 
                       if (item.type === 'distribution_assets_list') {
