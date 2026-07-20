@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { VAULT_FACTORY_ABI } from '@/lib/evm/vaultFactory.abi';
@@ -15,8 +15,9 @@ const FACTORY_ADDRESS = import.meta.env.VITE_EVM_VAULT_FACTORY_ADDRESS;
  *  4. POST /vaults/publish (chainType=robinhood, txHash) → backend marks vault published
  */
 export const useCreateEvmVault = () => {
-  const { address: creatorAddress } = useAccount();
+  const { address: creatorAddress, chainId: currentChainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
 
   const [isPreparing, setIsPreparing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -60,7 +61,11 @@ export const useCreateEvmVault = () => {
       // bigint conversion — values come as strings from JSON
       const cfgForContract = normalizeBigInts(cfg);
 
-      // ── Step 2: creator submits the on-chain transaction ──────────────────
+      // ── Step 2: ensure wallet is on the correct chain, then submit ───────
+      if (currentChainId !== robinhoodChain.id) {
+        await switchChainAsync({ chainId: robinhoodChain.id });
+      }
+
       const hash = await writeContractAsync({
         address: FACTORY_ADDRESS,
         abi: VAULT_FACTORY_ABI,

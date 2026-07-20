@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -81,6 +82,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const { isRobinHood } = useNetwork();
   const { createEvmVault, isPending: isEvmPending } = useCreateEvmVault();
+  const { isConnected: isEvmConnected } = useAccount();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -618,6 +620,17 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             toast.error('Please fix the validation errors before submitting');
             return;
           }
+          // Walk the viem error cause chain to detect wallet rejection
+          const isUserRejected =
+            err?.name === 'UserRejectedRequestError' ||
+            err?.cause?.name === 'UserRejectedRequestError' ||
+            err?.cause?.cause?.name === 'UserRejectedRequestError' ||
+            err?.message?.includes('User rejected the request') ||
+            err?.details?.includes('User denied');
+          if (isUserRejected) {
+            toast.error('Vault launch cancelled by user');
+            return;
+          }
           if (!handleServerFieldErrors(err)) {
             console.error(err);
             toast.error('Failed to launch vault on Robinhood Chain.');
@@ -690,6 +703,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
+        console.log(err);
         if (err?.name === 'ValidationError') {
           const formattedErrors = transformYupErrors(err);
           setErrors(formattedErrors);
@@ -986,11 +1000,20 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           )}
           <PrimaryButton
             className="uppercase"
-            disabled={isSubmitting || isFormBlocked || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
+            disabled={
+              isSubmitting ||
+              isFormBlocked ||
+              !(isRobinHood ? isEvmConnected : wallet.isConnected) ||
+              (IS_MAINNET && !canCreateVaults)
+            }
             onClick={onSubmit}
             title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
           >
-            {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
+            {isSubmitting
+              ? 'Launching...'
+              : !(isRobinHood ? isEvmConnected : wallet.isConnected)
+                ? 'Connect wallet to launch'
+                : 'Confirm & launch'}
           </PrimaryButton>
         </div>
       );
