@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils.js';
 
-const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
+const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, pickByCurrency }) => {
   const handleCopy = (e, text, message) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
@@ -66,7 +66,9 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
               <p className="font-medium text-gray-300">Value:</p>
               <p>
                 {currencySymbol}
-                {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
+                {formatAdaPrice(
+                  pickByCurrency({ ada: asset.valueAda || 0, usd: asset.valueUsd || 0, eth: asset.valueEth || 0 })
+                )}
               </p>
             </div>
             <div>
@@ -117,7 +119,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   );
 };
 
-export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda }) => {
+export const VaultContributedAssetsCard = ({ assets, currencySymbol, pickByCurrency }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
 
   return (
@@ -129,7 +131,7 @@ export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda }) =>
           isExpanded={expandedAsset === index}
           onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
           currencySymbol={currencySymbol}
-          isAda={isAda}
+          pickByCurrency={pickByCurrency}
         />
       ))}
     </div>

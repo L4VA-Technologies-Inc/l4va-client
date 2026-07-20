@@ -2,14 +2,14 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { formatNum } from '@/utils/core.utils.js';
 
 export const Stats = ({ user }) => {
-  const { currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-input-bg rounded-md p-6">
         <p className="text-dark-100 mb-2">TVL</p>
         <p className="text-2xl font-medium">
-          {currency === 'ada' ? `₳${formatNum(user?.totalValueAda) || 0}` : `$${formatNum(user?.totalValueUsd) || 0}`}
+          {`${currencySymbol}${formatNum(pickByCurrency({ ada: user?.totalValueAda, usd: user?.totalValueUsd, eth: user?.totalValueEth })) || 0}`}
         </p>
       </div>
       <div className="bg-input-bg rounded-md p-6">

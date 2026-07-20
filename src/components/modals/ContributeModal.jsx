@@ -22,7 +22,7 @@ const MAX_FT_PER_TRANSACTION = 10;
 const MAX_SAFE_QUANTITY = Number.MAX_SAFE_INTEGER; // 9,007,199,254,740,991
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
-  const { currencySymbol, isAda } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -90,15 +90,32 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         // asset.priceAda is per decimal-adjusted unit
         // So we can directly multiply: decimalAmount * pricePerDecimalUnit
         const selectedDecimalQty = Number(asset.amount) || 0;
-        const pricePerDecimalUnit = isAda ? asset.priceAda : asset.priceUsd;
+        const pricePerDecimalUnit = pickByCurrency({ ada: asset.priceAda, usd: asset.priceUsd, eth: asset.priceEth });
         total += selectedDecimalQty * pricePerDecimalUnit;
       } else {
         // For NFTs, use full value
-        total += isAda ? asset.valueAda : asset.valueUsd;
+        total += pickByCurrency({ ada: asset.valueAda, usd: asset.valueUsd, eth: asset.valueEth });
       }
     });
     return total;
-  }, [selectedNFTs, isAda]);
+  }, [selectedNFTs, pickByCurrency]);
+
+  // Same sum always expressed in ADA - VT math below is denominated in ADA regardless of the
+  // display currency, and the ADA<->display rate is derived from this pair (no separate rate field).
+  const estimatedValueAda = useMemo(() => {
+    let total = 0;
+    selectedNFTs.forEach(asset => {
+      if (asset.isFungibleToken) {
+        total += (Number(asset.amount) || 0) * asset.priceAda;
+      } else {
+        total += asset.valueAda;
+      }
+    });
+    return total;
+  }, [selectedNFTs]);
+
+  // Units of the active display currency per 1 ADA (1 when the display currency is ADA).
+  const displayPerAda = estimatedValueAda > 0 ? estimatedValue / estimatedValueAda : 1;
 
   // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
   const tokensForAcqPercent = vault.tokensForAcquires / 100;
@@ -112,7 +129,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const expansionVTAmount = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets) return 0;
 
-    const assetValueAda = isAda ? estimatedValue : estimatedValue / (vault.adaPrice || 1);
+    const assetValueAda = estimatedValueAda;
     const decimals = vault.ftTokenDecimals ?? 6;
     const decimalMultiplier = Math.pow(10, decimals);
 
@@ -136,7 +153,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       if (!currentVtPrice || currentVtPrice === 0) return 0;
       return (assetValueAda / currentVtPrice) * decimalMultiplier;
     }
-  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, isAda, estimatedValue, vault]);
+  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, estimatedValueAda, vault]);
 
   const expansionVTValue = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets) return 0;
@@ -144,10 +161,14 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     const decimals = vault.ftTokenDecimals ?? 6;
     const decimalMultiplier = Math.pow(10, decimals);
     const vtCount = expansionVTAmount / decimalMultiplier;
-    const vtPriceInCurrency = isAda ? vault.vtPrice : vault.vtPrice * (vault.adaPrice || 1);
+    const vtPriceInCurrency = pickByCurrency({
+      ada: vault.vtPrice,
+      usd: vault.vtPrice * (vault.adaPrice || 1),
+      eth: vault.vtPrice * displayPerAda,
+    });
 
     return vtCount * vtPriceInCurrency;
-  }, [isExpansionMode, hasSelectedAssets, expansionVTAmount, isAda, vault]);
+  }, [isExpansionMode, hasSelectedAssets, expansionVTAmount, pickByCurrency, displayPerAda, vault]);
 
   const expansionValueDifference = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets || estimatedValue === 0) return 0;
@@ -155,9 +176,11 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   }, [isExpansionMode, hasSelectedAssets, expansionVTValue, estimatedValue]);
 
   // Get current vault TVL (what contributors have already contributed)
-  const currentVaultTVL = isAda
-    ? vault.assetsPrices?.totalValueAda || vault.totalAssetsCostAda || 0
-    : vault.assetsPrices?.totalValueUsd || vault.totalAssetsCostUsd || 0;
+  const currentVaultTVL = pickByCurrency({
+    ada: vault.assetsPrices?.totalValueAda || vault.totalAssetsCostAda || 0,
+    usd: vault.assetsPrices?.totalValueUsd || vault.totalAssetsCostUsd || 0,
+    eth: vault.assetsPrices?.totalValueEth || vault.totalAssetsCostEth || 0,
+  });
 
   // Calculate user's share of the total contributor pool
   const totalContributorValue = currentVaultTVL + estimatedValue;
@@ -200,7 +223,11 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     hasSelectedAssets && hasAcquirePhase
       ? ((tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
       : '0.00';
-  const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
+  const estimatedReceivedLabel = pickByCurrency({
+    ada: 'Estimated ADA Received',
+    usd: 'Estimated USD Received',
+    eth: 'Estimated ETH Received',
+  });
 
   const toggleNFT = useCallback(asset => {
     if (asset.isFungibleToken) return;

@@ -13,8 +13,10 @@ interface WalletAsset {
   isFungibleToken: boolean;
   priceAda: number;
   priceUsd: number;
+  priceEth: number;
   valueAda: number;
   valueUsd: number;
+  valueEth: number;
   metadata?: {
     policyId: string;
     fingerprint?: string;
@@ -40,6 +42,7 @@ interface WalletOverview {
   wallet: string;
   totalValueAda: number;
   totalValueUsd: number;
+  totalValueEth: number;
   lastUpdated: string;
   summary: {
     totalAssets: number;

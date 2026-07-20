@@ -13,7 +13,7 @@ import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
   const { name, tokensForAcquires, liquidityPoolContribution, ftTokenSupply } = vault;
-  const { currency, currencySymbol } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
   const [acquireAmount, setAcquireAmount] = useState(0);
   const { mutateAsync: createAcquireTx } = useCreateAcquireTx();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'isUpdatingUtxos');
@@ -235,7 +235,11 @@ export const AcquireModal = ({ vault, onClose }) => {
                 <p className="text-xl font-medium">
                   {currencySymbol}
                   {formatNum(
-                    currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd
+                    pickByCurrency({
+                      ada: vault.assetsPrices.totalAcquiredAda,
+                      usd: vault.assetsPrices.totalAcquiredUsd,
+                      eth: vault.assetsPrices.totalAcquiredEth,
+                    })
                   )}
                 </p>
               </div>

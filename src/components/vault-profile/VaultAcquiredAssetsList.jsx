@@ -24,7 +24,7 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const { currencySymbol, isAda, currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -83,7 +83,13 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             <div className="flex items-baseline gap-1 text-white">
               <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatLargeNumber(isAda ? data?.data?.totalAcquired || 0 : data?.data?.totalAcquiredUsd || 0)}
+                {formatLargeNumber(
+                  pickByCurrency({
+                    ada: data?.data?.totalAcquired || 0,
+                    usd: data?.data?.totalAcquiredUsd || 0,
+                    eth: data?.data?.totalAcquiredEth || 0,
+                  })
+                )}
               </span>
             </div>
           </div>
@@ -96,13 +102,22 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               value={
                 vault.vaultStatus === 'locked'
                   ? (() => {
-                      const val = isAda ? data?.data?.totalAdaLiquidityAda : data?.data?.totalAdaLiquidityUsd;
-                      return val != null ? (isAda ? `₳${formatNum(2 * val)}` : `$${formatNum(2 * val)}`) : 'N/A';
+                      const val = pickByCurrency({
+                        ada: data?.data?.totalAdaLiquidityAda,
+                        usd: data?.data?.totalAdaLiquidityUsd,
+                        eth: data?.data?.totalAdaLiquidityEth,
+                      });
+                      return val != null ? `${currencySymbol}${formatNum(2 * val)}` : 'N/A';
                     })()
                   : vault.projectedLpAdaAmount || vault.projectedLpUsdAmount
-                    ? currency === 'ada'
-                      ? `₳${formatNum(2 * vault.projectedLpAdaAmount)}`
-                      : `$${formatNum(2 * vault.projectedLpUsdAmount)}`
+                    ? `${currencySymbol}${formatNum(
+                        2 *
+                          pickByCurrency({
+                            ada: vault.projectedLpAdaAmount,
+                            usd: vault.projectedLpUsdAmount,
+                            eth: vault.projectedLpEthAmount,
+                          })
+                      )}`
                     : 'N/A'
               }
             />

@@ -47,6 +47,7 @@ export const Header = () => {
   const currencyOptions = [
     { label: 'ADA', value: 'ada' },
     { label: 'USD', value: 'usdt' },
+    { label: 'ETH', value: 'eth' },
   ];
 
   const networkOptions = [
