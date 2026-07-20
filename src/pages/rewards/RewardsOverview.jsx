@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { useAuth } from '@/lib/auth/auth';
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
 import { useClaimableAmount } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
@@ -32,7 +33,9 @@ import { formatCompactNumber } from '@/utils/core.utils';
 export const RewardsOverview = () => {
   const navigate = useNavigate();
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { isAuthenticated } = useAuth();
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const isRobinhoodRewardsSession = isAuthenticated && !isConnected;
 
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
@@ -117,8 +120,14 @@ export const RewardsOverview = () => {
           <Card className="p-12">
             <div className="text-center">
               <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-gray-400">Please connect your wallet to view your rewards</p>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                {isRobinhoodRewardsSession ? 'Rewards Not Tracked for Robinhood Yet' : 'Connect Your Wallet'}
+              </h2>
+              <p className="text-gray-400">
+                {isRobinhoodRewardsSession
+                  ? 'Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch to a Cardano wallet to view your rewards.'
+                  : 'Please connect your wallet to view your rewards'}
+              </p>
             </div>
           </Card>
         </div>

@@ -3,6 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useState } from 'react';
 
+import { useAuth } from '@/lib/auth/auth';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge, VaultLeaderboard, EpochSelector } from '@/components/rewards';
@@ -11,7 +13,10 @@ export const VaultDetails = () => {
   const navigate = useNavigate();
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { isAuthenticated } = useAuth();
+  const { isRobinHood } = useNetwork();
   const [selectedEpochIds, setSelectedEpochIds] = useState([]);
+  const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
 
   const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
 
@@ -36,7 +41,7 @@ export const VaultDetails = () => {
     );
   }
 
-  if (!isConnected || !vaultRewardData) {
+  if (isRobinhoodRewardsSession || !isConnected || !vaultRewardData) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -57,7 +62,16 @@ export const VaultDetails = () => {
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
             <div className="p-12">
               <div className="text-center text-steel-400">
-                {!isConnected && <div>Please connect your wallet</div>}
+                {isRobinhoodRewardsSession && (
+                  <div>
+                    <div className="text-white font-medium mb-2">Rewards Not Tracked for Robinhood Yet</div>
+                    <div className="text-sm">
+                      Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch
+                      to a Cardano wallet to view vault rewards.
+                    </div>
+                  </div>
+                )}
+                {!isRobinhoodRewardsSession && !isConnected && <div>Please connect your wallet</div>}
                 {isConnected && !walletAddress && <div>Waiting for wallet address...</div>}
                 {isConnected && walletAddress && rewardError && (
                   <div>

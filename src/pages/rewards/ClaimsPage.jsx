@@ -2,16 +2,21 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useWallet } from '@ada-anvil/weld/react';
 
+import { useAuth } from '@/lib/auth/auth';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useClaimTransactions } from '@/hooks/useRewardsClaims';
 import { ClaimHistoryDetails } from '@/components/rewards';
 
 export const ClaimsPage = () => {
   const navigate = useNavigate();
   const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { isAuthenticated } = useAuth();
+  const { isRobinHood } = useNetwork();
+  const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
 
   const { data: transactionsData, isLoading } = useClaimTransactions(walletAddress);
 
-  if (!isConnected) {
+  if (isRobinhoodRewardsSession || !isConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -23,7 +28,11 @@ export const ClaimsPage = () => {
             Back to Rewards
           </button>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-8 text-center">
-            <p className="text-steel-400">Connect your wallet to view claim history</p>
+            <p className="text-steel-400">
+              {isRobinhoodRewardsSession
+                ? 'Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch to a Cardano wallet to view claim history.'
+                : 'Connect your wallet to view claim history'}
+            </p>
           </div>
         </div>
       </div>
