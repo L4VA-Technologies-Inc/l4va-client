@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 import toast from 'react-hot-toast';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper.jsx';
@@ -42,6 +43,13 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     'isUpdatingUtxos',
     'changeAddressBech32'
   );
+  // Wallet address is chain-specific: Cardano comes from the weld wallet
+  // (bech32), Robinhood/EVM comes from the wagmi wallet (0x). The backend
+  // resolves the holdings per `chain`, so we just forward the matching address.
+  const { address: evmAddress } = useAccount();
+  const chain = vault?.chainType || 'cardano';
+  const isEvmChain = chain === 'robinhood';
+  const walletAddress = isEvmChain ? evmAddress : wallet?.changeAddressBech32;
   const { sendTransaction, status, error } = useTransaction();
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
@@ -72,11 +80,12 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     loadMoreAssets,
     refresh,
   } = useInfiniteWalletAssets({
-    walletAddress: wallet?.changeAddressBech32,
+    walletAddress,
     whitelistedPolicies,
     activeTab,
     search: searchQuery.trim() || '',
     vaultId: vault?.id, // Pass vault ID for custom pricing
+    chain, // Chain type so the backend resolves the correct wallet holdings
   });
 
   // Calculate estimated value

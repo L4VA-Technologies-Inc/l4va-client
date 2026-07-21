@@ -308,6 +308,7 @@ export const useWalletSummaryPaginated = ({
   whitelistedPolicies,
   search,
   vaultId,
+  chain,
 }: {
   address: string;
   page?: number;
@@ -316,9 +317,10 @@ export const useWalletSummaryPaginated = ({
   whitelistedPolicies?: string[];
   search?: string;
   vaultId?: string;
+  chain?: string;
 }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId],
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId, chain],
     queryFn: () =>
       TapToolsApiProvider.getWalletSummaryPaginated({
         address,
@@ -328,6 +330,7 @@ export const useWalletSummaryPaginated = ({
         whitelistedPolicies,
         search,
         vaultId,
+        chain,
       }),
     enabled: !!address,
   });
