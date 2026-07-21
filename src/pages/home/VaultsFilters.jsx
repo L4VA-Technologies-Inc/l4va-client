@@ -3,6 +3,7 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -21,6 +22,7 @@ const DEFAULT_TAB = 'all';
 const VaultsFilters = ({ className = '' }) => {
   const search = useSearch({ from: '/' });
   const router = useRouter();
+  const { network } = useNetwork();
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
@@ -40,7 +42,17 @@ const VaultsFilters = ({ className = '' }) => {
     limit: 12,
     filter: initialTab.filter,
     search: '',
+    chainType: network,
   });
+
+  // Keep the vault search in sync with the network selected in the header.
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      chainType: network,
+      page: 1,
+    }));
+  }, [network]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
@@ -84,6 +96,7 @@ const VaultsFilters = ({ className = '' }) => {
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
+      chainType: network,
       ...filters,
     }));
   };

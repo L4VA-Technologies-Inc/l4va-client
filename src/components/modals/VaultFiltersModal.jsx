@@ -364,22 +364,6 @@ export const VaultFiltersModal = ({
         </div>
 
         <div>
-          <h3 className="text-lg font-medium mb-3">Chain Type</h3>
-          <div className="flex flex-wrap gap-2">
-            {OPTIONS.chainTypes.map(chain => (
-              <Chip
-                key={chain.value}
-                label={chain.label}
-                value={chain.value}
-                selected={filters.chainType.includes(chain.value)}
-                onSelect={() => toggleArrayFilter('chainType', chain.value)}
-                size="lg"
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
           <h3 className="text-lg font-medium mb-3">Initial % Vault Offered</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="relative w-full">
