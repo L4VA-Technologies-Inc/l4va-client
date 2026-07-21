@@ -4,7 +4,7 @@ import { LazyImage } from '@/components/shared/LazyImage';
 import { formatNum, formatPolicyId } from '@/utils/core.utils';
 import { getPolicyUrl } from '@/utils/explorer.utils';
 
-export const SelectedAssetItem = ({ asset, onRemove }) => (
+export const SelectedAssetItem = ({ asset, chainType, onRemove }) => (
   <div className="flex items-center gap-3">
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800 overflow-hidden">
       <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
@@ -25,7 +25,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
       <div className="flex items-center gap-3 shrink-0">
         {asset.metadata?.policyId && (
           <a
-            href={getPolicyUrl(asset.metadata.policyId)}
+            href={getPolicyUrl(asset.metadata.policyId, chainType || asset.chainType)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}

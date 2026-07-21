@@ -73,13 +73,22 @@ export const getAddressUrl = (address, chainType = ChainType.CARDANO, isTestnet 
 };
 
 /**
- * Get policy ID explorer URL (Cardano only)
+ * Get policy/contract explorer URL
  * @param {string} policyId - Policy ID
+ * @param {string} chainType - ChainType.CARDANO or ChainType.ROBINHOOD
  * @param {boolean} isTestnet - Whether to use testnet URLs
- * @returns {string} Policy explorer URL
+ * @returns {string} Policy/contract explorer URL
  */
-export const getPolicyUrl = (policyId, isTestnet = IS_PREPROD) => {
+export const getPolicyUrl = (policyId, chainType, isTestnet = IS_PREPROD) => {
   if (!policyId) return '';
+
+  const isEvmContractAddress = /^0x[a-fA-F0-9]{40}$/.test(policyId);
+  const resolvedChainType = chainType || (isEvmContractAddress ? ChainType.ROBINHOOD : ChainType.CARDANO);
+
+  if (resolvedChainType === ChainType.ROBINHOOD) {
+    // Robinhood Chain assets use EVM contract addresses.
+    return getTokenUrl(policyId, resolvedChainType, isTestnet);
+  }
 
   const config = getExplorerConfig(ChainType.CARDANO, isTestnet);
 

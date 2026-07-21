@@ -385,20 +385,23 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             </PrimaryButton>
           </div>
         </div>
-        <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-          {selectedNFTs.length > 0 ? (
-            <>
-              Transaction cost:{' '}
-              <span className="text-white font-medium">~{transactionCostEstimate.totalWalletAda.toFixed(2)} ADA</span> (
-              {totalProtocolFeeAda > 0
-                ? `${totalProtocolFeeAda.toFixed(2)} ADA Protocol fees (${feeAssetCount} asset${feeAssetCount !== 1 ? 's' : ''} × ${feePerAssetAda} ADA) + ~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`
-                : `~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`}
-              )
-            </>
-          ) : (
-            <>Select assets to see estimated transaction cost.</>
-          )}
-        </div>
+        {!isEvmChain && (
+          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+            {selectedNFTs.length > 0 ? (
+              <>
+                Transaction cost:{' '}
+                <span className="text-white font-medium">~{transactionCostEstimate.totalWalletAda.toFixed(2)} ADA</span>{' '}
+                (
+                {totalProtocolFeeAda > 0
+                  ? `${totalProtocolFeeAda.toFixed(2)} ADA Protocol fees (${feeAssetCount} asset${feeAssetCount !== 1 ? 's' : ''} × ${feePerAssetAda} ADA) + ~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`
+                  : `~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`}
+                )
+              </>
+            ) : (
+              <>Select assets to see estimated transaction cost.</>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -426,6 +429,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           isLoadingMore={isLoadingMore}
           hasNextPage={hasNextPage}
           loadMoreAssets={loadMoreAssets}
+          chainType={chain}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           selectedNFTs={selectedNFTs}
