@@ -11,6 +11,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
+import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
@@ -638,7 +639,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const vaultSwapToken = activeLpTokenOut || import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
   const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
 
-  const renderSwapBlock = () => (
+  const renderSwapBlock = () => {
+    // Swap isn't available for Robinhood-chain vaults.
+    if (vault.chainType === ChainType.ROBINHOOD) return null;
+
+    return (
     <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
       <SwapComponent
         key={swapInstanceKey}
@@ -648,7 +653,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         }}
       />
     </div>
-  );
+    );
+  };
 
   return (
     <>
