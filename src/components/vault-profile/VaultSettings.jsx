@@ -196,7 +196,7 @@ export const VaultSettings = ({ vault }) => {
             <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
             <InfoRow label="Token Name" value={vault.name} />
             <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
-            <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
+            {vault.policyId && <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />}
             <InfoRow
               customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
               valueWrapperClassName="w-full justify-start sm:w-auto sm:min-w-0 sm:justify-end"
