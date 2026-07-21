@@ -11,6 +11,8 @@ import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
 import L4vaIcon from '@/icons/l4va.svg?react';
+import CardanoIcon from '@/icons/cardano.svg?react';
+import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
@@ -52,8 +54,16 @@ export const Header = () => {
   ];
 
   const networkOptions = [
-    { label: 'Cardano', value: ChainType.CARDANO },
-    { label: 'Robinhood', value: ChainType.ROBINHOOD },
+    {
+      label: 'Cardano',
+      value: ChainType.CARDANO,
+      icon: <CardanoIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
+    {
+      label: 'Robinhood',
+      value: ChainType.ROBINHOOD,
+      icon: <RobinhoodIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
   ];
 
   const { notifications, fetching, readAll, hasMore, isLoading, fetchMore, refetch } = useNotifications();
