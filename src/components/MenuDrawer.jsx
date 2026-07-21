@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency.js';
+import { useNetwork } from '@/hooks/useNetwork.js';
 
 export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   const handleNavClick = (link, e) => {
@@ -14,10 +15,12 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   };
 
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
+  const { isRobinHood, isCardano } = useNetwork();
 
   const currencyOptions = [
-    { label: 'ADA', value: 'ada' },
+    ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
     { label: 'USD', value: 'usdt' },
+    ...(isCardano ? [] : [{ label: 'ETH', value: 'eth' }]),
   ];
 
   return (
