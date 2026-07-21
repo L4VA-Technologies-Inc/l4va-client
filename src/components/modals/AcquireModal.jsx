@@ -303,7 +303,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                     ? 'ACQUIRE'
                     : status.toUpperCase()}
               </PrimaryButton>
-              {!isEth &&
+              {!isEth && (
                 <div className="text-xs text-dark-100">
                   Transaction cost:{' '}
                   <span className="text-white font-medium">
@@ -315,7 +315,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                     : '~1.72 ADA Network fees'}
                   )
                 </div>
-              }
+              )}
             </div>
           </div>
         </div>
