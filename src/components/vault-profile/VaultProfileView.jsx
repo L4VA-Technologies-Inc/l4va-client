@@ -644,15 +644,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     if (vault.chainType === ChainType.ROBINHOOD) return null;
 
     return (
-    <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
-      <SwapComponent
-        key={swapInstanceKey}
-        config={{
-          defaultTokenOut: vaultSwapToken,
-          style: { width: '100%' },
-        }}
-      />
-    </div>
+      <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+        <SwapComponent
+          key={swapInstanceKey}
+          config={{
+            defaultTokenOut: vaultSwapToken,
+            style: { width: '100%' },
+          }}
+        />
+      </div>
     );
   };
 
