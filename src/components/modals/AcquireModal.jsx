@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
+import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum } from '@/utils/core.utils';
@@ -21,34 +24,59 @@ export const AcquireModal = ({ vault, onClose }) => {
   const buildTransaction = useBuildTransaction();
   const submitTransaction = useSubmitTransaction();
 
-  // Use vault-specific max acquire amount if available, otherwise fallback to 10M ADA
-  const maxAcquireAmount = vault.maxAcquireAmountAda || 10000000;
-  const maxValue = Math.floor(Math.min(wallet.balanceAda || 0, maxAcquireAmount));
+  // ── Chain awareness ────────────────────────────────────────────────────
+  // Robinhood vaults are acquired with ETH (EVM), everything else with ADA.
+  const isEth = vault?.chainType === 'robinhood';
+  const assetSymbol = isEth ? 'ETH' : 'ADA';
+  // Chain-appropriate input ergonomics: ETH is fractional, ADA is coarse.
+  const minAcquire = isEth ? 0.001 : 5;
+  const stepAmount = isEth ? 0.01 : 1;
+  const maxInputDecimals = isEth ? 6 : 2;
+
+  // ETH balance comes from the wagmi wallet; ADA from the weld wallet.
+  const { address: evmAddress } = useAccount();
+  const { data: ethBalance } = useBalance({
+    address: evmAddress,
+    chainId: robinhoodChain.id,
+    query: { enabled: isEth && Boolean(evmAddress) },
+  });
+  // wagmi v3 dropped `data.formatted`; format the raw bigint `value` ourselves.
+  const ethBalanceNum = ethBalance ? Number(formatUnits(ethBalance.value, ethBalance.decimals)) : 0;
+  const walletBalance = isEth ? ethBalanceNum : wallet.balanceAda || 0;
+
+  // Use vault-specific max acquire amount if available, otherwise no practical cap
+  // for ETH / fallback to 10M ADA for Cardano.
+  const maxAcquireAmount = isEth
+    ? vault.maxAcquireAmountEth || Number.MAX_SAFE_INTEGER
+    : vault.maxAcquireAmountAda || 10000000;
+  // Keep ADA integer-floored (existing behaviour); ETH keeps its fractional precision.
+  const cappedMax = Math.min(walletBalance, maxAcquireAmount);
+  const maxValue = isEth ? cappedMax : Math.floor(cappedMax);
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
-  // TVL (Total Value Locked) - the value of contributed assets
-  const tvl = vault.assetsPrices?.totalValueAda || 0;
-  const totalAcquiredAda = vault.assetsPrices?.totalAcquiredAda || 0;
+  // TVL (Total Value Locked) - the value of contributed assets, in the chain's native unit
+  const tvl = isEth ? vault.assetsPrices?.totalValueEth || 0 : vault.assetsPrices?.totalValueAda || 0;
+  const totalAcquired = isEth ? vault.assetsPrices?.totalAcquiredEth || 0 : vault.assetsPrices?.totalAcquiredAda || 0;
 
-  // Fair value ADA = expected total ADA if FDV equals TVL
-  // e.g., if TVL = 10,000 and tokensForAcquires = 50%, fairValueAda = 5,000
-  const fairValueAda = tvl * (tokensForAcquires / 100);
+  // Fair value = expected total if FDV equals TVL
+  // e.g., if TVL = 10,000 and tokensForAcquires = 50%, fairValue = 5,000
+  const fairValue = tvl * (tokensForAcquires / 100);
 
   // Calculate user share based on fair value projection or actual total acquired
   // - Before fair value is reached: project based on fair value (more intuitive estimate)
   // - After fair value exceeded: use actual total (reflects real dilution)
   let userShare = 0;
-  if (acquireAmountNum > 0 && fairValueAda > 0) {
-    // Total ADA that would be in the pool after this acquisition
-    const totalAfterAcquisition = totalAcquiredAda + acquireAmountNum;
+  if (acquireAmountNum > 0 && fairValue > 0) {
+    // Total that would be in the pool after this acquisition
+    const totalAfterAcquisition = totalAcquired + acquireAmountNum;
 
-    if (totalAfterAcquisition >= fairValueAda) {
+    if (totalAfterAcquisition >= fairValue) {
       // Total would exceed fair value - use actual amounts
       userShare = acquireAmountNum / totalAfterAcquisition;
     } else {
       // Total below fair value - project as if fair value will be reached
-      userShare = acquireAmountNum / fairValueAda;
+      userShare = acquireAmountNum / fairValue;
     }
   }
 
@@ -70,12 +98,19 @@ export const AcquireModal = ({ vault, onClose }) => {
       const { data } = await createAcquireTx({
         vaultId: vault.id,
         assets: [
-          {
-            assetName: 'lovelace',
-            policyId: 'lovelace',
-            type: 'ADA',
-            quantity: Number(acquireAmount),
-          },
+          isEth
+            ? {
+                assetName: 'eth',
+                policyId: 'eth',
+                type: 'ETH',
+                quantity: Number(acquireAmount),
+              }
+            : {
+                assetName: 'lovelace',
+                policyId: 'lovelace',
+                type: 'ADA',
+                quantity: Number(acquireAmount),
+              },
         ],
       });
 
@@ -131,7 +166,7 @@ export const AcquireModal = ({ vault, onClose }) => {
 
     if (value.includes('.')) {
       const [int, dec] = value.split('.');
-      value = int + '.' + dec.slice(0, 2);
+      value = int + '.' + dec.slice(0, maxInputDecimals);
     }
 
     if (Number(value) > maxValue) {
@@ -150,8 +185,10 @@ export const AcquireModal = ({ vault, onClose }) => {
         <div className="flex flex-col p-6 space-y-6">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <span>ADA in wallet</span>
-              <span className="font-bold">{formatNum(wallet.balanceAda || 0)} ADA</span>
+              <span>{assetSymbol} in wallet</span>
+              <span className="font-bold">
+                {formatNum(walletBalance, isEth ? 6 : 2)} {assetSymbol}
+              </span>
             </div>
             <div className="bg-steel-850 p-4 rounded-lg">
               <h3 className="font-bold mb-2">Acquire</h3>
@@ -166,7 +203,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   <button
                     type="button"
                     onClick={() => {
-                      const newValue = Math.min(parseFloat(acquireAmount || 0) + 1, maxValue);
+                      const newValue = Math.min(parseFloat(acquireAmount || 0) + stepAmount, maxValue);
                       setAcquireAmount(newValue.toString());
                     }}
                     className="p-1 hover:bg-steel-700 rounded transition-colors"
@@ -176,7 +213,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   <button
                     type="button"
                     onClick={() => {
-                      const newValue = Math.max(parseFloat(acquireAmount || 0) - 1, 0);
+                      const newValue = Math.max(parseFloat(acquireAmount || 0) - stepAmount, 0);
                       setAcquireAmount(newValue.toString());
                     }}
                     className="p-1 hover:bg-steel-700 rounded transition-colors"
@@ -184,21 +221,22 @@ export const AcquireModal = ({ vault, onClose }) => {
                     <ChevronDown className="transition-transform duration-200" size={20} />
                   </button>
                 </div>
-                <span className="text-2xl font-bold">ADA</span>
+                <span className="text-2xl font-bold">{assetSymbol}</span>
               </div>
-              {acquireAmountNum > 0 && acquireAmountNum < 5 && (
+              {acquireAmountNum > 0 && acquireAmountNum < minAcquire && (
                 <div className="mt-3 text-xs text-yellow-400">
-                  Minimum 5 ADA required to cover transaction fees and ensure meaningful vault token allocation
+                  Minimum {minAcquire} {assetSymbol} required to cover transaction fees and ensure meaningful vault
+                  token allocation
                 </div>
               )}
-              {maxAcquireAmount < 10000000 && (
+              {!isEth && maxAcquireAmount < 10000000 && (
                 <div className="mt-3 text-xs text-zinc-400">
-                  Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} ADA per transaction
+                  Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} {assetSymbol} per transaction
                 </div>
               )}
               {acquireAmountNum > maxAcquireAmount && (
                 <div className="mt-3 text-xs text-red-400">
-                  Amount exceeds maximum limit of {formatNum(maxAcquireAmount)} ADA per transaction
+                  Amount exceeds maximum limit of {formatNum(maxAcquireAmount)} {assetSymbol} per transaction
                 </div>
               )}
             </div>
@@ -209,7 +247,9 @@ export const AcquireModal = ({ vault, onClose }) => {
               <div className="text-center">
                 <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
                   Est. Vault Token (%)
-                  <HoverHelp hint="Your estimated share of vault tokens as a percentage, based on your ADA amount relative to total ADA from acquirers (or fair value)." />
+                  <HoverHelp
+                    hint={`Your estimated share of vault tokens as a percentage, based on your ${assetSymbol} amount relative to total ${assetSymbol} from acquirers (or fair value).`}
+                  />
                 </p>
                 <p className="text-xl font-medium">{estVaultTokenPercent.toFixed(2)}%</p>
               </div>
@@ -229,16 +269,16 @@ export const AcquireModal = ({ vault, onClose }) => {
               </div>
               <div className="text-center">
                 <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
-                  Total ADA sent by acquirers
+                  Total {assetSymbol} sent by acquirers
                   <HoverHelp hint="Total amount all acquirers have sent to this vault so far." />
                 </p>
                 <p className="text-xl font-medium">
                   {currencySymbol}
                   {formatNum(
                     pickByCurrency({
-                      ada: vault.assetsPrices.totalAcquiredAda,
-                      usd: vault.assetsPrices.totalAcquiredUsd,
-                      eth: vault.assetsPrices.totalAcquiredEth,
+                      ada: vault.assetsPrices?.totalAcquiredAda,
+                      usd: vault.assetsPrices?.totalAcquiredUsd,
+                      eth: vault.assetsPrices?.totalAcquiredEth,
                     })
                   )}
                 </p>
@@ -249,24 +289,33 @@ export const AcquireModal = ({ vault, onClose }) => {
               <PrimaryButton
                 className="uppercase"
                 disabled={
-                  status !== 'idle' || wallet.isUpdatingUtxos || acquireAmountNum < 5 || !vault.isAcquireWindowActive
+                  status !== 'idle' ||
+                  (!isEth && wallet.isUpdatingUtxos) ||
+                  acquireAmountNum < minAcquire ||
+                  !vault.isAcquireWindowActive
                 }
                 onClick={handleAcquire}
                 icon={status !== 'idle' ? Spinner : null}
               >
-                {wallet.isUpdatingUtxos ? 'Updating UTXOs...' : status === 'idle' ? 'ACQUIRE' : status.toUpperCase()}
+                {!isEth && wallet.isUpdatingUtxos
+                  ? 'Updating UTXOs...'
+                  : status === 'idle'
+                    ? 'ACQUIRE'
+                    : status.toUpperCase()}
               </PrimaryButton>
-              <div className="text-xs text-dark-100">
-                Transaction cost:{' '}
-                <span className="text-white font-medium">
-                  ~{((vault.protocolAcquiresFeeAda || 0) + 1.72).toFixed(2)} ADA
-                </span>{' '}
-                (
-                {vault.protocolAcquiresFeeAda > 0
-                  ? `${vault.protocolAcquiresFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
-                  : '~1.72 ADA Network fees'}
-                )
-              </div>
+              {!isEth &&
+                <div className="text-xs text-dark-100">
+                  Transaction cost:{' '}
+                  <span className="text-white font-medium">
+                    ~{((vault.protocolAcquiresFeeAda || 0) + 1.72).toFixed(2)} ADA
+                  </span>{' '}
+                  (
+                  {vault.protocolAcquiresFeeAda > 0
+                    ? `${vault.protocolAcquiresFeeAda?.toFixed(2)} ADA Protocol fees + ~1.72 ADA Network fees`
+                    : '~1.72 ADA Network fees'}
+                  )
+                </div>
+              }
             </div>
           </div>
         </div>
