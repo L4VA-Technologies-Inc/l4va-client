@@ -223,7 +223,7 @@ export const LavaSteelSelect = ({
 
   useClickOutside(dropdownRef, () => setIsOpen(false));
 
-  const selectedOption = options.find(option => option.value === value)?.label || placeholder;
+  const selectedOption = options.find(option => option.value === value);
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -238,7 +238,10 @@ export const LavaSteelSelect = ({
         disabled={disabled}
         onClick={toggleDropdown}
       >
-        <span className="truncate mr-2">{selectedOption}</span>
+        <span className="flex items-center gap-2 truncate mr-2">
+          {selectedOption?.icon}
+          <span className="truncate">{selectedOption?.label || placeholder}</span>
+        </span>
         <ChevronDown className={`h-5 w-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
@@ -256,9 +259,12 @@ export const LavaSteelSelect = ({
                 type="button"
                 onClick={() => handleOptionClick(option.value)}
                 disabled={option.disabled}
-                title={option.label}
+                title={typeof option.label === 'string' ? option.label : undefined}
               >
-                <span className="block truncate">{option.label}</span>
+                <span className="flex items-center gap-2 truncate">
+                  {option.icon}
+                  <span className="truncate">{option.label}</span>
+                </span>
               </button>
             ))}
           </div>
