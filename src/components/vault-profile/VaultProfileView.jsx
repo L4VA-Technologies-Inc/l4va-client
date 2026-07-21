@@ -10,6 +10,7 @@ import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constant
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
+import { ChainBadge } from '@/components/shared/ChainBadge';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
@@ -654,7 +655,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       {renderPublishedOverlay()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
-          <div className="overflow-hidden rounded-lg">
+          <div className="relative overflow-hidden rounded-lg">
+            <ChainBadge
+              chainType={vault.chainType}
+              className="absolute top-3 right-3 z-10 bg-black/60 p-1.5 backdrop-blur-sm"
+            />
             <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
               {vault.vaultImage ? (
                 <img
