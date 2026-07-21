@@ -3,9 +3,10 @@ import { useMemo } from 'react';
 
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
+import { ChainBadge } from '@/components/shared/ChainBadge';
 import { InfoRow } from '@/components/ui/infoRow';
 import { formatCompactNumber, formatVaultStatus } from '@/utils/core.utils';
-import { ChainTypeLabels, VaultShortResponse } from '@/utils/types';
+import { VaultShortResponse } from '@/utils/types';
 import L4vaIcon from '@/icons/l4va.svg?react';
 
 type VaultListItemProps = {
@@ -54,11 +55,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-xl">{name || 'No name'}</h3>
-                {vault.chainType && (
-                  <span className="rounded-full bg-steel-850 px-3 py-0.5 text-xs font-medium text-white">
-                    {ChainTypeLabels[vault.chainType] ?? vault.chainType}
-                  </span>
-                )}
+                <ChainBadge chainType={vault.chainType} className="bg-steel-850 p-1.5" />
               </div>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>

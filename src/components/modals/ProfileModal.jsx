@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { LogOut, User, FolderOpen, ArrowLeftRight, RefreshCwIcon, Gift } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useWallet, useExtensions } from '@ada-anvil/weld/react';
+import { useAccount, useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import toast from 'react-hot-toast';
 
+import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
@@ -11,17 +14,29 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { formatNum } from '@/utils/core.utils';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance';
+import { useNetwork } from '@/hooks/useNetwork';
 
 export const ProfileModal = () => {
   const { closeModal } = useModalControls();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isRobinHood } = useNetwork();
 
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'disconnect');
   const updateWalletStore = useExtensions('update');
 
   const { vlrmBalance, isLoading, refreshBalance } = useVlrmBalance();
   const [isWalletRefreshing, setIsWalletRefreshing] = useState(false);
+
+  const { address: evmAddress } = useAccount();
+  const { data: ethBalance, refetch: refetchEthBalance } = useBalance({
+    address: evmAddress,
+    chainId: robinhoodChain.id,
+    query: { enabled: isRobinHood && Boolean(evmAddress) },
+  });
+
+  // wagmi v3 dropped `data.formatted`; format the raw bigint `value` ourselves.
+  const ethBalanceFormatted = ethBalance ? formatUnits(ethBalance.value, ethBalance.decimals) : '0';
 
   const handleDisconnect = () => {
     wallet.disconnect();
@@ -44,8 +59,12 @@ export const ProfileModal = () => {
   const handleRefreshAllBalances = async () => {
     try {
       setIsWalletRefreshing(true);
-      await refreshBalance();
-      await updateWalletStore();
+      if (isRobinHood) {
+        await refetchEthBalance();
+      } else {
+        await refreshBalance();
+        await updateWalletStore();
+      }
       toast.success('Balances updated');
     } catch {
       toast.error('Failed to update balances');
@@ -81,14 +100,23 @@ export const ProfileModal = () => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
-            <span className="text-dark-100">$VLRM</span>
-            <span className="font-bold">{formatNum(vlrmBalance, 4)} VLRM</span>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
-            <span className="text-dark-100">ADA</span>
-            <span className="font-bold">{formatNum(wallet.balanceAda)} ADA</span>
-          </div>
+          {isRobinHood ? (
+            <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
+              <span className="text-dark-100">ETH</span>
+              <span className="font-bold">{formatNum(ethBalanceFormatted, 4)} ETH</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
+                <span className="text-dark-100">$VLRM</span>
+                <span className="font-bold">{formatNum(vlrmBalance, 4)} VLRM</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
+                <span className="text-dark-100">ADA</span>
+                <span className="font-bold">{formatNum(wallet.balanceAda)} ADA</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -101,14 +129,21 @@ export const ProfileModal = () => {
           <FolderOpen size={20} />
           My vaults
         </SecondaryButton>
-        <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/rewards')}>
-          <Gift size={20} />
-          My rewards
-        </SecondaryButton>
-        <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
-          <ArrowLeftRight size={20} />
-          Swap ADA/$VLRM
-        </SecondaryButton>
+        {!isRobinHood && (
+          <>
+            <SecondaryButton
+              className="w-full justify-start gap-3 text-left"
+              onClick={() => handleNavigation('/rewards')}
+            >
+              <Gift size={20} />
+              My rewards
+            </SecondaryButton>
+            <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
+              <ArrowLeftRight size={20} />
+              Swap ADA/$VLRM
+            </SecondaryButton>
+          </>
+        )}
 
         <div className="border-t border-white/10 my-4" />
 
