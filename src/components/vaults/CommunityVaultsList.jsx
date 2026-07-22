@@ -5,9 +5,6 @@ import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 import { useNetwork } from '@/hooks/useNetwork';
 
-// Vaults without an explicit network are treated as Cardano.
-const getVaultNetwork = vault => vault?.network || 'cardano';
-
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
   { id: 'upcoming', label: 'Upcoming', filter: 'published' },
@@ -29,12 +26,15 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
+  const { network } = useNetwork();
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
     limit: 12,
     filter: initialTab.filter,
     search: '',
+    chainType: network,
   });
 
   useEffect(() => {
@@ -46,6 +46,15 @@ export const CommunityVaultsList = ({ className = '' }) => {
       filter: newTab.filter,
     }));
   }, [tabParam]);
+
+  // Keep the vault search in sync with the network selected in the header.
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      chainType: network,
+      page: 1,
+    }));
+  }, [network]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
@@ -73,10 +82,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
-  const { network } = useNetwork();
-
   const { data, isLoading, error } = useVaults(appliedFilters);
-  const vaults = (data?.data?.items || []).filter(vault => getVaultNetwork(vault) === network);
+  const vaults = data?.data?.items || [];
 
   const pagination = data?.data
     ? {
@@ -92,6 +99,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
+      chainType: network,
       ...filters,
     }));
   };

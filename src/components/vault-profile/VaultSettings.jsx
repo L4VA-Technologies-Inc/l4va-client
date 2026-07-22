@@ -101,7 +101,8 @@ export const VaultSettings = ({ vault }) => {
   };
 
   const isOwner = user?.id === vault.owner.id;
-  const canCancelVaultByOwner = isOwner && vault?.canCancelVault;
+  // Cancel Vault is not supported on Robinhood (EVM) vaults.
+  const canCancelVaultByOwner = isOwner && vault?.canCancelVault && vault?.chainType !== 'robinhood';
 
   const renderAssets = assetsWhitelist => {
     const whitelistedAssets = (assetsWhitelist ?? []).filter(asset => asset.policyId);
