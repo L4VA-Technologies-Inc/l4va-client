@@ -1,6 +1,7 @@
 import { formatNum } from '@/utils/core.utils.js';
 import { useStatistics } from '@/services/api/queries';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const getBackgroundColor = index => {
   const colors = ['#c10007', '#e7000b', '#fb2c36', '#ff6467'];
@@ -77,7 +78,8 @@ const ProgressBar = ({ items, title }) => {
 };
 
 const Stats = () => {
-  const { data } = useStatistics();
+  const { network } = useNetwork();
+  const { data } = useStatistics({ chainType: network });
   const statistics = data?.data;
   const { currencySymbol, pickByCurrency } = useCurrency();
 
