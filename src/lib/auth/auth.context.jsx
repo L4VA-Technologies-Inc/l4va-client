@@ -26,7 +26,21 @@ export const AuthProvider = ({ children }) => {
         chainType,
       });
       localStorage.setItem('jwt', response.data.accessToken);
-      localStorage.setItem('authenticated_stake_address', stakeAddress);
+      if (stakeAddress) {
+        localStorage.setItem('authenticated_stake_address', stakeAddress);
+      } else {
+        localStorage.removeItem('authenticated_stake_address');
+      }
+      if (walletAddress) {
+        localStorage.setItem('authenticated_wallet_address', walletAddress);
+      } else {
+        localStorage.removeItem('authenticated_wallet_address');
+      }
+      if (chainType) {
+        localStorage.setItem('authenticated_chain_type', chainType);
+      } else {
+        localStorage.removeItem('authenticated_chain_type');
+      }
       queryClient.setQueryData(['profile'], { data: response.data.user });
       return response.data;
     } catch (error) {
