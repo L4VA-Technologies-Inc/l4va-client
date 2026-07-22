@@ -29,10 +29,10 @@ export const useAcquire = () => {
   });
 };
 
-export const useStatistics = () => {
+export const useStatistics = (params = {}) => {
   return useQuery({
-    queryKey: ['statistics'],
-    queryFn: () => VaultsApiProvider.getStatistics(),
+    queryKey: ['statistics', params],
+    queryFn: () => VaultsApiProvider.getStatistics(params),
   });
 };
 

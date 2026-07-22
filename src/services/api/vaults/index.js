@@ -16,8 +16,8 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getStatistics() {
-    const response = await axiosInstance.get(VaultsConfigProvider.getStatistics());
+  static async getStatistics(params = {}) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getStatistics(), { params });
     return response;
   }
 
