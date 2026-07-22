@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
-import { parseEther } from 'viem';
 
 import { CoreApiProvider } from '@/services/api/core';
 import { useCreateAcquireTx } from '@/services/api/queries';
@@ -68,6 +67,7 @@ export const useEvmAcquireTransaction = () => {
               policyId: '0x0000000000000000000000000000000000000000',
               type: 'eth',
               quantity: amountWei, // Send as string to preserve precision for large wei values
+              metadata: { rawWei: true },
             },
           ],
         });
