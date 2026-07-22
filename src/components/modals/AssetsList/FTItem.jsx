@@ -1,6 +1,7 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { useNetwork } from '@/hooks/useNetwork';
 import {
   formatTokenQuantity,
   formatTokenQuantityExact,
@@ -9,14 +10,18 @@ import {
 } from '@/utils/core.utils';
 import { getPolicyUrl } from '@/utils/explorer.utils';
 
-const PolicyIdRow = ({ policyId, chainType }) => {
+const PolicyIdRow = ({ policyId }) => {
+  const { network, isRobinHood } = useNetwork();
+
   if (!policyId) return null;
 
   return (
     <div className="flex items-center gap-1.5 min-w-0 border-t border-steel-750/50 pt-2.5 mt-1 ml-10 sm:ml-11">
-      <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">Policy</span>
+      <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">
+        {isRobinHood ? 'Contract' : 'Policy'}
+      </span>
       <a
-        href={getPolicyUrl(policyId, chainType)}
+        href={getPolicyUrl(policyId, network?.chainType)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
@@ -29,7 +34,7 @@ const PolicyIdRow = ({ policyId, chainType }) => {
   );
 };
 
-export const FTItem = ({ ft, chainType, amount, isDisabled, onAmountChange }) => {
+export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
   const decimals = ft.metadata?.decimals ?? 6;
   const displayName = ft?.ticker || ft?.displayName || ft?.name;
   const availableDisplay = formatTokenQuantity(ft.quantity, decimals, decimals);
@@ -82,7 +87,7 @@ export const FTItem = ({ ft, chainType, amount, isDisabled, onAmountChange }) =>
             </button>
           </div>
         </div>
-        <PolicyIdRow policyId={ft.metadata?.policyId} chainType={ft.chainType || chainType} />
+        <PolicyIdRow policyId={ft.metadata?.policyId} />
       </div>
     </div>
   );
