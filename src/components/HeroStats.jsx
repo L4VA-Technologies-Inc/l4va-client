@@ -1,6 +1,7 @@
 import { useCountAnimation } from '@/hooks/useCountAnimation';
 import { useStatistics } from '@/services/api/queries';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const Counter = ({ value, prefix = '', decimals = 0 }) => {
   const animatedValue = useCountAnimation(value, 2000, decimals);
@@ -13,7 +14,8 @@ const Counter = ({ value, prefix = '', decimals = 0 }) => {
 };
 
 const HeroStats = () => {
-  const { data } = useStatistics();
+  const { network } = useNetwork();
+  const { data } = useStatistics({ chainType: network });
   const stats = data?.data;
   const { currencySymbol, pickByCurrency } = useCurrency();
 
