@@ -87,4 +87,18 @@ export class CoreApiProvider {
     });
     return response;
   }
+
+  static async prepareEvmContribution({ txId }) {
+    const response = await axiosInstance.post(CoreConfigProvider.prepareEvmContribution(), { txId });
+    return response;
+  }
+
+  static async confirmEvmContribution({ txId, txHash, childTxHashes }) {
+    const response = await axiosInstance.post(CoreConfigProvider.confirmEvmContribution(), {
+      txId,
+      txHash,
+      childTxHashes,
+    });
+    return response;
+  }
 }

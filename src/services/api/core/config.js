@@ -42,4 +42,12 @@ export class CoreConfigProvider {
   static updateTransactionHash(txId) {
     return `/api/v1/contribute/transaction/${txId}/hash`;
   }
+
+  static prepareEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/prepare';
+  }
+
+  static confirmEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/confirm';
+  }
 }

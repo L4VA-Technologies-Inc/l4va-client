@@ -8,6 +8,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton.tsx';
 import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
 import MetricCard from '@/components/shared/MetricCard.jsx';
 import { useTransaction } from '@/hooks/useTransaction.js';
+import { useEvmContributeTransaction } from '@/hooks/useEvmContributeTransaction.js';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
 import { useVaultAssets } from '@/services/api/queries.js';
@@ -50,7 +51,9 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const chain = vault?.chainType || 'cardano';
   const isEvmChain = chain === 'robinhood';
   const walletAddress = isEvmChain ? evmAddress : wallet?.changeAddressBech32;
-  const { sendTransaction, status, error } = useTransaction();
+  const cardanoTransaction = useTransaction();
+  const evmTransaction = useEvmContributeTransaction();
+  const { sendTransaction, status, error } = isEvmChain ? evmTransaction : cardanoTransaction;
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
