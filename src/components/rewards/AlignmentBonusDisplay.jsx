@@ -25,6 +25,8 @@ const getOracleTier = balance => {
   return null;
 };
 
+const roundPercent = value => Number((Number(value) || 0).toFixed(2));
+
 export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
   const navigate = useNavigate();
 
@@ -45,8 +47,8 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
   const oracleBonus = bonuses.oracle || {};
   const alignmentFullBonus = bonuses.alignment || {};
 
-  const totalBonusPercent = alignmentData?.multiplierPercent || 0;
-  const maxBonusPercent = alignmentData?.maxMultiplierPercent || 20;
+  const totalBonusPercent = roundPercent(alignmentData?.multiplierPercent);
+  const maxBonusPercent = roundPercent(alignmentData?.maxMultiplierPercent || 20);
 
   const oracleTier = getOracleTier(oracleBonus.balance || 0);
 
@@ -55,7 +57,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       label: 'L4VA Staking',
       clickable: true,
       requirement: `Stake at least ${l4vaBonus.requiredAmount?.toLocaleString() || '100,000'} L4VA`,
-      bonus: l4vaBonus.bonusPercent || 5,
+      bonus: roundPercent(l4vaBonus.bonusPercent || 5),
       achieved: l4vaBonus.achieved,
       progress: l4vaBonus.requiredAmount ? Math.min(100, (l4vaBonus.stakedAmount / l4vaBonus.requiredAmount) * 100) : 0,
       stakedAmount: l4vaBonus.stakedAmount || 0,
@@ -66,7 +68,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       label: 'VLRM Staking',
       clickable: true,
       requirement: `Stake at least ${vlrmBonus.requiredAmount?.toLocaleString() || '20,000'} VLRM`,
-      bonus: vlrmBonus.bonusPercent || 5,
+      bonus: roundPercent(vlrmBonus.bonusPercent || 5),
       achieved: vlrmBonus.achieved,
       progress: vlrmBonus.requiredAmount ? Math.min(100, (vlrmBonus.stakedAmount / vlrmBonus.requiredAmount) * 100) : 0,
       stakedAmount: vlrmBonus.stakedAmount || 0,
@@ -78,7 +80,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       clickable: true,
       vaultId: ORACLE_VAULT_ID,
       requirement: oracleTier ? oracleTier.label : 'Hold at least 100 ORACLE',
-      bonus: oracleBonus.bonusPercent || 0,
+      bonus: roundPercent(oracleBonus.bonusPercent),
       achieved: oracleBonus.achieved,
       progress: oracleBonus.achieved ? 100 : 0,
       balance: oracleBonus.balance || 0,
@@ -88,7 +90,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
     {
       label: 'Full Alignment',
       requirement: 'All three conditions met (L4VA + VLRM + ORACLE)',
-      bonus: alignmentFullBonus.bonusPercent || 5,
+      bonus: roundPercent(alignmentFullBonus.bonusPercent || 5),
       achieved: alignmentFullBonus.achieved,
       progress: alignmentFullBonus.achieved ? 100 : 0,
       isFullAlignment: true,
