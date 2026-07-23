@@ -15,11 +15,13 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get all epochs
-   * @returns {Promise<Array>} List of all epochs
+   * Get paginated epochs
+   * @param {number} limit
+   * @param {number} offset
+   * @returns {Promise<{epochs: Array, total: number}>}
    */
-  static async getEpochs() {
-    const response = await axiosInstance.get(RewardsConfigProvider.epochs());
+  static async getEpochs(limit = 20, offset = 0) {
+    const response = await axiosInstance.get(RewardsConfigProvider.epochs(), { params: { limit, offset } });
     return response.data;
   }
 
