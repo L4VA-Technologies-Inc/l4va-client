@@ -71,6 +71,12 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
     setExpandedAsset(null);
   };
 
+  const selectedTotalAcquired = pickByCurrency({
+    ada: data?.data?.totalAcquired ?? 0,
+    usd: data?.data?.totalAcquiredUsd ?? 0,
+    eth: data?.data?.totalAcquiredEth ?? data?.data?.totalAcquired ?? 0,
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10">
@@ -83,13 +89,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             <div className="flex items-baseline gap-1 text-white">
               <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatLargeNumber(
-                  pickByCurrency({
-                    ada: data?.data?.totalAcquired || 0,
-                    usd: data?.data?.totalAcquiredUsd || 0,
-                    eth: data?.data?.totalAcquiredEth || 0,
-                  })
-                )}
+                {formatLargeNumber(selectedTotalAcquired)}
               </span>
             </div>
           </div>
