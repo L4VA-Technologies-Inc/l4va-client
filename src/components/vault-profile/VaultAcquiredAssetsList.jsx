@@ -25,6 +25,7 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, pickByCurrency } = useCurrency();
+  const isEth = vault?.chainType === 'robinhood';
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -202,7 +203,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                         }}
                       />
                     </td>
-                    <td className="px-4 py-3 font-medium">ADA</td>
+                    <td className="px-4 py-3 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
                     <td className="px-4 py-3 capitalize">{asset.type}</td>
                     <td className="px-4 py-3 capitalize">{asset.status}</td>
                     <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
@@ -223,38 +224,42 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     <tr className="bg-steel-750">
                       <td colSpan="6" className="px-4 py-2">
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
-                          <div>
-                            <p className="font-medium">Policy ID:</p>
-                            <div className="flex items-center gap-2">
-                              <p className="break-all">{substringAddress(asset.policyId)}</p>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(asset.policyId);
-                                  toast.success('Policy ID copied to clipboard');
-                                }}
-                                className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
+                          {!isEth && (
+                            <div>
+                              <p className="font-medium">Policy ID:</p>
+                              <div className="flex items-center gap-2">
+                                <p className="break-all">{substringAddress(asset.policyId)}</p>
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(asset.policyId);
+                                    toast.success('Policy ID copied to clipboard');
+                                  }}
+                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <p className="font-medium">Asset ID:</p>
-                            <div className="flex items-center gap-2">
-                              <p className="break-all">{substringAddress(asset.assetId)}</p>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(asset.assetId);
-                                  toast.success('Asset ID copied to clipboard');
-                                }}
-                                className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
+                          )}
+                          {!isEth && (
+                            <div>
+                              <p className="font-medium">Asset ID:</p>
+                              <div className="flex items-center gap-2">
+                                <p className="break-all">{substringAddress(asset.assetId)}</p>
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(asset.assetId);
+                                    toast.success('Asset ID copied to clipboard');
+                                  }}
+                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div>
                             <p className="font-medium">Added At:</p>
                             <p>{new Date(asset.addedAt).toLocaleDateString()}</p>
