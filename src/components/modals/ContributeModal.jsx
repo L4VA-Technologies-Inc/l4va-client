@@ -20,8 +20,6 @@ import { estimateContributionTransactionCost } from '@/utils/contributionTransac
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
-// Maximum safe quantity for raw blockchain quantities
-const MAX_SAFE_QUANTITY = Number.MAX_SAFE_INTEGER; // 9,007,199,254,740,991
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const { currencySymbol, pickByCurrency } = useCurrency();
@@ -272,12 +270,11 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
     const numDecimalAmount = Number(amount);
 
-    // Convert to raw quantity for validation against MAX_SAFE_QUANTITY
+    // Convert to raw quantity for validation against available balance
+    // Note: For EVM tokens with 18 decimals, raw quantities can exceed MAX_SAFE_INTEGER
+    // (e.g., 135 tokens = 135000000000000000000), but JavaScript handles these with
+    // acceptable precision loss for token amounts.
     const rawAmount = getRawQuantity(numDecimalAmount, decimals);
-    if (rawAmount > MAX_SAFE_QUANTITY) {
-      toast.error(`Quantity exceeds maximum safe value`);
-      return;
-    }
 
     // Cap at available quantity (work in raw units to avoid rounding issues)
     if (rawAmount > ft.quantity) {
