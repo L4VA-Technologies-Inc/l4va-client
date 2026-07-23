@@ -12,24 +12,6 @@ import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
 
-const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
-  const enhancedNft = {
-    ...nft,
-    src: nft.metadata?.image,
-  };
-
-  return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
-};
-
-const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
-  const enhancedFt = {
-    ...ft,
-    src: ft.metadata?.image,
-  };
-
-  return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
-};
-
 export const AssetsList = ({
   walletAssets,
   isLoading,
@@ -50,6 +32,7 @@ export const AssetsList = ({
   onSearchChange,
   showTabs = true,
   title = 'Available Assets',
+  chainType = 'cardano',
 }) => {
   const { isRobinHood } = useNetwork();
 
@@ -65,11 +48,15 @@ export const AssetsList = ({
         const isDisabled = !isSelected && selectedNFTsCount >= MAX_NFT_PER_TRANSACTION;
 
         return (
-          <EnhancedNFTItem
+          <NFTItem
             key={item.tokenId}
-            nft={item}
+            nft={{
+              ...item,
+              src: item.metadata?.image,
+            }}
             isSelected={isSelected}
             isDisabled={isDisabled}
+            chainType={item.chainType || chainType}
             onToggle={onToggleNFT}
           />
         );
@@ -78,17 +65,30 @@ export const AssetsList = ({
         const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
 
         return (
-          <EnhancedFTItem
+          <FTItem
             key={item.tokenId}
-            ft={item}
+            ft={{
+              ...item,
+              src: item.metadata?.image,
+            }}
             amount={selectedAmount[item.tokenId] || ''}
             isDisabled={isDisabled}
+            chainType={item.chainType || chainType}
             onAmountChange={onFTAmountChange}
           />
         );
       }
     },
-    [activeTab, selectedNFTs, selectedAmount, selectedNFTsCount, selectedFTsCount, onToggleNFT, onFTAmountChange]
+    [
+      activeTab,
+      selectedNFTs,
+      selectedAmount,
+      selectedNFTsCount,
+      selectedFTsCount,
+      onToggleNFT,
+      onFTAmountChange,
+      chainType,
+    ]
   );
 
   return (
@@ -137,7 +137,7 @@ export const AssetsList = ({
               renderSelectedItem ? (
                 renderSelectedItem(asset)
               ) : (
-                <SelectedAssetItem key={asset.tokenId} asset={asset} onRemove={onRemoveNFT} />
+                <SelectedAssetItem key={asset.tokenId} asset={asset} chainType={chainType} onRemove={onRemoveNFT} />
               )
             )
           ) : (
