@@ -719,7 +719,7 @@ export const LavaWhitelistWithCaps = ({
                             ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
                             : [
                                 { name: 'market', label: 'Market / Floor Price' },
-                                { name: 'custom', label: 'Custom Price' },
+                                ...(isRobinHood ? [] : [{ name: 'custom', label: 'Custom Price' }]),
                               ]
                         }
                         value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
@@ -743,7 +743,7 @@ export const LavaWhitelistWithCaps = ({
                       })()}
                     </div>
 
-                    {asset.valuationMethod === 'custom' && !asset.isLpToken && (
+                    {asset.valuationMethod === 'custom' && !asset.isLpToken && !isRobinHood && (
                       <div>
                         {renderInput({
                           required: true,

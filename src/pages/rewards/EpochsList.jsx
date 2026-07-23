@@ -8,6 +8,9 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
 import { EpochRewardRow, TotalEarnedCard } from '@/components/rewards';
+import { Pagination } from '@/components/shared/Pagination.jsx';
+
+const EPOCHS_PER_PAGE = 20;
 
 export const EpochsList = () => {
   const navigate = useNavigate();
@@ -15,12 +18,14 @@ export const EpochsList = () => {
   const { isAuthenticated } = useAuth();
   const { isRobinHood } = useNetwork();
   const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
+  const [page, setPage] = React.useState(1);
 
-  const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs();
+  const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs(EPOCHS_PER_PAGE, (page - 1) * EPOCHS_PER_PAGE);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
-  // Data is already normalized by backend
+  // Pagination is server-side: backend returns only the current page's epochs plus the total count
   const epochs = epochsData?.epochs || [];
+  const totalPages = Math.ceil((epochsData?.total || 0) / EPOCHS_PER_PAGE);
 
   // Create a map of epoch rewards for quick lookup
   const rewardsByEpoch = React.useMemo(() => {
@@ -144,6 +149,12 @@ export const EpochsList = () => {
             return <EpochRewardRow key={epoch.id} epoch={epoch} reward={reward} score={reward?.score} />;
           })}
         </div>
+
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} className="justify-center" />
+          </div>
+        )}
 
         {isLoadingHistory && (
           <div className="text-center py-8">

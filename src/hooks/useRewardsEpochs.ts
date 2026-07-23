@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { RewardsApiProvider } from '@/services/api/rewards';
 
 /**
- * Fetch all epochs
+ * Fetch paginated epochs
  */
-export const useEpochs = () => {
+export const useEpochs = (limit = 20, offset = 0) => {
   return useQuery({
-    queryKey: ['rewards', 'epochs'],
-    queryFn: () => RewardsApiProvider.getEpochs(),
+    queryKey: ['rewards', 'epochs', limit, offset],
+    queryFn: () => RewardsApiProvider.getEpochs(limit, offset),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

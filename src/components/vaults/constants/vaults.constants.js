@@ -365,10 +365,10 @@ export const vaultSchema = yup.object({
   isAcquireOnly: yup.boolean().default(false),
   minAcquireThreshold: yup
     .number()
-    .typeError('Minimum ADA threshold must be a number')
+    .typeError('Minimum threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.nullable().positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      then: schema => schema.nullable().positive('Must be a positive number'),
       otherwise: schema => schema.nullable().notRequired(),
     }),
 
@@ -621,7 +621,7 @@ export const initialVaultState = {
   acquireReserve: null,
   liquidityPoolContribution: null,
   isAcquireOnly: false,
-  minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
+  minAcquireThreshold: null, // in ADA (converted to lovelace before API call) on Cardano, in ETH as-is on Robinhood
   allowAcquireExpansion: false,
 
   // Step 4: Governance

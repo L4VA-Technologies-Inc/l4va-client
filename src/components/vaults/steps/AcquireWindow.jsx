@@ -6,6 +6,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { useNetwork } from '@/hooks/useNetwork';
 import {
   RESERVE_HINT,
   LIQUIDITY_POOL_CONTRIBUTION_HINT,
@@ -20,6 +21,8 @@ export const AcquireWindow = ({
   isAdvancedPresetAvailable = true,
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
+  const { isRobinHood } = useNetwork();
+  const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -103,7 +106,7 @@ export const AcquireWindow = ({
         {isAcquireOnly && (
           <div>
             <Label className="uppercase font-bold" htmlFor="minAcquireThreshold">
-              MINIMUM ADA THRESHOLD (OPTIONAL)
+              MINIMUM {assetSymbol} THRESHOLD (OPTIONAL)
             </Label>
             <div className="mt-4">
               <LavaInput
@@ -111,8 +114,8 @@ export const AcquireWindow = ({
                 label=""
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
-                placeholder="e.g. 10000"
-                suffix="ADA"
+                placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
+                suffix={assetSymbol}
                 type="text"
                 value={
                   data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
@@ -120,13 +123,18 @@ export const AcquireWindow = ({
                     : ''
                 }
                 onChange={e => {
+                  if (isRobinHood) {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                    updateField('minAcquireThreshold', raw === '' ? null : raw);
+                    return;
+                  }
                   const raw = e.target.value.replace(/[^0-9]/g, '');
                   updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
                 }}
                 hint={
                   data.liquidityPoolContribution > 0
-                    ? `Optional. Sets the minimum ADA required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ADA to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ADA is refunded. If not set, only the LP minimum must be met.`
-                    : 'Optional. If set, the vault will only lock if this minimum amount of ADA is acquired. If not set, the vault will lock if ANY amount of ADA is acquired. If no ADA is acquired, the vault will fail and all ADA is refunded.'
+                    ? `Optional. Sets the minimum ${assetSymbol} required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ${assetSymbol} to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ${assetSymbol} is refunded. If not set, only the LP minimum must be met.`
+                    : `Optional. If set, the vault will only lock if this minimum amount of ${assetSymbol} is acquired. If not set, the vault will lock if ANY amount of ${assetSymbol} is acquired. If no ${assetSymbol} is acquired, the vault will fail and all ${assetSymbol} is refunded.`
                 }
               />
               {data.liquidityPoolContribution > 0 && (
@@ -134,7 +142,7 @@ export const AcquireWindow = ({
                   Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that
                   must be met:
                   <br />
-                  1. Your minimum ADA threshold (if set)
+                  1. Your minimum {assetSymbol} threshold (if set)
                   <br />
                   2. LP minimum liquidity requirement (calculated automatically)
                   <br />

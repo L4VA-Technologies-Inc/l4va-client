@@ -597,7 +597,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         setIsSubmitting(true);
         try {
           await vaultSchema.validate(vaultData, { abortEarly: false });
-          const formattedData = formatVaultData(vaultData);
+          const formattedData = formatVaultData(vaultData, isRobinHood);
           setErrors({});
 
           const { dbVaultId } = await createEvmVault(formattedData);
@@ -675,7 +675,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
-        const formattedData = formatVaultData(vaultData);
+        const formattedData = formatVaultData(vaultData, isRobinHood);
         setErrors({});
 
         const { data } = await VaultsApiProvider.createVault(formattedData);
@@ -740,7 +740,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const saveDraft = async () => {
     try {
       setIsSavingDraft(true);
-      const formattedData = formatVaultData(vaultData);
+      const formattedData = formatVaultData(vaultData, isRobinHood);
       const existingDraftId = vaultData?.id ?? vault?.id;
       if (existingDraftId) {
         formattedData.id = existingDraftId;
@@ -898,7 +898,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           />
         );
       case 2:
-        return <AssetContribution data={vaultData} errors={errors} updateField={updateField} />;
+        return (
+          <AssetContribution data={vaultData} errors={errors} updateField={updateField} isRobinHood={isRobinHood} />
+        );
       case 3:
         return (
           <AcquireWindow
