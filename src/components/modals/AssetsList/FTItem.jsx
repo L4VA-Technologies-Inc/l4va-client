@@ -84,7 +84,7 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange, chainType }) =>
             </button>
           </div>
         </div>
-        <PolicyIdRow policyId={ft.metadata?.policyId} chainType={chainType} />
+        <PolicyIdRow policyId={ft.metadata?.policyId} chainType={ft.chainType || chainType} />
       </div>
     </div>
   );
