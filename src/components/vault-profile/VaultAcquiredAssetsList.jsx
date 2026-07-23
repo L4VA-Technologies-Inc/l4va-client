@@ -178,7 +178,6 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               <tr className="text-dark-100 text-sm border-b border-steel-750">
                 <th className="px-4 py-3 text-left">Image</th>
                 <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Type</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Quantity</th>
                 <th className="px-4 py-3"></th>
@@ -204,7 +203,6 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       />
                     </td>
                     <td className="px-4 py-3 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
-                    <td className="px-4 py-3 capitalize">{asset.type}</td>
                     <td className="px-4 py-3 capitalize">{asset.status}</td>
                     <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                     <td className="px-4 py-3 text-center">
@@ -222,7 +220,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                   </tr>
                   {expandedAsset === index && (
                     <tr className="bg-steel-750">
-                      <td colSpan="6" className="px-4 py-2">
+                      <td colSpan="5" className="px-4 py-2">
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                           {!isEth && (
                             <div>
