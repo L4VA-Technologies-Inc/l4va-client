@@ -4,6 +4,8 @@ import { createContext, useContext } from 'react';
 export function clearAuthLocalStorage() {
   localStorage.removeItem('jwt');
   localStorage.removeItem('authenticated_stake_address');
+  localStorage.removeItem('authenticated_wallet_address');
+  localStorage.removeItem('authenticated_chain_type');
   localStorage.removeItem('vlrm_balance_cache');
   localStorage.removeItem('storageVault');
 
