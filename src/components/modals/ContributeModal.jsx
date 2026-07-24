@@ -15,11 +15,40 @@ import { useVaultAssets } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-import { getDecimalAdjustedQuantity, getRawQuantity } from '@/utils/core.utils';
 import { estimateContributionTransactionCost } from '@/utils/contributionTransactionCost.js';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
+
+const toRawQuantityString = (decimalQuantity, decimals = 6) => {
+  if (decimalQuantity === null || decimalQuantity === undefined || decimalQuantity === '') return '0';
+
+  const safeDecimals = Math.max(0, Math.min(Number(decimals) || 0, 20));
+  const normalized = String(decimalQuantity).trim();
+
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return '0';
+
+  const [integerPart = '0', fractionalPart = ''] = normalized.split('.');
+  const paddedFraction = safeDecimals ? fractionalPart.padEnd(safeDecimals, '0').substring(0, safeDecimals) : '';
+  const rawString = `${integerPart}${paddedFraction}`.replace(/^0+(?=\d)/, '');
+
+  return (rawString || '0').toString();
+};
+
+const rawQuantityToDisplayAmount = (rawQuantity, decimals = 6, maxDisplayDecimals = 8) => {
+  const safeDecimals = Math.max(0, Math.min(Number(decimals) || 0, 20));
+  const displayDecimals = Math.min(safeDecimals, maxDisplayDecimals);
+  const raw = BigInt(String(rawQuantity ?? 0));
+
+  if (safeDecimals === 0) return raw.toString();
+
+  const divisor = 10n ** BigInt(safeDecimals);
+  const integerPart = raw / divisor;
+  const fractionFull = (raw % divisor).toString().padStart(safeDecimals, '0');
+  const fractionDisplay = fractionFull.substring(0, displayDecimals);
+
+  return displayDecimals > 0 ? `${integerPart.toString()}.${fractionDisplay}` : integerPart.toString();
+};
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const { currencySymbol, pickByCurrency } = useCurrency();
@@ -268,24 +297,16 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
     if (!isValid) return;
 
-    const numDecimalAmount = Number(amount);
-
     // Convert to raw quantity for validation against available balance
-    // Note: For EVM tokens with 18 decimals, raw quantities can exceed MAX_SAFE_INTEGER
-    // (e.g., 135 tokens = 135000000000000000000), but JavaScript handles these with
-    // acceptable precision loss for token amounts.
-    const rawAmount = getRawQuantity(numDecimalAmount, decimals);
+    const rawAmount = BigInt(toRawQuantityString(amount, decimals));
 
-    // Cap at available quantity (work in raw units to avoid rounding issues)
-    if (rawAmount > ft.quantity) {
+    // Cap at available quantity (work in raw units to avoid rounding issues).
+    // EVM assets provide decimal-adjusted `quantity` and base-unit `rawQuantity`.
+    // Cardano assets keep using `quantity` as the raw balance.
+    const availableRawQuantity = BigInt(String(ft.rawQuantity ?? ft.quantity ?? 0));
+    if (rawAmount > availableRawQuantity) {
       // Cap to available raw quantity, then convert back to decimal for display
-      const cappedRawAmount = ft.quantity;
-      const cappedDecimalAmount = getDecimalAdjustedQuantity(cappedRawAmount, decimals);
-      // Truncate to display precision (max 8 decimals) without rounding up
-      const displayDecimals = Math.min(decimals, 8);
-      const multiplier = Math.pow(10, displayDecimals);
-      const truncatedAmount = Math.floor(cappedDecimalAmount * multiplier) / multiplier;
-      amount = truncatedAmount.toFixed(displayDecimals);
+      amount = rawQuantityToDisplayAmount(availableRawQuantity, decimals, 8);
     }
 
     setSelectedAmount(prev => ({
@@ -331,10 +352,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         if (asset.isFungibleToken) {
           // Convert decimal to raw quantity for backend
           const decimals = asset.metadata?.decimals ?? 6;
-          const rawQuantity = getRawQuantity(Number(asset.amount), decimals);
+          const rawQuantity = toRawQuantityString(asset.amount, decimals);
           return {
             ...asset,
-            quantity: rawQuantity, // Send raw blockchain quantity
+            quantity: rawQuantity, // Send raw blockchain quantity as string for bigint-safe APIs
           };
         }
         // For NFTs, quantity is always 1 (raw blockchain unit)

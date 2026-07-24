@@ -9,6 +9,7 @@ interface WalletAsset {
   displayName?: string;
   ticker?: string;
   quantity: number;
+  rawQuantity?: string | number;
   isNft: boolean;
   isFungibleToken: boolean;
   priceAda: number;

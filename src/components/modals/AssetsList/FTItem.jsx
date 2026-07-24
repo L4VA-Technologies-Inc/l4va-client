@@ -34,13 +34,16 @@ const PolicyIdRow = ({ policyId, chainType }) => {
 export const FTItem = ({ ft, amount, isDisabled, onAmountChange, chainType }) => {
   const decimals = ft.metadata?.decimals ?? 6;
   const displayName = ft?.ticker || ft?.displayName || ft?.name;
-  const availableDisplay = formatTokenQuantity(ft.quantity, decimals, decimals);
-  const availableExact = formatTokenQuantityExact(ft.quantity, decimals);
+  // EVM payloads include decimal-adjusted `quantity` plus base-unit `rawQuantity`.
+  // Formatting and max calculations operate on base units, so prefer `rawQuantity`.
+  const availableRawQuantity = ft.rawQuantity ?? ft.quantity;
+  const availableDisplay = formatTokenQuantity(availableRawQuantity, decimals, decimals);
+  const availableExact = formatTokenQuantityExact(availableRawQuantity, decimals);
 
   const handleMax = e => {
     e.stopPropagation();
     if (isDisabled) return;
-    onAmountChange(ft, getMaxDecimalTokenAmount(ft.quantity, decimals));
+    onAmountChange(ft, getMaxDecimalTokenAmount(availableRawQuantity, decimals));
   };
 
   return (
