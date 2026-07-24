@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import { substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils.js';
 
-const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, pickByCurrency }) => {
+const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinhoodVault }) => {
+  const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
+
   const handleCopy = (e, text, message) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
@@ -66,9 +68,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, pickByCurrency 
               <p className="font-medium text-gray-300">Value:</p>
               <p>
                 {currencySymbol}
-                {formatAdaPrice(
-                  pickByCurrency({ ada: asset.valueAda || 0, usd: asset.valueUsd || 0, eth: asset.valueEth || 0 })
-                )}
+                {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
               </p>
             </div>
             <div>
@@ -77,29 +77,31 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, pickByCurrency 
             </div>
 
             <div className="col-span-2 sm:col-span-1">
-              <p className="font-medium text-gray-300">Policy ID:</p>
+              <p className="font-medium text-gray-300">{policyLabel}:</p>
               <div className="flex items-center gap-2">
                 <p className="break-all">{substringAddress(asset.policyId)}</p>
                 <button
-                  onClick={e => handleCopy(e, asset.policyId, 'Policy ID copied')}
+                  onClick={e => handleCopy(e, asset.policyId, `${policyLabel} copied`)}
                   className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
             </div>
-            <div className="col-span-2 sm:col-span-1">
-              <p className="font-medium text-gray-300">Asset ID:</p>
-              <div className="flex items-center gap-2">
-                <p className="break-all">{substringAddress(asset.assetId)}</p>
-                <button
-                  onClick={e => handleCopy(e, asset.assetId, 'Asset ID copied')}
-                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
+            {!isRobinhoodVault && (
+              <div className="col-span-2 sm:col-span-1">
+                <p className="font-medium text-gray-300">Asset ID:</p>
+                <div className="flex items-center gap-2">
+                  <p className="break-all">{substringAddress(asset.assetId)}</p>
+                  <button
+                    onClick={e => handleCopy(e, asset.assetId, 'Asset ID copied')}
+                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <p className="font-medium text-gray-300">Updated At:</p>
@@ -119,7 +121,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, pickByCurrency 
   );
 };
 
-export const VaultContributedAssetsCard = ({ assets, currencySymbol, pickByCurrency }) => {
+export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda, isRobinhoodVault = false }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
 
   return (
@@ -131,7 +133,8 @@ export const VaultContributedAssetsCard = ({ assets, currencySymbol, pickByCurre
           isExpanded={expandedAsset === index}
           onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
           currencySymbol={currencySymbol}
-          pickByCurrency={pickByCurrency}
+          isAda={isAda}
+          isRobinhoodVault={isRobinhoodVault}
         />
       ))}
     </div>

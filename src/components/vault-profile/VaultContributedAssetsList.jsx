@@ -26,8 +26,10 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 
 const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const { currencySymbol, pickByCurrency } = useCurrency();
+  const { currencySymbol, isAda } = useCurrency();
   const limit = 10;
+  const isRobinhoodVault = vault?.chainType?.toLowerCase() === 'robinhood' || vault?.id === 'robinhood';
+  const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
 
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -101,13 +103,7 @@ const VaultContributedAssetsList = ({ vault }) => {
             <div className="flex items-baseline gap-1 text-white">
               <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatLargeNumber(
-                  pickByCurrency({
-                    ada: statistics?.totalAssetValueAda || 0,
-                    usd: statistics?.totalAssetValueUsd || 0,
-                    eth: statistics?.totalAssetValueEth || 0,
-                  })
-                )}
+                {formatLargeNumber(isAda ? statistics?.totalAssetValueAda || 0 : statistics?.totalAssetValueUsd || 0)}
               </span>
             </div>
           </div>
@@ -119,11 +115,7 @@ const VaultContributedAssetsList = ({ vault }) => {
               icon={Layers}
               label="Assets Avg"
               value={`${currencySymbol}${formatLargeNumber(
-                pickByCurrency({
-                  ada: statistics?.assetsAvgAda || 0,
-                  usd: statistics?.assetsAvgUsd || 0,
-                  eth: statistics?.assetsAvgEth || 0,
-                })
+                isAda ? statistics?.assetsAvgAda || 0 : statistics?.assetsAvgUsd || 0
               )}`}
             />
           </div>
@@ -186,7 +178,12 @@ const VaultContributedAssetsList = ({ vault }) => {
         </div>
       ) : (
         <>
-          <VaultContributedAssetsCard assets={assets} currencySymbol={currencySymbol} pickByCurrency={pickByCurrency} />
+          <VaultContributedAssetsCard
+            assets={assets}
+            currencySymbol={currencySymbol}
+            isAda={isAda}
+            isRobinhoodVault={isRobinhoodVault}
+          />
           <div className="md:block overflow-x-auto rounded-2xl border border-steel-750 hidden">
             <table className="w-full">
               <thead>
@@ -238,13 +235,7 @@ const VaultContributedAssetsList = ({ vault }) => {
                         <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                         <td className="px-4 py-3">
                           {currencySymbol}
-                          {formatAdaPrice(
-                            pickByCurrency({
-                              ada: asset.valueAda || 0,
-                              usd: asset.valueUsd || 0,
-                              eth: asset.valueEth || 0,
-                            })
-                          )}
+                          {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
@@ -260,14 +251,14 @@ const VaultContributedAssetsList = ({ vault }) => {
                           <td colSpan="8" className="px-4 py-2">
                             <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                               <div>
-                                <p className="font-medium">Policy ID:</p>
+                                <p className="font-medium">{policyLabel}:</p>
                                 <div className="flex items-center gap-2">
                                   <p className="break-all">{substringAddress(asset.policyId)}</p>
                                   <button
                                     onClick={e => {
                                       e.stopPropagation();
                                       navigator.clipboard.writeText(asset.policyId);
-                                      toast.success('Policy ID copied to clipboard');
+                                      toast.success(`${policyLabel} copied to clipboard`);
                                     }}
                                     className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                   >
@@ -275,22 +266,24 @@ const VaultContributedAssetsList = ({ vault }) => {
                                   </button>
                                 </div>
                               </div>
-                              <div>
-                                <p className="font-medium">Asset ID:</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="break-all">{substringAddress(asset.assetId)}</p>
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      navigator.clipboard.writeText(asset.assetId);
-                                      toast.success('Asset ID copied to clipboard');
-                                    }}
-                                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </button>
+                              {!isRobinhoodVault && (
+                                <div>
+                                  <p className="font-medium">Asset ID:</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="break-all">{substringAddress(asset.assetId)}</p>
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(asset.assetId);
+                                        toast.success('Asset ID copied to clipboard');
+                                      }}
+                                      className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                    >
+                                      <Copy className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                               <div>
                                 <p className="font-medium">Added At:</p>
                                 <p>{new Date(asset.addedAt).toLocaleDateString()}</p>
