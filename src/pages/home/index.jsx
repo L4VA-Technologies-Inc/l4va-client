@@ -1,6 +1,3 @@
-import Hero from '@/pages/home/Hero';
-import HeroStats from '@/components/HeroStats';
-import Features from '@/components/Features';
 import Faq from '@/pages/home/Faq';
 import VaultsFilters from '@/pages/home/VaultsFilters';
 import Stats from '@/pages/home/Stats';
@@ -23,11 +20,11 @@ export const Home = () => {
         />
       </div>
       <div className="space-y-20">
-        <div className="pt-12 relative">
+        {/* <div className="pt-12 relative">
           <Hero />
         </div>
         <HeroStats />
-        <Features />
+        <Features /> */}
         <VaultsFilters />
         <VaultTokensStatistics />
         {/* <Acquire /> */}
