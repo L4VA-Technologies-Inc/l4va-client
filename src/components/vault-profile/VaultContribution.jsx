@@ -280,7 +280,7 @@ export const VaultContribution = ({ vault }) => {
                     pickByCurrency({
                       ada: vault.requireReservedCostAda,
                       usd: vault.requireReservedCostUsd,
-                      eth: vault.requireReservedCostEth,
+                      eth: vault.requireReservedCostEth ?? vault.requireReservedCostAda,
                     })
                   )}`}
                 </span>
