@@ -101,8 +101,11 @@ export const VaultSettings = ({ vault }) => {
   };
 
   const isOwner = user?.id === vault.owner.id;
+  const isRobinhoodVault = vault?.chainType === 'robinhood';
   // Cancel Vault is not supported on Robinhood (EVM) vaults.
-  const canCancelVaultByOwner = isOwner && vault?.canCancelVault && vault?.chainType !== 'robinhood';
+  const canCancelVaultByOwner = isOwner && vault?.canCancelVault && !isRobinhoodVault;
+  // Burn Vault is not supported on Robinhood (EVM) vaults.
+  const canBurnVault = isOwner && vault?.vaultStatus === 'failed' && !isRobinhoodVault;
 
   const renderAssets = assetsWhitelist => {
     const whitelistedAssets = (assetsWhitelist ?? []).filter(asset => asset.policyId);
@@ -252,7 +255,7 @@ export const VaultSettings = ({ vault }) => {
                 Cancel Vault
               </Button>
             )}
-            {vault.vaultStatus === 'failed' && (
+            {canBurnVault && (
               <Button
                 disabled={vault.vaultStatus !== 'failed'}
                 className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
