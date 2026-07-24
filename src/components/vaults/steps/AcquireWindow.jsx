@@ -125,16 +125,45 @@ export const AcquireWindow = ({
                 onChange={e => {
                   if (isRobinHood) {
                     const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+
+                    // Allow natural partial typing, but block committed values below 0.01 ETH.
+                    if (raw !== '') {
+                      const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
+                      const parsed = Number(raw);
+                      if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
+                        return;
+                      }
+                      if (!Number.isNaN(parsed) && parsed > 10000) {
+                        return;
+                      }
+                    }
+
                     updateField('minAcquireThreshold', raw === '' ? null : raw);
                     return;
                   }
                   const raw = e.target.value.replace(/[^0-9]/g, '');
                   updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
                 }}
+                onBlur={() => {
+                  if (!isRobinHood) return;
+                  if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
+                  const parsed = Number(data.minAcquireThreshold);
+                  if (Number.isNaN(parsed)) {
+                    updateField('minAcquireThreshold', null);
+                    return;
+                  }
+                  if (parsed > 0 && parsed < 0.01) {
+                    updateField('minAcquireThreshold', '0.01');
+                    return;
+                  }
+                  if (parsed > 10000) {
+                    updateField('minAcquireThreshold', '10000');
+                  }
+                }}
                 hint={
                   data.liquidityPoolContribution > 0
-                    ? `Optional. Sets the minimum ${assetSymbol} required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ${assetSymbol} to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ${assetSymbol} is refunded. If not set, only the LP minimum must be met.`
-                    : `Optional. If set, the vault will only lock if this minimum amount of ${assetSymbol} is acquired. If not set, the vault will lock if ANY amount of ${assetSymbol} is acquired. If no ${assetSymbol} is acquired, the vault will fail and all ${assetSymbol} is refunded.`
+                    ? `Optional. ${isRobinHood ? 'When set on Robinhood, minimum is 0.01 ETH. ' : ''}Sets the minimum ${assetSymbol} required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ${assetSymbol} to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ${assetSymbol} is refunded. If not set, only the LP minimum must be met.`
+                    : `Optional. ${isRobinHood ? 'When set on Robinhood, minimum is 0.01 ETH. ' : ''}If set, the vault will only lock if this minimum amount of ${assetSymbol} is acquired. If not set, the vault will lock if ANY amount of ${assetSymbol} is acquired. If no ${assetSymbol} is acquired, the vault will fail and all ${assetSymbol} is refunded.`
                 }
               />
               {data.liquidityPoolContribution > 0 && (

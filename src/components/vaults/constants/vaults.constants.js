@@ -368,7 +368,26 @@ export const vaultSchema = yup.object({
     .typeError('Minimum threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.nullable().positive('Must be a positive number'),
+      then: schema =>
+        schema
+          .nullable()
+          .positive('Must be a positive number')
+          .test('min-threshold-by-chain', 'Minimum ETH threshold is 0.01', function validateMinThresholdByChain(value) {
+            if (value === null || value === undefined) return true;
+            const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+            if (!isRobinHood) return true;
+            return value >= 0.01;
+          })
+          .test(
+            'max-threshold-by-chain',
+            'Maximum ETH threshold is 10000',
+            function validateMaxThresholdByChain(value) {
+              if (value === null || value === undefined) return true;
+              const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+              if (!isRobinHood) return true;
+              return value <= 10000;
+            }
+          ),
       otherwise: schema => schema.nullable().notRequired(),
     }),
 
