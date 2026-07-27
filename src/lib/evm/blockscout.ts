@@ -93,3 +93,36 @@ export const fetchWalletTokens = async (address: string): Promise<BlockscoutWall
 
   return tokens;
 };
+
+/**
+ * Resolve metadata for a single token contract regardless of whether the
+ * connected wallet holds it. Used to show a ticker/name for manually pasted
+ * contract addresses that don't show up in {@link fetchWalletTokens}.
+ */
+export const fetchTokenMetadata = async (address: string): Promise<BlockscoutWalletToken | null> => {
+  if (!BLOCKSCOUT_URL) {
+    console.error('VITE_ROBINHOOD_BLOCKSCOUT_URL is not set; cannot fetch EVM token metadata');
+    return null;
+  }
+
+  const base = normalizeBaseUrl(BLOCKSCOUT_URL);
+
+  try {
+    const response = await fetch(`${base}/api/v2/tokens/${address}`);
+    if (!response.ok) return null;
+
+    const token: BlockscoutTokenRaw = await response.json();
+    const contract = token.address ?? token.address_hash ?? address;
+
+    return {
+      address: contract,
+      name: token.name ?? '',
+      symbol: token.symbol ?? '',
+      type: token.type ?? '',
+      decimals: token.decimals != null && token.decimals !== '' ? Number(token.decimals) : null,
+      value: '0',
+    };
+  } catch {
+    return null;
+  }
+};

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 
-import { fetchWalletTokens } from '@/lib/evm/blockscout';
+import { fetchTokenMetadata, fetchWalletTokens } from '@/lib/evm/blockscout';
 import type { GroupedPolicy } from '@/hooks/useAssets';
 
 const isNftType = (type: string): boolean => type === 'ERC-721' || type === 'ERC-1155';
@@ -82,23 +82,28 @@ export const useEvmAssets = () => {
 
   // Unknown contract addresses (pasted manually) resolve to a verified stub so
   // they can still be whitelisted even when absent from the wallet's holdings.
+  // Their ticker/name is resolved via a direct Blockscout token lookup since
+  // they won't appear in the wallet's held-token list.
   const lookupPolicies = useCallback(
     async (policyIds: string[]): Promise<GroupedPolicy[]> =>
-      policyIds.map(id => {
-        const match = heldPolicies.find(p => p.policyId.toLowerCase() === id.toLowerCase());
-        return (
-          match ?? {
+      Promise.all(
+        policyIds.map(async id => {
+          const match = heldPolicies.find(p => p.policyId.toLowerCase() === id.toLowerCase());
+          if (match) return match;
+
+          const metadata = await fetchTokenMetadata(id);
+          return {
             policyId: id,
-            name: '',
-            assetName: '',
+            name: metadata?.symbol || metadata?.name || '',
+            assetName: metadata?.symbol || metadata?.name || '',
             count: 1,
-            collectionName: null,
+            collectionName: metadata?.name || metadata?.symbol || null,
             isVerified: true,
             verificationPlatform: null,
             isLpToken: false,
-          }
-        );
-      }),
+          };
+        })
+      ),
     [heldPolicies]
   );
 

@@ -70,95 +70,159 @@ export const ConfigureVault = ({
   const isOverLimit = combinedWhitelistCount > 100;
 
   return (
-    <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
+    <div className="my-16 space-y-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div className="space-y-12">
+          <div>
+            <LavaInput
+              required
+              error={errors.name}
+              label="Vault name"
+              name="name"
+              placeholder="Add the name of your Vault"
+              value={data.name || ''}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <LavaRadio
+                label="*Vault Preset"
+                name="preset"
+                options={presetOptions}
+                value={presetValue}
+                onChange={onPresetChange}
+                onDeleteOption={onDeletePreset}
+                isOptionDeletable={option => option?.isCustom}
+                deletingOptionId={deletingPresetId}
+                hint="Choose a preset to auto-fill vault configuration fields."
+              />
+              {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
+            </div>
+            <div>
+              <LavaRadio
+                label="*Vault privacy"
+                name="privacy"
+                options={privacyOptions}
+                value={data.privacy || ''}
+                onChange={value => updateField('privacy', value)}
+                hint={PRIVACY_HINT}
+              />
+              {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
+            </div>
+          </div>
+
+          <div>
+            <LavaCheckbox
+              name="allowAcquireExpansion"
+              checked={data.allowAcquireExpansion || false}
+              onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
+              label="Allow Acquire Expansion"
+              description="If enabled, vault token holders can create governance proposals to open additional acquire windows (ADA → Vault Token minting) after the vault is locked."
+            />
+          </div>
+
+          <div>
+            <LavaInput
+              required
+              error={errors.vaultTokenTicker}
+              label="Vault Token Ticker"
+              maxLength={9}
+              name="vaultTokenTicker"
+              placeholder="Add ticker"
+              value={data.vaultTokenTicker || ''}
+              onChange={handleChange}
+              hint="This is the ticker that the Governance Token will have when minted."
+            />
+          </div>
+
+          <div>
+            <LavaTextarea
+              error={errors.description}
+              label="Vault description"
+              name="description"
+              placeholder="Add a description for your Vault"
+              value={data.description || ''}
+              onChange={handleChange}
+              hint="This is the Vault description."
+            />
+          </div>
+
+          <div>
+            <LavaTextarea
+              error={errors.tokenDescription}
+              label="Vault token description"
+              name="tokenDescription"
+              placeholder="Add a description for your Vault token"
+              value={data.tokenDescription || ''}
+              onChange={handleChange}
+              hint="This is the Vault Token description used when registering Vault metadata."
+            />
+          </div>
+        </div>
+
+        <div className="space-y-12">
+          <div>
+            <UploadZone
+              required
+              image={data.vaultImage}
+              label="Vault image"
+              setImage={image => updateField('vaultImage', image)}
+              hint="This is the image that will live on the Vault Profile page. For best results, upload a photo of 640×640 pixels — we will also crop it to these dimensions automatically."
+              onUploadingChange={onImageUploadingChange}
+              imageType="background"
+            />
+            {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
+          </div>
+          <div>
+            <UploadZone
+              required
+              image={data.ftTokenImg}
+              label="Vault Token Image"
+              setImage={image => updateField('ftTokenImg', image)}
+              onUploadingChange={onImageUploadingChange}
+              hint="This is the image that will live on Vault Token. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
+              imageType="ticker"
+            />
+            {errors.ftTokenImg && <p className="text-red-600 mt-2 text-sm">{errors.ftTokenImg}</p>}
+          </div>
+          <div>
+            <LavaSocialLinks
+              errors={errors}
+              setSocialLinks={links => updateField('socialLinks', links)}
+              socialLinks={data.socialLinks || []}
+            />
+          </div>
+          <div>
+            <LavaSelect
+              label="Add vault tags"
+              options={VAULT_TAGS_OPTIONS}
+              value=""
+              onChange={handleTagAdd}
+              placeholder="Select tags for your vault"
+              error={errors.tags}
+            />
+            {data.tags && data.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {data.tags.map(tag => {
+                  const tagOption = VAULT_TAGS_OPTIONS.find(option => option.value === tag);
+                  return (
+                    <Chip
+                      key={tag}
+                      label={tagOption?.label || tag}
+                      value={tag}
+                      variant="removable"
+                      onRemove={handleTagRemove}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-12">
-        <div>
-          <LavaInput
-            required
-            error={errors.name}
-            label="Vault name"
-            name="name"
-            placeholder="Add the name of your Vault"
-            value={data.name || ''}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <LavaRadio
-              label="*Vault Preset"
-              name="preset"
-              options={presetOptions}
-              value={presetValue}
-              onChange={onPresetChange}
-              onDeleteOption={onDeletePreset}
-              isOptionDeletable={option => option?.isCustom}
-              deletingOptionId={deletingPresetId}
-              hint="Choose a preset to auto-fill vault configuration fields."
-            />
-            {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
-          </div>
-          <div>
-            <LavaRadio
-              label="*Vault privacy"
-              name="privacy"
-              options={privacyOptions}
-              value={data.privacy || ''}
-              onChange={value => updateField('privacy', value)}
-              hint={PRIVACY_HINT}
-            />
-            {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
-          </div>
-        </div>
-
-        <div>
-          <LavaCheckbox
-            name="allowAcquireExpansion"
-            checked={data.allowAcquireExpansion || false}
-            onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
-            label="Allow Acquire Expansion"
-            description="If enabled, vault token holders can create governance proposals to open additional acquire windows (ADA → Vault Token minting) after the vault is locked."
-          />
-        </div>
-
-        <div>
-          <LavaInput
-            required
-            error={errors.vaultTokenTicker}
-            label="Vault Token Ticker"
-            maxLength={9}
-            name="vaultTokenTicker"
-            placeholder="Add ticker"
-            value={data.vaultTokenTicker || ''}
-            onChange={handleChange}
-            hint="This is the ticker that the Governance Token will have when minted."
-          />
-        </div>
-
-        <div>
-          <LavaTextarea
-            error={errors.description}
-            label="Vault description"
-            name="description"
-            placeholder="Add a description for your Vault"
-            value={data.description || ''}
-            onChange={handleChange}
-            hint="This is the Vault description."
-          />
-        </div>
-
-        <div>
-          <LavaTextarea
-            error={errors.tokenDescription}
-            label="Vault token description"
-            name="tokenDescription"
-            placeholder="Add a description for your Vault token"
-            value={data.tokenDescription || ''}
-            onChange={handleChange}
-            hint="This is the Vault Token description used when registering Vault metadata."
-          />
-        </div>
-
         <div>
           <LavaWhitelistWithCaps
             required
@@ -250,66 +314,6 @@ export const ConfigureVault = ({
               </p>
             </div>
           )}
-      </div>
-
-      <div className="space-y-12">
-        <div>
-          <UploadZone
-            required
-            image={data.vaultImage}
-            label="Vault image"
-            setImage={image => updateField('vaultImage', image)}
-            hint="This is the image that will live on the Vault Profile page. For best results, upload a photo of 640×640 pixels — we will also crop it to these dimensions automatically."
-            onUploadingChange={onImageUploadingChange}
-            imageType="background"
-          />
-          {errors.vaultImage && <p className="text-red-600 mt-2 text-sm">{errors.vaultImage}</p>}
-        </div>
-        <div>
-          <UploadZone
-            required
-            image={data.ftTokenImg}
-            label="Vault Token Image"
-            setImage={image => updateField('ftTokenImg', image)}
-            onUploadingChange={onImageUploadingChange}
-            hint="This is the image that will live on Vault Tocken. For best results, upload a photo of 256×256 pixels — we will also crop it to these dimensions automatically."
-            imageType="ticker"
-          />
-          {errors.ftTokenImg && <p className="text-red-600 mt-2 text-sm">{errors.ftTokenImg}</p>}
-        </div>
-        <div>
-          <LavaSocialLinks
-            errors={errors}
-            setSocialLinks={links => updateField('socialLinks', links)}
-            socialLinks={data.socialLinks || []}
-          />
-        </div>
-        <div>
-          <LavaSelect
-            label="Add vault tags"
-            options={VAULT_TAGS_OPTIONS}
-            value=""
-            onChange={handleTagAdd}
-            placeholder="Select tags for your vault"
-            error={errors.tags}
-          />
-          {data.tags && data.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {data.tags.map(tag => {
-                const tagOption = VAULT_TAGS_OPTIONS.find(option => option.value === tag);
-                return (
-                  <Chip
-                    key={tag}
-                    label={tagOption?.label || tag}
-                    value={tag}
-                    variant="removable"
-                    onRemove={handleTagRemove}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
