@@ -48,6 +48,8 @@ export const LavaWhitelistWithCaps = ({
 }) => {
   const styles = variants[variant];
   const isSteel = variant === 'steel';
+  // Shared column template so the header row and every asset row line up like a table.
+  const tableGridCols = 'grid-cols-1 md:grid-cols-[minmax(240px,2fr)_repeat(3,minmax(0,1fr))]';
 
   const renderInput = ({ onChange, onBlur, style, ...rest }) => {
     if (isSteel) {
@@ -64,6 +66,7 @@ export const LavaWhitelistWithCaps = ({
   const [showDropdown, setShowDropdown] = useState({});
   const [searchResults, setSearchResults] = useState({});
   const [isSearching, setIsSearching] = useState({});
+  const [focusedUniqueId, setFocusedUniqueId] = useState(null);
   const dropdownRefs = useRef({});
   const searchTimers = useRef({});
 
@@ -540,7 +543,15 @@ export const LavaWhitelistWithCaps = ({
           />
         </div>
       )}
-      <div className="space-y-4">
+      <div className={cn(whitelist.length > 0 && 'border border-white/10 rounded-lg divide-y divide-white/10')}>
+        {showCountCaps && whitelist.length > 0 && (
+          <div className={cn('hidden md:grid gap-4 p-4 bg-steel-800/40', tableGridCols)}>
+            <span className="uppercase font-bold text-sm text-dark-100">*Asset</span>
+            <span className="uppercase font-bold text-sm text-dark-100">*Min asset cap</span>
+            <span className="uppercase font-bold text-sm text-dark-100">*Max asset cap</span>
+            <span className="uppercase font-bold text-sm text-dark-100">*Asset valuation method</span>
+          </div>
+        )}
         {whitelist.map(asset => {
           const isSearchMode = !!asset.policyId;
           const policiesToShow = isSearchMode
@@ -549,233 +560,242 @@ export const LavaWhitelistWithCaps = ({
           const currentIsSearching = isSearching[asset.uniqueId];
           const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
+          const resolvedName = asset.collectionName || asset.name;
+          const displayValue = focusedUniqueId === asset.uniqueId || !resolvedName ? asset.policyId : resolvedName;
+
           return (
-            <div key={asset.id || asset.uniqueId} className={styles.itemSpacing}>
-              <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
-                {renderInput({
-                  placeholder: effectivePlaceholder,
-                  style: styles.policyInputStyle,
-                  value: asset.policyId,
-                  className: styles.policyInputClassName,
-                  onChange: e => handleInputChange(asset.uniqueId, e.target.value),
-                  onFocus: () => {
-                    if (walletPolicyIds.length > 0 || asset.policyId) {
-                      setShowDropdown(prev => ({ ...prev, [asset.uniqueId]: true }));
-                      if (asset.policyId) {
-                        triggerSearch(asset.uniqueId, asset.policyId);
+            <div
+              key={asset.id || asset.uniqueId}
+              className={cn('p-4 grid gap-4 items-start', showCountCaps ? tableGridCols : 'grid-cols-1')}
+            >
+              <div className={styles.itemSpacing}>
+                <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
+                  {renderInput({
+                    placeholder: effectivePlaceholder,
+                    style: styles.policyInputStyle,
+                    value: displayValue,
+                    className: styles.policyInputClassName,
+                    onChange: e => handleInputChange(asset.uniqueId, e.target.value),
+                    onFocus: () => {
+                      setFocusedUniqueId(asset.uniqueId);
+                      if (walletPolicyIds.length > 0 || asset.policyId) {
+                        setShowDropdown(prev => ({ ...prev, [asset.uniqueId]: true }));
+                        if (asset.policyId) {
+                          triggerSearch(asset.uniqueId, asset.policyId);
+                        }
                       }
-                    }
-                  },
-                })}
-                {isWalletConnected && walletPolicyIds.length > 0 && (
+                    },
+                    onBlur: () => setFocusedUniqueId(prev => (prev === asset.uniqueId ? null : prev)),
+                  })}
+                  {isWalletConnected && walletPolicyIds.length > 0 && (
+                    <Button
+                      type="button"
+                      className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => toggleDropdown(asset.uniqueId)}
+                    >
+                      {showDropdown[asset.uniqueId] ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                   <Button
-                    type="button"
-                    className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
+                    className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
                     size="icon"
                     variant="ghost"
-                    onClick={() => toggleDropdown(asset.uniqueId)}
+                    onClick={() => handleRemoveOrClear(asset.uniqueId)}
                   >
-                    {showDropdown[asset.uniqueId] ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
+                    <X className="h-4 w-4" />
                   </Button>
-                )}
-                <Button
-                  className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => handleRemoveOrClear(asset.uniqueId)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                {showDropdown[asset.uniqueId] && (
-                  <div className={styles.dropdown} onScroll={e => handleScroll(e, asset.uniqueId)}>
-                    {currentIsSearching ? (
-                      <div className="flex items-center justify-center py-6">
-                        <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                      </div>
-                    ) : policiesToShow.length > 0 ? (
-                      <>
-                        <div className="space-y-0">
-                          {policiesToShow.map(policy => (
-                            <div key={policy.policyId}>{renderAssetItem(asset, policy)}</div>
-                          ))}
+                  {showDropdown[asset.uniqueId] && (
+                    <div className={styles.dropdown} onScroll={e => handleScroll(e, asset.uniqueId)}>
+                      {currentIsSearching ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
                         </div>
-                        {!isSearchMode && isLoadingMore && (
-                          <div className="flex items-center justify-center py-3">
-                            <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                      ) : policiesToShow.length > 0 ? (
+                        <>
+                          <div className="space-y-0">
+                            {policiesToShow.map(policy => (
+                              <div key={policy.policyId}>{renderAssetItem(asset, policy)}</div>
+                            ))}
                           </div>
-                        )}
-                        {!isSearchMode && hasMore && !isLoadingMore && (
-                          <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center py-6 text-dark-100">
-                        {isSearchMode ? 'No matching policies found in your wallet' : 'No policies available'}
-                      </div>
-                    )}
+                          {!isSearchMode && isLoadingMore && (
+                            <div className="flex items-center justify-center py-3">
+                              <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                            </div>
+                          )}
+                          {!isSearchMode && hasMore && !isLoadingMore && (
+                            <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-center py-6 text-dark-100">
+                          {isSearchMode ? 'No matching policies found in your wallet' : 'No policies available'}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {(() => {
+                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
+                  return <p className="text-red-600 text-sm mt-1">{policyIdError}</p>;
+                })()}
+                {(() => {
+                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
+                  if (policyIdError) return null;
+                  return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].isVerified`]}</p>;
+                })()}
+                {asset.policyId && asset.isVerified === true && (
+                  <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>
+                      {selectedVerificationLabel
+                        ? `Verified collection · ${selectedVerificationLabel}`
+                        : 'Verified collection'}
+                    </span>
+                  </div>
+                )}
+                {asset.policyId && asset.isVerified === false && (
+                  <div className="flex items-center gap-1.5 text-sm text-orange-400 -mt-4">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span>Unverified collection — cannot be added to a vault</span>
                   </div>
                 )}
               </div>
-              {(() => {
-                const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
-                return <p className="text-red-600 text-sm mt-1">{policyIdError}</p>;
-              })()}
-              {(() => {
-                const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
-                if (policyIdError) return null;
-                return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].isVerified`]}</p>;
-              })()}
-              {asset.policyId && asset.isVerified === true && (
-                <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>
-                    {selectedVerificationLabel
-                      ? `Verified collection · ${selectedVerificationLabel}`
-                      : 'Verified collection'}
-                  </span>
-                </div>
-              )}
-              {asset.policyId && asset.isVerified === false && (
-                <div className="flex items-center gap-1.5 text-sm text-orange-400 -mt-4">
-                  <ShieldAlert className="h-4 w-4" />
-                  <span>Unverified collection — cannot be added to a vault</span>
-                </div>
-              )}
+
               {showCountCaps && (
                 <>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      {renderInput({
-                        required: true,
-                        label: 'Min asset cap',
-                        type: 'text',
-                        pattern: '[0-9]*',
-                        style: isSteel ? undefined : { fontSize: '20px' },
-                        value: asset.countCapMin,
-                        onChange: e => {
-                          const inputValue = e.target.value;
-                          const numericValue = Number(inputValue.replace(/,/g, ''));
-                          if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                            updateAsset(asset.uniqueId, 'countCapMin', inputValue);
-                          }
-                        },
-                        onBlur: e =>
-                          updateAsset(
-                            asset.uniqueId,
-                            'countCapMin',
-                            e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
-                          ),
-                        hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
-                      })}
-                      {(() => {
-                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                        return (
-                          <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
-                        );
-                      })()}
-                    </div>
+                  <div>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Min asset cap</span>
+                    {renderInput({
+                      required: true,
+                      type: 'text',
+                      pattern: '[0-9]*',
+                      style: isSteel ? undefined : { fontSize: '20px' },
+                      value: asset.countCapMin,
+                      onChange: e => {
+                        const inputValue = e.target.value;
+                        const numericValue = Number(inputValue.replace(/,/g, ''));
+                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                          updateAsset(asset.uniqueId, 'countCapMin', inputValue);
+                        }
+                      },
+                      onBlur: e =>
+                        updateAsset(
+                          asset.uniqueId,
+                          'countCapMin',
+                          e.target.value === '' ? 1 : Number(e.target.value.replace(/,/g, ''))
+                        ),
+                      hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
+                    })}
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
+                      );
+                    })()}
+                  </div>
 
-                    <div className="flex-1">
+                  <div>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Max asset cap</span>
+                    {renderInput({
+                      required: true,
+                      value: asset.countCapMax,
+                      onChange: e => {
+                        const inputValue = e.target.value;
+                        const numericValue = Number(inputValue.replace(/,/g, ''));
+                        if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
+                          updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                        }
+                      },
+                      onBlur: e => {
+                        const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                        const limitedValue = Math.min(rawValue, maxCapValue);
+                        updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                      },
+                      hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
+                    })}
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
+                      );
+                    })()}
+                  </div>
+
+                  <div>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100 block mb-2">
+                      *Asset valuation method
+                    </span>
+                    <LavaRadio
+                      name={`valuationMethod_${asset.uniqueId}`}
+                      options={
+                        asset.isLpToken
+                          ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
+                          : [
+                              { name: 'market', label: 'Market / Floor Price' },
+                              ...(isRobinHood ? [] : [{ name: 'custom', label: 'Custom Price' }]),
+                            ]
+                      }
+                      value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
+                      onChange={value => {
+                        if (!asset.isLpToken) {
+                          updateAsset(asset.uniqueId, 'valuationMethod', value);
+                        }
+                      }}
+                      disabled={asset.isLpToken}
+                    />
+                    {asset.isLpToken && (
+                      <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
+                    )}
+                    {(() => {
+                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      return (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors[`assetsWhitelist[${index}].valuationMethod`]}
+                        </p>
+                      );
+                    })()}
+                  </div>
+
+                  {asset.valuationMethod === 'custom' && !asset.isLpToken && !isRobinHood && (
+                    <div className="md:col-span-4 max-w-xs">
                       {renderInput({
                         required: true,
-                        label: 'Max asset cap',
-                        value: asset.countCapMax,
+                        label: 'Custom Price (ADA)',
+                        type: 'text',
+                        placeholder: 'Enter price in ADA',
+                        style: isSteel ? undefined : { fontSize: '20px' },
+                        value: asset.customPriceAda || '',
                         onChange: e => {
                           const inputValue = e.target.value;
-                          const numericValue = Number(inputValue.replace(/,/g, ''));
-                          if (inputValue === '' || (!isNaN(numericValue) && numericValue <= maxCapValue)) {
-                            updateAsset(asset.uniqueId, 'countCapMax', inputValue);
+                          if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
+                            updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
                           }
                         },
                         onBlur: e => {
-                          const rawValue = e.target.value === '' ? 1000 : Number(e.target.value.replace(/,/g, ''));
+                          const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
                           const limitedValue = Math.min(rawValue, maxCapValue);
-                          updateAsset(asset.uniqueId, 'countCapMax', limitedValue);
+                          updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
                         },
-                        hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
+                        hint: 'The custom ADA price for this policy',
                       })}
-                      {(() => {
-                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                        return (
-                          <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 mt-4">
-                    <div>
-                      <LavaRadio
-                        label="*Asset Valuation Method"
-                        name={`valuationMethod_${asset.uniqueId}`}
-                        options={
-                          asset.isLpToken
-                            ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
-                            : [
-                                { name: 'market', label: 'Market / Floor Price' },
-                                ...(isRobinHood ? [] : [{ name: 'custom', label: 'Custom Price' }]),
-                              ]
-                        }
-                        value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
-                        onChange={value => {
-                          if (!asset.isLpToken) {
-                            updateAsset(asset.uniqueId, 'valuationMethod', value);
-                          }
-                        }}
-                        disabled={asset.isLpToken}
-                      />
-                      {asset.isLpToken && (
-                        <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
-                      )}
                       {(() => {
                         const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                         return (
                           <p className="text-red-600 text-sm mt-1">
-                            {errors[`assetsWhitelist[${index}].valuationMethod`]}
+                            {errors[`assetsWhitelist[${index}].customPriceAda`]}
                           </p>
                         );
                       })()}
                     </div>
-
-                    {asset.valuationMethod === 'custom' && !asset.isLpToken && !isRobinHood && (
-                      <div>
-                        {renderInput({
-                          required: true,
-                          label: 'Custom Price (ADA)',
-                          type: 'text',
-                          placeholder: 'Enter price in ADA',
-                          style: isSteel ? undefined : { fontSize: '20px' },
-                          value: asset.customPriceAda || '',
-                          onChange: e => {
-                            const inputValue = e.target.value;
-                            if (inputValue === '' || /^\d*\.?\d*$/.test(inputValue)) {
-                              updateAsset(asset.uniqueId, 'customPriceAda', inputValue);
-                            }
-                          },
-                          onBlur: e => {
-                            const rawValue = e.target.value === '' ? 10 : Number(e.target.value.replace(/,/g, ''));
-                            const limitedValue = Math.min(rawValue, maxCapValue);
-                            updateAsset(asset.uniqueId, 'customPriceAda', limitedValue);
-                          },
-                          hint: 'The custom ADA price for this policy',
-                        })}
-                        {(() => {
-                          const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                          return (
-                            <p className="text-red-600 text-sm mt-1">
-                              {errors[`assetsWhitelist[${index}].customPriceAda`]}
-                            </p>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </>
               )}
             </div>
