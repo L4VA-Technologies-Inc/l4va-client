@@ -438,11 +438,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
-        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
-          <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
-            {vault.isOfficialPartner && (
-              <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-start">
+          <div className="flex flex-col min-w-0 gap-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
+              {vault.isOfficialPartner && (
+                <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+              )}
+            </div>
+            {(vault.vaultTokenTicker || vault.ftTokenSupply) && (
+              <div className="flex items-center gap-2 text-sm text-dark-100">
+                {vault.vaultTokenTicker && <span className="font-medium text-white">${vault.vaultTokenTicker}</span>}
+                {vault.ftTokenSupply ? (
+                  <span>
+                    Total Supply: <span className="text-white">{formatNum(vault.ftTokenSupply)}</span>
+                  </span>
+                ) : null}
+              </div>
             )}
           </div>
           <div className="flex gap-2 items-center">
