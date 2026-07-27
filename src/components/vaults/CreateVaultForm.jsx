@@ -115,6 +115,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const isAcquireOnly = vaultData.preset === 'acquire_only';
   const isContributionOnly = vaultData.tokensForAcquires === 0;
 
+  useEffect(() => {
+    if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
+      setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));
+    }
+  }, [isRobinHood, vaultData.privacy]);
+
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
   const visibleSteps = steps.filter(s => {

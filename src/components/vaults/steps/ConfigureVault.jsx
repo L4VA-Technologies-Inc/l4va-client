@@ -14,6 +14,7 @@ import {
   VAULT_PRIVACY_TYPES,
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
+import { useNetwork } from '@/hooks/useNetwork';
 
 export const ConfigureVault = ({
   data,
@@ -27,10 +28,16 @@ export const ConfigureVault = ({
   deletingPresetId,
   onRemoveWhitelistItem,
 }) => {
+  const { isCardano } = useNetwork();
+
   const handleChange = e => {
     const { name, value } = e.target;
     updateField(name, value);
   };
+
+  const privacyOptions = isCardano
+    ? VAULT_PRIVACY_OPTIONS
+    : VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC);
 
   const handleTagAdd = tagValue => {
     const currentTags = data.tags || [];
@@ -95,7 +102,7 @@ export const ConfigureVault = ({
             <LavaRadio
               label="*Vault privacy"
               name="privacy"
-              options={VAULT_PRIVACY_OPTIONS}
+              options={privacyOptions}
               value={data.privacy || ''}
               onChange={value => updateField('privacy', value)}
               hint={PRIVACY_HINT}
