@@ -110,6 +110,7 @@ export const VAULT_TAGS_OPTIONS = [
   { value: 'Staking', label: 'Staking' },
   { value: 'DePin', label: 'DePin' },
   { value: 'Stablecoin', label: 'Stablecoin' },
+  { value: 'Memecoins', label: 'Memecoins' },
   { value: 'Governance', label: 'Governance' },
   { value: 'DEX', label: 'DEX' },
   { value: 'Gaming', label: 'Gaming' },
