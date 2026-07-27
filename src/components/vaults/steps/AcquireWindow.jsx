@@ -23,6 +23,10 @@ export const AcquireWindow = ({
   const isAcquireOnly = data.isAcquireOnly === true;
   const { isRobinHood } = useNetwork();
   const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
+  const maxAcquireThreshold = 100000;
+  const minAcquireThresholdRangeHint = isRobinHood
+    ? 'Allowed range when set: 0.01 to 100,000 ETH.'
+    : 'Allowed range when set: 1+ ADA (max 100,000 ADA).';
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -104,81 +108,76 @@ export const AcquireWindow = ({
           </div>
         </div>
         {isAcquireOnly && (
-          <div>
-            <Label className="uppercase font-bold" htmlFor="minAcquireThreshold">
-              MINIMUM {assetSymbol} THRESHOLD (OPTIONAL)
-            </Label>
-            <div className="mt-4">
-              <LavaInput
-                error={errors.minAcquireThreshold}
-                label=""
-                id="minAcquireThreshold"
-                name="minAcquireThreshold"
-                placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
-                suffix={assetSymbol}
-                type="text"
-                value={
-                  data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
-                    ? String(data.minAcquireThreshold)
-                    : ''
-                }
-                onChange={e => {
-                  if (isRobinHood) {
-                    const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+          <div className="mt-4">
+            <LavaInput
+              error={errors.minAcquireThreshold}
+              label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
+              id="minAcquireThreshold"
+              name="minAcquireThreshold"
+              placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
+              suffix={assetSymbol}
+              type="text"
+              value={
+                data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
+                  ? String(data.minAcquireThreshold)
+                  : ''
+              }
+              onChange={e => {
+                if (isRobinHood) {
+                  const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
 
-                    // Allow natural partial typing, but block committed values below 0.01 ETH.
-                    if (raw !== '') {
-                      const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
-                      const parsed = Number(raw);
-                      if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
-                        return;
-                      }
-                      if (!Number.isNaN(parsed) && parsed > 10000) {
-                        return;
-                      }
+                  // Allow natural partial typing, but block committed values below 0.01 ETH.
+                  if (raw !== '') {
+                    const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
+                    const parsed = Number(raw);
+                    if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
+                      return;
                     }
+                    if (!Number.isNaN(parsed) && parsed > maxAcquireThreshold) {
+                      return;
+                    }
+                  }
 
-                    updateField('minAcquireThreshold', raw === '' ? null : raw);
-                    return;
-                  }
-                  const raw = e.target.value.replace(/[^0-9]/g, '');
-                  updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
-                }}
-                onBlur={() => {
-                  if (!isRobinHood) return;
-                  if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
-                  const parsed = Number(data.minAcquireThreshold);
-                  if (Number.isNaN(parsed)) {
-                    updateField('minAcquireThreshold', null);
-                    return;
-                  }
-                  if (parsed > 0 && parsed < 0.01) {
-                    updateField('minAcquireThreshold', '0.01');
-                    return;
-                  }
-                  if (parsed > 10000) {
-                    updateField('minAcquireThreshold', '10000');
-                  }
-                }}
-                hint={
-                  data.liquidityPoolContribution > 0
-                    ? `Optional. ${isRobinHood ? 'When set on Robinhood, minimum is 0.01 ETH. ' : ''}Sets the minimum ${assetSymbol} required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ${assetSymbol} to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ${assetSymbol} is refunded. If not set, only the LP minimum must be met.`
-                    : `Optional. ${isRobinHood ? 'When set on Robinhood, minimum is 0.01 ETH. ' : ''}If set, the vault will only lock if this minimum amount of ${assetSymbol} is acquired. If not set, the vault will lock if ANY amount of ${assetSymbol} is acquired. If no ${assetSymbol} is acquired, the vault will fail and all ${assetSymbol} is refunded.`
+                  updateField('minAcquireThreshold', raw === '' ? null : raw);
+                  return;
                 }
-              />
-              {data.liquidityPoolContribution > 0 && (
-                <p className="text-orange-500 mt-2 text-sm">
-                  Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that
-                  must be met:
-                  <br />
-                  1. Your minimum {assetSymbol} threshold (if set)
-                  <br />
-                  2. LP minimum liquidity requirement (calculated automatically)
-                  <br />
-                  The vault will fail if EITHER threshold is not reached during the acquire window.
-                </p>
-              )}
-            </div>
+                const raw = e.target.value.replace(/[^0-9]/g, '');
+                updateField('minAcquireThreshold', raw === '' ? null : Math.min(Number(raw), maxAcquireThreshold));
+              }}
+              onBlur={() => {
+                if (!isRobinHood) return;
+                if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
+                const parsed = Number(data.minAcquireThreshold);
+                if (Number.isNaN(parsed)) {
+                  updateField('minAcquireThreshold', null);
+                  return;
+                }
+                if (parsed > 0 && parsed < 0.01) {
+                  updateField('minAcquireThreshold', '0.01');
+                  return;
+                }
+                if (parsed > maxAcquireThreshold) {
+                  updateField('minAcquireThreshold', String(maxAcquireThreshold));
+                }
+              }}
+              hint={
+                data.liquidityPoolContribution > 0
+                  ? `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
+                  : `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
+              }
+            />
+            {data.liquidityPoolContribution > 0 && (
+              <p className="text-orange-500 mt-2 text-sm">
+                Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that must
+                be met:
+                <br />
+                1. Your minimum {assetSymbol} threshold (if set)
+                <br />
+                2. LP minimum liquidity requirement (calculated automatically)
+                <br />
+                The vault will fail if EITHER threshold is not reached during the acquire window.
+              </p>
+            )}
           </div>
         )}
       </div>
