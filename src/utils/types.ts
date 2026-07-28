@@ -55,6 +55,9 @@ export enum ProposalType {
   EXPANSION = 'expansion',
   ASSET_WHITELIST_UPDATE = 'asset_whitelist_update',
   ACQUIRE_EXPANSION = 'acquire_expansion',
+  STAKE_ASSETS = 'stake_assets',
+  UNSTAKE_ASSETS = 'unstake_assets',
+  HARVEST_REWARDS = 'harvest_rewards',
 }
 
 export const ProposalTypeLabels = {
@@ -67,6 +70,9 @@ export const ProposalTypeLabels = {
   [ProposalType.EXPANSION]: 'Vault Expansion',
   [ProposalType.ASSET_WHITELIST_UPDATE]: 'Update Asset Whitelist',
   [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
+  [ProposalType.STAKE_ASSETS]: 'Stake Assets',
+  [ProposalType.UNSTAKE_ASSETS]: 'Unstake Assets',
+  [ProposalType.HARVEST_REWARDS]: 'Harvest Rewards',
 };
 
 export enum ClaimStatus {

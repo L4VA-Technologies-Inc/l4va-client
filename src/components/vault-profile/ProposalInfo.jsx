@@ -15,6 +15,7 @@ import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 import { ProposalEndDate } from './ProposalEndDate';
 import { VaultSkeleton } from './VaultSkeleton';
+import { RelicsStakingDetails } from './ProposalInfo/RelicsStakingDetails.jsx';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
 import { ProposalTypeLabels } from '@/utils/types';
@@ -446,6 +447,19 @@ export const ProposalInfo = ({ proposalId }) => {
         return acquireExpansionItems;
       }
 
+      case 'stake_assets':
+      case 'unstake_assets':
+      case 'harvest_rewards': {
+        // Return special type for relics staking details component
+        return [
+          executionOptions,
+          {
+            type: 'relics_staking_details',
+            value: proposalInfo,
+          },
+        ];
+      }
+
       default:
         return [];
     }
@@ -663,6 +677,10 @@ export const ProposalInfo = ({ proposalId }) => {
 
                       if (item.type === 'asset_whitelist_update_list') {
                         return <AssetWhitelistUpdateList key={index} assets={item.value} label={item.label} />;
+                      }
+
+                      if (item.type === 'relics_staking_details') {
+                        return <RelicsStakingDetails key={index} proposal={item.value} />;
                       }
 
                       return <ProposalField key={index} label={item.label} value={item.value} />;
