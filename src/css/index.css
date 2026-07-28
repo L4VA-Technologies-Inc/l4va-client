@@ -9,6 +9,7 @@
 
 :root {
   --layout-top-padding: 84px;
+  --theme-transition-duration: 320ms;
   --color-background-primary: #000322;
   --color-text-primary: #FFFFFF;
   --color-dark-100: #979BB0;
@@ -51,6 +52,15 @@
 
   --header-height: 72px;
   --content-space-top: 24px;
+}
+
+:root.theme-transition,
+:root.theme-transition *,
+:root.theme-transition *::before,
+:root.theme-transition *::after {
+  transition-property: background-color, color, border-color, outline-color, fill, stroke, box-shadow;
+  transition-duration: var(--theme-transition-duration);
+  transition-timing-function: ease;
 }
 
 :root[data-chain='robinhood'] {
