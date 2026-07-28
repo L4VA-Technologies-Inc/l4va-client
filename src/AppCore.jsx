@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
 import { useWalletChangeListener } from '@/hooks/useWalletChangeListener';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const router = createRouter({
   routeTree,
@@ -24,6 +25,7 @@ const router = createRouter({
 const AppWithInterceptor = () => {
   useAuthInterceptor();
   useWalletChangeListener();
+  const { updateNetwork } = useNetwork();
 
   useEffect(() => {
     const message = sessionStorage.getItem('logout_toast');
@@ -32,6 +34,19 @@ const AppWithInterceptor = () => {
       toast.error(message);
     }
   }, []);
+
+  // Lets a link like example.com?chain=robinhood auto-select the network on landing,
+  // then strips just that param so it doesn't stay visible in the address bar.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const chainParam = url.searchParams.get('chain');
+    if (chainParam !== 'robinhood' && chainParam !== 'cardano') return;
+
+    updateNetwork(chainParam);
+    url.searchParams.delete('chain');
+    const search = url.searchParams.toString();
+    window.history.replaceState({}, '', `${url.pathname}${search ? `?${search}` : ''}${url.hash}`);
+  }, [updateNetwork]);
 
   return (
     <ModalProvider>
