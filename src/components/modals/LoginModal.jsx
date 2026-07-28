@@ -108,7 +108,9 @@ export const LoginModal = () => {
           if (error?.message?.includes('already pending')) {
             toast.error('Check your wallet — a connection request is already open');
           } else {
-            toast.error(error?.message || 'Failed to connect wallet');
+            // viem's full `message` appends "Details: ...\nVersion: viem@x.y.z" —
+            // `shortMessage` is the same text without that noise.
+            toast.error(error?.shortMessage || error?.message || 'Failed to connect wallet');
           }
         },
       }
