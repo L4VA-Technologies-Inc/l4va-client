@@ -29,15 +29,44 @@ const heldTokenCount = (token: BlockscoutWalletToken): number => {
   }
 };
 
+const mergePolicy = (existing: GroupedPolicy, incoming: GroupedPolicy): GroupedPolicy => {
+  const shouldUpgradeVerification = incoming.isVerified && !existing.isVerified;
+  const shouldUpgradeCount = (incoming.count || 0) > (existing.count || 0);
+  const shouldUpgradeNames =
+    (!existing.collectionName && !!incoming.collectionName) ||
+    (!existing.name && !!incoming.name) ||
+    (!existing.assetName && !!incoming.assetName);
+
+  if (!shouldUpgradeVerification && !shouldUpgradeCount && !shouldUpgradeNames) {
+    return existing;
+  }
+
+  return {
+    ...existing,
+    ...incoming,
+    count: Math.max(existing.count || 0, incoming.count || 0),
+  };
+};
+
+const upsertPolicy = (byAddress: Map<string, GroupedPolicy>, incoming: GroupedPolicy): void => {
+  const existing = byAddress.get(incoming.policyId);
+  if (!existing) {
+    byAddress.set(incoming.policyId, incoming);
+    return;
+  }
+
+  byAddress.set(incoming.policyId, mergePolicy(existing, incoming));
+};
+
 /**
  * EVM counterpart to {@link useAssets}. Enumerates the connected wallet's tokens
  * via the Blockscout explorer (the wallet address comes from wagmi `useAccount`)
  * and exposes them through the SAME shape `useAssets` returns, so
  * `LavaWhitelistWithCaps` can consume either transparently.
  *
- * The EVM `policyId` is the token contract address. Verification comes from
- * Blockscout's own reputation signal rather than an on-chain marketplace, since
- * no such registry exists for Robinhood Chain.
+ * The EVM `policyId` is the token contract address. Verification is strict for
+ * whitelist discovery: mainnet uses Blockscout admin/certified tokens, while
+ * testnet falls back to smart-contract verification so dev flows still work.
  */
 export const useEvmAssets = () => {
   const { address, isConnected } = useAccount();
@@ -53,8 +82,8 @@ export const useEvmAssets = () => {
     staleTime: 1000 * 60, // 1 minute — wallet holdings change rarely mid-session
   });
 
-  // Chain-wide token list (not scoped to the wallet) so creators can whitelist
-  // popular/verified assets they don't personally hold — mirrors what a wallet
+  // Chain-wide verified token list (not scoped to the wallet) so creators can
+  // whitelist popular assets they don't personally hold — mirrors what a wallet
   // holds with what's actually indexed on the chain, same as `getCollectionNames`
   // does for Cardano policies.
   const { data: chainTokens, isLoading: isLoadingChainTokens } = useQuery({
@@ -83,10 +112,7 @@ export const useEvmAssets = () => {
   const browsePolicies = useMemo<GroupedPolicy[]>(() => {
     const byAddress = new Map<string, GroupedPolicy>(heldPolicies.map(p => [p.policyId, p]));
     (chainTokens || []).forEach(token => {
-      const policyId = token.address.toLowerCase();
-      if (!byAddress.has(policyId)) {
-        byAddress.set(policyId, toGroupedPolicy(token, 0));
-      }
+      upsertPolicy(byAddress, toGroupedPolicy(token, 0));
     });
     return Array.from(byAddress.values());
   }, [heldPolicies, chainTokens]);
@@ -108,10 +134,7 @@ export const useEvmAssets = () => {
       try {
         const remoteMatches = await searchTokens(query);
         remoteMatches.forEach(token => {
-          const policyId = token.address.toLowerCase();
-          if (!byAddress.has(policyId)) {
-            byAddress.set(policyId, toGroupedPolicy(token, 0));
-          }
+          upsertPolicy(byAddress, toGroupedPolicy(token, 0));
         });
       } catch (error) {
         console.error('Error searching chain-wide tokens:', error);

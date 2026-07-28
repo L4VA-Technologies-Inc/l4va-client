@@ -460,6 +460,16 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
+  const formatTokenDisplayName = policy => {
+    const baseName = policy.collectionName || policy.name || '';
+    if (!isRobinHood) return baseName;
+
+    const ticker = policy.name || policy.assetName || '';
+    if (!baseName) return ticker;
+    if (!ticker || baseName.toLowerCase() === ticker.toLowerCase()) return baseName;
+    return `${baseName} (${ticker})`;
+  };
+
   const renderAssetItem = (asset, policy) => {
     const searchText = asset.policyId.toLowerCase();
     const highlightText = (text, search) => {
@@ -481,7 +491,7 @@ export const LavaWhitelistWithCaps = ({
       }
     };
 
-    const displayName = policy.collectionName || policy.name;
+    const displayName = formatTokenDisplayName(policy);
     const isVerified = policy.isVerified;
     const verificationBadgeLabel = getVerificationPlatformLabel(policy.verificationPlatform);
 
@@ -560,7 +570,7 @@ export const LavaWhitelistWithCaps = ({
           const currentIsSearching = isSearching[asset.uniqueId];
           const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
-          const resolvedName = asset.collectionName || asset.name;
+          const resolvedName = formatTokenDisplayName(asset);
           const displayValue = focusedUniqueId === asset.uniqueId || !resolvedName ? asset.policyId : resolvedName;
 
           return (
