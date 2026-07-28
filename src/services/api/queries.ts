@@ -365,10 +365,10 @@ export const useSubmitTerminationClaim = () => {
   });
 };
 
-export const useGovernanceProposals = (vaultId: string) => {
+export const useGovernanceProposals = (vaultId: string, params: { page?: number; limit?: number } = {}) => {
   return useQuery({
-    queryKey: ['governance-proposals', vaultId],
-    queryFn: () => GovernanceApiProvider.getProposals(vaultId),
+    queryKey: ['governance-proposals', vaultId, params],
+    queryFn: () => GovernanceApiProvider.getProposals(vaultId, params),
     enabled: !!vaultId,
   });
 };
