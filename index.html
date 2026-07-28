@@ -40,17 +40,27 @@
     <!-- Web Manifest -->
     <link rel="manifest" href="/favicon/site.webmanifest">
 
-    <link
-      rel="preload"
-      href="/assets/banner-bg.webp"
-      as="image"
-      type="image/webp"
-      fetchpriority="high"
-      imagesrcset="/assets/banner-bg-768.webp 768w, /assets/banner-bg-1280.webp 1280w, /assets/banner-bg.webp 1920w"
-      imagesizes="100vw"
-    >
-
     <title>L4VA - The Future of Asset Fractionalization</title>
+    <script>
+      (function () {
+        // Preload the hero banner only on the main landing route.
+        if (window.location.pathname !== "/") return;
+
+        var link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.type = "image/webp";
+        link.fetchPriority = "high";
+        link.href = "/assets/banner-bg.webp";
+        link.setAttribute(
+          "imagesrcset",
+          "/assets/banner-bg-768.webp 768w, /assets/banner-bg-1280.webp 1280w, /assets/banner-bg.webp 1920w"
+        );
+        link.setAttribute("imagesizes", "100vw");
+
+        document.head.appendChild(link);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
