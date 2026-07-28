@@ -20,7 +20,7 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { Pagination } from '@/components/shared/Pagination';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useDeleteProposal, useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
@@ -203,7 +203,7 @@ export const VaultGovernance = ({ vault }) => {
           <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.vaultImage} />
         ) : (
           <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
-            <L4vaIcon className="h-8 w-8 text-white" />
+            <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
           </div>
         )}
         <h1 className="text-3xl font-bold">{vault.name}</h1>

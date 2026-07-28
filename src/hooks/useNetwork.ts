@@ -10,10 +10,18 @@ const normalizeNetwork = (value: string | null): NetworkType => {
 };
 
 let globalNetwork: NetworkType = normalizeNetwork(localStorage.getItem(NETWORK_STORAGE_KEY));
+
+const applyNetworkTheme = (newNetwork: NetworkType) => {
+  document.documentElement.setAttribute('data-chain', newNetwork);
+};
+
+applyNetworkTheme(globalNetwork);
+
 const subscribers = new Set<(newNetwork: NetworkType) => void>();
 
 const notifySubscribers = (newNetwork: NetworkType) => {
   globalNetwork = newNetwork;
+  applyNetworkTheme(newNetwork);
   subscribers.forEach(callback => callback(newNetwork));
 };
 

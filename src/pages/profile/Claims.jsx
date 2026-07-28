@@ -9,7 +9,7 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims, useBuildTerminationClaim, useSubmitTerminationClaim } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { LavaTable } from '@/components/shared/LavaTable';

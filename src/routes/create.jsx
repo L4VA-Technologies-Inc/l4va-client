@@ -2,9 +2,11 @@ import { createFileRoute, Navigate } from '@tanstack/react-router';
 
 import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { useAuth } from '@/lib/auth/auth';
+import { useNetwork } from '@/hooks/useNetwork';
 
 const CreateComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isRobinHood } = useNetwork();
 
   const getStorageVault = () => {
     try {
@@ -37,7 +39,7 @@ const CreateComponent = () => {
       <div
         className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full max-w-[1920px] min-h-[300px] bg-cover bg-bottom bg-no-repeat"
         style={{
-          backgroundImage: 'url(/assets/vaults/create-vault-bg.webp)',
+          backgroundImage: isRobinHood ? 'none' : 'url(/assets/vaults/create-vault-bg.webp)',
         }}
       />
       <CreateVaultForm vault={storageVault} setVault={handleSaveVault} />

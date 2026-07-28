@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import CardanoIcon from '@/icons/cardano.svg?react';
 import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';

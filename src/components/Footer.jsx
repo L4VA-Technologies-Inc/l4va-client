@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import XIcon from '@/icons/x.svg?react';
 import MediumIcon from '@/icons/medium.svg?react';
 import DiscordIcon from '@/icons/discord.svg?react';
