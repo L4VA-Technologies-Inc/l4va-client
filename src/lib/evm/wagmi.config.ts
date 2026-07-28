@@ -1,6 +1,6 @@
 import { defineChain } from 'viem';
 import { createConfig, http } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { injected, coinbaseWallet } from 'wagmi/connectors';
 
 // Robinhood Chain — Arbitrum L2 (EVM), mainnet launched 2026-07-01.
 // Chain ID 4663 (mainnet) / 46630 (testnet). ETH is the native gas token.
@@ -25,8 +25,9 @@ export const robinhoodChain = defineChain({
 const RPC_URL = import.meta.env.VITE_ROBINHOOD_RPC_URL || robinhoodChain.rpcUrls.default.http[0];
 
 // `injected()` auto-discovers browser-extension wallets via EIP-6963 (MetaMask,
-// Rabby, Trust, etc.); coinbaseWallet + walletConnect broaden coverage to ~300 wallets.
-const connectors = [injected()];
+// Rabby, Trust, etc.); `coinbaseWallet()` adds its own SDK popup (extension if present,
+// otherwise a QR code for Coinbase's mobile app) — no external project ID required.
+const connectors = [injected(), coinbaseWallet({ appName: 'L4VA' })];
 
 export const wagmiConfig = createConfig({
   chains: [robinhoodChain],
