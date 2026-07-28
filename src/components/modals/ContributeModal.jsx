@@ -19,6 +19,8 @@ import { estimateContributionTransactionCost } from '@/utils/contributionTransac
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
+const ESTIMATED_VALUE_MAX_DECIMALS = 6;
+const ESTIMATED_VALUE_MIN_THRESHOLD = 10 ** -ESTIMATED_VALUE_MAX_DECIMALS;
 
 const toRawQuantityString = (decimalQuantity, decimals = 6) => {
   if (decimalQuantity === null || decimalQuantity === undefined || decimalQuantity === '') return '0';
@@ -268,6 +270,22 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     eth: 'Estimated ETH Received',
   });
 
+  const estimatedValueDisplay = useMemo(() => {
+    if (estimatedValue > 0 && estimatedValue < ESTIMATED_VALUE_MIN_THRESHOLD) {
+      const threshold = ESTIMATED_VALUE_MIN_THRESHOLD.toLocaleString(undefined, {
+        minimumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+        maximumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+        useGrouping: false,
+      });
+      return `<${currencySymbol}${threshold}`;
+    }
+
+    return `${currencySymbol}${estimatedValue.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+    })}`;
+  }, [currencySymbol, estimatedValue]);
+
   const toggleNFT = useCallback(asset => {
     if (asset.isFungibleToken) return;
 
@@ -479,7 +497,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           <div className="grid grid-cols-2 gap-3">
             <MetricCard
               label={isExpansionMode ? 'Estimated Asset(s) Value' : 'Estimated Value'}
-              value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`}
+              value={estimatedValueDisplay}
               hint={
                 isExpansionMode
                   ? 'Total estimated value of your selected assets at current market prices.'
