@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -19,6 +19,7 @@ import { ProposalEndDate } from './ProposalEndDate';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { Pagination } from '@/components/shared/Pagination';
 import L4vaIcon from '@/icons/l4va.svg?react';
 import { useDeleteProposal, useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
@@ -26,10 +27,11 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
+const PROPOSALS_PER_PAGE = 2;
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
-  const [proposals, setProposals] = useState([]);
+  const [page, setPage] = useState(1);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [deletingProposalId, setDeletingProposalId] = useState(null);
   const { user } = useAuth();
@@ -43,7 +45,11 @@ export const VaultGovernance = ({ vault }) => {
     label: tab,
   }));
 
-  const { data, isLoading } = useGovernanceProposals(vault.id);
+  const { data } = useGovernanceProposals(vault.id, { page, limit: PROPOSALS_PER_PAGE });
+  const responseData = data?.data || data;
+  const proposals = Array.isArray(responseData) ? responseData : responseData?.items || [];
+  const totalPages = Array.isArray(responseData) ? 1 : responseData?.totalPages || 1;
+  const currentPage = Array.isArray(responseData) ? page : responseData?.page || page;
 
   const currentUserId = user?.id;
   const isDeleteInProgress = deleteProposalMutation.isPending || deletingProposalId !== null;
@@ -96,6 +102,12 @@ export const VaultGovernance = ({ vault }) => {
 
   const handleTabSelect = selectedTab => {
     setActiveTab(selectedTab);
+    setPage(1);
+  };
+
+  const handlePageChange = newPage => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filteredProposals = proposals.filter(proposal => {
@@ -108,12 +120,6 @@ export const VaultGovernance = ({ vault }) => {
     if (activeTab === 'Finished') return proposal.status === 'executed' || proposal.status === 'passed';
     return false;
   });
-
-  useEffect(() => {
-    if (data?.data && !isLoading) {
-      setProposals(data.data);
-    }
-  }, [data, isLoading]);
 
   const handleOpenProposalInfo = proposal => {
     if (!user) {
@@ -235,7 +241,7 @@ export const VaultGovernance = ({ vault }) => {
                   inactiveTabClassName="text-dark-100"
                   tabClassName="flex-1 text-center"
                   tabs={PROPOSAL_TABS}
-                  onTabChange={setActiveTab}
+                  onTabChange={handleTabSelect}
                 />
               </div>
             </div>
@@ -428,6 +434,14 @@ export const VaultGovernance = ({ vault }) => {
                 message="No proposal found"
                 iconBgColor="bg-orange-500/15"
                 iconInnerBgColor="bg-orange-500/30"
+              />
+            )}
+            {totalPages > 1 && (
+              <Pagination
+                className="mt-6"
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
               />
             )}
           </>

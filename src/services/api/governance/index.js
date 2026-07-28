@@ -2,8 +2,10 @@ import { GovernanceConfigProvider } from '@/services/api/governance/config';
 import { axiosInstance } from '@/services/api';
 
 export class GovernanceApiProvider {
-  static async getProposals(vaultId) {
-    const response = await axiosInstance.get(GovernanceConfigProvider.getProposals(vaultId));
+  static async getProposals(vaultId, { page = 1, limit = 10 } = {}) {
+    const response = await axiosInstance.get(GovernanceConfigProvider.getProposals(vaultId), {
+      params: { page, limit },
+    });
     return response;
   }
 
