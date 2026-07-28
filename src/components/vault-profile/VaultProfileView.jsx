@@ -79,7 +79,7 @@ import {
 import { getAddressUrl, getPolicyUrl } from '@/utils/explorer.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
 import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
@@ -689,7 +689,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 />
               ) : (
                 <div className="w-full h-full bg-steel-850 flex items-center justify-center">
-                  <L4vaIcon className="h-16 w-16 text-white" />
+                  <L4vaIcon chainType={vault.chainType} className="h-16 w-16 text-white" />
                 </div>
               )}
             </div>

@@ -7,7 +7,7 @@ import { ChainBadge } from '@/components/shared/ChainBadge';
 import { InfoRow } from '@/components/ui/infoRow';
 import { formatCompactNumber, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 
 type VaultListItemProps = {
   vault: VaultShortResponse;
@@ -46,7 +46,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
             <img alt={`${name} vault avatar`} src={vaultImage} className="object-cover w-full h-full" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
-              <L4vaIcon className="h-12 w-12 text-white" />
+              <L4vaIcon chainType={vault.chainType} className="h-12 w-12 text-white" />
             </div>
           )}
         </div>

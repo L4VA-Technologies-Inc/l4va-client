@@ -8,7 +8,7 @@ import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatString, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 
 type VaultCardProps = {
   vault: VaultShortResponse;
@@ -48,7 +48,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} loading="lazy" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
-              <L4vaIcon className="h-8 w-8 text-white" />
+              <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
             </div>
           )}
           <ChainBadge
@@ -72,7 +72,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} loading="lazy" />
             ) : (
               <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center flex-shrink-0">
-                <L4vaIcon className="h-8 w-8 text-white" />
+                <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
               </div>
             )}
             <div>

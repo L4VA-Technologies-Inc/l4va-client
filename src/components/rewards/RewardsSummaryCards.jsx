@@ -1,6 +1,6 @@
 import { Lock, TrendingUp, Trophy } from 'lucide-react';
 
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatCompactNumber } from '@/utils/core.utils';
 

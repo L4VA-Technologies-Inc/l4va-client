@@ -21,8 +21,6 @@
   /* Color System */
   --color-orange-500: #FF842C;
   --color-slate-950: #000322;
-  --color-slate-900: #0B0B29;
-  --color-slate-850: #0A0D29;
   --color-steel-950: #181A2A;
   --color-steel-900: #1D1F2F;
   --color-steel-850: #202233;
@@ -45,11 +43,37 @@
   --color-yellow-400: #FFD012;
   --color-yellow-300: #FDE047;
   --color-blue-500: #EAB308;
+  --color-button-gradient-from: #FF842C;
+  --color-button-gradient-mid: #FFA53A;
+  --color-button-gradient-to: #FFD012;
   --color-white: #FFFFFF;
   --color-black: #000000;
 
   --header-height: 72px;
   --content-space-top: 24px;
+}
+
+:root[data-chain='robinhood'] {
+  --color-background-primary: #0D0D0C;
+  --color-input-bg: #151614;
+  --color-accent: #1B1D19;
+  --color-primary: #CCFF00;
+  --color-orange-500: var(--color-primary);
+  --color-slate-950: #0D0D0C;
+  --color-steel-950: #151614;
+  --color-steel-900: #1B1D19;
+  --color-steel-850: #242620;
+  --color-steel-800: #2D3028;
+  --color-steel-750: #383C31;
+  --color-steel-600: #4A503F;
+  --color-steel-400: #9CA3AF;
+  --color-button-gradient-from: #B6E600;
+  --color-button-gradient-mid: #CCFF00;
+  --color-button-gradient-to: #F2FF4A;
+}
+
+:root[data-chain='robinhood'] .bg-orange-500.border-orange-500.text-white {
+  color: #151614;
 }
 
 .dark {}
@@ -67,8 +91,6 @@
   /* Color System */
   --color-orange-500: var(--color-orange-500);
   --color-slate-950: var(--color-slate-950);
-  --color-slate-900: var(--color-slate-900);
-  --color-slate-850: var(--color-slate-850);
   --color-steel-950: var(--color-steel-950);
   --color-steel-900: var(--color-steel-900);
   --color-steel-850: var(--color-steel-850);
@@ -108,11 +130,22 @@ body {
 }
 
 .bg-orange-gradient {
-  @apply bg-gradient-to-r from-[#FF842C] to-[#FFD012];
+  background: linear-gradient(
+    90deg,
+    var(--color-button-gradient-from) 0%,
+    var(--color-button-gradient-mid) 68%,
+    var(--color-button-gradient-to) 100%
+  );
 }
 
 .text-orange-gradient {
-  @apply bg-gradient-to-r from-[#FF842C] to-[#FFD012] bg-clip-text text-transparent;
+  background: linear-gradient(
+    90deg,
+    var(--color-button-gradient-from) 0%,
+    var(--color-button-gradient-mid) 68%,
+    var(--color-button-gradient-to) 100%
+  );
+  @apply bg-clip-text text-transparent;
 }
 
 button {
