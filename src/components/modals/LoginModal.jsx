@@ -328,7 +328,7 @@ export const LoginModal = () => {
             {walletItem.Icon ? (
               <walletItem.Icon className="w-6 h-6 rounded-md" />
             ) : walletItem.icon ? (
-              <img alt="wallet" className="w-6 h-6" src={walletItem.icon} />
+              <img alt="" aria-hidden="true" className="w-6 h-6" src={walletItem.icon} />
             ) : (
               <WalletIcon className="w-6 h-6" />
             )}
