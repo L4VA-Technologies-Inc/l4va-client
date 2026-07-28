@@ -15,9 +15,47 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import WalletIcon from '@/icons/wallet.svg?react';
+import MetaMaskIcon from '@/icons/metamask.svg?react';
+import WalletConnectIcon from '@/icons/walletconnect.svg?react';
+import OkxIcon from '@/icons/okx.svg?react';
+import BinanceIcon from '@/icons/binance.svg?react';
+import CoinbaseIcon from '@/icons/coinbase.svg?react';
+import TrustWalletIcon from '@/icons/trustwallet.svg?react';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
+
+// Curated EVM wallets shown as a "download" row when not detected as installed
+// (EIP-6963 only announces wallets actually present) — Coinbase is the exception, its
+// SDK connector works even without a detected extension (see coinbaseConnector below).
+const POPULAR_EVM_WALLETS = [
+  { key: 'metamask', displayName: 'MetaMask', website: 'https://metamask.io/download/', Icon: MetaMaskIcon },
+  {
+    key: 'walletconnect',
+    displayName: 'WalletConnect',
+    website: 'https://walletconnect.com/',
+    Icon: WalletConnectIcon,
+  },
+  { key: 'okx', displayName: 'OKX Wallet', website: 'https://www.okx.com/web3', Icon: OkxIcon },
+  {
+    key: 'binance',
+    displayName: 'Binance Wallet',
+    website: 'https://www.binance.com/en/web3wallet',
+    Icon: BinanceIcon,
+  },
+  {
+    key: 'coinbase',
+    displayName: 'Coinbase Wallet',
+    website: 'https://www.coinbase.com/wallet/downloads',
+    Icon: CoinbaseIcon,
+  },
+  {
+    key: 'trust',
+    displayName: 'Trust Wallet',
+    website: 'https://trustwallet.com/download',
+    Icon: TrustWalletIcon,
+  },
+];
 
 const messageHex = msg =>
   Array.from(msg)
@@ -59,8 +97,9 @@ export const LoginModal = () => {
   } = useConnect();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
 
-  // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and drop the
-  // generic "injected" fallback — leaving only real, installed wallets (empty if none).
+  // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and keep only
+  // real, browser-detected extensions — drops the generic "injected" fallback as well
+  // as SDK-based connectors (e.g. Coinbase), which are merged in separately below.
   const robinhoodConnectors = useMemo(() => {
     const seen = new Set();
     const tempConnectors = connectors.map(v => ({
@@ -74,8 +113,13 @@ export const LoginModal = () => {
       seen.add(connector.id);
       return true;
     });
-    return unique.filter(connector => connector.id !== 'injected');
+    return unique.filter(connector => connector.id !== 'injected' && connector.type === 'injected');
   }, [connectors]);
+
+  // Coinbase's SDK connector works without browser detection — it opens its own popup
+  // (extension if present, otherwise a QR code for the mobile app) — so it's always
+  // offered as connectable rather than gated behind EIP-6963 detection.
+  const coinbaseConnector = connectors.find(c => c.type === 'coinbaseWallet');
 
   // Backend authenticates EVM users by wallet address only (no signature).
   const loginWithRobinhoodAddress = async address => {
@@ -260,83 +304,112 @@ export const LoginModal = () => {
   const renderWalletsList = () => {
     const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];
     const cardanoWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.key));
-    const filteredWallets = isRobinHood ? robinhoodConnectors : cardanoWallets;
-    return (
-      <>
-        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-          {isRobinHood && filteredWallets.length === 0 && (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <WalletIcon className="w-8 h-8 text-dark-100" />
-              <p className="text-sm text-dark-100">
-                No wallet detected. Install a browser wallet like{' '}
-                <a
-                  href="https://metamask.io/download/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-500 hover:underline"
-                >
-                  MetaMask
-                </a>
-                ,{' '}
-                <a
-                  href="https://rabby.io/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-500 hover:underline"
-                >
-                  Rabby
-                </a>{' '}
-                or{' '}
-                <a
-                  href="https://www.coinbase.com/wallet/downloads"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-500 hover:underline"
-                >
-                  Coinbase Wallet
-                </a>{' '}
-                to connect.
-              </p>
-            </div>
-          )}
-          {filteredWallets.map(wallet => {
-            const isConnecting = isRobinHood
-              ? isRobinhoodConnecting && robinhoodConnectVars?.connector?.id === wallet.key
-              : wallet.isConnectingTo === wallet.key;
-            return (
-              <button
-                key={wallet.key}
-                className="
+    // Installed wallets always sort to the top; relative order within each group is preserved.
+    const sortedCardanoWallets = [...cardanoWallets].sort(
+      (a, b) => (installed.has(a.key) ? 0 : 1) - (installed.has(b.key) ? 0 : 1)
+    );
+
+    const renderWalletRow = walletItem => {
+      const isConnecting = isRobinHood
+        ? isRobinhoodConnecting && robinhoodConnectVars?.connector?.id === walletItem.key
+        : walletItem.isConnectingTo === walletItem.key;
+      return (
+        <button
+          key={walletItem.key}
+          className="
               flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
               transition-colors disabled:opacity-50 hover:bg-steel-750
             "
-                disabled={isConnecting || !isChecked || !isCheckedService}
-                type="button"
-                onClick={() => handleConnect(wallet.key)}
-              >
-                <div className="flex items-center gap-2">
-                  {wallet.icon ? (
-                    <img alt="wallet" className="w-6 h-6" src={wallet.icon} />
-                  ) : (
-                    <WalletIcon className="w-6 h-6" />
-                  )}
-                  <span className="font-bold text-sm">{wallet.displayName}</span>
-                </div>
-                {isConnecting && <Spinner />}
-                {!isRobinHood && !installed.has(wallet.key) && (
-                  <a
-                    className="text-sm text-dark-100 p-1"
-                    href={wallet.website}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <Download className="w-4 h-4" size={14} />
-                  </a>
-                )}
-              </button>
-            );
-          })}
+          disabled={isConnecting || !isChecked || !isCheckedService}
+          type="button"
+          onClick={() => handleConnect(walletItem.key)}
+        >
+          <div className="flex items-center gap-2">
+            {walletItem.Icon ? (
+              <walletItem.Icon className="w-6 h-6 rounded-md" />
+            ) : walletItem.icon ? (
+              <img alt="" aria-hidden="true" className="w-6 h-6" src={walletItem.icon} />
+            ) : (
+              <WalletIcon className="w-6 h-6" />
+            )}
+            <span className="font-bold text-sm">{walletItem.displayName}</span>
+          </div>
+          {isConnecting && <Spinner />}
+          {!isRobinHood && !installed.has(walletItem.key) && (
+            <a
+              className="text-sm text-dark-100 p-1"
+              href={walletItem.website}
+              rel="noopener noreferrer"
+              target="_blank"
+              onClick={e => e.stopPropagation()}
+            >
+              <Download className="w-4 h-4" size={14} />
+            </a>
+          )}
+        </button>
+      );
+    };
+
+    const renderDownloadWalletRow = walletItem => {
+      const Icon = walletItem.Icon || WalletIcon;
+      return (
+        <a
+          key={walletItem.key}
+          className="flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg transition-colors hover:bg-steel-750"
+          href={walletItem.website}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <div className="flex items-center gap-2">
+            <Icon className="w-6 h-6 rounded-md" />
+            <span className="font-bold text-sm">{walletItem.displayName}</span>
+          </div>
+          <Download className="w-4 h-4 text-dark-100" size={14} />
+        </a>
+      );
+    };
+
+    // Name-match a detected EVM connector against our curated wallet list (e.g. a
+    // browser's EIP-6963 "MetaMask" connector matches the 'metamask' entry) so it gets
+    // the brand icon and isn't also listed as a separate download prompt.
+    const matchPopularEvmWallet = displayName => {
+      const name = displayName?.toLowerCase() || '';
+      return POPULAR_EVM_WALLETS.find(pw => name.includes(pw.key));
+    };
+
+    let evmConnectableWallets = [];
+    let evmDownloadWallets = [];
+    if (isRobinHood) {
+      const detectedKeys = new Set();
+      evmConnectableWallets = robinhoodConnectors.map(connector => {
+        const match = matchPopularEvmWallet(connector.displayName);
+        if (match) detectedKeys.add(match.key);
+        return match ? { ...connector, Icon: match.Icon } : connector;
+      });
+
+      // Coinbase's SDK connector works without a detected extension (it opens its own
+      // popup, falling back to a QR code) — offer it as a connect button unless its
+      // browser extension was already picked up above.
+      if (!detectedKeys.has('coinbase') && coinbaseConnector) {
+        const coinbasePopular = POPULAR_EVM_WALLETS.find(pw => pw.key === 'coinbase');
+        evmConnectableWallets.push({ ...coinbasePopular, key: coinbaseConnector.id });
+        detectedKeys.add('coinbase');
+      }
+
+      evmDownloadWallets = POPULAR_EVM_WALLETS.filter(pw => !detectedKeys.has(pw.key));
+    }
+
+    return (
+      <>
+        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
+          {isRobinHood ? (
+            <>
+              {evmConnectableWallets.map(renderWalletRow)}
+              {evmDownloadWallets.map(renderDownloadWalletRow)}
+            </>
+          ) : (
+            sortedCardanoWallets.map(renderWalletRow)
+          )}
         </div>
         <div className="mt-4 md:mt-6">
           <LavaCheckbox
