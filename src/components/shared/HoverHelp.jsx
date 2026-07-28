@@ -100,10 +100,8 @@ export const HoverHelp = ({ hint, className = '', variant = 'help', children = n
       className={`inline-flex ${isIconVariant ? '' : 'font-normal'} ${className}`}
       onMouseEnter={show}
       onMouseLeave={() => setIsVisible(false)}
-      onFocus={isIconVariant ? undefined : show}
-      onBlur={isIconVariant ? undefined : () => setIsVisible(false)}
-      onFocusIn={isIconVariant ? show : undefined}
-      onFocusOut={isIconVariant ? hideIfFocusLeft : undefined}
+      onFocus={show}
+      onBlur={isIconVariant ? hideIfFocusLeft : () => setIsVisible(false)}
       tabIndex={isIconVariant ? -1 : 0}
       role={isIconVariant ? undefined : 'button'}
     >
