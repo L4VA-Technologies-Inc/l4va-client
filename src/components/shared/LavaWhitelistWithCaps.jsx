@@ -322,9 +322,9 @@ export const LavaWhitelistWithCaps = ({
 
   // EVM equivalent of the backfill above. EVM contract addresses (0x + 40 hex)
   // never match the Cardano policy-id regex, so resolve them here: pull metadata
-  // from the held-token list and mark every valid address verified (there is no
-  // marketplace verification analogue on EVM). This also lets users paste any
-  // contract address manually and have it accepted.
+  // and verification (Blockscout's reputation signal) from the held/chain-wide
+  // token list. This also lets users paste any contract address manually and
+  // have it looked up.
   useEffect(() => {
     if (!isRobinHood) return;
 
@@ -349,7 +349,7 @@ export const LavaWhitelistWithCaps = ({
         assetsNeedingVerification.forEach((asset, index) => {
           const result = results[index];
           updatesByUniqueId[asset.uniqueId] = {
-            isVerified: true,
+            isVerified: result?.isVerified ?? false,
             collectionName: result?.collectionName ?? asset.collectionName ?? null,
             name: result?.name || asset.name || '',
             assetName: result?.assetName || asset.assetName || '',
@@ -460,6 +460,16 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
+  const formatTokenDisplayName = policy => {
+    const baseName = policy.collectionName || policy.name || '';
+    if (!isRobinHood) return baseName;
+
+    const ticker = policy.name || policy.assetName || '';
+    if (!baseName) return ticker;
+    if (!ticker || baseName.toLowerCase() === ticker.toLowerCase()) return baseName;
+    return `${baseName} (${ticker})`;
+  };
+
   const renderAssetItem = (asset, policy) => {
     const searchText = asset.policyId.toLowerCase();
     const highlightText = (text, search) => {
@@ -481,7 +491,7 @@ export const LavaWhitelistWithCaps = ({
       }
     };
 
-    const displayName = policy.collectionName || policy.name;
+    const displayName = formatTokenDisplayName(policy);
     const isVerified = policy.isVerified;
     const verificationBadgeLabel = getVerificationPlatformLabel(policy.verificationPlatform);
 
@@ -560,7 +570,7 @@ export const LavaWhitelistWithCaps = ({
           const currentIsSearching = isSearching[asset.uniqueId];
           const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
-          const resolvedName = asset.collectionName || asset.name;
+          const resolvedName = formatTokenDisplayName(asset);
           const displayValue = focusedUniqueId === asset.uniqueId || !resolvedName ? asset.policyId : resolvedName;
 
           return (
@@ -634,7 +644,11 @@ export const LavaWhitelistWithCaps = ({
                         </>
                       ) : (
                         <div className="flex items-center justify-center py-6 text-dark-100">
-                          {isSearchMode ? 'No matching policies found in your wallet' : 'No policies available'}
+                          {isSearchMode
+                            ? isRobinHood
+                              ? 'No matching tokens found on Robinhood Chain'
+                              : 'No matching policies found in your wallet'
+                            : 'No policies available'}
                         </div>
                       )}
                     </div>
@@ -655,16 +669,22 @@ export const LavaWhitelistWithCaps = ({
                   <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
                     <ShieldCheck className="h-4 w-4" />
                     <span>
-                      {selectedVerificationLabel
-                        ? `Verified collection · ${selectedVerificationLabel}`
-                        : 'Verified collection'}
+                      {isRobinHood
+                        ? 'Verified token · Blockscout'
+                        : selectedVerificationLabel
+                          ? `Verified collection · ${selectedVerificationLabel}`
+                          : 'Verified collection'}
                     </span>
                   </div>
                 )}
                 {asset.policyId && asset.isVerified === false && (
                   <div className="flex items-center gap-1.5 text-sm text-orange-400 -mt-4">
                     <ShieldAlert className="h-4 w-4" />
-                    <span>Unverified collection — cannot be added to a vault</span>
+                    <span>
+                      {isRobinHood
+                        ? 'Unverified token — flagged by Blockscout, add with caution'
+                        : 'Unverified collection — cannot be added to a vault'}
+                    </span>
                   </div>
                 )}
               </div>
