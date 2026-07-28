@@ -479,7 +479,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           <div className="grid grid-cols-2 gap-3">
             <MetricCard
               label={isExpansionMode ? 'Estimated Asset(s) Value' : 'Estimated Value'}
-              value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`}
               hint={
                 isExpansionMode
                   ? 'Total estimated value of your selected assets at current market prices.'
