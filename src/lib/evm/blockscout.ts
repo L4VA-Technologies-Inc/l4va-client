@@ -17,6 +17,10 @@ interface BlockscoutTokenRaw {
   symbol?: string | null;
   type?: string; // 'ERC-20' | 'ERC-721' | 'ERC-1155'
   decimals?: string | null;
+  // Blockscout's own scam/reputation signal ('ok' | 'scam' | ...); the closest
+  // thing to third-party token verification available on Robinhood Chain.
+  reputation?: string | null;
+  holders_count?: string | null;
 }
 
 interface BlockscoutTokenBalanceRaw {
@@ -39,9 +43,23 @@ export interface BlockscoutWalletToken {
   decimals: number | null;
   /** Raw value as returned by Blockscout (base units for ERC-20). */
   value: string;
+  /** True when Blockscout's reputation signal for this token is 'ok'. */
+  isVerified: boolean;
+  holders: number | null;
 }
 
 const normalizeBaseUrl = (url: string): string => url.replace(/\/+$/, '');
+
+const normalizeToken = (token: BlockscoutTokenRaw, fallbackAddress: string, value = '0'): BlockscoutWalletToken => ({
+  address: token.address ?? token.address_hash ?? fallbackAddress,
+  name: token.name ?? '',
+  symbol: token.symbol ?? '',
+  type: token.type ?? '',
+  decimals: token.decimals != null && token.decimals !== '' ? Number(token.decimals) : null,
+  value,
+  isVerified: token.reputation === 'ok',
+  holders: token.holders_count != null ? Number(token.holders_count) : null,
+});
 
 /**
  * Fetch every ERC-20 / ERC-721 / ERC-1155 token the given address holds,
@@ -77,14 +95,7 @@ export const fetchWalletTokens = async (address: string): Promise<BlockscoutWall
       const token = item.token ?? {};
       const contract = token.address ?? token.address_hash;
       if (!contract) return;
-      tokens.push({
-        address: contract,
-        name: token.name ?? '',
-        symbol: token.symbol ?? '',
-        type: token.type ?? '',
-        decimals: token.decimals != null && token.decimals !== '' ? Number(token.decimals) : null,
-        value: item.value ?? '0',
-      });
+      tokens.push(normalizeToken(token, contract, item.value ?? '0'));
     });
 
     if (!data.next_page_params) break;
@@ -112,17 +123,42 @@ export const fetchTokenMetadata = async (address: string): Promise<BlockscoutWal
     if (!response.ok) return null;
 
     const token: BlockscoutTokenRaw = await response.json();
-    const contract = token.address ?? token.address_hash ?? address;
-
-    return {
-      address: contract,
-      name: token.name ?? '',
-      symbol: token.symbol ?? '',
-      type: token.type ?? '',
-      decimals: token.decimals != null && token.decimals !== '' ? Number(token.decimals) : null,
-      value: '0',
-    };
+    return normalizeToken(token, address);
   } catch {
     return null;
   }
+};
+
+/**
+ * Search tokens indexed chain-wide by Blockscout (not scoped to any wallet),
+ * so the vault-creation whitelist can surface assets the creator doesn't hold —
+ * e.g. popular/verified tokens on Robinhood Chain. An empty query returns
+ * Blockscout's default listing, which is sorted by holder count.
+ */
+export const searchTokens = async (query = ''): Promise<BlockscoutWalletToken[]> => {
+  if (!BLOCKSCOUT_URL) {
+    console.error('VITE_ROBINHOOD_BLOCKSCOUT_URL is not set; cannot search EVM tokens');
+    return [];
+  }
+
+  const base = normalizeBaseUrl(BLOCKSCOUT_URL);
+  const params = new URLSearchParams();
+  if (query) params.set('q', query);
+
+  const response = await fetch(`${base}/api/v2/tokens?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Blockscout responded ${response.status}`);
+  }
+
+  const data: BlockscoutTokensResponse = await response.json();
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  return items
+    .map(item => {
+      // The search endpoint returns bare token objects, not { token, value } rows.
+      const token = (item.token ?? item) as BlockscoutTokenRaw;
+      const contract = token.address ?? token.address_hash;
+      return contract ? normalizeToken(token, contract) : null;
+    })
+    .filter((token): token is BlockscoutWalletToken => token !== null);
 };
