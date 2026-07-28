@@ -314,17 +314,19 @@ export const LoginModal = () => {
         ? isRobinhoodConnecting && robinhoodConnectVars?.connector?.id === walletItem.key
         : walletItem.isConnectingTo === walletItem.key;
       return (
-        <button
+        <div
           key={walletItem.key}
           className="
               flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
-              transition-colors disabled:opacity-50 hover:bg-steel-750
+              transition-colors hover:bg-steel-750
             "
-          disabled={isConnecting || !isChecked || !isCheckedService}
-          type="button"
-          onClick={() => handleConnect(walletItem.key)}
         >
-          <div className="flex items-center gap-2">
+          <button
+            className="flex items-center gap-2 flex-1 text-left disabled:opacity-50"
+            disabled={isConnecting || !isChecked || !isCheckedService}
+            type="button"
+            onClick={() => handleConnect(walletItem.key)}
+          >
             {walletItem.Icon ? (
               <walletItem.Icon className="w-6 h-6 rounded-md" />
             ) : walletItem.icon ? (
@@ -333,20 +335,22 @@ export const LoginModal = () => {
               <WalletIcon className="w-6 h-6" />
             )}
             <span className="font-bold text-sm">{walletItem.displayName}</span>
+          </button>
+          <div className="flex items-center">
+            {isConnecting && <Spinner />}
+            {!isRobinHood && !installed.has(walletItem.key) && (
+              <a
+                className="text-sm text-dark-100 p-1"
+                href={walletItem.website}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label={`Download ${walletItem.displayName}`}
+              >
+                <Download className="w-4 h-4" size={14} />
+              </a>
+            )}
           </div>
-          {isConnecting && <Spinner />}
-          {!isRobinHood && !installed.has(walletItem.key) && (
-            <a
-              className="text-sm text-dark-100 p-1"
-              href={walletItem.website}
-              rel="noopener noreferrer"
-              target="_blank"
-              onClick={e => e.stopPropagation()}
-            >
-              <Download className="w-4 h-4" size={14} />
-            </a>
-          )}
-        </button>
+        </div>
       );
     };
 
