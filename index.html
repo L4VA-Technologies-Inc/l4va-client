@@ -43,7 +43,7 @@
     <title>L4VA - The Future of Asset Fractionalization</title>
     <script>
       (function () {
-        // Preload the hero banner only on the main landing route.
+        // Preload the generated background texture only on the main landing route.
         if (window.location.pathname !== "/") return;
 
         var link = document.createElement("link");
@@ -51,12 +51,7 @@
         link.as = "image";
         link.type = "image/webp";
         link.fetchPriority = "high";
-        link.href = "/assets/banner-bg.webp";
-        link.setAttribute(
-          "imagesrcset",
-          "/assets/banner-bg-768.webp 768w, /assets/banner-bg-1280.webp 1280w, /assets/banner-bg.webp 1920w"
-        );
-        link.setAttribute("imagesizes", "100vw");
+        link.href = "/assets/ai-bg-texture.webp";
 
         document.head.appendChild(link);
       })();
