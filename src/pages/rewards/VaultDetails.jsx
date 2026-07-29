@@ -51,7 +51,9 @@ export const VaultDetails = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
             <div className="flex items-center gap-4">
               <p className="text-steel-400 font-mono text-sm">{vaultId}</p>
-              {isWalletConnected && <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />}
+              {isWalletConnected && (
+                <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />
+              )}
             </div>
           </div>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
