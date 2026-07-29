@@ -1,21 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Wallet, Lock, Unlock, Layers, ArrowLeft } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
 
-import { useAuth } from '@/lib/auth/auth';
-import { useNetwork } from '@/hooks/useNetwork';
 import { useVestingSummary, useActiveVesting } from '@/hooks/useRewardsVesting';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { VestingProgress, VestingGrouped } from '@/components/rewards';
 
 export const VestingPage = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
-  const { isAuthenticated } = useAuth();
-  const { isRobinHood } = useNetwork();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
   const [groupBy, setGroupBy] = useState('none'); // 'none', 'epoch', 'vault'
-  const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
 
   const { data: vestingSummaryData, isLoading: isLoadingSummary } = useVestingSummary(walletAddress);
   const { data: activeVestingData, isLoading: isLoadingActive } = useActiveVesting(walletAddress);
@@ -39,7 +34,7 @@ export const VestingPage = () => {
   const activePositions = activeVestingData || [];
 
   // Wallet not connected state
-  if (isRobinhoodRewardsSession || !isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
@@ -49,11 +44,11 @@ export const VestingPage = () => {
               <div className="text-center">
                 <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
                 <h2 className="text-xl font-semibold text-white mb-2">
-                  {isRobinhoodRewardsSession ? 'Rewards Not Tracked for Robinhood Yet' : 'Connect Your Wallet'}
+                  {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
                 </h2>
                 <p className="text-steel-400">
-                  {isRobinhoodRewardsSession
-                    ? 'Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch to a Cardano wallet to view your vesting positions.'
+                  {isRobinHood
+                    ? 'Please connect your Robinhood wallet to view your vesting positions.'
                     : 'Please connect your wallet to view your vesting positions'}
                 </p>
               </div>

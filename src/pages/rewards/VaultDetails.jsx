@@ -1,22 +1,17 @@
 import { useParams, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
 import { useState } from 'react';
 
-import { useAuth } from '@/lib/auth/auth';
-import { useNetwork } from '@/hooks/useNetwork';
 import { useWalletVaultReward, useVaultScores } from '@/hooks/useRewardsVaults';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { formatCompactNumber } from '@/utils/core.utils';
 import { RewardSourceBadge, VaultLeaderboard, EpochSelector } from '@/components/rewards';
 
 export const VaultDetails = () => {
   const navigate = useNavigate();
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
-  const { isAuthenticated } = useAuth();
-  const { isRobinHood } = useNetwork();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
   const [selectedEpochIds, setSelectedEpochIds] = useState([]);
-  const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
 
   const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
 
@@ -41,7 +36,7 @@ export const VaultDetails = () => {
     );
   }
 
-  if (isRobinhoodRewardsSession || !isConnected || !vaultRewardData) {
+  if (!isWalletConnected || !walletAddress || !vaultRewardData) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -56,30 +51,32 @@ export const VaultDetails = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Vault Rewards</h1>
             <div className="flex items-center gap-4">
               <p className="text-steel-400 font-mono text-sm">{vaultId}</p>
-              {isConnected && <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />}
+              {isWalletConnected && <EpochSelector selectedEpochIds={selectedEpochIds} onChange={setSelectedEpochIds} />}
             </div>
           </div>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl overflow-hidden">
             <div className="p-12">
               <div className="text-center text-steel-400">
-                {isRobinhoodRewardsSession && (
+                {!isWalletConnected && (
                   <div>
-                    <div className="text-white font-medium mb-2">Rewards Not Tracked for Robinhood Yet</div>
+                    <div className="text-white font-medium mb-2">
+                      {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+                    </div>
                     <div className="text-sm">
-                      Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch
-                      to a Cardano wallet to view vault rewards.
+                      {isRobinHood
+                        ? 'Please connect your Robinhood wallet to view vault rewards.'
+                        : 'Please connect your wallet to view vault rewards.'}
                     </div>
                   </div>
                 )}
-                {!isRobinhoodRewardsSession && !isConnected && <div>Please connect your wallet</div>}
-                {isConnected && !walletAddress && <div>Waiting for wallet address...</div>}
-                {isConnected && walletAddress && rewardError && (
+                {isWalletConnected && !walletAddress && <div>Waiting for wallet address...</div>}
+                {isWalletConnected && walletAddress && rewardError && (
                   <div>
                     <div className="text-red-400 mb-2">Error loading vault data</div>
                     <div className="text-sm">{rewardError.message || String(rewardError)}</div>
                   </div>
                 )}
-                {isConnected &&
+                {isWalletConnected &&
                   walletAddress &&
                   !rewardError &&
                   !vaultRewardData &&

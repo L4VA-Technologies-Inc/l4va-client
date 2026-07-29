@@ -1,12 +1,10 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Calendar, Wallet, ArrowLeft, TrendingUp } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
 
-import { useAuth } from '@/lib/auth/auth';
-import { useNetwork } from '@/hooks/useNetwork';
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { EpochRewardRow, TotalEarnedCard } from '@/components/rewards';
 import { Pagination } from '@/components/shared/Pagination.jsx';
 
@@ -14,10 +12,7 @@ const EPOCHS_PER_PAGE = 20;
 
 export const EpochsList = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
-  const { isAuthenticated } = useAuth();
-  const { isRobinHood } = useNetwork();
-  const isRobinhoodRewardsSession = isAuthenticated && isRobinHood;
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
   const [page, setPage] = React.useState(1);
 
   const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs(EPOCHS_PER_PAGE, (page - 1) * EPOCHS_PER_PAGE);
@@ -38,7 +33,7 @@ export const EpochsList = () => {
   }, [historyData]);
 
   // Wallet not connected state
-  if (isRobinhoodRewardsSession || !isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
@@ -47,11 +42,11 @@ export const EpochsList = () => {
             <div className="text-center">
               <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-white mb-2">
-                {isRobinhoodRewardsSession ? 'Rewards Not Tracked for Robinhood Yet' : 'Connect Your Wallet'}
+                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
               </h2>
               <p className="text-steel-400">
-                {isRobinhoodRewardsSession
-                  ? 'Robinhood logins are supported on the site, but rewards stats are not tracked for them yet. Switch to a Cardano wallet to view your epoch rewards.'
+                {isRobinHood
+                  ? 'Please connect your Robinhood wallet to view your epoch rewards.'
                   : 'Please connect your wallet to view your epoch rewards'}
               </p>
             </div>
