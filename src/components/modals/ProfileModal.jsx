@@ -129,20 +129,15 @@ export const ProfileModal = () => {
           <FolderOpen size={20} />
           My vaults
         </SecondaryButton>
+        <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/rewards')}>
+          <Gift size={20} />
+          My rewards
+        </SecondaryButton>
         {!isRobinHood && (
-          <>
-            <SecondaryButton
-              className="w-full justify-start gap-3 text-left"
-              onClick={() => handleNavigation('/rewards')}
-            >
-              <Gift size={20} />
-              My rewards
-            </SecondaryButton>
-            <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
-              <ArrowLeftRight size={20} />
-              Swap ADA/$VLRM
-            </SecondaryButton>
-          </>
+          <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
+            <ArrowLeftRight size={20} />
+            Swap ADA/$VLRM
+          </SecondaryButton>
         )}
 
         <div className="border-t border-white/10 my-4" />
