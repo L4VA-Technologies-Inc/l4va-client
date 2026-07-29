@@ -2,6 +2,13 @@
  * Messages for proposal execution status
  */
 
+const getPaymentAsset = () => {
+  const selectedCurrency = typeof localStorage !== 'undefined' ? localStorage.getItem('selectedCurrency') : null;
+  if (selectedCurrency === 'eth') return 'ETH';
+  if (selectedCurrency === 'usdt') return 'USD';
+  return 'ADA';
+};
+
 export const PROPOSAL_EXECUTION_MESSAGES = {
   // In Progress messages
   inProgress: {
@@ -20,11 +27,12 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
   // Successfully executed messages
   success: {
     burning: 'Assets have been successfully burned and removed from the vault.',
-    distribution: 'ADA has been successfully distributed to all eligible VT holders.',
+    distribution: currencyLabel => `${currencyLabel} has been successfully distributed to all eligible VT holders.`,
     staking: 'Assets have been successfully staked according to the proposal.',
     asset_whitelist_update: 'New assets have been successfully added to the vault whitelist.',
     expansion: 'Vault expansion has been successfully opened. New assets can now be contributed.',
-    acquire_expansion: 'Acquire expansion has been successfully opened. The vault is now accepting ADA contributions.',
+    acquire_expansion: currencyLabel =>
+      `Acquire expansion has been successfully opened. The vault is now accepting ${currencyLabel} contributions.`,
     termination: {
       default: 'Vault termination has been successfully completed.',
       dao: 'Vault has been successfully terminated by governance vote.',
@@ -47,10 +55,11 @@ export const TERMINATION_STATUS_MESSAGES = {
   nft_burning: 'Burning NFTs - Sending NFTs to burn wallet...',
   nft_burned: 'NFTs burned successfully - Proceeding to liquidity removal...',
   lp_removal_pending: 'Removing liquidity - Sending LP tokens to VyFi...',
-  lp_removal_awaiting: 'Awaiting liquidity return - Waiting for VyFi to return VT and ADA...',
-  lp_return_received: 'Liquidity returned - VT and ADA received from VyFi...',
+  lp_removal_awaiting: currencyLabel =>
+    `Awaiting liquidity return - Waiting for VyFi to return VT and ${currencyLabel}...`,
+  lp_return_received: currencyLabel => `Liquidity returned - VT and ${currencyLabel} received from VyFi...`,
   vt_burned: 'VT tokens burned - Preparing treasury distribution...',
-  ada_in_treasury: 'ADA transferred to treasury - Creating claims for VT holders...',
+  ada_in_treasury: currencyLabel => `${currencyLabel} transferred to treasury - Creating claims for VT holders...`,
   claims_created: 'Claims created - VT holders can now claim their share...',
   claims_processing: 'Claims in progress - VT holders are claiming their distributions...',
   claims_complete: 'All claims processed - Finalizing vault termination...',
@@ -78,12 +87,14 @@ export const getSuccessMessage = (proposalType, vault = null) => {
     return PROPOSAL_EXECUTION_MESSAGES.success.termination.default;
   }
 
-  return PROPOSAL_EXECUTION_MESSAGES.success[proposalType] || PROPOSAL_EXECUTION_MESSAGES.success.default;
+  const message = PROPOSAL_EXECUTION_MESSAGES.success[proposalType] || PROPOSAL_EXECUTION_MESSAGES.success.default;
+  return typeof message === 'function' ? message(getPaymentAsset()) : message;
 };
 
 /**
  * Get termination status message
  */
 export const getTerminationStatusMessage = status => {
-  return TERMINATION_STATUS_MESSAGES[status] || TERMINATION_STATUS_MESSAGES.default;
+  const message = TERMINATION_STATUS_MESSAGES[status] || TERMINATION_STATUS_MESSAGES.default;
+  return typeof message === 'function' ? message(getPaymentAsset()) : message;
 };

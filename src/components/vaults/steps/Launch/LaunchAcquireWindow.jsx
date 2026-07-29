@@ -2,9 +2,12 @@ import { Edit } from 'lucide-react';
 
 import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
 import { HoverHelp } from '@/components/shared/HoverHelp';
-import { LIQUIDITY_POOL_CONTRIBUTION_HINT, RESERVE_HINT } from '@/components/vaults/constants/vaults.constants';
+import { getLiquidityPoolContributionHint, getReserveHint } from '@/components/vaults/constants/vaults.constants';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
+  const { currencyLabel } = useCurrency();
+
   const formatTime = (type, time) => {
     if (type === 'upon-asset-window-closing') {
       return 'Upon asset window closing';
@@ -51,7 +54,7 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
           <div>
             <div className="flex items-center gap-2 min-w-0">
               <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Reserve (%)</p>
-              <HoverHelp hint={RESERVE_HINT} />
+              <HoverHelp hint={getReserveHint(currencyLabel)} />
             </div>
             <p className="break-words">{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
           </div>
@@ -60,7 +63,7 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
               <p className="uppercase font-semibold text-dark-100 break-words min-w-0">
                 Liquidity Pool (LP) Contribution (%)
               </p>
-              <HoverHelp hint={LIQUIDITY_POOL_CONTRIBUTION_HINT} />
+              <HoverHelp hint={getLiquidityPoolContributionHint(currencyLabel)} />
             </div>
             <p className="break-words">
               {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}

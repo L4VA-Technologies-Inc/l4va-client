@@ -15,6 +15,7 @@ import {
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const ConfigureVault = ({
   data,
@@ -29,6 +30,7 @@ export const ConfigureVault = ({
   onRemoveWhitelistItem,
 }) => {
   const { isCardano } = useNetwork();
+  const { currencyLabel } = useCurrency();
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -118,7 +120,7 @@ export const ConfigureVault = ({
               checked={data.allowAcquireExpansion || false}
               onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
               label="Allow Acquire Expansion"
-              description="If enabled, vault token holders can create governance proposals to open additional acquire windows (ADA → Vault Token minting) after the vault is locked."
+              description={`If enabled, vault token holders can create governance proposals to open additional acquire windows (${currencyLabel} to Vault Token minting) after the vault is locked.`}
             />
           </div>
 

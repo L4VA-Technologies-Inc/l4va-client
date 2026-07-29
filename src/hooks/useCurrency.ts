@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 type CurrencyType = 'ada' | 'usdt' | 'eth';
 type CurrencySymbol = '₳' | '$' | 'ETH ';
+type CurrencyLabel = 'ADA' | 'USD' | 'ETH';
 
 // Normalize currency value to ensure it's always valid
 const normalizeCurrency = (value: string | null): CurrencyType => {
@@ -21,6 +22,7 @@ const notifySubscribers = (newCurrency: CurrencyType) => {
 export const useCurrency = (): {
   currency: CurrencyType;
   currencySymbol: CurrencySymbol;
+  currencyLabel: CurrencyLabel;
   isAda: boolean;
   pickByCurrency: <T>(values: { ada: T; usd: T; eth: T }) => T;
   updateCurrency: (newCurrency: CurrencyType) => void;
@@ -47,6 +49,7 @@ export const useCurrency = (): {
   }, []);
 
   const currencySymbol: CurrencySymbol = currency === 'ada' ? '₳' : currency === 'eth' ? 'ETH ' : '$';
+  const currencyLabel: CurrencyLabel = currency === 'ada' ? 'ADA' : currency === 'eth' ? 'ETH' : 'USD';
   const isAda = currency === 'ada';
 
   // Select the value matching the active currency. Backend returns ada/usd/eth-denominated
@@ -58,5 +61,5 @@ export const useCurrency = (): {
     [currency]
   );
 
-  return { currency, currencySymbol, isAda, pickByCurrency, updateCurrency };
+  return { currency, currencySymbol, currencyLabel, isAda, pickByCurrency, updateCurrency };
 };

@@ -2,20 +2,17 @@ import { Trash } from 'lucide-react';
 
 import { Label } from '@/components/ui/label';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
+import { useCurrency } from '@/hooks/useCurrency';
 
-const presetHelpfulHint = {
+const getPresetHelpfulHint = currencyLabel => ({
   simple:
     'Simple vault where Contributors send assets and keep all pro-rata Vault Tokens based on value of assets contributed (floor price for NFTs / spot price for CNTs at end of Contribution window).\n',
-  contributors:
-    'Contributors send assets and ADA for LP contribution, then keep all pro-rata Vault Tokens based on value of assets contributed (floor price for NFTs / spot price for CNTs at end of Contribution window) MINUS Vault Token LP contribution.',
-  acquirers:
-    'Simple vault where Contributors send assets to receive ONLY pro-rata of ADA MINUS the LP ADA contribution. Acquirers send ADA to receive pro-rata Vault Tokens MINUS vault token LP contribution.',
-  acquirers_50:
-    'Simple vault where Contributors send assets to receive 50% pro-rata of Vault Token MINUS LP contribution AND pro-rata of ADA sent by acquirers MINUS ADA LP contribution. Acquirers send ADA to receive 50% of pro-rata vault token MINUS Vault Token LP contribution.',
+  contributors: `Contributors send assets and ${currencyLabel} for LP contribution, then keep all pro-rata Vault Tokens based on value of assets contributed (floor price for NFTs / spot price for CNTs at end of Contribution window) MINUS Vault Token LP contribution.`,
+  acquirers: `Simple vault where Contributors send assets to receive ONLY pro-rata of ${currencyLabel} MINUS the LP ${currencyLabel} contribution. Acquirers send ${currencyLabel} to receive pro-rata Vault Tokens MINUS vault token LP contribution.`,
+  acquirers_50: `Simple vault where Contributors send assets to receive 50% pro-rata of Vault Token MINUS LP contribution AND pro-rata of ${currencyLabel} sent by acquirers MINUS ${currencyLabel} LP contribution. Acquirers send ${currencyLabel} to receive 50% of pro-rata vault token MINUS Vault Token LP contribution.`,
   advanced: 'Customizable vault based on user settings for all fields.',
-  acquire_only:
-    'Acquire-Only vault with no Contribution phase. Acquirers send ADA directly to receive pro-rata Vault Tokens (100%). ADA goes straight to the vault treasury. Vault locks once the acquire window closes and the minimum ADA threshold is met.',
-};
+  acquire_only: `Acquire-Only vault with no Contribution phase. Acquirers send ${currencyLabel} directly to receive pro-rata Vault Tokens (100%). ${currencyLabel} goes straight to the vault treasury. Vault locks once the acquire window closes and the minimum ${currencyLabel} threshold is met.`,
+});
 
 export const LavaRadio = ({
   name,
@@ -29,6 +26,8 @@ export const LavaRadio = ({
   isOptionDeletable,
   deletingOptionId,
 }) => {
+  const { currencyLabel } = useCurrency();
+  const presetHelpfulHint = getPresetHelpfulHint(currencyLabel);
   const firstOptionId = options.length > 0 ? `${name}-${options[0].name}` : undefined;
 
   return (

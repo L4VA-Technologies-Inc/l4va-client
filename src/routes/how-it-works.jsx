@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 
+import { useNetwork } from '@/hooks/useNetwork';
+import { useCurrency } from '@/hooks/useCurrency';
+
 export const HowItWorks = () => {
+  const { isRobinHood } = useNetwork();
+  const { currencyLabel } = useCurrency();
+  const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
+
   return (
     <div className="container mx-auto px-4 py-12 xl:px-0 text-primary-text">
       <h1 className="text-3xl md:text-4xl font-russo font-bold mb-8 text-center">How it works</h1>
@@ -30,17 +37,17 @@ export const HowItWorks = () => {
         <section>
           <h2 className="text-2xl font-semibold mb-4">What can I put in a vault?</h2>
           <p>
-            Vaults can hold a wide range of Cardano-native digital assets, such as NFTs, on-chain RWAs, and fungible
-            tokens. As the protocol expands, more asset types and integrations will be supported.
+            Vaults can hold a wide range of {nativeAssetDescription} digital assets, such as NFTs, on-chain RWAs, and
+            fungible tokens. As the protocol expands, more asset types and integrations will be supported.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">How do I acquire vault tokens?</h2>
           <p>
-            During the acquire stage, ADA holders can send ADA into the vault in exchange for fractional governance
-            tokens. These vault tokens represent ownership rights, governance power, and access to future rewards tied
-            to the vault’s assets.
+            During the acquire stage, {currencyLabel} holders can send {currencyLabel} into the vault in exchange for
+            fractional governance tokens. These vault tokens represent ownership rights, governance power, and access to
+            future rewards tied to the vault’s assets.
           </p>
         </section>
 
@@ -48,9 +55,9 @@ export const HowItWorks = () => {
           <h2 className="text-2xl font-semibold mb-4">How do I contribute?</h2>
           <p>
             If you hold eligible assets, you can send them directly into a vault during its contribution stage.
-            Contributors receive governance tokens proportional to the value of their assets, and receive ADA for the
-            percentage of tokens offered to new acquirers, giving them both liquidity and voting rights over the vault’s
-            future.
+            Contributors receive governance tokens proportional to the value of their assets, and receive{' '}
+            {currencyLabel} for the percentage of tokens offered to new acquirers, giving them both liquidity and voting
+            rights over the vault’s future.
           </p>
         </section>
 

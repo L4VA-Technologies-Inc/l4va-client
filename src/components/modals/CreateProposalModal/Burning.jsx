@@ -3,8 +3,10 @@ import { useEffect, useState, useRef } from 'react';
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Burning({ onClose, vaultId, onDataChange, error }) {
+  const { currencyLabel } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState([]);
@@ -74,7 +76,7 @@ export default function Burning({ onClose, vaultId, onDataChange, error }) {
         onClose={handleClose}
         onConfirm={handleConfirm}
         title="If you wish to proceed with a Burn flow, you must select the box below indicating that you understand how the NFT burn process works."
-        understanding="I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ADA. This action will permanently burn these NFTs and cannot be undone."
+        understanding={`I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ${currencyLabel}. This action will permanently burn these NFTs and cannot be undone.`}
         confirming="By selecting this checkbox and continuing, you confirm that you want to include burning all NFTs in this vault as part of the termination process. I agree to proceed with termination and burning all NFTs."
       />
 

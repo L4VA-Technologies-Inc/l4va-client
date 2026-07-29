@@ -724,10 +724,12 @@ export const VALUE_METHOD_HINT = `Market / Floor Price: Vault value for reserve 
 Fixed: Vault value for reserve % purposes set as fixed amount.
 `;
 
-export const RESERVE_HINT = `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ADA sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ADA, and ADA sent by Acquirers is = 7,999 ADA at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
+export const getReserveHint = currencyLabel =>
+  `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ${currencyLabel} sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ${currencyLabel}, and ${currencyLabel} sent by Acquirers is = 7,999 ${currencyLabel} at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
 
-export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `Input determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool.  
-Note: The net tokens and ADA received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ADA are sent.`;
+export const getLiquidityPoolContributionHint =
+  currencyLabel => `Input determines the amount of ${currencyLabel} and Vault Tokens sent to the initial Liquidity Pool.
+Note: The net tokens and ${currencyLabel} received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ${currencyLabel} are sent.`;
 
 export const ASSET_WHITE_LIST = {
   f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: {

@@ -53,7 +53,7 @@ const rawQuantityToDisplayAmount = (rawQuantity, decimals = 6, maxDisplayDecimal
 };
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
-  const { currencySymbol, pickByCurrency } = useCurrency();
+  const { currencySymbol, currencyLabel, pickByCurrency } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -265,7 +265,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       ? ((tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
       : '0.00';
   const estimatedReceivedLabel = pickByCurrency({
-    ada: 'Estimated ADA Received',
+    ada: `Estimated ${currencyLabel} Received`,
     usd: 'Estimated USD Received',
     eth: 'Estimated ETH Received',
   });
@@ -517,7 +517,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
               <MetricCard
                 label="Estimated Vault Token Received"
                 value={estimatedTickerVal}
-                hint="Estimated number of vault tokens you will receive. Final amount depends on asset values at the end of the contribution window and total ADA sent in the acquire phase."
+                hint={`Estimated number of vault tokens you will receive. Final amount depends on asset values at the end of the contribution window and total ${currencyLabel} sent in the acquire phase.`}
               />
             )}
 

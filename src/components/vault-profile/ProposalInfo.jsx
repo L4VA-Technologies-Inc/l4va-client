@@ -22,6 +22,7 @@ import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const ProposalInfoSkeleton = () => (
   <div>
@@ -104,6 +105,7 @@ const ProposalInfoSkeleton = () => (
 );
 
 export const ProposalInfo = ({ proposalId }) => {
+  const { currencyLabel } = useCurrency();
   const { user } = useAuth();
   const { openModal } = useModalControls();
   const router = useRouter();
@@ -261,7 +263,7 @@ export const ProposalInfo = ({ proposalId }) => {
         if (proposalDistributionInfo) {
           distributionItems.push({
             label: 'Total Amount',
-            value: `${proposalDistributionInfo.totalAdaAmount?.toLocaleString()} ADA`,
+            value: `${proposalDistributionInfo.totalAdaAmount?.toLocaleString()} ${currencyLabel}`,
           });
           distributionItems.push({
             label: 'Eligible Recipients',
@@ -270,7 +272,7 @@ export const ProposalInfo = ({ proposalId }) => {
           if (proposalDistributionInfo.skippedHolders > 0) {
             distributionItems.push({
               label: 'Skipped Recipients',
-              value: `${proposalDistributionInfo.skippedHolders} (below min ${proposalDistributionInfo.minAdaPerRecipient} ADA)`,
+              value: `${proposalDistributionInfo.skippedHolders} (below min ${proposalDistributionInfo.minAdaPerRecipient} ${currencyLabel})`,
             });
           }
         }
@@ -285,7 +287,7 @@ export const ProposalInfo = ({ proposalId }) => {
             const distributedAda = parseInt(proposalDistributionStatus.totalDistributed) / 1000000;
             distributionItems.push({
               label: 'Distributed',
-              value: `${distributedAda.toLocaleString()} ADA`,
+              value: `${distributedAda.toLocaleString()} ${currencyLabel}`,
             });
           }
         }
@@ -413,7 +415,7 @@ export const ProposalInfo = ({ proposalId }) => {
           // Max ADA / Progress
           if (acquireExpansionConfig.noMax) {
             acquireExpansionItems.push({
-              label: 'ADA Limit',
+              label: `${currencyLabel} Limit`,
               value: 'No limit',
             });
           } else if (acquireExpansionConfig.maxAda) {
@@ -421,7 +423,7 @@ export const ProposalInfo = ({ proposalId }) => {
             const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
             const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
             acquireExpansionItems.push({
-              label: 'ADA Limit',
+              label: `${currencyLabel} Limit`,
               value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
             });
           }
@@ -763,8 +765,8 @@ export const ProposalInfo = ({ proposalId }) => {
                     {proposalInfo.vault.terminationMetadata.status === 'claims_created' ||
                     proposalInfo.vault.terminationMetadata.status === 'claims_processing' ? (
                       <div className="text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 rounded p-3">
-                        VT holders can now claim their share of assets and ADA. Check the Claims tab to process your
-                        claim.
+                        VT holders can now claim their share of assets and {currencyLabel}. Check the Claims tab to
+                        process your claim.
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400">
