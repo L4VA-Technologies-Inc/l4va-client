@@ -28,7 +28,7 @@ const Hero = () => {
           <h1
             className="
               uppercase leading-tight text-2xl lg:text-5xl xl:text-6xl tracking-wide lg:tracking-wider
-              bg-gradient-to-r from-[var(--color-orange-500)] to-[#FFD012] bg-clip-text text-transparent
+              bg-gradient-to-r from-[var(--color-orange-500)] to-[var(--color-button-gradient-to)] bg-clip-text text-transparent
             "
           >
             The Future of Asset Fractionalization

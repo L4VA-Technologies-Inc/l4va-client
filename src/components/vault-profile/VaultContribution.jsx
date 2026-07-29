@@ -84,7 +84,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency }) => 
               segments={[
                 {
                   progress: Math.min(progress, 100),
-                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                  className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                 },
               ]}
             />
@@ -138,7 +138,7 @@ const ContributionProgress = ({
                 segments={[
                   {
                     progress: contributionProgress,
-                    className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                    className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                   },
                 ]}
               />
@@ -192,7 +192,7 @@ const ContributionProgress = ({
                             segments={[
                               {
                                 progress: assetProgress,
-                                className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                                className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                               },
                             ]}
                           />
@@ -292,7 +292,7 @@ export const VaultContribution = ({ vault }) => {
                   segments={[
                     {
                       progress: Math.min(acquireProgress, 100),
-                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                      className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                     },
                     ...(reserveThresholdMet
                       ? [
@@ -415,7 +415,7 @@ export const VaultContribution = ({ vault }) => {
           <div className="w-full">
             <div className="text-sm text-dark-100 font-medium">
               Total Acquired Amount:{' '}
-              <span className="text-[#F97316]">
+              <span className="text-orange-500">
                 {`${currencySymbol}${formatNumber(
                   pickByCurrency({
                     ada: vault.assetsPrices.totalAcquiredAda || 0,
