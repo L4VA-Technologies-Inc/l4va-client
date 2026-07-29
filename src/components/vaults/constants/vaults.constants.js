@@ -607,6 +607,24 @@ export const editUpcomingVaultSchema = yup.object({
   tags: yup.array().of(yup.string()).default([]),
 });
 
+// Matches the shape LavaWhitelistWithCaps.addNewAsset() creates, so the asset
+// table (header + row) is visible as soon as the create flow loads instead of
+// showing only the "+" button until the user adds a row themselves.
+export const createEmptyWhitelistAsset = () => ({
+  policyId: '',
+  assetName: '',
+  name: '',
+  count: 1,
+  policyName: 'N/A',
+  collectionName: null,
+  isVerified: null,
+  verificationPlatform: null,
+  valuationMethod: 'market',
+  customPriceAda: null,
+  countCapMin: 1,
+  countCapMax: 1000,
+});
+
 export const initialVaultState = {
   // Step 1: Configure Vault
   name: '',
@@ -628,7 +646,7 @@ export const initialVaultState = {
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
   contributionDuration: MIN_CONTRIBUTION_DURATION_MS,
-  assetsWhitelist: [],
+  assetsWhitelist: [createEmptyWhitelistAsset()],
   valuationCurrency: 'ADA',
   valuationAmount: null,
 
