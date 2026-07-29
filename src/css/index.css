@@ -131,6 +131,27 @@ body {
   @apply bg-primary-background text-primary-text font-satoshi;
 }
 
+.home-bg-texture {
+  background-image:
+    radial-gradient(circle at 18% 42%, rgba(255, 132, 44, 0.16), transparent 30%),
+    linear-gradient(180deg, rgba(0, 3, 34, 0.18) 0%, var(--color-background-primary) 100%),
+    url('/assets/ai-bg-texture.webp');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.78;
+  mask-image: linear-gradient(to bottom, black 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 78%, transparent 100%);
+}
+
+:root[data-chain='robinhood'] .home-bg-texture {
+  background-image:
+    radial-gradient(circle at 18% 42%, rgba(204, 255, 0, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(13, 13, 12, 0.12) 0%, var(--color-background-primary) 100%),
+    url('/assets/ai-bg-texture.webp');
+  filter: saturate(0.78);
+}
+
 .container {
   max-width: 1170px;
 }
