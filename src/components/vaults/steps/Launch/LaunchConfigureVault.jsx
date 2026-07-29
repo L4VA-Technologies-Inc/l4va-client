@@ -50,6 +50,13 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => (
           <p className="break-words">{data.vaultTokenTicker || 'Not set'}</p>
         </div>
         <div>
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Vault Token description</p>
+            <HoverHelp hint="This is the Vault Token description used when registering Vault metadata." />
+          </div>
+          <p className="break-words">{data.tokenDescription || 'No token description'}</p>
+        </div>
+        <div>
           <p className="uppercase font-semibold text-dark-100">Vault brief</p>
           <p className="break-words">{data.description || 'No description'}</p>
         </div>
