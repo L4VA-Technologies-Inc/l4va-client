@@ -47,6 +47,13 @@
   --color-button-gradient-from: #FF842C;
   --color-button-gradient-mid: #FFA53A;
   --color-button-gradient-to: #FFD012;
+  --color-chart-accent: #DC2626;
+  --color-chart-segment-1: #C10007;
+  --color-chart-segment-2: #E7000B;
+  --color-chart-segment-3: #FB2C36;
+  --color-chart-segment-4: #FF6467;
+  --color-chart-segment-5: #F87171;
+  --color-step-accent: #DC2626;
   --color-white: #FFFFFF;
   --color-black: #000000;
 
@@ -80,6 +87,13 @@
   --color-button-gradient-from: #B6E600;
   --color-button-gradient-mid: #CCFF00;
   --color-button-gradient-to: #F2FF4A;
+  --color-chart-accent: var(--color-primary);
+  --color-chart-segment-1: #91B800;
+  --color-chart-segment-2: #B6E600;
+  --color-chart-segment-3: #CCFF00;
+  --color-chart-segment-4: #DFFF33;
+  --color-chart-segment-5: #F2FF4A;
+  --color-step-accent: var(--color-primary);
 }
 
 :root[data-chain='robinhood'] .bg-orange-500.border-orange-500.text-white {

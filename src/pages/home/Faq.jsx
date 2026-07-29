@@ -3,8 +3,8 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const StepCard = ({ number, title, description }) => (
-  <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]">
-    <div className="min-w-[80px] text-center text-4xl sm:text-6xl lg:text-8xl xl:text-[128px] font-extrabold text-red-600 font-satoshi">
+  <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-steel-900/50 backdrop-blur-sm rounded-[10px]">
+    <div className="min-w-[80px] text-center text-4xl sm:text-6xl lg:text-8xl xl:text-[128px] font-extrabold text-[var(--color-step-accent)] font-satoshi">
       {number}
     </div>
     <div className="text-center sm:text-left">
