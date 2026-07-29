@@ -35,6 +35,7 @@ import {
 import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
   CREATE_VAULT_STEPS,
+  createEmptyWhitelistAsset,
   initialVaultState,
   stepFields,
   VAULT_PRIVACY_TYPES,
@@ -166,7 +167,12 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   useEffect(() => {
     if (vault) {
-      setVaultData(vault);
+      setVaultData({
+        ...vault,
+        // A draft saved before any assets were added would otherwise leave the
+        // asset table hidden behind an empty array, same as a brand new vault.
+        assetsWhitelist: vault.assetsWhitelist?.length ? vault.assetsWhitelist : [createEmptyWhitelistAsset()],
+      });
       isPresetManuallyChanged.current = false;
       // Allow the preset resolution effect to re-run for the new vault
       resolvedForVaultRef.current = null;
