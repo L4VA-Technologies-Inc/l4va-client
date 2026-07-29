@@ -9,9 +9,12 @@ import {
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum, substringAddress } from '@/utils/core.utils.js';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
+import { TokenImage } from '@/components/shared/TokenImage';
 
 export const LaunchConfigureVault = ({ data, setCurrentStep }) => {
   const { currencyLabel } = useCurrency();
+  const { isRobinHood } = useNetwork();
 
   return (
     <section className="min-w-0 overflow-x-hidden">
@@ -82,12 +85,19 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => {
                 {data.assetsWhitelist.slice(0, 5).map((asset, index) => {
                   return (
                     <div key={asset.policyId || index} className="space-y-4">
-                      <div className="flex items-center gap-10">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <TokenImage
+                            asset={asset}
+                            alt={asset.policyName || asset.policyId}
+                            chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                            className="h-7 w-7 rounded-full shrink-0"
+                            width={28}
+                            height={28}
+                          />
                           <span>{substringAddress(asset.policyId)}</span>
                         </div>
-                        <span>{asset.policyName}</span>
+                        <span className="min-w-0 truncate">{asset.policyName}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div>

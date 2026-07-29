@@ -1,5 +1,5 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
-import { LazyImage } from '@/components/shared/LazyImage';
+import { TokenImage } from '@/components/shared/TokenImage';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import {
   formatTokenQuantity,
@@ -50,13 +50,13 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange, chainType }) =>
     <div className={isDisabled ? 'opacity-50' : ''}>
       <div className="rounded-md bg-steel-800 px-3 py-2.5 space-y-0">
         <div className="flex items-center gap-3 min-w-0 mb-2">
-          <LazyImage
-            src={ft.src}
+          <TokenImage
+            asset={ft}
             alt={displayName}
+            chainType={ft.chainType || chainType}
             className="rounded-full shrink-0"
             width={32}
             height={32}
-            fallbackSrc="/assets/icons/ada.svg"
           />
           <div className="flex flex-col flex-1 min-w-0 gap-0.5">
             <span className="font-medium text-sm sm:text-base truncate">{displayName}</span>

@@ -17,6 +17,7 @@ const toGroupedPolicy = (token: BlockscoutWalletToken, count: number): GroupedPo
   isVerified: token.isVerified,
   verificationPlatform: null,
   isLpToken: false,
+  imageUrl: token.imageUrl,
 });
 
 const heldTokenCount = (token: BlockscoutWalletToken): number => {
@@ -35,7 +36,8 @@ const mergePolicy = (existing: GroupedPolicy, incoming: GroupedPolicy): GroupedP
   const shouldUpgradeNames =
     (!existing.collectionName && !!incoming.collectionName) ||
     (!existing.name && !!incoming.name) ||
-    (!existing.assetName && !!incoming.assetName);
+    (!existing.assetName && !!incoming.assetName) ||
+    (!existing.imageUrl && !!incoming.imageUrl);
 
   if (!shouldUpgradeVerification && !shouldUpgradeCount && !shouldUpgradeNames) {
     return existing;
@@ -167,6 +169,7 @@ export const useEvmAssets = () => {
             isVerified: false,
             verificationPlatform: null,
             isLpToken: false,
+            imageUrl: null,
           };
         })
       ),

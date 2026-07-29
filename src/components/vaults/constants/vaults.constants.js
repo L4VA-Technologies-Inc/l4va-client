@@ -619,6 +619,8 @@ export const createEmptyWhitelistAsset = () => ({
   collectionName: null,
   isVerified: null,
   verificationPlatform: null,
+  imageUrl: null,
+  image: null,
   valuationMethod: 'market',
   customPriceAda: null,
   countCapMin: 1,

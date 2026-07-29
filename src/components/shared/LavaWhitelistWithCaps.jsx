@@ -11,6 +11,7 @@ import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
 import { useEvmAssets } from '@/hooks/useEvmAssets';
 import { useNetwork } from '@/hooks/useNetwork';
 import { cn } from '@/lib/utils';
+import { TokenImage } from '@/components/shared/TokenImage';
 
 const variants = {
   default: {
@@ -205,6 +206,8 @@ export const LavaWhitelistWithCaps = ({
       collectionName: null,
       isVerified: null,
       verificationPlatform: null,
+      imageUrl: null,
+      image: null,
     });
     triggerSearch(uniqueId, value);
 
@@ -221,6 +224,8 @@ export const LavaWhitelistWithCaps = ({
       collectionName: policy.collectionName ?? null,
       isVerified: policy.isVerified ?? false,
       verificationPlatform: policy.verificationPlatform ?? null,
+      imageUrl: policy.imageUrl ?? policy.image ?? null,
+      image: policy.image ?? policy.imageUrl ?? null,
     });
     setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
     setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
@@ -260,6 +265,8 @@ export const LavaWhitelistWithCaps = ({
               assetName: localMatch.assetName || asset.assetName || '',
               count: localMatch.count || asset.count || 1,
               isLpToken: localMatch.isLpToken ?? false,
+              imageUrl: localMatch.imageUrl ?? asset.imageUrl ?? asset.image ?? null,
+              image: localMatch.image ?? localMatch.imageUrl ?? asset.image ?? asset.imageUrl ?? null,
             };
           } else {
             needsApiLookup.push(asset);
@@ -280,6 +287,8 @@ export const LavaWhitelistWithCaps = ({
               assetName: result.assetName || asset.assetName || '',
               count: result.count || asset.count || 1,
               isLpToken: result.isLpToken ?? false,
+              imageUrl: result.imageUrl ?? asset.imageUrl ?? asset.image ?? null,
+              image: result.image ?? result.imageUrl ?? asset.image ?? asset.imageUrl ?? null,
             };
           });
         }
@@ -354,6 +363,8 @@ export const LavaWhitelistWithCaps = ({
             name: result?.name || asset.name || '',
             assetName: result?.assetName || asset.assetName || '',
             count: result?.count || asset.count || 1,
+            imageUrl: result?.imageUrl ?? asset.imageUrl ?? asset.image ?? null,
+            image: result?.image ?? result?.imageUrl ?? asset.image ?? asset.imageUrl ?? null,
           };
         });
 
@@ -407,6 +418,8 @@ export const LavaWhitelistWithCaps = ({
         collectionName: null,
         isVerified: null,
         verificationPlatform: null,
+        imageUrl: null,
+        image: null,
       });
       setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
     } else {
@@ -426,6 +439,8 @@ export const LavaWhitelistWithCaps = ({
       collectionName: null,
       isVerified: null,
       verificationPlatform: null,
+      imageUrl: null,
+      image: null,
       valuationMethod: 'market',
       customPriceAda: null,
       uniqueId: Date.now(),
@@ -454,6 +469,8 @@ export const LavaWhitelistWithCaps = ({
             ...(policyData.verificationPlatform !== undefined && {
               verificationPlatform: policyData.verificationPlatform,
             }),
+            ...(policyData.imageUrl !== undefined && { imageUrl: policyData.imageUrl }),
+            ...(policyData.image !== undefined && { image: policyData.image }),
           }
         : asset
     );
@@ -505,6 +522,14 @@ export const LavaWhitelistWithCaps = ({
         }`}
         onClick={isVerified ? () => selectPolicyId(asset.uniqueId, policy) : undefined}
       >
+        <TokenImage
+          asset={policy}
+          alt={displayName || policy.policyId}
+          chainType={isRobinHood ? 'robinhood' : 'cardano'}
+          className="h-8 w-8 rounded-full shrink-0"
+          width={32}
+          height={32}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <div className="font-medium text-white truncate">{highlightText(displayName, searchText)}</div>
@@ -666,15 +691,25 @@ export const LavaWhitelistWithCaps = ({
                   return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].isVerified`]}</p>;
                 })()}
                 {asset.policyId && asset.isVerified === true && (
-                  <div className="flex items-center gap-1.5 text-sm text-green-400 -mt-4">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>
-                      {isRobinHood
-                        ? 'Verified token · Blockscout'
-                        : selectedVerificationLabel
-                          ? `Verified collection · ${selectedVerificationLabel}`
-                          : 'Verified collection'}
-                    </span>
+                  <div className="flex items-center gap-2 text-sm text-green-400 -mt-4">
+                    <TokenImage
+                      asset={asset}
+                      alt={resolvedName || asset.policyId}
+                      chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                      className="h-6 w-6 rounded-full shrink-0"
+                      width={24}
+                      height={24}
+                    />
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <ShieldCheck className="h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {isRobinHood
+                          ? 'Verified token · Blockscout'
+                          : selectedVerificationLabel
+                            ? `Verified collection · ${selectedVerificationLabel}`
+                            : 'Verified collection'}
+                      </span>
+                    </div>
                   </div>
                 )}
                 {asset.policyId && asset.isVerified === false && (
