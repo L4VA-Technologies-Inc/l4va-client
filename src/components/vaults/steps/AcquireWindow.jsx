@@ -25,7 +25,9 @@ export const AcquireWindow = ({
   const { currencyLabel: assetSymbol } = useCurrency();
   const { isRobinHood } = useNetwork();
   const maxAcquireThreshold = 100000;
-  const minAcquireThresholdRangeHint = `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
+  const minAcquireThresholdRangeHint = isRobinHood
+    ? `Allowed range when set: 0.01 to 100,000 ${assetSymbol}.`
+    : `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
   const handleChange = e => {
     const { name, value } = e.target;
