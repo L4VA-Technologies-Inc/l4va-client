@@ -4,13 +4,19 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 
 const getBackgroundColor = index => {
-  const colors = ['#c10007', '#e7000b', '#fb2c36', '#ff6467'];
+  const colors = [
+    'var(--color-chart-segment-1)',
+    'var(--color-chart-segment-2)',
+    'var(--color-chart-segment-3)',
+    'var(--color-chart-segment-4)',
+    'var(--color-chart-segment-5)',
+  ];
   return colors[index] || colors[colors.length - 1];
 };
 
 const StatCard = ({ value, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-red-600 text-3xl xl:text-4xl font-bold mb-2">{value}</p>
+    <p className="font-russo text-[var(--color-chart-accent)] text-3xl xl:text-4xl font-bold mb-2">{value}</p>
     <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
   </div>
 );
@@ -27,12 +33,12 @@ const ProgressBar = ({ items, title }) => {
 
   return (
     <div className="mb-16">
-      <h2 className="text-2xl lg:text-5xl xl:text-4xl font-extrabold text-red-600 mb-8">{title}</h2>
+      <h2 className="text-2xl lg:text-5xl xl:text-4xl font-extrabold text-[var(--color-chart-accent)] mb-8">{title}</h2>
       <div className="space-y-8">
         <div className="grid gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {itemsWithValues.map((item, index) => (
-              <div key={`label-${item.label}`} className="flex items-start gap-3 bg-gray-900/50 p-3 rounded-lg">
+              <div key={`label-${item.label}`} className="flex items-start gap-3 bg-steel-900/50 p-3 rounded-lg">
                 <div className="w-3 h-3 rounded-sm mt-1" style={{ backgroundColor: getBackgroundColor(index) }} />
                 <div>
                   <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>
