@@ -69,7 +69,8 @@ export const LavaRadio = ({
                   <div
                     className="w-2.5 h-2.5 m-[5px] absolute inset-0 rounded-full scale-0 peer-checked:scale-100 transition-transform"
                     style={{
-                      background: 'linear-gradient(to bottom, var(--color-orange-500), #FFD012)',
+                      background:
+                        'linear-gradient(to bottom, var(--color-orange-500), var(--color-button-gradient-to))',
                     }}
                   />
                 </div>
