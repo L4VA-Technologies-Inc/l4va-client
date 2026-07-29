@@ -28,6 +28,7 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { getSuccessMessage } from '@/constants/proposalMessages';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -90,7 +91,7 @@ const formatAmount = amount => {
   }).format(numValue);
 };
 
-const getActivityTitle = activity => {
+const getActivityTitle = (activity, currencyLabel) => {
   if (activity.activityType === 'transaction') {
     switch (activity.type) {
       case 'create-vault': {
@@ -100,10 +101,10 @@ const getActivityTitle = activity => {
       case 'acquire': {
         const adaAsset = activity.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
         if (adaAsset?.quantity) {
-          return `${formatAmount(adaAsset.quantity)} ADA Acquired`;
+          return `${formatAmount(adaAsset.quantity)} ${currencyLabel} Acquired`;
         }
         if (activity.amount) {
-          return `${formatAmount(activity.amount)} ADA Acquired`;
+          return `${formatAmount(activity.amount)} ${currencyLabel} Acquired`;
         }
         return 'Acquire';
       }
@@ -151,13 +152,14 @@ const getProposalStatus = activityType => {
 
 const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
+  const { currencyLabel } = useCurrency();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
 
   const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
   const Icon = config.icon;
-  const title = getActivityTitle(activity);
+  const title = getActivityTitle(activity, currencyLabel);
 
   const isTransaction = activity.activityType === 'transaction';
   const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
@@ -183,7 +185,7 @@ const ActivityCard = ({ activity, vault }) => {
           return 'Assets contributed to vault';
         }
         case 'acquire': {
-          return 'ADA spent on acquire';
+          return `${currencyLabel} spent on acquire`;
         }
         default:
           return config.label;
@@ -454,6 +456,7 @@ const FILTER_MAP = {
 };
 
 export const VaultActivity = ({ vault }) => {
+  const { currencyLabel } = useCurrency();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -536,7 +539,7 @@ export const VaultActivity = ({ vault }) => {
               description = 'Assets contributed to vault';
               break;
             case 'acquire':
-              description = 'ADA spent on acquire';
+              description = `${currencyLabel} spent on acquire`;
               break;
           }
         } else if (isPhaseTransition) {
@@ -570,7 +573,7 @@ export const VaultActivity = ({ vault }) => {
         return [
           formatDateTime(activity.created_at),
           activityType,
-          getActivityTitle(activity),
+          getActivityTitle(activity, currencyLabel),
           description,
           userAddress,
           assetNames,

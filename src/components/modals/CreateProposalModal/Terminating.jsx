@@ -4,8 +4,10 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatNum } from '@/utils/core.utils.js';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Terminating({ onClose, vaultId, onDataChange }) {
+  const { currencyLabel } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: terminationData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'terminate');
@@ -33,7 +35,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
       .map(asset => ({
         collection:
           asset.name ||
-          (asset.policy_id === '' && asset.asset_id === '' ? 'ADA' : `${asset.policy_id?.substring(0, 8)}...`),
+          (asset.policy_id === '' && asset.asset_id === '' ? currencyLabel : `${asset.policy_id?.substring(0, 8)}...`),
         value: asset.formattedQuantity || asset.quantity || '0',
         id: asset.id,
         imageUrl: asset.imageUrl,
@@ -107,7 +109,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
         onClose={handleClose}
         onConfirm={handleConfirm}
         title="You cannot proceed with the Termination flow if you have NFTs in this Vault."
-        understanding="I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ADA. This action will permanently burn these NFTs and cannot be undone."
+        understanding={`I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ${currencyLabel}. This action will permanently burn these NFTs and cannot be undone.`}
         confirming="By selecting this checkbox and continuing, you confirm that you want to include burning all NFTs in this vault as part of the termination process. I agree to proceed with termination and burning all NFTs."
         description="If you wish to proceed with a Burn and Terminate flow, you must select the box below indicating that you understand how the NFT burn process works."
       />
@@ -212,7 +214,9 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
                       <span className="text-white font-medium">{pool.dex}</span>
                     </div>
                     <div className="flex gap-3 text-sm">
-                      <span className="text-white/60">{formatNum(pool.adaAmount, 2)} ADA</span>
+                      <span className="text-white/60">
+                        {formatNum(pool.adaAmount, 2)} {currencyLabel}
+                      </span>
                       <span className="text-white/60">{formatNum(pool.vtAmount, 0)} VT</span>
                       <span className={`font-medium ${pool.isRecoverable ? 'text-green-400' : 'text-red-400'}`}>
                         {pool.isRecoverable ? 'Recoverable' : 'Unrecoverable'}

@@ -13,11 +13,12 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import {
   VAULT_TAGS_OPTIONS,
-  RESERVE_HINT,
-  LIQUIDITY_POOL_CONTRIBUTION_HINT,
+  getReserveHint,
+  getLiquidityPoolContributionHint,
   editUpcomingVaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import { transformYupErrors } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const formatWithDecimal = value => {
   if (value === '' || value === null || value === undefined) return '';
@@ -27,6 +28,7 @@ const formatWithDecimal = value => {
 };
 
 export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
+  const { currencyLabel } = useCurrency();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -309,8 +311,8 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
             />
             {formData.tokensForAcquires === 0 && (
               <p className="text-orange-500 mt-1 text-sm">
-                Warning: 0% Tokens for Acquirers means this vault will NOT be offered to acquirers to send ADA and
-                Reserve % will not apply.
+                Warning: 0% Tokens for Acquirers means this vault will NOT be offered to acquirers to send{' '}
+                {currencyLabel} and Reserve % will not apply.
               </p>
             )}
           </div>
@@ -327,7 +329,7 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
                 formData.acquireReserve === 0 ? '0' : formData.acquireReserve ? String(formData.acquireReserve) : ''
               }
               onChange={value => handleAcquireChange('acquireReserve', value)}
-              hint={RESERVE_HINT}
+              hint={getReserveHint(currencyLabel)}
               disabled={formData.tokensForAcquires === 0}
               helperText={errors.acquireReserve}
             />
@@ -355,7 +357,7 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
                     : ''
               }
               onChange={value => handleAcquireChange('liquidityPoolContribution', value)}
-              hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
+              hint={getLiquidityPoolContributionHint(currencyLabel)}
               helperText={errors.liquidityPoolContribution}
             />
             {liquidityPoolContributionNum === 0 && (

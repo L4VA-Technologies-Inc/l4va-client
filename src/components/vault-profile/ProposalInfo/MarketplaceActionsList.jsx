@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { getTransactionUrl } from '@/utils/explorer.utils';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatAdaPrice } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const ActionField = ({ label, value, children, className }) => (
   <div className="flex justify-between items-center">
@@ -12,6 +13,8 @@ const ActionField = ({ label, value, children, className }) => (
 );
 
 export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainType }) => {
+  const { currencyLabel } = useCurrency();
+
   if (!Array.isArray(actions) || actions.length === 0) return null;
 
   // Check if this is a DexHunter swap action
@@ -32,7 +35,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
               {isDexHunterSwap ? (
                 <>
                   <ActionField label="Market" value={action.market || 'DexHunter'} />
-                  <ActionField label="Type" value="Swap to ADA" />
+                  <ActionField label="Type" value={`Swap to ${currencyLabel}`} />
                   {action.assetName && <ActionField label="Token" value={action.assetName} />}
                   {action.assetImg && (
                     <ActionField label="Token Image">

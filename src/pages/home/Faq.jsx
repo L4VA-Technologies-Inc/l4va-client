@@ -1,4 +1,6 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const StepCard = ({ number, title, description }) => (
   <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-white/5 backdrop-blur-sm rounded-[10px]">
@@ -25,6 +27,11 @@ const FaqItem = ({ question, answer, index }) => (
 );
 
 const Faq = () => {
+  const { isRobinHood } = useNetwork();
+  const { currencyLabel } = useCurrency();
+  const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
+  const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
+
   const steps = [
     {
       number: 1,
@@ -41,8 +48,7 @@ const Faq = () => {
     {
       number: 3,
       title: 'Acquire',
-      description:
-        'Acquirers with vault access then have the opportunity to send ADA to the vault for a pro-rata share of the Vault Tokens.',
+      description: `Acquirers with vault access then have the opportunity to send ${currencyLabel} to the vault for a pro-rata share of the Vault Tokens.`,
     },
     {
       number: 4,
@@ -55,8 +61,7 @@ const Faq = () => {
   const faqItems = [
     {
       question: 'What is L4VA?',
-      answer:
-        'L4VA is an open-source protocol on Cardano that lets anyone fractionalize digital assets into community-governed vaults. Instead of assets sitting idle, L4VA transforms them into liquid, tradable tokens with built-in governance. No custodians. Permissionless. Designed for transparent and decentralized ownership.',
+      answer: `L4VA is an open-source protocol on ${chainName} that lets anyone fractionalize digital assets into community-governed vaults. Instead of assets sitting idle, L4VA transforms them into liquid, tradable tokens with built-in governance. No custodians. Permissionless. Designed for transparent and decentralized ownership.`,
     },
     {
       question: 'What can I do with a vault?',
@@ -73,18 +78,15 @@ const Faq = () => {
     },
     {
       question: 'What can I put in a vault?',
-      answer:
-        'Vaults can hold a wide range of Cardano-native digital assets, such as NFTs, on-chain RWAs, and fungible tokens. As the protocol expands, more asset types and integrations will be supported.',
+      answer: `Vaults can hold a wide range of ${nativeAssetDescription} digital assets, such as NFTs, on-chain RWAs, and fungible tokens. As the protocol expands, more asset types and integrations will be supported.`,
     },
     {
       question: 'How do I acquire vault tokens?',
-      answer:
-        'During the acquire stage, ADA holders can send ADA into the vault in exchange for fractional governance tokens. These vault tokens represent ownership rights, governance power, and access to future rewards tied to the vault’s assets.',
+      answer: `During the acquire stage, ${currencyLabel} holders can send ${currencyLabel} into the vault in exchange for fractional governance tokens. These vault tokens represent ownership rights, governance power, and access to future rewards tied to the vault’s assets.`,
     },
     {
       question: 'How do I contribute?',
-      answer:
-        'If you hold eligible assets, you can send them directly into a vault during its contribution stage. Contributors receive governance tokens proportional to the value of their assets, and receive ADA for the percentage of tokens offered to new acquirers, giving them both liquidity and voting rights over the vault’s future.',
+      answer: `If you hold eligible assets, you can send them directly into a vault during its contribution stage. Contributors receive governance tokens proportional to the value of their assets, and receive ${currencyLabel} for the percentage of tokens offered to new acquirers, giving them both liquidity and voting rights over the vault’s future.`,
     },
     {
       question: 'How do I earn $L4VA rewards?',
@@ -103,11 +105,12 @@ const Faq = () => {
                 How it Works
               </h3>
               <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
-                Unlock liquidity, access, and governance for any asset on Cardano.
+                Unlock liquidity, access, and governance for any asset on {chainName}.
               </h4>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Create a vault, customize settings, and invite contributors to add assets, then acquirers send ADA in
-                exchange for governance tokens -- fractional asset tokens with real decision making power.
+                Create a vault, customize settings, and invite contributors to add assets, then acquirers send{' '}
+                {currencyLabel} in exchange for governance tokens -- fractional asset tokens with real decision making
+                power.
               </p>
               <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
                 Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault

@@ -55,7 +55,7 @@ const ProgressBubble = ({ value, progress }) => {
   );
 };
 
-const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency }) => {
+const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, currencyLabel }) => {
   const hasMax = !vault.acquireExpansionNoMax && vault.acquireExpansionMaxAda > 0;
   const currentAda = vault.acquireExpansionCurrentAda || 0;
   const currentUsd = vault.acquireExpansionCurrentUsd || 0;
@@ -90,7 +90,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency }) => 
             />
           </div>
           <div className="flex justify-between w-full text-xs text-dark-100">
-            <span>min 0 ADA</span>
+            <span>min 0 {currencyLabel}</span>
             <span>
               max {`${currencySymbol}${formatNum(pickByCurrency({ ada: maxAda, usd: maxUsd, eth: maxEth }))}`}
             </span>
@@ -105,7 +105,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency }) => 
             </span>
           </div>
           <div className="text-sm text-dark-100 mb-2">
-            No ADA limit - contributions accepted until the current phase expires
+            No {currencyLabel} limit - contributions accepted until the current phase expires
           </div>
         </>
       )}
@@ -224,7 +224,7 @@ const ContributionProgress = ({
 
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
-  const { currencySymbol, pickByCurrency } = useCurrency();
+  const { currencySymbol, currencyLabel, pickByCurrency } = useCurrency();
 
   const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
@@ -311,15 +311,15 @@ export const VaultContribution = ({ vault }) => {
                     <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
                       <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
                       <span className="text-red-300 text-xs">
-                        LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
-                        below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will fail
-                        and refund users.
+                        LP is required but estimated {currencyLabel} portion of LP (₳
+                        {formatNum(vault.projectedLpAdaAmount)}) is below minimum (₳{vault.lpMinLiquidityAda}). Vault
+                        needs more acquire contributions or will fail and refund users.
                       </span>
                     </div>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-dark-100">Current ADA LP amount:</span>
+                        <span className="text-dark-100">Current {currencyLabel} LP amount:</span>
                         <span className="text-dark-100">
                           {`${currencySymbol}${formatNum(
                             pickByCurrency({
@@ -362,9 +362,9 @@ export const VaultContribution = ({ vault }) => {
                         <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded">
                           <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
                           <span className="text-red-300 text-xs">
-                            LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
-                            below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will
-                            fail and refund users.
+                            LP is required but estimated {currencyLabel} portion of LP (₳
+                            {formatNum(vault.projectedLpAdaAmount)}) is below minimum (₳{vault.lpMinLiquidityAda}).
+                            Vault needs more acquire contributions or will fail and refund users.
                           </span>
                         </div>
                       ) : (
@@ -374,7 +374,7 @@ export const VaultContribution = ({ vault }) => {
                             <span className="text-white font-medium">{vault.liquidityPoolContribution}%</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-dark-100">Current ADA LP amount:</span>
+                            <span className="text-dark-100">Current {currencyLabel} LP amount:</span>
                             <span className="text-dark-100">
                               {`${currencySymbol}${formatNum(
                                 pickByCurrency({
@@ -443,7 +443,12 @@ export const VaultContribution = ({ vault }) => {
             setShowMoreInfo={setShowMoreInfo}
           />
         ) : isAcquireExpansion ? (
-          <AcquireExpansionProgress vault={vault} currencySymbol={currencySymbol} pickByCurrency={pickByCurrency} />
+          <AcquireExpansionProgress
+            vault={vault}
+            currencySymbol={currencySymbol}
+            pickByCurrency={pickByCurrency}
+            currencyLabel={currencyLabel}
+          />
         ) : null}
       </div>
 

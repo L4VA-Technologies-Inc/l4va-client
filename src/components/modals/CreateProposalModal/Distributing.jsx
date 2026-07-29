@@ -7,8 +7,10 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatAdaPrice } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Distributing({ isDisabled, onDataChange, vaultId }) {
+  const { currencyLabel } = useCurrency();
   const [adaAmount, setAdaAmount] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
@@ -106,7 +108,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex-1">
               <LavaSteelInput
                 type="number"
-                label="Amount (ADA)"
+                label={`Amount (${currencyLabel})`}
                 placeholder="0.00"
                 value={adaAmount}
                 onChange={handleAdaAmountChange}
@@ -120,8 +122,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>
-                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} ADA). Fee reserve required for
-                transaction.
+                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} {currencyLabel}). Fee reserve
+                required for transaction.
               </span>
             </div>
           )}
@@ -129,7 +131,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           {noOneWillReceive && (
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
-              <span>Minimum {minAdaPerHolder} ADA required for at least one holder to receive distribution</span>
+              <span>
+                Minimum {minAdaPerHolder} {currencyLabel} required for at least one holder to receive distribution
+              </span>
             </div>
           )}
 
@@ -137,8 +141,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex items-center gap-2 text-yellow-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>
-                Some holders with smaller VT balances may not receive distribution (minimum {minAdaPerHolder} ADA per
-                recipient)
+                Some holders with smaller VT balances may not receive distribution (minimum {minAdaPerHolder}{' '}
+                {currencyLabel} per recipient)
               </span>
             </div>
           )}
@@ -151,10 +155,14 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <Wallet className="w-4 h-4" />
             <span className="text-sm">Treasury Balance</span>
           </div>
-          <p className="text-2xl font-semibold text-white">{treasuryBalanceAda.toLocaleString()} ADA</p>
-          <p className="text-xs text-green-400 mt-1">Max Distributable: {maxDistributableAda.toLocaleString()} ADA</p>
+          <p className="text-2xl font-semibold text-white">
+            {treasuryBalanceAda.toLocaleString()} {currencyLabel}
+          </p>
+          <p className="text-xs text-green-400 mt-1">
+            Max Distributable: {maxDistributableAda.toLocaleString()} {currencyLabel}
+          </p>
           <p className="text-xs text-white/40">
-            (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} ADA)
+            (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} {currencyLabel})
           </p>
         </div>
 
@@ -164,7 +172,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <span className="text-sm">VT Holders</span>
           </div>
           <p className="text-2xl font-semibold text-white">{vtHolderCount.toLocaleString()}</p>
-          <p className="text-xs text-white/40 mt-1">Min {minAdaPerHolder} ADA per holder required</p>
+          <p className="text-xs text-white/40 mt-1">
+            Min {minAdaPerHolder} {currencyLabel} per holder required
+          </p>
         </div>
       </div>
 
@@ -175,8 +185,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           <div className="text-sm text-white/70">
             <p className="font-medium text-white/90 mb-2">How Distribution Works</p>
             <ul className="space-y-1 list-disc list-inside">
-              <li>ADA is distributed proportionally based on VT holdings</li>
-              <li>Minimum 2 ADA per recipient (Cardano UTXO requirement)</li>
+              <li>{currencyLabel} is distributed proportionally based on VT holdings</li>
+              <li>Minimum 2 {currencyLabel} per recipient</li>
               <li>Distribution is processed in batches of ~200 recipients</li>
               <li>Claims are created for each recipient to track status</li>
             </ul>
@@ -206,7 +216,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-white/60">Total Amount:</span>
-              <span className="ml-2 text-white">{enteredAda.toLocaleString()} ADA</span>
+              <span className="ml-2 text-white">
+                {enteredAda.toLocaleString()} {currencyLabel}
+              </span>
             </div>
             <div>
               <span className="text-white/60">Recipients:</span>

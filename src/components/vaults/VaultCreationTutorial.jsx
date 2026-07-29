@@ -1,8 +1,15 @@
 import { Info, BookOpen } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export const VaultCreationTutorial = () => {
+  const { isRobinHood } = useNetwork();
+  const { currencyLabel } = useCurrency();
+  const anyTokenLabel = isRobinHood ? 'Any Token' : 'Any CNT';
+  const anyTokenDescription = isRobinHood ? 'Any Robinhood-supported token' : 'Any Cardano Native Token';
+
   const sampleVault = {
     name: 'Premium NFT Collection Vault',
     type: 'Multi NFT',
@@ -72,7 +79,7 @@ export const VaultCreationTutorial = () => {
                   <strong>Multi NFT:</strong> Multiple NFTs from the same collection
                 </li>
                 <li>
-                  <strong>Any CNT:</strong> Any Cardano Native Token
+                  <strong>{anyTokenLabel}:</strong> {anyTokenDescription}
                 </li>
               </ul>
               <p>
@@ -160,12 +167,12 @@ export const VaultCreationTutorial = () => {
                 to acquirers. This is the most critical setting for token distribution.
               </p>
               <p>
-                <strong>• Reserve (%):</strong> The minimum percentage of vault value (in ADA) that must be raised from
-                acquirers for the vault to lock successfully. If not met, all funds are refunded.
+                <strong>• Reserve (%):</strong> The minimum percentage of vault value (in {currencyLabel}) that must be
+                raised from acquirers for the vault to lock successfully. If not met, all funds are refunded.
               </p>
               <p>
-                <strong>• Liquidity Pool Contribution (%):</strong> Percentage of tokens and ADA allocated to the
-                initial liquidity pool for trading.
+                <strong>• Liquidity Pool Contribution (%):</strong> Percentage of tokens and {currencyLabel} allocated
+                to the initial liquidity pool for trading.
               </p>
               <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-lg p-4 mt-4">
                 <div className="flex items-start gap-2">

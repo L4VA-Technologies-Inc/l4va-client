@@ -6,8 +6,10 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
+  const { currencyLabel } = useCurrency();
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false);
   const [maxAda, setMaxAda] = useState('');
@@ -62,8 +64,9 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
 
         <div className="p-4 bg-steel-700 rounded-lg">
           <p className="text-sm text-gray-300">
-            <strong>Acquire Expansion</strong> allows the vault to reopen for new ADA contributions in exchange for
-            newly minted vault tokens. Users send ADA and receive VT based on the pricing model selected below.
+            <strong>Acquire Expansion</strong> allows the vault to reopen for new {currencyLabel} contributions in
+            exchange for newly minted vault tokens. Users send {currencyLabel} and receive VT based on the pricing model
+            selected below.
           </p>
         </div>
 
@@ -72,7 +75,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
               Expansion Duration*
-              <HoverHelp hint="How long the vault will accept new ADA contributions" />
+              <HoverHelp hint={`How long the vault will accept new ${currencyLabel} contributions`} />
             </label>
             <LavaCheckbox
               name="acquireExpansionNoLimit"
@@ -96,21 +99,25 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
           ) : (
             <div className="p-3 bg-steel-700 rounded-lg">
               <p className="text-sm text-gray-300">
-                Vault will remain open until closed by governance action or max ADA is reached
+                Vault will remain open until closed by governance action or max {currencyLabel} is reached
               </p>
             </div>
           )}
           {noLimit && noMax && (
-            <p className="text-red-500 text-sm mt-2">At least one limit (Duration or Maximum ADA) must be set</p>
+            <p className="text-red-500 text-sm mt-2">
+              At least one limit (Duration or Maximum {currencyLabel}) must be set
+            </p>
           )}
         </div>
 
-        {/* Max ADA */}
+        {/* Max acquire amount */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
-              Maximum ADA*
-              <HoverHelp hint="Total ADA that can be raised during this expansion window (max: 1 billion ADA)" />
+              Maximum {currencyLabel}*
+              <HoverHelp
+                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel})`}
+              />
             </label>
             <LavaCheckbox
               name="acquireExpansionNoMax"
@@ -136,19 +143,20 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     setMaxAda(value);
                   }
                 }}
-                placeholder="Enter maximum ADA (e.g., 10000)"
+                placeholder={`Enter maximum ${currencyLabel} (e.g., 10000)`}
                 error={error && !maxAda}
               />
               {maxAda && parseFloat(maxAda) > 1000000 && (
                 <p className="text-xs text-yellow-400 mt-1">
-                  Large limit set ({parseFloat(maxAda).toLocaleString()} ADA). Consider if this is intentional.
+                  Large limit set ({parseFloat(maxAda).toLocaleString()} {currencyLabel}). Consider if this is
+                  intentional.
                 </p>
               )}
             </>
           ) : (
             <div className="p-3 bg-steel-700 rounded-lg">
               <p className="text-sm text-gray-300">
-                Unlimited ADA can be accepted until duration ends or governance closes the vault
+                Unlimited {currencyLabel} can be accepted until duration ends or governance closes the vault
               </p>
             </div>
           )}
@@ -156,14 +164,16 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
 
         {/* Price Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">VT Price per ADA*</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">VT Price per {currencyLabel}*</label>
           <LavaSteelSelect options={priceTypeOptions} value={priceType} onChange={setPriceType} />
 
           {priceType === 'limit' && (
             <div className="mt-3">
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
-                Limit Price (VT per 1 ADA)
-                <HoverHelp hint="Fixed amount of vault tokens contributors will receive per 1 ADA (max: 1,000,000 VT)" />
+                Limit Price (VT per 1 {currencyLabel})
+                <HoverHelp
+                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT)`}
+                />
               </label>
               <LavaSteelInput
                 type="number"
@@ -179,7 +189,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     setLimitPrice(value);
                   }
                 }}
-                placeholder="Enter VT per 1 ADA (up to 6 decimals, max 1M)"
+                placeholder={`Enter VT per 1 ${currencyLabel} (up to 6 decimals, max 1M)`}
                 error={error && !limitPrice}
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
@@ -193,8 +203,8 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     <div className="mt-2 p-3 bg-red-900/20 border border-red-600/50 rounded">
                       <p className="text-red-400 text-sm font-medium">⚠️ Price Too Low</p>
                       <p className="text-red-300/90 text-xs mt-1">
-                        With {decimals} decimals, minimum limit price is {minLimitPrice} VT per 1 ADA. Lower values
-                        would result in 0 tokens minted.
+                        With {decimals} decimals, minimum limit price is {minLimitPrice} VT per 1 {currencyLabel}. Lower
+                        values would result in 0 tokens minted.
                       </p>
                     </div>
                   );
@@ -207,7 +217,9 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                       <p className="text-sm text-primary font-mono mt-1">
                         100 ₳ = {(limitPriceNum * 100).toLocaleString()} VT
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">Min: {minLimitPrice} VT/ADA</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Min: {minLimitPrice} VT/{currencyLabel}
+                      </p>
                     </div>
                   );
                 }
@@ -227,7 +239,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                   Contributors will receive VT based on the current market price from the Liquidity Pool:
                 </p>
                 <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
-                  VT Amount = ADA Sent × (Current VT/ADA Price from LP)
+                  VT Amount = {currencyLabel} Sent x (Current VT/{currencyLabel} Price from LP)
                 </div>
                 <p className="text-xs text-gray-400">
                   This ensures contributors receive VT at fair market value based on DEX prices (DexHunter, Taptools)
@@ -238,8 +250,8 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                   <p className="text-yellow-400 text-sm font-medium">⚠️ Market Pricing Requirements:</p>
                   <p className="text-yellow-300/90 text-xs mt-1">
                     This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP
-                    with at least 1,000 ADA in liquidity. Please use <strong>Limit Price</strong> instead, or create an
-                    LP first.
+                    with at least 1,000 {currencyLabel} in liquidity. Please use <strong>Limit Price</strong> instead,
+                    or create an LP first.
                   </p>
                 </div>
               )}
@@ -269,7 +281,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                   : 'Not set'}
             </p>
             <p>
-              <span className="text-gray-400">Max ADA:</span>{' '}
+              <span className="text-gray-400">Max {currencyLabel}:</span>{' '}
               {noMax ? 'Unlimited' : maxAda ? `${parseFloat(maxAda).toLocaleString()} ₳` : 'Not set'}
             </p>
             <p>

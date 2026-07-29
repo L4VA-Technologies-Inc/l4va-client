@@ -6,10 +6,11 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import {
-  RESERVE_HINT,
-  LIQUIDITY_POOL_CONTRIBUTION_HINT,
+  getReserveHint,
+  getLiquidityPoolContributionHint,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 
@@ -21,12 +22,10 @@ export const AcquireWindow = ({
   isAdvancedPresetAvailable = true,
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
+  const { currencyLabel: assetSymbol } = useCurrency();
   const { isRobinHood } = useNetwork();
-  const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
   const maxAcquireThreshold = 100000;
-  const minAcquireThresholdRangeHint = isRobinHood
-    ? 'Allowed range when set: 0.01 to 100,000 ETH.'
-    : 'Allowed range when set: 1+ ADA (max 100,000 ADA).';
+  const minAcquireThresholdRangeHint = `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -218,7 +217,7 @@ export const AcquireWindow = ({
             type="text"
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
-            hint={RESERVE_HINT}
+            hint={getReserveHint(assetSymbol)}
             disabled={isPresetConfigLocked || isAcquireOnly || data.tokensForAcquires === 0}
           />
           {!isAcquireOnly && data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
@@ -246,7 +245,7 @@ export const AcquireWindow = ({
             }
             onChange={handleChange}
             disabled={isAcquireOnly ? false : isPresetConfigLocked}
-            hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
+            hint={getLiquidityPoolContributionHint(assetSymbol)}
           />
           {data.liquidityPoolContribution === 0 && (
             <p className="text-orange-500 mt-1">

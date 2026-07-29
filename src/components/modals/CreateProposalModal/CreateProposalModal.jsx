@@ -31,6 +31,7 @@ import {
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const executionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
@@ -49,6 +50,7 @@ const initialProposalData = {
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
+  const { currencyLabel } = useCurrency();
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState(
@@ -378,7 +380,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           {currentProposalFee > 0 ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
-              <span className="text-yellow-500 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
+              <span className="text-yellow-500 text-xs">
+                Governance fee: {feeInAda.toFixed(2)} {currencyLabel}
+              </span>
             </div>
           ) : (
             <span className="text-gray-400">New proposal</span>
