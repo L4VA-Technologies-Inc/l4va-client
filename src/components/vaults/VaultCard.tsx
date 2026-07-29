@@ -113,15 +113,12 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
       </Link>
 
       <div className="flex items-center justify-center gap-3 h-10 px-6 pb-6">
-        {socialLinks.length > 0 ? (
+        {socialLinks.length > 0 &&
           socialLinks.map((social, index) => (
             <a key={index} href={social.url} rel="noopener noreferrer" target="_blank">
               <SocialPlatformIcon className="text-white" platformId={social.name} />
             </a>
-          ))
-        ) : (
-          <span className="text-dark-100 text-sm">No social links</span>
-        )}
+          ))}
       </div>
     </div>
   );

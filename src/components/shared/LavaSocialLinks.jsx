@@ -155,7 +155,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
 
   return (
     <div className="space-y-2">
-      {validLinks.length > 0 ? (
+      {validLinks.length > 0 &&
         validLinks.map((link, index) => (
           <a
             key={`social-link-${index}`}
@@ -167,10 +167,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             <SocialPlatformIcon className="text-white" platformId={link.name} size={20} />
             <span>{link.url}</span>
           </a>
-        ))
-      ) : (
-        <p>No social links added.</p>
-      )}
+        ))}
     </div>
   );
 };
