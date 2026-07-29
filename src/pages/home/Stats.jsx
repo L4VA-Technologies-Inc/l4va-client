@@ -38,10 +38,7 @@ const ProgressBar = ({ items, title }) => {
         <div className="grid gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {itemsWithValues.map((item, index) => (
-              <div
-                key={`label-${item.label}`}
-                className="flex items-start gap-3 bg-steel-900/50 p-3 rounded-lg"
-              >
+              <div key={`label-${item.label}`} className="flex items-start gap-3 bg-steel-900/50 p-3 rounded-lg">
                 <div className="w-3 h-3 rounded-sm mt-1" style={{ backgroundColor: getBackgroundColor(index) }} />
                 <div>
                   <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>

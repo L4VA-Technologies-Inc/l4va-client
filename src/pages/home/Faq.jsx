@@ -32,7 +32,7 @@ const Faq = () => {
   const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
   const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
 
-  const steps = [
+  const defaultSteps = [
     {
       number: 1,
       title: 'Create',
@@ -57,6 +57,55 @@ const Faq = () => {
         'Once successfully locked the Vault Tokens holders now control the fate of the vault and its assets.',
     },
   ];
+
+  const robinhoodSteps = [
+    {
+      number: 1,
+      title: 'Create',
+      description:
+        'Create a new Vault by meeting the required protocol conditions, then define the strategy, eligible assets, contribution rules, and governance settings.',
+    },
+    {
+      number: 2,
+      title: 'Contribute',
+      description:
+        'Approved contributors add eligible tokenized assets to the Vault during its contribution window and receive a proportional share of the Vault Tokens.',
+    },
+    {
+      number: 3,
+      title: 'Acquire',
+      description:
+        'Participants use ETH or USDC to acquire a proportional share of the Vault Tokens, providing capital and liquidity to the strategy.',
+    },
+    {
+      number: 4,
+      title: 'Govern',
+      description:
+        'After launch, Vault Token holders collectively govern the Vault through transparent on-chain proposals and voting—guiding how the strategy and its assets evolve.',
+    },
+  ];
+
+  const defaultHeroContent = {
+    subtitle: `Unlock liquidity, access, and governance for any asset on ${chainName}.`,
+    paragraphs: [
+      `Create a vault, customize settings, and invite contributors to add assets, then acquirers send ${currencyLabel} in exchange for governance tokens -- fractional asset tokens with real decision making power.`,
+      'Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault tokens retained. Token holders have the power to manage the future of assets in the vault.',
+      'Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital assets.',
+    ],
+  };
+
+  const robinhoodHeroContent = {
+    subtitle: 'Create, own, and govern programmable investment products on Robinhood Chain.',
+    paragraphs: [
+      'Create a Vault, define its strategy and governance settings, and invite contributors to add eligible tokenized assets. Participants can then acquire Vault Tokens using ETH or USDC, gaining proportional exposure to the Vault and a voice in its future.',
+      'Vault creators, asset contributors, token acquirers, liquidity providers, and governance participants can earn L4VA rewards for activities that expand the protocol. Rewards are designed around active contribution—not passive ownership or total value locked.',
+      'Once launched, every Vault becomes a community-governed on-chain market. Vault Token holders can propose and vote on how the strategy, assets, and rules evolve over time.',
+      'Open, programmable infrastructure for transforming tokenized assets into investment products that communities can launch, own, and govern.',
+    ],
+  };
+
+  const steps = isRobinHood ? robinhoodSteps : defaultSteps;
+  const heroContent = isRobinHood ? robinhoodHeroContent : defaultHeroContent;
 
   const faqItems = [
     {
@@ -105,21 +154,13 @@ const Faq = () => {
                 How it Works
               </h3>
               <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
-                Unlock liquidity, access, and governance for any asset on {chainName}.
+                {heroContent.subtitle}
               </h4>
-              <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Create a vault, customize settings, and invite contributors to add assets, then acquirers send{' '}
-                {currencyLabel} in exchange for governance tokens -- fractional asset tokens with real decision making
-                power.
-              </p>
-              <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault
-                tokens retained. Token holders have the power to manage the future of assets in the vault.
-              </p>
-              <p className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital
-                assets.
-              </p>
+              {heroContent.paragraphs.map(paragraph => (
+                <p key={paragraph} className="text-base sm:text-lg lg:text-xl xl:text-2xl">
+                  {paragraph}
+                </p>
+              ))}
             </div>
             <div className="space-y-4 sm:space-y-6">
               {steps.map(step => (
