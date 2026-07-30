@@ -9,6 +9,7 @@ import { InfoRow } from '@/components/ui/infoRow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import L4vaIcon from '@/components/shared/L4vaIcon';
+import { TokenImage } from '@/components/shared/TokenImage';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -68,7 +69,7 @@ export const VaultSettings = ({ vault }) => {
     navigator.clipboard
       .writeText(value.toString())
       .then(() => {
-        toast.success(`Asset Policy ID copied to clipboard`);
+        toast.success(`Asset ${isRobinhoodVault ? 'contract' : 'policy ID'} copied to clipboard`);
       })
       .catch(err => {
         console.error('Failed to copy:', err);
@@ -140,7 +141,17 @@ export const VaultSettings = ({ vault }) => {
                   isFirst ? 'pt-0 pb-3' : 'py-3'
                 )}
               >
-                <span className="min-w-0 flex-1 break-words pr-2">{name || 'Unnamed collection'}</span>
+                <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
+                  <TokenImage
+                    asset={asset}
+                    alt={name || asset.policyId}
+                    chainType={vault.chainType}
+                    className="h-7 w-7 rounded-full shrink-0"
+                    width={28}
+                    height={28}
+                  />
+                  <span className="min-w-0 break-words">{name || 'Unnamed collection'}</span>
+                </span>
               </AccordionTrigger>
               <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
                 <div className="text-sm">

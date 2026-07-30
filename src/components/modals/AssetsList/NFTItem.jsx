@@ -1,6 +1,6 @@
 import CardanoCheckmarkIcon from '@/icons/checkmark.svg?react';
 import RobinhoodCheckmarkIcon from '@/icons/checkmark-rh.svg?react';
-import { LazyImage } from '@/components/shared/LazyImage';
+import { TokenImage } from '@/components/shared/TokenImage';
 import { formatPolicyId } from '@/utils/core.utils';
 import { getPolicyUrl } from '@/utils/explorer.utils';
 import { useNetwork } from '@/hooks/useNetwork';
@@ -30,13 +30,13 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle, chainType }) =>
       </div>
       <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800 overflow-hidden">
         <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-          <LazyImage
-            src={nft.src}
+          <TokenImage
+            asset={nft}
             alt={nft.displayName || nft.name}
+            chainType={nft.chainType || chainType}
             className="rounded-full shrink-0"
             width={32}
             height={32}
-            fallbackSrc="/assets/icons/ada.svg"
           />
           <span className="font-medium truncate">{nft.displayName || nft.name}</span>
         </div>

@@ -29,6 +29,10 @@ interface BlockscoutTokenRaw {
   is_smart_contract_verified?: boolean;
   is_verified_via_admin_panel?: boolean;
   certified?: boolean;
+  icon_url?: string | null;
+  image_url?: string | null;
+  logo_url?: string | null;
+  token_icon_url?: string | null;
 }
 
 interface BlockscoutTokenBalanceRaw {
@@ -55,6 +59,10 @@ interface BlockscoutQuickSearchItem {
   is_smart_contract_verified?: boolean;
   is_verified_via_admin_panel?: boolean;
   certified?: boolean;
+  icon_url?: string | null;
+  image_url?: string | null;
+  logo_url?: string | null;
+  token_icon_url?: string | null;
 }
 
 export interface BlockscoutWalletToken {
@@ -71,6 +79,7 @@ export interface BlockscoutWalletToken {
    */
   isVerified: boolean;
   holders: number | null;
+  imageUrl: string | null;
 }
 
 const normalizeBaseUrl = (url: string): string => url.replace(/\/+$/, '');
@@ -118,6 +127,7 @@ const normalizeToken = (token: BlockscoutTokenRaw, fallbackAddress: string, valu
   value,
   isVerified: isBlockscoutTokenVerified(token),
   holders: token.holders_count != null ? Number(token.holders_count) : null,
+  imageUrl: token.icon_url ?? token.image_url ?? token.logo_url ?? token.token_icon_url ?? null,
 });
 
 const normalizeQuickSearchToken = (item: BlockscoutQuickSearchItem): BlockscoutWalletToken | null => {
@@ -136,6 +146,10 @@ const normalizeQuickSearchToken = (item: BlockscoutQuickSearchItem): BlockscoutW
       is_smart_contract_verified: item.is_smart_contract_verified,
       is_verified_via_admin_panel: item.is_verified_via_admin_panel,
       certified: item.certified,
+      icon_url: item.icon_url,
+      image_url: item.image_url,
+      logo_url: item.logo_url,
+      token_icon_url: item.token_icon_url,
     },
     item.address_hash
   );

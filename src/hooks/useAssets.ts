@@ -42,6 +42,12 @@ type CollectionLookupRaw = {
   tokenVerification?: { platform?: unknown; is_verified?: boolean };
   isLpToken?: boolean;
   is_lp_token?: boolean;
+  image?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
+  logo?: string | null;
+  logoUrl?: string | null;
+  logo_url?: string | null;
 };
 
 function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
@@ -50,6 +56,7 @@ function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
   isVerified: boolean;
   verificationPlatform: VerificationPlatform | null;
   isLpToken: boolean;
+  imageUrl: string | null;
 } {
   const policyId = raw.policyId ?? raw.policy_id ?? '';
   const collectionName = raw.collectionName ?? raw.collection_name ?? null;
@@ -57,7 +64,8 @@ function normalizeCollectionLookupItem(raw: CollectionLookupRaw): {
   const platformRaw = raw.platform ?? raw.tokenVerification?.platform;
   const verificationPlatform = isVerified ? parseVerificationPlatform(platformRaw) : null;
   const isLpToken = raw.isLpToken ?? raw.is_lp_token ?? false;
-  return { policyId, collectionName, isVerified, verificationPlatform, isLpToken };
+  const imageUrl = raw.imageUrl ?? raw.image_url ?? raw.image ?? raw.logoUrl ?? raw.logo_url ?? raw.logo ?? null;
+  return { policyId, collectionName, isVerified, verificationPlatform, isLpToken, imageUrl };
 }
 
 export interface WalletAsset {
@@ -79,6 +87,7 @@ export interface GroupedPolicy {
   verificationPlatform: VerificationPlatform | null;
   /** Whether this is an LP token requiring dynamic pricing */
   isLpToken: boolean;
+  imageUrl?: string | null;
 }
 
 const PAGE_SIZE = 10;
@@ -201,6 +210,7 @@ export const useAssets = () => {
         isVerified: boolean;
         verificationPlatform: VerificationPlatform | null;
         isLpToken: boolean;
+        imageUrl: string | null;
       }
     >
   >(new Map());
@@ -248,6 +258,7 @@ export const useAssets = () => {
                 isVerified: normalized.isVerified,
                 verificationPlatform: normalized.verificationPlatform,
                 isLpToken: normalized.isLpToken,
+                imageUrl: normalized.imageUrl,
               });
             });
           } catch (error) {
@@ -258,6 +269,7 @@ export const useAssets = () => {
                 isVerified: false,
                 verificationPlatform: null,
                 isLpToken: false,
+                imageUrl: null,
               });
             });
           }
@@ -272,6 +284,7 @@ export const useAssets = () => {
           isVerified: cached?.isVerified ?? false,
           verificationPlatform: cached?.verificationPlatform ?? null,
           isLpToken: cached?.isLpToken ?? false,
+          imageUrl: cached?.imageUrl ?? null,
         };
       });
     };
