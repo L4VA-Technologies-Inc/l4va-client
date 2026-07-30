@@ -101,6 +101,7 @@ export const RewardsOverview = () => {
 
   // Claiming enabled flag — defaults to true so the button shows while epoch data is loading
   const claimsEnabled = currentEpochData?.claimsEnabled ?? true;
+  const canClaim = claimsEnabled && !isRobinHood;
 
   // Get current epoch estimate
   const currentEpochEstimate = estimateData?.estimatedReward || 0;
@@ -174,12 +175,14 @@ export const RewardsOverview = () => {
                     {formatCompactNumber(claimableAmount)} $L4VA
                   </p>
                 </div>
-                {claimsEnabled ? (
+                {canClaim ? (
                   <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
                 ) : (
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
                     <Clock className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-sm font-medium">Claiming coming soon</span>
+                    <span className="text-sm font-medium">
+                      {isRobinHood ? 'Claiming not available on Robinhood yet' : 'Claiming coming soon'}
+                    </span>
                   </div>
                 )}
               </div>
