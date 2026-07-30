@@ -141,7 +141,7 @@ export const RewardsOverview = () => {
             <h1 className="text-3xl font-bold text-white">Rewards Dashboard</h1>
             <button
               onClick={() => setIsInfoModalOpen(true)}
-              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-colors"
+              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 transition-colors"
               aria-label="How rewards work"
             >
               <Info className="w-5 h-5" />
