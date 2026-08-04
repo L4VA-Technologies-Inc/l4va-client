@@ -11,7 +11,7 @@ export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = n
 
   return (
     <div
-      className={`p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg hover:bg-gray-800/70 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      className={`p-4 bg-steel-800/50 border border-gray-700/50 rounded-lg hover:bg-steel-800/70 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

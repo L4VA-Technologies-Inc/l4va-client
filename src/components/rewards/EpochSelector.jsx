@@ -54,7 +54,7 @@ export const EpochSelector = ({ selectedEpochIds = [], onChange, mode = 'single'
   };
 
   if (isLoading) {
-    return <div className="h-10 w-40 bg-gray-800/50 rounded-lg animate-pulse" />;
+    return <div className="h-10 w-40 bg-steel-800/50 rounded-lg animate-pulse" />;
   }
 
   return (

@@ -8,9 +8,8 @@ import { substringAddress, formatAdaPrice, formatNumber, formatLargeNumber, form
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
+import { TokenImage } from '@/components/shared/TokenImage.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-
-const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -212,13 +211,13 @@ const VaultContributedAssetsList = ({ vault }) => {
                         onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
                       >
                         <td className="px-4 py-3">
-                          <img
+                          <TokenImage
+                            asset={asset}
                             alt={asset.name || 'NFT'}
-                            className="w-12 h-12 rounded-lg object-cover"
-                            src={asset.image || FALLBACK_IMAGE}
-                            onError={e => {
-                              e.target.src = FALLBACK_IMAGE;
-                            }}
+                            className="rounded-lg"
+                            width={48}
+                            height={48}
+                            chainType={isRobinhoodVault ? 'robinhood' : 'cardano'}
                           />
                         </td>
                         <td

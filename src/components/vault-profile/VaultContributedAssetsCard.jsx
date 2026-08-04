@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 
 import { substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils.js';
+import { TokenImage } from '@/components/shared/TokenImage.jsx';
 
 const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinhoodVault }) => {
   const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
@@ -13,7 +14,6 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinh
     toast.success(message);
   };
 
-  const imageUrl = asset.image ? asset.image : '/assets/icons/ada.svg';
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
 
   return (
@@ -29,7 +29,14 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinh
         onClick={onClick}
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <img alt={assetName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={imageUrl} />
+          <TokenImage
+            asset={asset}
+            alt={assetName}
+            className="rounded-lg flex-shrink-0"
+            width={48}
+            height={48}
+            chainType={isRobinhoodVault ? 'robinhood' : 'cardano'}
+          />
           <p className="font-medium text-white truncate">{assetName}</p>
         </div>
 
