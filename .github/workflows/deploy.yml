@@ -50,7 +50,8 @@ jobs:
           export L4VA_NETWORK_NAME=l4va-testnet-network
           export CLIENT_HOST_PORT=5273
 
-          mkdir -p "$APP_DIR"
+          sudo mkdir -p "$APP_DIR"
+          sudo chown -R "$(id -u):$(id -g)" "$APP_DIR"
           cd "$APP_DIR"
           # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
           rm -rf src/
@@ -87,7 +88,8 @@ jobs:
           export L4VA_NETWORK_NAME=l4va-network
           export CLIENT_HOST_PORT=5173
 
-          mkdir -p "$APP_DIR"
+          sudo mkdir -p "$APP_DIR"
+          sudo chown -R "$(id -u):$(id -g)" "$APP_DIR"
           cd "$APP_DIR"
           # Remove old src files to prevent stale files (e.g., renamed .js -> .ts)
           rm -rf src/
