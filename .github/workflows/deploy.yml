@@ -46,6 +46,7 @@ jobs:
         run: |
           APPS_ROOT=~/apps-testnet
           APP_DIR="$APPS_ROOT/l4va-client"
+          COMPOSE_PROJECT_NAME=l4va-testnet-client
           export CONTAINER_PREFIX=l4va-testnet
           export L4VA_NETWORK_NAME=l4va-testnet-network
           export CLIENT_HOST_PORT=5273
@@ -63,8 +64,8 @@ jobs:
           rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' "$GITHUB_WORKSPACE/" "$APP_DIR/"
           # Copy environment-specific files
           cp "$GITHUB_WORKSPACE/.env" "$APP_DIR/.env"
-          docker compose build l4va-client
-          docker compose up -d --force-recreate l4va-client
+          docker compose -p "$COMPOSE_PROJECT_NAME" build l4va-client
+          docker compose -p "$COMPOSE_PROJECT_NAME" up -d --force-recreate l4va-client
 
   deploy-prod:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -84,6 +85,7 @@ jobs:
         run: |
           APPS_ROOT=~/apps
           APP_DIR="$APPS_ROOT/l4va-client"
+          COMPOSE_PROJECT_NAME=l4va-client-prod
           export CONTAINER_PREFIX=l4va
           export L4VA_NETWORK_NAME=l4va-network
           export CLIENT_HOST_PORT=5173
@@ -101,5 +103,5 @@ jobs:
           rsync -a --delete --exclude 'node_modules' --exclude '.env' --exclude 'dist' "$GITHUB_WORKSPACE/" "$APP_DIR/"
           # Copy environment-specific files
           cp "$GITHUB_WORKSPACE/.env" "$APP_DIR/.env"
-          docker compose build l4va-client
-          docker compose up -d --force-recreate l4va-client
+          docker compose -p "$COMPOSE_PROJECT_NAME" build l4va-client
+          docker compose -p "$COMPOSE_PROJECT_NAME" up -d --force-recreate l4va-client
