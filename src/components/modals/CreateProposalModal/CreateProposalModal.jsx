@@ -32,8 +32,9 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { ChainType } from '@/utils/types';
 
-const executionOptions = [
+const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
@@ -45,12 +46,22 @@ const executionOptions = [
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
+const evmExecutionOptions = [
+  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  { value: 'distribution', label: 'Distribution' },
+  { value: 'termination', label: 'Termination' },
+];
+
+const executionOptions = cardanoExecutionOptions;
+
 const initialProposalData = {
   isValid: true,
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const { currencyLabel } = useCurrency();
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState(
@@ -94,7 +105,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
 
     if (isExpansion) {
-      return executionOptions.map(option => {
+      return activeExecutionOptions.map(option => {
         if (option.value === 'distribution') {
           return option;
         }
@@ -106,8 +117,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       });
     }
 
-    return executionOptions;
-  }, [vault.vaultStatus]);
+    return activeExecutionOptions;
+  }, [vault.vaultStatus, activeExecutionOptions]);
 
   const handleCreateProposal = () => {
     // Validate voting duration constraints
@@ -196,7 +207,31 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
-        if (marketActionType === 'swap') {
+        // EVM: Uniswap swap proposal
+        if (marketActionType === 'evm_swap') {
+          proposalPayload.marketplaceActions = (proposalData.evmSwapActions || []).map(action => ({
+            exec: 'SELL',
+            inputAsset: action.inputAsset,
+            expectedOutputAsset: action.outputAsset,
+            amount: action.amount,
+            market: 'Uniswap',
+            assetId: action.inputAsset,
+          }));
+          // EVM: close position proposal
+        } else if (marketActionType === 'evm_close_position') {
+          const a = proposalData.evmClosePositionAction || {};
+          proposalPayload.marketplaceActions = [
+            {
+              exec: 'CLOSE_POSITION',
+              assetId: a.positionAsset || '',
+              positionId: a.positionId,
+              positionAsset: a.positionAsset,
+              underlyingAsset: a.underlyingAsset,
+              positionAmount: a.positionAmount,
+              market: 'Uniswap',
+            },
+          ];
+        } else if (marketActionType === 'swap') {
           proposalPayload.marketplaceActions = (proposalData.swapActions || []).map(action => ({
             assetId: action.assetId,
             exec: 'SELL',
@@ -477,6 +512,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}
                 error={error}
+                isEvmVault={isEvmVault}
               />
             )}
             {selectedOption === 'expansion' && (

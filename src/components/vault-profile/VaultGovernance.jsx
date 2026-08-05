@@ -9,9 +9,11 @@ import {
   CircleArrowUp,
   ArrowLeft,
   Trash2,
+  PauseCircle,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useReadContract } from 'wagmi';
 
 import { ProposalInfo } from './ProposalInfo';
 import { ProposalEndDate } from './ProposalEndDate';
@@ -25,6 +27,7 @@ import { useDeleteProposal, useGovernanceProposals } from '@/services/api/querie
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { ChainType } from '@/utils/types';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
@@ -39,6 +42,16 @@ export const VaultGovernance = ({ vault }) => {
 
   const queryClient = useQueryClient();
   const deleteProposalMutation = useDeleteProposal();
+
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+
+  // Read on-chain pause state for EVM vaults only.
+  const { data: isPaused } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [{ type: 'function', stateMutability: 'view', name: 'paused', inputs: [], outputs: [{ type: 'bool' }] }],
+    functionName: 'paused',
+    query: { enabled: isEvmVault && !!vault?.contractAddress },
+  });
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({
     value: tab,
@@ -208,6 +221,15 @@ export const VaultGovernance = ({ vault }) => {
         )}
         <h1 className="text-3xl font-bold">{vault.name}</h1>
       </div>
+
+      {isPaused && (
+        <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg px-4 py-3 mb-6">
+          <PauseCircle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">
+            This vault is currently paused. Contributions and new proposals are temporarily suspended.
+          </span>
+        </div>
+      )}
 
       {showProposalList ? (
         selectedProposal ? (
