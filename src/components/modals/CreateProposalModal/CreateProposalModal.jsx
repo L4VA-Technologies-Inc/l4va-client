@@ -223,7 +223,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             expectedOutputAsset: action.outputAsset,
             amount: action.amount,
             market: 'Uniswap',
-            assetId: action.inputAsset,
+            assetId: '',
           }));
           // EVM: close position proposal
         } else if (marketActionType === 'evm_close_position') {
