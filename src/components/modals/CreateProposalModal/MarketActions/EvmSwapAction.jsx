@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus, X, ArrowRight } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 
@@ -8,20 +8,23 @@ const ERC20_DECIMALS_ABI = [
   { type: 'function', stateMutability: 'view', name: 'decimals', inputs: [], outputs: [{ type: 'uint8' }] },
 ];
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 const isValidAddress = addr => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
 /** Fetches ERC-20 decimals for a given address and notifies the parent. */
-const DecimalsResolver = ({ address, onResolved }) => {
+const DecimalsResolver = ({ address, actionId, onResolved }) => {
+  const validAddress = isValidAddress(address);
   const { data } = useReadContract({
-    address,
+    address: validAddress ? address : ZERO_ADDRESS,
     abi: ERC20_DECIMALS_ABI,
     functionName: 'decimals',
-    query: { enabled: isValidAddress(address) },
+    query: { enabled: validAddress },
   });
 
   useEffect(() => {
-    if (data != null) onResolved(Number(data));
-  }, [data, onResolved]);
+    if (data != null) onResolved(actionId, Number(data));
+  }, [actionId, data, onResolved]);
 
   return null;
 };
@@ -50,6 +53,18 @@ const isValidAction = action =>
 
 const EvmSwapAction = ({ onDataChange, error }) => {
   const [actions, setActions] = useState([emptyAction()]);
+
+  const updateDecimals = useCallback((id, decimals) => {
+    setActions(prev => {
+      let changed = false;
+      const next = prev.map(action => {
+        if (action.id !== id || action.decimals === decimals) return action;
+        changed = true;
+        return { ...action, decimals };
+      });
+      return changed ? next : prev;
+    });
+  }, []);
 
   useEffect(() => {
     onDataChange({
@@ -89,7 +104,7 @@ const EvmSwapAction = ({ onDataChange, error }) => {
         return (
           <div key={action.id} className="bg-steel-800 rounded-lg p-4 space-y-4">
             {/* resolve decimals silently when the input address is valid */}
-            <DecimalsResolver address={action.inputAsset} onResolved={d => update(action.id, 'decimals', d)} />
+            <DecimalsResolver address={action.inputAsset} actionId={action.id} onResolved={updateDecimals} />
 
             <div className="flex justify-between items-center">
               <span className="font-medium text-sm">

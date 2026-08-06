@@ -1,6 +1,7 @@
 import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -52,8 +53,6 @@ const evmExecutionOptions = [
   { value: 'termination', label: 'Termination' },
 ];
 
-const executionOptions = cardanoExecutionOptions;
-
 const initialProposalData = {
   isValid: true,
 };
@@ -75,10 +74,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [status, setStatus] = useState('idle');
 
   const wallet = useWallet('handler', 'isConnected');
+  const { isConnected: isEvmConnected } = useAccount();
   const createProposalMutation = useCreateProposal();
   const submitProposalFeePayment = useSubmitProposalFeePayment();
   const deleteProposalMutation = useDeleteProposal();
   const { data: governanceFees } = useGovernanceFees();
+
+  const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
+  const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
 
   const { refetch } = useGovernanceProposals(vault.id);
 
@@ -121,6 +124,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, [vault.vaultStatus, activeExecutionOptions]);
 
   const handleCreateProposal = () => {
+    if (!isWalletConnected) {
+      toast.error(`Please connect your ${connectWalletLabel} first`);
+      return;
+    }
+
     // Validate voting duration constraints
     if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
       const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
@@ -158,8 +166,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     setStatus('creating');
     try {
       // Step 1: Check if wallet is connected
-      if (!wallet.isConnected || !wallet.handler) {
-        toast.error('Please connect your wallet first');
+      if (!isWalletConnected) {
+        toast.error(`Please connect your ${connectWalletLabel} first`);
         setStatus('idle');
         return;
       }
@@ -293,6 +301,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       // Step 4: Handle payment if required
       if (requiresPayment && presignedTx) {
         try {
+          if (!wallet.handler) {
+            throw new Error('Cardano wallet is required to sign the proposal fee transaction');
+          }
+
           // Sign fee transaction
           setStatus('signing');
           const signature = await wallet.handler.signTx(presignedTx, true);
@@ -381,7 +393,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, []);
 
   const handleChangeExecutionOption = value => {
-    const option = executionOptions.find(opt => opt.value === value);
+    const option = availableExecutionOptions.find(opt => opt.value === value);
     if (option?.disabled) {
       return;
     }
@@ -486,7 +498,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'distribution' && (
               <Distributing
-                isDisabled={executionOptions.find(opt => opt.value === 'distribution')?.disabled}
+                isDisabled={availableExecutionOptions.find(opt => opt.value === 'distribution')?.disabled}
                 vaultId={vault?.id}
                 onDataChange={handleDataChange}
               />

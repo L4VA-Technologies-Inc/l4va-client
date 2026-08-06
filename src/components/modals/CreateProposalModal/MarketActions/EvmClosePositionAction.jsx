@@ -7,6 +7,8 @@ const ERC20_DECIMALS_ABI = [
   { type: 'function', stateMutability: 'view', name: 'decimals', inputs: [], outputs: [{ type: 'uint8' }] },
 ];
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 const isValidAddress = addr => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
 const toRaw = (human, decimals) => {
@@ -31,13 +33,14 @@ const EvmClosePositionAction = ({ onDataChange, error }) => {
   const [decimals, setDecimals] = useState(18);
 
   const update = (field, value) => setAction(prev => ({ ...prev, [field]: value }));
+  const validPositionAsset = isValidAddress(action.positionAsset);
 
   // Fetch decimals from the position asset contract.
   const { data: resolvedDecimals } = useReadContract({
-    address: action.positionAsset,
+    address: validPositionAsset ? action.positionAsset : ZERO_ADDRESS,
     abi: ERC20_DECIMALS_ABI,
     functionName: 'decimals',
-    query: { enabled: isValidAddress(action.positionAsset) },
+    query: { enabled: validPositionAsset },
   });
 
   useEffect(() => {
