@@ -12,14 +12,17 @@ const ActionField = ({ label, value, children, className }) => (
   </div>
 );
 
+/** Truncate a 0x address for display. */
+const shortAddr = addr => (addr ? `${addr.slice(0, 8)}\u2026${addr.slice(-6)}` : 'N/A');
+
 export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainType }) => {
   const { currencyLabel } = useCurrency();
 
   if (!Array.isArray(actions) || actions.length === 0) return null;
 
-  // Check if this is a DexHunter swap action
-  // DexHunter swaps have market='DexHunter' OR have slippage field (unique to swaps)
   const isDexHunterSwap = actions[0]?.market === 'DexHunter' || actions[0]?.slippage !== undefined;
+  const isEvmUniswapSwap = actions[0]?.market === 'Uniswap' && actions[0]?.inputAsset;
+  const isEvmClosePosition = actions[0]?.exec === 'CLOSE_POSITION';
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,10 +32,39 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
       </div>
       <div className="space-y-4 pl-4 border-l border-steel-750">
         {actions.map((action, index) => (
-          <div key={action.assetId} className="space-y-2">
+          <div key={index} className="space-y-2">
             <div className="text-sm text-gray-500">Action {index + 1}</div>
             <div className="space-y-2">
-              {isDexHunterSwap ? (
+              {isEvmUniswapSwap ? (
+                <>
+                  <ActionField label="Market" value="Uniswap V3 (Robinhood Chain)" />
+                  <ActionField label="Type" value="Token Swap" />
+                  <ActionField label="Input Token" value={shortAddr(action.inputAsset)} />
+                  <ActionField label="Output Token" value={shortAddr(action.expectedOutputAsset)} />
+                  {(action.humanAmount || action.amount) && (
+                    <ActionField label="Amount" value={action.humanAmount || action.amount} />
+                  )}
+                  {action.assetStatus && (
+                    <ActionField label="Status" className="uppercase" value={action.assetStatus} />
+                  )}
+                </>
+              ) : isEvmClosePosition ? (
+                <>
+                  <ActionField label="Market" value="Uniswap V3 (Robinhood Chain)" />
+                  <ActionField label="Type" value="Close Position" />
+                  {action.positionId && <ActionField label="Position ID" value={action.positionId} />}
+                  {action.positionAsset && (
+                    <ActionField label="Position Asset" value={shortAddr(action.positionAsset)} />
+                  )}
+                  {action.underlyingAsset && (
+                    <ActionField label="Return To" value={shortAddr(action.underlyingAsset)} />
+                  )}
+                  {action.positionAmount && <ActionField label="Amount (raw)" value={action.positionAmount} />}
+                  {action.assetStatus && (
+                    <ActionField label="Status" className="uppercase" value={action.assetStatus} />
+                  )}
+                </>
+              ) : isDexHunterSwap ? (
                 <>
                   <ActionField label="Market" value={action.market || 'DexHunter'} />
                   <ActionField label="Type" value={`Swap to ${currencyLabel}`} />
@@ -60,13 +92,16 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
                     />
                   )}
                   {!action.useMarketPrice && action.customPriceAda && (
-                    <ActionField label="Custom Price" value={`₳${formatAdaPrice(action.customPriceAda)} per token`} />
+                    <ActionField
+                      label="Custom Price"
+                      value={`\u20B3${formatAdaPrice(action.customPriceAda)} per token`}
+                    />
                   )}
                   {action.estimatedOutput && (
-                    <ActionField label="Estimated Output" value={`₳${formatAdaPrice(action.estimatedOutput)}`} />
+                    <ActionField label="Estimated Output" value={`\u20B3${formatAdaPrice(action.estimatedOutput)}`} />
                   )}
                   {action.actualOutput && (
-                    <ActionField label="Actual Output" value={`₳${formatAdaPrice(action.actualOutput)}`} />
+                    <ActionField label="Actual Output" value={`\u20B3${formatAdaPrice(action.actualOutput)}`} />
                   )}
                   {action.txHash && (
                     <ActionField label="Transaction">
@@ -76,7 +111,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-orange-500 hover:text-orange-400 transition-colors text-sm"
                       >
-                        <span>View on Cardanoscan</span>
+                        <span>View on Explorer</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </ActionField>
@@ -90,18 +125,20 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
                   <ActionField label="Exec" value={action.exec} />
                   <ActionField label="Market" value={action.market || 'WayUp'} />
                   {action.assetPrice && String(action.exec || '').toLowerCase() !== 'offer' && (
-                    <ActionField label="Floor Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />
+                    <ActionField label="Floor Price" value={`\u20B3${formatAdaPrice(action.assetPrice)}`} />
                   )}
                   {action.price && (
                     <ActionField
                       label={String(action.exec || '').toLowerCase() === 'offer' ? 'Offered Price' : 'Buying Max Price'}
-                      value={`₳${formatAdaPrice(action.price)}`}
+                      value={`\u20B3${formatAdaPrice(action.price)}`}
                     />
                   )}
                   {action.listingPrice && (
-                    <ActionField label="Listing Price" value={`₳${formatAdaPrice(action.listingPrice)}`} />
+                    <ActionField label="Listing Price" value={`\u20B3${formatAdaPrice(action.listingPrice)}`} />
                   )}
-                  {action.newPrice && <ActionField label="New Price" value={`₳${formatAdaPrice(action.newPrice)}`} />}
+                  {action.newPrice && (
+                    <ActionField label="New Price" value={`\u20B3${formatAdaPrice(action.newPrice)}`} />
+                  )}
                   {action.assetName && <ActionField label="Asset Name" value={action.assetName} />}
                   {action.assetImg && (
                     <ActionField label="Asset Image">
@@ -140,7 +177,9 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
                   {action.sellType && <ActionField label="Sell Type" value={action.sellType} />}
                   {action.method && <ActionField label="Method" value={action.method} />}
                   {action.market && <ActionField label="Market" value={action.market} />}
-                  {action.assetPrice && <ActionField label="Price" value={`₳${formatAdaPrice(action.assetPrice)}`} />}
+                  {action.assetPrice && (
+                    <ActionField label="Price" value={`\u20B3${formatAdaPrice(action.assetPrice)}`} />
+                  )}
                   {action.assetStatus && (
                     <ActionField label="Status" className="uppercase" value={action.assetStatus} />
                   )}

@@ -222,6 +222,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             inputAsset: action.inputAsset,
             expectedOutputAsset: action.outputAsset,
             amount: action.amount,
+            humanAmount: action.humanAmount,
             market: 'Uniswap',
             assetId: '',
           }));
