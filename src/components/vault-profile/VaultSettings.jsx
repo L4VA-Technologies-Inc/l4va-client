@@ -8,7 +8,6 @@ import { useNavigate, useRouter } from '@tanstack/react-router';
 import { InfoRow } from '@/components/ui/infoRow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import L4vaIcon from '@/components/shared/L4vaIcon';
 import { TokenImage } from '@/components/shared/TokenImage';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
@@ -192,20 +191,6 @@ export const VaultSettings = ({ vault }) => {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center mb-6">
-          {vault.vaultImage ? (
-            <img
-              alt={vault.name}
-              className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
-              src={vault.vaultImage}
-            />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
-              <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
-            </div>
-          )}
-          <h1 className="text-3xl font-bold">{vault.name}</h1>
-        </div>
         <div className="bg-steel-750 rounded-lg p-4">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold mb-4">Vault Info</h2>

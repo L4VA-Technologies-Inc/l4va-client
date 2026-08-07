@@ -18,7 +18,6 @@ import clsx from 'clsx';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
-import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
@@ -608,21 +607,6 @@ export const VaultActivity = ({ vault }) => {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center mb-6">
-          {vault.vaultImage ? (
-            <img
-              alt={vault.name}
-              className="w-[100px] h-[100px] rounded-full mb-4 object-cover border-4 border-steel-750"
-              src={vault.vaultImage}
-            />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center border-4 border-steel-750">
-              <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
-            </div>
-          )}
-          <h1 className="text-3xl font-bold text-white">{vault.name}</h1>
-        </div>
-
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
