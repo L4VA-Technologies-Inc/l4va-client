@@ -49,6 +49,8 @@ const cardanoExecutionOptions = [
 
 const evmExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'acquire_expansion', label: 'Acquire Expansion' },
   { value: 'distribution', label: 'Distribution' },
   { value: 'termination', label: 'Termination' },
 ];
@@ -187,7 +189,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
       } else if (selectedOption === 'expansion') {
-        proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        if (isEvmVault) {
+          proposalPayload.expansionEvmAssets = proposalData.expansionEvmAssets || [];
+        } else {
+          proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        }
         proposalPayload.expansionDuration = proposalData.expansionDuration;
         proposalPayload.expansionNoLimit = proposalData.expansionNoLimit || false;
         proposalPayload.expansionAssetMax = proposalData.expansionAssetMax;
