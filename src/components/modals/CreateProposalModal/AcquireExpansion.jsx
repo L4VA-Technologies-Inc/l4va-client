@@ -12,6 +12,7 @@ import { ChainType } from '@/utils/types';
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const { currencyLabel } = useCurrency();
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false);
   const [maxAda, setMaxAda] = useState('');
@@ -217,7 +218,8 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     <div className="mt-2 p-3 bg-steel-800 rounded">
                       <p className="text-xs text-gray-400">Example calculation:</p>
                       <p className="text-sm text-primary font-mono mt-1">
-                        100 ₳ = {(limitPriceNum * 100).toLocaleString()} VT
+                        {exampleContributionAmount} {currencyLabel} ={' '}
+                        {(limitPriceNum * exampleContributionAmount).toLocaleString()} VT
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         Min: {minLimitPrice} VT/{currencyLabel}
@@ -261,12 +263,15 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                   </p>
                 </div>
               )}
-              {!isEvmVault && vault?.hasActiveLp && vault?.vtPrice && (
+              {vault?.hasActiveLp && vault?.vtPrice && (
                 <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                  <p className="text-primary text-sm font-medium">✓ LP Detected</p>
-                  <p className="text-gray-300 text-xs mt-1">Current VT Price: {vault.vtPrice.toFixed(6)} ₳ per VT</p>
+                  <p className="text-primary text-sm font-medium">✓ {isEvmVault ? 'Uniswap Pool' : 'LP'} Detected</p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Current VT Price: {vault.vtPrice.toFixed(6)} {currencyLabel} per VT
+                  </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Example: 100 ₳ = ~{(100 / vault.vtPrice).toFixed(2)} VT (at current price)
+                    Example: {exampleContributionAmount} {currencyLabel} = ~
+                    {(exampleContributionAmount / vault.vtPrice).toFixed(2)} VT (at current price)
                   </p>
                 </div>
               )}
