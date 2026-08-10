@@ -113,6 +113,11 @@ export const LavaDatePicker = ({
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   const styles = variants[variant];
+  const optionBaseClasses =
+    'sm:w-full shrink-0 aspect-square transition-all duration-200 bg-steel-850 text-steel-300 hover:bg-steel-800 hover:text-white';
+  const optionActiveClasses = 'bg-orange-500 text-steel-950 hover:bg-orange-500 hover:text-steel-950';
+  const optionDisabledClasses =
+    'bg-steel-900 text-steel-600 cursor-not-allowed hover:bg-steel-900 hover:text-steel-600';
 
   return (
     <>
@@ -183,7 +188,7 @@ export const LavaDatePicker = ({
                     outside: 'text-muted-foreground aria-selected:text-muted-foreground',
                     disabled: 'text-muted-foreground opacity-50',
                     selected:
-                      'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+                      'bg-orange-500 text-steel-950 hover:bg-orange-500 hover:text-steel-950 focus:bg-orange-500 focus:text-steel-950',
                   }}
                   disabled={date => {
                     const minimumDate = minDate || startOfToday();
@@ -203,10 +208,16 @@ export const LavaDatePicker = ({
                         return (
                           <Button
                             key={hour}
-                            className="sm:w-full shrink-0 aspect-square"
+                            className={cn(
+                              optionBaseClasses,
+                              dateValue && getHours(dateValue) % 12 === hour % 12
+                                ? optionActiveClasses
+                                : 'text-steel-400',
+                              (!dateValue || isHourDisabled) && optionDisabledClasses
+                            )}
                             size="icon"
                             disabled={!dateValue || isHourDisabled}
-                            variant={dateValue && getHours(dateValue) % 12 === hour % 12 ? 'default' : 'ghost'}
+                            variant="ghost"
                             onClick={() => handleTimeChange('hour', hour.toString())}
                           >
                             {hour}
@@ -218,43 +229,56 @@ export const LavaDatePicker = ({
                   </ScrollArea>
                   <ScrollArea className={cn('w-64 sm:w-auto', styles.scrollArea)}>
                     <div className="flex sm:flex-col p-2">
-                      {Array.from({ length: 12 }, (_, i) => i * 5).map(minute => (
-                        <Button
-                          key={minute}
-                          className="sm:w-full shrink-0 aspect-square"
-                          size="icon"
-                          disabled={
-                            !dateValue || (isToday && getHours(dateValue) === currentHour && minute < currentMinute)
-                          }
-                          variant={dateValue && getMinutes(dateValue) === minute ? 'default' : 'ghost'}
-                          onClick={() => handleTimeChange('minute', minute.toString())}
-                        >
-                          {minute}
-                        </Button>
-                      ))}
+                      {Array.from({ length: 12 }, (_, i) => i * 5).map(minute => {
+                        const isMinuteSelected = dateValue && getMinutes(dateValue) === minute;
+                        const isMinuteDisabled =
+                          !dateValue || (isToday && getHours(dateValue) === currentHour && minute < currentMinute);
+                        return (
+                          <Button
+                            key={minute}
+                            className={cn(
+                              optionBaseClasses,
+                              isMinuteSelected ? optionActiveClasses : 'text-steel-400',
+                              isMinuteDisabled && optionDisabledClasses
+                            )}
+                            size="icon"
+                            disabled={isMinuteDisabled}
+                            variant="ghost"
+                            onClick={() => handleTimeChange('minute', minute.toString())}
+                          >
+                            {minute}
+                          </Button>
+                        );
+                      })}
                     </div>
                     <ScrollBar className="sm:hidden" orientation="horizontal" />
                   </ScrollArea>
                   <ScrollArea className={cn(styles.scrollArea, 'rounded-[10px]')}>
                     <div className="flex sm:flex-col p-2">
-                      {['AM', 'PM'].map(ampm => (
-                        <Button
-                          key={ampm}
-                          className="sm:w-full shrink-0 aspect-square"
-                          size="icon"
-                          disabled={!dateValue || (isToday && ampm === 'AM' && currentHour >= 12)}
-                          variant={
-                            dateValue &&
-                            ((ampm === 'AM' && getHours(dateValue) < 12) ||
-                              (ampm === 'PM' && getHours(dateValue) >= 12))
-                              ? 'default'
-                              : 'ghost'
-                          }
-                          onClick={() => handleTimeChange('ampm', ampm)}
-                        >
-                          {ampm}
-                        </Button>
-                      ))}
+                      {['AM', 'PM'].map(ampm => {
+                        let isAmPmSelected = false;
+                        if (dateValue) {
+                          const selectedHour = getHours(dateValue);
+                          isAmPmSelected = ampm === 'AM' ? selectedHour < 12 : selectedHour >= 12;
+                        }
+                        const isAmPmDisabled = !dateValue || (isToday && ampm === 'AM' && currentHour >= 12);
+                        return (
+                          <Button
+                            key={ampm}
+                            className={cn(
+                              optionBaseClasses,
+                              isAmPmSelected ? optionActiveClasses : 'text-steel-400',
+                              isAmPmDisabled && optionDisabledClasses
+                            )}
+                            size="icon"
+                            disabled={isAmPmDisabled}
+                            variant="ghost"
+                            onClick={() => handleTimeChange('ampm', ampm)}
+                          >
+                            {ampm}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 </div>
