@@ -23,6 +23,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 
 const ProposalInfoSkeleton = () => (
   <div>
@@ -107,6 +108,7 @@ const ProposalInfoSkeleton = () => (
 export const ProposalInfo = ({ proposalId }) => {
   const { currencyLabel } = useCurrency();
   const { user } = useAuth();
+  const { walletAddress, isWalletConnected } = useRewardsWalletConnection();
   const { openModal } = useModalControls();
   const router = useRouter();
 
@@ -456,7 +458,9 @@ export const ProposalInfo = ({ proposalId }) => {
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
   const handleVote = async (proposalId, voteType) => {
-    if (!user) {
+    const activeVoterAddress = walletAddress || user?.address;
+
+    if (!user || !isWalletConnected || !activeVoterAddress) {
       openModal('LoginModal');
       return;
     }
@@ -470,7 +474,7 @@ export const ProposalInfo = ({ proposalId }) => {
             proposalId,
             voteData: {
               vote: voteType.toLowerCase(),
-              voterAddress: user.address,
+              voterAddress: activeVoterAddress,
             },
           });
           setCanVote(false);

@@ -7,9 +7,12 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
+import { ChainType } from '@/utils/types';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const { currencyLabel } = useCurrency();
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false);
   const [maxAda, setMaxAda] = useState('');
@@ -215,7 +218,8 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     <div className="mt-2 p-3 bg-steel-800 rounded">
                       <p className="text-xs text-gray-400">Example calculation:</p>
                       <p className="text-sm text-primary font-mono mt-1">
-                        100 ₳ = {(limitPriceNum * 100).toLocaleString()} VT
+                        {exampleContributionAmount} {currencyLabel} ={' '}
+                        {(limitPriceNum * exampleContributionAmount).toLocaleString()} VT
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         Min: {minLimitPrice} VT/{currencyLabel}
@@ -236,31 +240,38 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                   <strong>Market Price Calculation:</strong>
                 </p>
                 <p className="text-sm text-gray-300">
-                  Contributors will receive VT based on the current market price from the Liquidity Pool:
+                  Contributors will receive VT based on the current market price
+                  {isEvmVault ? ' from Uniswap' : ' from the Liquidity Pool'}:
                 </p>
                 <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
-                  VT Amount = {currencyLabel} Sent x (Current VT/{currencyLabel} Price from LP)
+                  VT Amount = {currencyLabel} Sent x (Current VT/{currencyLabel} Price from{' '}
+                  {isEvmVault ? 'Uniswap' : 'LP'})
                 </div>
                 <p className="text-xs text-gray-400">
-                  This ensures contributors receive VT at fair market value based on DEX prices (DexHunter, Taptools)
+                  {isEvmVault
+                    ? `VT price is fetched from the Uniswap pool on Robinhood Chain at cycle close time`
+                    : `This ensures contributors receive VT at fair market value based on DEX prices (DexHunter, Taptools)`}
                 </p>
               </div>
               {!vault?.hasActiveLp && (
                 <div className="p-3 bg-yellow-900/20 border border-yellow-600/50 rounded-lg">
                   <p className="text-yellow-400 text-sm font-medium">⚠️ Market Pricing Requirements:</p>
                   <p className="text-yellow-300/90 text-xs mt-1">
-                    This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP
-                    with at least 1,000 {currencyLabel} in liquidity. Please use <strong>Limit Price</strong> instead,
-                    or create an LP first.
+                    {isEvmVault
+                      ? `This vault does not have an active Uniswap pool. Market pricing requires a VT pool with liquidity. Please use Limit Price instead.`
+                      : `This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP with at least 1,000 ${currencyLabel} in liquidity. Please use Limit Price instead, or create an LP first.`}
                   </p>
                 </div>
               )}
               {vault?.hasActiveLp && vault?.vtPrice && (
                 <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                  <p className="text-primary text-sm font-medium">✓ LP Detected</p>
-                  <p className="text-gray-300 text-xs mt-1">Current VT Price: {vault.vtPrice.toFixed(6)} ₳ per VT</p>
+                  <p className="text-primary text-sm font-medium">✓ {isEvmVault ? 'Uniswap Pool' : 'LP'} Detected</p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Current VT Price: {vault.vtPrice.toFixed(6)} {currencyLabel} per VT
+                  </p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Example: 100 ₳ = ~{(100 / vault.vtPrice).toFixed(2)} VT (at current price)
+                    Example: {exampleContributionAmount} {currencyLabel} = ~
+                    {(exampleContributionAmount / vault.vtPrice).toFixed(2)} VT (at current price)
                   </p>
                 </div>
               )}

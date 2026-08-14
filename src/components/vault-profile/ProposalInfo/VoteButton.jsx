@@ -1,18 +1,20 @@
 export const VoteButton = ({ voteType, icon: Icon, label, canVote, isSelected, onClick }) => {
+  const baseBackground = 'var(--color-steel-850)';
+
   const getStyles = () => {
     const getBackground = () => {
-      if (!canVote) return '#2D3049';
+      if (!canVote) return baseBackground;
       if (voteType === 'yes') {
-        return 'linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), #2D3049';
+        return `linear-gradient(90deg, rgba(34, 197, 94, 0.00) 0%, rgba(34, 197, 94, 0.20) 100%), ${baseBackground}`;
       }
       if (voteType === 'no') {
-        return 'linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), #2D3049';
+        return `linear-gradient(90deg, rgba(239, 68, 68, 0.00) 0%, rgba(239, 68, 68, 0.20) 100%), ${baseBackground}`;
       }
-      return 'linear-gradient(90deg, rgba(148, 163, 184, 0.00) 0%, rgba(148, 163, 184, 0.15) 100%), #2D3049';
+      return `linear-gradient(90deg, rgba(148, 163, 184, 0.00) 0%, rgba(148, 163, 184, 0.15) 100%), ${baseBackground}`;
     };
 
     const getBorderColor = () => {
-      if (!isSelected) return '#2D3049';
+      if (!isSelected) return baseBackground;
       if (voteType === 'yes') return '#22c55e';
       if (voteType === 'no') return '#ef4444';
       return '#94a3b8';

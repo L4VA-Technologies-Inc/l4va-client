@@ -1,6 +1,7 @@
 import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -32,8 +33,9 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { ChainType } from '@/utils/types';
 
-const executionOptions = [
+const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
@@ -45,12 +47,22 @@ const executionOptions = [
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
+const evmExecutionOptions = [
+  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'acquire_expansion', label: 'Acquire Expansion' },
+  { value: 'distribution', label: 'Distribution' },
+  { value: 'termination', label: 'Termination' },
+];
+
 const initialProposalData = {
   isValid: true,
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const { currencyLabel } = useCurrency();
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState(
@@ -64,10 +76,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [status, setStatus] = useState('idle');
 
   const wallet = useWallet('handler', 'isConnected');
+  const { isConnected: isEvmConnected } = useAccount();
   const createProposalMutation = useCreateProposal();
   const submitProposalFeePayment = useSubmitProposalFeePayment();
   const deleteProposalMutation = useDeleteProposal();
   const { data: governanceFees } = useGovernanceFees();
+
+  const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
+  const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
 
   const { refetch } = useGovernanceProposals(vault.id);
 
@@ -94,7 +110,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
 
     if (isExpansion) {
-      return executionOptions.map(option => {
+      return activeExecutionOptions.map(option => {
         if (option.value === 'distribution') {
           return option;
         }
@@ -106,10 +122,15 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       });
     }
 
-    return executionOptions;
-  }, [vault.vaultStatus]);
+    return activeExecutionOptions;
+  }, [vault.vaultStatus, activeExecutionOptions]);
 
   const handleCreateProposal = () => {
+    if (!isWalletConnected) {
+      toast.error(`Please connect your ${connectWalletLabel} first`);
+      return;
+    }
+
     // Validate voting duration constraints
     if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
       const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
@@ -147,8 +168,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     setStatus('creating');
     try {
       // Step 1: Check if wallet is connected
-      if (!wallet.isConnected || !wallet.handler) {
-        toast.error('Please connect your wallet first');
+      if (!isWalletConnected) {
+        toast.error(`Please connect your ${connectWalletLabel} first`);
         setStatus('idle');
         return;
       }
@@ -168,7 +189,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'distribution') {
         proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
       } else if (selectedOption === 'expansion') {
-        proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        if (isEvmVault) {
+          proposalPayload.expansionEvmAssets = proposalData.expansionEvmAssets || [];
+        } else {
+          proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        }
         proposalPayload.expansionDuration = proposalData.expansionDuration;
         proposalPayload.expansionNoLimit = proposalData.expansionNoLimit || false;
         proposalPayload.expansionAssetMax = proposalData.expansionAssetMax;
@@ -196,7 +221,32 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
-        if (marketActionType === 'swap') {
+        // EVM: Uniswap swap proposal
+        if (marketActionType === 'evm_swap') {
+          proposalPayload.marketplaceActions = (proposalData.evmSwapActions || []).map(action => ({
+            exec: 'SELL',
+            inputAsset: action.inputAsset,
+            expectedOutputAsset: action.outputAsset,
+            amount: action.amount,
+            humanAmount: action.humanAmount,
+            market: 'Uniswap',
+            assetId: '',
+          }));
+          // EVM: close position proposal
+        } else if (marketActionType === 'evm_close_position') {
+          const a = proposalData.evmClosePositionAction || {};
+          proposalPayload.marketplaceActions = [
+            {
+              exec: 'CLOSE_POSITION',
+              assetId: a.positionAsset || '',
+              positionId: a.positionId,
+              positionAsset: a.positionAsset,
+              underlyingAsset: a.underlyingAsset,
+              positionAmount: a.positionAmount,
+              market: 'Uniswap',
+            },
+          ];
+        } else if (marketActionType === 'swap') {
           proposalPayload.marketplaceActions = (proposalData.swapActions || []).map(action => ({
             assetId: action.assetId,
             exec: 'SELL',
@@ -258,6 +308,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       // Step 4: Handle payment if required
       if (requiresPayment && presignedTx) {
         try {
+          if (!wallet.handler) {
+            throw new Error('Cardano wallet is required to sign the proposal fee transaction');
+          }
+
           // Sign fee transaction
           setStatus('signing');
           const signature = await wallet.handler.signTx(presignedTx, true);
@@ -346,7 +400,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, []);
 
   const handleChangeExecutionOption = value => {
-    const option = executionOptions.find(opt => opt.value === value);
+    const option = availableExecutionOptions.find(opt => opt.value === value);
     if (option?.disabled) {
       return;
     }
@@ -451,7 +505,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'distribution' && (
               <Distributing
-                isDisabled={executionOptions.find(opt => opt.value === 'distribution')?.disabled}
+                isDisabled={availableExecutionOptions.find(opt => opt.value === 'distribution')?.disabled}
                 vaultId={vault?.id}
                 onDataChange={handleDataChange}
               />
@@ -477,6 +531,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}
                 error={error}
+                isEvmVault={isEvmVault}
               />
             )}
             {selectedOption === 'expansion' && (

@@ -187,7 +187,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
-  const { currencySymbol, pickByCurrency } = useCurrency();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
@@ -388,6 +388,27 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     }
   };
 
+  const formatVaultStatCurrency = (value, maximumFractionDigits = 2) => {
+    if (value == null) return 'N/A';
+
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return 'N/A';
+
+    const sign = numericValue < 0 ? '-' : '';
+    const absValue = Math.abs(numericValue);
+
+    // ETH values can be much smaller than ADA/USD-denominated values.
+    // Keep extra precision so non-zero values don't collapse to 0.
+    if (currency === 'eth') {
+      if (absValue > 0 && absValue < 0.000001) {
+        return `${sign}${currencySymbol}< 0.000001`;
+      }
+      return `${sign}${currencySymbol}${formatNum(absValue, 6)}`;
+    }
+
+    return `${sign}${currencySymbol}${formatNum(absValue, maximumFractionDigits)}`;
+  };
+
   // Calculate vault statistics - values computed on the backend in vault.vaultStats
   const vaultStats = {
     assetValue: vault.vaultStatus,
@@ -397,8 +418,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         usd: vault.vaultStats?.ftGainsUsd,
         eth: vault.vaultStats?.ftGainsEth,
       });
-      if (val == null) return 'N/A';
-      return `${val < 0 ? '-' : ''}${currencySymbol}${formatNum(Math.abs(val))}`;
+      return formatVaultStatCurrency(val);
     })(),
     fdv: (() => {
       const val = pickByCurrency({
@@ -406,8 +426,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         usd: vault.vaultStats?.fdvUsd,
         eth: vault.vaultStats?.fdvEth,
       });
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      return formatVaultStatCurrency(val);
     })(),
     fdvTvl: (() => {
       const val = vault.vaultStats?.fdvTvl;
@@ -421,17 +440,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         usd: vault.vaultStats?.vtPriceUsd,
         eth: vault.vaultStats?.vtPriceEth,
       });
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val, 4)}`;
+      return formatVaultStatCurrency(val, 4);
     })(),
     tvl: (() => {
       const val = pickByCurrency({
-        ada: vault.vaultStats?.tvlAda,
-        usd: vault.vaultStats?.tvlUsd,
-        eth: vault.vaultStats?.tvlEth,
+        ada: vault.vaultStats?.tvlAda ?? vault.assetsPrices?.totalValueAda ?? vault.totalValueAda,
+        usd: vault.vaultStats?.tvlUsd ?? vault.assetsPrices?.totalValueUsd ?? vault.totalValueUsd,
+        eth: vault.vaultStats?.tvlEth ?? vault.assetsPrices?.totalValueEth ?? vault.totalValueEth,
       });
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      return formatVaultStatCurrency(val);
     })(),
   };
 

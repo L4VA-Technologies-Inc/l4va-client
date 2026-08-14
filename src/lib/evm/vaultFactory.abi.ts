@@ -1,16 +1,9 @@
 /**
- * Minimal V3 ABI for VaultFactory — only the createVault function.
- * Full contract ABI is not needed on the frontend.
+ * Minimal V4 ABI for VaultFactory — only the createVault function.
  *
- * Mirrors the Solidity V3 signature:
- *   createVault(VaultConfig cfg, uint256 adminNonce, uint256 deadline, bytes adminSignature)
- *     returns (address vault, address vaultToken)
- *
- * V3 removes all rate tables from CycleConfig — final VT / native
- * allocations are committed off-chain and published on-chain as a Merkle
- * root at Vault.closeCycle(...). If the contract is ever upgraded, this
- * ABI must be kept in sync with `src/libraries/VaultTypes.sol` in the
- * `vault-contract-solidity` repo.
+ * V4 VaultConfig adds archetype (bytes32), vaultDeployer (address),
+ * creationApprover (address), and authority (address); the V3 `admin`
+ * field is gone. Keep in sync with VaultTypes.sol in vault-contract-solidity.
  */
 export const VAULT_FACTORY_ABI = [
   {
@@ -23,8 +16,11 @@ export const VAULT_FACTORY_ABI = [
         type: 'tuple',
         components: [
           { name: 'vaultId', type: 'bytes32' },
+          { name: 'archetype', type: 'bytes32' },
+          { name: 'vaultDeployer', type: 'address' },
           { name: 'creator', type: 'address' },
-          { name: 'admin', type: 'address' },
+          { name: 'creationApprover', type: 'address' },
+          { name: 'authority', type: 'address' },
           { name: 'mintingKey', type: 'address' },
           { name: 'treasury', type: 'address' },
           { name: 'vtName', type: 'string' },

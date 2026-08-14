@@ -9,9 +9,11 @@ import {
   CircleArrowUp,
   ArrowLeft,
   Trash2,
+  PauseCircle,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useReadContract } from 'wagmi';
 
 import { ProposalInfo } from './ProposalInfo';
 import { ProposalEndDate } from './ProposalEndDate';
@@ -20,11 +22,11 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { Pagination } from '@/components/shared/Pagination';
-import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useDeleteProposal, useGovernanceProposals } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { ChainType } from '@/utils/types';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
@@ -39,6 +41,16 @@ export const VaultGovernance = ({ vault }) => {
 
   const queryClient = useQueryClient();
   const deleteProposalMutation = useDeleteProposal();
+
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+
+  // Read on-chain pause state for EVM vaults only.
+  const { data: isPaused } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [{ type: 'function', stateMutability: 'view', name: 'paused', inputs: [], outputs: [{ type: 'bool' }] }],
+    functionName: 'paused',
+    query: { enabled: isEvmVault && !!vault?.contractAddress },
+  });
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({
     value: tab,
@@ -198,16 +210,14 @@ export const VaultGovernance = ({ vault }) => {
 
   return (
     <div className="text-white min-h-screen p-6 rounded-2xl overflow-hidden">
-      <div className="flex flex-col items-center mb-6">
-        {vault.vaultImage ? (
-          <img alt={vault.name} className="w-[100px] h-[100px] rounded-full mb-4 object-cover" src={vault.vaultImage} />
-        ) : (
-          <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
-            <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
-          </div>
-        )}
-        <h1 className="text-3xl font-bold">{vault.name}</h1>
-      </div>
+      {isPaused && (
+        <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg px-4 py-3 mb-6">
+          <PauseCircle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">
+            This vault is currently paused. Contributions and new proposals are temporarily suspended.
+          </span>
+        </div>
+      )}
 
       {showProposalList ? (
         selectedProposal ? (

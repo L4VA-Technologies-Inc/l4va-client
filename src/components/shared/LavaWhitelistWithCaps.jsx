@@ -514,7 +514,6 @@ export const LavaWhitelistWithCaps = ({
 
     return (
       <button
-        key={`${policy.policyId}-${policy.name}`}
         type="button"
         disabled={!isVerified}
         className={`w-full px-4 py-2 text-left flex items-center gap-3 border-b border-steel-700 last:border-b-0 ${
@@ -587,7 +586,7 @@ export const LavaWhitelistWithCaps = ({
             <span className="uppercase font-bold text-sm text-dark-100">*Asset valuation method</span>
           </div>
         )}
-        {whitelist.map(asset => {
+        {whitelist.map((asset, index) => {
           const isSearchMode = !!asset.policyId;
           const policiesToShow = isSearchMode
             ? getFilteredSearchResults(asset.uniqueId)
@@ -600,7 +599,7 @@ export const LavaWhitelistWithCaps = ({
 
           return (
             <div
-              key={asset.id || asset.uniqueId}
+              key={asset.id || asset.uniqueId || `asset-${index}`}
               className={cn('p-4 grid gap-4 items-start', showCountCaps ? tableGridCols : 'grid-cols-1')}
             >
               <div className={styles.itemSpacing}>
@@ -654,8 +653,10 @@ export const LavaWhitelistWithCaps = ({
                       ) : policiesToShow.length > 0 ? (
                         <>
                           <div className="space-y-0">
-                            {policiesToShow.map(policy => (
-                              <div key={policy.policyId}>{renderAssetItem(asset, policy)}</div>
+                            {policiesToShow.map((policy, policyIndex) => (
+                              <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
+                                {renderAssetItem(asset, policy)}
+                              </div>
                             ))}
                           </div>
                           {!isSearchMode && isLoadingMore && (
