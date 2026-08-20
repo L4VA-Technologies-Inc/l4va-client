@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { SendHorizonal } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
@@ -70,11 +70,6 @@ const renderMessageContent = content => {
 
 export const AiVaultChat = ({ messages, isSending, onSend }) => {
   const [input, setInput] = useState('');
-  const endRef = useRef(null);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isSending]);
 
   const submit = event => {
     event.preventDefault();
@@ -99,7 +94,6 @@ export const AiVaultChat = ({ messages, isSending, onSend }) => {
             <span className="text-sm">Thinking…</span>
           </div>
         )}
-        <div ref={endRef} />
       </div>
       <form className="flex gap-3 border-t border-steel-750 p-4" onSubmit={submit}>
         <textarea
