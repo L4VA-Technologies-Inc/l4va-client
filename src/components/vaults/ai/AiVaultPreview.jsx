@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react';
-import { ImagePlus, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
+import { ImagePlus, ListChecks, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
+import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const MAX_IMAGE_SIZE_MB = 5;
 
@@ -26,7 +28,6 @@ export const AiVaultPreview = ({
   vault,
   aiFields,
   missingFields,
-  status,
   isGeneratingImage,
   isUploadingImage,
   onEditManually,
@@ -34,14 +35,28 @@ export const AiVaultPreview = ({
   onOpenInForm,
   onReset,
   onUploadImage,
+  onUpdateVault,
 }) => {
   const [imagePrompt, setImagePrompt] = useState('');
   const fileInputRef = useRef(null);
   const { currencyLabel } = useCurrency();
+  const { openModal } = useModalControls();
 
   const isAiSet = field => aiFields.includes(field);
-  const canOpenInForm = status === 'ready' && !!vault.vaultImage;
+  // Mirrors the manual form's own gate (same schema powers "Confirm & launch" there) instead of
+  // trusting the assistant's self-reported status, which can lag behind an already-valid draft.
+  const canOpenInForm = vaultSchema.isValidSync(vault);
   const isBusy = isGeneratingImage || isUploadingImage;
+  const whitelistCount = (vault.assetsWhitelist || []).filter(item => item?.policyId).length;
+
+  const openWhitelistModal = () => {
+    openModal('AiAssetWhitelistModal', {
+      whitelist: vault.assetsWhitelist || [],
+      setWhitelist: assets => onUpdateVault('assetsWhitelist', assets),
+      isExpandable: vault.isExpandableAssetWhitelist,
+      onExpandableChange: checked => onUpdateVault('isExpandableAssetWhitelist', checked),
+    });
+  };
 
   const handleFileChange = event => {
     const file = event.target.files?.[0];
@@ -167,14 +182,25 @@ export const AiVaultPreview = ({
           Still needed: <span className="text-orange-500">{missingFields.join(', ')}</span>
         </p>
       )}
-      {status === 'ready' && !vault.vaultImage && (
-        <p className="text-sm text-orange-500">Generate the vault image to continue.</p>
+      {!canOpenInForm && !vault.vaultImage && (
+        <p className="text-sm text-orange-500">Generate or upload the vault image to continue.</p>
       )}
+
       {!vault.isAcquireOnly && (
-        <p className="text-sm text-dark-100">
-          Collections, whitelists and social links aren't set by the assistant — click "Edit manually" and open the
-          Configure step to add them.
-        </p>
+        <div className="border-t border-steel-800 pt-4">
+          <div className="flex items-center justify-between">
+            <span className="font-russo uppercase text-sm text-white">Asset whitelist</span>
+            <span className="text-dark-100 text-sm">{whitelistCount}/10</span>
+          </div>
+          <p className="mt-1 text-sm text-dark-100">
+            Search and add collections, or manage contributor/acquirer whitelists and social links via "Edit
+            manually".
+          </p>
+          <SecondaryButton className="mt-3 w-full" onClick={openWhitelistModal}>
+            <ListChecks className="w-4 h-4" />
+            {whitelistCount > 0 ? 'Manage asset whitelist' : 'Add asset whitelist'}
+          </SecondaryButton>
+        </div>
       )}
 
       <div className="space-y-2">

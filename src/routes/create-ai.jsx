@@ -58,6 +58,7 @@ const CreateAiComponent = () => {
           onGenerateImage={builder.generateImage}
           onOpenInForm={() => openInForm()}
           onReset={builder.reset}
+          onUpdateVault={builder.updateVaultField}
           onUploadImage={builder.uploadImage}
         />
       </div>

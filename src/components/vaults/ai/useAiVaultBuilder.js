@@ -179,6 +179,16 @@ export const useAiVaultBuilder = () => {
     setAiFields([]);
   }, []);
 
+  // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
+  const updateVaultField = useCallback(
+    (field, value) => {
+      const next = { ...vault, [field]: value };
+      setVault(next);
+      persist(messages, next, status, missingFields, aiFields);
+    },
+    [aiFields, messages, missingFields, persist, status, vault]
+  );
+
   return {
     messages,
     vault,
@@ -191,6 +201,7 @@ export const useAiVaultBuilder = () => {
     sendMessage,
     generateImage,
     uploadImage,
+    updateVaultField,
     reset,
   };
 };
