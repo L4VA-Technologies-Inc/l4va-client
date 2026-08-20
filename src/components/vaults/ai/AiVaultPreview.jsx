@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { ImagePlus, ListChecks, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { describeMissingFields } from './aiVault.utils';
+
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -178,7 +180,7 @@ export const AiVaultPreview = ({
 
       {missingFields.length > 0 && (
         <p className="text-sm text-dark-100">
-          Still needed: <span className="text-orange-500">{missingFields.join(', ')}</span>
+          Still needed: <span className="text-orange-500">{describeMissingFields(missingFields)}</span>
         </p>
       )}
       {!canOpenInForm && !vault.vaultImage && (

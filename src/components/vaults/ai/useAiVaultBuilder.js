@@ -94,26 +94,31 @@ export const useAiVaultBuilder = () => {
 
       try {
         let response = await requestTurn(history, vault);
+        // A reset request replaces the draft from scratch instead of merging onto the old one.
+        let base = response.resetDraft ? initialVaultState : vault;
         let draft = response.vaultDraft ?? {};
-        let candidate = buildVaultFromAiDraft(vault, draft, presets);
+        let candidate = buildVaultFromAiDraft(base, draft, presets);
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
         // Feed the live yup errors back so a stale prompt degrades to a retry, never to a bad draft.
         for (let attempt = 0; attempt < MAX_CORRECTION_ATTEMPTS && errors.length; attempt += 1) {
           response = await requestTurn(history, vault, errors);
+          base = response.resetDraft ? initialVaultState : vault;
           draft = response.vaultDraft ?? {};
-          candidate = buildVaultFromAiDraft(vault, draft, presets);
+          candidate = buildVaultFromAiDraft(base, draft, presets);
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
         }
 
         if (errors.length) {
           draft = dropInvalidFields(draft, errors);
-          candidate = buildVaultFromAiDraft(vault, draft, presets);
+          candidate = buildVaultFromAiDraft(base, draft, presets);
         }
 
         const nextMessages = [...history, { role: 'assistant', content: response.message }];
         const nextStatus = errors.length ? 'gathering' : response.status;
-        const nextAiFields = [...new Set([...aiFields, ...Object.keys(draft)])];
+        const nextAiFields = response.resetDraft
+          ? Object.keys(draft)
+          : [...new Set([...aiFields, ...Object.keys(draft)])];
 
         setMessages(nextMessages);
         setVault(candidate);

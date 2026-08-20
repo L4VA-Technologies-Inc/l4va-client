@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 
@@ -6,12 +7,14 @@ import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
 import { CREATE_VAULT_STEPS } from '@/components/vaults/constants/vaults.constants';
+import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { useAuth } from '@/lib/auth/auth';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const builder = useAiVaultBuilder();
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
     localStorage.setItem('storageVault', JSON.stringify(builder.vault));
@@ -57,11 +60,16 @@ const CreateAiComponent = () => {
           onEditManually={editManually}
           onGenerateImage={builder.generateImage}
           onOpenInForm={() => openInForm()}
-          onReset={builder.reset}
+          onReset={() => setIsResetModalOpen(true)}
           onUpdateVault={builder.updateVaultField}
           onUploadImage={builder.uploadImage}
         />
       </div>
+      <ResetVaultConfirmModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={builder.reset}
+      />
     </div>
   );
 };

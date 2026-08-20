@@ -106,7 +106,7 @@ export const AiVaultChat = ({ messages, isSending, onSend }) => {
           className="flex-1 resize-none rounded-lg bg-steel-850 border border-steel-750 px-4 py-3 text-white outline-none focus:border-orange-500"
           disabled={isSending}
           maxLength={4000}
-          placeholder="e.g. A public gaming NFT vault, 30% of tokens for acquirers, 7-day windows"
+          placeholder="Ask L4VA AI"
           rows={2}
           value={input}
           onChange={event => setInput(event.target.value)}
