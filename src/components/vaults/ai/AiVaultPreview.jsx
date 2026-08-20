@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { ImagePlus, RotateCcw, Sparkles } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { ImagePlus, RotateCcw, Sparkles, Upload } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { useCurrency } from '@/hooks/useCurrency';
+
+const MAX_IMAGE_SIZE_MB = 5;
 
 const msToDays = value => (value ? `${(Number(value) / 86400000).toFixed(1)} days` : '—');
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
@@ -25,15 +28,36 @@ export const AiVaultPreview = ({
   missingFields,
   status,
   isGeneratingImage,
+  isUploadingImage,
   onGenerateImage,
   onOpenInForm,
   onReset,
+  onUploadImage,
 }) => {
   const [imagePrompt, setImagePrompt] = useState('');
+  const fileInputRef = useRef(null);
   const { currencyLabel } = useCurrency();
 
   const isAiSet = field => aiFields.includes(field);
   const canOpenInForm = status === 'ready' && !!vault.vaultImage;
+  const isBusy = isGeneratingImage || isUploadingImage;
+
+  const handleFileChange = event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+      toast.error(`File size must be less than ${MAX_IMAGE_SIZE_MB}MB`);
+      return;
+    }
+
+    onUploadImage(file);
+  };
 
   return (
     <div className="rounded-lg border border-steel-750 bg-steel-900 p-6 space-y-6">
@@ -59,7 +83,7 @@ export const AiVaultPreview = ({
         )}
         <textarea
           className="mt-3 w-full resize-none rounded-lg bg-steel-850 border border-steel-750 px-3 py-2 text-white text-sm outline-none focus:border-orange-500"
-          disabled={isGeneratingImage}
+          disabled={isBusy}
           maxLength={1000}
           placeholder="Describe the vault image"
           rows={3}
@@ -68,7 +92,7 @@ export const AiVaultPreview = ({
         />
         <SecondaryButton
           className="mt-2 w-full"
-          disabled={isGeneratingImage || imagePrompt.trim().length < 3}
+          disabled={isBusy || imagePrompt.trim().length < 3}
           onClick={() => onGenerateImage(imagePrompt)}
         >
           {isGeneratingImage ? (
@@ -77,6 +101,24 @@ export const AiVaultPreview = ({
             <>
               <ImagePlus className="w-4 h-4" />
               {vault.vaultImage ? 'Regenerate image' : 'Generate image'}
+            </>
+          )}
+        </SecondaryButton>
+
+        <div className="mt-2 flex items-center gap-3">
+          <div className="h-px flex-1 bg-steel-750" />
+          <span className="text-dark-100 text-xs uppercase">or</span>
+          <div className="h-px flex-1 bg-steel-750" />
+        </div>
+
+        <input ref={fileInputRef} accept="image/*" className="hidden" type="file" onChange={handleFileChange} />
+        <SecondaryButton className="mt-2 w-full" disabled={isBusy} onClick={() => fileInputRef.current?.click()}>
+          {isUploadingImage ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              Upload your own photo
             </>
           )}
         </SecondaryButton>

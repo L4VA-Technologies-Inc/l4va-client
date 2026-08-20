@@ -12,6 +12,7 @@ import { initialVaultState } from '@/components/vaults/constants/vaults.constant
 import { environments } from '@/constants/core.constants';
 import { useNetwork } from '@/hooks/useNetwork';
 import { AiApiProvider } from '@/services/api/ai';
+import { CoreApiProvider } from '@/services/api/core';
 import { usePresets } from '@/services/api/queries';
 
 const MAX_CORRECTION_ATTEMPTS = 2;
@@ -42,6 +43,7 @@ export const useAiVaultBuilder = () => {
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
   const [isSending, setIsSending] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { network } = useNetwork();
   const { data: presetsData } = usePresets();
@@ -148,6 +150,26 @@ export const useAiVaultBuilder = () => {
     [aiFields, isGeneratingImage, messages, missingFields, persist, status, vault]
   );
 
+  const uploadImage = useCallback(
+    async file => {
+      if (!file || isUploadingImage) return;
+
+      setIsUploadingImage(true);
+      try {
+        const { data } = await CoreApiProvider.uploadImage(file, 'background');
+        // Same rule as the AI-generated image: one asset backs both the vault and its token.
+        const next = { ...vault, vaultImage: data.url, ftTokenImg: data.url };
+        setVault(next);
+        persist(messages, next, status, missingFields, aiFields);
+      } catch (err) {
+        toast.error(err?.response?.data?.message ?? 'Could not upload the image.');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    },
+    [aiFields, isUploadingImage, messages, missingFields, persist, status, vault]
+  );
+
   const reset = useCallback(() => {
     sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
     setMessages([GREETING]);
@@ -165,8 +187,10 @@ export const useAiVaultBuilder = () => {
     aiFields,
     isSending,
     isGeneratingImage,
+    isUploadingImage,
     sendMessage,
     generateImage,
+    uploadImage,
     reset,
   };
 };

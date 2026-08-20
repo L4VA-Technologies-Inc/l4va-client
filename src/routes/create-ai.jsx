@@ -49,12 +49,14 @@ const CreateAiComponent = () => {
         <AiVaultPreview
           aiFields={builder.aiFields}
           isGeneratingImage={builder.isGeneratingImage}
+          isUploadingImage={builder.isUploadingImage}
           missingFields={builder.missingFields}
           status={builder.status}
           vault={builder.vault}
           onGenerateImage={builder.generateImage}
           onOpenInForm={openInForm}
           onReset={builder.reset}
+          onUploadImage={builder.uploadImage}
         />
       </div>
     </div>
