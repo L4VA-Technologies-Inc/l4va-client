@@ -144,7 +144,6 @@ export const AiVaultPreview = ({
         <Row isAiSet={isAiSet('name')} label="Name" value={vault.name || '—'} />
         <Row isAiSet={isAiSet('vaultTokenTicker')} label="Ticker" value={vault.vaultTokenTicker || '—'} />
         <Row isAiSet={isAiSet('privacy')} label="Privacy" value={vault.privacy || '—'} />
-        <Row isAiSet={isAiSet('type')} label="Type" value={vault.type || '—'} />
         <Row
           isAiSet={isAiSet('contributionDuration')}
           label="Contribution"
@@ -193,8 +192,7 @@ export const AiVaultPreview = ({
             <span className="text-dark-100 text-sm">{whitelistCount}/10</span>
           </div>
           <p className="mt-1 text-sm text-dark-100">
-            Search and add collections, or manage contributor/acquirer whitelists and social links via "Edit
-            manually".
+            Search and add collections, or manage contributor/acquirer whitelists and social links via "Edit manually".
           </p>
           <SecondaryButton className="mt-3 w-full" onClick={openWhitelistModal}>
             <ListChecks className="w-4 h-4" />
