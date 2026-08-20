@@ -9,15 +9,20 @@ export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
  */
 export const validateAiDraftFields = async (mergedVault, draftKeys) => {
   const errors = [];
+  // Keys like preset_id/allowAcquireExpansion aren't part of the form schema — validateAt()
+  // throws "schema does not contain the path" for them, which is not a real validation error.
+  const schemaKeys = new Set(Object.keys(vaultSchema.fields));
 
   await Promise.all(
-    draftKeys.map(async key => {
-      try {
-        await vaultSchema.validateAt(key, mergedVault);
-      } catch (err) {
-        errors.push(`${key}: ${err?.message ?? 'invalid value'}`);
-      }
-    })
+    draftKeys
+      .filter(key => schemaKeys.has(key))
+      .map(async key => {
+        try {
+          await vaultSchema.validateAt(key, mergedVault);
+        } catch (err) {
+          errors.push(`${key}: ${err?.message ?? 'invalid value'}`);
+        }
+      })
   );
 
   return errors;

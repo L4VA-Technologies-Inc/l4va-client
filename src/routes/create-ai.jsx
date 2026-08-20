@@ -13,14 +13,15 @@ const CreateAiComponent = () => {
   const navigate = useNavigate();
   const builder = useAiVaultBuilder();
 
-  const openInForm = () => {
+  const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
     localStorage.setItem('storageVault', JSON.stringify(builder.vault));
-    localStorage.setItem(
-      AI_VAULT_STORAGE_META_KEY,
-      JSON.stringify({ source: 'ai', startStep: CREATE_VAULT_STEPS.length })
-    );
+    localStorage.setItem(AI_VAULT_STORAGE_META_KEY, JSON.stringify({ source: 'ai', startStep }));
     navigate({ to: '/create' });
   };
+
+  // Lets the user drop into the manual form at any point to tweak settings or add
+  // whitelists/collections — those are never invented by the assistant.
+  const editManually = () => openInForm(1);
 
   if (isLoading) {
     return null;
@@ -53,8 +54,9 @@ const CreateAiComponent = () => {
           missingFields={builder.missingFields}
           status={builder.status}
           vault={builder.vault}
+          onEditManually={editManually}
           onGenerateImage={builder.generateImage}
-          onOpenInForm={openInForm}
+          onOpenInForm={() => openInForm()}
           onReset={builder.reset}
           onUploadImage={builder.uploadImage}
         />

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ImagePlus, RotateCcw, Sparkles, Upload } from 'lucide-react';
+import { ImagePlus, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { Spinner } from '@/components/Spinner';
@@ -29,6 +29,7 @@ export const AiVaultPreview = ({
   status,
   isGeneratingImage,
   isUploadingImage,
+  onEditManually,
   onGenerateImage,
   onOpenInForm,
   onReset,
@@ -171,14 +172,21 @@ export const AiVaultPreview = ({
       )}
       {!vault.isAcquireOnly && (
         <p className="text-sm text-dark-100">
-          Collections, whitelists and social links are added in the form — the assistant never invents addresses.
+          Collections, whitelists and social links aren't set by the assistant — click "Edit manually" and open the
+          Configure step to add them.
         </p>
       )}
 
-      <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm} onClick={onOpenInForm}>
-        <Sparkles className="w-4 h-4" />
-        Review & launch
-      </PrimaryButton>
+      <div className="space-y-2">
+        <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm} onClick={onOpenInForm}>
+          <Sparkles className="w-4 h-4" />
+          Review & launch
+        </PrimaryButton>
+        <SecondaryButton className="w-full uppercase" onClick={onEditManually}>
+          <Pencil className="w-4 h-4" />
+          Edit manually
+        </SecondaryButton>
+      </div>
     </div>
   );
 };
