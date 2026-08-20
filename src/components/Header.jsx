@@ -209,8 +209,14 @@ export const Header = () => {
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-            <L4vaIcon className="flex-shrink-0" height={24} width={24} />
-            <span className="hidden lg:block text-2xl font-bold uppercase">L4VA</span>
+            {isRobinHood ? (
+              <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-8 w-auto object-contain" />
+            ) : (
+              <>
+                <L4vaIcon className="flex-shrink-0" height={24} width={24} />
+                <span className="hidden lg:block text-2xl font-bold uppercase">L4VA</span>
+              </>
+            )}
           </Link>
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">

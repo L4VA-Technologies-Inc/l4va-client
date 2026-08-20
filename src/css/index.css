@@ -74,7 +74,7 @@
   --color-background-primary: #0D0D0C;
   --color-input-bg: #151614;
   --color-accent: #1B1D19;
-  --color-primary: #CCFF00;
+  --color-primary: #00C805;
   --color-orange-500: var(--color-primary);
   --color-slate-950: #0D0D0C;
   --color-steel-950: #151614;
@@ -84,15 +84,15 @@
   --color-steel-750: #383C31;
   --color-steel-600: #4A503F;
   --color-steel-400: #9CA3AF;
-  --color-button-gradient-from: #B6E600;
-  --color-button-gradient-mid: #CCFF00;
-  --color-button-gradient-to: #F2FF4A;
+  --color-button-gradient-from: #009004;
+  --color-button-gradient-mid: #00C805;
+  --color-button-gradient-to: #8CFF5E;
   --color-chart-accent: var(--color-primary);
-  --color-chart-segment-1: #91B800;
-  --color-chart-segment-2: #B6E600;
-  --color-chart-segment-3: #CCFF00;
-  --color-chart-segment-4: #DFFF33;
-  --color-chart-segment-5: #F2FF4A;
+  --color-chart-segment-1: #009004;
+  --color-chart-segment-2: #00C805;
+  --color-chart-segment-3: #8CFF5E;
+  --color-chart-segment-4: #B8FF94;
+  --color-chart-segment-5: #D8FFC4;
   --color-step-accent: var(--color-primary);
 }
 
