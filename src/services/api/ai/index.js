@@ -77,7 +77,8 @@ export class AiApiProvider {
         if (event.type === 'delta' && typeof event.text === 'string') {
           onDelta?.(event.text);
         } else if (event.type === 'done') {
-          const { type: _type, ...rest } = event;
+          const rest = { ...event };
+          delete rest.type;
           donePayload = rest;
         } else if (event.type === 'error') {
           throw Object.assign(new Error(event.message || 'The assistant is unavailable right now.'), {

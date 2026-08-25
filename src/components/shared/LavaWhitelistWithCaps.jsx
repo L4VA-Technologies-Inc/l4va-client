@@ -16,16 +16,14 @@ import { TokenImage } from '@/components/shared/TokenImage';
 
 const variants = {
   default: {
-    dropdown:
-      'fixed z-[200] bg-steel-800 border border-steel-600 rounded-lg shadow-lg overflow-y-auto',
+    dropdown: 'fixed z-[200] bg-steel-800 border border-steel-600 rounded-lg shadow-lg overflow-y-auto',
     policyInputClassName: 'pr-20',
     policyInputStyle: { fontSize: '20px' },
     addButton: 'border-2 border-white/20 rounded-lg p-2',
     itemSpacing: 'space-y-6',
   },
   steel: {
-    dropdown:
-      'fixed z-[200] bg-steel-850 border border-steel-750 rounded-lg shadow-lg overflow-y-auto',
+    dropdown: 'fixed z-[200] bg-steel-850 border border-steel-750 rounded-lg shadow-lg overflow-y-auto',
     policyInputClassName: 'pr-20',
     policyInputStyle: undefined,
     addButton: 'border border-steel-750 rounded-lg p-2',
@@ -145,8 +143,7 @@ export const LavaWhitelistWithCaps = ({
         if (!showDropdown[uniqueId]) return;
         const anchor = dropdownRefs.current[uniqueId];
         const menu = portalDropdownRefs.current[uniqueId];
-        const clickedInside =
-          (anchor && anchor.contains(event.target)) || (menu && menu.contains(event.target));
+        const clickedInside = (anchor && anchor.contains(event.target)) || (menu && menu.contains(event.target));
         if (!clickedInside) {
           setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
         }
@@ -838,55 +835,55 @@ export const LavaWhitelistWithCaps = ({
                         style={dropdownRects[asset.uniqueId] || { visibility: 'hidden' }}
                         onScroll={e => handleScroll(e, asset.uniqueId)}
                       >
-                      {!isWalletConnected && !isSearchMode ? (
-                        <div className="px-4 py-5 text-sm text-dark-100 space-y-1">
-                          <p className="text-white font-medium">Connect your wallet to browse holdings</p>
-                          <p>Or paste a Policy ID above to look one up.</p>
-                        </div>
-                      ) : currentIsSearching ? (
-                        <div className="flex items-center justify-center py-6">
-                          <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                        </div>
-                      ) : policiesToShow.length > 0 ? (
-                        <>
-                          <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-dark-100 border-b border-steel-700">
-                            {isSearchMode ? 'Search results' : 'Your wallet collections'}
-                            <span className="ml-2 normal-case tracking-normal text-dark-100/70">
-                              — only verified can be selected
-                            </span>
+                        {!isWalletConnected && !isSearchMode ? (
+                          <div className="px-4 py-5 text-sm text-dark-100 space-y-1">
+                            <p className="text-white font-medium">Connect your wallet to browse holdings</p>
+                            <p>Or paste a Policy ID above to look one up.</p>
                           </div>
-                          <div className="space-y-0">
-                            {policiesToShow.map((policy, policyIndex) => (
-                              <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
-                                {renderAssetItem(asset, policy)}
-                              </div>
-                            ))}
+                        ) : currentIsSearching ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
                           </div>
-                          {!isSearchMode && isLoadingMore && (
-                            <div className="flex items-center justify-center py-3">
-                              <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                        ) : policiesToShow.length > 0 ? (
+                          <>
+                            <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-dark-100 border-b border-steel-700">
+                              {isSearchMode ? 'Search results' : 'Your wallet collections'}
+                              <span className="ml-2 normal-case tracking-normal text-dark-100/70">
+                                — only verified can be selected
+                              </span>
                             </div>
-                          )}
-                          {!isSearchMode && hasMore && !isLoadingMore && (
-                            <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center gap-1 py-6 px-4 text-center text-dark-100 text-sm">
-                          {isSearchMode ? (
-                            isRobinHood ? (
-                              <span>No matching tokens found</span>
+                            <div className="space-y-0">
+                              {policiesToShow.map((policy, policyIndex) => (
+                                <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
+                                  {renderAssetItem(asset, policy)}
+                                </div>
+                              ))}
+                            </div>
+                            {!isSearchMode && isLoadingMore && (
+                              <div className="flex items-center justify-center py-3">
+                                <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                              </div>
+                            )}
+                            {!isSearchMode && hasMore && !isLoadingMore && (
+                              <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-1 py-6 px-4 text-center text-dark-100 text-sm">
+                            {isSearchMode ? (
+                              isRobinHood ? (
+                                <span>No matching tokens found</span>
+                              ) : (
+                                <span>No matching collections in your wallet</span>
+                              )
                             ) : (
-                              <span>No matching collections in your wallet</span>
-                            )
-                          ) : (
-                            <>
-                              <span className="text-white">No collections to show yet</span>
-                              <span>Type a name or Policy ID to search</span>
-                            </>
-                          )}
-                        </div>
-                      )}
+                              <>
+                                <span className="text-white">No collections to show yet</span>
+                                <span>Type a name or Policy ID to search</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>,
                       document.body
                     )}
