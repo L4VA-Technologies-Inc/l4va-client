@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { SendHorizonal } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
@@ -69,12 +69,16 @@ const renderMessageContent = content => {
 };
 
 export const AiVaultChat = ({ messages, isSending, onSend }) => {
+  const textareaRef = useRef(null);
   const [input, setInput] = useState('');
 
   const submit = event => {
     event.preventDefault();
     onSend(input);
     setInput('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '';
+    }
   };
 
   return (
@@ -95,24 +99,38 @@ export const AiVaultChat = ({ messages, isSending, onSend }) => {
           </div>
         )}
       </div>
-      <form className="flex gap-3 border-t border-steel-750 p-4" onSubmit={submit}>
-        <textarea
-          className="flex-1 resize-none rounded-lg bg-steel-850 border border-steel-750 px-4 py-3 text-white outline-none focus:border-orange-500"
-          disabled={isSending}
-          maxLength={4000}
-          placeholder="Ask L4VA AI"
-          rows={2}
-          value={input}
-          onChange={event => setInput(event.target.value)}
-          onKeyDown={event => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              submit(event);
-            }
-          }}
-        />
-        <PrimaryButton className="self-stretch px-6" disabled={isSending || !input.trim()} onClick={submit}>
-          <SendHorizonal className="w-5 h-5" />
-        </PrimaryButton>
+      <form className="border-t border-steel-750" onSubmit={submit}>
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            className="w-full resize-none rounded-sm bg-steel-850 border border-steel-750 px-5 py-4 pr-16 text-white outline-none focus:border-orange-500"
+            disabled={isSending}
+            maxLength={4000}
+            placeholder="Ask L4VA AI"
+            rows={1}
+            value={input}
+            onChange={event => {
+              const textarea = event.currentTarget;
+              textarea.style.height = 'auto';
+              textarea.style.height = `${textarea.scrollHeight}px`;
+              setInput(textarea.value);
+            }}
+            onKeyDown={event => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                submit(event);
+              }
+            }}
+          />
+          <PrimaryButton
+            aria-label="Send message"
+            className="absolute bottom-3.5 right-4 h-10 w-10 rounded-full p-0"
+            disabled={isSending || !input.trim()}
+            onClick={submit}
+            title="Send message"
+          >
+            <SendHorizonal className="h-5 w-5" />
+          </PrimaryButton>
+        </div>
       </form>
     </div>
   );
