@@ -625,6 +625,7 @@ export const createEmptyWhitelistAsset = () => ({
   customPriceAda: null,
   countCapMin: 1,
   countCapMax: 1000,
+  uniqueId: Date.now() + Math.floor(Math.random() * 1000),
 });
 
 export const initialVaultState = {

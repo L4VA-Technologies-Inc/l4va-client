@@ -22,6 +22,7 @@ import { VoteConfirmModal } from '@/components/modals/VoteConfirmModal.jsx';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal.jsx';
 import { StakingConfirmModal } from '@/components/modals/StakingConfirmModal';
 import { EditUpcomingVaultModal } from '@/components/modals/EditUpcomingVaultModal';
+import { AiAssetWhitelistModal } from '@/components/modals/AiAssetWhitelistModal';
 
 export const MODAL_ENTRIES = [
   {
@@ -119,5 +120,9 @@ export const MODAL_ENTRIES = [
   {
     name: 'EditUpcomingVaultModal',
     Component: EditUpcomingVaultModal,
+  },
+  {
+    name: 'AiAssetWhitelistModal',
+    Component: AiAssetWhitelistModal,
   },
 ];

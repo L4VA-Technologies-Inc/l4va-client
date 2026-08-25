@@ -1,5 +1,6 @@
 import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useAccount } from 'wagmi';
 
@@ -15,16 +16,14 @@ import { TokenImage } from '@/components/shared/TokenImage';
 
 const variants = {
   default: {
-    dropdown:
-      'absolute top-full left-0 right-0 z-50 mt-1 bg-steel-800 border border-steel-600 rounded-lg shadow-lg max-h-64 overflow-y-auto',
+    dropdown: 'fixed z-[200] bg-steel-800 border border-steel-600 rounded-lg shadow-lg overflow-y-auto',
     policyInputClassName: 'pr-20',
     policyInputStyle: { fontSize: '20px' },
     addButton: 'border-2 border-white/20 rounded-lg p-2',
     itemSpacing: 'space-y-6',
   },
   steel: {
-    dropdown:
-      'absolute top-full left-0 right-0 z-50 mt-1 bg-steel-850 border border-steel-750 rounded-lg shadow-lg max-h-64 overflow-y-auto',
+    dropdown: 'fixed z-[200] bg-steel-850 border border-steel-750 rounded-lg shadow-lg overflow-y-auto',
     policyInputClassName: 'pr-20',
     policyInputStyle: undefined,
     addButton: 'border border-steel-750 rounded-lg p-2',
@@ -35,7 +34,8 @@ const variants = {
 export const LavaWhitelistWithCaps = ({
   required = false,
   label = 'Asset whitelist',
-  itemPlaceholder = '*Enter Policy ID',
+  hideLabel = false,
+  itemPlaceholder = 'Search collection or paste Policy ID',
   whitelist = [],
   setWhitelist,
   maxItems = 10,
@@ -50,7 +50,7 @@ export const LavaWhitelistWithCaps = ({
   const styles = variants[variant];
   const isSteel = variant === 'steel';
   // Shared column template so the header row and every asset row line up like a table.
-  const tableGridCols = 'grid-cols-1 md:grid-cols-[minmax(240px,2fr)_repeat(3,minmax(0,1fr))]';
+  const tableGridCols = 'grid-cols-1 md:grid-cols-[minmax(260px,2fr)_repeat(3,minmax(0,1fr))]';
 
   const renderInput = ({ onChange, onBlur, style, ...rest }) => {
     if (isSteel) {
@@ -68,7 +68,11 @@ export const LavaWhitelistWithCaps = ({
   const [searchResults, setSearchResults] = useState({});
   const [isSearching, setIsSearching] = useState({});
   const [focusedUniqueId, setFocusedUniqueId] = useState(null);
+  const [dropdownRects, setDropdownRects] = useState({});
   const dropdownRefs = useRef({});
+  const portalDropdownRefs = useRef({});
+  const rowRefs = useRef({});
+  const pendingFocusIdRef = useRef(null);
   const searchTimers = useRef({});
 
   const { isRobinHood } = useNetwork();
@@ -88,8 +92,11 @@ export const LavaWhitelistWithCaps = ({
 
   // On EVM the identifier is a token contract address, not a Cardano policy id.
   // Only override the default label so explicit caller placeholders still win.
-  const effectivePlaceholder =
-    isRobinHood && itemPlaceholder === '*Enter Policy ID' ? '*Enter contract address' : itemPlaceholder;
+  const effectivePlaceholder = isRobinHood
+    ? itemPlaceholder.includes('Policy ID')
+      ? 'Search token or paste contract address'
+      : itemPlaceholder
+    : itemPlaceholder;
 
   const walletPolicyIds = data?.data || [];
 
@@ -106,13 +113,39 @@ export const LavaWhitelistWithCaps = ({
         .map(item => item.policyId.toLowerCase()),
     ]);
 
+  const updateDropdownRect = useCallback(uniqueId => {
+    const anchor = dropdownRefs.current[uniqueId];
+    if (!anchor) return;
+
+    const rect = anchor.getBoundingClientRect();
+    const gap = 4;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
+    const maxHeight = Math.min(280, Math.max(140, openUp ? spaceAbove : spaceBelow));
+
+    setDropdownRects(prev => ({
+      ...prev,
+      [uniqueId]: {
+        left: rect.left,
+        width: Math.max(rect.width, 300),
+        maxHeight,
+        ...(openUp
+          ? { bottom: window.innerHeight - rect.top + gap, top: 'auto' }
+          : { top: rect.bottom + gap, bottom: 'auto' }),
+      },
+    }));
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = event => {
       Object.keys(showDropdown).forEach(uniqueId => {
-        if (showDropdown[uniqueId] && dropdownRefs.current[uniqueId]) {
-          if (!dropdownRefs.current[uniqueId].contains(event.target)) {
-            setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
-          }
+        if (!showDropdown[uniqueId]) return;
+        const anchor = dropdownRefs.current[uniqueId];
+        const menu = portalDropdownRefs.current[uniqueId];
+        const clickedInside = (anchor && anchor.contains(event.target)) || (menu && menu.contains(event.target));
+        if (!clickedInside) {
+          setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
         }
       });
     };
@@ -122,6 +155,22 @@ export const LavaWhitelistWithCaps = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDropdown]);
+
+  // Keep portal menus aligned while the modal scrolls or the window resizes.
+  useEffect(() => {
+    const openIds = Object.keys(showDropdown).filter(id => showDropdown[id]);
+    if (!openIds.length) return undefined;
+
+    const sync = () => openIds.forEach(updateDropdownRect);
+    sync();
+    window.addEventListener('resize', sync);
+    // Capture scroll from the modal body and anywhere else.
+    window.addEventListener('scroll', sync, true);
+    return () => {
+      window.removeEventListener('resize', sync);
+      window.removeEventListener('scroll', sync, true);
+    };
+  }, [showDropdown, updateDropdownRect]);
 
   // Cleanup search timers on unmount
   useEffect(() => {
@@ -212,7 +261,7 @@ export const LavaWhitelistWithCaps = ({
     triggerSearch(uniqueId, value);
 
     if (value) {
-      setShowDropdown(prev => ({ ...prev, [uniqueId]: true }));
+      openDropdown(uniqueId);
     }
   };
 
@@ -229,6 +278,7 @@ export const LavaWhitelistWithCaps = ({
     });
     setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
     setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
+    setFocusedUniqueId(prev => (prev === uniqueId ? null : prev));
   };
 
   // Backfill verification data for pre-populated items (e.g. edit draft)
@@ -395,15 +445,25 @@ export const LavaWhitelistWithCaps = ({
     };
   }, [isRobinHood, whitelist, lookupPolicies, setWhitelist]);
 
+  const openDropdown = useCallback(
+    uniqueId => {
+      setShowDropdown(prev => ({ ...prev, [uniqueId]: true }));
+      // Measure after the open flag flips so the anchor is laid out.
+      requestAnimationFrame(() => updateDropdownRect(uniqueId));
+    },
+    [updateDropdownRect]
+  );
+
   const toggleDropdown = uniqueId => {
     const willOpen = !showDropdown[uniqueId];
-    setShowDropdown(prev => ({ ...prev, [uniqueId]: willOpen }));
-
     if (willOpen) {
+      openDropdown(uniqueId);
       const asset = whitelist.find(item => item.uniqueId === uniqueId);
       if (asset && asset.policyId) {
         triggerSearch(uniqueId, asset.policyId);
       }
+    } else {
+      setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
     }
   };
 
@@ -430,6 +490,7 @@ export const LavaWhitelistWithCaps = ({
 
   const addNewAsset = () => {
     if (whitelist.length >= maxItems) return;
+    const uniqueId = Date.now();
     const newAsset = {
       policyId: '',
       assetName: '',
@@ -443,7 +504,7 @@ export const LavaWhitelistWithCaps = ({
       image: null,
       valuationMethod: 'market',
       customPriceAda: null,
-      uniqueId: Date.now(),
+      uniqueId,
     };
 
     if (showCountCaps) {
@@ -451,8 +512,26 @@ export const LavaWhitelistWithCaps = ({
       newAsset.countCapMax = Math.min(1000, maxCapValue);
     }
 
+    pendingFocusIdRef.current = uniqueId;
     setWhitelist([...whitelist, newAsset]);
   };
+
+  // After "Add another", scroll the new row into view and focus its search field.
+  useEffect(() => {
+    const uniqueId = pendingFocusIdRef.current;
+    if (!uniqueId) return;
+
+    pendingFocusIdRef.current = null;
+    const row = rowRefs.current[uniqueId];
+    if (!row) return;
+
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const input = row.querySelector('input');
+    if (input) {
+      // Wait a tick so scroll starts before focus steals attention on mobile.
+      requestAnimationFrame(() => input.focus({ preventScroll: true }));
+    }
+  }, [whitelist]);
 
   const updateAsset = (uniqueId, field, val, policyData = {}) => {
     const updatedAssets = whitelist.map(asset =>
@@ -520,6 +599,7 @@ export const LavaWhitelistWithCaps = ({
           isVerified ? 'hover:bg-steel-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
         }`}
         onClick={isVerified ? () => selectPolicyId(asset.uniqueId, policy) : undefined}
+        onMouseDown={event => event.preventDefault()}
       >
         <TokenImage
           asset={policy}
@@ -552,20 +632,41 @@ export const LavaWhitelistWithCaps = ({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <div className="uppercase font-bold mb-2">
-          {required ? '*' : ''}
-          {label}
+      {!hideLabel && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="uppercase font-bold mb-2">
+            {required ? '*' : ''}
+            {label}
+          </div>
+          <button
+            className={cn(styles.addButton, whitelist.length >= maxItems && 'opacity-50 cursor-not-allowed')}
+            disabled={whitelist.length >= maxItems}
+            type="button"
+            onClick={addNewAsset}
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          className={cn(styles.addButton, whitelist.length >= maxItems && 'opacity-50 cursor-not-allowed')}
-          disabled={whitelist.length >= maxItems}
-          type="button"
-          onClick={addNewAsset}
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+      )}
+      {hideLabel && (
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-dark-100">
+            {whitelist.filter(item => item?.policyId).length}/{maxItems} collections added
+          </span>
+          <button
+            className={cn(
+              'inline-flex items-center gap-2 text-sm text-white hover:text-orange-400 transition-colors',
+              whitelist.length >= maxItems && 'opacity-50 cursor-not-allowed'
+            )}
+            disabled={whitelist.length >= maxItems}
+            type="button"
+            onClick={addNewAsset}
+          >
+            <Plus className="h-4 w-4" />
+            Add another
+          </button>
+        </div>
+      )}
       {onExpandableChange && (
         <div className="mb-4">
           <LavaCheckbox
@@ -580,10 +681,22 @@ export const LavaWhitelistWithCaps = ({
       <div className={cn(whitelist.length > 0 && 'border border-white/10 rounded-lg divide-y divide-white/10')}>
         {showCountCaps && whitelist.length > 0 && (
           <div className={cn('hidden md:grid gap-4 p-4 bg-steel-800/40', tableGridCols)}>
-            <span className="uppercase font-bold text-sm text-dark-100">*Asset</span>
-            <span className="uppercase font-bold text-sm text-dark-100">*Min asset cap</span>
-            <span className="uppercase font-bold text-sm text-dark-100">*Max asset cap</span>
-            <span className="uppercase font-bold text-sm text-dark-100">*Asset valuation method</span>
+            <div>
+              <span className="uppercase font-bold text-sm text-dark-100">*Collection</span>
+              <p className="text-xs text-dark-100/70 mt-1 font-normal normal-case">Pick from wallet or search</p>
+            </div>
+            <div>
+              <span className="uppercase font-bold text-sm text-dark-100">*Min cap</span>
+              <p className="text-xs text-dark-100/70 mt-1 font-normal normal-case">Minimum units needed</p>
+            </div>
+            <div>
+              <span className="uppercase font-bold text-sm text-dark-100">*Max cap</span>
+              <p className="text-xs text-dark-100/70 mt-1 font-normal normal-case">Maximum units accepted</p>
+            </div>
+            <div>
+              <span className="uppercase font-bold text-sm text-dark-100">*Valuation</span>
+              <p className="text-xs text-dark-100/70 mt-1 font-normal normal-case">How this asset is priced</p>
+            </div>
           </div>
         )}
         {whitelist.map((asset, index) => {
@@ -595,104 +708,200 @@ export const LavaWhitelistWithCaps = ({
           const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
 
           const resolvedName = formatTokenDisplayName(asset);
-          const displayValue = focusedUniqueId === asset.uniqueId || !resolvedName ? asset.policyId : resolvedName;
+          const isEditing = focusedUniqueId === asset.uniqueId;
+          const hasSelectedAsset = Boolean(asset.policyId && resolvedName && !isEditing);
+          const displayValue = isEditing || !resolvedName ? asset.policyId : resolvedName;
+
+          const beginEditing = () => {
+            setFocusedUniqueId(asset.uniqueId);
+            openDropdown(asset.uniqueId);
+            if (asset.policyId) {
+              triggerSearch(asset.uniqueId, asset.policyId);
+            }
+          };
 
           return (
             <div
               key={asset.id || asset.uniqueId || `asset-${index}`}
+              ref={el => {
+                rowRefs.current[asset.uniqueId] = el;
+              }}
               className={cn('p-4 grid gap-4 items-start', showCountCaps ? tableGridCols : 'grid-cols-1')}
             >
               <div className={styles.itemSpacing}>
                 <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
-                  {renderInput({
-                    placeholder: effectivePlaceholder,
-                    style: styles.policyInputStyle,
-                    value: displayValue,
-                    className: styles.policyInputClassName,
-                    onChange: e => handleInputChange(asset.uniqueId, e.target.value),
-                    onFocus: () => {
-                      setFocusedUniqueId(asset.uniqueId);
-                      if (walletPolicyIds.length > 0 || asset.policyId) {
-                        setShowDropdown(prev => ({ ...prev, [asset.uniqueId]: true }));
-                        if (asset.policyId) {
-                          triggerSearch(asset.uniqueId, asset.policyId);
-                        }
-                      }
-                    },
-                    onBlur: () => setFocusedUniqueId(prev => (prev === asset.uniqueId ? null : prev)),
-                  })}
-                  {isWalletConnected && walletPolicyIds.length > 0 && (
-                    <Button
-                      type="button"
-                      className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => toggleDropdown(asset.uniqueId)}
-                    >
-                      {showDropdown[asset.uniqueId] ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
-                  <Button
-                    className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleRemoveOrClear(asset.uniqueId)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  {showDropdown[asset.uniqueId] && (
-                    <div className={styles.dropdown} onScroll={e => handleScroll(e, asset.uniqueId)}>
-                      {currentIsSearching ? (
-                        <div className="flex items-center justify-center py-6">
-                          <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                        </div>
-                      ) : policiesToShow.length > 0 ? (
-                        <>
-                          <div className="space-y-0">
-                            {policiesToShow.map((policy, policyIndex) => (
-                              <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
-                                {renderAssetItem(asset, policy)}
-                              </div>
-                            ))}
-                          </div>
-                          {!isSearchMode && isLoadingMore && (
-                            <div className="flex items-center justify-center py-3">
-                              <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                            </div>
+                  {hasSelectedAsset ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-steel-700 bg-steel-850/80 px-3 py-2.5">
+                      <TokenImage
+                        asset={asset}
+                        alt={resolvedName || asset.policyId}
+                        chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                        className="h-10 w-10 rounded-full shrink-0"
+                        width={40}
+                        height={40}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-white truncate">{resolvedName}</span>
+                          {asset.isVerified === true && (
+                            <span className="inline-flex items-center gap-1 text-[11px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 shrink-0">
+                              <ShieldCheck className="h-3 w-3" />
+                              Verified
+                              {selectedVerificationLabel ? ` · ${selectedVerificationLabel}` : ''}
+                            </span>
                           )}
-                          {!isSearchMode && hasMore && !isLoadingMore && (
-                            <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
+                          {asset.isVerified === false && (
+                            <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/30 shrink-0">
+                              <ShieldAlert className="h-3 w-3" />
+                              Unverified
+                            </span>
                           )}
-                        </>
-                      ) : (
-                        <div className="flex items-center justify-center py-6 text-dark-100">
-                          {isSearchMode
-                            ? isRobinHood
-                              ? 'No matching tokens found on Robinhood Chain'
-                              : 'No matching policies found in your wallet'
-                            : 'No policies available'}
                         </div>
-                      )}
+                        <p className="text-xs text-dark-100 font-mono truncate mt-0.5">{asset.policyId}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="shrink-0 text-xs uppercase tracking-wide text-orange-400 hover:text-orange-300 px-2 py-1"
+                        onClick={beginEditing}
+                      >
+                        Change
+                      </button>
+                      <Button
+                        className="h-8 w-8 rounded-full shrink-0"
+                        size="icon"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => handleRemoveOrClear(asset.uniqueId)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
+                  ) : (
+                    <>
+                      {renderInput({
+                        placeholder: effectivePlaceholder,
+                        style: styles.policyInputStyle,
+                        value: displayValue,
+                        className: styles.policyInputClassName,
+                        onChange: e => handleInputChange(asset.uniqueId, e.target.value),
+                        onFocus: () => {
+                          setFocusedUniqueId(asset.uniqueId);
+                          if (walletPolicyIds.length > 0 || asset.policyId) {
+                            openDropdown(asset.uniqueId);
+                            if (asset.policyId) {
+                              triggerSearch(asset.uniqueId, asset.policyId);
+                            }
+                          } else if (isWalletConnected) {
+                            openDropdown(asset.uniqueId);
+                          }
+                        },
+                        onBlur: () => setFocusedUniqueId(prev => (prev === asset.uniqueId ? null : prev)),
+                      })}
+                      {isWalletConnected && (
+                        <Button
+                          type="button"
+                          className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => toggleDropdown(asset.uniqueId)}
+                        >
+                          {showDropdown[asset.uniqueId] ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
+                        size="icon"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => handleRemoveOrClear(asset.uniqueId)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
                   )}
+                  {showDropdown[asset.uniqueId] &&
+                    !hasSelectedAsset &&
+                    typeof document !== 'undefined' &&
+                    createPortal(
+                      <div
+                        ref={el => {
+                          portalDropdownRefs.current[asset.uniqueId] = el;
+                        }}
+                        className={styles.dropdown}
+                        style={dropdownRects[asset.uniqueId] || { visibility: 'hidden' }}
+                        onScroll={e => handleScroll(e, asset.uniqueId)}
+                      >
+                        {!isWalletConnected && !isSearchMode ? (
+                          <div className="px-4 py-5 text-sm text-dark-100 space-y-1">
+                            <p className="text-white font-medium">Connect your wallet to browse holdings</p>
+                            <p>Or paste a Policy ID above to look one up.</p>
+                          </div>
+                        ) : currentIsSearching ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                          </div>
+                        ) : policiesToShow.length > 0 ? (
+                          <>
+                            <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-dark-100 border-b border-steel-700">
+                              {isSearchMode ? 'Search results' : 'Your wallet collections'}
+                              <span className="ml-2 normal-case tracking-normal text-dark-100/70">
+                                — only verified can be selected
+                              </span>
+                            </div>
+                            <div className="space-y-0">
+                              {policiesToShow.map((policy, policyIndex) => (
+                                <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
+                                  {renderAssetItem(asset, policy)}
+                                </div>
+                              ))}
+                            </div>
+                            {!isSearchMode && isLoadingMore && (
+                              <div className="flex items-center justify-center py-3">
+                                <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
+                              </div>
+                            )}
+                            {!isSearchMode && hasMore && !isLoadingMore && (
+                              <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-1 py-6 px-4 text-center text-dark-100 text-sm">
+                            {isSearchMode ? (
+                              isRobinHood ? (
+                                <span>No matching tokens found</span>
+                              ) : (
+                                <span>No matching collections in your wallet</span>
+                              )
+                            ) : (
+                              <>
+                                <span className="text-white">No collections to show yet</span>
+                                <span>Type a name or Policy ID to search</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>,
+                      document.body
+                    )}
                 </div>
                 {(() => {
-                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                  const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
-                  return <p className="text-red-600 text-sm mt-1">{policyIdError}</p>;
+                  const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  const policyIdError = errors[`assetsWhitelist[${rowIndex}].policyId`];
+                  return policyIdError ? <p className="text-red-600 text-sm mt-1">{policyIdError}</p> : null;
                 })()}
                 {(() => {
-                  const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
-                  const policyIdError = errors[`assetsWhitelist[${index}].policyId`];
+                  const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                  const policyIdError = errors[`assetsWhitelist[${rowIndex}].policyId`];
                   if (policyIdError) return null;
-                  return <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].isVerified`]}</p>;
+                  const verifiedError = errors[`assetsWhitelist[${rowIndex}].isVerified`];
+                  return verifiedError ? <p className="text-red-600 text-sm mt-1">{verifiedError}</p> : null;
                 })()}
-                {asset.policyId && asset.isVerified === true && (
-                  <div className="flex items-center gap-2 text-sm text-green-400 -mt-4">
+                {!hasSelectedAsset && asset.policyId && asset.isVerified === true && (
+                  <div className="flex items-center gap-2 text-sm text-green-400">
                     <TokenImage
                       asset={asset}
                       alt={resolvedName || asset.policyId}
@@ -713,8 +922,8 @@ export const LavaWhitelistWithCaps = ({
                     </div>
                   </div>
                 )}
-                {asset.policyId && asset.isVerified === false && (
-                  <div className="flex items-center gap-1.5 text-sm text-orange-400 -mt-4">
+                {!hasSelectedAsset && asset.policyId && asset.isVerified === false && (
+                  <div className="flex items-center gap-1.5 text-sm text-orange-400">
                     <ShieldAlert className="h-4 w-4" />
                     <span>
                       {isRobinHood
@@ -728,7 +937,8 @@ export const LavaWhitelistWithCaps = ({
               {showCountCaps && (
                 <>
                   <div>
-                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Min asset cap</span>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Min cap</span>
+                    <p className="md:hidden text-xs text-dark-100/70 mb-1">Minimum units needed</p>
                     {renderInput({
                       required: true,
                       type: 'text',
@@ -751,15 +961,18 @@ export const LavaWhitelistWithCaps = ({
                       hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
                     })}
                     {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                       return (
-                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMin`]}</p>
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors[`assetsWhitelist[${rowIndex}].countCapMin`]}
+                        </p>
                       );
                     })()}
                   </div>
 
                   <div>
-                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Max asset cap</span>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100">*Max cap</span>
+                    <p className="md:hidden text-xs text-dark-100/70 mb-1">Maximum units accepted</p>
                     {renderInput({
                       required: true,
                       value: asset.countCapMax,
@@ -778,17 +991,18 @@ export const LavaWhitelistWithCaps = ({
                       hint: `Maximum value: ${maxCapValue.toLocaleString()}`,
                     })}
                     {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                       return (
-                        <p className="text-red-600 text-sm mt-1">{errors[`assetsWhitelist[${index}].countCapMax`]}</p>
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors[`assetsWhitelist[${rowIndex}].countCapMax`]}
+                        </p>
                       );
                     })()}
                   </div>
 
                   <div>
-                    <span className="md:hidden uppercase font-bold text-sm text-dark-100 block mb-2">
-                      *Asset valuation method
-                    </span>
+                    <span className="md:hidden uppercase font-bold text-sm text-dark-100 block">*Valuation</span>
+                    <p className="md:hidden text-xs text-dark-100/70 mb-2">How this asset is priced</p>
                     <LavaRadio
                       name={`valuationMethod_${asset.uniqueId}`}
                       options={
@@ -811,10 +1025,10 @@ export const LavaWhitelistWithCaps = ({
                       <p className="text-xs text-gray-400 mt-1 ml-6">Price = Pool TVL ÷ Total LP Token Supply</p>
                     )}
                     {(() => {
-                      const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                      const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                       return (
                         <p className="text-red-600 text-sm mt-1">
-                          {errors[`assetsWhitelist[${index}].valuationMethod`]}
+                          {errors[`assetsWhitelist[${rowIndex}].valuationMethod`]}
                         </p>
                       );
                     })()}
@@ -843,10 +1057,10 @@ export const LavaWhitelistWithCaps = ({
                         hint: 'The custom ADA price for this policy',
                       })}
                       {(() => {
-                        const index = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
+                        const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                         return (
                           <p className="text-red-600 text-sm mt-1">
-                            {errors[`assetsWhitelist[${index}].customPriceAda`]}
+                            {errors[`assetsWhitelist[${rowIndex}].customPriceAda`]}
                           </p>
                         );
                       })()}

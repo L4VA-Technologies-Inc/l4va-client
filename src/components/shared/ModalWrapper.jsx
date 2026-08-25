@@ -54,6 +54,8 @@ export const ModalWrapper = ({
         return 'md:max-w-2xl';
       case '3xl':
         return 'md:max-w-3xl';
+      case '4xl':
+        return 'md:max-w-5xl';
       case 'responsive':
       default:
         return 'md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl 3xl:max-w-4xl';

@@ -49,6 +49,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
+import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
 
@@ -58,14 +59,16 @@ const LazySwapComponent = lazy(() =>
   }))
 );
 
-export const CreateVaultForm = ({ vault, setVault }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled = false }) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
-  const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
+  const [visitedSteps, setVisitedSteps] = useState(
+    () => new Set(Array.from({ length: initialStep }, (_, index) => index + 1))
+  );
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [canCreateVaults, setCanCreateVaults] = useState(true);
@@ -110,8 +113,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     [presets]
   );
 
-  // Config-controlled inputs are locked unless an advanced preset exists AND is currently active
-  const isPresetConfigLocked = !isAdvancedPresetAvailable || vaultData.preset !== 'advanced';
+  // Config-controlled inputs are locked unless an advanced preset exists AND is currently active.
+  // An AI-prefilled draft already carries explicit values, so it stays editable regardless of preset.
+  const isPresetConfigLocked = !aiPrefilled && (!isAdvancedPresetAvailable || vaultData.preset !== 'advanced');
 
   const isAcquireOnly = vaultData.preset === 'acquire_only';
   const isContributionOnly = vaultData.tokensForAcquires === 0;
@@ -233,8 +237,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           );
           applyPresetData(firstPreset);
         }
-      } else {
-        // Draft has no preset_id — apply first preset
+      } else if (!aiPrefilled) {
+        // Draft has no preset_id — apply first preset. An AI draft keeps its own values.
         applyPresetData(firstPreset);
       }
     } else {
@@ -243,7 +247,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
 
     isPresetManuallyChanged.current = false;
-  }, [isPresetsLoading, isPresetsError, presets, vault]);
+  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled]);
 
   // --- Step state sync ---
 
@@ -296,7 +300,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     if (currentStep < steps.length) {
       const isAcquireOnly = vaultData.preset === 'acquire_only';
       const isContributionOnly = vaultData.tokensForAcquires === 0;
-      const isAdvancedMode = isAdvancedPresetAvailable && vaultData.preset === 'advanced';
+      const isAdvancedMode = (isAdvancedPresetAvailable && vaultData.preset === 'advanced') || aiPrefilled;
       let nextStep;
       if (isAdvancedMode || isAcquireOnly || isContributionOnly) {
         nextStep = currentStep + 1;
@@ -518,7 +522,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
     // immediately reflect the advanced mode (unlocks inputs, restores step-by-step navigation).
     // Do NOT auto-switch if the current preset is acquire_only — LP% is intentionally editable there.
-    if (currentStep !== 1 && isAdvancedPresetAvailable && vaultData.preset !== 'acquire_only') {
+    if (currentStep !== 1 && !aiPrefilled && isAdvancedPresetAvailable && vaultData.preset !== 'acquire_only') {
       const advancedPreset = presets.find(
         preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
       );
@@ -620,6 +624,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             queryClient.invalidateQueries({ queryKey: ['vaults'] }),
           ]);
           localStorage.removeItem('storageVault');
+          localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
           navigate({ to: `/vaults/${dbVaultId}` });
           await changeStep(1, true);
           setSteps(CREATE_VAULT_STEPS);
@@ -702,6 +707,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         }).then(res => {
           if (res.data.id) {
             localStorage.removeItem('storageVault');
+            localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
             navigate({ to: `/vaults/${data.vaultId}` });
           }
         });
@@ -858,6 +864,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const resetVault = async () => {
     localStorage.removeItem('storageVault');
+    localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
 
     const firstPreset = presets[0] ?? null;
     const resetData = { ...initialVaultState };
