@@ -21,7 +21,7 @@ const MAX_HISTORY_MESSAGES = 30;
 const GREETING = {
   role: 'assistant',
   content:
-    'Tell me what you want to vault — the assets, who can join, and how long the windows should stay open. I will fill in the rest.',
+    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config on the right as we talk, and I'm happy to explain how any of it works or suggest sensible values along the way.",
 };
 
 const readSession = () => {
