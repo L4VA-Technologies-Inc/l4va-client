@@ -7,6 +7,7 @@ import {
   dropInvalidFields,
   validateAiDraftFields,
 } from './aiVault.utils';
+import { createSmoothTextRevealer } from './smoothTextRevealer';
 
 import { initialVaultState } from '@/components/vaults/constants/vaults.constants';
 import { environments } from '@/constants/core.constants';
@@ -32,6 +33,9 @@ const readSession = () => {
     return null;
   }
 };
+
+const toHistoryPayload = history =>
+  history.slice(-MAX_HISTORY_MESSAGES).map(({ role, content }) => ({ role, content }));
 
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
@@ -72,7 +76,7 @@ export const useAiVaultBuilder = () => {
   const requestTurn = useCallback(
     async (history, currentDraft, validationErrors) => {
       const { data } = await AiApiProvider.sendVaultAssistantMessage({
-        messages: history.slice(-MAX_HISTORY_MESSAGES).map(({ role, content }) => ({ role, content })),
+        messages: toHistoryPayload(history),
         chain: network,
         network: environment,
         currentDraft,
@@ -83,17 +87,47 @@ export const useAiVaultBuilder = () => {
     [network, environment]
   );
 
+  const streamTurn = useCallback(
+    async (history, currentDraft, onDelta) => {
+      return AiApiProvider.streamVaultAssistantMessage(
+        {
+          messages: toHistoryPayload(history),
+          chain: network,
+          network: environment,
+          currentDraft,
+        },
+        { onDelta }
+      );
+    },
+    [network, environment]
+  );
+
   const sendMessage = useCallback(
     async text => {
       const trimmed = text.trim();
       if (!trimmed || isSending) return;
 
       const history = [...messages, { role: 'user', content: trimmed }];
-      setMessages(history);
+      setMessages([...history, { role: 'assistant', content: '' }]);
       setIsSending(true);
 
       try {
-        let response = await requestTurn(history, vault);
+        const revealer = createSmoothTextRevealer(content => {
+          setMessages([...history, { role: 'assistant', content }]);
+        });
+
+        let response;
+        try {
+          response = await streamTurn(history, vault, delta => {
+            revealer.push(delta);
+          });
+        } catch (err) {
+          revealer.cancel();
+          throw err;
+        }
+
+        const streamedContent = await revealer.finish();
+
         // A reset request replaces the draft from scratch instead of merging onto the old one.
         let base = response.resetDraft ? initialVaultState : vault;
         let draft = response.vaultDraft ?? {};
@@ -114,7 +148,7 @@ export const useAiVaultBuilder = () => {
           candidate = buildVaultFromAiDraft(base, draft, presets);
         }
 
-        const nextMessages = [...history, { role: 'assistant', content: response.message }];
+        const nextMessages = [...history, { role: 'assistant', content: response.message || streamedContent }];
         const nextStatus = errors.length ? 'gathering' : response.status;
         const nextAiFields = response.resetDraft
           ? Object.keys(draft)
@@ -127,12 +161,14 @@ export const useAiVaultBuilder = () => {
         setAiFields(nextAiFields);
         persist(nextMessages, candidate, nextStatus, response.missingFields ?? [], nextAiFields);
       } catch (err) {
-        toast.error(err?.response?.data?.message ?? 'The assistant is unavailable right now.');
+        // Drop the empty/partial assistant bubble on failure so the user can retry cleanly.
+        setMessages(history);
+        toast.error(err?.response?.data?.message ?? err?.message ?? 'The assistant is unavailable right now.');
       } finally {
         setIsSending(false);
       }
     },
-    [aiFields, isSending, messages, persist, presets, requestTurn, vault]
+    [aiFields, isSending, messages, persist, presets, requestTurn, streamTurn, vault]
   );
 
   const generateImage = useCallback(

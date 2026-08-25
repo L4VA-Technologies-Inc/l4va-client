@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SendHorizonal } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
@@ -70,7 +70,19 @@ const renderMessageContent = content => {
 
 export const AiVaultChat = ({ messages, isSending, onSend }) => {
   const textareaRef = useRef(null);
+  const bottomRef = useRef(null);
   const [input, setInput] = useState('');
+
+  const lastMessage = messages[messages.length - 1];
+  const isStreamingAssistant = isSending && lastMessage?.role === 'assistant';
+  const showThinking = isSending && (!isStreamingAssistant || !lastMessage.content);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: isStreamingAssistant ? 'auto' : 'smooth',
+      block: 'end',
+    });
+  }, [messages, isSending, isStreamingAssistant]);
 
   const submit = event => {
     event.preventDefault();
@@ -84,20 +96,35 @@ export const AiVaultChat = ({ messages, isSending, onSend }) => {
   return (
     <div className="flex flex-col h-[70vh] rounded-lg border border-steel-750 bg-steel-900">
       <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
-        {messages.map((message, index) => (
-          <div
-            key={`${message.role}-${index}`}
-            className={`max-w-[85%] rounded-lg px-4 py-3 ${bubbleClass(message.role)}`}
-          >
-            {renderMessageContent(message.content)}
-          </div>
-        ))}
-        {isSending && (
+        {messages.map((message, index) => {
+          const isLiveAssistant = isStreamingAssistant && index === messages.length - 1;
+          if (isLiveAssistant && !message.content) {
+            return null;
+          }
+
+          return (
+            <div
+              key={`${message.role}-${index}`}
+              className={`max-w-[85%] rounded-lg px-4 py-3 ${bubbleClass(message.role)}`}
+            >
+              {isLiveAssistant ? (
+                <p className="whitespace-pre-wrap">
+                  {message.content}
+                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-orange-400 align-text-bottom" />
+                </p>
+              ) : (
+                renderMessageContent(message.content)
+              )}
+            </div>
+          );
+        })}
+        {showThinking && (
           <div className="self-start flex items-center gap-2 text-dark-100 px-4 py-3">
             <Spinner size="sm" />
             <span className="text-sm">Thinking…</span>
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
       <form className="border-t border-steel-750" onSubmit={submit}>
         <div className="relative">
