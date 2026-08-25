@@ -48,7 +48,8 @@ export const AiVaultPreview = ({
   isUploadingImage,
   onEditManually,
   onGenerateImage,
-  onOpenInForm,
+  onLaunch,
+  isLaunching,
   onReset,
   onUploadImage,
   onUpdateVault,
@@ -158,7 +159,6 @@ export const AiVaultPreview = ({
 
       <div>
         <Row isAiSet={isAiSet('name')} label="Name" value={vault.name || '—'} />
-        <Row isAiSet={isAiSet('type')} label="Type" value={textValue(vault.type).toUpperCase()} />
         <Row isAiSet={isAiSet('vaultTokenTicker')} label="Ticker" value={vault.vaultTokenTicker || '—'} />
         <Row isAiSet={isAiSet('privacy')} label="Privacy" value={vault.privacy || '—'} />
         <Row isAiSet={isAiSet('description')} label="Description" value={textValue(vault.description)} />
@@ -189,11 +189,6 @@ export const AiVaultPreview = ({
           value={textValue(vault.acquireOpenWindowType)}
         />
         <Row isAiSet={isAiSet('valueMethod')} label="Valuation" value={textValue(vault.valueMethod).toUpperCase()} />
-        <Row
-          isAiSet={isAiSet('valuationCurrency')}
-          label="Valuation currency"
-          value={textValue(vault.valuationCurrency)}
-        />
         <Row isAiSet={isAiSet('tokensForAcquires')} label="For acquirers" value={percent(vault.tokensForAcquires)} />
         <Row isAiSet={isAiSet('acquireReserve')} label="Reserve" value={percent(vault.acquireReserve)} />
         <Row
@@ -257,9 +252,9 @@ export const AiVaultPreview = ({
       )}
 
       <div className="space-y-2">
-        <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm} onClick={onOpenInForm}>
+        <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm || isLaunching} onClick={onLaunch}>
           <Sparkles className="w-4 h-4" />
-          Review & launch
+          {isLaunching ? 'Launching...' : 'Confirm & launch'}
         </PrimaryButton>
         <SecondaryButton className="w-full uppercase" onClick={onEditManually}>
           <Pencil className="w-4 h-4" />
