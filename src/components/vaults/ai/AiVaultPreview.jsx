@@ -242,7 +242,7 @@ export const AiVaultPreview = ({
             <span className="text-dark-100 text-sm">{whitelistCount}/10</span>
           </div>
           <p className="mt-1 text-sm text-dark-100">
-            Search and add collections, or manage contributor/acquirer whitelists and social links via "Edit manually".
+            Pick verified collections contributors can deposit, plus min/max caps for each.
           </p>
           <SecondaryButton className="mt-3 w-full" onClick={openWhitelistModal}>
             <ListChecks className="w-4 h-4" />
