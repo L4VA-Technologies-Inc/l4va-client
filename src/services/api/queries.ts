@@ -11,6 +11,7 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
 import { SettingsApiProvider } from '@/services/api/settings/index.js';
 import { RewardsApiProvider } from '@/services/api/rewards/index.js';
+import { TokensApiProvider } from '@/services/api/tokens/index.js';
 
 export const useVaults = (filters: any) => {
   return useQuery({
@@ -552,6 +553,115 @@ export const useMarketStatistics = (params = {}) => {
     queryKey: ['vaults', 'market-statistics', params],
     queryFn: () => VaultsApiProvider.getMarketStatistics(params),
     staleTime: 0,
+  });
+};
+
+export const useMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins'],
+    queryFn: () => TokensApiProvider.getMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useMemecoin = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins', id],
+    queryFn: () => TokensApiProvider.getMemecoin(id),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useMemecoinOhlc = (id: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins', id, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getMemecoinOhlc(id, days),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', 'memecoins'],
+    queryFn: () => TokensApiProvider.getCardanoMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoin = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', id],
+    queryFn: () => TokensApiProvider.getCardanoMemecoin(id),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoinOhlc = (id: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', id, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getCardanoMemecoinOhlc(id, days),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', 'memecoins'],
+    queryFn: () => TokensApiProvider.getRobinhoodMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodRwas = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', 'rwas'],
+    queryFn: () => TokensApiProvider.getRobinhoodRwas(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodNfts = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', 'nfts'],
+    queryFn: () => TokensApiProvider.getRobinhoodNfts(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodToken = (address: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address],
+    queryFn: () => TokensApiProvider.getRobinhoodToken(address),
+    enabled: !!address,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodTokenOhlc = (address: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getRobinhoodTokenOhlc(address, days),
+    enabled: !!address,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodTokenTrades = (address: string, limit: number = 40) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address, 'trades', limit],
+    queryFn: () => TokensApiProvider.getRobinhoodTokenTrades(address, limit),
+    enabled: !!address,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
   });
 };
 
