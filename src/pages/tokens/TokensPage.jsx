@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, Filter, Flame, ShieldCheck, Zap } from 'lucide-react';
+import { Flame, ShieldCheck, Zap } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { Pagination } from '@/components/shared/Pagination';
-import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Spinner } from '@/components/Spinner';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
@@ -317,7 +316,7 @@ export const TokensPage = () => {
             activeTabClassName="text-primary"
           />
         )}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        {/* <div className="flex items-center gap-2 w-full sm:w-auto">
           <SecondaryButton size="sm" className="gap-2">
             <Clock className="w-4 h-4" />
             24H
@@ -330,7 +329,7 @@ export const TokensPage = () => {
             <span>10</span>
             <span className="text-dark-100">+</span>
           </SecondaryButton>
-        </div>
+        </div> */}
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-steel-750">
