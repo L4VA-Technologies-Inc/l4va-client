@@ -15,9 +15,9 @@ export const formatTokenMoney = (value, currency, currencySymbol, opts = {}) => 
     return `${currencySymbol}${num.toFixed(digits)}${suffix}`;
   };
 
-  if (n >= 1_000_000_000) return withSuffix(n / 1_000_000_000, 'B');
-  if (n >= 1_000_000) return withSuffix(n / 1_000_000, 'M');
-  if (n >= 1_000) return withSuffix(n / 1_000, 'K');
+  if (n >= 1000000000) return withSuffix(n / 1000000000, 'B');
+  if (n >= 1000000) return withSuffix(n / 1000000, 'M');
+  if (n >= 1000) return withSuffix(n / 1000, 'K');
 
   if (currency === 'eth' || currency === 'ada') {
     if (n >= 1) return `${currencySymbol}${n.toFixed(isPrice ? 4 : 2)}`;

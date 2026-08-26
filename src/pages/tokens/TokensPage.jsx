@@ -9,12 +9,7 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Spinner } from '@/components/Spinner';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
-import {
-  useCardanoMemecoins,
-  useRobinhoodMemecoins,
-  useRobinhoodNfts,
-  useRobinhoodRwas,
-} from '@/services/api/queries';
+import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodNfts, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
 
 const LIST_TABS = ['Trending', 'Top', 'Gainers', 'New'];
@@ -39,10 +34,7 @@ const TokenImage = ({ src, alt, size = 'sm' }) => (
   <img
     src={src || '/favicon/favicon.ico'}
     alt={alt || ''}
-    className={clsx(
-      'rounded-full object-cover bg-steel-750 shrink-0',
-      size === 'sm' ? 'w-6 h-6' : 'w-10 h-10'
-    )}
+    className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
     onError={e => {
       e.currentTarget.src = '/favicon/favicon.ico';
     }}
@@ -54,10 +46,7 @@ const Sparkline = ({ points, positive }) => {
     return <span className="text-dark-100 text-xs">—</span>;
   }
 
-  const sampled =
-    points.length > 48
-      ? points.filter((_, i) => i % Math.ceil(points.length / 48) === 0)
-      : points;
+  const sampled = points.length > 48 ? points.filter((_, i) => i % Math.ceil(points.length / 48) === 0) : points;
 
   const width = 88;
   const height = 28;
@@ -166,8 +155,7 @@ export const TokensPage = () => {
   const rhRwasQuery = useRobinhoodRwas(isRobinhood && rhTab === 'RWAs');
   const rhNftsQuery = useRobinhoodNfts(isRobinhood && rhTab === 'NFTs');
 
-  const activeRhQuery =
-    rhTab === 'RWAs' ? rhRwasQuery : rhTab === 'NFTs' ? rhNftsQuery : rhMemesQuery;
+  const activeRhQuery = rhTab === 'RWAs' ? rhRwasQuery : rhTab === 'NFTs' ? rhNftsQuery : rhMemesQuery;
 
   const tokens = isRobinhood ? activeRhQuery.data || [] : globalQuery.data || [];
   const isLoading = isRobinhood ? activeRhQuery.isLoading : globalQuery.isLoading;
@@ -201,11 +189,17 @@ export const TokensPage = () => {
   }, [tokens, activeTab, isRobinhood, rhTab]);
 
   const trending = useMemo(
-    () => [...tokens].sort((a, b) => (b.volume_24h ?? b.holders_count ?? 0) - (a.volume_24h ?? a.holders_count ?? 0)).slice(0, 6),
+    () =>
+      [...tokens]
+        .sort((a, b) => (b.volume_24h ?? b.holders_count ?? 0) - (a.volume_24h ?? a.holders_count ?? 0))
+        .slice(0, 6),
     [tokens]
   );
   const graduated = useMemo(
-    () => [...tokens].sort((a, b) => (b.market_cap ?? b.holders_count ?? 0) - (a.market_cap ?? a.holders_count ?? 0)).slice(6, 12),
+    () =>
+      [...tokens]
+        .sort((a, b) => (b.market_cap ?? b.holders_count ?? 0) - (a.market_cap ?? a.holders_count ?? 0))
+        .slice(6, 12),
     [tokens]
   );
   const gainers = useMemo(
@@ -419,12 +413,8 @@ export const TokensPage = () => {
                       </div>
                       <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
                     </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">
-                      {formatTokenField(token, 'fdv')}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">
-                      {formatTokenField(token, 'volume')}
-                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
                     <td className="px-4 py-4 text-sm text-white tabular-nums">
                       {isRobinhood ? (
                         formatTokenField(token, 'liquidity')
@@ -434,7 +424,7 @@ export const TokensPage = () => {
                     </td>
                     <td className="px-4 py-4 text-sm text-white tabular-nums">
                       {isRobinhood ? (
-                        token.holders_count ?? '—'
+                        (token.holders_count ?? '—')
                       ) : (
                         <RangeBar
                           low={pickTokenAmount(token, pickByCurrency, {
@@ -456,9 +446,7 @@ export const TokensPage = () => {
                         />
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">
-                      {formatTokenField(token, 'mcap')}
-                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
