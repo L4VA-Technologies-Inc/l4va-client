@@ -36,8 +36,8 @@ const formatTokenAmount = value => {
   if (value == null || Number.isNaN(Number(value))) return '—';
   const n = Number(value);
   const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (abs >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
+  if (abs >= 1000000) return `${(n / 1000000).toFixed(2)}M`;
+  if (abs >= 1000) return `${(n / 1000).toFixed(2)}K`;
   if (abs >= 1) return n.toFixed(2);
   if (abs >= 0.0001) return n.toFixed(4);
   return n.toPrecision(3);
@@ -72,18 +72,10 @@ export const TokenDetailPage = ({ tokenId }) => {
   const rhTrades = useRobinhoodTokenTrades(isRobinhood ? tokenId : '', 40);
 
   const token = isRobinhood ? rhQuery.data : isCardano ? cardanoQuery.data : cgQuery.data;
-  const isLoading = isRobinhood
-    ? rhQuery.isLoading
-    : isCardano
-      ? cardanoQuery.isLoading
-      : cgQuery.isLoading;
+  const isLoading = isRobinhood ? rhQuery.isLoading : isCardano ? cardanoQuery.isLoading : cgQuery.isLoading;
   const error = isRobinhood ? rhQuery.error : isCardano ? cardanoQuery.error : cgQuery.error;
   const chartData = isRobinhood ? rhChart.data : isCardano ? cardanoChart.data : cgChart.data;
-  const chartLoading = isRobinhood
-    ? rhChart.isLoading
-    : isCardano
-      ? cardanoChart.isLoading
-      : cgChart.isLoading;
+  const chartLoading = isRobinhood ? rhChart.isLoading : isCardano ? cardanoChart.isLoading : cgChart.isLoading;
 
   const ticker = (token?.symbol || '').toUpperCase();
   const ohlcvData = chartData?.ohlcv || [];
@@ -224,9 +216,7 @@ export const TokenDetailPage = ({ tokenId }) => {
             target="_blank"
             rel="noreferrer"
             className="w-8 h-8 rounded-lg border border-steel-750 bg-steel-850 text-dark-100 hover:text-white flex items-center justify-center"
-            aria-label={
-              isRobinhood ? 'Open on DexScreener' : isCardano ? 'Open on Cardanoscan' : 'Open on CoinGecko'
-            }
+            aria-label={isRobinhood ? 'Open on DexScreener' : isCardano ? 'Open on Cardanoscan' : 'Open on CoinGecko'}
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -318,9 +308,7 @@ export const TokenDetailPage = ({ tokenId }) => {
                 onClick={() => setInterval(item)}
                 className={clsx(
                   'px-2.5 py-1 rounded-lg text-xs font-medium transition-colors',
-                  interval.label === item.label
-                    ? 'bg-steel-750 text-orange-400'
-                    : 'text-dark-100 hover:text-white'
+                  interval.label === item.label ? 'bg-steel-750 text-orange-400' : 'text-dark-100 hover:text-white'
                 )}
               >
                 {item.label}
@@ -334,9 +322,7 @@ export const TokenDetailPage = ({ tokenId }) => {
             isLoading={chartLoading}
             isNotFound={!chartLoading && !ohlcvData.length}
             emptyMessage={
-              isRobinhood
-                ? 'No chart data available for this token yet'
-                : 'No chart data available for this vault yet'
+              isRobinhood ? 'No chart data available for this token yet' : 'No chart data available for this vault yet'
             }
           />
         </section>
