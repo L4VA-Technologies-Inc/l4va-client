@@ -6,13 +6,30 @@ const transformDataToCandles = ohlcvData => {
     return [];
   }
 
-  return ohlcvData.map(point => ({
-    time: point.time,
-    open: +point.open,
-    high: +point.high,
-    low: +point.low,
-    close: +point.close,
-  }));
+  const sorted = ohlcvData
+    .map(point => ({
+      time: Math.floor(Number(point.time)),
+      open: +point.open,
+      high: +point.high,
+      low: +point.low,
+      close: +point.close,
+    }))
+    .filter(c => c.time && !Number.isNaN(c.open))
+    .sort((a, b) => a.time - b.time);
+
+  // lightweight-charts requires strictly ascending unique times
+  const out = [];
+  for (const candle of sorted) {
+    const prev = out[out.length - 1];
+    if (prev && prev.time === candle.time) {
+      prev.high = Math.max(prev.high, candle.high);
+      prev.low = Math.min(prev.low, candle.low);
+      prev.close = candle.close;
+    } else {
+      out.push({ ...candle });
+    }
+  }
+  return out;
 };
 
 const ChartSkeleton = () => (
@@ -21,7 +38,7 @@ const ChartSkeleton = () => (
   </div>
 );
 
-const VaultChart = ({ ohlcvData, isLoading, isNotFound }) => {
+const VaultChart = ({ ohlcvData, isLoading, isNotFound, emptyMessage }) => {
   const chartContainerRef = useRef(null);
 
   useEffect(() => {
@@ -82,7 +99,7 @@ const VaultChart = ({ ohlcvData, isLoading, isNotFound }) => {
   if (isNotFound || !ohlcvData || !Array.isArray(ohlcvData) || ohlcvData.length === 0) {
     return (
       <div className="w-full min-h-[260px] md:min-h-[320px] rounded-lg border border-steel-800/50 bg-steel-900/40 flex items-center justify-center text-dark-100 text-sm">
-        No chart data available for this vault yet
+        {emptyMessage || 'No chart data available for this vault yet'}
       </div>
     );
   }

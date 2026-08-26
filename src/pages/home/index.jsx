@@ -1,7 +1,7 @@
 import Faq from '@/pages/home/Faq';
 import VaultsFilters from '@/pages/home/VaultsFilters';
 import Stats from '@/pages/home/Stats';
-import { VaultTokensStatistics } from '@/components/vaults/VaultTokensStatistics.jsx';
+import { TokensPage } from '@/pages/tokens/TokensPage';
 
 export const Home = () => {
   return (
@@ -14,7 +14,7 @@ export const Home = () => {
         <HeroStats /> */}
         {/* <Features /> */}
         <VaultsFilters />
-        <VaultTokensStatistics />
+        <TokensPage />
         {/* <Acquire /> */}
         <Stats />
         <Faq />

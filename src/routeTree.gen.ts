@@ -20,9 +20,11 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as AboutUsRouteImport } from './routes/about-us'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
+import { Route as TokensIndexRouteImport } from './routes/tokens/index'
 import { Route as RewardsIndexRouteImport } from './routes/rewards/index'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as VaultsIdRouteImport } from './routes/vaults/$id'
+import { Route as TokensIdRouteImport } from './routes/tokens/$id'
 import { Route as RewardsVestingRouteImport } from './routes/rewards/vesting'
 import { Route as RewardsVaultsRouteImport } from './routes/rewards/vaults'
 import { Route as RewardsEpochsRouteImport } from './routes/rewards/epochs'
@@ -87,6 +89,11 @@ const VaultsIndexRoute = VaultsIndexRouteImport.update({
   path: '/vaults/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TokensIndexRoute = TokensIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TokensRoute,
+} as any)
 const RewardsIndexRoute = RewardsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -101,6 +108,11 @@ const VaultsIdRoute = VaultsIdRouteImport.update({
   id: '/vaults/$id',
   path: '/vaults/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TokensIdRoute = TokensIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TokensRoute,
 } as any)
 const RewardsVestingRoute = RewardsVestingRouteImport.update({
   id: '/vesting',
@@ -153,16 +165,18 @@ export interface FileRoutesByFullPath {
   '/rewards': typeof RewardsRouteWithChildren
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/tokens': typeof TokensRoute
+  '/tokens': typeof TokensRouteWithChildren
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
   '/rewards/epochs': typeof RewardsEpochsRouteWithChildren
   '/rewards/vaults': typeof RewardsVaultsRouteWithChildren
   '/rewards/vesting': typeof RewardsVestingRoute
+  '/tokens/$id': typeof TokensIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/profile': typeof ProfileIndexRoute
   '/rewards/': typeof RewardsIndexRoute
+  '/tokens/': typeof TokensIndexRoute
   '/vaults': typeof VaultsIndexRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
   '/rewards/epochs/': typeof RewardsEpochsIndexRoute
@@ -176,15 +190,16 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/tokens': typeof TokensRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
   '/rewards/vaults': typeof RewardsVaultsRouteWithChildren
   '/rewards/vesting': typeof RewardsVestingRoute
+  '/tokens/$id': typeof TokensIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/profile': typeof ProfileIndexRoute
   '/rewards': typeof RewardsIndexRoute
+  '/tokens': typeof TokensIndexRoute
   '/vaults': typeof VaultsIndexRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
   '/rewards/epochs': typeof RewardsEpochsIndexRoute
@@ -200,16 +215,18 @@ export interface FileRoutesById {
   '/rewards': typeof RewardsRouteWithChildren
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/tokens': typeof TokensRoute
+  '/tokens': typeof TokensRouteWithChildren
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
   '/rewards/epochs': typeof RewardsEpochsRouteWithChildren
   '/rewards/vaults': typeof RewardsVaultsRouteWithChildren
   '/rewards/vesting': typeof RewardsVestingRoute
+  '/tokens/$id': typeof TokensIdRoute
   '/vaults/$id': typeof VaultsIdRoute
   '/profile/': typeof ProfileIndexRoute
   '/rewards/': typeof RewardsIndexRoute
+  '/tokens/': typeof TokensIndexRoute
   '/vaults/': typeof VaultsIndexRoute
   '/rewards/vaults/$vaultId': typeof RewardsVaultsVaultIdRoute
   '/rewards/epochs/': typeof RewardsEpochsIndexRoute
@@ -233,9 +250,11 @@ export interface FileRouteTypes {
     | '/rewards/epochs'
     | '/rewards/vaults'
     | '/rewards/vesting'
+    | '/tokens/$id'
     | '/vaults/$id'
     | '/profile'
     | '/rewards/'
+    | '/tokens/'
     | '/vaults'
     | '/rewards/vaults/$vaultId'
     | '/rewards/epochs/'
@@ -249,15 +268,16 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/swap'
     | '/terms-of-service'
-    | '/tokens'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
     | '/rewards/vaults'
     | '/rewards/vesting'
+    | '/tokens/$id'
     | '/vaults/$id'
     | '/profile'
     | '/rewards'
+    | '/tokens'
     | '/vaults'
     | '/rewards/vaults/$vaultId'
     | '/rewards/epochs'
@@ -279,9 +299,11 @@ export interface FileRouteTypes {
     | '/rewards/epochs'
     | '/rewards/vaults'
     | '/rewards/vesting'
+    | '/tokens/$id'
     | '/vaults/$id'
     | '/profile/'
     | '/rewards/'
+    | '/tokens/'
     | '/vaults/'
     | '/rewards/vaults/$vaultId'
     | '/rewards/epochs/'
@@ -297,7 +319,7 @@ export interface RootRouteChildren {
   RewardsRoute: typeof RewardsRouteWithChildren
   SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
-  TokensRoute: typeof TokensRoute
+  TokensRoute: typeof TokensRouteWithChildren
   ProfileIdRoute: typeof ProfileIdRoute
   ProposalsIdRoute: typeof ProposalsIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
@@ -384,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VaultsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tokens/': {
+      id: '/tokens/'
+      path: '/'
+      fullPath: '/tokens/'
+      preLoaderRoute: typeof TokensIndexRouteImport
+      parentRoute: typeof TokensRoute
+    }
     '/rewards/': {
       id: '/rewards/'
       path: '/'
@@ -404,6 +433,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vaults/$id'
       preLoaderRoute: typeof VaultsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/tokens/$id': {
+      id: '/tokens/$id'
+      path: '/$id'
+      fullPath: '/tokens/$id'
+      preLoaderRoute: typeof TokensIdRouteImport
+      parentRoute: typeof TokensRoute
     }
     '/rewards/vesting': {
       id: '/rewards/vesting'
@@ -507,6 +543,19 @@ const RewardsRouteChildren: RewardsRouteChildren = {
 const RewardsRouteWithChildren =
   RewardsRoute._addFileChildren(RewardsRouteChildren)
 
+interface TokensRouteChildren {
+  TokensIdRoute: typeof TokensIdRoute
+  TokensIndexRoute: typeof TokensIndexRoute
+}
+
+const TokensRouteChildren: TokensRouteChildren = {
+  TokensIdRoute: TokensIdRoute,
+  TokensIndexRoute: TokensIndexRoute,
+}
+
+const TokensRouteWithChildren =
+  TokensRoute._addFileChildren(TokensRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutUsRoute: AboutUsRoute,
@@ -517,7 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   RewardsRoute: RewardsRouteWithChildren,
   SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
-  TokensRoute: TokensRoute,
+  TokensRoute: TokensRouteWithChildren,
   ProfileIdRoute: ProfileIdRoute,
   ProposalsIdRoute: ProposalsIdRoute,
   VaultsIdRoute: VaultsIdRoute,
