@@ -1,4 +1,4 @@
-import { defineChain } from 'viem';
+import { defineChain, type Chain } from 'viem';
 import { createConfig, http } from 'wagmi';
 import { injected, coinbaseWallet } from 'wagmi/connectors';
 
@@ -9,30 +9,99 @@ import { injected, coinbaseWallet } from 'wagmi/connectors';
 const ROBINHOOD_NETWORK = import.meta.env.VITE_ROBINHOOD_NETWORK || 'mainnet';
 const IS_TESTNET = ROBINHOOD_NETWORK === 'testnet';
 
-export const robinhoodChain = defineChain({
-  id: Number(import.meta.env.VITE_ROBINHOOD_CHAIN_ID) || (IS_TESTNET ? 46630 : 4663),
+/** Uniswap Trading API + token markets target Robinhood mainnet. */
+export const robinhoodUniswapChain = defineChain({
+  id: 4663,
   name: 'Robinhood Chain',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: [import.meta.env.VITE_ROBINHOOD_RPC_URL] },
+    default: {
+      http: [
+        import.meta.env.VITE_ROBINHOOD_MAINNET_RPC_URL ||
+          import.meta.env.VITE_ROBINHOOD_RPC_URL ||
+          'https://rpc.mainnet.chain.robinhood.com',
+      ],
+    },
   },
   blockExplorers: {
-    default: { name: 'Blockscout', url: import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL },
+    default: {
+      name: 'Blockscout',
+      url:
+        import.meta.env.VITE_ROBINHOOD_MAINNET_BLOCKSCOUT_URL ||
+        import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
+        'https://explorer.mainnet.chain.robinhood.com',
+    },
   },
 });
 
-// Single optional RPC override; if empty, the active chain's public default is used.
-const RPC_URL = import.meta.env.VITE_ROBINHOOD_RPC_URL || robinhoodChain.rpcUrls.default.http[0];
+const robinhoodTestnet = defineChain({
+  id: Number(import.meta.env.VITE_ROBINHOOD_CHAIN_ID) || 46630,
+  name: 'Robinhood Chain Testnet',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [
+        import.meta.env.VITE_ROBINHOOD_RPC_URL || 'https://rpc.testnet.chain.robinhood.com',
+      ],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Blockscout',
+      url:
+        import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
+        'https://explorer.testnet.chain.robinhood.com',
+    },
+  },
+});
 
-// `injected()` auto-discovers browser-extension wallets via EIP-6963 (MetaMask,
-// Rabby, Trust, etc.); `coinbaseWallet()` adds its own SDK popup (extension if present,
-// otherwise a QR code for Coinbase's mobile app) — no external project ID required.
-const connectors = [injected(), coinbaseWallet({ appName: 'L4VA' })];
+/** Active app chain (login / vaults) — from VITE_ROBINHOOD_*. */
+export const robinhoodChain: Chain = IS_TESTNET
+  ? robinhoodTestnet
+  : defineChain({
+      ...robinhoodUniswapChain,
+      id: Number(import.meta.env.VITE_ROBINHOOD_CHAIN_ID) || robinhoodUniswapChain.id,
+      rpcUrls: {
+        default: {
+          http: [
+            import.meta.env.VITE_ROBINHOOD_RPC_URL ||
+              robinhoodUniswapChain.rpcUrls.default.http[0],
+          ],
+        },
+      },
+      blockExplorers: {
+        default: {
+          name: 'Blockscout',
+          url:
+            import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
+            robinhoodUniswapChain.blockExplorers.default.url,
+        },
+      },
+    });
+
+// shimDisconnect defaults to true in wagmi v3 and forces wallet_requestPermissions
+// on every connect. MetaMask Flask frequently leaves that RPC hanging
+// ("already pending" / "Unknown response id") — disable it and rely on
+// eth_requestAccounts instead.
+const connectors = [
+  injected({ shimDisconnect: false }),
+  coinbaseWallet({ appName: 'L4VA' }),
+];
+
+const chains =
+  robinhoodChain.id === robinhoodUniswapChain.id
+    ? ([robinhoodChain] as const)
+    : ([robinhoodChain, robinhoodUniswapChain] as const);
+
+const transports: Record<number, ReturnType<typeof http>> = {
+  [robinhoodChain.id]: http(robinhoodChain.rpcUrls.default.http[0]),
+};
+if (robinhoodUniswapChain.id !== robinhoodChain.id) {
+  transports[robinhoodUniswapChain.id] = http(robinhoodUniswapChain.rpcUrls.default.http[0]);
+}
 
 export const wagmiConfig = createConfig({
-  chains: [robinhoodChain],
+  chains,
   connectors,
-  transports: {
-    [robinhoodChain.id]: http(RPC_URL),
-  },
+  transports,
 });

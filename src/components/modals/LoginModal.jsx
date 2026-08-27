@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
@@ -13,7 +13,6 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
-import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import WalletIcon from '@/icons/wallet.svg?react';
 import MetaMaskIcon from '@/icons/metamask.svg?react';
 import WalletConnectIcon from '@/icons/walletconnect.svg?react';
@@ -88,18 +87,27 @@ export const LoginModal = () => {
   const installed = useExtensions('supportedMap');
 
   // Robinhood Chain (EVM) — connect via wagmi, then log in by address (no signature).
-  const { isConnected: isRobinhoodConnected } = useAccount();
+  const {
+    isConnected: isRobinhoodConnected,
+    address: robinhoodAddress,
+    connector: activeRobinhoodConnector,
+  } = useAccount();
   const {
     connectors,
-    connect: connectRobinhood,
+    connectAsync: connectRobinhoodAsync,
     isPending: isRobinhoodConnecting,
     variables: robinhoodConnectVars,
   } = useConnect();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
+  // Guards against double-clicks / overlapping connects — wagmi's isPending alone
+  // is not enough (MetaMask Flask keeps a pending requestPermissions across calls).
+  const robinhoodConnectLockRef = useRef(false);
 
   // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and keep only
   // real, browser-detected extensions — drops the generic "injected" fallback as well
   // as SDK-based connectors (e.g. Coinbase), which are merged in separately below.
+  // MetaMask + MetaMask Flask both inject and corrupt each other's RPC stream — if both
+  // are present, keep only Flask in the list (still tell the user to disable the other).
   const robinhoodConnectors = useMemo(() => {
     const seen = new Set();
     const tempConnectors = connectors.map(v => ({
@@ -113,7 +121,41 @@ export const LoginModal = () => {
       seen.add(connector.id);
       return true;
     });
-    return unique.filter(connector => connector.id !== 'injected' && connector.type === 'injected');
+    const injectedOnly = unique.filter(
+      connector => connector.id !== 'injected' && connector.type === 'injected'
+    );
+
+    const metamaskFamily = injectedOnly.filter(c =>
+      (c.name || c.displayName || '').toLowerCase().includes('metamask')
+    );
+    if (metamaskFamily.length <= 1) return injectedOnly;
+
+    const flask = metamaskFamily.find(c =>
+      (c.name || c.displayName || '').toLowerCase().includes('flask')
+    );
+    const keepId = (flask || metamaskFamily[0]).id;
+    return injectedOnly.filter(c => {
+      const name = (c.name || c.displayName || '').toLowerCase();
+      if (!name.includes('metamask')) return true;
+      return c.id === keepId;
+    });
+  }, [connectors]);
+
+  const hasConflictingMetaMasks = useMemo(() => {
+    // Prefer rdns/id (EIP-6963) over display name — "MetaMask Flask" contains
+    // "metamask" and was falsely tripping a name-based check.
+    const injected = connectors.filter(c => c.type === 'injected' && c.id !== 'injected');
+    const hasMetaMask = injected.some(c => {
+      const id = (c.id || '').toLowerCase();
+      const name = (c.name || '').toLowerCase();
+      return id === 'io.metamask' || (name === 'metamask' && !name.includes('flask'));
+    });
+    const hasFlask = injected.some(c => {
+      const id = (c.id || '').toLowerCase();
+      const name = (c.name || '').toLowerCase();
+      return id === 'io.metamask.flask' || name.includes('flask');
+    });
+    return hasMetaMask && hasFlask;
   }, [connectors]);
 
   // Coinbase's SDK connector works without browser detection — it opens its own popup
@@ -136,29 +178,62 @@ export const LoginModal = () => {
     }
   };
 
+  const clearEvmLoginFlags = () => {
+    sessionStorage.removeItem('evm_intentional_disconnect');
+    sessionStorage.removeItem('evm_login_in_progress');
+  };
+
   const handleRobinhoodConnect = async connector => {
-    if (!connector || isRobinhoodConnecting) return;
-    // wagmi throws "Connector already connected" if a session is active — drop it first.
-    if (isRobinhoodConnected) {
-      await disconnectRobinhood();
-    }
-    connectRobinhood(
-      { connector, chainId: robinhoodChain.id },
-      {
-        onSuccess: data => {
-          loginWithRobinhoodAddress(data?.accounts?.[0]);
-        },
-        onError: error => {
-          if (error?.message?.includes('already pending')) {
-            toast.error('Check your wallet — a connection request is already open');
-          } else {
-            // viem's full `message` appends "Details: ...\nVersion: viem@x.y.z" —
-            // `shortMessage` is the same text without that noise.
-            toast.error(error?.shortMessage || error?.message || 'Failed to connect wallet');
-          }
-        },
+    if (!connector || isRobinhoodConnecting || robinhoodConnectLockRef.current) return;
+    robinhoodConnectLockRef.current = true;
+
+    // Already connected — login in place. Never switch chain during login (second
+    // MetaMask popup → accountsChanged flicker → "Wallet changed" logout).
+    if (
+      isRobinhoodConnected &&
+      robinhoodAddress &&
+      (!activeRobinhoodConnector || activeRobinhoodConnector.id === connector.id)
+    ) {
+      try {
+        await loginWithRobinhoodAddress(robinhoodAddress);
+      } finally {
+        robinhoodConnectLockRef.current = false;
       }
-    );
+      return;
+    }
+
+    sessionStorage.setItem('evm_intentional_disconnect', '1');
+    sessionStorage.setItem('evm_login_in_progress', '1');
+
+    try {
+      if (isRobinhoodConnected) {
+        await disconnectRobinhood();
+      }
+
+      // Single wagmi connect only — do NOT also call eth_requestAccounts / poll
+      // eth_accounts. Extra RPC traffic desyncs MetaMask Flask's inpage stream
+      // ("StreamMiddleware - Unknown response id" spam) and blocks connect.
+      const data = await connectRobinhoodAsync({ connector });
+      const address = data?.accounts?.[0];
+      if (!address) {
+        toast.error('Wallet connection was not completed');
+        return;
+      }
+
+      await loginWithRobinhoodAddress(address);
+    } catch (error) {
+      const msg = String(error?.shortMessage || error?.message || '');
+      if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
+        toast.error('Connection rejected in wallet');
+      } else if (error?.code === -32002 || msg.includes('already pending')) {
+        toast.error('Pending request in Flask — reject it, then click Connect once');
+      } else {
+        toast.error(msg || 'Failed to connect wallet');
+      }
+    } finally {
+      clearEvmLoginFlags();
+      robinhoodConnectLockRef.current = false;
+    }
   };
 
   const wallet = useWallet(
@@ -405,6 +480,12 @@ export const LoginModal = () => {
 
     return (
       <>
+        {isRobinHood && hasConflictingMetaMasks && (
+          <p className="mb-3 text-sm text-orange-500 px-1">
+            MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions,
+            then refresh — both at once breaks connect.
+          </p>
+        )}
         <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
           {isRobinHood ? (
             <>

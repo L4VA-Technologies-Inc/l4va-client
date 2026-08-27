@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 import VaultChart from '@/components/shared/VaultChart';
 import { Spinner } from '@/components/Spinner';
+import { SwapComponent } from '@/components/swap/Swap';
+import { UniswapSwapPanel } from '@/components/swap/UniswapSwapPanel';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
 import {
   useCardanoMemecoin,
   useCardanoMemecoinOhlc,
@@ -60,6 +63,17 @@ export const TokenDetailPage = ({ tokenId }) => {
   const [interval, setInterval] = useState(INTERVALS[2]);
   const [copied, setCopied] = useState(false);
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
+  const { network } = useNetwork();
+  const navigate = useNavigate();
+  const networkOnOpenRef = useRef(network);
+
+  // Token detail is chain-specific — switching Cardano ↔ Robinhood in the header
+  // should drop back to the tokens list for that network.
+  useEffect(() => {
+    if (network !== networkOnOpenRef.current) {
+      navigate({ to: '/tokens', replace: true });
+    }
+  }, [network, navigate]);
 
   const isRobinhood = /^0x[a-fA-F0-9]{40}$/.test(tokenId);
   const isCardano = !isRobinhood && /^[a-fA-F0-9]{56,}$/i.test(tokenId);
@@ -328,6 +342,24 @@ export const TokenDetailPage = ({ tokenId }) => {
         </section>
 
         <aside className="flex flex-col gap-4">
+          {isRobinhood && (
+            <UniswapSwapPanel
+              tokenAddress={tokenId}
+              tokenSymbol={ticker || 'TOKEN'}
+              tokenImage={token.image || token.icon_url}
+            />
+          )}
+          {isCardano && (
+            <div className="bg-steel-950 rounded-xl p-4 lg:p-0 w-full">
+              <SwapComponent
+                key={tokenId}
+                config={{
+                  defaultTokenOut: tokenId,
+                  style: { width: '100%' },
+                }}
+              />
+            </div>
+          )}
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-4">
             <h2 className="text-sm font-medium text-white mb-3">Market Overview</h2>
             <div className="grid grid-cols-2 gap-3">
