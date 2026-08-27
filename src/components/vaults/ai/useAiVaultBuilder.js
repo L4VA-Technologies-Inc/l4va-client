@@ -46,6 +46,9 @@ export const useAiVaultBuilder = () => {
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
   const [isSending, setIsSending] = useState(false);
+  // Action the backend returned for this turn (e.g. a validated launch confirmation). Transient:
+  // it belongs to the turn that produced it, so it is never persisted or restored.
+  const [pendingAction, setPendingAction] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -110,6 +113,7 @@ export const useAiVaultBuilder = () => {
       const history = [...messages, { role: 'user', content: trimmed }];
       setMessages([...history, { role: 'assistant', content: '' }]);
       setIsSending(true);
+      setPendingAction(null);
 
       try {
         const revealer = createSmoothTextRevealer(content => {
@@ -156,6 +160,9 @@ export const useAiVaultBuilder = () => {
 
         setMessages(nextMessages);
         setVault(candidate);
+        // The assistant can only ask; the server decides. An action exists here only because a tool
+        // ran server-side and its validation passed.
+        setPendingAction(response.action ?? null);
         setStatus(nextStatus);
         setMissingFields(response.missingFields ?? []);
         setAiFields(nextAiFields);
@@ -211,8 +218,11 @@ export const useAiVaultBuilder = () => {
     [aiFields, isUploadingImage, messages, missingFields, persist, status, vault]
   );
 
+  const clearAction = useCallback(() => setPendingAction(null), []);
+
   const reset = useCallback(() => {
     sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
+    setPendingAction(null);
     setMessages([GREETING]);
     setVault(initialVaultState);
     setStatus('gathering');
@@ -239,6 +249,8 @@ export const useAiVaultBuilder = () => {
     isSending,
     isGeneratingImage,
     isUploadingImage,
+    pendingAction,
+    clearAction,
     sendMessage,
     generateImage,
     uploadImage,

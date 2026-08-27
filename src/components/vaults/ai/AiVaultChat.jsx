@@ -9,6 +9,21 @@ const bubbleClass = role =>
     ? 'self-end bg-orange-500/15 border border-orange-500/30 text-white'
     : 'self-start bg-steel-850 border border-steel-750 text-dark-100';
 
+const OptionButtons = ({ options, onSelect, disabled }) => (
+  <div className="flex flex-wrap gap-2 mt-3">
+    {options.map((option, index) => (
+      <button
+        key={index}
+        onClick={() => onSelect(option)}
+        disabled={disabled}
+        className="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-300 hover:bg-orange-500/30 hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+      >
+        {option}
+      </button>
+    ))}
+  </div>
+);
+
 // Renders **bold**, `code` and inline text, splitting on the markers so no dangerouslySetInnerHTML is needed.
 const renderInline = text =>
   text
@@ -68,7 +83,9 @@ const renderMessageContent = content => {
   return <div className="flex flex-col gap-2">{blocks}</div>;
 };
 
-export const AiVaultChat = ({ messages, isSending, onSend }) => {
+// Intent is the assistant's job: it decides when to request the launch_vault tool, the backend
+// validates it, and the confirmation arrives as a structured action. Nothing here reads the text.
+export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => {
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
   const [input, setInput] = useState('');
@@ -103,17 +120,25 @@ export const AiVaultChat = ({ messages, isSending, onSend }) => {
           }
 
           return (
-            <div
-              key={`${message.role}-${index}`}
-              className={`max-w-[85%] rounded-lg px-4 py-3 ${bubbleClass(message.role)}`}
-            >
-              {isLiveAssistant ? (
-                <p className="whitespace-pre-wrap">
-                  {message.content}
-                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-orange-400 align-text-bottom" />
-                </p>
-              ) : (
-                renderMessageContent(message.content)
+            <div key={`${message.role}-${index}`}>
+              <div className={`max-w-[85%] rounded-lg px-4 py-3 ${bubbleClass(message.role)}`}>
+                {isLiveAssistant ? (
+                  <p className="whitespace-pre-wrap">
+                    {message.content}
+                    <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-orange-400 align-text-bottom" />
+                  </p>
+                ) : (
+                  renderMessageContent(message.content)
+                )}
+              </div>
+              {message.options && !isLiveAssistant && (
+                <div className="max-w-[85%]">
+                  <OptionButtons
+                    options={message.options}
+                    onSelect={option => onOptionSelect?.(option)}
+                    disabled={isSending}
+                  />
+                </div>
               )}
             </div>
           );
