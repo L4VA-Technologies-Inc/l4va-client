@@ -9,16 +9,20 @@ const bubbleClass = role =>
     ? 'self-end bg-orange-500/15 border border-orange-500/30 text-white'
     : 'self-start bg-steel-850 border border-steel-750 text-dark-100';
 
+// Options arrive as { label, value }; plain strings are tolerated for transcripts persisted
+// before the assistant started returning structured options.
+const normalizeOption = option => (typeof option === 'string' ? { label: option, value: option } : option);
+
 const OptionButtons = ({ options, onSelect, disabled }) => (
   <div className="flex flex-wrap gap-2 mt-3">
-    {options.map((option, index) => (
+    {options.map(normalizeOption).map((option, index) => (
       <button
         key={index}
         onClick={() => onSelect(option)}
         disabled={disabled}
         className="px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-300 hover:bg-orange-500/30 hover:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
       >
-        {option}
+        {option.label}
       </button>
     ))}
   </div>
@@ -131,7 +135,7 @@ export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => 
                   renderMessageContent(message.content)
                 )}
               </div>
-              {message.options && !isLiveAssistant && (
+              {message.options?.length > 0 && !isLiveAssistant && (
                 <div className="max-w-[85%]">
                   <OptionButtons
                     options={message.options}

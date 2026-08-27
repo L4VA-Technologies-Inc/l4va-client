@@ -22,7 +22,7 @@ const MAX_HISTORY_MESSAGES = 30;
 const GREETING = {
   role: 'assistant',
   content:
-    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config on the right as we talk, and I'm happy to explain how any of it works or suggest sensible values along the way.",
+    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config as we talk and pick sensible values for anything you don't care to specify.",
 };
 
 const readSession = () => {
@@ -152,7 +152,14 @@ export const useAiVaultBuilder = () => {
           candidate = buildVaultFromAiDraft(base, draft, presets);
         }
 
-        const nextMessages = [...history, { role: 'assistant', content: response.message || streamedContent }];
+        const nextMessages = [
+          ...history,
+          {
+            role: 'assistant',
+            content: response.message || streamedContent,
+            options: response.options ?? [],
+          },
+        ];
         const nextStatus = errors.length ? 'gathering' : response.status;
         const nextAiFields = response.resetDraft
           ? Object.keys(draft)

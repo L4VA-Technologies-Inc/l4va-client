@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ImagePlus, ListChecks, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { describeMissingFields } from './aiVault.utils';
+import { describeMissingFields, validateImageFile } from './aiVault.utils';
 
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -10,8 +10,6 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useModalControls } from '@/lib/modals/modal.context';
-
-const MAX_IMAGE_SIZE_MB = 5;
 
 const formatDuration = value => {
   if (!value) return '—';
@@ -80,12 +78,9 @@ export const AiVaultPreview = ({
     event.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-      toast.error(`File size must be less than ${MAX_IMAGE_SIZE_MB}MB`);
+    const error = validateImageFile(file);
+    if (error) {
+      toast.error(error);
       return;
     }
 
