@@ -1,17 +1,10 @@
-import { useRef, useState } from 'react';
-import { ImagePlus, ListChecks, Pencil, RotateCcw, Sparkles, Upload } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { ListChecks, RotateCcw, Sparkles } from 'lucide-react';
 
-import { describeMissingFields } from './aiVault.utils';
-
-import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useModalControls } from '@/lib/modals/modal.context';
-
-const MAX_IMAGE_SIZE_MB = 5;
 
 const formatDuration = value => {
   if (!value) return '—';
@@ -40,22 +33,7 @@ const Row = ({ label, value, isAiSet }) => (
   </div>
 );
 
-export const AiVaultPreview = ({
-  vault,
-  aiFields,
-  missingFields,
-  isGeneratingImage,
-  isUploadingImage,
-  onEditManually,
-  onGenerateImage,
-  onLaunch,
-  isLaunching,
-  onReset,
-  onUploadImage,
-  onUpdateVault,
-}) => {
-  const [imagePrompt, setImagePrompt] = useState('');
-  const fileInputRef = useRef(null);
+export const AiVaultPreview = ({ vault, aiFields, onLaunch, isLaunching, onReset, onUpdateVault }) => {
   const { currencyLabel } = useCurrency();
   const { openModal } = useModalControls();
 
@@ -63,7 +41,6 @@ export const AiVaultPreview = ({
   // Mirrors the manual form's own gate (same schema powers "Confirm & launch" there) instead of
   // trusting the assistant's self-reported status, which can lag behind an already-valid draft.
   const canOpenInForm = vaultSchema.isValidSync(vault);
-  const isBusy = isGeneratingImage || isUploadingImage;
   const whitelistCount = (vault.assetsWhitelist || []).filter(item => item?.policyId).length;
 
   const openWhitelistModal = () => {
@@ -73,23 +50,6 @@ export const AiVaultPreview = ({
       isExpandable: vault.isExpandableAssetWhitelist,
       onExpandableChange: checked => onUpdateVault('isExpandableAssetWhitelist', checked),
     });
-  };
-
-  const handleFileChange = event => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-      toast.error(`File size must be less than ${MAX_IMAGE_SIZE_MB}MB`);
-      return;
-    }
-
-    onUploadImage(file);
   };
 
   return (
@@ -104,57 +64,6 @@ export const AiVaultPreview = ({
         >
           <RotateCcw className="w-4 h-4" />
         </button>
-      </div>
-
-      <div>
-        {vault.vaultImage ? (
-          <img alt="Generated vault" className="w-full aspect-square object-cover rounded-lg" src={vault.vaultImage} />
-        ) : (
-          <div className="w-full aspect-square rounded-lg border border-dashed border-steel-700 flex items-center justify-center text-dark-100 text-sm text-center px-6">
-            Describe the image you want and generate it — the same image is used for the vault and its token.
-          </div>
-        )}
-        <textarea
-          className="mt-3 w-full resize-none rounded-lg bg-steel-850 border border-steel-750 px-3 py-2 text-white text-sm outline-none focus:border-orange-500"
-          disabled={isBusy}
-          maxLength={1000}
-          placeholder="Describe the vault image"
-          rows={3}
-          value={imagePrompt}
-          onChange={event => setImagePrompt(event.target.value)}
-        />
-        <SecondaryButton
-          className="mt-2 w-full"
-          disabled={isBusy || imagePrompt.trim().length < 3}
-          onClick={() => onGenerateImage(imagePrompt)}
-        >
-          {isGeneratingImage ? (
-            <Spinner size="sm" />
-          ) : (
-            <>
-              <ImagePlus className="w-4 h-4" />
-              {vault.vaultImage ? 'Regenerate image' : 'Generate image'}
-            </>
-          )}
-        </SecondaryButton>
-
-        <div className="mt-2 flex items-center gap-3">
-          <div className="h-px flex-1 bg-steel-750" />
-          <span className="text-dark-100 text-xs uppercase">or</span>
-          <div className="h-px flex-1 bg-steel-750" />
-        </div>
-
-        <input ref={fileInputRef} accept="image/*" className="hidden" type="file" onChange={handleFileChange} />
-        <SecondaryButton className="mt-2 w-full" disabled={isBusy} onClick={() => fileInputRef.current?.click()}>
-          {isUploadingImage ? (
-            <Spinner size="sm" />
-          ) : (
-            <>
-              <Upload className="w-4 h-4" />
-              Upload your own photo
-            </>
-          )}
-        </SecondaryButton>
       </div>
 
       <div>
@@ -188,7 +97,6 @@ export const AiVaultPreview = ({
           label="Acquire opens"
           value={textValue(vault.acquireOpenWindowType)}
         />
-        <Row isAiSet={isAiSet('valueMethod')} label="Valuation" value={textValue(vault.valueMethod).toUpperCase()} />
         <Row isAiSet={isAiSet('tokensForAcquires')} label="For acquirers" value={percent(vault.tokensForAcquires)} />
         <Row isAiSet={isAiSet('acquireReserve')} label="Reserve" value={percent(vault.acquireReserve)} />
         <Row
@@ -224,16 +132,9 @@ export const AiVaultPreview = ({
           label="Termination"
           value={textValue(vault.terminationType).toUpperCase()}
         />
+        {/* One image backs both the vault and its token; it is created and shown in the chat. */}
+        <Row label="Image" value={vault.vaultImage ? 'Added' : '—'} />
       </div>
-
-      {missingFields.length > 0 && (
-        <p className="text-sm text-dark-100">
-          Still needed: <span className="text-orange-500">{describeMissingFields(missingFields)}</span>
-        </p>
-      )}
-      {!canOpenInForm && !vault.vaultImage && (
-        <p className="text-sm text-orange-500">Generate or upload the vault image to continue.</p>
-      )}
 
       {!vault.isAcquireOnly && (
         <div className="border-t border-steel-800 pt-4">
@@ -256,10 +157,6 @@ export const AiVaultPreview = ({
           <Sparkles className="w-4 h-4" />
           {isLaunching ? 'Launching...' : 'Confirm & launch'}
         </PrimaryButton>
-        <SecondaryButton className="w-full uppercase" onClick={onEditManually}>
-          <Pencil className="w-4 h-4" />
-          Edit manually
-        </SecondaryButton>
       </div>
     </div>
   );

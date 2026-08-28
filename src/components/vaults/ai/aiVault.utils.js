@@ -3,46 +3,30 @@ import { initialVaultState, vaultSchema } from '@/components/vaults/constants/va
 export const AI_VAULT_STORAGE_META_KEY = 'storageVaultAiMeta';
 export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
 
-/** User-facing labels for vault fields, used to translate raw field names in assistant hints. */
-const FIELD_LABELS = {
-  name: 'vault name',
-  vaultTokenTicker: 'token ticker',
-  preset_id: 'preset',
-  privacy: 'privacy setting',
-  type: 'asset type',
-  tags: 'tags',
-  description: 'description',
-  tokenDescription: 'token description',
-  vaultImage: 'vault image',
-  ftTokenImg: 'token image',
-  isExpandableAssetWhitelist: 'expandable whitelist setting',
-  allowAcquireExpansion: 'acquire expansion setting',
-  valueMethod: 'valuation method',
-  valuationCurrency: 'valuation currency',
-  valuationAmount: 'valuation amount',
-  contributionOpenWindowType: 'contribution window type',
-  contributionOpenWindowTime: 'contribution window time',
-  contributionDuration: 'contribution window length',
-  acquireOpenWindowType: 'acquire window type',
-  acquireOpenWindowTime: 'acquire window time',
-  acquireWindowDuration: 'acquire window length',
-  tokensForAcquires: 'tokens for acquirers',
-  acquireReserve: 'acquire reserve',
-  liquidityPoolContribution: 'liquidity pool contribution',
-  isAcquireOnly: 'acquire-only setting',
-  minAcquireThreshold: 'minimum acquire threshold',
-  ftTokenSupply: 'token supply',
-  terminationType: 'termination type',
-  creationThreshold: 'proposal threshold',
-  cosigningThreshold: 'quorum',
-  executionThreshold: 'approval threshold',
+export const MAX_IMAGE_SIZE_MB = 5;
+
+/** Returns an error message for an unusable image file, or null when the file is fine. */
+export const validateImageFile = file => {
+  if (!file) return 'Please choose an image file';
+  if (!file.type.startsWith('image/')) return 'Please choose an image file';
+  if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) return `File size must be less than ${MAX_IMAGE_SIZE_MB}MB`;
+  return null;
 };
 
-/** Turns raw field names (e.g. "vaultTokenTicker") into short, user-friendly phrases. */
-export const describeField = name => FIELD_LABELS[name] ?? name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-
-/** Formats a list of missing/invalid field names into a readable, comma-separated phrase. */
-export const describeMissingFields = fields => fields.map(describeField).join(', ');
+/**
+ * Image prompt derived from the vault the assistant already built, so a one-click "Generate image"
+ * needs no prompt from the user. The preview panel still accepts a written prompt.
+ */
+export const buildVaultImagePrompt = vault => {
+  const parts = [];
+  parts.push(
+    vault?.name ? `Cover artwork for a crypto vault called "${vault.name}"` : 'Cover artwork for a crypto vault'
+  );
+  if (vault?.description) parts.push(vault.description);
+  if (vault?.tags?.length) parts.push(`Themes: ${vault.tags.join(', ')}`);
+  parts.push('Bold, modern, iconic, centered composition, no text.');
+  return parts.join('. ');
+};
 
 /**
  * Validate only the fields the assistant just produced. Validating the whole draft would
@@ -67,6 +51,24 @@ export const validateAiDraftFields = async (mergedVault, draftKeys) => {
   );
 
   return errors;
+};
+
+/**
+ * Fields of the merged vault that are still missing or invalid, according to the live form schema.
+ *
+ * The assistant also reports what it thinks is missing, but that is its view of its own draft one
+ * turn ago — it goes stale as soon as a value is set, and it never sees fields it cannot edit. The
+ * schema is the same validator the manual form and launch use, so it is always consistent with the
+ * vault actually on screen.
+ */
+export const collectIncompleteFields = async vault => {
+  try {
+    await vaultSchema.validate(vault, { abortEarly: false });
+    return [];
+  } catch (err) {
+    const paths = (err?.inner ?? []).map(issue => issue.path).filter(Boolean);
+    return [...new Set(paths)];
+  }
 };
 
 /** Drop every field named in `errors` so an invalid value never reaches the form. */

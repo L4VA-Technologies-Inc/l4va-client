@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import {
   AI_VAULT_CHAT_SESSION_KEY,
   buildVaultFromAiDraft,
+  buildVaultImagePrompt,
+  collectIncompleteFields,
   dropInvalidFields,
   validateAiDraftFields,
 } from './aiVault.utils';
@@ -22,7 +24,7 @@ const MAX_HISTORY_MESSAGES = 30;
 const GREETING = {
   role: 'assistant',
   content:
-    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config on the right as we talk, and I'm happy to explain how any of it works or suggest sensible values along the way.",
+    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config as we talk and pick sensible values for anything you don't care to specify.",
 };
 
 const readSession = () => {
@@ -34,8 +36,15 @@ const readSession = () => {
   }
 };
 
+// Only role/content reaches the model: image widgets and attachments are UI state, not conversation.
 const toHistoryPayload = history =>
   history.slice(-MAX_HISTORY_MESSAGES).map(({ role, content }) => ({ role, content }));
+
+/** Drops a trailing image-prompt card once it has been used or superseded. */
+const withoutTrailingGenerator = messages =>
+  messages.length && messages[messages.length - 1].widget?.type === 'image-generator'
+    ? messages.slice(0, -1)
+    : messages;
 
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
@@ -46,6 +55,9 @@ export const useAiVaultBuilder = () => {
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
   const [isSending, setIsSending] = useState(false);
+  // Action the backend returned for this turn (e.g. a validated launch confirmation). Transient:
+  // it belongs to the turn that produced it, so it is never persisted or restored.
+  const [pendingAction, setPendingAction] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -110,6 +122,7 @@ export const useAiVaultBuilder = () => {
       const history = [...messages, { role: 'user', content: trimmed }];
       setMessages([...history, { role: 'assistant', content: '' }]);
       setIsSending(true);
+      setPendingAction(null);
 
       try {
         const revealer = createSmoothTextRevealer(content => {
@@ -148,18 +161,32 @@ export const useAiVaultBuilder = () => {
           candidate = buildVaultFromAiDraft(base, draft, presets);
         }
 
-        const nextMessages = [...history, { role: 'assistant', content: response.message || streamedContent }];
+        const nextMessages = [
+          ...history,
+          {
+            role: 'assistant',
+            content: response.message || streamedContent,
+            options: response.options ?? [],
+          },
+        ];
         const nextStatus = errors.length ? 'gathering' : response.status;
         const nextAiFields = response.resetDraft
           ? Object.keys(draft)
           : [...new Set([...aiFields, ...Object.keys(draft)])];
 
+        // Derived from the vault we are about to show, never from the assistant's own report, so
+        // the panel can never claim a field is missing while displaying its value.
+        const nextMissingFields = await collectIncompleteFields(candidate);
+
         setMessages(nextMessages);
         setVault(candidate);
+        // The assistant can only ask; the server decides. An action exists here only because a tool
+        // ran server-side and its validation passed.
+        setPendingAction(response.action ?? null);
         setStatus(nextStatus);
-        setMissingFields(response.missingFields ?? []);
+        setMissingFields(nextMissingFields);
         setAiFields(nextAiFields);
-        persist(nextMessages, candidate, nextStatus, response.missingFields ?? [], nextAiFields);
+        persist(nextMessages, candidate, nextStatus, nextMissingFields, nextAiFields);
       } catch (err) {
         // Drop the empty/partial assistant bubble on failure so the user can retry cleanly.
         setMessages(history);
@@ -171,24 +198,63 @@ export const useAiVaultBuilder = () => {
     [aiFields, isSending, messages, persist, presets, requestTurn, streamTurn, vault]
   );
 
+  /**
+   * Applies one image to the vault and shows it in the conversation. The vault and its governance
+   * token always share a single image, so both fields are written together.
+   */
+  const applyImage = useCallback(
+    async (url, content) => {
+      const next = { ...vault, vaultImage: url, ftTokenImg: url };
+      const nextMessages = [
+        ...withoutTrailingGenerator(messages),
+        { role: 'assistant', content, attachment: { type: 'vault-image', url } },
+      ];
+      const nextMissingFields = await collectIncompleteFields(next);
+
+      setVault(next);
+      setMessages(nextMessages);
+      setMissingFields(nextMissingFields);
+      persist(nextMessages, next, status, nextMissingFields, aiFields);
+    },
+    [aiFields, messages, persist, status, vault]
+  );
+
+  /** Opens the inline image-prompt card, prefilled from the vault built so far. */
+  const startImageGeneration = useCallback(() => {
+    if (isGeneratingImage || isUploadingImage) return;
+
+    const isReplacing = !!vault.vaultImage;
+    const nextMessages = [
+      ...withoutTrailingGenerator(messages),
+      {
+        role: 'assistant',
+        content: isReplacing
+          ? 'Describe the image you want instead, or adjust the suggestion below.'
+          : 'Describe the image you want, or use the suggestion below.',
+        widget: { type: 'image-generator', prompt: buildVaultImagePrompt(vault), isReplacing },
+      },
+    ];
+
+    setMessages(nextMessages);
+    persist(nextMessages, vault, status, missingFields, aiFields);
+  }, [aiFields, isGeneratingImage, isUploadingImage, messages, missingFields, persist, status, vault]);
+
   const generateImage = useCallback(
     async prompt => {
-      if (!prompt.trim() || isGeneratingImage) return;
+      if (!prompt?.trim() || isGeneratingImage) return;
 
       setIsGeneratingImage(true);
       try {
         const { data } = await AiApiProvider.generateVaultImage(prompt.trim());
-        // One generated image backs both the vault image and the vault token image.
-        const next = { ...vault, vaultImage: data.fileUrl, ftTokenImg: data.fileUrl };
-        setVault(next);
-        persist(messages, next, status, missingFields, aiFields);
+        await applyImage(data.fileUrl, vault.name ? `Image added to ${vault.name}.` : 'Image added.');
       } catch (err) {
+        // A failure stays local to the image card; the conversation itself is untouched.
         toast.error(err?.response?.data?.message ?? 'Could not generate the image.');
       } finally {
         setIsGeneratingImage(false);
       }
     },
-    [aiFields, isGeneratingImage, messages, missingFields, persist, status, vault]
+    [applyImage, isGeneratingImage, vault.name]
   );
 
   const uploadImage = useCallback(
@@ -198,21 +264,21 @@ export const useAiVaultBuilder = () => {
       setIsUploadingImage(true);
       try {
         const { data } = await CoreApiProvider.uploadImage(file, 'background');
-        // Same rule as the AI-generated image: one asset backs both the vault and its token.
-        const next = { ...vault, vaultImage: data.url, ftTokenImg: data.url };
-        setVault(next);
-        persist(messages, next, status, missingFields, aiFields);
+        await applyImage(data.url, 'Image added.');
       } catch (err) {
         toast.error(err?.response?.data?.message ?? 'Could not upload the image.');
       } finally {
         setIsUploadingImage(false);
       }
     },
-    [aiFields, isUploadingImage, messages, missingFields, persist, status, vault]
+    [applyImage, isUploadingImage]
   );
+
+  const clearAction = useCallback(() => setPendingAction(null), []);
 
   const reset = useCallback(() => {
     sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
+    setPendingAction(null);
     setMessages([GREETING]);
     setVault(initialVaultState);
     setStatus('gathering');
@@ -222,12 +288,15 @@ export const useAiVaultBuilder = () => {
 
   // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
   const updateVaultField = useCallback(
-    (field, value) => {
+    async (field, value) => {
       const next = { ...vault, [field]: value };
+      const nextMissingFields = await collectIncompleteFields(next);
+
       setVault(next);
-      persist(messages, next, status, missingFields, aiFields);
+      setMissingFields(nextMissingFields);
+      persist(messages, next, status, nextMissingFields, aiFields);
     },
-    [aiFields, messages, missingFields, persist, status, vault]
+    [aiFields, messages, persist, status, vault]
   );
 
   return {
@@ -239,7 +308,10 @@ export const useAiVaultBuilder = () => {
     isSending,
     isGeneratingImage,
     isUploadingImage,
+    pendingAction,
+    clearAction,
     sendMessage,
+    startImageGeneration,
     generateImage,
     uploadImage,
     updateVaultField,

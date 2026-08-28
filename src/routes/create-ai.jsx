@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultChat } from '@/components/vaults/ai/AiVaultChat';
@@ -8,17 +8,21 @@ import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
 import { CREATE_VAULT_STEPS } from '@/components/vaults/constants/vaults.constants';
+import { LaunchVaultConfirmModal } from '@/components/modals/LaunchVaultConfirmModal';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { useLaunchVault } from '@/hooks/useLaunchVault';
 import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const builder = useAiVaultBuilder();
   const { launchVault } = useLaunchVault();
+  const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
     localStorage.setItem('storageVault', JSON.stringify(builder.vault));
@@ -30,6 +34,23 @@ const CreateAiComponent = () => {
   // whitelists/collections — those are never invented by the assistant.
   const editManually = () => openInForm(1);
 
+  // The chat owns the image flow; the asset picker is the one reserved action that needs a modal.
+  const handleOptionSelect = option => {
+    if (option.value === 'choose_assets') {
+      openModal('AiAssetWhitelistModal', {
+        whitelist: builder.vault.assetsWhitelist || [],
+        setWhitelist: assets => builder.updateVaultField('assetsWhitelist', assets),
+        isExpandable: builder.vault.isExpandableAssetWhitelist,
+        onExpandableChange: checked => builder.updateVaultField('isExpandableAssetWhitelist', checked),
+      });
+      return;
+    }
+    builder.sendMessage(option.value);
+  };
+
+  // The assistant requests a launch through a backend-validated action; the user still confirms it.
+  const launchRequest = builder.pendingAction?.name === 'launch_vault' ? builder.pendingAction : null;
+
   const handleLaunch = async () => {
     if (isLaunching) return;
 
@@ -37,6 +58,7 @@ const CreateAiComponent = () => {
     try {
       await launchVault(builder.vault);
       toast.success('Vault launched successfully');
+      builder.clearAction();
       builder.reset();
     } catch (error) {
       if (error?.name === 'ValidationError') {
@@ -82,24 +104,54 @@ const CreateAiComponent = () => {
         </span>
         <span className="hidden w-32 md:block" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-        <AiVaultChat isSending={builder.isSending} messages={builder.messages} onSend={builder.sendMessage} />
-        <AiVaultPreview
-          aiFields={builder.aiFields}
-          isGeneratingImage={builder.isGeneratingImage}
-          isUploadingImage={builder.isUploadingImage}
-          missingFields={builder.missingFields}
-          isLaunching={isLaunching}
-          status={builder.status}
-          vault={builder.vault}
-          onEditManually={editManually}
-          onGenerateImage={builder.generateImage}
-          onLaunch={handleLaunch}
-          onReset={() => setIsResetModalOpen(true)}
-          onUpdateVault={builder.updateVaultField}
-          onUploadImage={builder.uploadImage}
-        />
+      <div
+        className={`grid gap-6 transition-all ${showPreview ? 'grid-cols-1 lg:grid-cols-[1fr_380px]' : 'grid-cols-1'}`}
+      >
+        <div className="relative">
+          <AiVaultChat
+            isGeneratingImage={builder.isGeneratingImage}
+            isSending={builder.isSending}
+            isUploadingImage={builder.isUploadingImage}
+            messages={builder.messages}
+            onGenerateImage={builder.generateImage}
+            onOptionSelect={handleOptionSelect}
+            onSend={builder.sendMessage}
+            onStartImageGeneration={builder.startImageGeneration}
+            onUploadImage={builder.uploadImage}
+          />
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="absolute top-4 right-4 p-2 rounded-lg bg-steel-850 border border-steel-750 hover:border-orange-500/50 hover:bg-steel-800 transition-all group"
+            title={showPreview ? 'Hide settings' : 'Show settings'}
+          >
+            <ChevronRight
+              className={`w-5 h-5 text-dark-100 group-hover:text-orange-300 transition-transform ${showPreview ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+        {showPreview && (
+          <AiVaultPreview
+            aiFields={builder.aiFields}
+            isLaunching={isLaunching}
+            status={builder.status}
+            vault={builder.vault}
+            onEditManually={editManually}
+            onLaunch={handleLaunch}
+            onReset={() => setIsResetModalOpen(true)}
+            onUpdateVault={builder.updateVaultField}
+          />
+        )}
       </div>
+      {launchRequest && (
+        <LaunchVaultConfirmModal
+          description={launchRequest.description}
+          isLaunching={isLaunching}
+          isOpen
+          vaultName={builder.vault?.name}
+          onClose={builder.clearAction}
+          onConfirm={handleLaunch}
+        />
+      )}
       <ResetVaultConfirmModal
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
