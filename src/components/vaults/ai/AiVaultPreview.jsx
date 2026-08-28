@@ -183,7 +183,6 @@ export const AiVaultPreview = ({
           label="Acquire opens"
           value={textValue(vault.acquireOpenWindowType)}
         />
-        <Row isAiSet={isAiSet('valueMethod')} label="Valuation" value={textValue(vault.valueMethod).toUpperCase()} />
         <Row isAiSet={isAiSet('tokensForAcquires')} label="For acquirers" value={percent(vault.tokensForAcquires)} />
         <Row isAiSet={isAiSet('acquireReserve')} label="Reserve" value={percent(vault.acquireReserve)} />
         <Row
