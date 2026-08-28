@@ -121,18 +121,12 @@ export const LoginModal = () => {
       seen.add(connector.id);
       return true;
     });
-    const injectedOnly = unique.filter(
-      connector => connector.id !== 'injected' && connector.type === 'injected'
-    );
+    const injectedOnly = unique.filter(connector => connector.id !== 'injected' && connector.type === 'injected');
 
-    const metamaskFamily = injectedOnly.filter(c =>
-      (c.name || c.displayName || '').toLowerCase().includes('metamask')
-    );
+    const metamaskFamily = injectedOnly.filter(c => (c.name || c.displayName || '').toLowerCase().includes('metamask'));
     if (metamaskFamily.length <= 1) return injectedOnly;
 
-    const flask = metamaskFamily.find(c =>
-      (c.name || c.displayName || '').toLowerCase().includes('flask')
-    );
+    const flask = metamaskFamily.find(c => (c.name || c.displayName || '').toLowerCase().includes('flask'));
     const keepId = (flask || metamaskFamily[0]).id;
     return injectedOnly.filter(c => {
       const name = (c.name || c.displayName || '').toLowerCase();
@@ -482,8 +476,8 @@ export const LoginModal = () => {
       <>
         {isRobinHood && hasConflictingMetaMasks && (
           <p className="mb-3 text-sm text-orange-500 px-1">
-            MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions,
-            then refresh — both at once breaks connect.
+            MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions, then refresh — both at
+            once breaks connect.
           </p>
         )}
         <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">

@@ -40,17 +40,13 @@ const robinhoodTestnet = defineChain({
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: {
-      http: [
-        import.meta.env.VITE_ROBINHOOD_RPC_URL || 'https://rpc.testnet.chain.robinhood.com',
-      ],
+      http: [import.meta.env.VITE_ROBINHOOD_RPC_URL || 'https://rpc.testnet.chain.robinhood.com'],
     },
   },
   blockExplorers: {
     default: {
       name: 'Blockscout',
-      url:
-        import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
-        'https://explorer.testnet.chain.robinhood.com',
+      url: import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL || 'https://explorer.testnet.chain.robinhood.com',
     },
   },
 });
@@ -63,18 +59,13 @@ export const robinhoodChain: Chain = IS_TESTNET
       id: Number(import.meta.env.VITE_ROBINHOOD_CHAIN_ID) || robinhoodUniswapChain.id,
       rpcUrls: {
         default: {
-          http: [
-            import.meta.env.VITE_ROBINHOOD_RPC_URL ||
-              robinhoodUniswapChain.rpcUrls.default.http[0],
-          ],
+          http: [import.meta.env.VITE_ROBINHOOD_RPC_URL || robinhoodUniswapChain.rpcUrls.default.http[0]],
         },
       },
       blockExplorers: {
         default: {
           name: 'Blockscout',
-          url:
-            import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
-            robinhoodUniswapChain.blockExplorers.default.url,
+          url: import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL || robinhoodUniswapChain.blockExplorers.default.url,
         },
       },
     });
@@ -83,10 +74,7 @@ export const robinhoodChain: Chain = IS_TESTNET
 // on every connect. MetaMask Flask frequently leaves that RPC hanging
 // ("already pending" / "Unknown response id") — disable it and rely on
 // eth_requestAccounts instead.
-const connectors = [
-  injected({ shimDisconnect: false }),
-  coinbaseWallet({ appName: 'L4VA' }),
-];
+const connectors = [injected({ shimDisconnect: false }), coinbaseWallet({ appName: 'L4VA' })];
 
 const chains =
   robinhoodChain.id === robinhoodUniswapChain.id

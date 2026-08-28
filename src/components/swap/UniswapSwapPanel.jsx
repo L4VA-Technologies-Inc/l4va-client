@@ -2,14 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { erc20Abi, formatUnits, parseUnits } from 'viem';
-import {
-  useAccount,
-  useBalance,
-  useReadContract,
-  useSendTransaction,
-  useSignTypedData,
-  useSwitchChain,
-} from 'wagmi';
+import { useAccount, useBalance, useReadContract, useSendTransaction, useSignTypedData, useSwitchChain } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 
 import { Spinner } from '@/components/Spinner';
@@ -319,8 +312,7 @@ export function UniswapSwapPanel({
     return null;
   }, [apiConfig]);
 
-  const chainMismatch =
-    isConnected && targetChainId && chainId != null && Number(chainId) !== Number(targetChainId);
+  const chainMismatch = isConnected && targetChainId && chainId != null && Number(chainId) !== Number(targetChainId);
 
   return (
     <div className="bg-steel-850 border border-steel-750 rounded-2xl p-4 flex flex-col gap-3">
@@ -368,9 +360,7 @@ export function UniswapSwapPanel({
             className="flex-1 bg-transparent text-xl text-white font-medium outline-none tabular-nums min-w-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
           />
           <div className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white">
-            {side === 'sell' && tokenImage ? (
-              <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" />
-            ) : null}
+            {side === 'sell' && tokenImage ? <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" /> : null}
             {side === 'buy' ? 'ETH' : tokenSymbol}
           </div>
         </div>
@@ -389,9 +379,7 @@ export function UniswapSwapPanel({
             )}
           </div>
           <div className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white">
-            {side === 'buy' && tokenImage ? (
-              <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" />
-            ) : null}
+            {side === 'buy' && tokenImage ? <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" /> : null}
             {side === 'buy' ? tokenSymbol : 'ETH'}
           </div>
         </div>
@@ -412,9 +400,7 @@ export function UniswapSwapPanel({
             onClick={() => setSlippage(opt.value)}
             className={clsx(
               'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors',
-              slippage === opt.value
-                ? 'bg-steel-750 text-orange-400'
-                : 'text-dark-100 hover:text-white'
+              slippage === opt.value ? 'bg-steel-750 text-orange-400' : 'text-dark-100 hover:text-white'
             )}
           >
             {opt.label}
@@ -424,8 +410,7 @@ export function UniswapSwapPanel({
 
       {chainMismatch && (
         <p className="text-[11px] text-amber-400">
-          Wallet is on chain {chainId}. Swap targets Robinhood {targetChainId} — you will be prompted
-          to switch.
+          Wallet is on chain {chainId}. Swap targets Robinhood {targetChainId} — you will be prompted to switch.
         </p>
       )}
 
