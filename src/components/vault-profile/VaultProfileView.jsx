@@ -2,8 +2,10 @@ import { Copy, EyeIcon, User, Share, BarChart3, Info, Pencil } from 'lucide-reac
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
+import { useReadContract } from 'wagmi';
 
 import { SwapComponent } from '../swap/Swap';
+import { UniswapSwapPanel } from '../swap/UniswapSwapPanel';
 
 import { useCurrency } from '@/hooks/useCurrency';
 import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
@@ -265,6 +267,22 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
+
+  const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  const { data: evmVaultTokenAddress } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [
+      {
+        type: 'function',
+        stateMutability: 'view',
+        name: 'vaultToken',
+        inputs: [],
+        outputs: [{ type: 'address' }],
+      },
+    ],
+    functionName: 'vaultToken',
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+  });
 
   const handleTabChange = tab => setActiveTab(tab);
 
@@ -669,8 +687,19 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
 
   const renderSwapBlock = () => {
-    // Swap isn't available for Robinhood-chain vaults.
-    if (vault.chainType === ChainType.ROBINHOOD) return null;
+    if (isRobinhoodVault) {
+      if (!evmVaultTokenAddress) return null;
+
+      return (
+        <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+          <UniswapSwapPanel
+            tokenAddress={evmVaultTokenAddress}
+            tokenSymbol={vault.vaultTokenTicker || 'VT'}
+            tokenImage={vault.vaultImage}
+          />
+        </div>
+      );
+    }
 
     return (
       <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">

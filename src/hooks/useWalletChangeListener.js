@@ -88,9 +88,18 @@ export const useWalletChangeListener = () => {
         clearTimeout(evmDisconnectedLogoutTimerRef.current);
         evmDisconnectedLogoutTimerRef.current = null;
       }
+      // Intentional disconnect → reconnect finished. Clear so a later real
+      // disconnect still logs the user out.
+      sessionStorage.removeItem('evm_intentional_disconnect');
 
       const authenticatedEvmAddress = localStorage.getItem('authenticated_wallet_address');
-      if (authenticatedEvmAddress && authenticatedEvmAddress.toLowerCase() !== evmAddress.toLowerCase()) {
+      // Skip address-mismatch logout while LoginModal is completing login for a
+      // newly connected wallet (authenticated_* may still hold the previous address).
+      if (
+        !sessionStorage.getItem('evm_login_in_progress') &&
+        authenticatedEvmAddress &&
+        authenticatedEvmAddress.toLowerCase() !== evmAddress.toLowerCase()
+      ) {
         logout('Wallet changed. Please login again.');
         previousEvmAddressRef.current = null;
         return;
@@ -102,7 +111,10 @@ export const useWalletChangeListener = () => {
         return;
       }
 
-      if (previousEvmAddressRef.current.toLowerCase() !== evmAddress.toLowerCase()) {
+      if (
+        !sessionStorage.getItem('evm_login_in_progress') &&
+        previousEvmAddressRef.current.toLowerCase() !== evmAddress.toLowerCase()
+      ) {
         logout('Wallet changed. Please login again.');
         previousEvmAddressRef.current = null;
       }
@@ -110,6 +122,13 @@ export const useWalletChangeListener = () => {
     }
 
     if (evmStatus === 'disconnected' && previousEvmAddressRef.current) {
+      // LoginModal sets this when switching wallets (disconnect → connect).
+      // Keep the flag until reconnect settles — clearing it here would let the
+      // disconnected timer logout while MetaMask still has a pending request.
+      if (sessionStorage.getItem('evm_intentional_disconnect')) {
+        previousEvmAddressRef.current = null;
+        return;
+      }
       logout('Wallet disconnected. Please login again.');
       previousEvmAddressRef.current = null;
       return;
@@ -121,12 +140,13 @@ export const useWalletChangeListener = () => {
       evmDisconnectedLogoutTimerRef.current = setTimeout(() => {
         evmDisconnectedLogoutTimerRef.current = null;
         if (!localStorage.getItem('jwt')) return;
+        if (sessionStorage.getItem('evm_intentional_disconnect')) return;
 
         const authenticatedChainType = localStorage.getItem('authenticated_chain_type');
         if (authenticatedChainType && authenticatedChainType !== 'robinhood') return;
 
         logout('Wallet disconnected. Please login again.');
-      }, 500);
+      }, 1500);
     }
 
     return () => {
