@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { SendHorizonal } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+import { AiVaultImageCard } from './AiVaultImageCard';
+import { AiVaultImageGenerator } from './AiVaultImageGenerator';
+import { validateImageFile } from './aiVault.utils';
 
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -89,10 +94,27 @@ const renderMessageContent = content => {
 
 // Intent is the assistant's job: it decides when to request the launch_vault tool, the backend
 // validates it, and the confirmation arrives as a structured action. Nothing here reads the text.
-export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => {
+export const AiVaultChat = ({
+  messages,
+  isSending,
+  isGeneratingImage,
+  isUploadingImage,
+  onSend,
+  onOptionSelect,
+  onStartImageGeneration,
+  onGenerateImage,
+  onUploadImage,
+}) => {
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [input, setInput] = useState('');
+  const isImageBusy = isGeneratingImage || isUploadingImage;
+  // The image belongs to the vault, not to a single message, so only the newest card can replace it.
+  const lastImageIndex = messages.reduce(
+    (last, message, index) => (message.attachment?.type === 'vault-image' ? index : last),
+    -1
+  );
 
   const lastMessage = messages[messages.length - 1];
   const isStreamingAssistant = isSending && lastMessage?.role === 'assistant';
@@ -104,6 +126,34 @@ export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => 
       block: 'end',
     });
   }, [messages, isSending, isStreamingAssistant]);
+
+  const openFilePicker = () => fileInputRef.current?.click();
+
+  const handleFileChange = event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const error = validateImageFile(file);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    onUploadImage(file);
+  };
+
+  // The image actions are handled here rather than sent as a reply — they open UI, not conversation.
+  const handleOptionSelect = option => {
+    if (option.value === 'generate_image') {
+      onStartImageGeneration();
+      return;
+    }
+    if (option.value === 'upload_image') {
+      openFilePicker();
+      return;
+    }
+    onOptionSelect?.(option);
+  };
 
   const submit = event => {
     event.preventDefault();
@@ -135,12 +185,33 @@ export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => 
                   renderMessageContent(message.content)
                 )}
               </div>
+              {message.widget?.type === 'image-generator' && !isLiveAssistant && (
+                <div className="max-w-[85%]">
+                  <AiVaultImageGenerator
+                    isGenerating={isGeneratingImage}
+                    isReplacing={message.widget.isReplacing}
+                    prompt={message.widget.prompt}
+                    onGenerate={onGenerateImage}
+                  />
+                </div>
+              )}
+              {message.attachment?.type === 'vault-image' && !isLiveAssistant && (
+                <div className="max-w-[85%]">
+                  <AiVaultImageCard
+                    isBusy={isImageBusy}
+                    isCurrent={index === lastImageIndex}
+                    url={message.attachment.url}
+                    onRegenerate={onStartImageGeneration}
+                    onUpload={openFilePicker}
+                  />
+                </div>
+              )}
               {message.options?.length > 0 && !isLiveAssistant && (
                 <div className="max-w-[85%]">
                   <OptionButtons
                     options={message.options}
-                    onSelect={option => onOptionSelect?.(option)}
-                    disabled={isSending}
+                    onSelect={handleOptionSelect}
+                    disabled={isSending || isImageBusy}
                   />
                 </div>
               )}
@@ -155,6 +226,7 @@ export const AiVaultChat = ({ messages, isSending, onSend, onOptionSelect }) => 
         )}
         <div ref={bottomRef} />
       </div>
+      <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
       <form className="border-t border-steel-750" onSubmit={submit}>
         <div className="relative">
           <textarea

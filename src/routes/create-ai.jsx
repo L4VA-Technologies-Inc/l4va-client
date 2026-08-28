@@ -1,15 +1,11 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultChat } from '@/components/vaults/ai/AiVaultChat';
 import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
-import {
-  AI_VAULT_STORAGE_META_KEY,
-  buildVaultImagePrompt,
-  validateImageFile,
-} from '@/components/vaults/ai/aiVault.utils';
+import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
 import { CREATE_VAULT_STEPS } from '@/components/vaults/constants/vaults.constants';
 import { LaunchVaultConfirmModal } from '@/components/modals/LaunchVaultConfirmModal';
@@ -27,7 +23,6 @@ const CreateAiComponent = () => {
   const [isLaunching, setIsLaunching] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const chatFileInputRef = useRef(null);
 
   const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
     localStorage.setItem('storageVault', JSON.stringify(builder.vault));
@@ -39,43 +34,18 @@ const CreateAiComponent = () => {
   // whitelists/collections — those are never invented by the assistant.
   const editManually = () => openInForm(1);
 
-  const handleImageFileChange = event => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    const error = validateImageFile(file);
-    if (error) {
-      toast.error(error);
+  // The chat owns the image flow; the asset picker is the one reserved action that needs a modal.
+  const handleOptionSelect = option => {
+    if (option.value === 'choose_assets') {
+      openModal('AiAssetWhitelistModal', {
+        whitelist: builder.vault.assetsWhitelist || [],
+        setWhitelist: assets => builder.updateVaultField('assetsWhitelist', assets),
+        isExpandable: builder.vault.isExpandableAssetWhitelist,
+        onExpandableChange: checked => builder.updateVaultField('isExpandableAssetWhitelist', checked),
+      });
       return;
     }
-    builder.uploadImage(file);
-  };
-
-  // Three option values are reserved for steps only the user can complete in the UI — the assistant
-  // never sets the collection or the image itself, so selecting one opens that UI instead of replying.
-  const handleOptionSelect = option => {
-    switch (option.value) {
-      case 'choose_assets':
-        openModal('AiAssetWhitelistModal', {
-          whitelist: builder.vault.assetsWhitelist || [],
-          setWhitelist: assets => builder.updateVaultField('assetsWhitelist', assets),
-          isExpandable: builder.vault.isExpandableAssetWhitelist,
-          onExpandableChange: checked => builder.updateVaultField('isExpandableAssetWhitelist', checked),
-        });
-        return;
-      case 'generate_image':
-        // One image backs both the vault and its token, and the assistant already wrote the
-        // metadata it is drawn from, so this needs no prompt from the user.
-        setShowPreview(true);
-        builder.generateImage(buildVaultImagePrompt(builder.vault));
-        return;
-      case 'upload_image':
-        chatFileInputRef.current?.click();
-        return;
-      default:
-        builder.sendMessage(option.value);
-    }
+    builder.sendMessage(option.value);
   };
 
   // The assistant requests a launch through a backend-validated action; the user still confirms it.
@@ -138,18 +108,16 @@ const CreateAiComponent = () => {
         className={`grid gap-6 transition-all ${showPreview ? 'grid-cols-1 lg:grid-cols-[1fr_380px]' : 'grid-cols-1'}`}
       >
         <div className="relative">
-          <input
-            accept="image/*"
-            className="hidden"
-            ref={chatFileInputRef}
-            type="file"
-            onChange={handleImageFileChange}
-          />
           <AiVaultChat
+            isGeneratingImage={builder.isGeneratingImage}
             isSending={builder.isSending}
+            isUploadingImage={builder.isUploadingImage}
             messages={builder.messages}
-            onSend={builder.sendMessage}
+            onGenerateImage={builder.generateImage}
             onOptionSelect={handleOptionSelect}
+            onSend={builder.sendMessage}
+            onStartImageGeneration={builder.startImageGeneration}
+            onUploadImage={builder.uploadImage}
           />
           <button
             onClick={() => setShowPreview(!showPreview)}
@@ -164,18 +132,13 @@ const CreateAiComponent = () => {
         {showPreview && (
           <AiVaultPreview
             aiFields={builder.aiFields}
-            isGeneratingImage={builder.isGeneratingImage}
-            isUploadingImage={builder.isUploadingImage}
-            missingFields={builder.missingFields}
             isLaunching={isLaunching}
             status={builder.status}
             vault={builder.vault}
             onEditManually={editManually}
-            onGenerateImage={builder.generateImage}
             onLaunch={handleLaunch}
             onReset={() => setIsResetModalOpen(true)}
             onUpdateVault={builder.updateVaultField}
-            onUploadImage={builder.uploadImage}
           />
         )}
       </div>
