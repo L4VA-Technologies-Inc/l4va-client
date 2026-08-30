@@ -5,9 +5,12 @@ import {
   AI_VAULT_CHAT_SESSION_KEY,
   buildVaultFromAiDraft,
   buildVaultImagePrompt,
+  clearStoredVaultDraft,
   collectIncompleteFields,
   dropInvalidFields,
+  readStoredVaultDraft,
   validateAiDraftFields,
+  writeStoredVaultDraft,
 } from './aiVault.utils';
 import { createSmoothTextRevealer } from './smoothTextRevealer';
 
@@ -50,7 +53,9 @@ export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
 
   const [messages, setMessages] = useState(restored?.messages ?? [GREETING]);
-  const [vault, setVault] = useState(restored?.vault ?? initialVaultState);
+  // The draft is shared with the manual create form via localStorage, so a manual edit made
+  // between visits wins over this hook's own (possibly stale) session snapshot.
+  const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
   const [status, setStatus] = useState(restored?.status ?? 'gathering');
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
@@ -69,6 +74,8 @@ export const useAiVaultBuilder = () => {
     import.meta.env.VITE_CARDANO_NETWORK === environments.MAINNET ? environments.MAINNET : environments.PREPROD;
 
   const persist = useCallback((next, nextVault, nextStatus, nextMissing, nextAiFields) => {
+    // Keep the shared draft in sync so the manual form sees every AI/preview edit on its next mount.
+    writeStoredVaultDraft(nextVault);
     try {
       sessionStorage.setItem(
         AI_VAULT_CHAT_SESSION_KEY,
@@ -278,6 +285,7 @@ export const useAiVaultBuilder = () => {
 
   const reset = useCallback(() => {
     sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
+    clearStoredVaultDraft();
     setPendingAction(null);
     setMessages([GREETING]);
     setVault(initialVaultState);

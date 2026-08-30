@@ -3,6 +3,38 @@ import { initialVaultState, vaultSchema } from '@/components/vaults/constants/va
 export const AI_VAULT_STORAGE_META_KEY = 'storageVaultAiMeta';
 export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
 
+/**
+ * The vault draft is shared between the manual create form and the AI chat: both read and write
+ * this one key so an edit in either place is visible in the other on the next mount. The AI chat
+ * keeps only its transcript (messages/status/aiFields) in its own session snapshot.
+ */
+export const VAULT_DRAFT_STORAGE_KEY = 'storageVault';
+
+export const readStoredVaultDraft = () => {
+  try {
+    const stored = localStorage.getItem(VAULT_DRAFT_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const writeStoredVaultDraft = vault => {
+  try {
+    localStorage.setItem(VAULT_DRAFT_STORAGE_KEY, JSON.stringify(vault));
+  } catch {
+    // Best-effort: a full/unavailable localStorage should not break the flow.
+  }
+};
+
+export const clearStoredVaultDraft = () => {
+  try {
+    localStorage.removeItem(VAULT_DRAFT_STORAGE_KEY);
+  } catch {
+    // Best-effort.
+  }
+};
+
 export const MAX_IMAGE_SIZE_MB = 5;
 
 /** Returns an error message for an unusable image file, or null when the file is fine. */
