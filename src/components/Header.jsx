@@ -18,7 +18,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 
 const navLinks = [
-  { to: '/create', label: 'Create', isAuth: true },
+  { to: '/create-ai', label: 'Create', isAuth: true },
   { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false },
   { to: '/vaults?tab=acquire', label: 'Acquire', isAuth: false },
   { to: '/vaults?tab=govern', label: 'Govern', isAuth: false },

@@ -19,7 +19,7 @@ const socialLinks = [
 ];
 
 const navLinks = [
-  { to: '/create', label: 'Create', isRequireAuth: true },
+  { to: '/create-ai', label: 'Create', isRequireAuth: true },
   { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isRequireAuth: true },
   { to: '/how-it-works', label: 'How it works', isRequireAuth: false },
