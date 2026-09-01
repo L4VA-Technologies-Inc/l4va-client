@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import L4vaIcon from '@/components/shared/L4vaIcon';
+
 const CARDANO_FALLBACK_SRC = '/assets/icons/ada.svg';
 
 const getAssetImageSrc = asset =>
@@ -12,15 +14,16 @@ const getAssetImageSrc = asset =>
   asset?.token_image ||
   '';
 
-const RobinhoodFallback = ({ alt, className, width, height }) => (
-  <div
+/** Green lava centered in a round token slot. */
+export const LavaTokenFallback = ({ alt = 'L4VA', className = '', style }) => (
+  <span
     aria-label={alt}
-    className={`flex items-center justify-center rounded-full bg-steel-700 text-white font-bold ring-1 ring-white/10 ${className}`}
     role="img"
-    style={{ width, height }}
+    className={`inline-flex items-center justify-center overflow-hidden ${className}`}
+    style={style}
   >
-    T
-  </div>
+    <L4vaIcon chainType="robinhood" preserveAspectRatio="xMidYMid meet" className="block size-[70%] shrink-0" />
+  </span>
 );
 
 export const TokenImage = ({
@@ -43,7 +46,7 @@ export const TokenImage = ({
   }, [resolvedSrc]);
 
   if (isRobinhood && (!hasImage || hasError)) {
-    return <RobinhoodFallback alt={alt} className={className} width={width} height={height} />;
+    return <LavaTokenFallback alt={alt} className={className} style={{ width, height }} />;
   }
 
   return (

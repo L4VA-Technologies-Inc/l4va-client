@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
+import { LavaTokenFallback } from '@/components/shared/TokenImage';
 import { Pagination } from '@/components/shared/Pagination';
 import { Spinner } from '@/components/Spinner';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -11,7 +12,6 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodNfts, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
 import { formatLargeNumber } from '@/utils/core.utils';
-import rhFlameLogo from '@/icons/l4va-rh.svg';
 
 const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
@@ -37,17 +37,35 @@ const ChangeText = ({ value, className }) => {
   return <span className={clsx(n >= 0 ? 'text-emerald-400' : 'text-rose-400', className)}>{formatChange(n)}</span>;
 };
 
-const TokenImage = ({ src, alt, size = 'sm', fallback = DEFAULT_TOKEN_IMAGE }) => (
-  <img
-    src={src || fallback}
-    alt={alt || ''}
-    className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
-    onError={e => {
-      e.currentTarget.onerror = null;
-      e.currentTarget.src = fallback;
-    }}
-  />
-);
+const TokenImage = ({ src, alt, size = 'sm' }) => {
+  const { isRobinHood } = useNetwork();
+  const [failed, setFailed] = useState(false);
+  const sizeClass = size === 'sm' ? 'w-6 h-6' : 'w-10 h-10';
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  if (isRobinHood && (!src || failed)) {
+    return <LavaTokenFallback alt={alt} className={clsx(sizeClass, 'shrink-0 rounded-full bg-steel-750')} />;
+  }
+
+  return (
+    <img
+      src={src || DEFAULT_TOKEN_IMAGE}
+      alt={alt || ''}
+      className={clsx('rounded-full object-cover bg-steel-750 shrink-0', sizeClass)}
+      onError={e => {
+        if (isRobinHood) {
+          setFailed(true);
+          return;
+        }
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = DEFAULT_TOKEN_IMAGE;
+      }}
+    />
+  );
+};
 
 const Sparkline = ({ points, positive }) => {
   if (!points?.length) {
@@ -115,14 +133,14 @@ const SummaryCard = ({ title, children }) => (
   </div>
 );
 
-const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage }) => (
+const TokenMiniRow = ({ image, ticker, fdv, change, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-sm w-full text-left rounded-lg px-0.5 -mx-0.5 py-0.5 hover:bg-steel-800/80 transition-colors cursor-pointer"
   >
     <div className="flex items-center gap-2 min-w-0">
-      <TokenImage src={image} alt={ticker} fallback={fallbackImage} />
+      <TokenImage src={image} alt={ticker} />
       <span className="truncate font-medium text-white uppercase">{ticker}</span>
     </div>
     <span className="text-dark-100 text-xs tabular-nums">{fdv}</span>
@@ -246,8 +264,6 @@ export const TokensPage = () => {
   }
 
   const isNftTable = isRobinhood && rhTab === 'NFTs';
-  // NFT collections rarely ship an image on testnet — fall back to the RH green flame logo
-  const tokenImageFallback = isNftTable ? rhFlameLogo : DEFAULT_TOKEN_IMAGE;
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -267,7 +283,6 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
@@ -286,7 +301,6 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
@@ -305,7 +319,6 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
@@ -366,7 +379,7 @@ export const TokensPage = () => {
                 >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <TokenImage src={token.image} alt={token.name} size="md" fallback={tokenImageFallback} />
+                      <TokenImage src={token.image} alt={token.name} size="md" />
                       <div>
                         <div className="font-medium text-white">{token.name || '—'}</div>
                         <div className="text-xs text-dark-100 uppercase">{token.symbol}</div>

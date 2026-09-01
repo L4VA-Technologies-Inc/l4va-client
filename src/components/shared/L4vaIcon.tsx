@@ -1,9 +1,8 @@
 import type { SVGProps } from 'react';
 
-import { useNetwork } from '@/hooks/useNetwork';
+import { useNetwork, type NetworkType } from '@/hooks/useNetwork';
 import CardanoL4vaIcon from '@/icons/l4va.svg?react';
 import RobinhoodL4vaIcon from '@/icons/l4va-rh.svg?react';
-import type { NetworkType } from '@/hooks/useNetwork';
 
 type L4vaIconProps = SVGProps<SVGSVGElement> & {
   chainType?: NetworkType | string | null;

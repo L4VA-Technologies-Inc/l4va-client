@@ -3,6 +3,7 @@ import { Copy, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 import { Link, useNavigate } from '@tanstack/react-router';
 
+import { LavaTokenFallback } from '@/components/shared/TokenImage';
 import VaultChart from '@/components/shared/VaultChart';
 import { Spinner } from '@/components/Spinner';
 import { SwapComponent } from '@/components/swap/Swap';
@@ -62,6 +63,7 @@ const formatAgo = iso => {
 export const TokenDetailPage = ({ tokenId }) => {
   const [interval, setInterval] = useState(INTERVALS[2]);
   const [copied, setCopied] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
   const { network } = useNetwork();
   const navigate = useNavigate();
@@ -90,6 +92,10 @@ export const TokenDetailPage = ({ tokenId }) => {
   const error = isRobinhood ? rhQuery.error : isCardano ? cardanoQuery.error : cgQuery.error;
   const chartData = isRobinhood ? rhChart.data : isCardano ? cardanoChart.data : cgChart.data;
   const chartLoading = isRobinhood ? rhChart.isLoading : isCardano ? cardanoChart.isLoading : cgChart.isLoading;
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [tokenId]);
 
   const ticker = (token?.symbol || '').toUpperCase();
   const ohlcvData = chartData?.ohlcv || [];
@@ -191,14 +197,22 @@ export const TokenDetailPage = ({ tokenId }) => {
           ← Tokens
         </Link>
         <div className="flex items-center gap-3 min-w-0">
-          <img
-            src={token.image || '/favicon/favicon.ico'}
-            alt={token.name}
-            className="w-10 h-10 rounded-full object-cover bg-steel-750"
-            onError={e => {
-              e.currentTarget.src = '/favicon/favicon.ico';
-            }}
-          />
+          {isRobinhood && (!token.image || imageFailed) ? (
+            <LavaTokenFallback className="w-10 h-10 shrink-0 rounded-full bg-steel-750" alt={token.name} />
+          ) : (
+            <img
+              src={token.image || '/favicon/favicon.ico'}
+              alt={token.name}
+              className="w-10 h-10 rounded-full object-cover bg-steel-750"
+              onError={e => {
+                if (isRobinhood) {
+                  setImageFailed(true);
+                  return;
+                }
+                e.currentTarget.src = '/favicon/favicon.ico';
+              }}
+            />
+          )}
           <h1 className="font-russo text-xl md:text-2xl uppercase text-white truncate">
             {token.name} <span className="text-dark-100">{ticker}</span>
           </h1>
