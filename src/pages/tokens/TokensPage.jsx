@@ -10,6 +10,10 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodNfts, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
+import { formatLargeNumber } from '@/utils/core.utils';
+import rhFlameLogo from '@/icons/l4va-rh.svg';
+
+const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
 const LIST_TABS = ['Trending', 'Top', 'Gainers', 'New'];
 const RH_TABS = ['Memecoins', 'RWAs', 'NFTs'];
@@ -18,7 +22,11 @@ const PAGE_SIZE = 10;
 const formatChange = value => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
   const n = Number(value);
-  return `${n > 0 ? '+' : ''}${n.toFixed(2)}%`;
+  const sign = n > 0 ? '+' : n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  // Compact very large percentage changes so they always fit (e.g. +1.11B%, +12.5M%, +125K%)
+  const body = abs >= 1000 ? formatLargeNumber(abs) : abs.toFixed(2);
+  return `${sign}${body}%`;
 };
 
 const ChangeText = ({ value, className }) => {
@@ -29,13 +37,14 @@ const ChangeText = ({ value, className }) => {
   return <span className={clsx(n >= 0 ? 'text-emerald-400' : 'text-rose-400', className)}>{formatChange(n)}</span>;
 };
 
-const TokenImage = ({ src, alt, size = 'sm' }) => (
+const TokenImage = ({ src, alt, size = 'sm', fallback = DEFAULT_TOKEN_IMAGE }) => (
   <img
-    src={src || '/favicon/favicon.ico'}
+    src={src || fallback}
     alt={alt || ''}
     className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
     onError={e => {
-      e.currentTarget.src = '/favicon/favicon.ico';
+      e.currentTarget.onerror = null;
+      e.currentTarget.src = fallback;
     }}
   />
 );
@@ -106,14 +115,14 @@ const SummaryCard = ({ title, children }) => (
   </div>
 );
 
-const TokenMiniRow = ({ image, ticker, fdv, change, onClick }) => (
+const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage }) => (
   <button
     type="button"
     onClick={onClick}
     className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-sm w-full text-left rounded-lg px-0.5 -mx-0.5 py-0.5 hover:bg-steel-800/80 transition-colors cursor-pointer"
   >
     <div className="flex items-center gap-2 min-w-0">
-      <TokenImage src={image} alt={ticker} />
+      <TokenImage src={image} alt={ticker} fallback={fallbackImage} />
       <span className="truncate font-medium text-white uppercase">{ticker}</span>
     </div>
     <span className="text-dark-100 text-xs tabular-nums">{fdv}</span>
@@ -237,6 +246,8 @@ export const TokensPage = () => {
   }
 
   const isNftTable = isRobinhood && rhTab === 'NFTs';
+  // NFT collections rarely ship an image on testnet — fall back to the RH green flame logo
+  const tokenImageFallback = isNftTable ? rhFlameLogo : DEFAULT_TOKEN_IMAGE;
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -256,12 +267,13 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
               change={item.change_24h}
+              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
         </SummaryCard>
 
-        <SummaryCard title="Just Graduated">
+        <SummaryCard title="Just Minted">
           <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
             <span>Name</span>
             <span>{isNftTable ? 'Holders' : 'FDV'}</span>
@@ -274,6 +286,7 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
               change={item.change_24h}
+              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
@@ -292,6 +305,7 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={formatTokenField(item, 'fdv')}
               change={item.change_24h}
+              fallbackImage={tokenImageFallback}
               onClick={() => openToken(item.id)}
             />
           ))}
@@ -352,7 +366,7 @@ export const TokensPage = () => {
                 >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <TokenImage src={token.image} alt={token.name} size="md" />
+                      <TokenImage src={token.image} alt={token.name} size="md" fallback={tokenImageFallback} />
                       <div>
                         <div className="font-medium text-white">{token.name || '—'}</div>
                         <div className="text-xs text-dark-100 uppercase">{token.symbol}</div>
