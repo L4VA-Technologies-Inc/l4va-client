@@ -545,6 +545,12 @@ export const useMarketWithOHLCV = (vaultId: string, interval: string = '1d') => 
     queryKey: ['markets', 'ohlcv', vaultId, interval],
     queryFn: () => VaultsApiProvider.getMarketByIdWithOHLCV(vaultId, interval),
     enabled: !!vaultId,
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
