@@ -45,7 +45,11 @@ export const Chip = ({
         <button
           type="button"
           onClick={handleRemove}
-          className="ml-2 text-steel-400 hover:text-white transition-colors"
+          className={`ml-2 rounded-full transition-colors ${
+            selected
+              ? 'text-white/80 hover:text-white hover:bg-white/20'
+              : 'text-steel-300 hover:text-white hover:bg-white/10'
+          }`}
           disabled={disabled}
         >
           <X size={14} />
