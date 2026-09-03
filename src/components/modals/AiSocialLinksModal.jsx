@@ -36,7 +36,9 @@ export const AiSocialLinksModal = ({ isOpen = true, onClose, socialLinks = [], s
   return (
     <ModalWrapper isOpen={isOpen} onClose={handleClose} size="2xl" title="Social links">
       <div className="flex flex-col gap-5">
-        <p className="text-dark-100 text-sm leading-relaxed">Optional. Add the same social profiles as in manual setup.</p>
+        <p className="text-dark-100 text-sm leading-relaxed">
+          Optional. Add the same social profiles as in manual setup.
+        </p>
         <LavaSocialLinks setSocialLinks={handleSetLinks} socialLinks={localLinks} />
         <div className="flex justify-end pt-1">
           <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleClose}>

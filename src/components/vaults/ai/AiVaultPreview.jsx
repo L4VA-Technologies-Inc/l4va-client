@@ -359,10 +359,7 @@ const DateRow = ({ label, value, isAiSet, isChanged, minDate, onCommit }) => (
     <div className="flex items-center justify-between gap-2">
       <span className="text-xs uppercase tracking-wide text-dark-100 font-russo">{label}</span>
       {isAiSet && (
-        <span
-          className="flex shrink-0 items-center opacity-40"
-          title="AI suggested this value — click to change it"
-        >
+        <span className="flex shrink-0 items-center opacity-40" title="AI suggested this value — click to change it">
           <Sparkles className="h-3 w-3 text-orange-400/80" />
         </span>
       )}
@@ -621,17 +618,17 @@ export const AiVaultPreview = ({
     });
   };
 
-  const privacyOptions = (isRobinHood
-    ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC)
-    : VAULT_PRIVACY_OPTIONS
+  const privacyOptions = (
+    isRobinHood
+      ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC)
+      : VAULT_PRIVACY_OPTIONS
   ).map(option => ({ value: option.name, label: option.label.replace(/ Vault$/i, '') }));
 
   const isPrivate = vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE;
   const isSemiPrivate = vault.privacy === VAULT_PRIVACY_TYPES.SEMI_PRIVATE;
   const isAcquireOnly = vault.isAcquireOnly === true;
   const hasAcquireWindow = Number(vault.tokensForAcquires) !== 0;
-  const showContributorWhitelist =
-    (isPrivate && vault.valueMethod === 'lbe') || isSemiPrivate;
+  const showContributorWhitelist = (isPrivate && vault.valueMethod === 'lbe') || isSemiPrivate;
   const showAcquirerWhitelist = isPrivate || isSemiPrivate;
   const contributorWallets = filledWallets(vault.contributorWhitelist);
   const acquirerWallets = filledWallets(vault.acquirerWhitelist);
@@ -915,9 +912,7 @@ export const AiVaultPreview = ({
                     placeholder="Amount"
                     sanitize={sanitizeDecimal}
                     value={vault.valuationAmount ? String(vault.valuationAmount) : ''}
-                    onCommit={next =>
-                      commitNumber('valuationAmount', next, { min: 0, max: Number.MAX_SAFE_INTEGER })
-                    }
+                    onCommit={next => commitNumber('valuationAmount', next, { min: 0, max: Number.MAX_SAFE_INTEGER })}
                   />
                 </>
               )}
@@ -982,9 +977,7 @@ export const AiVaultPreview = ({
           )}
           {isAcquireOnly && (
             <EditableRow
-              displayValue={
-                vault.minAcquireThreshold ? `${vault.minAcquireThreshold} ${currencyLabel}` : ''
-              }
+              displayValue={vault.minAcquireThreshold ? `${vault.minAcquireThreshold} ${currencyLabel}` : ''}
               isAiSet={isAiSet('minAcquireThreshold')}
               isChanged={isChanged('minAcquireThreshold')}
               label="Min acquire"
@@ -992,9 +985,7 @@ export const AiVaultPreview = ({
               sanitize={sanitizeDecimal}
               suffix={currencyLabel}
               value={
-                vault.minAcquireThreshold === 0 || vault.minAcquireThreshold
-                  ? String(vault.minAcquireThreshold)
-                  : ''
+                vault.minAcquireThreshold === 0 || vault.minAcquireThreshold ? String(vault.minAcquireThreshold) : ''
               }
               onCommit={next => commitNumber('minAcquireThreshold', next, { min: 0, max: 100000 })}
             />
@@ -1013,7 +1004,11 @@ export const AiVaultPreview = ({
             onCommit={next => commitNumber('ftTokenSupply', next, { min: MIN_SUPPLY, max: MAX_SUPPLY, integer: true })}
           />
           {isAcquireOnly ? (
-            <FieldShell isAiSet={isAiSet('tokensForAcquires')} isChanged={isChanged('tokensForAcquires')} label="For acquirers">
+            <FieldShell
+              isAiSet={isAiSet('tokensForAcquires')}
+              isChanged={isChanged('tokensForAcquires')}
+              label="For acquirers"
+            >
               <span className="text-sm text-white">100%</span>
             </FieldShell>
           ) : (
@@ -1089,7 +1084,6 @@ export const AiVaultPreview = ({
             onCommit={next => onUpdateVault('terminationType', next)}
           />
         </Section>
-
       </div>
 
       <div className="space-y-2">
