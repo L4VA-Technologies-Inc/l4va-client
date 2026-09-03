@@ -8,10 +8,10 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
  * One image backs both the vault and its token, so there is only ever one of these to replace.
  */
 export const AiVaultImageCard = ({ url, alt, isCurrent, isBusy, onRegenerate, onUpload }) => (
-  <div className="mt-3">
+  <div>
     <img
       alt={alt || 'Vault image'}
-      className="w-full max-w-[280px] aspect-square rounded-lg border border-steel-750 object-cover"
+      className="w-full max-w-[280px] aspect-square rounded-2xl border border-steel-750 object-cover"
       src={url}
     />
     {isCurrent && (

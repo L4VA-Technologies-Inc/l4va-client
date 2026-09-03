@@ -1,4 +1,8 @@
-import { initialVaultState, vaultSchema } from '@/components/vaults/constants/vaults.constants';
+import {
+  createEmptyWhitelistAsset,
+  initialVaultState,
+  vaultSchema,
+} from '@/components/vaults/constants/vaults.constants';
 
 export const AI_VAULT_STORAGE_META_KEY = 'storageVaultAiMeta';
 export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
@@ -160,3 +164,57 @@ export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   const merged = { ...(previousVault ?? initialVaultState), ...aiDraft };
   return enforceVaultCoherence(applyPresetToDraft(merged, presets));
 };
+
+const MAX_WHITELIST_ASSETS = 10;
+
+/** Catalog hits from lookup_assets — drop them into the whitelist table, never inventing ids. */
+export const mergeResolvedAssets = (vault, resolvedAssets) => {
+  if (!Array.isArray(resolvedAssets) || !resolvedAssets.length) return vault;
+
+  const existing = (vault.assetsWhitelist || []).filter(item => item?.policyId);
+  const seen = new Set(existing.map(item => item.policyId.toLowerCase()));
+  const added = [];
+
+  resolvedAssets.forEach((asset, index) => {
+    const policyId = typeof asset?.policyId === 'string' ? asset.policyId.toLowerCase() : '';
+    if (!policyId || seen.has(policyId) || existing.length + added.length >= MAX_WHITELIST_ASSETS) return;
+    seen.add(policyId);
+
+    const name = asset.name || asset.symbol || policyId;
+    const symbol = asset.symbol || '';
+    added.push({
+      ...createEmptyWhitelistAsset(),
+      uniqueId: Date.now() + index + Math.floor(Math.random() * 1000),
+      policyId,
+      assetName: symbol || name,
+      name,
+      collectionName: name,
+      isVerified: true,
+      imageUrl: asset.image || null,
+      image: asset.image || null,
+    });
+  });
+
+  if (!added.length) return vault;
+  return { ...vault, assetsWhitelist: [...existing, ...added] };
+};
+
+export const RH_VAULT_STARTER_OPTIONS = [
+  { label: 'Launch a memecoin backed by RWAs', value: 'Launch a memecoin backed by RWAs' },
+  { label: 'Launch a community managed ETF', value: 'Launch a community managed ETF' },
+  { label: 'Fractionalize a basket of NFTs', value: 'Fractionalize a basket of NFTs' },
+];
+
+const CARDANO_AI_GREETING = {
+  role: 'assistant',
+  content:
+    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config as we talk and pick sensible values for anything you don't care to specify.",
+};
+
+const RH_AI_GREETING = {
+  role: 'assistant',
+  content: 'What do you want to build today? You can text your idea, or click one of these options.',
+  options: RH_VAULT_STARTER_OPTIONS,
+};
+
+export const buildAiGreeting = isRobinhood => (isRobinhood ? RH_AI_GREETING : CARDANO_AI_GREETING);

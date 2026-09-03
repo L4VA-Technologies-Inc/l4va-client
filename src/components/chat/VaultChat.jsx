@@ -18,6 +18,14 @@ const VaultChannelHeader = ({ vault }) => {
   );
 };
 
+const chatHeaders = () => {
+  const jwt = localStorage.getItem('jwt');
+  return {
+    'Content-Type': 'application/json',
+    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+  };
+};
+
 const VaultChat = ({ vault, vaultId, apiKey }) => {
   const actualVaultId = vault?.id || vaultId;
   const actualApiKey = apiKey || import.meta.env.VITE_STREAM_API_KEY;
@@ -27,13 +35,19 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const userId = user?.id || 'anonymous';
+  const userId = user?.id;
   const userName = user?.name || user?.username || 'Anonymous User';
 
   useEffect(() => {
     const initChat = async () => {
       if (!actualVaultId || !actualApiKey) {
         setError('Missing required parameters: vaultId or apiKey');
+        setLoading(false);
+        return;
+      }
+
+      if (!userId) {
+        setError('You must be signed in to use chat');
         setLoading(false);
         return;
       }
@@ -48,13 +62,14 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
         setLoading(true);
         setError(null);
 
-        const userResponse = await fetch(`/api/v1/chat/user/${userId}`, {
+        const headers = chatHeaders();
+
+        const userResponse = await fetch('/api/v1/chat/user', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             name: userName,
             image: user?.avatar || `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
-            role: 'user',
           }),
         });
 
@@ -63,7 +78,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
           throw new Error(`${userError}`);
         }
 
-        const tokenResponse = await fetch(`/api/v1/chat/token/${userId}`);
+        const tokenResponse = await fetch('/api/v1/chat/token', { headers });
         if (!tokenResponse.ok) {
           const tokenError = await tokenResponse.text();
           throw new Error(`${tokenError}`);
@@ -84,8 +99,7 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
         const channelResponse = await fetch(`/api/v1/chat/vault/${actualVaultId}/channel`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ createdByUserId: userId }),
+          headers,
         });
 
         if (!channelResponse.ok) {

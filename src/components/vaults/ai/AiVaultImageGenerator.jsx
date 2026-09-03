@@ -14,7 +14,7 @@ export const AiVaultImageGenerator = ({ prompt, isGenerating, isReplacing, onGen
   const [value, setValue] = useState(prompt ?? '');
 
   return (
-    <div className="mt-3 rounded-lg border border-steel-750 bg-steel-850 p-4">
+    <div className="max-w-md rounded-2xl border border-steel-750 bg-steel-850 p-4">
       <p className="font-russo uppercase text-sm text-white">
         {isReplacing ? 'Regenerate vault image' : 'Generate vault image'}
       </p>

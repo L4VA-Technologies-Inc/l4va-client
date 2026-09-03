@@ -1,13 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import {
   AI_VAULT_CHAT_SESSION_KEY,
+  buildAiGreeting,
   buildVaultFromAiDraft,
   buildVaultImagePrompt,
   clearStoredVaultDraft,
   collectIncompleteFields,
   dropInvalidFields,
+  enforceVaultCoherence,
+  mergeResolvedAssets,
   readStoredVaultDraft,
   validateAiDraftFields,
   writeStoredVaultDraft,
@@ -23,12 +26,6 @@ import { usePresets } from '@/services/api/queries';
 
 const MAX_CORRECTION_ATTEMPTS = 2;
 const MAX_HISTORY_MESSAGES = 30;
-
-const GREETING = {
-  role: 'assistant',
-  content:
-    "Tell me your strategy — the assets, who can join, and how long the windows should stay open. I'll fill in the vault config as we talk and pick sensible values for anything you don't care to specify.",
-};
 
 const readSession = () => {
   try {
@@ -51,8 +48,9 @@ const withoutTrailingGenerator = messages =>
 
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
+  const { network, isRobinHood } = useNetwork();
 
-  const [messages, setMessages] = useState(restored?.messages ?? [GREETING]);
+  const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isRobinHood)]);
   // The draft is shared with the manual create form via localStorage, so a manual edit made
   // between visits wins over this hook's own (possibly stale) session snapshot.
   const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
@@ -66,7 +64,6 @@ export const useAiVaultBuilder = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const { network } = useNetwork();
   const { data: presetsData } = usePresets();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
 
@@ -91,6 +88,13 @@ export const useAiVaultBuilder = () => {
       // Session storage is best-effort; losing the transcript is not fatal.
     }
   }, []);
+
+  useEffect(() => {
+    if (messages.length !== 1 || messages[0]?.role !== 'assistant') return;
+    const next = buildAiGreeting(isRobinHood);
+    if (messages[0].content === next.content) return;
+    setMessages([next]);
+  }, [isRobinHood, messages]);
 
   const requestTurn = useCallback(
     async (history, currentDraft, validationErrors) => {
@@ -151,7 +155,8 @@ export const useAiVaultBuilder = () => {
         // A reset request replaces the draft from scratch instead of merging onto the old one.
         let base = response.resetDraft ? initialVaultState : vault;
         let draft = response.vaultDraft ?? {};
-        let candidate = buildVaultFromAiDraft(base, draft, presets);
+        let resolvedAssets = [...(response.resolvedAssets ?? [])];
+        let candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
         // Feed the live yup errors back so a stale prompt degrades to a retry, never to a bad draft.
@@ -159,13 +164,14 @@ export const useAiVaultBuilder = () => {
           response = await requestTurn(history, vault, errors);
           base = response.resetDraft ? initialVaultState : vault;
           draft = response.vaultDraft ?? {};
-          candidate = buildVaultFromAiDraft(base, draft, presets);
+          resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
+          candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
         }
 
         if (errors.length) {
           draft = dropInvalidFields(draft, errors);
-          candidate = buildVaultFromAiDraft(base, draft, presets);
+          candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
         }
 
         const nextMessages = [
@@ -177,9 +183,10 @@ export const useAiVaultBuilder = () => {
           },
         ];
         const nextStatus = errors.length ? 'gathering' : response.status;
+        const resolvedKeys = resolvedAssets.length ? ['assetsWhitelist'] : [];
         const nextAiFields = response.resetDraft
-          ? Object.keys(draft)
-          : [...new Set([...aiFields, ...Object.keys(draft)])];
+          ? [...new Set([...Object.keys(draft), ...resolvedKeys])]
+          : [...new Set([...aiFields, ...Object.keys(draft), ...resolvedKeys])];
 
         // Derived from the vault we are about to show, never from the assistant's own report, so
         // the panel can never claim a field is missing while displaying its value.
@@ -287,17 +294,18 @@ export const useAiVaultBuilder = () => {
     sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
     clearStoredVaultDraft();
     setPendingAction(null);
-    setMessages([GREETING]);
+    setMessages([buildAiGreeting(isRobinHood)]);
     setVault(initialVaultState);
     setStatus('gathering');
     setMissingFields([]);
     setAiFields([]);
-  }, []);
+  }, [isRobinHood]);
 
   // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
   const updateVaultField = useCallback(
     async (field, value) => {
-      const next = { ...vault, [field]: value };
+      const patch = field && typeof field === 'object' && value === undefined ? field : { [field]: value };
+      const next = enforceVaultCoherence({ ...vault, ...patch });
       const nextMissingFields = await collectIncompleteFields(next);
 
       setVault(next);

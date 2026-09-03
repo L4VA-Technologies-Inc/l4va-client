@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultChat } from '@/components/vaults/ai/AiVaultChat';
@@ -22,17 +23,30 @@ const CreateAiComponent = () => {
   const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(() => (builder.aiFields?.length ?? 0) > 0);
+  const userCollapsedPreview = useRef(false);
+
+  // Slide the draft open as soon as the conversation starts populating it, so fields appear live.
+  useEffect(() => {
+    if (userCollapsedPreview.current) return;
+    if (builder.isSending || builder.aiFields.length > 0) {
+      setShowPreview(true);
+    }
+  }, [builder.isSending, builder.aiFields.length]);
+
+  const togglePreview = () => {
+    setShowPreview(prev => {
+      const next = !prev;
+      userCollapsedPreview.current = !next;
+      return next;
+    });
+  };
 
   const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
     localStorage.setItem('storageVault', JSON.stringify(builder.vault));
     localStorage.setItem(AI_VAULT_STORAGE_META_KEY, JSON.stringify({ source: 'ai', startStep }));
     navigate({ to: '/create' });
   };
-
-  // Lets the user drop into the manual form at any point to tweak settings or add
-  // whitelists/collections — those are never invented by the assistant.
-  const editManually = () => openInForm(1);
 
   // The chat owns the image flow; the asset picker is the one reserved action that needs a modal.
   const handleOptionSelect = option => {
@@ -89,75 +103,85 @@ const CreateAiComponent = () => {
   }
 
   return (
-    <div className="pb-8">
-      <div className="flex flex-col items-start gap-2 py-4 md:flex-row md:items-center md:justify-between">
-        <button
-          className="order-last flex items-center gap-2 text-dark-100 hover:text-white transition-colors md:order-none"
-          type="button"
-          onClick={() => navigate({ to: '/create' })}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="uppercase font-russo text-sm">Manual setup</span>
-        </button>
-        <span className="order-first font-russo text-2xl uppercase md:order-none md:text-3xl">
-          Create vault with AI
-        </span>
-        <span className="hidden w-32 md:block" />
-      </div>
-      <div
-        className={`grid gap-6 transition-all ${showPreview ? 'grid-cols-1 lg:grid-cols-[1fr_380px]' : 'grid-cols-1'}`}
-      >
-        <div className="relative">
-          <AiVaultChat
-            isGeneratingImage={builder.isGeneratingImage}
-            isSending={builder.isSending}
-            isUploadingImage={builder.isUploadingImage}
-            messages={builder.messages}
-            onGenerateImage={builder.generateImage}
-            onOptionSelect={handleOptionSelect}
-            onSend={builder.sendMessage}
-            onStartImageGeneration={builder.startImageGeneration}
-            onUploadImage={builder.uploadImage}
-          />
+    <MotionConfig reducedMotion="user">
+      <div className="pb-8">
+        <div className="flex flex-col items-start gap-2 py-4 md:flex-row md:items-center md:justify-between">
           <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="absolute top-4 right-4 p-2 rounded-lg bg-steel-850 border border-steel-750 hover:border-orange-500/50 hover:bg-steel-800 transition-all group"
-            title={showPreview ? 'Hide settings' : 'Show settings'}
+            className="group order-last flex items-center gap-2 text-dark-100 transition-colors duration-150 hover:text-white active:opacity-70 md:order-none"
+            type="button"
+            onClick={() => openInForm(1)}
           >
-            <ChevronRight
-              className={`w-5 h-5 text-dark-100 group-hover:text-orange-300 transition-transform ${showPreview ? 'rotate-180' : ''}`}
-            />
+            <ArrowLeft className="w-4 h-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+            <span className="uppercase font-russo text-sm">Manual setup</span>
           </button>
+          <span className="order-first font-russo text-2xl uppercase tracking-tight md:order-none md:text-3xl">
+            Create vault with AI
+          </span>
+          <span className="hidden w-32 md:block" />
         </div>
-        {showPreview && (
-          <AiVaultPreview
-            aiFields={builder.aiFields}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            <AiVaultChat
+              isGeneratingImage={builder.isGeneratingImage}
+              isPreviewOpen={showPreview}
+              isSending={builder.isSending}
+              isUploadingImage={builder.isUploadingImage}
+              messages={builder.messages}
+              onGenerateImage={builder.generateImage}
+              onOptionSelect={handleOptionSelect}
+              onSend={builder.sendMessage}
+              onStartImageGeneration={builder.startImageGeneration}
+              onTogglePreview={togglePreview}
+              onUploadImage={builder.uploadImage}
+            />
+          </div>
+          <AnimatePresence initial={false}>
+            {showPreview && (
+              <motion.div
+                key="preview"
+                animate={{ opacity: 1, x: 0 }}
+                className="w-full shrink-0 lg:w-[380px]"
+                exit={{ opacity: 0, x: 16 }}
+                initial={{ opacity: 0, x: 16 }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+              >
+                <AiVaultPreview
+                  aiFields={builder.aiFields}
+                  isLaunching={isLaunching}
+                  missingFields={builder.missingFields}
+                  status={builder.status}
+                  vault={builder.vault}
+                  onGenerateImageRequest={builder.startImageGeneration}
+                  onLaunch={handleLaunch}
+                  onReset={() => setIsResetModalOpen(true)}
+                  onSendMessage={builder.sendMessage}
+                  onUpdateVault={builder.updateVaultField}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {launchRequest && (
+          <LaunchVaultConfirmModal
+            description={launchRequest.description}
             isLaunching={isLaunching}
-            status={builder.status}
-            vault={builder.vault}
-            onEditManually={editManually}
-            onLaunch={handleLaunch}
-            onReset={() => setIsResetModalOpen(true)}
-            onUpdateVault={builder.updateVaultField}
+            isOpen
+            vaultName={builder.vault?.name}
+            onClose={builder.clearAction}
+            onConfirm={handleLaunch}
           />
         )}
-      </div>
-      {launchRequest && (
-        <LaunchVaultConfirmModal
-          description={launchRequest.description}
-          isLaunching={isLaunching}
-          isOpen
-          vaultName={builder.vault?.name}
-          onClose={builder.clearAction}
-          onConfirm={handleLaunch}
+        <ResetVaultConfirmModal
+          isOpen={isResetModalOpen}
+          onClose={() => setIsResetModalOpen(false)}
+          onConfirm={() => {
+            userCollapsedPreview.current = false;
+            setShowPreview(false);
+            builder.reset();
+          }}
         />
-      )}
-      <ResetVaultConfirmModal
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-        onConfirm={builder.reset}
-      />
-    </div>
+      </div>
+    </MotionConfig>
   );
 };
 

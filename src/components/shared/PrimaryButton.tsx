@@ -23,7 +23,7 @@ const PrimaryButton = ({ children, className, disabled = false, size = 'md', onC
       disabled={disabled}
       type="button"
       className={cn(
-        'cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 bg-orange-gradient text-slate-950 hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:opacity-50 active:opacity-80',
+        'cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-[opacity,transform] duration-150 ease-out disabled:pointer-events-none disabled:opacity-50 bg-orange-gradient text-slate-950 hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:hover:opacity-50 active:scale-[0.97] active:opacity-80',
         sizeClasses[size],
         className
       )}

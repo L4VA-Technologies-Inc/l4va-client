@@ -18,7 +18,8 @@ const variants = {
     scrollArea: 'bg-input-bg',
   },
   steel: {
-    button: 'bg-steel-850 rounded-lg border border-steel-750 w-full h-[40px] py-4 px-5',
+    button:
+      'bg-steel-850 rounded-lg border border-steel-750 w-full min-w-0 shrink py-2 px-3 min-h-[40px] h-auto whitespace-normal',
     popover: 'bg-steel-850 rounded-lg border border-steel-750',
     calendar: 'bg-steel-850 rounded-[10px]',
     scrollArea: 'bg-steel-850',
@@ -153,11 +154,13 @@ export const LavaDatePicker = ({
                 )}
                 variant="outline"
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
                 {dateValue ? (
-                  <span className={variant === 'steel' ? 'text-base' : ''}>{formatDateTime(dateValue)}</span>
+                  <span className={variant === 'steel' ? 'min-w-0 flex-1 text-sm leading-snug break-words text-left' : ''}>
+                    {formatDateTime(dateValue)}
+                  </span>
                 ) : (
-                  <span className={cn(variant === 'steel' ? 'text-base' : '')}>Select date</span>
+                  <span className={cn(variant === 'steel' ? 'text-sm' : '')}>Select date</span>
                 )}
               </Button>
             </PopoverTrigger>
