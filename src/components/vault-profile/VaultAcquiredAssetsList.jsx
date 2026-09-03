@@ -1,5 +1,16 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronDown, ChevronUp, Copy, Search, Coins, Users, Wallet } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Search,
+  Coins,
+  Users,
+  Wallet,
+  BarChart3,
+  TrendingUp,
+  PieChart,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { useVaultAcquiredAssets } from '@/services/api/queries';
@@ -8,7 +19,73 @@ import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 
-const FALLBACK_IMAGE = '/assets/icons/ada.svg';
+const ADA_IMAGE = '/assets/icons/ada.svg';
+const ETH_IMAGE = '/assets/icons/eth.svg';
+
+// TODO: replace mock data with real token analytics from API
+const TOKEN_SUMMARY_MOCK = {
+  stats: [
+    { label: 'Market Cap', value: '$1.24M' },
+    { label: '24h Volume', value: '$4,820' },
+    { label: '24h High', value: '$0.046' },
+    { label: '24h Low', value: '$0.039' },
+    { label: 'All-Time High', value: '$0.089' },
+    { label: 'Avg. Holding', value: '21.5K' },
+  ],
+  diversification: [
+    { label: 'Whales', sub: '> 1% supply', holders: 12, pct: 38 },
+    { label: 'Large', sub: '0.1% – 1%', holders: 68, pct: 27 },
+    { label: 'Medium', sub: '0.01% – 0.1%', holders: 214, pct: 21 },
+    { label: 'Small', sub: '< 0.01%', holders: 990, pct: 14 },
+  ],
+};
+
+const SummaryStat = ({ label, value }) => (
+  <div className="flex flex-col gap-1 px-4 py-3 rounded-xl border border-steel-800 bg-steel-900/30">
+    <span className="text-[11px] font-medium text-steel-400 uppercase tracking-wider leading-none">{label}</span>
+    <span className="text-sm font-bold text-white leading-none">{value}</span>
+  </div>
+);
+
+const TokenSummaryCard = ({ holders, liquidity }) => (
+  <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10 p-5 md:p-6 flex flex-col gap-6">
+    <div className="flex items-center gap-2 text-steel-400">
+      <PieChart className="w-4 h-4 text-orange-500" />
+      <span className="text-[11px] text-white font-semibold uppercase tracking-wider">Token Summary</span>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <SummaryStat label="Holders" value={holders} />
+      <SummaryStat label="Liquidity" value={liquidity} />
+      {TOKEN_SUMMARY_MOCK.stats.map(s => (
+        <SummaryStat key={s.label} label={s.label} value={s.value} />
+      ))}
+    </div>
+
+    <div className="flex flex-col gap-3">
+      <span className="text-[11px] text-white font-semibold uppercase tracking-wider">
+        Diversification by wallet size
+      </span>
+      <div className="flex flex-col gap-3">
+        {TOKEN_SUMMARY_MOCK.diversification.map(d => (
+          <div key={d.label} className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-white font-medium">
+                {d.label} <span className="text-steel-500 text-xs">({d.sub})</span>
+              </span>
+              <span className="text-steel-300">
+                {d.holders} holders · {d.pct}%
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-steel-800 overflow-hidden">
+              <div className="h-full rounded-full bg-orange-500" style={{ width: `${d.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -26,6 +103,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, pickByCurrency } = useCurrency();
   const isEth = vault?.chainType === 'robinhood';
+  const fallbackImage = isEth ? ETH_IMAGE : ADA_IMAGE;
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -78,9 +156,32 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
     eth: data?.data?.totalAcquiredEth ?? data?.data?.totalAcquired ?? 0,
   });
 
+  const holdersValue = formatNumber(vault.tokenHolders || 0);
+
+  const liquidityValue =
+    vault.vaultStatus === 'locked'
+      ? (() => {
+          const val = pickByCurrency({
+            ada: data?.data?.totalAdaLiquidityAda,
+            usd: data?.data?.totalAdaLiquidityUsd,
+            eth: data?.data?.totalAdaLiquidityEth,
+          });
+          return val != null ? `${currencySymbol}${formatNum(2 * val)}` : 'N/A';
+        })()
+      : vault.projectedLpAdaAmount || vault.projectedLpUsdAmount
+        ? `${currencySymbol}${formatNum(
+            2 *
+              pickByCurrency({
+                ada: vault.projectedLpAdaAmount,
+                usd: vault.projectedLpUsdAmount,
+                eth: vault.projectedLpEthAmount,
+              })
+          )}`
+        : 'N/A';
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10">
+      {/* <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10">
         <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-steel-800/50">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2 text-steel-400">
@@ -122,6 +223,8 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     : 'N/A'
               }
             />
+            <StatBadge icon={BarChart3} label="24h Volume" value="$4,820" />
+            <StatBadge icon={TrendingUp} label="24h High / Low" value="$0.046 / $0.039" />
           </div>
         </div>
 
@@ -154,7 +257,9 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             />
           </div>
         </div>
-      </div>
+      </div> */}
+
+      <TokenSummaryCard holders={holdersValue} liquidity={liquidityValue} />
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -196,9 +301,9 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       <img
                         alt={asset.name || 'NFT'}
                         className="w-12 h-12 rounded-lg object-cover"
-                        src={asset.imageUrl || FALLBACK_IMAGE}
+                        src={asset.imageUrl || fallbackImage}
                         onError={e => {
-                          e.target.src = FALLBACK_IMAGE;
+                          e.target.src = fallbackImage;
                         }}
                       />
                     </td>
