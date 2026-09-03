@@ -23,7 +23,7 @@ const CreateAiComponent = () => {
   const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(() => (builder.aiFields?.length ?? 0) > 0);
+  const [showPreview, setShowPreview] = useState(true);
   const userCollapsedPreview = useRef(false);
 
   // Slide the draft open as soon as the conversation starts populating it, so fields appear live.
