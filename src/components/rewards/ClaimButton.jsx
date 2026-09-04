@@ -4,13 +4,59 @@ import toast from 'react-hot-toast';
 
 import PrimaryButton from '../shared/PrimaryButton';
 
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { RewardsApiProvider } from '@/services/api/rewards';
 
 export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = false }) => {
   const [status, setStatus] = React.useState('idle');
   const wallet = useWallet('handler', 'isConnected');
+  const { isRobinHood, isEvmConnected } = useRewardsWalletConnection();
 
-  const handleClaim = async () => {
+  const handleEvmClaim = async () => {
+    if (!isEvmConnected) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    if (claimableAmount <= 0) {
+      toast.error('No rewards available to claim');
+      return;
+    }
+
+    try {
+      setStatus('claiming');
+      toast.loading('Claiming rewards...', { id: 'claim-tx' });
+
+      const result = await RewardsApiProvider.claimEvmRewards({
+        claimImmediate: true,
+        claimVested: true,
+      });
+
+      if (!result?.success && !result?.txHash) {
+        throw new Error(result?.error || 'Failed to claim rewards');
+      }
+
+      toast.success(`Successfully claimed ${result.claimedAmount ?? claimableAmount} $L4VA!`, {
+        id: 'claim-tx',
+        duration: 7000,
+      });
+
+      if (onSuccess) {
+        onSuccess({
+          success: true,
+          txHash: result.txHash,
+          claimedAmount: result.claimedAmount,
+        });
+      }
+    } catch (error) {
+      const message = error?.response?.data?.message || error?.message || 'Failed to process claim';
+      toast.error(message, { id: 'claim-tx' });
+    } finally {
+      setStatus('idle');
+    }
+  };
+
+  const handleCardanoClaim = async () => {
     if (!wallet.isConnected || !wallet.handler) {
       toast.error('Please connect your wallet');
       return;
@@ -100,6 +146,14 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
     } finally {
       setStatus('idle');
     }
+  };
+
+  const handleClaim = async () => {
+    if (isRobinHood) {
+      await handleEvmClaim();
+      return;
+    }
+    await handleCardanoClaim();
   };
 
   const isPending = status !== 'idle';

@@ -213,6 +213,17 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Claim rewards on Robinhood Chain. Server broadcasts the ERC-20 transfer;
+   * the user does not sign a transaction.
+   * @param {Object} options - { epochIds?, claimImmediate?, claimVested? }
+   * @returns {Promise<{ success, txHash, claimedAmount, ... }>}
+   */
+  static async claimEvmRewards(options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.claimEvm(), options);
+    return response.data;
+  }
+
   // ============================================================================
   // Vesting Methods
   // ============================================================================
