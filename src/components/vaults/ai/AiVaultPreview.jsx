@@ -694,6 +694,17 @@ export const AiVaultPreview = ({
         </div>
       </div>
 
+      <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm || isLaunching} onClick={onLaunch}>
+        <Sparkles className="w-4 h-4" />
+        {isLaunching
+          ? 'Launching...'
+          : canOpenInForm
+            ? 'Confirm & launch'
+            : missingRequired.length > 0
+              ? `Complete setup · ${missingRequired.length} remaining`
+              : 'Complete setup'}
+      </PrimaryButton>
+
       <div>
         <Section id="identity" isOpen={openSections.has('identity')} label="Identity" onToggle={toggleSection}>
           <EditableRow
@@ -1084,19 +1095,6 @@ export const AiVaultPreview = ({
             onCommit={next => onUpdateVault('terminationType', next)}
           />
         </Section>
-      </div>
-
-      <div className="space-y-2">
-        <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm || isLaunching} onClick={onLaunch}>
-          <Sparkles className="w-4 h-4" />
-          {isLaunching
-            ? 'Launching...'
-            : canOpenInForm
-              ? 'Confirm & launch'
-              : missingRequired.length > 0
-                ? `Complete setup · ${missingRequired.length} remaining`
-                : 'Complete setup'}
-        </PrimaryButton>
       </div>
     </div>
   );
