@@ -11,6 +11,18 @@ export class TokensConfigProvider {
     return `/api/v1/tokens/memecoins/${id}/ohlc`;
   }
 
+  static getTokenDetail(id) {
+    return `/api/v1/tokens/${id}`;
+  }
+
+  static getTokenOhlc(id) {
+    return `/api/v1/tokens/${id}/ohlc`;
+  }
+
+  static getTokenTrades(id) {
+    return `/api/v1/tokens/${id}/trades`;
+  }
+
   static getCardanoMemecoins() {
     return '/api/v1/tokens/cardano/memecoins';
   }

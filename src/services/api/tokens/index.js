@@ -69,4 +69,23 @@ export class TokensApiProvider {
     });
     return response.data;
   }
+
+  static async getTokenDetail(id) {
+    const response = await axiosInstance.get(TokensConfigProvider.getTokenDetail(id));
+    return response.data;
+  }
+
+  static async getTokenOhlc(id, interval = '1d') {
+    const response = await axiosInstance.get(TokensConfigProvider.getTokenOhlc(id), {
+      params: { interval },
+    });
+    return response.data;
+  }
+
+  static async getTokenTrades(id, limit = 40) {
+    const response = await axiosInstance.get(TokensConfigProvider.getTokenTrades(id), {
+      params: { limit },
+    });
+    return response.data;
+  }
 }

@@ -671,6 +671,38 @@ export const useRobinhoodTokenTrades = (address: string, limit: number = 40) => 
   });
 };
 
+export const useTokenDetail = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id],
+    queryFn: () => TokensApiProvider.getTokenDetail(id),
+    enabled: !!id,
+    staleTime: 30_000,
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useTokenOhlc = (id: string, interval: string = '1d') => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id, 'ohlc', interval],
+    queryFn: () => TokensApiProvider.getTokenOhlc(id, interval),
+    enabled: !!id,
+    staleTime: 30_000,
+  });
+};
+
+export const useTokenTrades = (id: string, limit: number = 40, enabled = false) => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id, 'trades', limit],
+    queryFn: () => TokensApiProvider.getTokenTrades(id, limit),
+    enabled: !!id && enabled,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+};
+
 export const useVaultActivity = (
   vaultId: string,
   params: { page?: number; limit?: number; sortOrder?: string; filter?: string }
