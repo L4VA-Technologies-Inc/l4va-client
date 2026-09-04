@@ -712,14 +712,6 @@ export const LavaWhitelistWithCaps = ({
           const hasSelectedAsset = Boolean(asset.policyId && resolvedName && !isEditing);
           const displayValue = isEditing || !resolvedName ? asset.policyId : resolvedName;
 
-          const beginEditing = () => {
-            setFocusedUniqueId(asset.uniqueId);
-            openDropdown(asset.uniqueId);
-            if (asset.policyId) {
-              triggerSearch(asset.uniqueId, asset.policyId);
-            }
-          };
-
           return (
             <div
               key={asset.id || asset.uniqueId || `asset-${index}`}
@@ -759,13 +751,6 @@ export const LavaWhitelistWithCaps = ({
                         </div>
                         <p className="text-xs text-dark-100 font-mono truncate mt-0.5">{asset.policyId}</p>
                       </div>
-                      <button
-                        type="button"
-                        className="shrink-0 text-xs uppercase tracking-wide text-orange-400 hover:text-orange-300 px-2 py-1"
-                        onClick={beginEditing}
-                      >
-                        Change
-                      </button>
                       <Button
                         className="h-8 w-8 rounded-full shrink-0"
                         size="icon"
