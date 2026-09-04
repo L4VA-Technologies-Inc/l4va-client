@@ -137,22 +137,6 @@ export const TokenDetailPage = ({ tokenId }) => {
     }));
   }, [tradesQuery.data]);
 
-  const stats = useMemo(() => {
-    const fields = token?.overview_fields || [];
-    return fields.map(field => {
-      if (field === 'holders') {
-        return {
-          label: OVERVIEW_LABEL.holders,
-          value: token.holders_count != null ? String(token.holders_count) : '—',
-        };
-      }
-      return {
-        label: OVERVIEW_LABEL[field] || field,
-        value: fmt(field, field === 'high' || field === 'low' ? { price: true } : undefined),
-      };
-    });
-  }, [token, currency, currencySymbol]);
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(copyValue);
@@ -183,6 +167,18 @@ export const TokenDetailPage = ({ tokenId }) => {
   }
 
   const chartLoading = chartQuery.isLoading || (chartQuery.isFetching && !ohlcvData.length);
+  const stats = (token.overview_fields || []).map(field => {
+    if (field === 'holders') {
+      return {
+        label: OVERVIEW_LABEL.holders,
+        value: token.holders_count != null ? String(token.holders_count) : '—',
+      };
+    }
+    return {
+      label: OVERVIEW_LABEL[field] || field,
+      value: fmt(field, field === 'high' || field === 'low' ? { price: true } : undefined),
+    };
+  });
 
   return (
     <div className="flex flex-col gap-4 pb-10">

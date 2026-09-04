@@ -198,9 +198,7 @@ export const TokensPage = () => {
     if (activeTab === 'Top') {
       return items.sort((a, b) => (b.market_cap ?? 0) - (a.market_cap ?? 0));
     }
-    return items.sort(
-      (a, b) => (b.volume_24h ?? b.liquidity_usd ?? 0) - (a.volume_24h ?? a.liquidity_usd ?? 0)
-    );
+    return items.sort((a, b) => (b.volume_24h ?? b.liquidity_usd ?? 0) - (a.volume_24h ?? a.liquidity_usd ?? 0));
   }, [tokens, activeTab, isRobinhood, rhTab]);
 
   const trending = useMemo(
