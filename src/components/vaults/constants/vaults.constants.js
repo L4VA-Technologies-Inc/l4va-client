@@ -49,6 +49,13 @@ export const VAULT_STATUSES = {
   FAILED: 'failed',
 };
 
+/** True when acquirers get 0% of vault tokens — the acquire window is skipped. */
+export const hasNoAcquirePhase = tokensForAcquires =>
+  tokensForAcquires !== null &&
+  tokensForAcquires !== undefined &&
+  tokensForAcquires !== '' &&
+  Number(tokensForAcquires) === 0;
+
 export const CREATE_VAULT_STEPS = [
   {
     id: 1,
@@ -397,7 +404,7 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Acquire window duration is required')
     .when('tokensForAcquires', {
-      is: 0,
+      is: value => hasNoAcquirePhase(value),
       then: schema => schema.nullable().notRequired(),
       otherwise: schema =>
         schema
@@ -406,7 +413,7 @@ export const vaultSchema = yup.object({
           .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
     }),
   acquireOpenWindowType: yup.string().when('tokensForAcquires', {
-    is: 0,
+    is: value => hasNoAcquirePhase(value),
     then: schema => schema.nullable().notRequired(),
     otherwise: schema => schema.required('Acquire window type is required'),
   }),
@@ -497,7 +504,7 @@ export const vaultSchema = yup.object({
       'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
       function (value) {
         const { tokensForAcquires } = this.parent;
-        if (tokensForAcquires === 0) {
+        if (hasNoAcquirePhase(tokensForAcquires)) {
           return value === 0;
         }
         return true;

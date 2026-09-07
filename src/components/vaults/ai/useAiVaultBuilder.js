@@ -6,7 +6,7 @@ import {
   buildAiGreeting,
   buildVaultFromAiDraft,
   buildVaultImagePrompt,
-  clearStoredVaultDraft,
+  clearVaultCreationDrafts,
   collectIncompleteFields,
   dropInvalidFields,
   enforceVaultCoherence,
@@ -70,7 +70,10 @@ export const useAiVaultBuilder = () => {
   const environment =
     import.meta.env.VITE_CARDANO_NETWORK === environments.MAINNET ? environments.MAINNET : environments.PREPROD;
 
-  const persist = useCallback((next, nextVault, nextStatus, nextMissing, nextAiFields) => {
+  const draftEpochRef = useRef(0);
+
+  const persist = useCallback((next, nextVault, nextStatus, nextMissing, nextAiFields, epoch) => {
+    if (epoch !== undefined && epoch !== draftEpochRef.current) return;
     // Keep the shared draft in sync so the manual form sees every AI/preview edit on its next mount.
     writeStoredVaultDraft(nextVault);
     try {
@@ -130,6 +133,7 @@ export const useAiVaultBuilder = () => {
       const trimmed = text.trim();
       if (!trimmed || isSending) return;
 
+      const epoch = draftEpochRef.current;
       const history = [...messages, { role: 'user', content: trimmed }];
       setMessages([...history, { role: 'assistant', content: '' }]);
       setIsSending(true);
@@ -200,7 +204,7 @@ export const useAiVaultBuilder = () => {
         setStatus(nextStatus);
         setMissingFields(nextMissingFields);
         setAiFields(nextAiFields);
-        persist(nextMessages, candidate, nextStatus, nextMissingFields, nextAiFields);
+        persist(nextMessages, candidate, nextStatus, nextMissingFields, nextAiFields, epoch);
       } catch (err) {
         // Drop the empty/partial assistant bubble on failure so the user can retry cleanly.
         setMessages(history);
@@ -291,8 +295,8 @@ export const useAiVaultBuilder = () => {
   const clearAction = useCallback(() => setPendingAction(null), []);
 
   const reset = useCallback(() => {
-    sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
-    clearStoredVaultDraft();
+    draftEpochRef.current += 1;
+    clearVaultCreationDrafts();
     setPendingAction(null);
     setMessages([buildAiGreeting(isRobinHood)]);
     setVault(initialVaultState);

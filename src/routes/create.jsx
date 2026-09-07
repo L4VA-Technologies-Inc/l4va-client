@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { Sparkles } from 'lucide-react';
+import { useCallback } from 'react';
 
 import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
@@ -23,9 +24,13 @@ const CreateComponent = () => {
   const aiMeta = readJson(AI_VAULT_STORAGE_META_KEY);
   const isAiPrefilled = aiMeta?.source === 'ai';
 
-  const handleSaveVault = data => {
+  const handleSaveVault = useCallback(data => {
+    if (!data) {
+      localStorage.removeItem('storageVault');
+      return;
+    }
     localStorage.setItem('storageVault', JSON.stringify(data));
-  };
+  }, []);
 
   if (isLoading) {
     return null;

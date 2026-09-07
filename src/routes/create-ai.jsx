@@ -70,10 +70,13 @@ const CreateAiComponent = () => {
 
     setIsLaunching(true);
     try {
-      await launchVault(builder.vault);
+      await launchVault(builder.vault, {
+        onSuccess: () => {
+          builder.clearAction();
+          builder.reset();
+        },
+      });
       toast.success('Vault launched successfully');
-      builder.clearAction();
-      builder.reset();
     } catch (error) {
       if (error?.name === 'ValidationError') {
         toast.error('Please complete all required vault fields before launching.');

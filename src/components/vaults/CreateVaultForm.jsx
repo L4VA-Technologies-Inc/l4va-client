@@ -36,6 +36,7 @@ import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
   CREATE_VAULT_STEPS,
   createEmptyWhitelistAsset,
+  hasNoAcquirePhase,
   initialVaultState,
   stepFields,
   VAULT_PRIVACY_TYPES,
@@ -49,7 +50,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
-import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
+import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
 
@@ -81,6 +82,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const isPresetManuallyChanged = useRef(false);
   // Tracks which vault key we have already resolved presets for, to avoid re-running on query refetches
   const resolvedForVaultRef = useRef(null);
+  // After a successful launch, skip writing the old draft back to localStorage.
+  const skipPersistRef = useRef(false);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
@@ -118,7 +121,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const isPresetConfigLocked = !aiPrefilled && (!isAdvancedPresetAvailable || vaultData.preset !== 'advanced');
 
   const isAcquireOnly = vaultData.preset === 'acquire_only';
-  const isContributionOnly = vaultData.tokensForAcquires === 0;
+  const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
 
   useEffect(() => {
     if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
@@ -199,36 +202,44 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     const applyPresetData = preset => {
       if (!preset) return;
       const config = preset.config || {};
-      const isAcquireOnly = preset.type?.toLowerCase() === 'acquire_only';
+      const isAcquireOnlyPreset = preset.type?.toLowerCase() === 'acquire_only';
       setVaultData(prev => ({
         ...prev,
         preset: preset.type || 'advanced',
         preset_id: preset.id ?? null,
-        tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
+        tokensForAcquires: isAcquireOnlyPreset ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
         acquireReserve: config.acquireReserve ?? prev.acquireReserve,
         liquidityPoolContribution: config.liquidityPoolContribution ?? prev.liquidityPoolContribution,
         creationThreshold: config.creationThreshold ?? prev.creationThreshold,
         voteThreshold: 0,
         cosigningThreshold: config.cosigningThreshold ?? prev.cosigningThreshold,
         executionThreshold: config.executionThreshold ?? prev.executionThreshold,
-        isAcquireOnly,
+        isAcquireOnly: isAcquireOnlyPreset,
       }));
       setSelectedPresetId(preset.id.toString());
     };
+
+    const isAdvancedPreset = preset =>
+      preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced';
 
     if (vault) {
       const savedPresetId = vault?.preset_id?.toString();
       if (savedPresetId) {
         const foundPreset = presets.find(p => p?.id?.toString() === savedPresetId);
         if (foundPreset) {
-          // Preset still exists — just sync the type label, keep existing config values
           setSelectedPresetId(savedPresetId);
-          setVaultData(prev => ({
-            ...prev,
-            preset: foundPreset.type || 'advanced',
-            preset_id: foundPreset.id ?? null,
-            isAcquireOnly: foundPreset.type?.toLowerCase() === 'acquire_only',
-          }));
+          // Locked presets must copy config (including tokensForAcquires: 0). Syncing only the
+          // type left leftover acquire values on Asset Contributors Only until the user toggled.
+          if (aiPrefilled || isAdvancedPreset(foundPreset)) {
+            setVaultData(prev => ({
+              ...prev,
+              preset: foundPreset.type || 'advanced',
+              preset_id: foundPreset.id ?? null,
+              isAcquireOnly: foundPreset.type?.toLowerCase() === 'acquire_only',
+            }));
+          } else {
+            applyPresetData(foundPreset);
+          }
         } else {
           // The preset was deleted — fall back to the first available preset
           toast.error(
@@ -260,6 +271,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   }, [vaultData, currentStep]);
 
   useEffect(() => {
+    if (skipPersistRef.current) return;
     if (setVault) {
       setVault(vaultData);
     }
@@ -299,7 +311,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
       const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = vaultData.tokensForAcquires === 0;
+      const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
       const isAdvancedMode = (isAdvancedPresetAvailable && vaultData.preset === 'advanced') || aiPrefilled;
       let nextStep;
       if (isAdvancedMode || isAcquireOnly || isContributionOnly) {
@@ -322,7 +334,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
       const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = vaultData.tokensForAcquires === 0;
+      const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
       let prevStep = currentStep - 1;
       // Skip contribution step for acquire-only vaults
       if (isAcquireOnly && prevStep === 2) {
@@ -623,8 +635,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             queryClient.invalidateQueries({ queryKey: ['vault', dbVaultId] }),
             queryClient.invalidateQueries({ queryKey: ['vaults'] }),
           ]);
-          localStorage.removeItem('storageVault');
-          localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+          skipPersistRef.current = true;
+          clearVaultCreationDrafts();
+          setVaultData(initialVaultState);
+          if (setVault) setVault(null);
           navigate({ to: `/vaults/${dbVaultId}` });
           await changeStep(1, true);
           setSteps(CREATE_VAULT_STEPS);
@@ -706,8 +720,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           signatures: [signature],
         }).then(res => {
           if (res.data.id) {
-            localStorage.removeItem('storageVault');
-            localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+            skipPersistRef.current = true;
+            clearVaultCreationDrafts();
+            setVaultData(initialVaultState);
+            if (setVault) setVault(null);
             navigate({ to: `/vaults/${data.vaultId}` });
           }
         });
@@ -750,6 +766,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     if (stepId === currentStep) return;
     // Prevent navigating to the contribution step for acquire-only vaults
     if (stepId === 2 && vaultData.preset === 'acquire_only') return;
+    if (stepId === 3 && hasNoAcquirePhase(vaultData.tokensForAcquires)) return;
     const skipValidation = stepId < currentStep;
     await changeStep(stepId, skipValidation);
     scrollToTop();
@@ -863,8 +880,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   };
 
   const resetVault = async () => {
-    localStorage.removeItem('storageVault');
-    localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+    skipPersistRef.current = true;
+    clearVaultCreationDrafts();
 
     const firstPreset = presets[0] ?? null;
     const resetData = { ...initialVaultState };
@@ -882,6 +899,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       resetData.executionThreshold = config.executionThreshold ?? null;
     }
 
+    skipPersistRef.current = false;
+    resolvedForVaultRef.current = null;
     setVaultData(resetData);
     await changeStep(1, true);
     setSteps(CREATE_VAULT_STEPS);

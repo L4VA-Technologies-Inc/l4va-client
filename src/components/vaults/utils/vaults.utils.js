@@ -1,3 +1,5 @@
+import { hasNoAcquirePhase } from '@/components/vaults/constants/vaults.constants';
+
 export const formatVaultData = (vaultData, isRobinHood = false) => {
   const formattedData = { ...vaultData };
 
@@ -11,6 +13,12 @@ export const formatVaultData = (vaultData, isRobinHood = false) => {
     formattedData.minAcquireThreshold = isRobinHood
       ? Number(formattedData.minAcquireThreshold)
       : Math.round(Number(formattedData.minAcquireThreshold) * 1000000);
+  }
+
+  if (hasNoAcquirePhase(formattedData.tokensForAcquires)) {
+    formattedData.tokensForAcquires = 0;
+    formattedData.acquireWindowDuration = null;
+    formattedData.acquireOpenWindowTime = null;
   }
 
   return formattedData;

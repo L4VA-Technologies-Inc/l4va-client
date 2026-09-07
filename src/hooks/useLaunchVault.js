@@ -11,7 +11,7 @@ import { useVlrmFeeSettings } from '@/services/api/queries';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { vaultSchema } from '@/components/vaults/constants/vaults.constants';
-import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
+import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 
 const BALANCE_STALENESS_MS = 5 * 60 * 1000;
 
@@ -26,7 +26,7 @@ export const useLaunchVault = () => {
   const { data: vlrmFeeData } = useVlrmFeeSettings();
 
   const launchVault = useCallback(
-    async vaultData => {
+    async (vaultData, { onSuccess } = {}) => {
       await vaultSchema.validate(vaultData, { abortEarly: false });
 
       if (isRobinHood) {
@@ -39,8 +39,8 @@ export const useLaunchVault = () => {
           queryClient.invalidateQueries({ queryKey: ['vault', dbVaultId] }),
           queryClient.invalidateQueries({ queryKey: ['vaults'] }),
         ]);
-        localStorage.removeItem('storageVault');
-        localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+        clearVaultCreationDrafts();
+        onSuccess?.();
         navigate({ to: `/vaults/${dbVaultId}` });
         return dbVaultId;
       }
@@ -77,8 +77,8 @@ export const useLaunchVault = () => {
       });
 
       if (response.data.id) {
-        localStorage.removeItem('storageVault');
-        localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+        clearVaultCreationDrafts();
+        onSuccess?.();
         navigate({ to: `/vaults/${data.vaultId}` });
       }
 

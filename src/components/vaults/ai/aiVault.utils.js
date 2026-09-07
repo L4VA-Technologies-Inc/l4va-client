@@ -39,6 +39,21 @@ export const clearStoredVaultDraft = () => {
   }
 };
 
+/** Clears every vault-creation draft so the next create starts empty. */
+export const clearVaultCreationDrafts = () => {
+  clearStoredVaultDraft();
+  try {
+    localStorage.removeItem(AI_VAULT_STORAGE_META_KEY);
+  } catch {
+    // Best-effort.
+  }
+  try {
+    sessionStorage.removeItem(AI_VAULT_CHAT_SESSION_KEY);
+  } catch {
+    // Best-effort.
+  }
+};
+
 export const MAX_IMAGE_SIZE_MB = 5;
 
 /** Returns an error message for an unusable image file, or null when the file is fine. */
@@ -128,16 +143,22 @@ export const applyPresetToDraft = (vault, presets) => {
   if (!preset) return vault;
 
   const config = preset.config || {};
-  const next = { ...vault, preset: preset.type || 'advanced' };
+  const next = { ...vault, preset: preset.type || 'advanced', preset_id: preset.id ?? vault.preset_id };
+  const isAdvanced = preset.type?.toLowerCase() === 'advanced' || preset.name?.toLowerCase() === 'advanced';
 
+  // Locked presets always copy their config, including tokensForAcquires: 0.
+  // Filling only empty fields left leftover acquire values on Asset Contributors Only.
   PRESET_CONFIG_FIELDS.forEach(field => {
-    if (next[field] === null || next[field] === undefined) {
-      next[field] = config[field] ?? next[field];
+    if (isAdvanced && next[field] !== null && next[field] !== undefined) return;
+    if (config[field] !== undefined) {
+      next[field] = config[field];
     }
   });
 
   if (preset.type?.toLowerCase() === 'acquire_only') {
     next.isAcquireOnly = true;
+  } else {
+    next.isAcquireOnly = false;
   }
 
   return next;
