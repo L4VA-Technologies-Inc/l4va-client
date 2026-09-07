@@ -144,8 +144,7 @@ export const applyPresetToDraft = (vault, presets) => {
 
   const config = preset.config || {};
   const next = { ...vault, preset: preset.type || 'advanced', preset_id: preset.id ?? vault.preset_id };
-  const isAdvanced =
-    preset.type?.toLowerCase() === 'advanced' || preset.name?.toLowerCase() === 'advanced';
+  const isAdvanced = preset.type?.toLowerCase() === 'advanced' || preset.name?.toLowerCase() === 'advanced';
 
   // Locked presets always copy their config, including tokensForAcquires: 0.
   // Filling only empty fields left leftover acquire values on Asset Contributors Only.
