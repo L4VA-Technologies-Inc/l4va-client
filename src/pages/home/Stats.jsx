@@ -1,4 +1,4 @@
-import { formatNum } from '@/utils/core.utils.js';
+import { formatNum, formatCompactValue } from '@/utils/core.utils.js';
 import { useStatistics } from '@/services/api/queries';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
@@ -14,9 +14,11 @@ const getBackgroundColor = index => {
   return colors[index] || colors[colors.length - 1];
 };
 
-const StatCard = ({ value, label }) => (
+const StatCard = ({ value, fullValue, label }) => (
   <div className="text-center p-6">
-    <p className="font-russo text-[var(--color-chart-accent)] text-3xl xl:text-4xl font-bold mb-2">{value}</p>
+    <p className="font-russo text-[var(--color-chart-accent)] text-3xl xl:text-4xl font-bold mb-2" title={fullValue}>
+      {value}
+    </p>
     <p className="font-bold text-lg lg:text-2xl xl:text-3xl">{label}</p>
   </div>
 );
@@ -43,9 +45,12 @@ const ProgressBar = ({ items, title }) => {
                 <div>
                   <div className="text-dark-100 text-sm lg:text-base">{item.label}</div>
                   <div className="text-base lg:text-lg xl:text-xl font-semibold">{item.percentage.toFixed(2)}%</div>
-                  <div className="text-dark-100 text-sm lg:text-base">
+                  <div
+                    className="text-dark-100 text-sm lg:text-base"
+                    title={`${currencySymbol}${formatNum(item.actualValue)}`}
+                  >
                     {currencySymbol}
-                    {formatNum(item.actualValue)}
+                    {formatCompactValue(item.actualValue)}
                   </div>
                 </div>
               </div>
@@ -90,6 +95,10 @@ const Stats = () => {
   const { currencySymbol, pickByCurrency } = useCurrency();
 
   const formatCurrency = (adaValue, usdValue, ethValue) => {
+    return `${currencySymbol}${formatCompactValue(pickByCurrency({ ada: adaValue, usd: usdValue, eth: ethValue }))}`;
+  };
+
+  const formatCurrencyFull = (adaValue, usdValue, ethValue) => {
     return `${currencySymbol}${formatNum(pickByCurrency({ ada: adaValue, usd: usdValue, eth: ethValue }))}`;
   };
 
@@ -99,22 +108,36 @@ const Stats = () => {
 
   const stats = statistics
     ? [
-        { label: 'Total Vaults', value: statistics.totalVaults?.toString() || '0' },
-        { label: 'Assets', value: statistics.totalAssets?.toString() || '0' },
+        {
+          label: 'Total Vaults',
+          value: formatCompactValue(statistics.totalVaults),
+          fullValue: formatNum(statistics.totalVaults) || '0',
+        },
+        {
+          label: 'Assets',
+          value: formatCompactValue(statistics.totalAssets),
+          fullValue: formatNum(statistics.totalAssets) || '0',
+        },
         {
           label: 'Acquired',
           value: formatCurrency(statistics.totalAcquiredAda, statistics.totalAcquiredUsd, statistics.totalAcquiredEth),
+          fullValue: formatCurrencyFull(
+            statistics.totalAcquiredAda,
+            statistics.totalAcquiredUsd,
+            statistics.totalAcquiredEth
+          ),
         },
         {
           label: 'TVL',
           value: formatCurrency(statistics.totalValueAda, statistics.totalValueUsd, statistics.totalValueEth),
+          fullValue: formatCurrencyFull(statistics.totalValueAda, statistics.totalValueUsd, statistics.totalValueEth),
         },
       ]
     : [
-        { label: 'Total Vaults', value: '0' },
-        { label: 'Assets', value: '0' },
-        { label: 'Acquired', value: `${currencySymbol}0` },
-        { label: 'TVL', value: `${currencySymbol}0` },
+        { label: 'Total Vaults', value: '0', fullValue: '0' },
+        { label: 'Assets', value: '0', fullValue: '0' },
+        { label: 'Acquired', value: `${currencySymbol}0`, fullValue: `${currencySymbol}0` },
+        { label: 'TVL', value: `${currencySymbol}0`, fullValue: `${currencySymbol}0` },
       ];
 
   const statusData = statistics?.vaultsByStage
@@ -150,7 +173,7 @@ const Stats = () => {
       <h1 className="font-russo font-bold text-3xl xl:text-4xl mb-8">QUICK STATS</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8">
         {stats.map(stat => (
-          <StatCard key={stat.label} label={stat.label} value={stat.value} />
+          <StatCard key={stat.label} fullValue={stat.fullValue} label={stat.label} value={stat.value} />
         ))}
       </div>
       <div className="space-y-16">

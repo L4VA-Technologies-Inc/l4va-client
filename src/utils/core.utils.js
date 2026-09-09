@@ -130,10 +130,28 @@ export const formatPercentage = value => {
   return `${sign}${formatted}%`;
 };
 
-export const formatCompactNumber = num => {
+export const formatCompactNumber = (num, maximumFractionDigits = 1) => {
   if (!num) return 0;
-  const formatter = Intl.NumberFormat('en', { notation: 'compact' });
+  const formatter = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits });
   return formatter.format(num);
+};
+
+/**
+ * Format a large number for compact display, falling back to grouped notation
+ * for values small enough to show in full.
+ * - abs value >= 1,000: compact notation (e.g. 3.36B, 66.58K)
+ * - otherwise: grouped notation with up to 2 decimals (e.g. 983, 66.58)
+ * @param {number|string} value
+ * @param {number} maximumFractionDigits - decimals for compact notation (default 2)
+ * @returns {string}
+ */
+export const formatCompactValue = (value, maximumFractionDigits = 2) => {
+  const num = Number(value);
+  if (!num || Number.isNaN(num)) return '0';
+  if (Math.abs(num) >= 1000) {
+    return Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits }).format(num);
+  }
+  return num.toLocaleString('en', { useGrouping: true, maximumFractionDigits });
 };
 
 /**
