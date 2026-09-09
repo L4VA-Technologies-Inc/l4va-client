@@ -15,6 +15,7 @@ import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/s
 import { ChainBadge } from '@/components/shared/ChainBadge';
 import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
+import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
     .then(module => ({
@@ -768,6 +769,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             {isPhaseTransitioning() && <PhaseTransitionInfo />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
+          {isRobinhoodVault && vault.vaultStatus === VAULT_STATUSES.TERMINATING && (
+            <div className="mb-6">
+              <VaultTerminationRedeem vault={vault} vaultTokenAddress={evmVaultTokenAddress} />
+            </div>
+          )}
           {vault.vaultStatus !== 'locked' ? (
             deferredReady ? (
               <Suspense fallback={<ContributionSkeleton />}>

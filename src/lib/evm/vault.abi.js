@@ -67,6 +67,54 @@ export const VAULT_CONTRIBUTION_ABI = [
   },
 ];
 
+// Termination / redemption entry points (V6 vault).
+//
+// After a TERMINATION proposal executes, the vault commits a fixed redemption
+// rate per distributable asset and opens redemption. A VT holder calls
+// `redeem(recipient)` which burns their ENTIRE VT balance and pays their
+// pro-rata share of every committed asset in one transaction. `previewRedeem`
+// is a view helper for "what would I get for asset X right now".
+export const VAULT_TERMINATION_ABI = [
+  {
+    type: 'function',
+    name: 'redeem',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'recipient', type: 'address' }],
+    outputs: [{ name: 'burned', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'terminationAssets',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'address[]' }],
+  },
+  {
+    type: 'function',
+    name: 'terminationDeadline',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'terminationOutstanding',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'previewRedeem',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'holder', type: 'address' },
+      { name: 'asset', type: 'address' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+];
+
 // ERC20 approve(spender, amount)
 export const ERC20_APPROVE_ABI = [
   {
