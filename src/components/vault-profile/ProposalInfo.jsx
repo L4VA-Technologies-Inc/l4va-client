@@ -1,5 +1,5 @@
 import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
 import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
+import { VoteStateBanner } from './ProposalInfo/VoteStateBanner';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 import { ProposalEndDate } from './ProposalEndDate';
 import { VaultSkeleton } from './VaultSkeleton';
@@ -25,6 +26,8 @@ import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenPro
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
+
+const VOTE_LABELS = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
 
 const ProposalInfoSkeleton = () => (
   <div>
@@ -128,6 +131,7 @@ export const ProposalInfo = ({ proposalId }) => {
   const totalVotes = response?.data?.votes?.length;
   const proposer = response?.data?.proposer;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
+  const [detailPage, setDetailPage] = useState('vote');
 
   const getTerminationProgress = status => {
     const statuses = [
@@ -459,6 +463,15 @@ export const ProposalInfo = ({ proposalId }) => {
 
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
+  // `canVote: false` collapses three very different situations. Separating them
+  // is what lets the UI say why an option is unavailable instead of going dead.
+  const voteState = useMemo(() => {
+    if (selectedVote) return 'voted';
+    if (canVote) return 'open';
+    if (!user || !isWalletConnected) return 'signed-out';
+    return 'no-power';
+  }, [selectedVote, canVote, user, isWalletConnected]);
+
   const handleVote = async (proposalId, voteType) => {
     const activeVoterAddress = walletAddress || user?.address;
 
@@ -540,15 +553,48 @@ export const ProposalInfo = ({ proposalId }) => {
     }
   }, [response?.data?.canVote, response?.data?.selectedVote]);
 
+  useEffect(() => {
+    const status = proposalInfo?.status;
+    if (!status) return;
+    const openForVoting = status === 'active' && !response?.data?.selectedVote;
+    setDetailPage(openForVoting ? 'vote' : 'results');
+  }, [proposalId, proposalInfo?.status, response?.data?.selectedVote]);
+
   if (!proposalInfo) {
     return <ProposalInfoSkeleton />;
   }
 
+  const isActive = proposalInfo.status === 'active';
+  const showVotePanel = !isActive || detailPage === 'vote';
+  const showResultsPanel = !isActive || detailPage === 'results';
+
   return (
     <div>
+      {isActive && (
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-2xl border border-steel-750 bg-steel-900 p-1">
+          <button
+            type="button"
+            onClick={() => setDetailPage('vote')}
+            className={`rounded-xl py-3 text-base font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100 ${
+              detailPage === 'vote' ? 'bg-orange-gradient text-slate-950' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Vote
+          </button>
+          <button
+            type="button"
+            onClick={() => setDetailPage('results')}
+            className={`rounded-xl py-3 text-base font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100 ${
+              detailPage === 'results' ? 'bg-orange-gradient text-slate-950' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Results
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
-          <div className="space-y-2">
+        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 flex flex-col gap-8">
+          <div className="order-1 space-y-2">
             <div className="text-dark-100 text-md mb-3">
               <ProposalEndDate
                 startDate={proposalInfo?.startDate}
@@ -558,7 +604,11 @@ export const ProposalInfo = ({ proposalId }) => {
             </div>
           </div>
 
-          <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
+          <div
+            className={`order-3 flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col ${
+              showResultsPanel ? '' : 'hidden'
+            }`}
+          >
             <div className="w-full space-y-2">
               <div className="flex justify-between">
                 <h3 className="text-gray-400">Proposal title</h3>
@@ -679,7 +729,7 @@ export const ProposalInfo = ({ proposalId }) => {
               </div>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className={`order-2 space-y-4 ${showVotePanel ? '' : 'hidden'}`}>
             {proposalInfo?.executionError ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
                 <div className="flex items-center space-x-2">
@@ -699,42 +749,62 @@ export const ProposalInfo = ({ proposalId }) => {
               </div>
             ) : proposalInfo.status === 'active' ? (
               <>
-                <VoteButton
-                  voteType="yes"
-                  icon={CheckCircle}
-                  label="Yes, pass this Proposal"
-                  canVote={canVote}
-                  isSelected={selectedVote === 'yes'}
-                  onClick={() => setSelectedVote('yes')}
-                />
-                <VoteButton
-                  voteType="no"
-                  icon={XCircle}
-                  label="No, do not pass this Proposal"
-                  canVote={canVote}
-                  isSelected={selectedVote === 'no'}
-                  onClick={() => setSelectedVote('no')}
-                />
-                {proposalInfo?.abstain && (
-                  <VoteButton
-                    voteType="abstain"
-                    icon={Ellipsis}
-                    label="Do nothing"
-                    canVote={canVote}
-                    isSelected={selectedVote === 'abstain'}
-                    onClick={() => setSelectedVote('abstain')}
-                  />
-                )}
-
-                <div className="flex justify-center">
-                  <PrimaryButton
-                    className="w-60 rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-                    onClick={() => (canVote && selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
-                    disabled={!canVote || !selectedVote}
-                  >
-                    <span className="text-white-500 text-2md flex items-center">Vote</span>
-                  </PrimaryButton>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-semibold tracking-tight text-white">{proposalInfo?.title}</h2>
+                  <p className="text-sm text-gray-400">
+                    Pick an option, then confirm below. You can vote once, and only while the window is open.
+                  </p>
                 </div>
+
+                <VoteStateBanner
+                  state={voteState}
+                  selectedVote={selectedVote}
+                  tokenTicker={proposalInfo?.vault?.vault_token_ticker}
+                  snapshotDate={proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : null}
+                  onConnect={() => openModal('LoginModal')}
+                />
+
+                <div aria-label="Vote options" className="space-y-4" role="radiogroup">
+                  <VoteButton
+                    voteType="yes"
+                    icon={CheckCircle}
+                    label="Yes, pass this Proposal"
+                    canVote={canVote}
+                    isSelected={selectedVote === 'yes'}
+                    onClick={() => setSelectedVote('yes')}
+                  />
+                  <VoteButton
+                    voteType="no"
+                    icon={XCircle}
+                    label="No, do not pass this Proposal"
+                    canVote={canVote}
+                    isSelected={selectedVote === 'no'}
+                    onClick={() => setSelectedVote('no')}
+                  />
+                  {proposalInfo?.abstain && (
+                    <VoteButton
+                      voteType="abstain"
+                      icon={Ellipsis}
+                      label="Do nothing"
+                      canVote={canVote}
+                      isSelected={selectedVote === 'abstain'}
+                      onClick={() => setSelectedVote('abstain')}
+                    />
+                  )}
+                </div>
+
+                {canVote && (
+                  <div className="flex flex-col items-center gap-2">
+                    <PrimaryButton
+                      className="w-full sm:w-60"
+                      disabled={!selectedVote}
+                      onClick={() => (selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
+                    >
+                      {selectedVote ? `Vote ${VOTE_LABELS[selectedVote] ?? selectedVote}` : 'Vote'}
+                    </PrimaryButton>
+                    {!selectedVote && <span className="text-xs text-gray-500">Select an option above to continue</span>}
+                  </div>
+                )}
 
                 <div className="text-center text-sm text-gray-400 italic">
                   * Voting power was calculated on{' '}
@@ -846,7 +916,7 @@ export const ProposalInfo = ({ proposalId }) => {
           </div>
         </div>
 
-        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6">
+        <div className={`bg-steel-950 border border-steel-750 rounded-lg p-6 ${showResultsPanel ? '' : 'hidden'}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <h3 className="text-1xl font-bold">Votes</h3>
@@ -872,7 +942,11 @@ export const ProposalInfo = ({ proposalId }) => {
             )}
           </div>
         </div>
-        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6">
+        <div
+          className={`bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6 ${
+            showResultsPanel ? '' : 'hidden'
+          }`}
+        >
           <div className="space-y-3">
             <h3 className="text-1xl font-bold">Information</h3>
             {informationItems.map((item, index) => (

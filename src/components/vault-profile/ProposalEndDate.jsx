@@ -1,8 +1,23 @@
 import { useEffect, useState } from 'react';
 
-import { formatProposalEndDate, formatDateWithTime } from '@/utils/core.utils';
+import { formatProposalEndDate, formatDateWithTime, MS_PER_HOUR, MS_PER_DAY } from '@/utils/core.utils';
 
-export const ProposalEndDate = ({ startDate, endDate, proposalStatus }) => {
+/** Tick often enough that the visible unit changes smoothly, and no more. */
+const getTickInterval = totalMs => {
+  if (totalMs < MS_PER_HOUR) return 1000; // mm:ss is on screen
+  if (totalMs < MS_PER_DAY) return 30000; // minutes are on screen
+  return 60000; // hours are on screen
+};
+
+/** Urgency reads as colour, so a closing window is visible without being read. */
+const getUrgencyClass = totalMs => {
+  if (totalMs <= 0) return '';
+  if (totalMs < MS_PER_HOUR) return 'text-red-400 font-medium';
+  if (totalMs < MS_PER_DAY) return 'text-yellow-400 font-medium';
+  return '';
+};
+
+export const ProposalEndDate = ({ startDate, endDate, proposalStatus, className = '' }) => {
   const [displayValue, setDisplayValue] = useState(null);
 
   const isEnded = proposalStatus === 'executed' || proposalStatus === 'rejected';
@@ -12,80 +27,63 @@ export const ProposalEndDate = ({ startDate, endDate, proposalStatus }) => {
     const dateToUse = isUpcoming ? startDate : endDate;
     if (!dateToUse) return;
 
+    let timeoutId;
+
     const updateDisplay = () => {
       const result = formatProposalEndDate(dateToUse);
 
-      // If proposal is ended (rejected/executed), force the display to show formatted date
+      // A concluded proposal shows when it concluded, never a live countdown.
       if (isEnded && result?.type === 'countdown') {
-        setDisplayValue({
-          type: 'ended',
-          value: formatDateWithTime(new Date(dateToUse)),
-        });
-        return { type: 'ended' };
+        setDisplayValue({ type: 'ended', value: formatDateWithTime(new Date(dateToUse)) });
+        return;
       }
 
       setDisplayValue(result);
-      return result;
+
+      if (result?.type === 'countdown') {
+        timeoutId = setTimeout(updateDisplay, getTickInterval(result.totalMs));
+      }
     };
 
-    const initialResult = updateDisplay();
-
-    // Only set up countdown interval if proposal is NOT ended and result is a countdown
-    if (initialResult?.type === 'countdown' && !isEnded) {
-      const interval = setInterval(updateDisplay, 1000);
-      return () => clearInterval(interval);
-    }
+    updateDisplay();
+    return () => clearTimeout(timeoutId);
   }, [startDate, endDate, isUpcoming, isEnded]);
 
   if (!displayValue) return null;
 
-  // Check countdown FIRST before checking isEnded status
   if (displayValue.type === 'countdown') {
-    const { hours, minutes, seconds } = displayValue.value;
     const prefix = isUpcoming ? 'Starts in' : 'Ends in';
     return (
-      <span>
-        {prefix} {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+      <span
+        className={`${getUrgencyClass(displayValue.totalMs)} ${className}`.trim()}
+        title={`${isUpcoming ? 'Voting opens' : 'Voting closes'} ${displayValue.absolute}`}
+      >
+        {prefix} {displayValue.value}
       </span>
     );
   }
 
-  // Handle ended proposals (status-based) or type === 'ended'
-  if (displayValue.type === 'ended' || isEnded) {
-    let status = 'Ended';
-    if (proposalStatus === 'executed') {
-      status = 'Executed';
-    } else if (proposalStatus === 'rejected') {
-      status = 'Failed';
-    } else if (isUpcoming) {
-      status = 'Started';
-    }
-
-    // For ended proposals, always use formatted date string
-    let valueToDisplay;
-    if (typeof displayValue.value === 'string') {
-      valueToDisplay = displayValue.value;
-    } else {
-      // If value is still an object (shouldn't happen but defensive), format the date directly
-      const dateToFormat = isUpcoming ? startDate : endDate;
-      valueToDisplay = dateToFormat ? formatDateWithTime(new Date(dateToFormat)) : 'N/A';
-    }
-
-    return (
-      <span>
-        {status} {valueToDisplay}
-      </span>
-    );
+  // Concluded, by status or because the moment has passed.
+  let status = 'Ended';
+  if (proposalStatus === 'executed') {
+    status = 'Executed';
+  } else if (proposalStatus === 'rejected') {
+    status = 'Failed';
+  } else if (isUpcoming) {
+    status = 'Started';
   }
 
-  // Handle 'date' type or any other type
-  const prefix = isUpcoming ? 'Starts' : 'Ends';
+  const dateToFormat = isUpcoming ? startDate : endDate;
   const valueToDisplay =
-    typeof displayValue.value === 'string' ? displayValue.value : JSON.stringify(displayValue.value);
+    typeof displayValue.value === 'string'
+      ? displayValue.value
+      : dateToFormat
+        ? formatDateWithTime(new Date(dateToFormat))
+        : 'N/A';
 
   return (
-    <span>
-      {prefix} {valueToDisplay}
+    <span className={className}>
+      {status} {valueToDisplay}
     </span>
   );
 };

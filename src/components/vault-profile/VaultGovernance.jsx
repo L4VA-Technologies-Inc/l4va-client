@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
-  ArrowRight,
   Check,
   CheckCircle,
   Ellipsis,
   XCircle,
   CircleCheck,
   CircleArrowUp,
+  CircleAlert,
   ArrowLeft,
   Trash2,
   PauseCircle,
@@ -17,6 +17,8 @@ import { useReadContract } from 'wagmi';
 
 import { ProposalInfo } from './ProposalInfo';
 import { ProposalEndDate } from './ProposalEndDate';
+import { VoteButton } from './ProposalInfo/VoteButton';
+import { ProposalCardAction } from './ProposalInfo/ProposalCardAction';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -31,6 +33,76 @@ import { ChainType } from '@/utils/types';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
+
+const VOTE_LABELS = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
+
+/**
+ * Names the destination of the card's action instead of leaving a bare arrow.
+ * First-time voters will not press an unlabeled control, so the label, size,
+ * and tooltip all say where this goes.
+ */
+const getProposalAction = proposal => {
+  if (proposal.status === 'active') {
+    return proposal.selectedVote
+      ? {
+          label: 'View vote',
+          isPrimary: false,
+          hint: 'See how you voted and the current tally',
+        }
+      : {
+          label: 'Vote',
+          isPrimary: true,
+          hint: 'Open this proposal to cast your vote',
+        };
+  }
+  if (proposal.status === 'upcoming') {
+    return { label: 'View details', isPrimary: false, hint: 'See this proposal before voting opens' };
+  }
+  return { label: 'View results', isPrimary: false, hint: 'See how this proposal ended' };
+};
+
+const VoteTally = ({ votes, abstain }) => (
+  <div className="space-y-3 mb-6">
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="text-green-500 text-sm flex items-center">
+          <CheckCircle className="w-4 h-4 mr-1" />
+          Yes, pass this Proposal
+        </span>
+        <span className="text-green-500 text-sm">{votes?.yes ?? 0}%</span>
+      </div>
+      <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
+        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${votes?.yes ?? 0}%` }} />
+      </div>
+    </div>
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="text-red-600 text-sm flex items-center">
+          <XCircle className="w-4 h-4 mr-1" />
+          No, do not pass this Proposal
+        </span>
+        <span className="text-red-600 text-sm">{votes?.no ?? 0}%</span>
+      </div>
+      <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
+        <div className="bg-red-600 h-2 rounded-full" style={{ width: `${votes?.no ?? 0}%` }} />
+      </div>
+    </div>
+    {abstain ? (
+      <div>
+        <div className="flex justify-between mb-1">
+          <span className="text-gray-600 text-sm flex items-center">
+            <Ellipsis className="w-4 h-4 mr-1" />
+            Do nothing
+          </span>
+          <span className="text-gray-600 text-sm">{votes?.abstain || 0}%</span>
+        </div>
+        <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
+          <div className="bg-gray-600 h-2 rounded-full" style={{ width: `${votes?.abstain || 0}%` }} />
+        </div>
+      </div>
+    ) : null}
+  </div>
+);
 
 export const VaultGovernance = ({ vault }) => {
   const [activeTab, setActiveTab] = useState('All');
@@ -62,7 +134,7 @@ export const VaultGovernance = ({ vault }) => {
   const responseData = data?.data || data;
   const proposals = Array.isArray(responseData) ? responseData : responseData?.items || [];
   useRefetchWhenProposalStatusMayChange(proposals, refetch);
-  const totalPages = Array.isArray(responseData) ? 1 : responseData?.totalPages || 1;
+  const totalPages = Array.isArray(responseData) ? 1 : responseData?.totalPages || 0;
   const currentPage = Array.isArray(responseData) ? page : responseData?.page || page;
 
   const currentUserId = user?.id;
@@ -277,134 +349,108 @@ export const VaultGovernance = ({ vault }) => {
                     ? 'Cannot delete within 1 hour of start time'
                     : 'Delete this proposal';
 
+                  const action = getProposalAction(proposal);
+                  const needsVote = proposal.status === 'active' && !proposal.selectedVote;
+
                   return (
                     <div
                       key={proposal.id}
-                      className={`relative bg-steel-950 border border-steel-750 rounded-lg p-6 ${
+                      className={`relative overflow-hidden rounded-2xl border border-steel-750 bg-steel-950 ${
                         isDeletingProposal ? 'overflow-hidden' : ''
                       }`}
                     >
-                      <div className="flex justify-between mb-1">
-                        <h3 className="text-lg font-medium">{proposal.title}</h3>
-                        <div className="flex items-center">
-                          {proposal.approved && (
-                            <span className="inline-flex items-center mr-2 text-green-500 text-sm">
-                              <Check className="w-4 h-4 mr-1" />
-                              Approved
+                      <div className="p-6 pb-5">
+                        <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
+                          <h3 className="text-lg font-medium break-words min-w-0">{proposal.title}</h3>
+                          <div className="flex items-center shrink-0">
+                            {proposal.approved && (
+                              <span className="inline-flex items-center mr-2 text-green-500 text-sm">
+                                <Check className="w-4 h-4 mr-1" />
+                                Approved
+                              </span>
+                            )}
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                proposal.status === 'executed' || proposal.status === 'passed'
+                                  ? 'bg-yellow-700 text-yellow-400'
+                                  : proposal.status === 'active'
+                                    ? 'bg-green-900 text-green-500'
+                                    : proposal.status === 'rejected'
+                                      ? 'bg-red-900 text-red-600'
+                                      : 'bg-steel-600 text-steel-400'
+                              }`}
+                            >
+                              {proposal.status !== 'executed' && proposal.status !== 'passed'
+                                ? proposal.status?.toLocaleUpperCase()
+                                : 'FINISHED'}
                             </span>
-                          )}
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              proposal.status === 'executed' || proposal.status === 'passed'
-                                ? 'bg-yellow-700 text-yellow-400'
-                                : proposal.status === 'active'
-                                  ? 'bg-green-900 text-green-500'
-                                  : proposal.status === 'rejected'
-                                    ? 'bg-red-900 text-red-600'
-                                    : 'bg-steel-600 text-steel-400'
-                            }`}
-                          >
-                            {proposal.status !== 'executed' && proposal.status !== 'passed'
-                              ? proposal.status?.toLocaleUpperCase()
-                              : 'FINISHED'}
-                          </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="text-dark-100 text-sm mb-3">
-                        <ProposalEndDate
-                          startDate={proposal.startDate}
-                          endDate={proposal.endDate}
-                          proposalStatus={proposal.status}
-                          isEnded={proposal.status === 'executed' || proposal.status === 'rejected'}
-                        />
-                      </div>
-
-                      <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
-
-                      {proposal.status !== 'active' ? (
-                        renderInactiveStatus(proposal.status, proposal.executionError)
-                      ) : proposal.votes ? (
-                        <div className="space-y-3 mb-6">
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-green-500 text-sm flex items-center">
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Yes, pass this Proposal
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mb-3">
+                          <ProposalEndDate
+                            className="text-dark-100"
+                            startDate={proposal.startDate}
+                            endDate={proposal.endDate}
+                            proposalStatus={proposal.status}
+                          />
+                          {proposal.status === 'active' &&
+                            currentUserId &&
+                            (proposal.selectedVote ? (
+                              <span className="inline-flex items-center gap-1 text-green-500">
+                                <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                                You voted {VOTE_LABELS[proposal.selectedVote] ?? proposal.selectedVote}
                               </span>
-                              <span className="text-green-500 text-sm">{proposal.votes.yes}%</span>
-                            </div>
-                            <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                              <div
-                                className="bg-green-500 h-2 rounded-full"
-                                style={{ width: `${proposal.votes.yes}%` }}
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-yellow-400">
+                                <CircleAlert className="w-3.5 h-3.5" aria-hidden="true" />
+                                You haven&apos;t voted yet
+                              </span>
+                            ))}
+                        </div>
+
+                        <p className="text-dark-100 mb-6 text-sm break-words">{proposal.description}</p>
+
+                        {needsVote ? (
+                          <div className="mb-2 space-y-3">
+                            <p className="text-sm font-medium text-white">Cast your vote</p>
+                            <div aria-label="Vote options" className="space-y-3" role="radiogroup">
+                              <VoteButton
+                                voteType="yes"
+                                icon={CheckCircle}
+                                label="Yes, pass this Proposal"
+                                canVote
+                                isSelected={false}
+                                onClick={() => handleOpenProposalInfo(proposal)}
                               />
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-red-600 text-sm flex items-center">
-                                <XCircle className="w-4 h-4 mr-1" />
-                                No, do not pass this Proposal
-                              </span>
-                              <span className="text-red-600 text-sm">{proposal.votes.no}%</span>
-                            </div>
-                            <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                              <div className="bg-red-600 h-2 rounded-full" style={{ width: `${proposal.votes.no}%` }} />
-                            </div>
-                          </div>
-                          {proposal?.abstain ? (
-                            <div>
-                              <div className="flex justify-between mb-1">
-                                <span className="text-gray-600 text-sm flex items-center">
-                                  <Ellipsis className="w-4 h-4 mr-1" />
-                                  Do nothing
-                                </span>
-                                <span className="text-gray-600 text-sm">{proposal.votes.abstain || 0}%</span>
-                              </div>
-                              <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden">
-                                <div
-                                  className="bg-gray-600 h-2 rounded-full"
-                                  style={{ width: `${proposal.votes.abstain || 0}%` }}
+                              <VoteButton
+                                voteType="no"
+                                icon={XCircle}
+                                label="No, do not pass this Proposal"
+                                canVote
+                                isSelected={false}
+                                onClick={() => handleOpenProposalInfo(proposal)}
+                              />
+                              {proposal.abstain ? (
+                                <VoteButton
+                                  voteType="abstain"
+                                  icon={Ellipsis}
+                                  label="Do nothing"
+                                  canVote
+                                  isSelected={false}
+                                  onClick={() => handleOpenProposalInfo(proposal)}
                                 />
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <div className="space-y-3 mb-6">
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-green-500 text-sm flex items-center">
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Yes, pass this Proposal
-                              </span>
-                              <span className="text-dark-100 text-sm">-</span>
-                            </div>
-                            <div className="w-full bg-green-900 rounded-full h-2 overflow-hidden">
-                              <div className="bg-green-500 h-2 rounded-full" style={{ width: '0%' }} />
+                              ) : null}
                             </div>
                           </div>
+                        ) : proposal.status !== 'active' ? (
+                          renderInactiveStatus(proposal.status, proposal.executionError)
+                        ) : (
+                          <VoteTally votes={proposal.votes} abstain={proposal.abstain} />
+                        )}
 
-                          <div>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-red-600 text-sm flex items-center">
-                                <XCircle className="w-4 h-4 mr-1" />
-                                No, do not pass this Proposal
-                              </span>
-                              <span className="text-dark-100 text-sm">-</span>
-                            </div>
-                            <div className="w-full bg-red-900 rounded-full h-2 overflow-hidden">
-                              <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }} />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end">
-                        <div className="flex items-center justify-end gap-3">
-                          {proposal.status === 'upcoming' && currentUserId && proposal?.creatorId === currentUserId && (
+                        {proposal.status === 'upcoming' && currentUserId && proposal?.creatorId === currentUserId && (
+                          <div className="mt-4 flex justify-end">
                             <HoverHelp hint={deleteHint} variant="icon">
                               <button
                                 className="p-2 rounded-md text-red-400 hover:text-red-500 hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -416,19 +462,15 @@ export const VaultGovernance = ({ vault }) => {
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </HoverHelp>
-                          )}
-                          <HoverHelp hint="Open proposal details" variant="icon">
-                            <button
-                              className="p-2 rounded-md text-dark-100 hover:text-white hover:bg-white/5 transition-colors"
-                              type="button"
-                              onClick={() => handleOpenProposalInfo(proposal)}
-                              aria-label="More info"
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                            </button>
-                          </HoverHelp>
-                        </div>
+                          </div>
+                        )}
                       </div>
+                      <ProposalCardAction
+                        label={action.label}
+                        hint={action.hint}
+                        isPrimary={action.isPrimary}
+                        onClick={() => handleOpenProposalInfo(proposal)}
+                      />
                       {isDeletingProposal && (
                         <div className="absolute inset-0 z-20 rounded-lg bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
                           <div className="flex flex-col items-center gap-3">
@@ -448,7 +490,7 @@ export const VaultGovernance = ({ vault }) => {
                 iconInnerBgColor="bg-orange-500/30"
               />
             )}
-            {totalPages > 1 && (
+            {filteredProposals.length > 0 && totalPages > 1 && (
               <Pagination
                 className="mt-6"
                 currentPage={currentPage}

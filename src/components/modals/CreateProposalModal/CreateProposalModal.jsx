@@ -34,6 +34,7 @@ import { MarketActions } from '@/components/modals/CreateProposalModal/MarketAct
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { ChainType } from '@/utils/types';
+import { formatDurationHuman } from '@/utils/core.utils';
 
 const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
@@ -134,10 +135,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
     // Validate voting duration constraints
     if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
-      const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
-      const maxDays = MAX_TIME_FOR_VOTING / (1000 * 60 * 60 * 24);
       toast.error(
-        `Voting duration must be between ${minHours} hours and ${maxDays} days. Please adjust the voting period.`,
+        `Voting duration must be between ${formatDurationHuman(MIN_TIME_FOR_VOTING)} and ${formatDurationHuman(
+          MAX_TIME_FOR_VOTING
+        )}. Please adjust the voting period.`,
         { duration: 5000 }
       );
       setError(true);
@@ -546,7 +547,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
 
             <div className="mt-8">
-              <h4 className="text-lg font-medium mb-4">Voting Period</h4>
+              <h4 className="text-lg font-medium mb-1">Voting Period</h4>
+              <p className="text-sm text-dark-100 mb-4">
+                Voting stays open for {formatDurationHuman(MIN_TIME_FOR_VOTING)} to{' '}
+                {formatDurationHuman(MAX_TIME_FOR_VOTING)}. Longer windows give holders across time zones a fair chance
+                to take part.
+              </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center text-sm">
                 <div className="flex-1 relative">
                   <LavaDatePicker
