@@ -2,6 +2,7 @@ import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
@@ -32,8 +33,10 @@ import {
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
-import { useCurrency } from '@/hooks/useCurrency';
 import { ChainType } from '@/utils/types';
+import { useAuth } from '@/lib/auth/auth';
+import { getWalletErrorMessage, isUserRejectedError } from '@/utils/walletErrors';
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 import { formatDurationHuman } from '@/utils/core.utils';
 
 const cardanoExecutionOptions = [
@@ -61,7 +64,6 @@ const initialProposalData = {
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
-  const { currencyLabel } = useCurrency();
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
   const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
   const [proposalTitle, setProposalTitle] = useState('');
@@ -76,6 +78,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [error, setError] = useState(false);
   const [status, setStatus] = useState('idle');
 
+  const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected');
   const { isConnected: isEvmConnected } = useAccount();
   const queryClient = useQueryClient();
@@ -83,27 +86,31 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const submitProposalFeePayment = useSubmitProposalFeePayment();
   const deleteProposalMutation = useDeleteProposal();
   const { data: governanceFees } = useGovernanceFees();
+  const { payFee: payEvmFee } = useEvmGovernanceFee();
 
   const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
   const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
 
   const refreshProposals = () => queryClient.invalidateQueries({ queryKey: ['governance-proposals', vault.id] });
 
-  // Get fee for current proposal type
+  // Get fee for current proposal type. Cardano fees are lovelace numbers; EVM
+  // fees live in a separate `evm` block as wei decimal strings, so both are
+  // normalised to BigInt here and formatted per chain at render time.
   const currentProposalFee = useMemo(() => {
-    if (!governanceFees?.data) return 0;
+    const fees = isEvmVault ? governanceFees?.data?.evm : governanceFees?.data;
+    if (!fees) return 0n;
     const feeMap = {
-      marketplace_action: governanceFees.data.proposalFeeMarketplaceAction,
-      distribution: governanceFees.data.proposalFeeDistribution,
-      expansion: governanceFees.data.proposalFeeExpansion,
-      acquire_expansion: governanceFees.data.proposalFeeExpansion, // Use same fee as expansion
-      asset_whitelist_update: governanceFees.data.proposalFeeAssetWhitelistUpdate,
-      staking: governanceFees.data.proposalFeeStaking,
-      termination: governanceFees.data.proposalFeeTermination,
-      burning: governanceFees.data.proposalFeeBurning,
+      marketplace_action: fees.proposalFeeMarketplaceAction,
+      distribution: fees.proposalFeeDistribution,
+      expansion: fees.proposalFeeExpansion,
+      acquire_expansion: fees.proposalFeeExpansion, // Use same fee as expansion
+      asset_whitelist_update: fees.proposalFeeAssetWhitelistUpdate,
+      staking: fees.proposalFeeStaking,
+      termination: fees.proposalFeeTermination,
+      burning: fees.proposalFeeBurning,
     };
-    return feeMap[selectedOption] || 0;
-  }, [governanceFees, selectedOption]);
+    return BigInt(feeMap[selectedOption] || 0);
+  }, [governanceFees, selectedOption, isEvmVault]);
 
   // Filter execution options based on vault status
   // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
@@ -305,43 +312,96 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         throw new Error('Failed to create proposal');
       }
 
-      const { proposal, requiresPayment, presignedTx } = createResponse.data;
+      const { proposal, requiresPayment, presignedTx, evmPayment } = createResponse.data;
 
       // Step 4: Handle payment if required
-      if (requiresPayment && presignedTx) {
+      if (requiresPayment && (presignedTx || evmPayment)) {
+        // Set once the EVM transfer is broadcast. From that moment the fee is
+        // real money on chain, so a later failure must NOT delete the proposal
+        // — the backend can still be retried against the same hash.
+        let evmFeePaid = false;
         try {
-          if (!wallet.handler) {
-            throw new Error('Cardano wallet is required to sign the proposal fee transaction');
-          }
+          if (isEvmVault) {
+            // EVM: the wallet sends the native transfer itself, then we hand
+            // the backend the hash to verify.
+            setStatus('signing');
+            // The backend verifies the fee came from the proposal creator's
+            // registered address, so pay from that exact account.
+            const feeTxHash = await payEvmFee(evmPayment, user?.address);
+            evmFeePaid = true;
 
-          // Sign fee transaction
-          setStatus('signing');
-          const signature = await wallet.handler.signTx(presignedTx, true);
+            // The backend verifies against its own RPC, which can trail the
+            // wallet's by a block or two. Retry a few times before treating a
+            // paid fee as a failure.
+            setStatus('submitting');
+            let submitResponse;
+            for (let attempt = 0; attempt < 3; attempt++) {
+              if (attempt > 0) {
+                await new Promise(resolve => setTimeout(resolve, 4000));
+              }
+              try {
+                submitResponse = await submitProposalFeePayment.mutateAsync({
+                  proposalId: proposal.id,
+                  txHash: feeTxHash,
+                });
+                break;
+              } catch (submitError) {
+                if (attempt === 2) throw submitError;
+                console.warn(`Fee confirmation attempt ${attempt + 1} failed, retrying`, submitError);
+              }
+            }
 
-          if (!signature) {
-            throw new Error('Fee transaction signing was cancelled');
-          }
+            if (!submitResponse?.data?.success) {
+              throw new Error(submitResponse?.data?.message || 'Failed to confirm fee payment');
+            }
+          } else {
+            if (!wallet.handler) {
+              throw new Error('Cardano wallet is required to sign the proposal fee transaction');
+            }
 
-          // Submit transaction with signatures to backend
-          setStatus('submitting');
-          const submitResponse = await submitProposalFeePayment.mutateAsync({
-            proposalId: proposal.id,
-            transaction: presignedTx,
-            signatures: [signature],
-          });
+            // Sign fee transaction
+            setStatus('signing');
+            const signature = await wallet.handler.signTx(presignedTx, true);
 
-          if (!submitResponse?.data?.success) {
-            throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
+            if (!signature) {
+              throw new Error('Fee transaction signing was cancelled');
+            }
+
+            // Submit transaction with signatures to backend
+            setStatus('submitting');
+            const submitResponse = await submitProposalFeePayment.mutateAsync({
+              proposalId: proposal.id,
+              transaction: presignedTx,
+              signatures: [signature],
+            });
+
+            if (!submitResponse?.data?.success) {
+              throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
+            }
           }
         } catch (feeError) {
           console.error('Fee transaction failed:', feeError);
 
           // Check if user declined to sign
-          const userCancelled = feeError?.message === 'user declined sign tx';
+          const userCancelled = isUserRejectedError(feeError);
+
+          // The fee is already on chain — deleting the proposal here would
+          // throw away something the user has paid for.
+          if (evmFeePaid) {
+            toast.error(
+              'Your fee payment went through but the proposal could not be activated yet. ' +
+                'The payment is recorded against the proposal — please contact support with the ' +
+                'proposal title so it can be completed.',
+              { duration: 12000 }
+            );
+            setStatus('idle');
+            await refreshProposals();
+            return;
+          }
 
           let errorMsg = userCancelled
-            ? 'Payment cancelled. Proposal was not created.'
-            : 'Payment failed. Proposal was not created.';
+            ? 'Payment cancelled — the proposal was not created and you have not been charged.'
+            : `${getWalletErrorMessage(feeError, 'Payment failed.')} The proposal was not created.`;
 
           // Always delete the unpaid proposal when payment fails
           try {
@@ -350,7 +410,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             console.error('Failed to delete unpaid proposal:', deleteError);
             errorMsg = userCancelled
               ? 'Payment cancelled. Your proposal was saved as unpaid and can be deleted from the Governance tab.'
-              : 'Payment failed. Your proposal was saved as unpaid and can be deleted from the Governance tab.';
+              : `${getWalletErrorMessage(feeError, 'Payment failed.')} Your proposal was saved as unpaid and can be deleted from the Governance tab.`;
           }
 
           toast.error(errorMsg, { duration: 7000 });
@@ -412,7 +472,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const renderFooter = () => {
     const isInvalid = isValidProposal();
-    const feeInAda = currentProposalFee / 1000000;
+    // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
+    // precision loss a Number division would introduce for wei.
+    // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
+    // precision loss a Number division would introduce for wei.
+    const formattedFee = formatUnits(currentProposalFee, isEvmVault ? 18 : 6);
+    // The fee is always paid in the chain's native asset, so it is labelled by
+    // chain rather than by the user's display-currency preference.
+    const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
     const isProcessing = status !== 'idle';
 
     const getButtonText = () => {
@@ -433,11 +500,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     return (
       <div className="flex justify-between items-center">
         <div className="text-sm">
-          {currentProposalFee > 0 ? (
+          {currentProposalFee > 0n ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
               <span className="text-yellow-500 text-xs">
-                Governance fee: {feeInAda.toFixed(2)} {currencyLabel}
+                Governance fee: {formattedFee} {feeCurrencyLabel}
               </span>
             </div>
           ) : (

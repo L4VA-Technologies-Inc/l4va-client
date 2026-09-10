@@ -47,6 +47,11 @@ export class GovernanceConfigProvider {
     return `/api/v1/governance/proposals/${proposalId}/vote-fee-transaction`;
   }
 
+  /** EVM (Robinhood) voting fee quote — native transfer params, not a presigned tx. */
+  static buildVoteFeePayment(proposalId) {
+    return `/api/v1/governance/proposals/${proposalId}/vote-fee-payment`;
+  }
+
   static submitProposalFeePayment(proposalId) {
     return `/api/v1/governance/proposals/${proposalId}/submit-fee-payment`;
   }

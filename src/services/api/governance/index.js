@@ -78,6 +78,11 @@ export class GovernanceApiProvider {
     return response;
   }
 
+  static async buildVoteFeePayment(proposalId) {
+    const response = await axiosInstance.post(GovernanceConfigProvider.buildVoteFeePayment(proposalId));
+    return response;
+  }
+
   static async submitProposalFeePayment(proposalId, data) {
     const response = await axiosInstance.post(GovernanceConfigProvider.submitProposalFeePayment(proposalId), data);
     return response;

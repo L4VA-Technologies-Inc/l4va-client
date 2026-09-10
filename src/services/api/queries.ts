@@ -499,18 +499,28 @@ export const useBuildVoteFeeTransaction = () => {
   });
 };
 
+export const useBuildVoteFeePayment = () => {
+  return useMutation({
+    mutationFn: ({ proposalId }: { proposalId: string }) => GovernanceApiProvider.buildVoteFeePayment(proposalId),
+  });
+};
+
 export const useSubmitProposalFeePayment = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    // Cardano sends { transaction, signatures }; EVM sends { txHash }. Only the
+    // provided keys are forwarded so the backend can tell the shapes apart.
     mutationFn: ({
       proposalId,
       transaction,
       signatures,
+      txHash,
     }: {
       proposalId: string;
-      transaction: string;
-      signatures: string[];
-    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, { transaction, signatures }),
+      transaction?: string;
+      signatures?: string[];
+      txHash?: string;
+    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, txHash ? { txHash } : { transaction, signatures }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
     },

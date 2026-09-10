@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useWallet } from '@ada-anvil/weld/react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
@@ -18,14 +19,21 @@ import { ProposalEndDate } from './ProposalEndDate';
 import { VaultSkeleton } from './VaultSkeleton';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
-import { ProposalTypeLabels } from '@/utils/types';
-import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
+import { ChainType, ProposalTypeLabels } from '@/utils/types';
+import {
+  useBuildVoteFeePayment,
+  useBuildVoteFeeTransaction,
+  useGovernanceFees,
+  useGovernanceProposal,
+  useVoteOnProposal,
+} from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 
 const VOTE_LABELS = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
 
@@ -463,6 +471,51 @@ export const ProposalInfo = ({ proposalId }) => {
 
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
+  const isEvmVault = proposalInfo?.vault?.chainType === ChainType.ROBINHOOD;
+  const { data: governanceFees } = useGovernanceFees();
+  const { payFee: payEvmFee } = useEvmGovernanceFee();
+  const buildVoteFeePayment = useBuildVoteFeePayment();
+  const buildVoteFeeTransaction = useBuildVoteFeeTransaction();
+  const wallet = useWallet('handler');
+
+  // Wei string (EVM) or lovelace number (Cardano); 0 by default, which keeps
+  // voting free and this whole path inert.
+  const votingFee = BigInt((isEvmVault ? governanceFees?.data?.evm?.votingFee : governanceFees?.data?.votingFee) || 0);
+
+  /**
+   * Pay the voting fee, returning the proof fields to merge into the vote
+   * request. Returns an empty object when no fee applies.
+   *
+   * Throws if payment fails, so the caller never records an unpaid vote.
+   */
+  const payVotingFee = async proposalId => {
+    if (votingFee <= 0n) return {};
+
+    if (isEvmVault) {
+      const { data } = await buildVoteFeePayment.mutateAsync({ proposalId });
+      const payment = data?.payment;
+      if (!payment) return {};
+      const feeTxHash = await payEvmFee(payment, walletAddress || user?.address);
+      return { feeTxHash };
+    }
+
+    if (!wallet.handler) {
+      throw new Error('Cardano wallet is required to pay the voting fee');
+    }
+    const { data } = await buildVoteFeeTransaction.mutateAsync({
+      proposalId,
+      data: { userAddress: walletAddress || user?.address },
+    });
+    const presignedTx = data?.presignedTx;
+    if (!presignedTx) return {};
+
+    const signature = await wallet.handler.signTx(presignedTx, true);
+    if (!signature) {
+      throw new Error('Voting fee signing was cancelled');
+    }
+    return { feeTransaction: presignedTx, feeSignatures: [signature] };
+  };
+
   // `canVote: false` collapses three very different situations. Separating them
   // is what lets the UI say why an option is unavailable instead of going dead.
   const voteState = useMemo(() => {
@@ -483,24 +536,28 @@ export const ProposalInfo = ({ proposalId }) => {
     openModal('VoteConfirmModal', {
       voteType,
       proposalTitle: proposalInfo?.title,
+      votingFee,
+      isEvmVault,
+      // Errors deliberately propagate: VoteConfirmModal keeps itself open and
+      // renders the failure next to the action, instead of closing into a
+      // detached toast while a wallet prompt is still on screen.
       onConfirm: async () => {
-        try {
-          await voteOnProposal.mutateAsync({
-            proposalId,
-            voteData: {
-              vote: voteType.toLowerCase(),
-              voterAddress: activeVoterAddress,
-            },
-          });
-          setCanVote(false);
-          setSelectedVote(voteType);
-          toast.success('Your vote has been recorded successfully');
-          await refetch();
-        } catch (error) {
-          console.error('Error voting on proposal:', error);
-          const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
-          toast.error(errorMessage);
-        }
+        // Pay the voting fee first, when one is configured. Zero fee — the
+        // default — skips this entirely and votes exactly as before.
+        const feeProof = await payVotingFee(proposalId);
+
+        await voteOnProposal.mutateAsync({
+          proposalId,
+          voteData: {
+            vote: voteType.toLowerCase(),
+            voterAddress: activeVoterAddress,
+            ...feeProof,
+          },
+        });
+        setCanVote(false);
+        setSelectedVote(voteType);
+        toast.success('Your vote has been recorded successfully');
+        await refetch();
       },
     });
   };
