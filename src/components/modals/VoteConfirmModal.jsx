@@ -1,10 +1,25 @@
 import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
+import { formatUnits } from 'viem';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 
-export const VoteConfirmModal = ({ isOpen = true, onClose, onConfirm, voteType, proposalTitle }) => {
+export const VoteConfirmModal = ({
+  isOpen = true,
+  onClose,
+  onConfirm,
+  voteType,
+  proposalTitle,
+  votingFee = 0n,
+  isEvmVault = false,
+}) => {
+  // Fees are zero by default, in which case nothing about this dialog changes.
+  const hasFee = BigInt(votingFee || 0) > 0n;
+  const formattedFee = hasFee ? formatUnits(BigInt(votingFee), isEvmVault ? 18 : 6) : null;
+  // Paid in the chain's native asset, not the user's display currency.
+  const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
+
   const handleConfirm = () => {
     if (onConfirm) {
       onConfirm();
@@ -66,6 +81,18 @@ export const VoteConfirmModal = ({ isOpen = true, onClose, onConfirm, voteType, 
           <div className="p-4 bg-steel-850 rounded-lg">
             <p className="text-sm text-gray-400 mb-1">On proposal:</p>
             <p className="text-white">{proposalTitle}</p>
+          </div>
+        )}
+
+        {hasFee && (
+          <div className="p-4 bg-steel-850 rounded-lg">
+            <p className="text-sm text-gray-400 mb-1">Voting fee</p>
+            <p className="text-yellow-500">
+              {formattedFee} {feeCurrencyLabel}
+            </p>
+            <p className="text-xs text-dark-100 mt-1">
+              You will be asked to approve this payment before your vote is recorded.
+            </p>
           </div>
         )}
 
