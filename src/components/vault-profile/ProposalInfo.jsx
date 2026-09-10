@@ -21,6 +21,7 @@ import { ProposalTypeLabels } from '@/utils/types';
 import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
@@ -115,6 +116,7 @@ export const ProposalInfo = ({ proposalId }) => {
   const { data: response, refetch } = useGovernanceProposal(proposalId);
 
   const proposalInfo = response?.data?.proposal;
+  useRefetchWhenProposalStatusMayChange(proposalInfo, refetch);
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
   const proposalDistributionInfo = response?.data?.distributionInfo;
   const proposalDistributionStatus = response?.data?.distributionStatus;

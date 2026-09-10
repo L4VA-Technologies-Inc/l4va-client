@@ -1,6 +1,7 @@
 import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
@@ -18,7 +19,6 @@ import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
 import {
   useCreateProposal,
-  useGovernanceProposals,
   useGovernanceFees,
   useSubmitProposalFeePayment,
   useDeleteProposal,
@@ -77,6 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const wallet = useWallet('handler', 'isConnected');
   const { isConnected: isEvmConnected } = useAccount();
+  const queryClient = useQueryClient();
   const createProposalMutation = useCreateProposal();
   const submitProposalFeePayment = useSubmitProposalFeePayment();
   const deleteProposalMutation = useDeleteProposal();
@@ -85,7 +86,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
   const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
 
-  const { refetch } = useGovernanceProposals(vault.id);
+  const refreshProposals = () => queryClient.invalidateQueries({ queryKey: ['governance-proposals', vault.id] });
 
   // Get fee for current proposal type
   const currentProposalFee = useMemo(() => {
@@ -353,14 +354,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
           toast.error(errorMsg, { duration: 7000 });
           setStatus('idle');
-          await refetch();
+          await refreshProposals();
           return;
         }
       }
 
       // Step 6: Success
       setStatus('success');
-      await refetch();
+      await refreshProposals();
       toast.success('Proposal created successfully!');
       onClose();
     } catch (error) {

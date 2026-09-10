@@ -52,11 +52,13 @@ export const ProposalEndDate = ({ startDate, endDate, proposalStatus }) => {
 
   // Handle ended proposals (status-based) or type === 'ended'
   if (displayValue.type === 'ended' || isEnded) {
-    let status = 'Started';
+    let status = 'Ended';
     if (proposalStatus === 'executed') {
       status = 'Executed';
     } else if (proposalStatus === 'rejected') {
       status = 'Failed';
+    } else if (isUpcoming) {
+      status = 'Started';
     }
 
     // For ended proposals, always use formatted date string

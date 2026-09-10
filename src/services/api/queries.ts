@@ -371,6 +371,7 @@ export const useGovernanceProposals = (vaultId: string, params: { page?: number;
     queryKey: ['governance-proposals', vaultId, params],
     queryFn: () => GovernanceApiProvider.getProposals(vaultId, params),
     enabled: !!vaultId,
+    staleTime: 0,
   });
 };
 
@@ -379,12 +380,17 @@ export const useGovernanceProposal = (proposalId: string) => {
     queryKey: ['governance-proposal', proposalId],
     queryFn: () => GovernanceApiProvider.getProposal(proposalId),
     enabled: !!proposalId,
+    staleTime: 0,
   });
 };
 
 export const useDeleteProposal = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (proposalId: string) => GovernanceApiProvider.deleteProposal(proposalId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
+    },
   });
 };
 
@@ -462,9 +468,13 @@ export const useOffersToCancel = (vaultId: string, { limit = 20, search = '' } =
 };
 
 export const useCreateProposal = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ vaultId, proposalData }: { vaultId: string; proposalData: any }) =>
       GovernanceApiProvider.createProposal(vaultId, proposalData),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals', variables.vaultId] });
+    },
   });
 };
 
@@ -490,6 +500,7 @@ export const useBuildVoteFeeTransaction = () => {
 };
 
 export const useSubmitProposalFeePayment = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       proposalId,
@@ -500,6 +511,9 @@ export const useSubmitProposalFeePayment = () => {
       transaction: string;
       signatures: string[];
     }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, { transaction, signatures }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
+    },
   });
 };
 

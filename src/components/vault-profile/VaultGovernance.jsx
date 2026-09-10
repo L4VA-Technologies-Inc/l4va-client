@@ -26,6 +26,7 @@ import { useDeleteProposal, useGovernanceProposals } from '@/services/api/querie
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { ChainType } from '@/utils/types';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
@@ -57,9 +58,10 @@ export const VaultGovernance = ({ vault }) => {
     label: tab,
   }));
 
-  const { data } = useGovernanceProposals(vault.id, { page, limit: PROPOSALS_PER_PAGE });
+  const { data, refetch } = useGovernanceProposals(vault.id, { page, limit: PROPOSALS_PER_PAGE });
   const responseData = data?.data || data;
   const proposals = Array.isArray(responseData) ? responseData : responseData?.items || [];
+  useRefetchWhenProposalStatusMayChange(proposals, refetch);
   const totalPages = Array.isArray(responseData) ? 1 : responseData?.totalPages || 1;
   const currentPage = Array.isArray(responseData) ? page : responseData?.page || page;
 
