@@ -402,6 +402,31 @@ export const formatInterval = timestamp => {
   return parts.length > 0 ? parts.join(' ') : '0m';
 };
 
+/**
+ * Spells a duration out in words ("5 days 12 hours") for copy and validation
+ * messages, where "120 hours" makes the reader do the arithmetic.
+ */
+export const formatDurationHuman = ms => {
+  if (!ms || ms <= 0) return '0 minutes';
+
+  const units = [
+    ['day', MS_PER_DAY],
+    ['hour', MS_PER_HOUR],
+    ['minute', MS_PER_MINUTE],
+  ];
+
+  const parts = [];
+  let remaining = Math.floor(ms);
+
+  for (const [label, size] of units) {
+    const count = Math.floor(remaining / size);
+    remaining -= count * size;
+    if (count > 0) parts.push(`${count} ${label}${count === 1 ? '' : 's'}`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : 'less than a minute';
+};
+
 export const handleNumberInput = value => {
   return value.replace(/[^0-9]/g, '');
 };
@@ -639,38 +664,51 @@ export const formatDateTime = (dt, options = {}) => {
   });
 };
 
+const MS_PER_SECOND = 1000;
+
+/**
+ * Renders remaining time using the two most significant units, so a multi-day
+ * voting window reads as "4d 6h" instead of an absolute date the reader has to
+ * subtract from today. Under an hour it switches to a ticking mm:ss, where the
+ * seconds actually carry urgency.
+ */
+export const formatTimeRemaining = totalMs => {
+  if (!totalMs || totalMs <= 0) return '0m';
+
+  const days = Math.floor(totalMs / MS_PER_DAY);
+  const hours = Math.floor((totalMs % MS_PER_DAY) / MS_PER_HOUR);
+  const minutes = Math.floor((totalMs % MS_PER_HOUR) / MS_PER_MINUTE);
+  const seconds = Math.floor((totalMs % MS_PER_MINUTE) / MS_PER_SECOND);
+
+  if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+/**
+ * Countdown state for a proposal's start or end moment. Always counts down
+ * while the moment is in the future — voting windows now run 5+ days, and a
+ * bare date gives no sense of how much time is left.
+ */
 export const formatProposalEndDate = endDate => {
   if (!endDate) return null;
 
   const end = new Date(endDate);
-  const now = new Date();
-  const diff = end - now;
-  const hoursLeft = diff / (1000 * 60 * 60);
+  const diff = end - new Date();
 
-  // Якщо пропозал завершився
   if (diff <= 0) {
     return {
       type: 'ended',
       value: formatDateWithTime(end),
+      totalMs: 0,
     };
   }
 
-  // Якщо до кінця менше 24 години - показуємо таймер
-  if (hoursLeft < 24) {
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-    return {
-      type: 'countdown',
-      value: { hours, minutes, seconds },
-      totalMs: diff,
-    };
-  }
-
-  // Якщо до кінця >= 24 години - показуємо дату + час
   return {
-    type: 'date',
-    value: formatDateWithTime(end),
+    type: 'countdown',
+    value: formatTimeRemaining(diff),
+    absolute: formatDateWithTime(end),
+    totalMs: diff,
   };
 };
 

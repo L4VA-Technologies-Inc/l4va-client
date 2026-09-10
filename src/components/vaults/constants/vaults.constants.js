@@ -13,8 +13,8 @@ export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD
 export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
 export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 300000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
 export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
-export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 1 Day (mainnet)
-export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
+export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 432000000; // 5 min (preprod) / 5 days (mainnet)
+export const MAX_TIME_FOR_VOTING = 1209600000; // 14 days
 export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
 
 // Cardano address regex based on environment

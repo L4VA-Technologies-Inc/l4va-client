@@ -140,20 +140,27 @@ export const LavaIntervalPicker = ({
                   <div className="p-4">
                     <div className="text-sm font-medium mb-2 text-center">Days</div>
                     <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
-                      {days.map(day => (
-                        <Button
-                          key={day}
-                          className={cn(
-                            optionBaseClasses,
-                            interval.days === day ? optionActiveClasses : 'text-steel-400'
-                          )}
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleIntervalChange('days', day.toString())}
-                        >
-                          {day}
-                        </Button>
-                      ))}
+                      {days.map(day => {
+                        // Match the hours/minutes columns: an unselectable value
+                        // reads as disabled rather than silently ignoring the tap.
+                        const isDisabled = !isValidSelection({ ...interval, days: day });
+                        return (
+                          <Button
+                            key={day}
+                            className={cn(
+                              optionBaseClasses,
+                              interval.days === day ? optionActiveClasses : 'text-steel-400',
+                              isDisabled && optionDisabledClasses
+                            )}
+                            size="icon"
+                            variant="ghost"
+                            disabled={isDisabled}
+                            onClick={() => handleIntervalChange('days', day.toString())}
+                          >
+                            {day}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
