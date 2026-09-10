@@ -1,9 +1,11 @@
 import { CheckCircle, XCircle, Ellipsis } from 'lucide-react';
+import { useState } from 'react';
 import { formatUnits } from 'viem';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { getWalletErrorMessage } from '@/utils/walletErrors';
 
 export const VoteConfirmModal = ({
   isOpen = true,
@@ -19,12 +21,38 @@ export const VoteConfirmModal = ({
   const formattedFee = hasFee ? formatUnits(BigInt(votingFee), isEvmVault ? 18 : 6) : null;
   // Paid in the chain's native asset, not the user's display currency.
   const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
+  const processingLabel = hasFee ? 'Confirm in your wallet...' : 'Submitting...';
 
-  const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  // When a fee applies, confirming opens a wallet prompt. Closing the modal at
+  // that point would leave the user staring at a prompt with no idea what it
+  // belongs to, so it stays open until the vote actually lands — and stays open
+  // on failure so the error is attached to the action that caused it.
+  const handleConfirm = async () => {
+    if (!onConfirm) {
+      onClose();
+      return;
     }
-    onClose();
+
+    setSubmitError(null);
+    setIsProcessing(true);
+    try {
+      await onConfirm();
+      onClose();
+    } catch (err) {
+      console.error('Vote failed:', err);
+      setSubmitError(
+        getWalletErrorMessage(err, 'Failed to submit your vote. Please try again.', {
+          rejectedMessage: hasFee
+            ? 'Payment cancelled — your vote was not submitted and you have not been charged.'
+            : 'Cancelled — your vote was not submitted.',
+        })
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const getVoteIcon = () => {
@@ -99,12 +127,24 @@ export const VoteConfirmModal = ({
         <p className="text-white/80">Are you sure you want to submit this vote?</p>
         <p className="text-sm text-dark-100">This action cannot be undone.</p>
 
+        {isProcessing && hasFee && (
+          <p className="text-sm text-yellow-500">
+            Approve the payment in your wallet, then keep this window open while the vote is recorded.
+          </p>
+        )}
+
+        {submitError && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+            <p className="text-sm text-red-400">{submitError}</p>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-3 justify-end mt-4">
-          <SecondaryButton className="w-full md:w-auto justify-center" onClick={onClose}>
-            Cancel
+          <SecondaryButton className="w-full md:w-auto justify-center" onClick={onClose} disabled={isProcessing}>
+            {submitError ? 'Close' : 'Cancel'}
           </SecondaryButton>
-          <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleConfirm}>
-            Confirm Vote
+          <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleConfirm} disabled={isProcessing}>
+            {isProcessing ? processingLabel : submitError ? 'Try Again' : 'Confirm Vote'}
           </PrimaryButton>
         </div>
       </div>

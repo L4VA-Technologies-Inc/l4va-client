@@ -34,6 +34,8 @@ import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
 import { ChainType } from '@/utils/types';
+import { useAuth } from '@/lib/auth/auth';
+import { getWalletErrorMessage, isUserRejectedError } from '@/utils/walletErrors';
 import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 
 const cardanoExecutionOptions = [
@@ -75,6 +77,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [error, setError] = useState(false);
   const [status, setStatus] = useState('idle');
 
+  const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected');
   const { isConnected: isEvmConnected } = useAccount();
   const queryClient = useQueryClient();
@@ -321,7 +324,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             // EVM: the wallet sends the native transfer itself, then we hand
             // the backend the hash to verify.
             setStatus('signing');
-            const feeTxHash = await payEvmFee(evmPayment);
+            // The backend verifies the fee came from the proposal creator's
+            // registered address, so pay from that exact account.
+            const feeTxHash = await payEvmFee(evmPayment, user?.address);
             evmFeePaid = true;
 
             // The backend verifies against its own RPC, which can trail the
@@ -377,10 +382,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           console.error('Fee transaction failed:', feeError);
 
           // Check if user declined to sign
-          const userCancelled =
-            feeError?.message === 'user declined sign tx' ||
-            feeError?.name === 'UserRejectedRequestError' ||
-            feeError?.cause?.name === 'UserRejectedRequestError';
+          const userCancelled = isUserRejectedError(feeError);
 
           // The fee is already on chain — deleting the proposal here would
           // throw away something the user has paid for.
@@ -397,8 +399,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           }
 
           let errorMsg = userCancelled
-            ? 'Payment cancelled. Proposal was not created.'
-            : 'Payment failed. Proposal was not created.';
+            ? 'Payment cancelled — the proposal was not created and you have not been charged.'
+            : `${getWalletErrorMessage(feeError, 'Payment failed.')} The proposal was not created.`;
 
           // Always delete the unpaid proposal when payment fails
           try {
@@ -407,7 +409,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             console.error('Failed to delete unpaid proposal:', deleteError);
             errorMsg = userCancelled
               ? 'Payment cancelled. Your proposal was saved as unpaid and can be deleted from the Governance tab.'
-              : 'Payment failed. Your proposal was saved as unpaid and can be deleted from the Governance tab.';
+              : `${getWalletErrorMessage(feeError, 'Payment failed.')} Your proposal was saved as unpaid and can be deleted from the Governance tab.`;
           }
 
           toast.error(errorMsg, { duration: 7000 });

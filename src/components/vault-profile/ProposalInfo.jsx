@@ -491,7 +491,7 @@ export const ProposalInfo = ({ proposalId }) => {
       const { data } = await buildVoteFeePayment.mutateAsync({ proposalId });
       const payment = data?.payment;
       if (!payment) return {};
-      const feeTxHash = await payEvmFee(payment);
+      const feeTxHash = await payEvmFee(payment, walletAddress || user?.address);
       return { feeTxHash };
     }
 
@@ -525,29 +525,26 @@ export const ProposalInfo = ({ proposalId }) => {
       proposalTitle: proposalInfo?.title,
       votingFee,
       isEvmVault,
+      // Errors deliberately propagate: VoteConfirmModal keeps itself open and
+      // renders the failure next to the action, instead of closing into a
+      // detached toast while a wallet prompt is still on screen.
       onConfirm: async () => {
-        try {
-          // Pay the voting fee first, when one is configured. Zero fee — the
-          // default — skips this entirely and votes exactly as before.
-          const feeProof = await payVotingFee(proposalId);
+        // Pay the voting fee first, when one is configured. Zero fee — the
+        // default — skips this entirely and votes exactly as before.
+        const feeProof = await payVotingFee(proposalId);
 
-          await voteOnProposal.mutateAsync({
-            proposalId,
-            voteData: {
-              vote: voteType.toLowerCase(),
-              voterAddress: activeVoterAddress,
-              ...feeProof,
-            },
-          });
-          setCanVote(false);
-          setSelectedVote(voteType);
-          toast.success('Your vote has been recorded successfully');
-          await refetch();
-        } catch (error) {
-          console.error('Error voting on proposal:', error);
-          const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
-          toast.error(errorMessage);
-        }
+        await voteOnProposal.mutateAsync({
+          proposalId,
+          voteData: {
+            vote: voteType.toLowerCase(),
+            voterAddress: activeVoterAddress,
+            ...feeProof,
+          },
+        });
+        setCanVote(false);
+        setSelectedVote(voteType);
+        toast.success('Your vote has been recorded successfully');
+        await refetch();
       },
     });
   };

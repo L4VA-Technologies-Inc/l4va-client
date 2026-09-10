@@ -24,7 +24,7 @@ export const useEvmGovernanceFee = () => {
   const { sendTransactionAsync } = useSendTransaction();
 
   const payFee = useCallback(
-    async payment => {
+    async (payment, expectedFrom) => {
       setError(null);
 
       if (!payment) {
@@ -32,6 +32,15 @@ export const useEvmGovernanceFee = () => {
       }
       if (!address) {
         throw new Error('Robinhood wallet is not connected');
+      }
+      // The backend verifies the payment came from the acting address. Catch a
+      // mismatch here rather than after the user has spent the fee on a
+      // transfer that would then be rejected.
+      if (expectedFrom && address.toLowerCase() !== expectedFrom.toLowerCase()) {
+        throw new Error(
+          `Connected wallet ${address} does not match the account for this action (${expectedFrom}). ` +
+            'Switch accounts and try again.'
+        );
       }
 
       const targetChainId = payment.chainId ?? robinhoodChain.id;
