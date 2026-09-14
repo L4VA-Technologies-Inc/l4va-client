@@ -270,6 +270,23 @@ export const useUpdateProfile = () => {
   });
 };
 
+export const useVerifyEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => CoreApiProvider.verifyEmail(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+};
+
+export const useResendEmailVerification = () => {
+  return useMutation({
+    mutationFn: () => CoreApiProvider.resendEmailVerification(),
+  });
+};
+
 export const useUploadImage = () => {
   return useMutation({
     mutationFn: file => CoreApiProvider.uploadImage(file),

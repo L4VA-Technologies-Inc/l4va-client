@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SwapRouteImport } from './routes/swap'
@@ -34,6 +35,11 @@ import { Route as ProfileIdRouteImport } from './routes/profile/$id'
 import { Route as RewardsEpochsIndexRouteImport } from './routes/rewards/epochs/index'
 import { Route as RewardsVaultsVaultIdRouteImport } from './routes/rewards/vaults/$vaultId'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TokensRoute = TokensRouteImport.update({
   id: '/tokens',
   path: '/tokens',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
+    | '/verify-email'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/swap'
     | '/terms-of-service'
+    | '/verify-email'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
+    | '/verify-email'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TokensRoute: typeof TokensRouteWithChildren
+  VerifyEmailRoute: typeof VerifyEmailRoute
   ProfileIdRoute: typeof ProfileIdRoute
   ProposalsIdRoute: typeof ProposalsIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
@@ -329,6 +342,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tokens': {
       id: '/tokens'
       path: '/tokens'
@@ -567,6 +587,7 @@ const rootRouteChildren: RootRouteChildren = {
   SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TokensRoute: TokensRouteWithChildren,
+  VerifyEmailRoute: VerifyEmailRoute,
   ProfileIdRoute: ProfileIdRoute,
   ProposalsIdRoute: ProposalsIdRoute,
   VaultsIdRoute: VaultsIdRoute,

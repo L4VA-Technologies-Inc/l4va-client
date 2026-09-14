@@ -19,6 +19,14 @@ export class CoreConfigProvider {
     return '/api/v1/users/profile';
   }
 
+  static verifyEmail() {
+    return '/api/v1/users/email/verify';
+  }
+
+  static resendEmailVerification() {
+    return '/api/v1/users/email/resend-verification';
+  }
+
   static uploadImage() {
     return '/api/v1/upload';
   }

@@ -31,6 +31,14 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async verifyEmail(token) {
+    return await axiosInstance.post(CoreConfigProvider.verifyEmail(), { token });
+  }
+
+  static async resendEmailVerification() {
+    return await axiosInstance.post(CoreConfigProvider.resendEmailVerification());
+  }
+
   static async uploadImage(file, imageType = '') {
     const formData = new FormData();
     formData.append('image', file);

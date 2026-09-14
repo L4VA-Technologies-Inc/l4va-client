@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Camera, Check, Copy, Edit, Loader2, Plus, X } from 'lucide-react';
+import { BadgeCheck, Camera, Check, Copy, Edit, Loader2, MailWarning, Plus, X } from 'lucide-react';
 
-import { useUpdateProfile, useUploadProfileImage } from '@/services/api/queries';
+import { useResendEmailVerification, useUpdateProfile, useUploadProfileImage } from '@/services/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
 
 const PROFILE_IMAGE_MAX_SIZE_MB = 5;
+// Must match RESEND_COOLDOWN_MS in the API's EmailVerificationService
+const RESEND_COOLDOWN_SECONDS = 60;
 const PROFILE_IMAGE_MAX_SIZE_BYTES = PROFILE_IMAGE_MAX_SIZE_MB * 1024 * 1024;
 
 const BackgroundSection = ({ bgImage, onClick, isEditable = true, isUploading = false, isDisabled = false }) => (
@@ -191,6 +193,10 @@ const ProfileEmail = ({
   isEditable = true,
   isEditing,
   email,
+  isVerified,
+  onResend,
+  isResending,
+  resendCooldown = 0,
   onEdit,
   onSave,
   onCancel,
@@ -245,7 +251,36 @@ const ProfileEmail = ({
         <>
           <div className="flex items-center gap-2 text-gray-300 text-sm">
             <span className={email ? '' : 'italic text-gray-500'}>{email || 'Add your email'}</span>
+            {email && isVerified && (
+              <span className="inline-flex items-center gap-1 text-xs text-green-400" title="Email verified">
+                <BadgeCheck size={14} />
+                Verified
+              </span>
+            )}
+            {email && !isVerified && (
+              <span className="inline-flex items-center gap-1 text-xs text-yellow-400" title="Email not verified">
+                <MailWarning size={14} />
+                Not verified
+              </span>
+            )}
           </div>
+          {email && !isVerified && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-orange-400 hover:text-orange-300 hover:bg-steel-800 h-8 px-2 text-xs"
+              onClick={onResend}
+              disabled={isResending || resendCooldown > 0}
+            >
+              {isResending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : resendCooldown > 0 ? (
+                `Resend in ${resendCooldown}s`
+              ) : (
+                'Resend link'
+              )}
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -282,6 +317,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [email, setEmail] = useState(user?.email || '');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [uploadingByType, setUploadingByType] = useState({ avatar: false, banner: false });
 
   const bgInputRef = useRef(null);
@@ -293,6 +329,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
   const uploadProfileImageMutation = useUploadProfileImage();
   const updateProfileMutation = useUpdateProfile();
+  const resendEmailVerificationMutation = useResendEmailVerification();
   const isAnyUploadInProgress = uploadingByType.avatar || uploadingByType.banner;
 
   useEffect(() => {
@@ -454,17 +491,44 @@ const ProfileHero = ({ user, isEditable = true }) => {
       return;
     }
 
+    const emailChanged = trimmedEmail.toLowerCase() !== (user?.email || '').toLowerCase();
+
     setIsUpdating(true);
     try {
       await updateProfileMutation.mutateAsync({ email: trimmedEmail || null });
-      setEmail(trimmedEmail);
+      setEmail(trimmedEmail.toLowerCase());
       setIsEditingEmail(false);
-      toast.success('Email updated successfully');
+      if (emailChanged && trimmedEmail) {
+        toast.success(`We sent a verification link to ${trimmedEmail}. Please check your inbox.`, { duration: 6000 });
+      } else {
+        toast.success('Email updated successfully');
+      }
     } catch (error) {
       console.error('Update error:', error);
       toast.error('Failed to update email');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(seconds => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendVerification = async () => {
+    try {
+      await resendEmailVerificationMutation.mutateAsync();
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      toast.success(`Verification link sent to ${user?.email}`);
+    } catch (error) {
+      const retryAfterSeconds = error?.response?.data?.retryAfterSeconds;
+      if (error?.response?.status === 429 && retryAfterSeconds) {
+        setResendCooldown(retryAfterSeconds);
+        return;
+      }
+      toast.error(error?.response?.data?.message || 'Failed to send verification email');
     }
   };
 
@@ -534,6 +598,10 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
             <ProfileEmail
               email={email}
+              isVerified={!!user?.emailVerified && email.toLowerCase() === (user?.email || '').toLowerCase()}
+              onResend={handleResendVerification}
+              isResending={resendEmailVerificationMutation.isPending}
+              resendCooldown={resendCooldown}
               inputRef={emailInputRef}
               isEditing={isEditingEmail}
               isEditable={isEditable}

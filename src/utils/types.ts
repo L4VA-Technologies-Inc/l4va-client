@@ -91,6 +91,7 @@ export interface IUser {
   username?: string;
   walletAddress: string;
   email?: string;
+  emailVerified?: boolean;
   biography?: string;
   twitterUsername?: string;
   discordUsername?: string;
