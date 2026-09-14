@@ -275,9 +275,9 @@ const ProfileEmail = ({
               {isResending ? (
                 <Loader2 size={14} className="animate-spin" />
               ) : resendCooldown > 0 ? (
-                `Resend in ${resendCooldown}s`
+                `Verify (${resendCooldown}s)`
               ) : (
-                'Resend link'
+                'Verify'
               )}
             </Button>
           )}
