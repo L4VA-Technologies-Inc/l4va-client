@@ -69,6 +69,33 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const { refetch } = useGovernanceProposals(vault.id);
 
+  // Market action proposals are charged per NFT/item acted on (one fee unit per
+  // marketplace action), matching the backend's per-item governance fee. Mirrors
+  // the item-count logic used when building the marketplaceActions payload below.
+  const marketplaceActionsCount = useMemo(() => {
+    if (selectedOption !== 'marketplace_action') return 1;
+    const marketActionType = proposalData.marketActionType || 'buy';
+    switch (marketActionType) {
+      case 'swap':
+        return Math.max((proposalData.swapActions || []).length, 1);
+      case 'update_list':
+        return Math.max(
+          (proposalData.updateListingAssets || []).filter(asset => asset.newPrice && Number(asset.newPrice) > 0).length,
+          1
+        );
+      case 'sell':
+      case 'buy_sell':
+      case 'buy':
+        return Math.max((proposalData.buyingSellingOptions || []).length, 1);
+      case 'cancel_offer':
+        return Math.max((proposalData.cancelOfferAssets || []).length, 1);
+      case 'unlist':
+        return Math.max((proposalData.unlistAssets || []).length, 1);
+      default:
+        return 1;
+    }
+  }, [selectedOption, proposalData]);
+
   // Get fee for current proposal type
   const currentProposalFee = useMemo(() => {
     if (!governanceFees?.data) return 0;
@@ -82,8 +109,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       termination: governanceFees.data.proposalFeeTermination,
       burning: governanceFees.data.proposalFeeBurning,
     };
-    return feeMap[selectedOption] || 0;
-  }, [governanceFees, selectedOption]);
+    const perUnitFee = feeMap[selectedOption] || 0;
+    const quantity = selectedOption === 'marketplace_action' ? marketplaceActionsCount : 1;
+    return perUnitFee * quantity;
+  }, [governanceFees, selectedOption, marketplaceActionsCount]);
 
   // Filter execution options based on vault status
   // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
@@ -355,6 +384,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const renderFooter = () => {
     const isInvalid = isValidProposal();
     const feeInAda = currentProposalFee / 1000000;
+    const perUnitFeeInAda = marketplaceActionsCount > 0 ? feeInAda / marketplaceActionsCount : feeInAda;
+    const showFeeBreakdown = selectedOption === 'marketplace_action' && marketplaceActionsCount > 1;
     const isProcessing = status !== 'idle';
 
     const getButtonText = () => {
@@ -378,7 +409,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
           {currentProposalFee > 0 ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
-              <span className="text-yellow-500 text-xs">Governance fee: {feeInAda.toFixed(2)} ADA</span>
+              <span className="text-yellow-500 text-xs">
+                Governance fee: {feeInAda.toFixed(2)} ADA
+                {showFeeBreakdown && ` (${marketplaceActionsCount} × ${perUnitFeeInAda.toFixed(2)} ADA)`}
+              </span>
             </div>
           ) : (
             <span className="text-gray-400">New proposal</span>
