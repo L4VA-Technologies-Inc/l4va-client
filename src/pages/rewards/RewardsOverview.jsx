@@ -189,7 +189,7 @@ export const RewardsOverview = () => {
         </div>
 
         {/* Alignment Bonuses */}
-        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} />
+        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} isRobinHood={isRobinHood} />
 
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
