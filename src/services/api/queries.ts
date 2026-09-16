@@ -791,6 +791,15 @@ export const useVlrmFeeSettings = () => {
   });
 };
 
+export const useNftFlagsSettings = () => {
+  return useQuery({
+    queryKey: ['nft-flags-settings'],
+    queryFn: () => SettingsApiProvider.getNftFlagsSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
 export const useTrackWidgetSwap = () => {
   return useMutation({
     mutationFn: (payload: unknown) => RewardsApiProvider.trackWidgetSwap(payload),

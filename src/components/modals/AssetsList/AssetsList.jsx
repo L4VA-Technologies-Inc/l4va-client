@@ -33,8 +33,10 @@ export const AssetsList = ({
   showTabs = true,
   title = 'Available Assets',
   chainType = 'cardano',
+  nftEnabled = true,
 }) => {
   const { isRobinHood } = useNetwork();
+  const tabs = nftEnabled ? ['NFT', 'FT'] : ['FT'];
 
   const filteredAssets = useMemo(() => {
     if (!walletAssets || walletAssets.length === 0) return [];
@@ -97,7 +99,7 @@ export const AssetsList = ({
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-medium">{title}</h2>
           {showTabs && (
-            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={['NFT', 'FT']} onTabChange={onTabChange} />
+            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={tabs} onTabChange={onTabChange} />
           )}
         </div>
         <LavaSearchInput

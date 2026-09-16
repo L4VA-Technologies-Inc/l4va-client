@@ -11,7 +11,7 @@ import { useTransaction } from '@/hooks/useTransaction.js';
 import { useEvmContributeTransaction } from '@/hooks/useEvmContributeTransaction.js';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
-import { useVaultAssets } from '@/services/api/queries.js';
+import { useVaultAssets, useNftFlagsSettings } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -80,6 +80,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const chain = vault?.chainType || 'cardano';
   const isEvmChain = chain === 'robinhood';
   const walletAddress = isEvmChain ? evmAddress : wallet?.changeAddressBech32;
+  const { data: nftFlagsData } = useNftFlagsSettings();
+  // Defaults to enabled until the flag loads, matching the backend's default-true kill switch.
+  const nftAssetsEnabled = nftFlagsData?.data?.evm_nft_assets_enabled ?? true;
+  const nftContributionAllowed = !isEvmChain || nftAssetsEnabled;
   const cardanoTransaction = useTransaction();
   const evmTransaction = useEvmContributeTransaction();
   const { sendTransaction, status, error } = isEvmChain ? evmTransaction : cardanoTransaction;
@@ -453,6 +457,14 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     }
   }, [walletError]);
 
+  // If NFTs are disabled for this chain, don't let the modal sit on the NFT tab
+  // (covers both the initial 'NFT' default and the flag loading in after mount).
+  useEffect(() => {
+    if (!nftContributionAllowed && activeTab === 'NFT') {
+      setActiveTab('FT');
+    }
+  }, [nftContributionAllowed, activeTab]);
+
   return (
     <ModalWrapper
       isOpen={isOpen}
@@ -471,6 +483,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           chainType={chain}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          nftEnabled={nftContributionAllowed}
           selectedNFTs={selectedNFTs}
           selectedAmount={selectedAmount}
           onToggleNFT={toggleNFT}

@@ -6,4 +6,9 @@ export class SettingsApiProvider {
     const response = await axiosInstance.get(SettingsConfigProvider.getVlrmFeeSettings());
     return response;
   }
+
+  static async getNftFlagsSettings() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getNftFlagsSettings());
+    return response;
+  }
 }
