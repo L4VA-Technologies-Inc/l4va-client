@@ -53,6 +53,11 @@ import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
 import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
+import {
+  VAULT_ARCHETYPES,
+  basketToAssetsWhitelist,
+  emptyIndexBasket,
+} from '@/components/vaults/index/indexVault.utils';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -129,6 +134,19 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     }
   }, [isRobinHood, vaultData.privacy]);
 
+  const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+
+  // Index vaults only exist on Robinhood; a draft restored on Cardano falls back to a standard vault.
+  useEffect(() => {
+    if (!isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+      setVaultData(prev => ({
+        ...prev,
+        vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+        assetsWhitelist: [createEmptyWhitelistAsset()],
+      }));
+    }
+  }, [isRobinHood, vaultData.vaultArchetype]);
+
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
   const visibleSteps = steps.filter(s => {
@@ -142,6 +160,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       Array.isArray(presets)
         ? presets
             .filter(preset => preset?.id !== undefined && preset?.id !== null)
+            // Index vaults raise native only, so the acquire-only preset is the single valid choice.
+            .filter(preset => !isIndexVault || preset?.type?.toLowerCase() === 'acquire_only')
             .map(preset => ({
               name: preset.id.toString(),
               label: preset?.name || preset?.type || 'Preset',
@@ -149,7 +169,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
               isCustom: preset?.type === 'custom',
             }))
         : [],
-    [presets]
+    [presets, isIndexVault]
   );
 
   // Whether the form should be fully blocked (loading or fetch error)
@@ -528,7 +548,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   };
 
   const updateField = async (fieldName, value) => {
-    setVaultData(prev => ({ ...prev, [fieldName]: value }));
+    setVaultData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      // The whitelist of an index vault is derived from its basket, never edited directly.
+      ...(fieldName === 'indexBasket' && isIndexVault ? { assetsWhitelist: basketToAssetsWhitelist(value) } : {}),
+    }));
 
     // When editing a field on a non-config step, auto-switch to the advanced preset if available.
     // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
@@ -591,6 +616,39 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       // Reset minAcquireThreshold when switching away from acquire-only
       minAcquireThreshold: isAcquireOnly ? (prev.minAcquireThreshold ?? null) : null,
     }));
+  };
+
+  const handleArchetypeChange = value => {
+    if (value === vaultData.vaultArchetype) return;
+
+    if (value === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+      const acquireOnlyPreset = presets.find(p => p?.type?.toLowerCase() === 'acquire_only');
+      if (!acquireOnlyPreset) {
+        toast.error('Index vaults need the Acquire-Only preset, which is not available right now.');
+        return;
+      }
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
+      setVaultData(prev => {
+        const indexBasket = prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket();
+        return {
+          ...prev,
+          vaultArchetype: VAULT_ARCHETYPES.INDEX_WEIGHTED,
+          indexBasket,
+          assetsWhitelist: basketToAssetsWhitelist(indexBasket),
+        };
+      });
+    } else {
+      setVaultData(prev => ({
+        ...prev,
+        vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+        assetsWhitelist: [createEmptyWhitelistAsset()],
+      }));
+    }
+
+    if (vault) isPresetManuallyChanged.current = true;
+    clearFieldError('indexBasket');
+    clearFieldError('assetsWhitelist');
   };
 
   const handlePresetChange = value => {
@@ -933,6 +991,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
             onRemoveWhitelistItem={handleRemoveWhitelistItem}
+            onArchetypeChange={handleArchetypeChange}
           />
         );
       case 2:

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatString, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
@@ -55,6 +56,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             chainType={vault.chainType}
             className="absolute top-3 right-3 bg-black/60 p-1.5 backdrop-blur-sm"
           />
+          <VaultTypeBadge vault={vault} className="absolute top-3 left-3" />
           {shouldShowCountdown && (
             <div className="absolute bottom-0 left-0 w-3/4">
               <VaultCountdown

@@ -128,4 +128,14 @@ export class VaultsApiProvider {
     const response = await axiosInstance.patch(VaultsConfigProvider.editUpcomingVaultSettings(vaultId), data);
     return response;
   }
+
+  static async getIndexOverview(vaultId) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexOverview(vaultId));
+    return response.data;
+  }
+
+  static async previewIndexReweight(vaultId, basket) {
+    const response = await axiosInstance.post(VaultsConfigProvider.previewIndexReweight(vaultId), basket);
+    return response.data;
+  }
 }

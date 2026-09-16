@@ -66,6 +66,16 @@ export const useVault = (id: string) => {
   });
 };
 
+/** Basket, live allocation and rebalance history of an index-weighted vault. */
+export const useVaultIndex = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['vault-index', id],
+    queryFn: () => VaultsApiProvider.getIndexOverview(id),
+    enabled: !!id && enabled,
+    staleTime: 60_000,
+  });
+};
+
 export const useVaultAssets = (
   id: string,
   search = '',

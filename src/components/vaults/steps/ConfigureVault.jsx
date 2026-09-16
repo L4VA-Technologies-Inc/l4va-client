@@ -16,6 +16,11 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
+import {
+  VAULT_ARCHETYPES,
+  VAULT_ARCHETYPE_HINT,
+  VAULT_ARCHETYPE_OPTIONS,
+} from '@/components/vaults/index/indexVault.utils';
 
 export const ConfigureVault = ({
   data,
@@ -28,8 +33,10 @@ export const ConfigureVault = ({
   onDeletePreset,
   deletingPresetId,
   onRemoveWhitelistItem,
+  onArchetypeChange,
 }) => {
   const { isCardano } = useNetwork();
+  const isIndexVault = !isCardano && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
   const { currencyLabel } = useCurrency();
 
   const handleChange = e => {
@@ -86,6 +93,23 @@ export const ConfigureVault = ({
               onChange={handleChange}
             />
           </div>
+          {!isCardano && (
+            <div>
+              <LavaRadio
+                label="*Vault type"
+                name="vaultArchetype"
+                options={VAULT_ARCHETYPE_OPTIONS}
+                value={data.vaultArchetype || VAULT_ARCHETYPES.STANDARD}
+                onChange={onArchetypeChange}
+                hint={VAULT_ARCHETYPE_HINT}
+              />
+              {isIndexVault && (
+                <p className="mt-3 text-sm text-dark-100">
+                  Index vaults use the Acquire-Only preset. You will set the basket and its weights in the Acquire step.
+                </p>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <LavaRadio
@@ -225,19 +249,21 @@ export const ConfigureVault = ({
       </div>
 
       <div className="space-y-12">
-        <div>
-          <LavaWhitelistWithCaps
-            required
-            label="Asset Whitelist"
-            setWhitelist={assets => updateField('assetsWhitelist', assets)}
-            whitelist={data.assetsWhitelist || []}
-            errors={errors}
-            vaultType={data.type}
-            isExpandable={data.isExpandableAssetWhitelist}
-            onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
-          />
-          {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
-        </div>
+        {!isIndexVault && (
+          <div>
+            <LavaWhitelistWithCaps
+              required
+              label="Asset Whitelist"
+              setWhitelist={assets => updateField('assetsWhitelist', assets)}
+              whitelist={data.assetsWhitelist || []}
+              errors={errors}
+              vaultType={data.type}
+              isExpandable={data.isExpandableAssetWhitelist}
+              onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
+            />
+            {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
+          </div>
+        )}
 
         {data.privacy === VAULT_PRIVACY_TYPES.PRIVATE && data.valueMethod === 'lbe' && (
           <div>

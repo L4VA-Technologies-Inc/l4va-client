@@ -2,6 +2,7 @@ import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
 import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
+import { VAULT_ARCHETYPES, emptyIndexBasket, validateIndexBasket } from '@/components/vaults/index/indexVault.utils';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
@@ -370,6 +371,15 @@ export const vaultSchema = yup.object({
           .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration is below the minimum allowed')
           .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
     }),
+  vaultArchetype: yup.string().oneOf(Object.values(VAULT_ARCHETYPES)).default(VAULT_ARCHETYPES.STANDARD),
+  indexBasket: yup
+    .mixed()
+    .nullable()
+    .test('valid-index-basket', 'Invalid index basket', function validateBasket(value) {
+      if (this.parent.vaultArchetype !== VAULT_ARCHETYPES.INDEX_WEIGHTED) return true;
+      const problem = validateIndexBasket(value);
+      return problem ? this.createError({ message: problem }) : true;
+    }),
   isAcquireOnly: yup.boolean().default(false),
   minAcquireThreshold: yup
     .number()
@@ -669,6 +679,8 @@ export const initialVaultState = {
   acquireReserve: null,
   liquidityPoolContribution: null,
   isAcquireOnly: false,
+  vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+  indexBasket: emptyIndexBasket(),
   minAcquireThreshold: null, // in ADA (converted to lovelace before API call) on Cardano, in ETH as-is on Robinhood
   allowAcquireExpansion: false,
 
@@ -704,6 +716,7 @@ export const stepFields = {
     'contributorWhitelist',
     'acquirerWhitelist',
     'allowAcquireExpansion',
+    'vaultArchetype',
   ],
   2: [
     'valueMethod',
@@ -720,6 +733,7 @@ export const stepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
+    'indexBasket',
   ],
   4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'cosigningThreshold', 'executionThreshold'],
   5: [],

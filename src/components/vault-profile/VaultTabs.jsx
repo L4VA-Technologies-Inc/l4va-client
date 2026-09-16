@@ -9,6 +9,8 @@ import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
+import { VaultIndexAllocation } from '@/components/vault-profile/VaultIndexAllocation';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
@@ -17,7 +19,14 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const router = useRouter();
 
   const baseTabContent = {
-    Assets: <VaultContributedAssetsList vault={vault} />,
+    Assets: isIndexVault(vault) ? (
+      <>
+        <VaultIndexAllocation vault={vault} />
+        <VaultContributedAssetsList vault={vault} />
+      </>
+    ) : (
+      <VaultContributedAssetsList vault={vault} />
+    ),
     Token: <VaultAcquiredAssetsList vault={vault} />,
     Governance: <VaultGovernance vault={vault} />,
     Activity: <VaultActivity vault={vault} />,

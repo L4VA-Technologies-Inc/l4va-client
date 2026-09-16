@@ -18,6 +18,8 @@ import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
+import IndexReweight from '@/components/modals/CreateProposalModal/IndexReweight.jsx';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import {
   useCreateProposal,
   useGovernanceFees,
@@ -65,11 +67,17 @@ const initialProposalData = {
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
-  const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
+  const isIndex = isIndexVault(vault);
+  const activeExecutionOptions = useMemo(() => {
+    if (!isEvmVault) return cardanoExecutionOptions;
+    return isIndex
+      ? [{ value: 'index_reweight', label: 'Index Re-weight' }, ...evmExecutionOptions]
+      : evmExecutionOptions;
+  }, [isEvmVault, isIndex]);
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
+    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : isIndex ? 'index_reweight' : 'marketplace_action'
   );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
@@ -105,6 +113,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       expansion: fees.proposalFeeExpansion,
       acquire_expansion: fees.proposalFeeExpansion, // Use same fee as expansion
       asset_whitelist_update: fees.proposalFeeAssetWhitelistUpdate,
+      index_reweight: fees.proposalFeeMarketplaceAction, // Same fee as market actions (backend mirrors this)
       staking: fees.proposalFeeStaking,
       termination: fees.proposalFeeTermination,
       burning: fees.proposalFeeBurning,
@@ -218,6 +227,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.acquireExpansionNoMax = proposalData.acquireExpansionNoMax || false;
         proposalPayload.acquireExpansionPriceType = proposalData.acquireExpansionPriceType || 'market';
         proposalPayload.acquireExpansionLimitPrice = proposalData.acquireExpansionLimitPrice;
+      } else if (selectedOption === 'index_reweight') {
+        proposalPayload.indexReweight = proposalData.indexReweight;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -611,6 +622,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'index_reweight' && (
+              <IndexReweight vault={vault} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">
