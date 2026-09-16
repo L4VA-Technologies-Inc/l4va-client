@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi';
 import toast from 'react-hot-toast';
 
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { useNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
@@ -80,17 +81,18 @@ const TermsAgreementText = () => {
 export const LoginModal = () => {
   const { activeModalData } = useModal();
   const { openModal, closeModal } = useModalControls();
-  const { isRobinHood, network } = useNetwork();
+  const { isEvm, network } = useNetwork();
   const { isAuthenticated, login, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
 
-  // Robinhood Chain (EVM) — connect via wagmi, then log in by address (no signature).
+  // EVM networks (Robinhood, Arc) — connect via wagmi, then log in by address (no signature).
   const {
     isConnected: isRobinhoodConnected,
     address: robinhoodAddress,
     connector: activeRobinhoodConnector,
+    chainId: walletChainId,
   } = useAccount();
   const {
     connectors,
@@ -99,6 +101,7 @@ export const LoginModal = () => {
     variables: robinhoodConnectVars,
   } = useConnect();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
   // Guards against double-clicks / overlapping connects — wagmi's isPending alone
   // is not enough (MetaMask Flask keeps a pending requestPermissions across calls).
   const robinhoodConnectLockRef = useRef(false);
@@ -161,7 +164,7 @@ export const LoginModal = () => {
   const loginWithRobinhoodAddress = async address => {
     if (!address) return;
     const res = await login(null, null, address, network);
-    if (!res?.user) return;
+    if (!res?.user) return false;
 
     closeModal();
     if (!res.user.email) {
@@ -169,6 +172,24 @@ export const LoginModal = () => {
     }
     if (activeModalData?.props?.onSuccess) {
       activeModalData.props.onSuccess();
+    }
+    return true;
+  };
+
+  // Moves the wallet onto the selected EVM network (Robinhood / Arc); wagmi asks the
+  // wallet to add the chain if it doesn't know it. Runs only after login succeeded —
+  // switching mid-connect caused the accountsChanged flicker that logged users out.
+  const switchWalletToNetworkChain = async (connector, currentChainId) => {
+    const targetChain = evmChainByNetwork[network];
+    if (!targetChain || currentChainId === targetChain.id) return;
+
+    sessionStorage.setItem('evm_login_in_progress', '1');
+    try {
+      await switchChainAsync({ chainId: targetChain.id, connector });
+    } catch {
+      toast.error(`Switch your wallet to ${targetChain.name} to use this network`);
+    } finally {
+      sessionStorage.removeItem('evm_login_in_progress');
     }
   };
 
@@ -181,15 +202,17 @@ export const LoginModal = () => {
     if (!connector || isRobinhoodConnecting || robinhoodConnectLockRef.current) return;
     robinhoodConnectLockRef.current = true;
 
-    // Already connected — login in place. Never switch chain during login (second
-    // MetaMask popup → accountsChanged flicker → "Wallet changed" logout).
+    // Already connected — login in place. Chain switch only after login (see
+    // switchWalletToNetworkChain).
     if (
       isRobinhoodConnected &&
       robinhoodAddress &&
       (!activeRobinhoodConnector || activeRobinhoodConnector.id === connector.id)
     ) {
       try {
-        await loginWithRobinhoodAddress(robinhoodAddress);
+        if (await loginWithRobinhoodAddress(robinhoodAddress)) {
+          await switchWalletToNetworkChain(activeRobinhoodConnector ?? connector, walletChainId);
+        }
       } finally {
         robinhoodConnectLockRef.current = false;
       }
@@ -214,7 +237,9 @@ export const LoginModal = () => {
         return;
       }
 
-      await loginWithRobinhoodAddress(address);
+      if (await loginWithRobinhoodAddress(address)) {
+        await switchWalletToNetworkChain(connector, data.chainId);
+      }
     } catch (error) {
       const msg = String(error?.shortMessage || error?.message || '');
       if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
@@ -283,7 +308,7 @@ export const LoginModal = () => {
     }
 
     setIsLoading(true);
-    if (isRobinHood) {
+    if (isEvm) {
       const connector = connectors.find(c => c.id === walletKey);
       handleRobinhoodConnect(connector);
     } else {
@@ -379,7 +404,7 @@ export const LoginModal = () => {
     );
 
     const renderWalletRow = walletItem => {
-      const isConnecting = isRobinHood
+      const isConnecting = isEvm
         ? isRobinhoodConnecting && robinhoodConnectVars?.connector?.id === walletItem.key
         : walletItem.isConnectingTo === walletItem.key;
       return (
@@ -407,7 +432,7 @@ export const LoginModal = () => {
           </button>
           <div className="flex items-center">
             {isConnecting && <Spinner />}
-            {!isRobinHood && !installed.has(walletItem.key) && (
+            {!isEvm && !installed.has(walletItem.key) && (
               <a
                 className="text-sm text-dark-100 p-1"
                 href={walletItem.website}
@@ -452,7 +477,7 @@ export const LoginModal = () => {
 
     let evmConnectableWallets = [];
     let evmDownloadWallets = [];
-    if (isRobinHood) {
+    if (isEvm) {
       const detectedKeys = new Set();
       evmConnectableWallets = robinhoodConnectors.map(connector => {
         const match = matchPopularEvmWallet(connector.displayName);
@@ -474,14 +499,14 @@ export const LoginModal = () => {
 
     return (
       <>
-        {isRobinHood && hasConflictingMetaMasks && (
+        {isEvm && hasConflictingMetaMasks && (
           <p className="mb-3 text-sm text-orange-500 px-1">
             MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions, then refresh — both at
             once breaks connect.
           </p>
         )}
         <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-          {isRobinHood ? (
+          {isEvm ? (
             <>
               {evmConnectableWallets.map(renderWalletRow)}
               {evmDownloadWallets.map(renderDownloadWalletRow)}

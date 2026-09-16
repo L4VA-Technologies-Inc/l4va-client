@@ -139,7 +139,7 @@ const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVa
 
 export const TokensPage = () => {
   const navigate = useNavigate();
-  const { isRobinHood: isRobinhood } = useNetwork();
+  const { isRobinHood: isRobinhood, isCardano, isArc } = useNetwork();
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState('Trending');
   const [rhTab, setRhTab] = useState('Memecoins');
@@ -163,7 +163,7 @@ export const TokensPage = () => {
     return formatTokenMoney(pickTokenAmount(token, pickByCurrency, map[field]), currency, currencySymbol, opts);
   };
 
-  const globalQuery = useCardanoMemecoins(!isRobinhood);
+  const globalQuery = useCardanoMemecoins(isCardano);
   const rhMemesQuery = useRobinhoodMemecoins(isRobinhood && rhTab === 'Memecoins');
   const rhRwasQuery = useRobinhoodRwas(isRobinhood && rhTab === 'RWAs');
   const rhNftsQuery = useRobinhoodNfts(isRobinhood && rhTab === 'NFTs');
@@ -232,6 +232,17 @@ export const TokensPage = () => {
     setRhTab(tab);
     setPage(1);
   };
+
+  if (isArc) {
+    return (
+      <div className="flex flex-col gap-6 pb-10">
+        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
+        <div className="rounded-2xl border border-steel-750 bg-steel-850 py-12 text-center text-dark-100">
+          No tokens on Arc yet
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -3,12 +3,8 @@ import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
-import { useCurrency } from '@/hooks/useCurrency.js';
-import { useNetwork } from '@/hooks/useNetwork.js';
+import { useNetworkSwitcher } from '@/hooks/useNetworkSwitcher';
 import { useAuth } from '@/lib/auth/auth';
-import { ChainType } from '@/utils/types';
-import CardanoIcon from '@/icons/cardano.svg?react';
-import RobinhoodIcon from '@/icons/robinhood.svg?react';
 
 export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   const handleNavClick = (link, e) => {
@@ -19,38 +15,14 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   };
 
   const { isAuthenticated } = useAuth();
-  const { currency: selectedCurrency, updateCurrency } = useCurrency();
-  const { network: selectedNetwork, updateNetwork, isRobinHood, isCardano } = useNetwork();
-
-  const currencyOptions = [
-    ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
-    { label: 'USD', value: 'usdt' },
-    ...(isCardano ? [] : [{ label: 'ETH', value: 'eth' }]),
-  ];
-
-  const networkOptions = [
-    {
-      label: 'Cardano',
-      value: ChainType.CARDANO,
-      icon: <CardanoIcon className="w-4 h-4 flex-shrink-0 text-white" />,
-    },
-    {
-      label: 'Robinhood',
-      value: ChainType.ROBINHOOD,
-      icon: <RobinhoodIcon className="w-4 h-4 flex-shrink-0 text-white" />,
-    },
-  ];
-
-  const handleNetworkChange = val => {
-    updateNetwork(val);
-    // ADA isn't available on Robinhood and ETH isn't on Cardano —
-    // swap to the network's native currency in the same tick.
-    if (val === ChainType.ROBINHOOD && selectedCurrency === 'ada') {
-      updateCurrency('eth');
-    } else if (val === ChainType.CARDANO && selectedCurrency === 'eth') {
-      updateCurrency('ada');
-    }
-  };
+  const {
+    network: selectedNetwork,
+    currency: selectedCurrency,
+    networkOptions,
+    currencyOptions,
+    changeNetwork,
+    updateCurrency,
+  } = useNetworkSwitcher();
 
   return (
     <>
@@ -103,7 +75,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
                 options={networkOptions}
                 value={selectedNetwork}
                 disabled={isAuthenticated}
-                onChange={handleNetworkChange}
+                onChange={changeNetwork}
               />
             </div>
 

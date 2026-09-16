@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
-export type NetworkType = 'cardano' | 'robinhood';
+export type NetworkType = 'cardano' | 'robinhood' | 'arc';
+
+export const NETWORKS: readonly NetworkType[] = ['cardano', 'robinhood', 'arc'];
+export const EVM_NETWORKS: readonly NetworkType[] = ['robinhood', 'arc'];
+
+export const isEvmNetwork = (value?: string | null): boolean => EVM_NETWORKS.includes(value as NetworkType);
 
 const NETWORK_STORAGE_KEY = 'selectedNetwork';
 const THEME_TRANSITION_CLASS = 'theme-transition';
@@ -8,7 +13,7 @@ const THEME_TRANSITION_DURATION_MS = 320;
 
 // Normalize network value to ensure it's always valid
 const normalizeNetwork = (value: string | null): NetworkType => {
-  return value === 'robinhood' ? 'robinhood' : 'cardano';
+  return NETWORKS.includes(value as NetworkType) ? (value as NetworkType) : 'cardano';
 };
 
 let globalNetwork: NetworkType = normalizeNetwork(localStorage.getItem(NETWORK_STORAGE_KEY));
@@ -28,6 +33,12 @@ const FAVICONS = {
     'favicon-32': '/favicon/favicon-rh-32x32.png',
     'favicon-16': '/favicon/favicon-rh-16x16.png',
   },
+  arc: {
+    'favicon-ico': '/favicon/favicon-arc.svg',
+    'favicon-png': '/favicon/favicon-arc.svg',
+    'favicon-32': '/favicon/favicon-arc.svg',
+    'favicon-16': '/favicon/favicon-arc.svg',
+  },
 } as const;
 
 const applyFavicon = (newNetwork: NetworkType) => {
@@ -36,6 +47,8 @@ const applyFavicon = (newNetwork: NetworkType) => {
     const link = document.getElementById(id);
     if (link instanceof HTMLLinkElement) {
       link.href = href;
+      // index.html declares ico/png types; the Arc favicon is an SVG.
+      link.type = href.endsWith('.svg') ? 'image/svg+xml' : href.includes('.ico') ? 'image/x-icon' : 'image/png';
     }
   });
 };
@@ -76,6 +89,9 @@ export const useNetwork = (): {
   network: NetworkType;
   isCardano: boolean;
   isRobinHood: boolean;
+  isArc: boolean;
+  /** Any EVM network (Robinhood, Arc) — wagmi wallets and address-based login. */
+  isEvm: boolean;
   updateNetwork: (newNetwork: NetworkType) => void;
 } => {
   const [network, setNetwork] = useState<NetworkType>(globalNetwork);
@@ -103,6 +119,8 @@ export const useNetwork = (): {
     network,
     isCardano: network === 'cardano',
     isRobinHood: network === 'robinhood',
+    isArc: network === 'arc',
+    isEvm: isEvmNetwork(network),
     updateNetwork,
   };
 };

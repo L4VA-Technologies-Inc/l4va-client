@@ -100,6 +100,38 @@
   color: #151614;
 }
 
+/* Arc: Circle's brand ramp (deep blue → violet → magenta) on an indigo near-black. */
+:root[data-chain='arc'] {
+  --color-background-primary: #0B0A1F;
+  --color-input-bg: #121130;
+  --color-accent: #1B1A3A;
+  --color-primary: #6470FF;
+  --color-orange-500: var(--color-primary);
+  --color-slate-950: #0B0A1F;
+  --color-steel-950: #121130;
+  --color-steel-900: #17163A;
+  --color-steel-850: #1E1D45;
+  --color-steel-800: #26254F;
+  --color-steel-750: #2F2D5C;
+  --color-steel-600: #433F74;
+  --color-steel-400: #A3A0C8;
+  /* Brightened brand ramp: buttons on it use dark text. */
+  --color-button-gradient-from: #6E7DFF;
+  --color-button-gradient-mid: #9A6BF0;
+  --color-button-gradient-to: #F0679E;
+  --color-chart-accent: var(--color-primary);
+  --color-chart-segment-1: #3B4BF0;
+  --color-chart-segment-2: #5A45DC;
+  --color-chart-segment-3: #7F3FB5;
+  --color-chart-segment-4: #A5408F;
+  --color-chart-segment-5: #C0407E;
+  --color-step-accent: var(--color-primary);
+}
+
+:root[data-chain='arc'] .bg-orange-500.border-orange-500.text-white {
+  color: #0B0A1F;
+}
+
 .dark {}
 
 @theme {
@@ -164,6 +196,17 @@ body {
     linear-gradient(180deg, rgba(13, 13, 12, 0.12) 0%, var(--color-background-primary) 100%),
     url('/assets/ai-bg-texture.webp');
   filter: saturate(0.78);
+}
+
+:root[data-chain='arc'] .home-bg-texture {
+  background-image:
+    radial-gradient(circle at 18% 42%, rgba(100, 112, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 82% 30%, rgba(192, 64, 126, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(11, 10, 31, 0.18) 0%, var(--color-background-primary) 100%),
+    linear-gradient(#3A3566, #3A3566),
+    url('/assets/ai-bg-texture.webp');
+  /* The solid layer recolors the texture's orange veins to Arc violet without touching the layers above. */
+  background-blend-mode: normal, normal, normal, color, normal;
 }
 
 .container {

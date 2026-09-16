@@ -3,7 +3,7 @@ import { IS_PREPROD } from '@/utils/networkValidation';
 
 /**
  * Centralized blockchain explorer URL configuration
- * Supports both Cardano and Robinhood chains with testnet/mainnet variants
+ * Supports Cardano and the EVM chains (Robinhood, Arc) with testnet/mainnet variants
  */
 
 const EXPLORER_URLS = {
@@ -25,7 +25,17 @@ const EXPLORER_URLS = {
       base: 'https://explorer.testnet.chain.robinhood.com',
     },
   },
+  [ChainType.ARC]: {
+    mainnet: {
+      base: 'https://explorer.arc.io',
+    },
+    testnet: {
+      base: 'https://explorer.testnet.arc.io',
+    },
+  },
 };
+
+const isEvmChainType = chainType => chainType === ChainType.ROBINHOOD || chainType === ChainType.ARC;
 
 /**
  * Get the explorer configuration for a given chain and network
@@ -50,7 +60,7 @@ export const getTransactionUrl = (txHash, chainType = ChainType.CARDANO, isTestn
 
   const config = getExplorerConfig(chainType, isTestnet);
 
-  if (chainType === ChainType.ROBINHOOD) {
+  if (isEvmChainType(chainType)) {
     return `${config.base}/tx/${txHash}`;
   }
 
@@ -85,8 +95,8 @@ export const getPolicyUrl = (policyId, chainType, isTestnet = IS_PREPROD) => {
   const isEvmContractAddress = /^0x[a-fA-F0-9]{40}$/.test(policyId);
   const resolvedChainType = chainType || (isEvmContractAddress ? ChainType.ROBINHOOD : ChainType.CARDANO);
 
-  if (resolvedChainType === ChainType.ROBINHOOD) {
-    // Robinhood Chain assets use EVM contract addresses.
+  if (isEvmChainType(resolvedChainType)) {
+    // EVM chain assets use contract addresses.
     return getTokenUrl(policyId, resolvedChainType, isTestnet);
   }
 

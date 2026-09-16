@@ -16,7 +16,7 @@ import { useNetwork } from '@/hooks/useNetwork';
 
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const { data: publicData, isLoading } = usePublicProfile(userId);
   const search = useSearch({
     from: userId ? '/profile/$id' : '/profile/',
@@ -38,7 +38,7 @@ export const Profile = ({ userId, isEditable }) => {
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
-        {!userId && !isRobinHood && (
+        {!userId && !isEvm && (
           <div className="w-full">
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 xl:gap-6 items-stretch">
               <StakingWidget focusOnMount={search?.section === 'staking'} />

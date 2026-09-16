@@ -3,7 +3,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { useAccount } from 'wagmi';
 
 import { useAuth } from '@/lib/auth/auth';
-import { useNetwork } from '@/hooks/useNetwork';
+import { isEvmNetwork, useNetwork } from '@/hooks/useNetwork';
 
 const checkWeldCookies = () => {
   const requiredCookies = ['weld_connected-wallet', 'weld_connected-stake', 'weld_connected-change'];
@@ -17,7 +17,7 @@ export const useWalletChangeListener = () => {
   const wallet = useWallet('isConnected', 'stakeAddressBech32');
   const { address: evmAddress, status: evmStatus } = useAccount();
   const { user, logout, isAuthenticated } = useAuth();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const previousStakeAddressRef = useRef(null);
   const previousEvmAddressRef = useRef(null);
   const evmDisconnectedLogoutTimerRef = useRef(null);
@@ -30,8 +30,8 @@ export const useWalletChangeListener = () => {
   }, [isAuthenticated, wallet.isConnected]);
 
   useEffect(() => {
-    // Weld/Cardano-only watchdog — EVM (Robinhood) has no Weld wallet/stake address.
-    if (isRobinHood || !isAuthenticated || !user) {
+    // Weld/Cardano-only watchdog — EVM wallets have no Weld wallet/stake address.
+    if (isEvm || !isAuthenticated || !user) {
       previousStakeAddressRef.current = null;
       return;
     }
@@ -60,11 +60,11 @@ export const useWalletChangeListener = () => {
       logout('Wallet changed. Please login again.');
       previousStakeAddressRef.current = null;
     }
-  }, [wallet.isConnected, wallet.stakeAddressBech32, user, isAuthenticated, logout, isRobinHood]);
+  }, [wallet.isConnected, wallet.stakeAddressBech32, user, isAuthenticated, logout, isEvm]);
 
   useEffect(() => {
-    // EVM (Robinhood) watchdog — mirrors the Cardano branch using wagmi's MetaMask/injected state.
-    if (!isRobinHood || !isAuthenticated || !user) {
+    // EVM (Robinhood, Arc) watchdog — mirrors the Cardano branch using wagmi's MetaMask/injected state.
+    if (!isEvm || !isAuthenticated || !user) {
       previousEvmAddressRef.current = null;
       if (evmDisconnectedLogoutTimerRef.current) {
         clearTimeout(evmDisconnectedLogoutTimerRef.current);
@@ -143,7 +143,7 @@ export const useWalletChangeListener = () => {
         if (sessionStorage.getItem('evm_intentional_disconnect')) return;
 
         const authenticatedChainType = localStorage.getItem('authenticated_chain_type');
-        if (authenticatedChainType && authenticatedChainType !== 'robinhood') return;
+        if (authenticatedChainType && !isEvmNetwork(authenticatedChainType)) return;
 
         logout('Wallet disconnected. Please login again.');
       }, 1500);
@@ -155,11 +155,11 @@ export const useWalletChangeListener = () => {
         evmDisconnectedLogoutTimerRef.current = null;
       }
     };
-  }, [isRobinHood, isAuthenticated, user, evmAddress, evmStatus, logout]);
+  }, [isEvm, isAuthenticated, user, evmAddress, evmStatus, logout]);
 
   useEffect(() => {
     // Weld cookie check would fire for EVM logins (no Weld cookies) and wrongly log them out.
-    if (isRobinHood || !isAuthenticated || !user) {
+    if (isEvm || !isAuthenticated || !user) {
       return;
     }
 
@@ -177,5 +177,5 @@ export const useWalletChangeListener = () => {
     const intervalId = setInterval(checkCookies, 5000);
 
     return () => clearInterval(intervalId);
-  }, [isAuthenticated, user, logout, isRobinHood]);
+  }, [isAuthenticated, user, logout, isEvm]);
 };

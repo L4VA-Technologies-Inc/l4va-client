@@ -27,7 +27,7 @@ const getOracleTier = balance => {
 
 const roundPercent = value => Number((Number(value) || 0).toFixed(2));
 
-export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false, isRobinHood = false }) => {
+export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false, isEvm = false }) => {
   const navigate = useNavigate();
 
   const handleItemClick = item => {
@@ -47,9 +47,9 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false, isRobi
   const oracleBonus = bonuses.oracle || {};
   const alignmentFullBonus = bonuses.alignment || {};
 
-  // VLRM staking and ORACLE exist on Cardano only: a Robinhood wallet gets them via a linked Cardano wallet
+  // VLRM staking and ORACLE exist on Cardano only: an EVM wallet gets them via a linked Cardano wallet
   const hasCardanoWallet =
-    !isRobinHood || (alignmentData?.linkedWallets || []).some(wallet => wallet.chainType === 'cardano');
+    !isEvm || (alignmentData?.linkedWallets || []).some(wallet => wallet.chainType === 'cardano');
 
   const totalBonusPercent = roundPercent(alignmentData?.multiplierPercent);
   const maxBonusPercent = roundPercent(alignmentData?.maxMultiplierPercent || 20);

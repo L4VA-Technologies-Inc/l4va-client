@@ -14,6 +14,8 @@ import { GoldenVerifiedBadge } from '@/components/shared/GoldenVerifiedBadge';
 import { useVaultAssetsWhitelist } from '@/services/api/queries';
 import { ChainType, ChainTypeLabels } from '@/utils/types';
 
+const ALL_CHAIN_TYPES = Object.values(ChainType);
+
 export const VaultFiltersModal = ({
   isOpen,
   onClose,
@@ -47,7 +49,7 @@ export const VaultFiltersModal = ({
       ? Array.isArray(initialFilters.chainType)
         ? initialFilters.chainType
         : [initialFilters.chainType]
-      : [ChainType.CARDANO, ChainType.ROBINHOOD],
+      : ALL_CHAIN_TYPES,
     assetWhitelist: Array.isArray(initialFilters.assetWhitelist)
       ? initialFilters.assetWhitelist
       : initialFilters.assetWhitelist
@@ -79,10 +81,7 @@ export const VaultFiltersModal = ({
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
-    chainTypes: [
-      { label: ChainTypeLabels[ChainType.CARDANO], value: ChainType.CARDANO },
-      { label: ChainTypeLabels[ChainType.ROBINHOOD], value: ChainType.ROBINHOOD },
-    ],
+    chainTypes: ALL_CHAIN_TYPES.map(chainType => ({ label: ChainTypeLabels[chainType], value: chainType })),
     assetWhitelist: assetsWhitelistData?.pages?.flatMap(page => (Array.isArray(page?.items) ? page.items : [])) || [],
   };
 
@@ -148,7 +147,7 @@ export const VaultFiltersModal = ({
       vaultStage: '',
       governance: '',
       verified: [],
-      chainType: [ChainType.CARDANO, ChainType.ROBINHOOD],
+      chainType: ALL_CHAIN_TYPES,
       assetWhitelist: [],
       contributionWindow: {
         from: '',

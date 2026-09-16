@@ -78,11 +78,13 @@ export enum ClaimStatus {
 export enum ChainType {
   CARDANO = 'cardano',
   ROBINHOOD = 'robinhood',
+  ARC = 'arc',
 }
 
 export const ChainTypeLabels: Record<ChainType, string> = {
   [ChainType.CARDANO]: 'Cardano',
   [ChainType.ROBINHOOD]: 'Robinhood',
+  [ChainType.ARC]: 'Arc',
 };
 
 // Type interfaces based on @Expose annotations

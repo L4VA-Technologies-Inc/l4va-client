@@ -12,7 +12,7 @@ const EPOCHS_PER_PAGE = 20;
 
 export const EpochsList = () => {
   const navigate = useNavigate();
-  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const { rewardsWalletAddress: walletAddress, isWalletConnected, isEvm, chainLabel } = useRewardsWalletConnection();
   const [page, setPage] = React.useState(1);
 
   const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs(EPOCHS_PER_PAGE, (page - 1) * EPOCHS_PER_PAGE);
@@ -42,11 +42,11 @@ export const EpochsList = () => {
             <div className="text-center">
               <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-white mb-2">
-                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+                {isEvm ? `Connect Your ${chainLabel} Wallet` : 'Connect Your Wallet'}
               </h2>
               <p className="text-steel-400">
-                {isRobinHood
-                  ? 'Please connect your Robinhood wallet to view your epoch rewards.'
+                {isEvm
+                  ? `Please connect your ${chainLabel} wallet to view your epoch rewards.`
                   : 'Please connect your wallet to view your epoch rewards'}
               </p>
             </div>

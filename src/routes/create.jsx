@@ -6,6 +6,7 @@ import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAuth } from '@/lib/auth/auth';
 import { useNetwork } from '@/hooks/useNetwork';
+import { ArcVaultCreationGate } from '@/components/vaults/ArcVaultCreationGate';
 
 const readJson = key => {
   try {
@@ -70,5 +71,9 @@ const CreateComponent = () => {
 };
 
 export const Route = createFileRoute('/create')({
-  component: CreateComponent,
+  component: () => (
+    <ArcVaultCreationGate>
+      <CreateComponent />
+    </ArcVaultCreationGate>
+  ),
 });

@@ -76,17 +76,44 @@ export const robinhoodChain: Chain = IS_TESTNET
 // eth_requestAccounts instead.
 const connectors = [injected({ shimDisconnect: false }), coinbaseWallet({ appName: 'L4VA' })];
 
-const chains =
-  robinhoodChain.id === robinhoodUniswapChain.id
-    ? ([robinhoodChain] as const)
-    : ([robinhoodChain, robinhoodUniswapChain] as const);
+// Arc — Circle's EVM L1, USDC is the native gas token (18 decimals).
+// Chain ID 5042 (mainnet) / 5042002 (testnet). Network via VITE_ARC_NETWORK.
+const IS_ARC_TESTNET = (import.meta.env.VITE_ARC_NETWORK || 'testnet') === 'testnet';
+const ARC_DEFAULTS = IS_ARC_TESTNET
+  ? { id: 5042002, name: 'Arc Testnet', rpc: 'https://rpc.testnet.arc.io', explorer: 'https://explorer.testnet.arc.io' }
+  : { id: 5042, name: 'Arc', rpc: 'https://rpc.mainnet.arc.io', explorer: 'https://explorer.arc.io' };
 
-const transports: Record<number, ReturnType<typeof http>> = {
-  [robinhoodChain.id]: http(robinhoodChain.rpcUrls.default.http[0]),
+export const arcChain: Chain = defineChain({
+  id: Number(import.meta.env.VITE_ARC_CHAIN_ID) || ARC_DEFAULTS.id,
+  name: ARC_DEFAULTS.name,
+  nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
+  rpcUrls: {
+    default: { http: [import.meta.env.VITE_ARC_RPC_URL || ARC_DEFAULTS.rpc] },
+  },
+  blockExplorers: {
+    default: { name: 'Arc Explorer', url: import.meta.env.VITE_ARC_EXPLORER_URL || ARC_DEFAULTS.explorer },
+  },
+  contracts: {
+    multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' },
+  },
+  testnet: IS_ARC_TESTNET,
+});
+
+/** Active wagmi chain for each EVM network the user can select. */
+export const evmChainByNetwork: Record<string, Chain> = {
+  robinhood: robinhoodChain,
+  arc: arcChain,
 };
-if (robinhoodUniswapChain.id !== robinhoodChain.id) {
-  transports[robinhoodUniswapChain.id] = http(robinhoodUniswapChain.rpcUrls.default.http[0]);
-}
+
+const chains = [
+  robinhoodChain,
+  ...(robinhoodUniswapChain.id !== robinhoodChain.id ? [robinhoodUniswapChain] : []),
+  arcChain,
+] as [Chain, ...Chain[]];
+
+const transports: Record<number, ReturnType<typeof http>> = Object.fromEntries(
+  chains.map(chain => [chain.id, http(chain.rpcUrls.default.http[0])])
+);
 
 export const wagmiConfig = createConfig({
   chains,

@@ -7,7 +7,7 @@ import { ClaimHistoryDetails } from '@/components/rewards';
 
 export const ClaimsPage = () => {
   const navigate = useNavigate();
-  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const { rewardsWalletAddress: walletAddress, isWalletConnected, isEvm, chainLabel } = useRewardsWalletConnection();
 
   const { data: transactionsData, isLoading } = useClaimTransactions(walletAddress);
 
@@ -24,8 +24,8 @@ export const ClaimsPage = () => {
           </button>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-8 text-center">
             <p className="text-steel-400">
-              {isRobinHood
-                ? 'Please connect your Robinhood wallet to view your claim history.'
+              {isEvm
+                ? `Please connect your ${chainLabel} wallet to view your claim history.`
                 : 'Connect your wallet to view claim history'}
             </p>
           </div>

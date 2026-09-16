@@ -14,6 +14,7 @@ import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmMod
 import { useLaunchVault } from '@/hooks/useLaunchVault';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { ArcVaultCreationGate } from '@/components/vaults/ArcVaultCreationGate';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -189,5 +190,9 @@ const CreateAiComponent = () => {
 };
 
 export const Route = createFileRoute('/create-ai')({
-  component: CreateAiComponent,
+  component: () => (
+    <ArcVaultCreationGate>
+      <CreateAiComponent />
+    </ArcVaultCreationGate>
+  ),
 });

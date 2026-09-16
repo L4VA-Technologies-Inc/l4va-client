@@ -31,7 +31,7 @@ import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
-  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const { rewardsWalletAddress: walletAddress, isWalletConnected, isEvm, chainLabel } = useRewardsWalletConnection();
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   // Fetch all rewards data
@@ -119,11 +119,11 @@ export const RewardsOverview = () => {
             <div className="text-center">
               <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-white mb-2">
-                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+                {isEvm ? `Connect Your ${chainLabel} Wallet` : 'Connect Your Wallet'}
               </h2>
               <p className="text-gray-400">
-                {isRobinHood
-                  ? 'Please connect your Robinhood wallet to view your rewards.'
+                {isEvm
+                  ? `Please connect your ${chainLabel} wallet to view your rewards.`
                   : 'Please connect your wallet to view your rewards'}
               </p>
             </div>
@@ -189,7 +189,7 @@ export const RewardsOverview = () => {
         </div>
 
         {/* Alignment Bonuses */}
-        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} isRobinHood={isRobinHood} />
+        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} isEvm={isEvm} />
 
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
