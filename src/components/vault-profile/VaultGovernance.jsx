@@ -30,6 +30,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { isEvmNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
@@ -116,13 +117,16 @@ export const VaultGovernance = ({ vault }) => {
   const deleteProposalMutation = useDeleteProposal();
 
   const isEvmVault = isEvmNetwork(vault?.chainType);
+  const vaultChainId = evmChainByNetwork[vault?.chainType]?.id;
 
-  // Read on-chain pause state for EVM vaults only.
+  // Read on-chain pause state for EVM vaults only. chainId is required so an Arc
+  // vault is not read against the first configured chain (Robinhood).
   const { data: isPaused } = useReadContract({
     address: vault?.contractAddress,
+    chainId: vaultChainId,
     abi: [{ type: 'function', stateMutability: 'view', name: 'paused', inputs: [], outputs: [{ type: 'bool' }] }],
     functionName: 'paused',
-    query: { enabled: isEvmVault && !!vault?.contractAddress },
+    query: { enabled: isEvmVault && !!vault?.contractAddress && !!vaultChainId },
   });
 
   const tabOptions = PROPOSAL_TABS.map(tab => ({

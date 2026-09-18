@@ -38,6 +38,8 @@ import { getWalletErrorMessage, isUserRejectedError } from '@/utils/walletErrors
 import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 import { formatDurationHuman } from '@/utils/core.utils';
 import { isEvmNetwork } from '@/hooks/useNetwork';
+import { ChainType, ChainTypeLabels } from '@/utils/types';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
@@ -52,11 +54,16 @@ const cardanoExecutionOptions = [
 ];
 
 const evmExecutionOptions = [
-  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
   { value: 'distribution', label: 'Distribution' },
   { value: 'termination', label: 'Termination' },
+];
+
+// Uniswap V3 swap / close-position is Robinhood-only; Arc has no swap deployment.
+const robinhoodExecutionOptions = [
+  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  ...evmExecutionOptions,
 ];
 
 const initialProposalData = {
@@ -65,11 +72,21 @@ const initialProposalData = {
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isEvmVault = isEvmNetwork(vault?.chainType);
-  const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
+  const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  const nativeSymbol = evmChainByNetwork[vault?.chainType]?.nativeCurrency?.symbol ?? 'ETH';
+  const activeExecutionOptions = isRobinhoodVault
+    ? robinhoodExecutionOptions
+    : isEvmVault
+      ? evmExecutionOptions
+      : cardanoExecutionOptions;
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
   const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
+    vault.vaultStatus === VAULT_STATUSES.EXPANSION
+      ? 'distribution'
+      : isRobinhoodVault || !isEvmVault
+        ? 'marketplace_action'
+        : 'expansion'
   );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
@@ -89,7 +106,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const { payFee: payEvmFee } = useEvmGovernanceFee();
 
   const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
-  const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
+  const connectWalletLabel = isEvmVault ? `${ChainTypeLabels[vault?.chainType] || 'EVM'} wallet` : 'Cardano wallet';
 
   const refreshProposals = () => queryClient.invalidateQueries({ queryKey: ['governance-proposals', vault.id] });
 
@@ -485,7 +502,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     const formattedFee = formatUnits(currentProposalFee, isEvmVault ? 18 : 6);
     // The fee is always paid in the chain's native asset, so it is labelled by
     // chain rather than by the user's display-currency preference.
-    const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
+    const feeCurrencyLabel = isEvmVault ? nativeSymbol : 'ADA';
     const isProcessing = status !== 'idle';
 
     const getButtonText = () => {
@@ -589,14 +606,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'termination' && (
               <Terminating
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('marketplace_action')}
+                onClose={() => setSelectedOption(isRobinhoodVault || !isEvmVault ? 'marketplace_action' : 'expansion')}
                 onDataChange={handleDataChange}
               />
             )}
             {selectedOption === 'burning' && (
               <Burning
                 vaultId={vault?.id}
-                onClose={() => setSelectedOption('marketplace_action')}
+                onClose={() => setSelectedOption(isRobinhoodVault || !isEvmVault ? 'marketplace_action' : 'expansion')}
                 onDataChange={handleDataChange}
                 error={error}
               />
@@ -607,7 +624,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}
                 error={error}
-                isEvmVault={isEvmVault}
+                isEvmVault={isRobinhoodVault}
               />
             )}
             {selectedOption === 'expansion' && (

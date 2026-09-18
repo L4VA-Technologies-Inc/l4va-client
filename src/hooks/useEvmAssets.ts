@@ -4,6 +4,7 @@ import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { fetchTokenMetadata, fetchWalletTokens, searchTokens, type BlockscoutWalletToken } from '@/lib/evm/blockscout';
+import { useNetwork } from '@/hooks/useNetwork';
 import type { GroupedPolicy } from '@/hooks/useAssets';
 
 const isNftType = (type: string): boolean => type === 'ERC-721' || type === 'ERC-1155';
@@ -72,13 +73,14 @@ const upsertPolicy = (byAddress: Map<string, GroupedPolicy>, incoming: GroupedPo
  */
 export const useEvmAssets = () => {
   const { address, isConnected } = useAccount();
+  const { network } = useNetwork();
 
   const {
     data: tokens,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ['evm-wallet-tokens', address],
+    queryKey: ['evm-wallet-tokens', address, network],
     queryFn: () => fetchWalletTokens(address as string),
     enabled: Boolean(address) && isConnected,
     staleTime: 1000 * 60, // 1 minute — wallet holdings change rarely mid-session
@@ -89,7 +91,7 @@ export const useEvmAssets = () => {
   // holds with what's actually indexed on the chain, same as `getCollectionNames`
   // does for Cardano policies.
   const { data: chainTokens, isLoading: isLoadingChainTokens } = useQuery({
-    queryKey: ['evm-chain-tokens'],
+    queryKey: ['evm-chain-tokens', network],
     queryFn: () => searchTokens(''),
     enabled: isConnected,
     staleTime: 1000 * 60 * 5,

@@ -64,7 +64,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId, vault 
   const handleAdaAmountChange = value => {
     setAdaAmount(value);
     // Uncheck "distribute all" if user manually changes amount
-    if (distributeAll && parseFloat(value) !== treasuryBalanceAda) {
+    if (distributeAll && parseFloat(value) !== maxDistributable) {
       setDistributeAll(false);
     }
   };
@@ -89,10 +89,10 @@ export default function Distributing({ isDisabled, onDataChange, vaultId, vault 
 
   // Auto-check "distribute all" if user enters the exact max distributable amount
   useEffect(() => {
-    if (!distributeAll && Math.abs(enteredAda - maxDistributableAda) < 0.000001 && maxDistributableAda > 0) {
+    if (!distributeAll && Math.abs(enteredAda - maxDistributable) < 0.000001 && maxDistributable > 0) {
       setDistributeAll(true);
     }
-  }, [enteredAda, maxDistributableAda, distributeAll]);
+  }, [enteredAda, maxDistributable, distributeAll]);
 
   if (isDisabled) {
     return (
@@ -122,7 +122,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId, vault 
             checked={distributeAll}
             onChange={e => handleDistributeAllChange(e.target.checked)}
             description="Distribute All"
-            disabled={treasuryBalanceAda <= 0}
+            disabled={maxDistributable <= 0}
           />
         </div>
 

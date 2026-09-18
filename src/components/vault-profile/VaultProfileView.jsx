@@ -612,7 +612,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <div className="flex items-center gap-2 text-sm text-dark-100">
               <span className="font-medium">Policy ID:</span>
               <a
-                href={getPolicyUrl(vault.policyId)}
+                href={getPolicyUrl(vault.policyId, vault.chainType)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline hover:text-orange-500 transition-colors"

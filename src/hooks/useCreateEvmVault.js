@@ -78,8 +78,9 @@ export const useCreateEvmVault = () => {
 
       // The admin signature's EIP-712 domain carries the chain id and factory, so the
       // transaction has to go to exactly those — a Robinhood signature is invalid on Arc.
+      // VITE_EVM_VAULT_FACTORY_ADDRESS is the Robinhood factory; never use it as an Arc fallback.
       const targetChainId = signedChainId ?? evmChainByNetwork[network]?.id;
-      const factoryAddress = signedFactoryAddress ?? FALLBACK_FACTORY_ADDRESS;
+      const factoryAddress = signedFactoryAddress ?? (network === 'robinhood' ? FALLBACK_FACTORY_ADDRESS : undefined);
       if (!targetChainId || !factoryAddress) {
         throw new Error(`No VaultFactory configured for ${network}`);
       }
