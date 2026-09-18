@@ -10,6 +10,7 @@ import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
 import { TokenImage } from '@/components/shared/TokenImage.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -27,7 +28,7 @@ const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, isAda } = useCurrency();
   const limit = 10;
-  const isRobinhoodVault = vault?.chainType?.toLowerCase() === 'robinhood' || vault?.id === 'robinhood';
+  const isRobinhoodVault = isEvmNetwork(vault?.chainType);
   const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
 
   const [appliedFilters, setAppliedFilters] = useState({

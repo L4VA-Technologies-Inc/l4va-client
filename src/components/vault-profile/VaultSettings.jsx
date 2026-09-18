@@ -16,6 +16,8 @@ import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/Confir
 import { CancelVaultConfirmModal } from '@/components/modals/CancelVaultConfirmModal';
 import { cn } from '@/lib/utils';
 import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
+import { isEvmNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const collectionDisplayName = asset =>
   asset.collectionName?.trim() || asset.name?.trim() || asset.policyName?.trim() || null;
@@ -101,7 +103,8 @@ export const VaultSettings = ({ vault }) => {
   };
 
   const isOwner = user?.id === vault.owner.id;
-  const isRobinhoodVault = vault?.chainType === 'robinhood';
+  const isRobinhoodVault = isEvmNetwork(vault?.chainType);
+  const nativeSymbol = evmChainByNetwork[vault?.chainType]?.nativeCurrency.symbol ?? 'ETH';
   // Cancel Vault is not supported on Robinhood (EVM) vaults.
   const canCancelVaultByOwner = isOwner && vault?.canCancelVault && !isRobinhoodVault;
   // Burn Vault is not supported on Robinhood (EVM) vaults.
@@ -227,7 +230,7 @@ export const VaultSettings = ({ vault }) => {
             />
             <InfoRow
               label="Implied Vault Valuation @ Lock"
-              symbol="ADA"
+              symbol={vault.valuationCurrency || (isRobinhoodVault ? nativeSymbol : 'ADA')}
               value={vault.valuationAmount ? vault.valuationAmount : 0}
             />
             <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />

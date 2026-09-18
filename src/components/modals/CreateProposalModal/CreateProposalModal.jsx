@@ -33,11 +33,11 @@ import {
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
-import { ChainType } from '@/utils/types';
 import { useAuth } from '@/lib/auth/auth';
 import { getWalletErrorMessage, isUserRejectedError } from '@/utils/walletErrors';
 import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 import { formatDurationHuman } from '@/utils/core.utils';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
@@ -64,7 +64,7 @@ const initialProposalData = {
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
-  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isEvmVault = isEvmNetwork(vault?.chainType);
   const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
@@ -196,7 +196,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.fts = proposalData.fts || [];
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
-        proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        if (isEvmVault) {
+          // Base units as a string — 18-decimal amounts exceed the safe integer range.
+          proposalPayload.distributionAmount = proposalData.distributionAmount;
+          proposalPayload.distributionAsset = proposalData.distributionAsset;
+        } else {
+          proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        }
       } else if (selectedOption === 'expansion') {
         if (isEvmVault) {
           proposalPayload.expansionEvmAssets = proposalData.expansionEvmAssets || [];
@@ -575,6 +581,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'distribution' && (
               <Distributing
                 isDisabled={availableExecutionOptions.find(opt => opt.value === 'distribution')?.disabled}
+                vault={vault}
                 vaultId={vault?.id}
                 onDataChange={handleDataChange}
               />

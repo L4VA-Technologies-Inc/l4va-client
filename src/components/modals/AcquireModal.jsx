@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useAccount, useBalance } from 'wagmi';
-import { formatUnits, parseEther } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown, ArrowLeftRight } from 'lucide-react';
 
-import { robinhoodChain } from '@/lib/evm/wagmi.config';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { formatNum } from '@/utils/core.utils';
@@ -28,11 +29,16 @@ export const AcquireModal = ({ vault, onClose }) => {
   const evmAcquire = useEvmAcquireTransaction();
 
   // ── Chain awareness ────────────────────────────────────────────────────
-  // Robinhood vaults are acquired with ETH (EVM), everything else with ADA.
-  const isEth = vault?.chainType === 'robinhood';
-  const assetSymbol = isEth ? 'ETH' : 'ADA';
-  // Chain-appropriate input ergonomics: ETH is fractional, ADA is coarse.
-  const minAcquire = isEth ? 0.001 : 5;
+  // Robinhood: native ETH. Arc: native USDC. Cardano: ADA.
+  const chainType = vault?.chainType;
+  const isEvm = isEvmNetwork(chainType);
+  const evmChain = isEvm ? evmChainByNetwork[chainType] : null;
+  const assetSymbol = evmChain?.nativeCurrency.symbol ?? 'ADA';
+  // ETH is volatile and priced in thousands; Arc's native USDC is a dollar. The two
+  // need different step sizes, minimums and USD conversion.
+  const isEth = assetSymbol === 'ETH';
+  const nativeDecimals = evmChain?.nativeCurrency.decimals ?? 18;
+  const minAcquire = isEth ? 0.001 : isEvm ? 0.01 : 5;
   const stepAmount = isEth ? 0.01 : 1;
   const maxInputDecimals = isEth ? 6 : 2;
 
@@ -41,33 +47,33 @@ export const AcquireModal = ({ vault, onClose }) => {
   // TODO: Replace with real-time price API endpoint for better accuracy
   const nativePrice = useMemo(() => {
     const totalUsd = vault.assetsPrices?.totalValueUsd || 0;
-    const totalNative = isEth ? vault.assetsPrices?.totalValueEth || 0 : vault.assetsPrices?.totalValueAda || 0;
+    const totalNative = isEth
+      ? vault.assetsPrices?.totalValueEth || 0
+      : isEvm
+        ? vault.assetsPrices?.totalValueUsd || 0
+        : vault.assetsPrices?.totalValueAda || 0;
 
     if (totalUsd > 0 && totalNative > 0) {
       return totalUsd / totalNative;
     }
 
-    // Fallback to approximate prices if vault data unavailable
-    return isEth ? 3000 : 0.35; // Approximate ETH ~$3000, ADA ~$0.35
-  }, [vault.assetsPrices, isEth]);
+    if (isEth) return 3000;
+    if (isEvm) return 1; // Arc native USDC
+    return 0.35;
+  }, [vault.assetsPrices, isEth, isEvm]);
 
-  // ETH balance comes from the wagmi wallet; ADA from the weld wallet.
   const { address: evmAddress } = useAccount();
-  const { data: ethBalance } = useBalance({
+  const { data: nativeBalance } = useBalance({
     address: evmAddress,
-    chainId: robinhoodChain.id,
-    query: { enabled: isEth && Boolean(evmAddress) },
+    chainId: evmChain?.id,
+    query: { enabled: isEvm && Boolean(evmAddress) && Boolean(evmChain?.id) },
   });
-  // wagmi v3 dropped `data.formatted`; format the raw bigint `value` ourselves.
-  const ethBalanceNum = ethBalance ? Number(formatUnits(ethBalance.value, ethBalance.decimals)) : 0;
-  const walletBalance = isEth ? ethBalanceNum : wallet.balanceAda || 0;
+  const nativeBalanceNum = nativeBalance ? Number(formatUnits(nativeBalance.value, nativeBalance.decimals)) : 0;
+  const walletBalance = isEvm ? nativeBalanceNum : wallet.balanceAda || 0;
 
-  // Use vault-specific max acquire amount if available, otherwise no practical cap
-  // for ETH / fallback to 10M ADA for Cardano.
   const maxAcquireAmount = isEth ? 100 : vault.maxAcquireAmountAda || 10000000;
-  // Keep ADA integer-floored (existing behaviour); ETH keeps its fractional precision.
   const cappedMax = Math.min(walletBalance, maxAcquireAmount);
-  const maxValue = isEth ? cappedMax : Math.floor(cappedMax);
+  const maxValue = isEvm ? cappedMax : Math.floor(cappedMax);
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
 
@@ -80,8 +86,16 @@ export const AcquireModal = ({ vault, onClose }) => {
   const effectiveAmount = nativeAmount;
 
   // TVL (Total Value Locked) - the value of contributed assets, in the chain's native unit
-  const tvl = isEth ? vault.assetsPrices?.totalValueEth || 0 : vault.assetsPrices?.totalValueAda || 0;
-  const totalAcquired = isEth ? vault.assetsPrices?.totalAcquiredEth || 0 : vault.assetsPrices?.totalAcquiredAda || 0;
+  const tvl = isEth
+    ? vault.assetsPrices?.totalValueEth || 0
+    : isEvm
+      ? vault.assetsPrices?.totalValueUsd || 0
+      : vault.assetsPrices?.totalValueAda || 0;
+  const totalAcquired = isEth
+    ? vault.assetsPrices?.totalAcquiredEth || 0
+    : isEvm
+      ? vault.assetsPrices?.totalAcquiredUsd || 0
+      : vault.assetsPrices?.totalAcquiredAda || 0;
 
   // Fair value = expected total if FDV equals TVL
   // e.g., if TVL = 10,000 and tokensForAcquires = 50%, fairValue = 5,000
@@ -116,17 +130,18 @@ export const AcquireModal = ({ vault, onClose }) => {
   const handleAcquire = async () => {
     if (!acquireAmount || parseFloat(acquireAmount) <= 0) return;
 
-    // ── EVM (Robinhood) branch ─────────────────────────────────────────────
-    // On the V3 vault, "acquire" is contributeNative() with value = ETH wei
-    // during the AcquireWindow. Backend signs the authorization; wallet just
-    // submits the payable call.
-    if (isEth) {
+    // ── EVM branch (Robinhood ETH / Arc USDC) ──────────────────────────────
+    // On the V3 vault, "acquire" is contributeNative() during the AcquireWindow.
+    if (isEvm) {
       setStatus('building');
-      // Use nativeAmount (converted from USD if needed) and convert to wei
-      const weiAmount = parseEther(String(nativeAmount));
+      const weiAmount = parseUnits(
+        Number(nativeAmount).toFixed(Math.min(maxInputDecimals, nativeDecimals)),
+        nativeDecimals
+      );
       const hash = await evmAcquire.sendTransaction({
         vaultId: vault.id,
-        amountWei: weiAmount.toString(), // Send wei as string to preserve precision
+        amountWei: weiAmount.toString(),
+        nativeSymbol: assetSymbol,
       });
       setStatus('idle');
       if (hash) onClose();
@@ -308,7 +323,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   token allocation
                 </div>
               )}
-              {!isEth && maxAcquireAmount < 10000000 && (
+              {!isEvm && maxAcquireAmount < 10000000 && (
                 <div className="mt-3 text-xs text-zinc-400">
                   Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} {assetSymbol} per transaction
                 </div>
@@ -369,20 +384,20 @@ export const AcquireModal = ({ vault, onClose }) => {
                 className="uppercase"
                 disabled={
                   status !== 'idle' ||
-                  (!isEth && wallet.isUpdatingUtxos) ||
+                  (!isEvm && wallet.isUpdatingUtxos) ||
                   effectiveAmount < minAcquire ||
                   !vault.isAcquireWindowActive
                 }
                 onClick={handleAcquire}
                 icon={status !== 'idle' ? Spinner : null}
               >
-                {!isEth && wallet.isUpdatingUtxos
+                {!isEvm && wallet.isUpdatingUtxos
                   ? 'Updating UTXOs...'
                   : status === 'idle'
                     ? 'ACQUIRE'
                     : status.toUpperCase()}
               </PrimaryButton>
-              {!isEth && (
+              {!isEvm && (
                 <div className="text-xs text-dark-100">
                   Transaction cost:{' '}
                   <span className="text-white font-medium">

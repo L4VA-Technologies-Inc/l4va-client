@@ -514,7 +514,7 @@ export const AiVaultPreview = ({
   onGenerateImageRequest,
 }) => {
   const { currencyLabel } = useCurrency();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const { openModal } = useModalControls();
   const previousVault = useRef(vault);
   const [changedFields, setChangedFields] = useState(() => new Set());
@@ -619,9 +619,7 @@ export const AiVaultPreview = ({
   };
 
   const privacyOptions = (
-    isRobinHood
-      ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC)
-      : VAULT_PRIVACY_OPTIONS
+    isEvm ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC) : VAULT_PRIVACY_OPTIONS
   ).map(option => ({ value: option.name, label: option.label.replace(/ Vault$/i, '') }));
 
   const isPrivate = vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE;
@@ -638,9 +636,9 @@ export const AiVaultPreview = ({
     label: option.label,
   }));
   const valuationCurrencyOptions = [
-    ...(isRobinHood ? [] : [{ value: 'ADA', label: 'ADA' }]),
+    ...(isEvm ? [] : [{ value: 'ADA', label: 'ADA' }]),
     { value: 'USD', label: 'USD' },
-    ...(isRobinHood ? [{ value: 'ETH', label: 'ETH' }] : []),
+    ...(isEvm ? [{ value: 'ETH', label: 'ETH' }] : []),
   ];
   const acquireMinDate =
     vault.contributionOpenWindowType === 'custom' && vault.contributionOpenWindowTime

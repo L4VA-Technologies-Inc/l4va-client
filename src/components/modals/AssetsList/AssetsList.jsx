@@ -65,7 +65,6 @@ export const AssetsList = ({
       } else {
         const hasAmount = selectedAmount[item.tokenId] && selectedAmount[item.tokenId] !== '0';
         const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
-
         return (
           <FTItem
             key={item.tokenId}

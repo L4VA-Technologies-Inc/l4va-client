@@ -3,19 +3,23 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchCh
 
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { VAULT_FACTORY_ABI } from '@/lib/evm/vaultFactory.abi';
-import { robinhoodChain } from '@/lib/evm/wagmi.config';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
+import { useNetwork } from '@/hooks/useNetwork';
 
-const FACTORY_ADDRESS = import.meta.env.VITE_EVM_VAULT_FACTORY_ADDRESS;
+/** Fallback for older backends that don't return the factory with the signature. */
+const FALLBACK_FACTORY_ADDRESS = import.meta.env.VITE_EVM_VAULT_FACTORY_ADDRESS;
 
 /**
- * Two-step EVM vault creation:
- *  1. POST /vaults  (chainType=robinhood) → get admin EIP-712 signature + VaultConfig
- *  2. writeContract(VaultFactory.createVault) → creator pays gas, tx submitted on-chain
+ * Two-step EVM vault creation, on whichever EVM chain is selected (Robinhood, Arc):
+ *  1. POST /vaults (chainType) → admin EIP-712 signature + VaultConfig + the chain
+ *     and factory that signature is bound to
+ *  2. writeContract(VaultFactory.createVault) → creator pays gas on that chain
  *  3. Wait for receipt
- *  4. POST /vaults/publish (chainType=robinhood, txHash) → backend marks vault published
+ *  4. POST /vaults/publish (txHash) → backend marks vault published
  */
 export const useCreateEvmVault = () => {
   const { address: creatorAddress, chainId: currentChainId } = useAccount();
+  const { network } = useNetwork();
   const { writeContractAsync } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
 
@@ -24,14 +28,16 @@ export const useCreateEvmVault = () => {
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState(null);
 
+  const [receiptChainId, setReceiptChainId] = useState(undefined);
+
   const { isLoading: isWaitingReceipt, isSuccess: receiptSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
-    chainId: robinhoodChain.id,
+    chainId: receiptChainId,
   });
 
   /**
-   * @param {object} vaultData — the same vaultData object used for Cardano creation,
-   *                             augmented with chainType: 'robinhood'
+   * @param {object} vaultData — the same vaultData object used for Cardano creation;
+   *                             the chain comes from the selected network
    * @returns {Promise<{ dbVaultId: string, onChainTxHash: string }>}
    */
   const createEvmVault = useCallback(
@@ -45,7 +51,7 @@ export const useCreateEvmVault = () => {
       try {
         const { data } = await VaultsApiProvider.createVault({
           ...vaultData,
-          chainType: 'robinhood',
+          chainType: network,
         });
         prepareRes = data;
       } finally {
@@ -59,6 +65,8 @@ export const useCreateEvmVault = () => {
         adminNonce,
         deadline,
         adminSignature,
+        chainId: signedChainId,
+        factoryAddress: signedFactoryAddress,
       } = prepareRes;
 
       if (!cfg || !adminSignature) {
@@ -68,17 +76,26 @@ export const useCreateEvmVault = () => {
       // bigint conversion — values come as strings from JSON
       const cfgForContract = normalizeBigInts(cfg);
 
+      // The admin signature's EIP-712 domain carries the chain id and factory, so the
+      // transaction has to go to exactly those — a Robinhood signature is invalid on Arc.
+      const targetChainId = signedChainId ?? evmChainByNetwork[network]?.id;
+      const factoryAddress = signedFactoryAddress ?? FALLBACK_FACTORY_ADDRESS;
+      if (!targetChainId || !factoryAddress) {
+        throw new Error(`No VaultFactory configured for ${network}`);
+      }
+      setReceiptChainId(targetChainId);
+
       // ── Step 2: ensure wallet is on the correct chain, then submit ───────
-      if (currentChainId !== robinhoodChain.id) {
-        await switchChainAsync({ chainId: robinhoodChain.id });
+      if (currentChainId !== targetChainId) {
+        await switchChainAsync({ chainId: targetChainId });
       }
 
       const hash = await writeContractAsync({
-        address: FACTORY_ADDRESS,
+        address: factoryAddress,
         abi: VAULT_FACTORY_ABI,
         functionName: 'createVault',
         args: [cfgForContract, BigInt(adminNonce), BigInt(deadline), adminSignature],
-        chainId: robinhoodChain.id,
+        chainId: targetChainId,
         account: creatorAddress,
       });
 
@@ -95,7 +112,7 @@ export const useCreateEvmVault = () => {
           vaultId: dbVaultId,
           txId: transactionId,
           txHash: hash,
-          chainType: 'robinhood',
+          chainType: network,
         });
       } finally {
         setIsConfirming(false);
@@ -103,7 +120,7 @@ export const useCreateEvmVault = () => {
 
       return { dbVaultId, onChainTxHash: hash };
     },
-    [creatorAddress, writeContractAsync]
+    [creatorAddress, currentChainId, network, switchChainAsync, writeContractAsync]
   );
 
   return {

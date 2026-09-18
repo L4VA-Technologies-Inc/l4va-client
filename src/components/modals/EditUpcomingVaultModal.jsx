@@ -171,12 +171,15 @@ export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
       onClose();
     } catch (err) {
       const responseData = err?.response?.data;
-      const message = responseData?.message;
-      if (message && message.toLowerCase().includes('ticker')) {
+      const rawMessage = responseData?.message;
+      const message = Array.isArray(rawMessage)
+        ? rawMessage.filter(item => typeof item === 'string').join('. ')
+        : rawMessage;
+      if (message && typeof message === 'string' && message.toLowerCase().includes('ticker')) {
         setErrors(prev => ({ ...prev, vaultTokenTicker: message }));
         toast.error(message);
       } else {
-        toast.error(message || 'Failed to update vault settings');
+        toast.error(typeof message === 'string' ? message : 'Failed to update vault settings');
       }
     } finally {
       setIsSaving(false);

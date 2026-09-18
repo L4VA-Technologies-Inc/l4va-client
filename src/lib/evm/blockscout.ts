@@ -1,14 +1,20 @@
-// Blockscout REST client for the Robinhood Chain explorer.
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
+
+// Blockscout REST client for the EVM chain explorers (Robinhood, Arc).
 //
 // EVM wallets (and wagmi) cannot enumerate the tokens an address holds — there
 // is no on-chain "wallet → its tokens" index. Blockscout builds that index off
 // Transfer logs and exposes it, so we use it as the enumeration source. The
 // wallet address itself still comes from wagmi (`useAccount`).
 
-const BLOCKSCOUT_URL = import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL;
-const ROBINHOOD_NETWORK = String(import.meta.env.VITE_ROBINHOOD_NETWORK || '').toLowerCase();
-const IS_BLOCKSCOUT_TESTNET =
-  ROBINHOOD_NETWORK === 'testnet' || (ROBINHOOD_NETWORK !== 'mainnet' && /(^|\.)testnet\./i.test(BLOCKSCOUT_URL || ''));
+// Each EVM chain has its own Blockscout instance; the selected network decides which
+// one we query, so a vault's tokens are always read from that vault's explorer.
+const explorerUrl = (): string | undefined => {
+  const network = localStorage.getItem('selectedNetwork') || '';
+  return evmChainByNetwork[network]?.blockExplorers?.default?.url;
+};
+
+const isBlockscoutTestnet = (base?: string): boolean => /(^|\.)testnet\./i.test(base || '');
 
 // Safety cap so a paginating wallet with thousands of tokens can't loop forever.
 const MAX_PAGES = 10;
@@ -111,7 +117,7 @@ const isBlockscoutTokenVerified = (token: {
   is_smart_contract_verified?: boolean;
   reputation?: string | null;
 }): boolean => {
-  if (IS_BLOCKSCOUT_TESTNET) {
+  if (isBlockscoutTestnet(explorerUrl())) {
     return isBlockscoutTestnetVerified(token);
   }
 
@@ -160,12 +166,13 @@ const normalizeQuickSearchToken = (item: BlockscoutQuickSearchItem): BlockscoutW
  * following Blockscout's cursor pagination up to {@link MAX_PAGES}.
  */
 export const fetchWalletTokens = async (address: string): Promise<BlockscoutWalletToken[]> => {
-  if (!BLOCKSCOUT_URL) {
-    console.error('VITE_ROBINHOOD_BLOCKSCOUT_URL is not set; cannot fetch EVM wallet tokens');
+  const blockscoutUrl = explorerUrl();
+  if (!blockscoutUrl) {
+    console.error(`No block explorer configured for the selected network; cannot fetch EVM wallet tokens`);
     return [];
   }
 
-  const base = normalizeBaseUrl(BLOCKSCOUT_URL);
+  const base = normalizeBaseUrl(blockscoutUrl);
   const tokens: BlockscoutWalletToken[] = [];
   let nextPageParams: Record<string, unknown> | null = null;
 
@@ -205,12 +212,13 @@ export const fetchWalletTokens = async (address: string): Promise<BlockscoutWall
  * contract addresses that don't show up in {@link fetchWalletTokens}.
  */
 export const fetchTokenMetadata = async (address: string): Promise<BlockscoutWalletToken | null> => {
-  if (!BLOCKSCOUT_URL) {
-    console.error('VITE_ROBINHOOD_BLOCKSCOUT_URL is not set; cannot fetch EVM token metadata');
+  const blockscoutUrl = explorerUrl();
+  if (!blockscoutUrl) {
+    console.error(`No block explorer configured for the selected network; cannot fetch EVM token metadata`);
     return null;
   }
 
-  const base = normalizeBaseUrl(BLOCKSCOUT_URL);
+  const base = normalizeBaseUrl(blockscoutUrl);
 
   try {
     const response = await fetch(`${base}/api/v2/tokens/${address}`);
@@ -230,12 +238,13 @@ export const fetchTokenMetadata = async (address: string): Promise<BlockscoutWal
  * Blockscout's default listing, which is sorted by holder count.
  */
 export const searchTokens = async (query = ''): Promise<BlockscoutWalletToken[]> => {
-  if (!BLOCKSCOUT_URL) {
-    console.error('VITE_ROBINHOOD_BLOCKSCOUT_URL is not set; cannot search EVM tokens');
+  const blockscoutUrl = explorerUrl();
+  if (!blockscoutUrl) {
+    console.error(`No block explorer configured for the selected network; cannot search EVM tokens`);
     return [];
   }
 
-  const base = normalizeBaseUrl(BLOCKSCOUT_URL);
+  const base = normalizeBaseUrl(blockscoutUrl);
 
   // Free-text search quality is better on quick search, and includes the
   // admin verification marker we trust for verified-only whitelist results.

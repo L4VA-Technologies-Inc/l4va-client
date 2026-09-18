@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaSelect } from '@/components/shared/LavaSelect';
@@ -9,14 +11,27 @@ import {
   VALUE_METHOD_HINT,
   MIN_CONTRIBUTION_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
+import { useNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
-export const Private = ({ data, errors = {}, updateField, isRobinHood = false }) => {
+export const Private = ({ data, errors = {}, updateField, isEvm = false }) => {
   const { valueMethod, privacy: vaultPrivacy } = data;
+  const { network } = useNetwork();
+  // Robinhood settles in ETH, Arc in USDC.
+  const nativeSymbol = evmChainByNetwork[network]?.nativeCurrency.symbol ?? 'ETH';
+
+  // The default vault state starts on ADA; on an EVM chain that option does not
+  // exist, so move it to that chain's native token instead of showing ADA.
+  useEffect(() => {
+    if (isEvm && data.valuationCurrency === 'ADA') {
+      updateField('valuationCurrency', nativeSymbol);
+    }
+  }, [isEvm, data.valuationCurrency, nativeSymbol, updateField]);
 
   const valuationCurrencyOptions = [
-    ...(isRobinHood ? [] : [{ id: 'ADA', label: 'ADA' }]),
+    ...(isEvm ? [] : [{ id: 'ADA', label: 'ADA' }]),
     { id: 'USD', label: 'USD' },
-    ...(isRobinHood ? [{ id: 'ETH', label: 'ETH' }] : []),
+    ...(isEvm ? [{ id: nativeSymbol, label: nativeSymbol }] : []),
   ];
 
   const valueMethodOptions =

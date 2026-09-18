@@ -29,7 +29,7 @@ import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
-import { ChainType } from '@/utils/types';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
@@ -115,7 +115,7 @@ export const VaultGovernance = ({ vault }) => {
   const queryClient = useQueryClient();
   const deleteProposalMutation = useDeleteProposal();
 
-  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isEvmVault = isEvmNetwork(vault?.chainType);
 
   // Read on-chain pause state for EVM vaults only.
   const { data: isPaused } = useReadContract({

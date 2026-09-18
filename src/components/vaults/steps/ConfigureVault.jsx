@@ -29,6 +29,7 @@ export const ConfigureVault = ({
   deletingPresetId,
   onRemoveWhitelistItem,
 }) => {
+  const isAcquireOnly = Boolean(data.isAcquireOnly) || data.preset === 'acquire_only';
   const { isCardano } = useNetwork();
   const { currencyLabel } = useCurrency();
 
@@ -225,19 +226,23 @@ export const ConfigureVault = ({
       </div>
 
       <div className="space-y-12">
-        <div>
-          <LavaWhitelistWithCaps
-            required
-            label="Asset Whitelist"
-            setWhitelist={assets => updateField('assetsWhitelist', assets)}
-            whitelist={data.assetsWhitelist || []}
-            errors={errors}
-            vaultType={data.type}
-            isExpandable={data.isExpandableAssetWhitelist}
-            onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
-          />
-          {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
-        </div>
+        {/* Acquire-only vaults have no contribution phase, so nobody ever sends these
+            assets — asking for a whitelist (and marking it required) is meaningless. */}
+        {!isAcquireOnly && (
+          <div>
+            <LavaWhitelistWithCaps
+              required
+              label="Asset Whitelist"
+              setWhitelist={assets => updateField('assetsWhitelist', assets)}
+              whitelist={data.assetsWhitelist || []}
+              errors={errors}
+              vaultType={data.type}
+              isExpandable={data.isExpandableAssetWhitelist}
+              onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
+            />
+            {errors.assetsWhitelist && <p className="text-red-600 mt-2 text-sm">{errors.assetsWhitelist}</p>}
+          </div>
+        )}
 
         {data.privacy === VAULT_PRIVACY_TYPES.PRIVATE && data.valueMethod === 'lbe' && (
           <div>

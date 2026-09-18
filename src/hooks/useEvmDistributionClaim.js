@@ -3,45 +3,38 @@ import toast from 'react-hot-toast';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 
-import { VAULT_TERMINATION_ABI } from '@/lib/evm/vault.abi';
+import { VAULT_DISTRIBUTION_ABI } from '@/lib/evm/vault.abi';
 import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
 
 /**
- * EVM (Robinhood) termination redemption.
+ * Claim one open distribution on an EVM vault.
  *
- * When a vault is `terminating`, the V6 contract holds a fixed redemption rate
- * per distributable asset. `redeem(recipient)` burns the caller's ENTIRE VT
- * balance and pays their pro-rata share of every committed asset in one tx.
- * There is no backend prepare step — the contract computes everything.
+ * A passed Distribution proposal only reserves the pot inside the vault
+ * contract — nothing is pushed to holders. Each holder pulls their own share
+ * with `claimDistribution(id, recipient)`. Unlike `redeem`, this does NOT burn
+ * VT: the same holder keeps claiming every later distribution.
  *
- * Pays strictly to the connected wallet (recipient = self); a holder who needs
- * a different recipient (e.g. a token that blacklists their address) can be
- * handled by the operator's `redeemFor` path.
+ * Pays strictly to the connected wallet, as the redeem path does.
  */
-export const useEvmRedeemTransaction = () => {
+export const useEvmDistributionClaim = () => {
   const [status, setStatus] = useState('idle');
-  const [txHash, setTxHash] = useState(null);
+  const [claimingId, setClaimingId] = useState(null);
   const [error, setError] = useState(null);
 
   const { address: holder, chainId: currentChainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
 
-  const redeem = useCallback(
-    async ({ vaultAddress, chainId }) => {
+  const claim = useCallback(
+    async ({ vaultAddress, chainId, distributionId }) => {
       setError(null);
-      setTxHash(null);
 
       if (!holder) {
-        const msg = 'Wallet not connected';
-        setError(msg);
-        toast.error(msg);
+        toast.error('Wallet not connected');
         return null;
       }
       if (!vaultAddress) {
-        const msg = 'Vault contract address unavailable';
-        setError(msg);
-        toast.error(msg);
+        toast.error('Vault contract address unavailable');
         return null;
       }
 
@@ -52,12 +45,13 @@ export const useEvmRedeemTransaction = () => {
           await switchChainAsync({ chainId: targetChainId });
         }
 
+        setClaimingId(String(distributionId));
         setStatus('signing');
         const hash = await writeContractAsync({
           address: vaultAddress,
-          abi: VAULT_TERMINATION_ABI,
-          functionName: 'redeem',
-          args: [holder],
+          abi: VAULT_DISTRIBUTION_ABI,
+          functionName: 'claimDistribution',
+          args: [BigInt(distributionId), holder],
           account: holder,
           chainId: targetChainId,
         });
@@ -65,33 +59,26 @@ export const useEvmRedeemTransaction = () => {
         setStatus('submitting');
         await waitForTransactionReceipt(wagmiConfig, { hash, chainId: targetChainId });
 
-        setTxHash(hash);
-        toast.success('Redemption submitted — your VT was burned and your share paid out');
+        toast.success('Distribution claimed — your share is in your wallet');
         setStatus('idle');
+        setClaimingId(null);
         return hash;
       } catch (err) {
-        const errorMessage = err?.response?.data?.message || err?.shortMessage || err?.message || 'Redemption failed';
+        const errorMessage = err?.shortMessage || err?.message || 'Claim failed';
         setError(errorMessage);
         toast.error(errorMessage, { className: '!max-w-[700px]', duration: 10000 });
         setStatus('idle');
+        setClaimingId(null);
         return null;
       }
     },
     [holder, currentChainId, switchChainAsync, writeContractAsync]
   );
 
-  const reset = useCallback(() => {
-    setStatus('idle');
-    setTxHash(null);
-    setError(null);
-  }, []);
-
   return {
-    status,
-    txHash,
+    claim,
+    claimingId,
     error,
-    redeem,
-    reset,
     isProcessing: ['signing', 'submitting'].includes(status),
   };
 };

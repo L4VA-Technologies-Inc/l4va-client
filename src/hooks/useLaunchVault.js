@@ -18,7 +18,7 @@ const BALANCE_STALENESS_MS = 5 * 60 * 1000;
 export const useLaunchVault = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const wallet = useWallet('handler', 'isConnected');
   const { isConnected: isEvmConnected } = useAccount();
   const { createEvmVault } = useCreateEvmVault();
@@ -29,7 +29,7 @@ export const useLaunchVault = () => {
     async (vaultData, { onSuccess } = {}) => {
       await vaultSchema.validate(vaultData, { abortEarly: false });
 
-      if (isRobinHood) {
+      if (isEvm) {
         if (!isEvmConnected) throw new Error('Connect your wallet to launch the vault.');
 
         const formattedData = formatVaultData(vaultData, true);
@@ -92,7 +92,7 @@ export const useLaunchVault = () => {
       createEvmVault,
       fetchVlrmBalance,
       isEvmConnected,
-      isRobinHood,
+      isEvm,
       lastUpdated,
       navigate,
       queryClient,

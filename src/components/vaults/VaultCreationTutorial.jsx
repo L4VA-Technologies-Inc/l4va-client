@@ -3,12 +3,13 @@ import { Info, BookOpen } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
+import { ChainTypeLabels } from '@/utils/types';
 
 export const VaultCreationTutorial = () => {
-  const { isRobinHood } = useNetwork();
+  const { network, isEvm } = useNetwork();
   const { currencyLabel } = useCurrency();
-  const anyTokenLabel = isRobinHood ? 'Any Token' : 'Any CNT';
-  const anyTokenDescription = isRobinHood ? 'Any Robinhood-supported token' : 'Any Cardano Native Token';
+  const anyTokenLabel = isEvm ? 'Any Token' : 'Any CNT';
+  const anyTokenDescription = isEvm ? `Any ${ChainTypeLabels[network]}-supported token` : 'Any Cardano Native Token';
 
   const sampleVault = {
     name: 'Premium NFT Collection Vault',

@@ -2,6 +2,12 @@
  * Messages for proposal execution status
  */
 
+/** Native payout token per EVM chain; absent for Cardano. */
+const EVM_CHAIN_LABELS = {
+  robinhood: 'ETH',
+  arc: 'USDC',
+};
+
 const getPaymentAsset = () => {
   const selectedCurrency = typeof localStorage !== 'undefined' ? localStorage.getItem('selectedCurrency') : null;
   if (selectedCurrency === 'eth') return 'ETH';
@@ -28,6 +34,10 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
   success: {
     burning: 'Assets have been successfully burned and removed from the vault.',
     distribution: currencyLabel => `${currencyLabel} has been successfully distributed to all eligible VT holders.`,
+    // EVM pays nobody automatically: execution only reserves the pot inside the
+    // vault contract, and each holder pulls their own share from the vault page.
+    distributionEvm: currencyLabel =>
+      `${currencyLabel} has been reserved for all eligible VT holders. Claim your share from the vault page before the claim window closes — it is not sent automatically.`,
     staking: 'Assets have been successfully staked according to the proposal.',
     asset_whitelist_update: 'New assets have been successfully added to the vault whitelist.',
     expansion: 'Vault expansion has been successfully opened. New assets can now be contributed.',
@@ -87,8 +97,13 @@ export const getSuccessMessage = (proposalType, vault = null) => {
     return PROPOSAL_EXECUTION_MESSAGES.success.termination.default;
   }
 
-  const message = PROPOSAL_EXECUTION_MESSAGES.success[proposalType] || PROPOSAL_EXECUTION_MESSAGES.success.default;
-  return typeof message === 'function' ? message(getPaymentAsset()) : message;
+  const evmChain = EVM_CHAIN_LABELS[vault?.chainType];
+  const key = proposalType === 'distribution' && evmChain ? 'distributionEvm' : proposalType;
+
+  const message = PROPOSAL_EXECUTION_MESSAGES.success[key] || PROPOSAL_EXECUTION_MESSAGES.success.default;
+  // On an EVM vault the payout asset is that chain's native token, not whatever
+  // currency the user happens to have selected in the header.
+  return typeof message === 'function' ? message(evmChain ?? getPaymentAsset()) : message;
 };
 
 /**

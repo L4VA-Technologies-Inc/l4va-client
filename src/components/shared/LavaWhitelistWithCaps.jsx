@@ -75,7 +75,7 @@ export const LavaWhitelistWithCaps = ({
   const pendingFocusIdRef = useRef(null);
   const searchTimers = useRef({});
 
-  const { isRobinHood } = useNetwork();
+  const { network, isEvm } = useNetwork();
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
   const { isConnected: isEvmConnected } = useAccount();
 
@@ -84,15 +84,13 @@ export const LavaWhitelistWithCaps = ({
   // stub, so only the active chain's wallet is queried.
   const cardanoAssets = useAssets();
   const evmAssets = useEvmAssets();
-  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = isRobinHood
-    ? evmAssets
-    : cardanoAssets;
+  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = isEvm ? evmAssets : cardanoAssets;
 
-  const isWalletConnected = isRobinHood ? isEvmConnected : wallet.isConnected;
+  const isWalletConnected = isEvm ? isEvmConnected : wallet.isConnected;
 
   // On EVM the identifier is a token contract address, not a Cardano policy id.
   // Only override the default label so explicit caller placeholders still win.
-  const effectivePlaceholder = isRobinHood
+  const effectivePlaceholder = isEvm
     ? itemPlaceholder.includes('Policy ID')
       ? 'Search token or paste contract address'
       : itemPlaceholder
@@ -385,7 +383,7 @@ export const LavaWhitelistWithCaps = ({
   // token list. This also lets users paste any contract address manually and
   // have it looked up.
   useEffect(() => {
-    if (!isRobinHood) return;
+    if (!isEvm) return;
 
     const assetsNeedingVerification = whitelist.filter(
       asset =>
@@ -443,7 +441,7 @@ export const LavaWhitelistWithCaps = ({
     return () => {
       isCancelled = true;
     };
-  }, [isRobinHood, whitelist, lookupPolicies, setWhitelist]);
+  }, [isEvm, whitelist, lookupPolicies, setWhitelist]);
 
   const openDropdown = useCallback(
     uniqueId => {
@@ -558,7 +556,7 @@ export const LavaWhitelistWithCaps = ({
 
   const formatTokenDisplayName = policy => {
     const baseName = policy.collectionName || policy.name || '';
-    if (!isRobinHood) return baseName;
+    if (!isEvm) return baseName;
 
     const ticker = policy.name || policy.assetName || '';
     if (!baseName) return ticker;
@@ -604,7 +602,7 @@ export const LavaWhitelistWithCaps = ({
         <TokenImage
           asset={policy}
           alt={displayName || policy.policyId}
-          chainType={isRobinHood ? 'robinhood' : 'cardano'}
+          chainType={network}
           className="h-8 w-8 rounded-full shrink-0"
           width={32}
           height={32}
@@ -727,7 +725,7 @@ export const LavaWhitelistWithCaps = ({
                       <TokenImage
                         asset={asset}
                         alt={resolvedName || asset.policyId}
-                        chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                        chainType={network}
                         className="h-10 w-10 rounded-full shrink-0"
                         width={40}
                         height={40}
@@ -856,7 +854,7 @@ export const LavaWhitelistWithCaps = ({
                         ) : (
                           <div className="flex flex-col items-center justify-center gap-1 py-6 px-4 text-center text-dark-100 text-sm">
                             {isSearchMode ? (
-                              isRobinHood ? (
+                              isEvm ? (
                                 <span>No matching tokens found</span>
                               ) : (
                                 <span>No matching collections in your wallet</span>
@@ -890,7 +888,7 @@ export const LavaWhitelistWithCaps = ({
                     <TokenImage
                       asset={asset}
                       alt={resolvedName || asset.policyId}
-                      chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                      chainType={network}
                       className="h-6 w-6 rounded-full shrink-0"
                       width={24}
                       height={24}
@@ -898,7 +896,7 @@ export const LavaWhitelistWithCaps = ({
                     <div className="flex items-center gap-1.5 min-w-0">
                       <ShieldCheck className="h-4 w-4 shrink-0" />
                       <span className="truncate">
-                        {isRobinHood
+                        {isEvm
                           ? 'Verified token · Blockscout'
                           : selectedVerificationLabel
                             ? `Verified collection · ${selectedVerificationLabel}`
@@ -911,7 +909,7 @@ export const LavaWhitelistWithCaps = ({
                   <div className="flex items-center gap-1.5 text-sm text-orange-400">
                     <ShieldAlert className="h-4 w-4" />
                     <span>
-                      {isRobinHood
+                      {isEvm
                         ? 'Unverified token — flagged by Blockscout, add with caution'
                         : 'Unverified collection — cannot be added to a vault'}
                     </span>
@@ -995,7 +993,7 @@ export const LavaWhitelistWithCaps = ({
                           ? [{ name: 'lp_token_dynamic', label: 'LP Token Price' }]
                           : [
                               { name: 'market', label: 'Market / Floor Price' },
-                              ...(isRobinHood ? [] : [{ name: 'custom', label: 'Custom Price' }]),
+                              ...(isEvm ? [] : [{ name: 'custom', label: 'Custom Price' }]),
                             ]
                       }
                       value={asset.isLpToken ? 'lp_token_dynamic' : asset.valuationMethod || 'market'}
@@ -1019,7 +1017,7 @@ export const LavaWhitelistWithCaps = ({
                     })()}
                   </div>
 
-                  {asset.valuationMethod === 'custom' && !asset.isLpToken && !isRobinHood && (
+                  {asset.valuationMethod === 'custom' && !asset.isLpToken && !isEvm && (
                     <div className="md:col-span-4 max-w-xs">
                       {renderInput({
                         required: true,

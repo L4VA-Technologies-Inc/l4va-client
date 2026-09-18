@@ -13,8 +13,8 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
-import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
+import { VaultDistributionClaim } from '@/components/vault-profile/VaultDistributionClaim';
 import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
@@ -85,6 +85,9 @@ import { useVaultAssets } from '@/services/api/queries';
 import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
 import { IS_MAINNET } from '@/utils/networkValidation.ts';
+import { isEvmNetwork } from '@/hooks/useNetwork';
+import { ChainType } from '@/utils/types';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -269,9 +272,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
-  const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isRobinhoodVault = isEvmNetwork(vault?.chainType);
+  // Without an explicit chain wagmi reads the first configured one (Robinhood), which
+  // returns nothing for an Arc vault and leaves the VT address — and balance — empty.
+  const vaultChainId = evmChainByNetwork[vault?.chainType]?.id;
   const { data: evmVaultTokenAddress } = useReadContract({
     address: vault?.contractAddress,
+    chainId: vaultChainId,
     abi: [
       {
         type: 'function',
@@ -282,7 +289,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       },
     ],
     functionName: 'vaultToken',
-    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress && !!vaultChainId },
   });
 
   const handleTabChange = tab => setActiveTab(tab);
@@ -708,6 +715,9 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const renderSwapBlock = () => {
     if (isRobinhoodVault) {
       if (!evmVaultTokenAddress) return null;
+      // The swap panel is Uniswap-on-Robinhood only. Arc has no Uniswap deployment,
+      // so showing it there would just offer to switch the wallet to the wrong chain.
+      if (vault?.chainType !== ChainType.ROBINHOOD) return null;
 
       return (
         <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
@@ -772,6 +782,13 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           {isRobinhoodVault && vault.vaultStatus === VAULT_STATUSES.TERMINATING && (
             <div className="mb-6">
               <VaultTerminationRedeem vault={vault} vaultTokenAddress={evmVaultTokenAddress} />
+            </div>
+          )}
+          {/* A distribution is claimable while the vault keeps running, so this is not
+              tied to a status — the panel renders nothing when there is nothing to claim. */}
+          {isRobinhoodVault && (
+            <div className="mb-6 empty:mb-0">
+              <VaultDistributionClaim vault={vault} />
             </div>
           )}
           {vault.vaultStatus !== 'locked' ? (
