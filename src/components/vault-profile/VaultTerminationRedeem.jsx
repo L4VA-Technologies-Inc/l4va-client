@@ -5,7 +5,7 @@ import { useAccount, useReadContract, useReadContracts } from 'wagmi';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useEvmRedeemTransaction } from '@/hooks/useEvmRedeemTransaction';
 import { VAULT_TERMINATION_ABI } from '@/lib/evm/vault.abi';
-import { robinhoodChain } from '@/lib/evm/wagmi.config';
+import { evmChainByNetwork, robinhoodChain } from '@/lib/evm/wagmi.config';
 import { useAuth } from '@/lib/auth/auth';
 
 const fmt = (raw, decimals) => {
@@ -33,6 +33,12 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
   const { redeem, isProcessing, txHash } = useEvmRedeemTransaction();
 
   const vaultAddress = vault?.contractAddress;
+  // Every read here is about this vault's contract, so it must go to its own chain —
+  // reading Robinhood for an Arc vault just returns an empty VT balance.
+  const chainId = evmChainByNetwork[vault?.chainType]?.id ?? robinhoodChain.id;
+  const nativeCurrency = evmChainByNetwork[vault?.chainType]?.nativeCurrency;
+  const nativeSymbol = nativeCurrency?.symbol ?? 'ETH';
+  const nativeDecimals = nativeCurrency?.decimals ?? 18;
   const enabled = Boolean(vaultAddress);
   const holderEnabled = enabled && Boolean(holder);
 
@@ -40,7 +46,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     address: vaultAddress,
     abi: VAULT_TERMINATION_ABI,
     functionName: 'terminationDeadline',
-    chainId: robinhoodChain.id,
+    chainId,
     query: { enabled },
   });
 
@@ -48,7 +54,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     address: vaultAddress,
     abi: VAULT_TERMINATION_ABI,
     functionName: 'terminationAssets',
-    chainId: robinhoodChain.id,
+    chainId,
     query: { enabled },
   });
 
@@ -57,7 +63,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: holder ? [holder] : undefined,
-    chainId: robinhoodChain.id,
+    chainId,
     query: { enabled: holderEnabled && Boolean(vaultTokenAddress) },
   });
 
@@ -65,7 +71,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     address: vaultTokenAddress,
     abi: erc20Abi,
     functionName: 'decimals',
-    chainId: robinhoodChain.id,
+    chainId,
     query: { enabled: Boolean(vaultTokenAddress) },
   });
 
@@ -80,13 +86,13 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
           abi: VAULT_TERMINATION_ABI,
           functionName: 'previewRedeem',
           args: [holder, asset],
-          chainId: robinhoodChain.id,
+          chainId,
         },
         ...(isNative
           ? []
           : [
-              { address: asset, abi: erc20Abi, functionName: 'symbol', chainId: robinhoodChain.id },
-              { address: asset, abi: erc20Abi, functionName: 'decimals', chainId: robinhoodChain.id },
+              { address: asset, abi: erc20Abi, functionName: 'symbol', chainId },
+              { address: asset, abi: erc20Abi, functionName: 'decimals', chainId },
             ]),
       ];
     });
@@ -104,8 +110,9 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     for (const asset of assets) {
       const isNative = asset === zeroAddress;
       const amount = previewData[i++]?.result ?? 0n;
-      let symbol = 'ETH';
-      let decimals = 18;
+      // The native payout is the chain's own token: ETH on Robinhood, USDC on Arc.
+      let symbol = nativeSymbol;
+      let decimals = nativeDecimals;
       if (!isNative) {
         symbol = previewData[i++]?.result ?? 'TOKEN';
         decimals = previewData[i++]?.result ?? 18;
@@ -113,7 +120,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
       out.push({ asset, symbol, amount: fmt(amount, decimals), hasAmount: (amount ?? 0n) > 0n });
     }
     return out;
-  }, [assets, previewData]);
+  }, [assets, previewData, nativeSymbol, nativeDecimals]);
 
   const hasVt = (vtBalance ?? 0n) > 0n;
   const deadlineLabel = deadline
@@ -166,7 +173,7 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
           className="w-full uppercase"
           disabled={!isAuthenticated || !holder || !hasVt || isProcessing || deadlinePassed}
           onClick={async () => {
-            const hash = await redeem({ vaultAddress });
+            const hash = await redeem({ vaultAddress, chainId });
             if (hash) {
               refetchBalance?.();
               refetchPreview?.();

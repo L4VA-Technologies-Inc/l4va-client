@@ -18,7 +18,7 @@ const readJson = key => {
 
 const CreateComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
 
   const storageVault = readJson('storageVault');
   const aiMeta = readJson(AI_VAULT_STORAGE_META_KEY);
@@ -56,7 +56,7 @@ const CreateComponent = () => {
       <div
         className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full max-w-[1920px] min-h-[300px] bg-cover bg-bottom bg-no-repeat"
         style={{
-          backgroundImage: isRobinHood ? 'none' : 'url(/assets/vaults/create-vault-bg.webp)',
+          backgroundImage: isEvm ? 'none' : 'url(/assets/vaults/create-vault-bg.webp)',
         }}
       />
       <CreateVaultForm

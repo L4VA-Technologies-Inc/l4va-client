@@ -16,6 +16,7 @@ import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { estimateContributionTransactionCost } from '@/utils/contributionTransactionCost.js';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
@@ -78,7 +79,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   // resolves the holdings per `chain`, so we just forward the matching address.
   const { address: evmAddress } = useAccount();
   const chain = vault?.chainType || 'cardano';
-  const isEvmChain = chain === 'robinhood';
+  const isEvmChain = isEvmNetwork(chain) || chain === 'arc';
   const walletAddress = isEvmChain ? evmAddress : wallet?.changeAddressBech32;
   const { data: nftFlagsData } = useNftFlagsSettings();
   // Defaults to enabled until the flag loads, matching the backend's default-true kill switch.

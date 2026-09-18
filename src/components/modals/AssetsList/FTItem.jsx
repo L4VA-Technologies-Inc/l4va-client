@@ -8,6 +8,7 @@ import {
   getMaxDecimalTokenAmount,
 } from '@/utils/core.utils';
 import { getPolicyUrl } from '@/utils/explorer.utils';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const PolicyIdRow = ({ policyId, chainType }) => {
   if (!policyId) return null;
@@ -15,7 +16,7 @@ const PolicyIdRow = ({ policyId, chainType }) => {
   return (
     <div className="flex items-center gap-1.5 min-w-0 border-t border-steel-750/50 pt-2.5 mt-1 ml-10 sm:ml-11">
       <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">
-        {chainType === 'robinhood' ? 'Contract' : 'Policy'}
+        {isEvmNetwork(chainType) ? 'Contract' : 'Policy'}
       </span>
       <a
         href={getPolicyUrl(policyId, chainType)}

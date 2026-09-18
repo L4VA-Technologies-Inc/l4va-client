@@ -20,7 +20,7 @@ const normalizeAuthorization = auth => ({
 });
 
 /**
- * EVM (Robinhood) acquire flow.
+ * EVM acquire flow (Robinhood ETH, Arc USDC).
  *
  * On the V3 Solidity vault there is no separate `acquire` function — acquiring
  * is `contributeNative(auth, sig)` called during the AcquireWindow. So this
@@ -44,7 +44,7 @@ export const useEvmAcquireTransaction = () => {
   const createAcquireTx = useCreateAcquireTx();
 
   const sendTransaction = useCallback(
-    async ({ vaultId, amountWei }) => {
+    async ({ vaultId, amountWei, nativeSymbol = 'ETH' }) => {
       setError(null);
       setTxHash(null);
 
@@ -63,11 +63,11 @@ export const useEvmAcquireTransaction = () => {
           vaultId,
           assets: [
             {
-              assetName: 'eth',
+              assetName: String(nativeSymbol).toLowerCase(),
               policyId: '0x0000000000000000000000000000000000000000',
-              type: 'eth',
-              quantity: amountWei, // Send as string to preserve precision for large wei values
-              metadata: { rawWei: true },
+              type: 'native',
+              quantity: amountWei,
+              metadata: { rawWei: true, standard: 'NATIVE' },
             },
           ],
         });
@@ -75,7 +75,7 @@ export const useEvmAcquireTransaction = () => {
 
         // ── Step 2: fetch the signed Native authorization ───────────────────
         const { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
-        const { vaultAddress, calls } = prepared;
+        const { vaultAddress, calls, chainId: vaultChainId } = prepared;
 
         if (!Array.isArray(calls) || calls.length !== 1) {
           throw new Error('Expected exactly one Native contribution call from the backend');
@@ -85,18 +85,17 @@ export const useEvmAcquireTransaction = () => {
           throw new Error(`Unexpected function ${call.functionName} — expected contributeNative`);
         }
 
+        const targetChainId = vaultChainId ?? robinhoodChain.id;
+
         // ── Step 3: ensure wallet is on the correct chain ───────────────────
-        if (currentChainId !== robinhoodChain.id) {
-          await switchChainAsync({ chainId: robinhoodChain.id });
+        if (currentChainId !== targetChainId) {
+          await switchChainAsync({ chainId: targetChainId });
         }
 
         // ── Step 4: contributeNative with value = <wei> ─────────────────────
         setStatus('signing');
         const authorization = normalizeAuthorization(call.authorization);
 
-        // Frontend already converted ETH → wei; the signed authorization
-        // carries the exact wei amount we must forward as `value`.
-        // Use call.value from backend or the wei amount we sent.
         const value = call.value ? BigInt(call.value) : BigInt(amountWei);
 
         const hash = await writeContractAsync({
@@ -105,14 +104,14 @@ export const useEvmAcquireTransaction = () => {
           functionName: 'contributeNative',
           args: [authorization, call.signature],
           account: contributor,
-          chainId: robinhoodChain.id,
+          chainId: targetChainId,
           value,
         });
 
         setStatus('submitting');
         await waitForTransactionReceipt(wagmiConfig, {
           hash,
-          chainId: robinhoodChain.id,
+          chainId: targetChainId,
         });
 
         // ── Step 5: confirm with backend ────────────────────────────────────

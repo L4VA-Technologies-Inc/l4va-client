@@ -2,8 +2,8 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { useNetwork } from '@/hooks/useNetwork';
 
 export const RewardsInfoModal = ({ isOpen, onClose }) => {
-  const { isRobinHood } = useNetwork();
-  const poolPair = isRobinHood ? 'VT/ETH or VT/USDC pools' : 'VT/ADA or VT/USDCx pools';
+  const { isRobinHood, isArc } = useNetwork();
+  const poolPair = isRobinHood ? 'VT/ETH or VT/USDC pools' : isArc ? 'VT/USDC pools' : 'VT/ADA or VT/USDCx pools';
 
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} title="L4VA Rewards — How it works" size="lg" allowBodyScroll>

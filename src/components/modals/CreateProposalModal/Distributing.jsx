@@ -8,9 +8,17 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatAdaPrice } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
+import { isEvmNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
-export default function Distributing({ isDisabled, onDataChange, vaultId }) {
+export default function Distributing({ isDisabled, onDataChange, vaultId, vault }) {
   const { currencyLabel } = useCurrency();
+  // EVM vaults have no treasury wallet: the distributable funds sit in the vault
+  // contract, and the backend returns availableAmount in base units for the asset.
+  const isEvmVault = isEvmNetwork(vault?.chainType);
+  const nativeCurrency = evmChainByNetwork[vault?.chainType]?.nativeCurrency;
+  const nativeSymbol = nativeCurrency?.symbol ?? 'ETH';
+  const nativeDecimals = nativeCurrency?.decimals ?? 18;
   const [adaAmount, setAdaAmount] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
@@ -23,24 +31,31 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
   const vtHolderCount = distributionInfo?.vtHolderCount || 0;
   const minAdaPerHolder = distributionInfo?.minAdaPerHolder || 2;
   const warnings = distributionInfo?.warnings || [];
-  const hasTreasuryWallet = distributionInfo?.hasTreasuryWallet ?? false;
+  const hasTreasuryWallet = isEvmVault ? true : (distributionInfo?.hasTreasuryWallet ?? false);
+  const evmAvailable = isEvmVault ? Number(distributionInfo?.availableAmount ?? 0) / 10 ** nativeDecimals : 0;
+  const amountLabel = isEvmVault ? nativeSymbol : currencyLabel;
 
   // Validation
   const enteredAda = parseFloat(adaAmount) || 0;
   const enteredLovelace = Math.floor(enteredAda * 1000000);
-  const isOverBalance = enteredAda > maxDistributableAda; // Use max distributable instead of raw balance
+  // EVM amounts are 18-decimal, so they go out as a base-unit string, not a number.
+  const enteredBaseUnits = isEvmVault
+    ? BigInt(Math.round(enteredAda * 10 ** 6)) * 10n ** BigInt(nativeDecimals - 6)
+    : 0n;
+  const maxDistributable = isEvmVault ? evmAvailable : maxDistributableAda;
+  const isOverBalance = enteredAda > maxDistributable;
   const adaPerHolder = vtHolderCount > 0 ? enteredAda / vtHolderCount : 0;
-  const hasNoFunds = hasTreasuryWallet && treasuryBalanceAda === 0;
+  const hasNoFunds = isEvmVault ? evmAvailable === 0 : hasTreasuryWallet && treasuryBalanceAda === 0;
   // Allow distribution even if some holders get less than minimum - they will be skipped
   // Only block if amount is too small to give anyone the minimum (less than 2 ADA total)
-  const noOneWillReceive = enteredAda > 0 && enteredAda < minAdaPerHolder;
+  const noOneWillReceive = !isEvmVault && enteredAda > 0 && enteredAda < minAdaPerHolder;
   const isValid = enteredAda > 0 && !isOverBalance && !noOneWillReceive && hasTreasuryWallet && !hasNoFunds;
 
   const handleDistributeAllChange = checked => {
     setDistributeAll(checked);
     if (checked) {
       // Use max distributable ADA (treasury minus fee reserve)
-      setAdaAmount(maxDistributableAda.toFixed(6));
+      setAdaAmount(maxDistributable.toFixed(6));
     } else {
       setAdaAmount('');
     }
@@ -49,7 +64,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
   const handleAdaAmountChange = value => {
     setAdaAmount(value);
     // Uncheck "distribute all" if user manually changes amount
-    if (distributeAll && parseFloat(value) !== treasuryBalanceAda) {
+    if (distributeAll && parseFloat(value) !== maxDistributable) {
       setDistributeAll(false);
     }
   };
@@ -57,19 +72,27 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
   // Notify parent of changes
   useEffect(() => {
     if (onDataChange) {
-      onDataChange({
-        distributionLovelaceAmount: isValid ? enteredLovelace : null,
-        isValid: isValid,
-      });
+      onDataChange(
+        isEvmVault
+          ? {
+              distributionAmount: isValid ? enteredBaseUnits.toString() : null,
+              distributionAsset: distributionInfo?.asset,
+              isValid,
+            }
+          : {
+              distributionLovelaceAmount: isValid ? enteredLovelace : null,
+              isValid,
+            }
+      );
     }
   }, [enteredLovelace, isValid, onDataChange]);
 
   // Auto-check "distribute all" if user enters the exact max distributable amount
   useEffect(() => {
-    if (!distributeAll && Math.abs(enteredAda - maxDistributableAda) < 0.000001 && maxDistributableAda > 0) {
+    if (!distributeAll && Math.abs(enteredAda - maxDistributable) < 0.000001 && maxDistributable > 0) {
       setDistributeAll(true);
     }
-  }, [enteredAda, maxDistributableAda, distributeAll]);
+  }, [enteredAda, maxDistributable, distributeAll]);
 
   if (isDisabled) {
     return (
@@ -99,7 +122,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             checked={distributeAll}
             onChange={e => handleDistributeAllChange(e.target.checked)}
             description="Distribute All"
-            disabled={treasuryBalanceAda <= 0}
+            disabled={maxDistributable <= 0}
           />
         </div>
 
@@ -108,7 +131,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex-1">
               <LavaSteelInput
                 type="number"
-                label={`Amount (${currencyLabel})`}
+                label={`Amount (${amountLabel})`}
                 placeholder="0.00"
                 value={adaAmount}
                 onChange={handleAdaAmountChange}
@@ -122,7 +145,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>
-                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} {currencyLabel}). Fee reserve
+                Amount exceeds max distributable ({maxDistributable.toLocaleString()} {amountLabel}). Fee reserve
                 required for transaction.
               </span>
             </div>
@@ -156,10 +179,10 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <span className="text-sm">Treasury Balance</span>
           </div>
           <p className="text-2xl font-semibold text-white">
-            {treasuryBalanceAda.toLocaleString()} {currencyLabel}
+            {(isEvmVault ? evmAvailable : treasuryBalanceAda).toLocaleString()} {amountLabel}
           </p>
           <p className="text-xs text-green-400 mt-1">
-            Max Distributable: {maxDistributableAda.toLocaleString()} {currencyLabel}
+            Max Distributable: {maxDistributable.toLocaleString()} {amountLabel}
           </p>
           <p className="text-xs text-white/40">
             (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} {currencyLabel})

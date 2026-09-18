@@ -7,6 +7,8 @@ import { formatNumber, substringAddress, formatNum, formatLargeNumber } from '@/
 import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { isEvmNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 
@@ -25,7 +27,8 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, pickByCurrency } = useCurrency();
-  const isEth = vault?.chainType === 'robinhood';
+  const isEvm = isEvmNetwork(vault?.chainType);
+  const assetSymbol = isEvm ? (evmChainByNetwork[vault?.chainType]?.nativeCurrency.symbol ?? 'ETH') : 'ADA';
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -202,7 +205,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                         }}
                       />
                     </td>
-                    <td className="px-4 py-3 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
+                    <td className="px-4 py-3 font-medium">{assetSymbol}</td>
                     <td className="px-4 py-3 capitalize">{asset.status}</td>
                     <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                     <td className="px-4 py-3 text-center">
@@ -222,7 +225,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     <tr className="bg-steel-750">
                       <td colSpan="5" className="px-4 py-2">
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
-                          {!isEth && (
+                          {!isEvm && (
                             <div>
                               <p className="font-medium">Policy ID:</p>
                               <div className="flex items-center gap-2">
@@ -240,7 +243,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                               </div>
                             </div>
                           )}
-                          {!isEth && (
+                          {!isEvm && (
                             <div>
                               <p className="font-medium">Asset ID:</p>
                               <div className="flex items-center gap-2">

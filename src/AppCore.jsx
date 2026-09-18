@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
 import { useWalletChangeListener } from '@/hooks/useWalletChangeListener';
-import { useNetwork } from '@/hooks/useNetwork';
+import { NETWORKS, useNetwork } from '@/hooks/useNetwork';
 
 const router = createRouter({
   routeTree,
@@ -40,7 +40,7 @@ const AppWithInterceptor = () => {
   useEffect(() => {
     const url = new URL(window.location.href);
     const chainParam = url.searchParams.get('chain');
-    if (chainParam !== 'robinhood' && chainParam !== 'cardano') return;
+    if (!NETWORKS.includes(chainParam)) return;
 
     updateNetwork(chainParam);
     url.searchParams.delete('chain');

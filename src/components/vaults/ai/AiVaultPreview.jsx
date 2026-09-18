@@ -24,6 +24,7 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
 const isEmptyValue = value =>
@@ -514,7 +515,8 @@ export const AiVaultPreview = ({
   onGenerateImageRequest,
 }) => {
   const { currencyLabel } = useCurrency();
-  const { isRobinHood } = useNetwork();
+  const { network, isEvm } = useNetwork();
+  const nativeSymbol = evmChainByNetwork[network]?.nativeCurrency?.symbol ?? 'ETH';
   const { openModal } = useModalControls();
   const previousVault = useRef(vault);
   const [changedFields, setChangedFields] = useState(() => new Set());
@@ -546,6 +548,16 @@ export const AiVaultPreview = ({
     const timeout = setTimeout(() => setChangedFields(new Set()), 1000);
     return () => clearTimeout(timeout);
   }, [vault]);
+
+  // Manual form uses the selected chain's native symbol (USDC on Arc). Drop ADA/ETH
+  // drafts that are invalid on the current network so launch doesn't submit ETH on Arc.
+  useEffect(() => {
+    if (!isEvm) return;
+    const allowed = new Set(['USD', nativeSymbol]);
+    if (vault.valuationCurrency && !allowed.has(vault.valuationCurrency)) {
+      onUpdateVault('valuationCurrency', nativeSymbol);
+    }
+  }, [isEvm, nativeSymbol, onUpdateVault, vault.valuationCurrency]);
 
   const toggleSection = id => {
     setOpenSections(prev => {
@@ -619,9 +631,7 @@ export const AiVaultPreview = ({
   };
 
   const privacyOptions = (
-    isRobinHood
-      ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC)
-      : VAULT_PRIVACY_OPTIONS
+    isEvm ? VAULT_PRIVACY_OPTIONS.filter(option => option.name === VAULT_PRIVACY_TYPES.PUBLIC) : VAULT_PRIVACY_OPTIONS
   ).map(option => ({ value: option.name, label: option.label.replace(/ Vault$/i, '') }));
 
   const isPrivate = vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE;
@@ -638,9 +648,9 @@ export const AiVaultPreview = ({
     label: option.label,
   }));
   const valuationCurrencyOptions = [
-    ...(isRobinHood ? [] : [{ value: 'ADA', label: 'ADA' }]),
+    ...(isEvm ? [] : [{ value: 'ADA', label: 'ADA' }]),
     { value: 'USD', label: 'USD' },
-    ...(isRobinHood ? [{ value: 'ETH', label: 'ETH' }] : []),
+    ...(isEvm ? [{ value: nativeSymbol, label: nativeSymbol }] : []),
   ];
   const acquireMinDate =
     vault.contributionOpenWindowType === 'custom' && vault.contributionOpenWindowTime

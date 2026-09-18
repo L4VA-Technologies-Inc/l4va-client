@@ -1,6 +1,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
+import { ChainTypeLabels } from '@/utils/types';
 
 const StepCard = ({ number, title, description }) => (
   <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-steel-900/50 backdrop-blur-sm rounded-[10px]">
@@ -27,10 +28,13 @@ const FaqItem = ({ question, answer, index }) => (
 );
 
 const Faq = () => {
-  const { isRobinHood } = useNetwork();
+  const { network, isArc, isEvm } = useNetwork();
   const { currencyLabel } = useCurrency();
-  const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
-  const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
+  const chainName = ChainTypeLabels[network];
+  const nativeAssetDescription = isEvm ? `${chainName}-supported` : 'Cardano-native';
+  // EVM copy is shared by Robinhood and Arc; Arc settles in USDC only.
+  const evmChainName = isArc ? 'Arc' : 'Robinhood Chain';
+  const evmAcquireAssets = isArc ? 'USDC' : 'ETH or USDC';
 
   const defaultSteps = [
     {
@@ -74,8 +78,7 @@ const Faq = () => {
     {
       number: 3,
       title: 'Acquire',
-      description:
-        'Participants use ETH or USDC to acquire a proportional share of the Vault Tokens, providing capital and liquidity to the strategy.',
+      description: `Participants use ${evmAcquireAssets} to acquire a proportional share of the Vault Tokens, providing capital and liquidity to the strategy.`,
     },
     {
       number: 4,
@@ -95,17 +98,17 @@ const Faq = () => {
   };
 
   const robinhoodHeroContent = {
-    subtitle: 'Create, own, and govern programmable investment products on Robinhood Chain.',
+    subtitle: `Create, own, and govern programmable investment products on ${evmChainName}.`,
     paragraphs: [
-      'Create a Vault, define its strategy and governance settings, and invite contributors to add eligible tokenized assets. Participants can then acquire Vault Tokens using ETH or USDC, gaining proportional exposure to the Vault and a voice in its future.',
+      `Create a Vault, define its strategy and governance settings, and invite contributors to add eligible tokenized assets. Participants can then acquire Vault Tokens using ${evmAcquireAssets}, gaining proportional exposure to the Vault and a voice in its future.`,
       'Vault creators, asset contributors, token acquirers, liquidity providers, and governance participants can earn L4VA rewards for activities that expand the protocol. Rewards are designed around active contribution—not passive ownership or total value locked.',
       'Once launched, every Vault becomes a community-governed on-chain market. Vault Token holders can propose and vote on how the strategy, assets, and rules evolve over time.',
       'Open, programmable infrastructure for transforming tokenized assets into investment products that communities can launch, own, and govern.',
     ],
   };
 
-  const steps = isRobinHood ? robinhoodSteps : defaultSteps;
-  const heroContent = isRobinHood ? robinhoodHeroContent : defaultHeroContent;
+  const steps = isEvm ? robinhoodSteps : defaultSteps;
+  const heroContent = isEvm ? robinhoodHeroContent : defaultHeroContent;
 
   const defaultFaqItems = [
     {
@@ -212,7 +215,7 @@ const Faq = () => {
       answer: (
         <div className="space-y-4">
           <p>
-            Vaults are designed to support tokenized assets available on Robinhood Chain and compatible EVM networks.
+            Vaults are designed to support tokenized assets available on {evmChainName} and compatible EVM networks.
           </p>
           <p>Depending on the Vault’s configuration and available integrations, eligible assets may include:</p>
           <ul className="list-disc pl-5 space-y-2">
@@ -236,7 +239,7 @@ const Faq = () => {
       answer: (
         <div className="space-y-4">
           <p>
-            During the acquisition stage, eligible participants can contribute ETH or USDC in exchange for a
+            During the acquisition stage, eligible participants can contribute {evmAcquireAssets} in exchange for a
             proportional allocation of Vault Tokens.
           </p>
           <p>Vault Tokens represent participation in the Vault and may provide:</p>
@@ -263,7 +266,8 @@ const Faq = () => {
           <p>
             In return, contributors receive a proportional allocation of Vault Tokens based on the applicable
             contribution and valuation rules. Where part of the Vault Token supply is allocated to new acquirers,
-            contributors may also receive a proportional share of the ETH or USDC raised during the acquisition stage.
+            contributors may also receive a proportional share of the {evmAcquireAssets} raised during the acquisition
+            stage.
           </p>
           <p>
             This allows contributors to gain liquidity while retaining participation and governance rights in the
@@ -306,7 +310,7 @@ const Faq = () => {
     },
   ];
 
-  const faqItems = isRobinHood ? robinhoodFaqItems : defaultFaqItems;
+  const faqItems = isEvm ? robinhoodFaqItems : defaultFaqItems;
 
   return (
     <div className="relative py-8 sm:py-12 lg:py-16">

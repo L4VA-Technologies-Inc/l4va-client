@@ -9,7 +9,7 @@ import { VestingProgress, VestingGrouped } from '@/components/rewards';
 
 export const VestingPage = () => {
   const navigate = useNavigate();
-  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const { rewardsWalletAddress: walletAddress, isWalletConnected, isEvm, chainLabel } = useRewardsWalletConnection();
   const [groupBy, setGroupBy] = useState('none'); // 'none', 'epoch', 'vault'
 
   const { data: vestingSummaryData, isLoading: isLoadingSummary } = useVestingSummary(walletAddress);
@@ -44,11 +44,11 @@ export const VestingPage = () => {
               <div className="text-center">
                 <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
                 <h2 className="text-xl font-semibold text-white mb-2">
-                  {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+                  {isEvm ? `Connect Your ${chainLabel} Wallet` : 'Connect Your Wallet'}
                 </h2>
                 <p className="text-steel-400">
-                  {isRobinHood
-                    ? 'Please connect your Robinhood wallet to view your vesting positions.'
+                  {isEvm
+                    ? `Please connect your ${chainLabel} wallet to view your vesting positions.`
                     : 'Please connect your wallet to view your vesting positions'}
                 </p>
               </div>

@@ -19,7 +19,7 @@ import { ProposalEndDate } from './ProposalEndDate';
 import { VaultSkeleton } from './VaultSkeleton';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
-import { ChainType, ProposalTypeLabels } from '@/utils/types';
+import { ProposalTypeLabels } from '@/utils/types';
 import {
   useBuildVoteFeePayment,
   useBuildVoteFeeTransaction,
@@ -34,6 +34,7 @@ import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } 
 import { useCurrency } from '@/hooks/useCurrency';
 import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 const VOTE_LABELS = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
 
@@ -471,7 +472,7 @@ export const ProposalInfo = ({ proposalId }) => {
 
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
-  const isEvmVault = proposalInfo?.vault?.chainType === ChainType.ROBINHOOD;
+  const isEvmVault = isEvmNetwork(proposalInfo?.vault?.chainType);
   const { data: governanceFees } = useGovernanceFees();
   const { payFee: payEvmFee } = useEvmGovernanceFee();
   const buildVoteFeePayment = useBuildVoteFeePayment();

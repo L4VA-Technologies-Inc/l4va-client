@@ -156,3 +156,70 @@ export const ERC1155_APPROVAL_ABI = [
     outputs: [],
   },
 ];
+
+/**
+ * Distributions. A passed Distribution proposal reserves a pot inside the vault
+ * contract; holders then pull their pro-rata share themselves — the backend only
+ * opens the distribution, it never pushes funds out. VT is NOT burned by a claim.
+ */
+export const VAULT_DISTRIBUTION_ABI = [
+  {
+    type: 'function',
+    name: 'totalDistributions',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'getDistribution',
+    stateMutability: 'view',
+    inputs: [{ name: 'distributionId', type: 'uint256' }],
+    outputs: [
+      {
+        type: 'tuple',
+        components: [
+          { name: 'asset', type: 'address' },
+          { name: 'timepoint', type: 'uint48' },
+          { name: 'netPot', type: 'uint256' },
+          { name: 'supply', type: 'uint256' },
+          { name: 'paid', type: 'uint256' },
+          { name: 'released', type: 'uint256' },
+          { name: 'openedAt', type: 'uint64' },
+          { name: 'deadline', type: 'uint64' },
+          { name: 'swept', type: 'bool' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'distributionClaimable',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'distributionId', type: 'uint256' },
+      { name: 'holder', type: 'address' },
+    ],
+    outputs: [{ type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'isDistributionClaimed',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'distributionId', type: 'uint256' },
+      { name: 'holder', type: 'address' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'claimDistribution',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'distributionId', type: 'uint256' },
+      { name: 'recipient', type: 'address' },
+    ],
+    outputs: [{ name: 'amount', type: 'uint256' }],
+  },
+];

@@ -87,7 +87,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const { createEvmVault } = useCreateEvmVault();
   const { isConnected: isEvmConnected } = useAccount();
 
@@ -124,10 +124,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
 
   useEffect(() => {
-    if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
+    if (isEvm && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
       setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));
     }
-  }, [isRobinHood, vaultData.privacy]);
+  }, [isEvm, vaultData.privacy]);
 
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
@@ -496,8 +496,11 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const handleServerFieldErrors = error => {
     const responseData = error?.response?.data;
-    const message = responseData?.message;
-    if (!message) return false;
+    const rawMessage = responseData?.message;
+    const message = Array.isArray(rawMessage)
+      ? rawMessage.filter(item => typeof item === 'string').join('. ')
+      : rawMessage;
+    if (!message || typeof message !== 'string') return false;
 
     const errorCode = responseData?.code;
     const errorTitle = responseData?.error;
@@ -621,11 +624,11 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       await handleNextStep();
     } else {
       // ---- EVM (Robinhood) path ---------------------------------------------
-      if (isRobinHood) {
+      if (isEvm) {
         setIsSubmitting(true);
         try {
           await vaultSchema.validate(vaultData, { abortEarly: false });
-          const formattedData = formatVaultData(vaultData, isRobinHood);
+          const formattedData = formatVaultData(vaultData, isEvm);
           setErrors({});
 
           const { dbVaultId } = await createEvmVault(formattedData);
@@ -706,7 +709,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
-        const formattedData = formatVaultData(vaultData, isRobinHood);
+        const formattedData = formatVaultData(vaultData, isEvm);
         setErrors({});
 
         const { data } = await VaultsApiProvider.createVault(formattedData);
@@ -775,7 +778,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const saveDraft = async () => {
     try {
       setIsSavingDraft(true);
-      const formattedData = formatVaultData(vaultData, isRobinHood);
+      const formattedData = formatVaultData(vaultData, isEvm);
       const existingDraftId = vaultData?.id ?? vault?.id;
       if (existingDraftId) {
         formattedData.id = existingDraftId;
@@ -936,9 +939,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           />
         );
       case 2:
-        return (
-          <AssetContribution data={vaultData} errors={errors} updateField={updateField} isRobinHood={isRobinHood} />
-        );
+        return <AssetContribution data={vaultData} errors={errors} updateField={updateField} isEvm={isEvm} />;
       case 3:
         return (
           <AcquireWindow
@@ -1043,7 +1044,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             disabled={
               isSubmitting ||
               isFormBlocked ||
-              !(isRobinHood ? isEvmConnected : wallet.isConnected) ||
+              !(isEvm ? isEvmConnected : wallet.isConnected) ||
               (IS_MAINNET && !canCreateVaults)
             }
             onClick={onSubmit}
@@ -1051,7 +1052,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           >
             {isSubmitting
               ? 'Launching...'
-              : !(isRobinHood ? isEvmConnected : wallet.isConnected)
+              : !(isEvm ? isEvmConnected : wallet.isConnected)
                 ? 'Connect wallet to launch'
                 : 'Confirm & launch'}
           </PrimaryButton>

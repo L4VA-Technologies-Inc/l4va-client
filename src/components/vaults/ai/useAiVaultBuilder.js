@@ -48,9 +48,9 @@ const withoutTrailingGenerator = messages =>
 
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
-  const { network, isRobinHood } = useNetwork();
+  const { network, isEvm } = useNetwork();
 
-  const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isRobinHood)]);
+  const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isEvm)]);
   // The draft is shared with the manual create form via localStorage, so a manual edit made
   // between visits wins over this hook's own (possibly stale) session snapshot.
   const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
@@ -94,10 +94,10 @@ export const useAiVaultBuilder = () => {
 
   useEffect(() => {
     if (messages.length !== 1 || messages[0]?.role !== 'assistant') return;
-    const next = buildAiGreeting(isRobinHood);
+    const next = buildAiGreeting(isEvm);
     if (messages[0].content === next.content) return;
     setMessages([next]);
-  }, [isRobinHood, messages]);
+  }, [isEvm, messages]);
 
   const requestTurn = useCallback(
     async (history, currentDraft, validationErrors) => {
@@ -298,12 +298,12 @@ export const useAiVaultBuilder = () => {
     draftEpochRef.current += 1;
     clearVaultCreationDrafts();
     setPendingAction(null);
-    setMessages([buildAiGreeting(isRobinHood)]);
+    setMessages([buildAiGreeting(isEvm)]);
     setVault(initialVaultState);
     setStatus('gathering');
     setMissingFields([]);
     setAiFields([]);
-  }, [isRobinHood]);
+  }, [isEvm]);
 
   // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
   const updateVaultField = useCallback(

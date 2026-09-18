@@ -126,15 +126,18 @@ export const useEvmContributeTransaction = () => {
 
         // ── Step 2: fetch signed authorizations ────────────────────────────
         const { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
-        const { vaultAddress, calls } = prepared;
+        // The backend signs each authorization for the vault's own chain and returns it.
+        const { vaultAddress, calls, chainId: vaultChainId } = prepared;
 
         if (!Array.isArray(calls) || calls.length === 0) {
           throw new Error('No contribution calls returned by the backend');
         }
 
+        const targetChainId = vaultChainId ?? robinhoodChain.id;
+
         // ── Step 3: ensure wallet is on the correct chain ──────────────────
-        if (currentChainId !== robinhoodChain.id) {
-          await switchChainAsync({ chainId: robinhoodChain.id });
+        if (currentChainId !== targetChainId) {
+          await switchChainAsync({ chainId: targetChainId });
         }
 
         // ── Step 4: submit approvals + contribute() one-by-one ─────────────
@@ -148,12 +151,12 @@ export const useEvmContributeTransaction = () => {
             const approvalHash = await writeContractAsync({
               ...approvalReq,
               account: contributor,
-              chainId: robinhoodChain.id,
+              chainId: targetChainId,
             });
             childTxHashes.push(approvalHash);
             await waitForTransactionReceipt(wagmiConfig, {
               hash: approvalHash,
-              chainId: robinhoodChain.id,
+              chainId: targetChainId,
             });
           }
 
@@ -166,7 +169,7 @@ export const useEvmContributeTransaction = () => {
             functionName: call.functionName,
             args: [authorization, call.signature],
             account: contributor,
-            chainId: robinhoodChain.id,
+            chainId: targetChainId,
             value,
           });
           childTxHashes.push(hash);
@@ -174,7 +177,7 @@ export const useEvmContributeTransaction = () => {
 
           await waitForTransactionReceipt(wagmiConfig, {
             hash,
-            chainId: robinhoodChain.id,
+            chainId: targetChainId,
           });
         }
 

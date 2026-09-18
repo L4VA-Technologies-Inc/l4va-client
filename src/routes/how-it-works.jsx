@@ -1,12 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { useNetwork } from '@/hooks/useNetwork';
+import { ChainTypeLabels } from '@/utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
 
 export const HowItWorks = () => {
-  const { isRobinHood } = useNetwork();
+  const { network, isEvm } = useNetwork();
   const { currencyLabel } = useCurrency();
-  const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
+  const nativeAssetDescription = isEvm ? `${ChainTypeLabels[network]}-supported` : 'Cardano-native';
 
   return (
     <div className="container mx-auto px-4 py-12 xl:px-0 text-primary-text">

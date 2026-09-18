@@ -7,11 +7,11 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
-import { ChainType } from '@/utils/types';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const { currencyLabel } = useCurrency();
-  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isEvmVault = isEvmNetwork(vault?.chainType);
   const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false);

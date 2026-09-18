@@ -6,10 +6,10 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { formatPolicyId } from '@/utils/core.utils';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
-import { ChainType } from '@/utils/types';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 export default function Expansion({ onDataChange, error, vault }) {
-  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isEvmVault = isEvmNetwork(vault?.chainType);
   const [selectedPolicies, setSelectedPolicies] = useState([]);
   const [evmAssets, setEvmAssets] = useState([]);
   const [duration, setDuration] = useState(null);

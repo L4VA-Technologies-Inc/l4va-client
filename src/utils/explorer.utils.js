@@ -3,8 +3,20 @@ import { IS_PREPROD } from '@/utils/networkValidation';
 
 /**
  * Centralized blockchain explorer URL configuration
- * Supports both Cardano and Robinhood chains with testnet/mainnet variants
+ * Supports Cardano and the EVM chains (Robinhood, Arc) with testnet/mainnet variants
  */
+
+// Cardano uses VITE_CARDANO_NETWORK (IS_PREPROD). Each EVM chain has its own
+// network env, so Arc/Robinhood explorers must not follow the Cardano flag.
+const isDefaultTestnet = chainType => {
+  if (chainType === ChainType.ARC) {
+    return (import.meta.env.VITE_ARC_NETWORK || 'testnet') === 'testnet';
+  }
+  if (chainType === ChainType.ROBINHOOD) {
+    return (import.meta.env.VITE_ROBINHOOD_NETWORK || 'mainnet') === 'testnet';
+  }
+  return IS_PREPROD;
+};
 
 const EXPLORER_URLS = {
   [ChainType.CARDANO]: {
@@ -25,7 +37,17 @@ const EXPLORER_URLS = {
       base: 'https://explorer.testnet.chain.robinhood.com',
     },
   },
+  [ChainType.ARC]: {
+    mainnet: {
+      base: 'https://explorer.arc.io',
+    },
+    testnet: {
+      base: 'https://explorer.testnet.arc.io',
+    },
+  },
 };
+
+const isEvmChainType = chainType => chainType === ChainType.ROBINHOOD || chainType === ChainType.ARC;
 
 /**
  * Get the explorer configuration for a given chain and network
@@ -33,8 +55,9 @@ const EXPLORER_URLS = {
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {object} Explorer configuration
  */
-const getExplorerConfig = (chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
-  const network = isTestnet ? 'testnet' : 'mainnet';
+const getExplorerConfig = (chainType = ChainType.CARDANO, isTestnet) => {
+  const resolvedTestnet = isTestnet ?? isDefaultTestnet(chainType);
+  const network = resolvedTestnet ? 'testnet' : 'mainnet';
   return EXPLORER_URLS[chainType]?.[network] || EXPLORER_URLS[ChainType.CARDANO][network];
 };
 
@@ -45,12 +68,12 @@ const getExplorerConfig = (chainType = ChainType.CARDANO, isTestnet = IS_PREPROD
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {string} Transaction explorer URL
  */
-export const getTransactionUrl = (txHash, chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
+export const getTransactionUrl = (txHash, chainType = ChainType.CARDANO, isTestnet) => {
   if (!txHash) return '';
 
   const config = getExplorerConfig(chainType, isTestnet);
 
-  if (chainType === ChainType.ROBINHOOD) {
+  if (isEvmChainType(chainType)) {
     return `${config.base}/tx/${txHash}`;
   }
 
@@ -65,7 +88,7 @@ export const getTransactionUrl = (txHash, chainType = ChainType.CARDANO, isTestn
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {string} Address explorer URL
  */
-export const getAddressUrl = (address, chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
+export const getAddressUrl = (address, chainType = ChainType.CARDANO, isTestnet) => {
   if (!address) return '';
 
   const config = getExplorerConfig(chainType, isTestnet);
@@ -79,21 +102,22 @@ export const getAddressUrl = (address, chainType = ChainType.CARDANO, isTestnet 
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {string} Policy/contract explorer URL
  */
-export const getPolicyUrl = (policyId, chainType, isTestnet = IS_PREPROD) => {
+export const getPolicyUrl = (policyId, chainType, isTestnet) => {
   if (!policyId) return '';
 
   const isEvmContractAddress = /^0x[a-fA-F0-9]{40}$/.test(policyId);
   const resolvedChainType = chainType || (isEvmContractAddress ? ChainType.ROBINHOOD : ChainType.CARDANO);
+  const resolvedTestnet = isTestnet ?? isDefaultTestnet(resolvedChainType);
 
-  if (resolvedChainType === ChainType.ROBINHOOD) {
-    // Robinhood Chain assets use EVM contract addresses.
-    return getTokenUrl(policyId, resolvedChainType, isTestnet);
+  if (isEvmChainType(resolvedChainType)) {
+    // EVM chain assets use contract addresses.
+    return getTokenUrl(policyId, resolvedChainType, resolvedTestnet);
   }
 
-  const config = getExplorerConfig(ChainType.CARDANO, isTestnet);
+  const config = getExplorerConfig(ChainType.CARDANO, resolvedTestnet);
 
   // Use pool.pm for mainnet, cardanoscan for testnet
-  if (isTestnet) {
+  if (resolvedTestnet) {
     return `${config.base}/tokenPolicy/${policyId}`;
   }
 
@@ -107,12 +131,12 @@ export const getPolicyUrl = (policyId, chainType, isTestnet = IS_PREPROD) => {
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {string} Token explorer URL
  */
-export const getTokenUrl = (tokenId, chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
+export const getTokenUrl = (tokenId, chainType = ChainType.CARDANO, isTestnet) => {
   if (!tokenId) return '';
 
   const config = getExplorerConfig(chainType, isTestnet);
 
-  if (chainType === ChainType.ROBINHOOD) {
+  if (isEvmChainType(chainType)) {
     return `${config.base}/token/${tokenId}`;
   }
 
@@ -127,12 +151,12 @@ export const getTokenUrl = (tokenId, chainType = ChainType.CARDANO, isTestnet = 
  * @param {boolean} isTestnet - Whether to use testnet URLs
  * @returns {string} Block explorer URL
  */
-export const getBlockUrl = (blockId, chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
+export const getBlockUrl = (blockId, chainType = ChainType.CARDANO, isTestnet) => {
   if (!blockId) return '';
 
   const config = getExplorerConfig(chainType, isTestnet);
 
-  if (chainType === ChainType.ROBINHOOD) {
+  if (isEvmChainType(chainType)) {
     return `${config.base}/block/${blockId}`;
   }
 

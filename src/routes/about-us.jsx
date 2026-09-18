@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { useNetwork } from '@/hooks/useNetwork';
+import { ChainTypeLabels } from '@/utils/types';
 
 export const AboutUs = () => {
-  const { isRobinHood } = useNetwork();
-  const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
+  const { network } = useNetwork();
+  const chainName = ChainTypeLabels[network];
 
   return (
     <div className="container mx-auto px-4 py-12 xl:px-0 text-primary-text">

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { isEvmNetwork } from '@/hooks/useNetwork';
+
 const CARDANO_FALLBACK_SRC = '/assets/icons/ada.svg';
 
 const getAssetImageSrc = asset =>
@@ -35,7 +37,7 @@ export const TokenImage = ({
 }) => {
   const resolvedSrc = useMemo(() => src || getAssetImageSrc(asset), [asset, src]);
   const [hasError, setHasError] = useState(false);
-  const isRobinhood = chainType === 'robinhood' || asset?.chainType === 'robinhood';
+  const isRobinhood = isEvmNetwork(chainType) || isEvmNetwork(asset?.chainType);
   const hasImage = typeof resolvedSrc === 'string' && resolvedSrc.trim() !== '';
 
   useEffect(() => {

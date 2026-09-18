@@ -14,7 +14,7 @@ import { TokenImage } from '@/components/shared/TokenImage';
 
 export const LaunchConfigureVault = ({ data, setCurrentStep }) => {
   const { currencyLabel } = useCurrency();
-  const { isRobinHood } = useNetwork();
+  const { network } = useNetwork();
 
   return (
     <section className="min-w-0 overflow-x-hidden">
@@ -90,7 +90,7 @@ export const LaunchConfigureVault = ({ data, setCurrentStep }) => {
                           <TokenImage
                             asset={asset}
                             alt={asset.policyName || asset.policyId}
-                            chainType={isRobinHood ? 'robinhood' : 'cardano'}
+                            chainType={network}
                             className="h-7 w-7 rounded-full shrink-0"
                             width={28}
                             height={28}

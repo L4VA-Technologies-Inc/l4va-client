@@ -10,7 +10,13 @@ import { RewardSourceBadge, VaultLeaderboard, EpochSelector } from '@/components
 export const VaultDetails = () => {
   const navigate = useNavigate();
   const { vaultId } = useParams({ from: '/rewards/vaults/$vaultId' });
-  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const {
+    rewardsWalletAddress: walletAddress,
+    isWalletConnected,
+    isEvm,
+    isArc,
+    chainLabel,
+  } = useRewardsWalletConnection();
   const [selectedEpochIds, setSelectedEpochIds] = useState([]);
 
   const activeEpochId = selectedEpochIds.length === 1 ? selectedEpochIds[0] : null;
@@ -62,16 +68,17 @@ export const VaultDetails = () => {
                 {!isWalletConnected && (
                   <div>
                     <div className="text-white font-medium mb-2">
-                      {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+                      {isEvm ? `Connect Your ${chainLabel} Wallet` : 'Connect Your Wallet'}
                     </div>
                     <div className="text-sm">
-                      {isRobinHood
-                        ? 'Please connect your Robinhood wallet to view vault rewards.'
+                      {isEvm
+                        ? `Please connect your ${chainLabel} wallet to view vault rewards.`
                         : 'Please connect your wallet to view vault rewards.'}
                     </div>
                   </div>
                 )}
-                {isWalletConnected && !walletAddress && <div>Waiting for wallet address...</div>}
+                {isWalletConnected && isArc && 'No vault rewards on Arc yet'}
+                {isWalletConnected && !isArc && !walletAddress && <div>Waiting for wallet address...</div>}
                 {isWalletConnected && walletAddress && rewardError && (
                   <div>
                     <div className="text-red-400 mb-2">Error loading vault data</div>

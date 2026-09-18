@@ -2,6 +2,7 @@ import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
 import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
+import { isEvmNetwork } from '@/hooks/useNetwork';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
@@ -168,9 +169,9 @@ export const assetWhitelistItemSchema = yup.object({
     .test('valid-policy-id', 'Invalid Policy ID', function validatePolicyId(value) {
       if (!value) return true; // let .required() handle empty
 
-      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      const isEvm = isEvmNetwork(localStorage.getItem('selectedNetwork'));
 
-      if (isRobinHood) {
+      if (isEvm) {
         // EVM: contract address — 0x followed by 40 hex chars
         if (/^0x[0-9a-fA-F]{40}$/.test(value)) return true;
         return this.createError({ message: 'Contract address must be a 0x-prefixed 40-character hex string' });
@@ -184,9 +185,9 @@ export const assetWhitelistItemSchema = yup.object({
     .boolean()
     .nullable()
     .test('verified-or-evm', 'Only verified collections can be added to a vault', function validateVerified(value) {
-      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      const isEvm = isEvmNetwork(localStorage.getItem('selectedNetwork'));
       // EVM contracts don't go through the Cardano verification system
-      if (isRobinHood) return true;
+      if (isEvm) return true;
       if (value !== true) return this.createError({ message: 'Only verified collections can be added to a vault' });
       return true;
     }),
@@ -351,7 +352,7 @@ export const vaultSchema = yup.object({
     .default([])
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.notRequired(),
+      then: () => yup.array().notRequired(),
       otherwise: schema =>
         schema
           .required('Assets whitelist is required')
@@ -380,19 +381,23 @@ export const vaultSchema = yup.object({
         schema
           .nullable()
           .positive('Must be a positive number')
-          .test('min-threshold-by-chain', 'Minimum ETH threshold is 0.01', function validateMinThresholdByChain(value) {
-            if (value === null || value === undefined) return true;
-            const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
-            if (!isRobinHood) return true;
-            return value >= 0.01;
-          })
+          .test(
+            'min-threshold-by-chain',
+            'Minimum threshold is 0.01 of the chain native token',
+            function validateMinThresholdByChain(value) {
+              if (value === null || value === undefined) return true;
+              const isEvm = isEvmNetwork(localStorage.getItem('selectedNetwork'));
+              if (!isEvm) return true;
+              return value >= 0.01;
+            }
+          )
           .test(
             'max-threshold-by-chain',
-            'Maximum ETH threshold is 10000',
+            'Maximum threshold is 10000 of the chain native token',
             function validateMaxThresholdByChain(value) {
               if (value === null || value === undefined) return true;
-              const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
-              if (!isRobinHood) return true;
+              const isEvm = isEvmNetwork(localStorage.getItem('selectedNetwork'));
+              if (!isEvm) return true;
               return value <= 10000;
             }
           ),

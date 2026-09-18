@@ -6,7 +6,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import toast from 'react-hot-toast';
 
-import { robinhoodChain } from '@/lib/evm/wagmi.config';
+import { evmChainByNetwork } from '@/lib/evm/wagmi.config';
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
@@ -21,7 +21,7 @@ export const ProfileModal = () => {
   const { closeModal } = useModalControls();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { isRobinHood } = useNetwork();
+  const { isEvm, network } = useNetwork();
   const { currencyLabel } = useCurrency();
 
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'disconnect');
@@ -31,14 +31,16 @@ export const ProfileModal = () => {
   const [isWalletRefreshing, setIsWalletRefreshing] = useState(false);
 
   const { address: evmAddress } = useAccount();
-  const { data: ethBalance, refetch: refetchEthBalance } = useBalance({
+  const evmChain = evmChainByNetwork[network];
+  const { data: nativeBalance, refetch: refetchNativeBalance } = useBalance({
     address: evmAddress,
-    chainId: robinhoodChain.id,
-    query: { enabled: isRobinHood && Boolean(evmAddress) },
+    chainId: evmChain?.id,
+    query: { enabled: isEvm && Boolean(evmAddress) },
   });
 
   // wagmi v3 dropped `data.formatted`; format the raw bigint `value` ourselves.
-  const ethBalanceFormatted = ethBalance ? formatUnits(ethBalance.value, ethBalance.decimals) : '0';
+  const nativeBalanceFormatted = nativeBalance ? formatUnits(nativeBalance.value, nativeBalance.decimals) : '0';
+  const nativeSymbol = evmChain?.nativeCurrency.symbol ?? 'ETH';
 
   const handleDisconnect = () => {
     wallet.disconnect();
@@ -61,8 +63,8 @@ export const ProfileModal = () => {
   const handleRefreshAllBalances = async () => {
     try {
       setIsWalletRefreshing(true);
-      if (isRobinHood) {
-        await refetchEthBalance();
+      if (isEvm) {
+        await refetchNativeBalance();
       } else {
         await refreshBalance();
         await updateWalletStore();
@@ -102,10 +104,12 @@ export const ProfileModal = () => {
         </div>
 
         <div className="flex flex-col gap-2">
-          {isRobinHood ? (
+          {isEvm ? (
             <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
-              <span className="text-dark-100">ETH</span>
-              <span className="font-bold">{formatNum(ethBalanceFormatted, 4)} ETH</span>
+              <span className="text-dark-100">{nativeSymbol}</span>
+              <span className="font-bold">
+                {formatNum(nativeBalanceFormatted, 4)} {nativeSymbol}
+              </span>
             </div>
           ) : (
             <>
@@ -137,7 +141,7 @@ export const ProfileModal = () => {
           <Gift size={20} />
           My rewards
         </SecondaryButton>
-        {!isRobinHood && (
+        {!isEvm && (
           <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
             <ArrowLeftRight size={20} />
             Swap {currencyLabel}/$VLRM

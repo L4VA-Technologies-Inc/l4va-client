@@ -10,7 +10,7 @@ import { RewardsApiProvider } from '@/services/api/rewards';
 export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = false }) => {
   const [status, setStatus] = React.useState('idle');
   const wallet = useWallet('handler', 'isConnected');
-  const { isRobinHood, isEvmConnected } = useRewardsWalletConnection();
+  const { isEvm, isEvmConnected } = useRewardsWalletConnection();
 
   const handleEvmClaim = async () => {
     if (!isEvmConnected) {
@@ -149,7 +149,7 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
   };
 
   const handleClaim = async () => {
-    if (isRobinHood) {
+    if (isEvm) {
       await handleEvmClaim();
       return;
     }

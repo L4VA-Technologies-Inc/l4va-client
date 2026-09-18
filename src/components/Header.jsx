@@ -8,14 +8,11 @@ import { ConnectButton } from '@/components/ConnectButton';
 import { MenuDrawer } from '@/components/MenuDrawer';
 import { useAuth } from '@/lib/auth/auth';
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
-import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
 import L4vaIcon from '@/components/shared/L4vaIcon';
-import CardanoIcon from '@/icons/cardano.svg?react';
-import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
-import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useNetworkSwitcher } from '@/hooks/useNetworkSwitcher';
 
 const navLinks = [
   { to: '/create-ai', label: 'Create', isAuth: true },
@@ -44,27 +41,15 @@ export const Header = () => {
   const { openModal } = useModalControls();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const { currency: selectedCurrency, updateCurrency } = useCurrency();
-  const { network: selectedNetwork, updateNetwork, isRobinHood, isCardano } = useNetwork();
-
-  const currencyOptions = [
-    ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
-    { label: 'USD', value: 'usdt' },
-    ...(isCardano ? [] : [{ label: 'ETH', value: 'eth' }]),
-  ];
-
-  const networkOptions = [
-    {
-      label: 'Cardano',
-      value: ChainType.CARDANO,
-      icon: <CardanoIcon className="w-4 h-4 flex-shrink-0 text-white" />,
-    },
-    {
-      label: 'Robinhood',
-      value: ChainType.ROBINHOOD,
-      icon: <RobinhoodIcon className="w-4 h-4 flex-shrink-0 text-white" />,
-    },
-  ];
+  const { isRobinHood } = useNetwork();
+  const {
+    network: selectedNetwork,
+    currency: selectedCurrency,
+    networkOptions,
+    currencyOptions,
+    changeNetwork,
+    updateCurrency,
+  } = useNetworkSwitcher();
 
   const { notifications, fetching, readAll, hasMore, isLoading, fetchMore, refetch } = useNotifications();
   const observerTarget = useRef(null);
@@ -236,17 +221,7 @@ export const Header = () => {
                   options={networkOptions}
                   value={selectedNetwork}
                   disabled={isAuthenticated}
-                  onChange={val => {
-                    updateNetwork(val);
-                    // ADA isn't available on Robinhood and ETH isn't on Cardano —
-                    // swap to the network's native currency in the same tick to avoid
-                    // the select briefly falling back to "Select an option".
-                    if (val === ChainType.ROBINHOOD && selectedCurrency === 'ada') {
-                      updateCurrency('eth');
-                    } else if (val === ChainType.CARDANO && selectedCurrency === 'eth') {
-                      updateCurrency('ada');
-                    }
-                  }}
+                  onChange={changeNetwork}
                 />
               </div>
               <div className="hidden lg:block">

@@ -23,9 +23,9 @@ export const AcquireWindow = ({
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
   const { currencyLabel: assetSymbol } = useCurrency();
-  const { isRobinHood } = useNetwork();
+  const { isEvm } = useNetwork();
   const maxAcquireThreshold = 100000;
-  const minAcquireThresholdRangeHint = isRobinHood
+  const minAcquireThresholdRangeHint = isEvm
     ? `Allowed range when set: 0.01 to 100,000 ${assetSymbol}.`
     : `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
@@ -115,7 +115,7 @@ export const AcquireWindow = ({
               label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
               id="minAcquireThreshold"
               name="minAcquireThreshold"
-              placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
+              placeholder={isEvm ? 'e.g. 0.01' : 'e.g. 10000'}
               suffix={assetSymbol}
               type="text"
               value={
@@ -124,7 +124,7 @@ export const AcquireWindow = ({
                   : ''
               }
               onChange={e => {
-                if (isRobinHood) {
+                if (isEvm) {
                   const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
 
                   // Allow natural partial typing, but block committed values below 0.01 ETH.
@@ -146,7 +146,7 @@ export const AcquireWindow = ({
                 updateField('minAcquireThreshold', raw === '' ? null : Math.min(Number(raw), maxAcquireThreshold));
               }}
               onBlur={() => {
-                if (!isRobinHood) return;
+                if (!isEvm) return;
                 if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
                 const parsed = Number(data.minAcquireThreshold);
                 if (Number.isNaN(parsed)) {

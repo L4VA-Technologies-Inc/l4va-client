@@ -5,6 +5,7 @@ import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
 import CardanoIcon from '@/icons/cardano.svg?react';
 import RobinhoodIcon from '@/icons/robinhood.svg?react';
+import ArcIcon from '@/icons/arc.svg?react';
 
 type ChainConfig = {
   Icon: FunctionComponent<SVGProps<SVGSVGElement>>;
@@ -25,6 +26,11 @@ const CHAIN_CONFIG: Record<string, ChainConfig> = {
     label: 'Robinhood',
     hint: 'This vault lives on the Robinhood Chain (EVM).',
     color: '#CCFF00',
+  },
+  [ChainType.ARC]: {
+    Icon: ArcIcon,
+    label: 'Arc',
+    hint: 'This vault lives on Arc (EVM).',
   },
 };
 
