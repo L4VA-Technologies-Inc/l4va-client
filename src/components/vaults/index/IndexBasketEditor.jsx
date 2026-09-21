@@ -19,6 +19,10 @@ import {
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
+// Hides the native number-input spinner arrows (WebKit and Firefox).
+const noSpinner =
+  '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
 const shortAddress = address => `${address.slice(0, 6)}…${address.slice(-4)}`;
 
 const TokenLogo = ({ image, symbol, className = 'h-8 w-8' }) =>
@@ -192,20 +196,19 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
 
   const emit = next => onChange({ targets, reserveBps, ...next });
 
+  // Adding an asset re-splits the basket evenly; the user can fine-tune weights afterwards.
   const addAsset = token => {
-    const remaining = Math.max(BPS - total, 0);
-    emit({
-      targets: [
-        ...targets,
-        {
-          assetAddress: token.address.toLowerCase(),
-          symbol: token.symbol || '',
-          name: token.name || '',
-          image: token.image || null,
-          weightBps: remaining,
-        },
-      ],
-    });
+    const next = [
+      ...targets,
+      {
+        assetAddress: token.address.toLowerCase(),
+        symbol: token.symbol || '',
+        name: token.name || '',
+        image: token.image || null,
+      },
+    ];
+    const weights = evenWeights(next.length);
+    emit({ targets: next.map((t, i) => ({ ...t, weightBps: weights[i] })) });
   };
 
   const updateWeight = (address, percent) => {
@@ -269,7 +272,11 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
                   disabled={disabled}
                   value={bpsToPercent(t.weightBps)}
                   onChange={e => updateWeight(t.assetAddress, e.target.value)}
-                  className="w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none"
+                  onWheel={e => e.currentTarget.blur()}
+                  className={cn(
+                    'w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none',
+                    noSpinner
+                  )}
                 />
                 <span className="text-dark-100">%</span>
               </label>
@@ -314,12 +321,16 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
             step={0.5}
             disabled={disabled}
             value={bpsToPercent(reserveBps)}
+            onWheel={e => e.currentTarget.blur()}
             onChange={e =>
               emit({
                 reserveBps: Math.min(Math.max(percentToBps(e.target.value), 0), INDEX_MAX_RESERVE_BPS),
               })
             }
-            className="w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none"
+            className={cn(
+              'w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none',
+              noSpinner
+            )}
           />
           <span className="text-dark-100">%</span>
         </label>
