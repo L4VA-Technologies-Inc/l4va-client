@@ -102,8 +102,7 @@ export const VaultSettings = ({ vault }) => {
 
   const isOwner = user?.id === vault.owner.id;
   const isRobinhoodVault = vault?.chainType === 'robinhood';
-  // Cancel Vault is not supported on Robinhood (EVM) vaults.
-  const canCancelVaultByOwner = isOwner && vault?.canCancelVault && !isRobinhoodVault;
+  const canCancelVaultByOwner = isOwner && vault?.canCancelVault;
   // Burn Vault is not supported on Robinhood (EVM) vaults.
   const canBurnVault = isOwner && vault?.vaultStatus === 'failed' && !isRobinhoodVault;
 
