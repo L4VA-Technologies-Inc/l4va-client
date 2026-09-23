@@ -53,6 +53,7 @@ import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
 import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import {
   VAULT_ARCHETYPES,
   basketToAssetsWhitelist,
@@ -93,6 +94,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
   const { isRobinHood } = useNetwork();
+  const archetypes = useVaultArchetypes();
   const { createEvmVault } = useCreateEvmVault();
   const { isConnected: isEvmConnected } = useAccount();
 
@@ -136,16 +138,30 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
 
-  // Index vaults only exist on Robinhood; a draft restored on Cardano falls back to a standard vault.
+  // A vault type the chain no longer offers (a draft moved between chains, or a
+  // type switched off in settings) falls back to whatever that chain does offer.
   useEffect(() => {
-    if (!isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
-      setVaultData(prev => ({
-        ...prev,
-        vaultArchetype: VAULT_ARCHETYPES.STANDARD,
-        assetsWhitelist: [createEmptyWhitelistAsset()],
-      }));
+    if (archetypes.isLoading) return;
+    const current = vaultData.vaultArchetype || VAULT_ARCHETYPES.STANDARD;
+    if (archetypes.isArchetypeAvailable(current)) return;
+
+    const next = archetypes.defaultArchetype;
+    setVaultData(prev => ({
+      ...prev,
+      vaultArchetype: next,
+      ...(next === VAULT_ARCHETYPES.INDEX_WEIGHTED
+        ? { indexBasket: prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket() }
+        : { assetsWhitelist: [createEmptyWhitelistAsset()] }),
+    }));
+
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    if (next === VAULT_ARCHETYPES.INDEX_WEIGHTED && acquireOnlyPreset) {
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
     }
-  }, [isRobinHood, vaultData.vaultArchetype]);
+    // applySelectedPreset is stable enough for this one-shot correction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archetypes, vaultData.vaultArchetype, presets]);
 
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
@@ -212,12 +228,19 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   useEffect(() => {
     if (isPresetsLoading || isPresetsError || !Array.isArray(presets) || presets.length === 0) return;
+    // Wait for the flags: on an index-only chain the default preset is not the
+    // first one, and resolving twice would overwrite the right answer.
+    if (archetypes.isLoading) return;
 
     const vaultKey = vault?.id?.toString() ?? '__new__';
     if (resolvedForVaultRef.current === vaultKey) return;
     resolvedForVaultRef.current = vaultKey;
 
-    const firstPreset = presets[0];
+    // Index vaults raise native only, so acquire-only is the only preset that fits.
+    const wantsIndexVault =
+      (vaultData.vaultArchetype || archetypes.defaultArchetype) === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    const firstPreset = (wantsIndexVault && acquireOnlyPreset) || presets[0];
 
     const applyPresetData = preset => {
       if (!preset) return;
@@ -278,7 +301,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     }
 
     isPresetManuallyChanged.current = false;
-  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled]);
+    // vaultData.vaultArchetype is read once here, on the run that resolves this
+    // vault; a later archetype change goes through handleArchetypeChange.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled, archetypes]);
 
   // --- Step state sync ---
 

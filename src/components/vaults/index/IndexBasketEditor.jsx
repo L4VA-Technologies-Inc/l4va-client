@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Plus, Search, ShieldAlert, ShieldCheck, Shuffle, X } from 'lucide-react';
-import { useAccount } from 'wagmi';
+import { useMemo, useState } from 'react';
+import { Shuffle, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { useClickOutside } from '@/hooks/useClickOutside';
-import { useEvmAssets } from '@/hooks/useEvmAssets';
-import { useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
+import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { useAssetSource } from '@/hooks/useAssetSource';
 import {
   BPS,
   INDEX_MAX_ASSETS,
@@ -69,238 +67,70 @@ export const BasketAllocationBar = ({ targets, reserveBps = 0, className = '' })
 };
 
 /**
- * A token as the picker hands it to the basket. `useEvmAssets` speaks the
- * whitelist's `GroupedPolicy` shape (policyId = contract address), the token
- * registry speaks its own; both are normalised here.
- */
-const fromGroupedPolicy = policy => ({
-  address: policy.policyId,
-  symbol: policy.name || policy.assetName || '',
-  name: policy.collectionName || policy.name || '',
-  image: policy.imageUrl || policy.image || null,
-  isVerified: policy.isVerified,
-});
-
-const VerificationBadge = ({ isVerified }) => {
-  if (isVerified === undefined || isVerified === null) return null;
-  return isVerified ? (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-green-500/30 bg-green-500/20 px-2 py-0.5 text-[11px] text-green-400">
-      <ShieldCheck className="h-3 w-3" />
-      Verified
-    </span>
-  ) : (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-orange-500/30 bg-orange-500/20 px-2 py-0.5 text-[11px] text-orange-400">
-      <ShieldAlert className="h-3 w-3" />
-      Unverified
-    </span>
-  );
-};
-
-/**
- * Asset search for the basket. Tokens come from the same source the acquire
- * step's asset whitelist uses — `useEvmAssets`, i.e. the connected wallet's
- * holdings plus the chain-wide Blockscout listing, searched with a debounce and
- * resolved by contract address when one is pasted — on top of the curated
- * Robinhood stock and token registry.
+ * Adds one asset to the basket through the same field the vault-creation asset
+ * whitelist uses: wallet holdings and chain-wide tokens, searched with a
+ * debounce, verification shown per row, and a pasted contract address resolved
+ * to its symbol and logo. Picking an asset adds it and clears the field, so the
+ * field never holds a selection of its own.
  */
 const AssetPicker = ({ existing, onAdd, disabled, steel }) => {
-  const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(false);
-  const [chainMatches, setChainMatches] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [draft, setDraft] = useState({ policyId: '' });
   const [isResolving, setIsResolving] = useState(false);
-  const containerRef = useRef(null);
-  useClickOutside(containerRef, () => setOpen(false));
+  const source = useAssetSource();
 
-  const { isConnected } = useAccount();
-  const { data: rwas = [], isLoading: rwasLoading } = useRobinhoodRwas(open);
-  const { data: memecoins = [], isLoading: memesLoading } = useRobinhoodMemecoins(open);
-  const { data: walletData, isLoading: walletLoading, searchPolicies, lookupPolicies } = useEvmAssets();
-  const browsePolicies = useMemo(() => walletData?.data || [], [walletData]);
-
-  // `useEvmAssets` hands back fresh callbacks on every render while no wallet
-  // is connected, so the search effect reads them through a ref rather than
-  // re-running (and re-scheduling itself) on each one.
-  const searchRef = useRef(searchPolicies);
-  useEffect(() => {
-    searchRef.current = searchPolicies;
-  }, [searchPolicies]);
-
-  const trimmed = query.trim();
-
-  // Same 300ms debounce as the whitelist input: every keystroke would otherwise
-  // hit Blockscout's search endpoint.
-  useEffect(() => {
-    if (!open) return undefined;
-    if (!trimmed) {
-      setChainMatches([]);
-      setIsSearching(false);
-      return undefined;
-    }
-    setIsSearching(true);
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      try {
-        const results = await searchRef.current(trimmed);
-        if (!cancelled) setChainMatches(results);
-      } catch (err) {
-        console.error('Token search failed:', err);
-        if (!cancelled) setChainMatches([]);
-      } finally {
-        if (!cancelled) setIsSearching(false);
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [trimmed, open]);
-
-  const groups = useMemo(() => {
-    const q = trimmed.toLowerCase();
-    const matches = token =>
-      token?.address &&
-      !existing.has(token.address.toLowerCase()) &&
-      (!q ||
-        token.symbol?.toLowerCase().includes(q) ||
-        token.name?.toLowerCase().includes(q) ||
-        token.address.toLowerCase() === q);
-
-    const registry = [
-      { label: 'Stocks & RWA', items: (Array.isArray(rwas) ? rwas : []).filter(matches).slice(0, 20) },
-      {
-        label: 'Tokens',
-        items: (Array.isArray(memecoins) ? memecoins : [])
-          .filter(t => t.asset_class !== 'vault_token')
-          .filter(matches)
-          .slice(0, 20),
-      },
-    ];
-
-    // Anything the registry already lists is not repeated in the wallet group.
-    const listed = new Set(registry.flatMap(g => g.items.map(t => t.address.toLowerCase())));
-    const source = trimmed ? chainMatches : browsePolicies;
-    const walletItems = source
-      .map(fromGroupedPolicy)
-      .filter(token => !listed.has(token.address.toLowerCase()))
-      .filter(matches)
-      .slice(0, 20);
-
-    return [...registry, { label: 'Wallet & chain tokens', items: walletItems }].filter(g => g.items.length > 0);
-  }, [rwas, memecoins, chainMatches, browsePolicies, trimmed, existing]);
-
-  const canAddCustom =
-    ADDRESS_RE.test(trimmed) &&
-    !existing.has(trimmed.toLowerCase()) &&
-    !groups.some(g => g.items.some(t => t.address.toLowerCase() === trimmed.toLowerCase()));
-
-  const add = token => {
-    onAdd(token);
-    setQuery('');
-    setChainMatches([]);
-    setOpen(false);
+  const add = policy => {
+    onAdd({
+      address: policy.policyId,
+      symbol: policy.name || policy.assetName || '',
+      name: policy.collectionName || policy.name || '',
+      image: policy.imageUrl || policy.image || null,
+    });
+    setDraft({ policyId: '' });
   };
 
-  // A pasted address is resolved before it is added, so the row shows the real
-  // symbol and logo instead of a bare address until the backend re-reads it.
-  const addPastedAddress = async () => {
+  // A token the chain does not index yet still belongs in a basket — the vault
+  // reads its symbol and decimals on launch either way. Resolve what we can
+  // first so the row is not a bare address.
+  const typed = draft.policyId.trim();
+  const canAddPasted = ADDRESS_RE.test(typed) && !existing.has(typed.toLowerCase());
+  const addPasted = async () => {
     setIsResolving(true);
     try {
-      const [policy] = await lookupPolicies([trimmed]);
-      add(policy ? fromGroupedPolicy(policy) : { address: trimmed, symbol: '', name: '', image: null });
+      const [policy] = await source.lookupPolicies([typed]);
+      add(policy || { policyId: typed });
     } catch (err) {
       console.error('Token lookup failed:', err);
-      add({ address: trimmed, symbol: '', name: '', image: null });
+      add({ policyId: typed });
     } finally {
       setIsResolving(false);
     }
   };
 
-  const isLoadingAny = rwasLoading || memesLoading || walletLoading || isSearching;
-
   return (
-    <div ref={containerRef} className="relative">
-      <div
-        className={cn(
-          'flex items-center gap-2 rounded-lg border px-4 h-[52px]',
-          steel ? 'bg-steel-850 border-steel-750' : 'bg-input-bg border-steel-750',
-          disabled && 'opacity-50'
-        )}
-      >
-        <Search className="h-4 w-4 text-dark-100" aria-hidden />
-        <input
-          type="text"
-          aria-label="Search assets to add to the basket"
-          className="w-full bg-transparent text-white placeholder:text-dark-100 focus:outline-none"
-          placeholder="Search stocks and tokens, or paste a token address"
-          value={query}
-          disabled={disabled}
-          onFocus={() => setOpen(true)}
-          onChange={e => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-        />
-        {(isSearching || isResolving) && <Loader2 className="h-4 w-4 animate-spin text-dark-100" aria-hidden />}
-      </div>
-      {open && !disabled && (
-        <div className="absolute left-0 right-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border border-steel-750 bg-steel-850 shadow-xl">
-          {canAddCustom && (
-            <button
-              type="button"
-              disabled={isResolving}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-steel-750 disabled:opacity-50"
-              onClick={addPastedAddress}
-            >
-              <Plus className="h-4 w-4 text-orange-500" />
-              <span className="text-sm">
-                Add token <span className="font-mono">{shortAddress(trimmed)}</span>
-                <span className="block text-xs text-dark-100">
-                  {isResolving ? 'Reading the token…' : 'Symbol and decimals are read from the chain'}
-                </span>
-              </span>
-            </button>
-          )}
-          {groups.map(group => (
-            <div key={group.label}>
-              <p className="sticky top-0 bg-steel-850 px-4 pt-3 pb-1 text-xs font-russo uppercase text-dark-100">
-                {group.label}
-              </p>
-              {group.items.map(token => (
-                <button
-                  key={`${group.label}-${token.address}`}
-                  type="button"
-                  className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-steel-750"
-                  onClick={() => add(token)}
-                >
-                  <TokenLogo image={token.image} symbol={token.symbol} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">
-                        {token.symbol || shortAddress(token.address)}
-                      </span>
-                      <VerificationBadge isVerified={token.isVerified} />
-                    </span>
-                    <span className="block truncate text-xs text-dark-100">{token.name}</span>
-                  </span>
-                  <span className="font-mono text-xs text-dark-100">{shortAddress(token.address)}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-          {isLoadingAny && groups.length === 0 && <p className="px-4 py-3 text-sm text-dark-100">Loading assets…</p>}
-          {!isLoadingAny && groups.length === 0 && !canAddCustom && (
-            <p className="px-4 py-3 text-sm text-dark-100">
-              No matching assets. Paste a Robinhood Chain token address to add it directly.
-            </p>
-          )}
-          {!isConnected && (
-            <p className="border-t border-steel-750 px-4 py-2 text-xs text-dark-100">
-              Connect your Robinhood wallet to search your holdings as well.
-            </p>
-          )}
-        </div>
-      )}
+    <div className={cn(disabled && 'pointer-events-none opacity-50')}>
+      <AssetSearchInput
+        allowUnverified
+        excludePolicyIds={[...existing]}
+        extraOption={
+          canAddPasted
+            ? {
+                title: `Add token ${shortAddress(typed)}`,
+                subtitle: isResolving ? 'Reading the token…' : 'Symbol and decimals are read from the chain',
+                disabled: isResolving,
+                onSelect: addPasted,
+              }
+            : null
+        }
+        placeholder="Search tokens or paste a token address"
+        showSelectedCard={false}
+        showVerificationHint={false}
+        source={source}
+        value={draft}
+        variant={steel ? 'steel' : 'default'}
+        onChange={text => setDraft({ policyId: text })}
+        onClear={() => setDraft({ policyId: '' })}
+        onSelect={add}
+      />
     </div>
   );
 };

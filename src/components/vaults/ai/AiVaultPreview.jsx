@@ -24,6 +24,12 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
+import {
+  formatBps,
+  INDEX_MAX_ASSETS,
+  validateIndexBasket,
+  VAULT_ARCHETYPES,
+} from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
 const isEmptyValue = value =>
@@ -563,9 +569,15 @@ export const AiVaultPreview = ({
   const canOpenInForm = vaultSchema.isValidSync(vault);
   const whitelistAssets = (vault.assetsWhitelist || []).filter(item => item?.policyId);
   const whitelistCount = whitelistAssets.length;
+  // An index vault has no whitelist to curate: its "assets" are the basket it
+  // buys, which the assistant cannot invent and the user picks here.
+  const isIndexVault = vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  const basketTargets = vault.indexBasket?.targets || [];
+  const basketProblem = isIndexVault ? validateIndexBasket(vault.indexBasket) : null;
 
   const requiredKeys = [
     ...BASE_REQUIRED_KEYS,
+    ...(isIndexVault ? ['indexBasket'] : []),
     ...(vault.isAcquireOnly ? [] : ['contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist']),
     ...(Number(vault.tokensForAcquires) === 0 ? [] : ['acquireWindowDuration', 'acquireOpenWindowType']),
     ...(vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE && vault.valueMethod === 'lbe' ? ['contributorWhitelist'] : []),
@@ -581,6 +593,7 @@ export const AiVaultPreview = ({
     if (key === 'contributorWhitelist' || key === 'acquirerWhitelist') {
       return filledWallets(vault[key]).length === 0;
     }
+    if (key === 'indexBasket') return !!basketProblem;
     return isEmptyValue(vault[key]);
   });
   const completionPercent = requiredKeys.length
@@ -589,6 +602,13 @@ export const AiVaultPreview = ({
 
   const requestIdentityGeneration = () => {
     onSendMessage?.('Please generate the vault name, ticker, description and tags now.');
+  };
+
+  const openBasketModal = () => {
+    openModal('AiIndexBasketModal', {
+      basket: vault.indexBasket,
+      setBasket: basket => onUpdateVault('indexBasket', basket),
+    });
   };
 
   const openWhitelistModal = () => {
@@ -789,6 +809,42 @@ export const AiVaultPreview = ({
         </Section>
 
         <Section id="assets" isOpen={openSections.has('assets')} label="Assets" onToggle={toggleSection}>
+          {isIndexVault && (
+            <div className="pb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-dark-100">Index basket</span>
+                <span className="text-dark-100 text-sm">
+                  {basketTargets.length}/{INDEX_MAX_ASSETS}
+                </span>
+              </div>
+              {basketTargets.length > 0 ? (
+                <>
+                  <ul className="mt-3 space-y-2">
+                    {basketTargets.map(target => (
+                      <li key={target.assetAddress} className="flex items-center gap-2 min-w-0">
+                        {target.image && (
+                          <img alt="" className="h-6 w-6 rounded-full object-cover shrink-0" src={target.image} />
+                        )}
+                        <span className="text-white text-sm truncate">{target.symbol || target.assetAddress}</span>
+                        <span className="ml-auto text-sm tabular-nums text-dark-100">
+                          {formatBps(target.weightBps)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {basketProblem && <p className="mt-2 text-sm text-red-400">{basketProblem}</p>}
+                </>
+              ) : (
+                <p className="mt-1 text-sm text-dark-100">
+                  Pick the tokens this vault buys when the acquire window locks, and their target weights.
+                </p>
+              )}
+              <SecondaryButton className="mt-3 w-full" onClick={openBasketModal}>
+                <ListChecks className="w-4 h-4" />
+                {basketTargets.length > 0 ? 'Manage index basket' : 'Add index basket'}
+              </SecondaryButton>
+            </div>
+          )}
           {!isAcquireOnly && (
             <div className="pb-3">
               <div className="flex items-center justify-between">

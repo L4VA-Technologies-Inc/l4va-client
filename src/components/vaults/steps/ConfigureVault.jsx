@@ -16,6 +16,7 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import {
   VAULT_ARCHETYPES,
   VAULT_ARCHETYPE_HINT,
@@ -36,7 +37,9 @@ export const ConfigureVault = ({
   onArchetypeChange,
 }) => {
   const { isCardano } = useNetwork();
+  const archetypes = useVaultArchetypes();
   const isIndexVault = !isCardano && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  const archetypeOptions = VAULT_ARCHETYPE_OPTIONS.filter(option => archetypes.isArchetypeAvailable(option.name));
   const { currencyLabel } = useCurrency();
 
   const handleChange = e => {
@@ -93,12 +96,14 @@ export const ConfigureVault = ({
               onChange={handleChange}
             />
           </div>
-          {!isCardano && (
+          {/* A chain that offers one vault type has nothing to ask: the type is
+              stated, not chosen. Reopening a type is a settings change. */}
+          {!isCardano && archetypes.hasChoice && (
             <div>
               <LavaRadio
                 label="*Vault type"
                 name="vaultArchetype"
-                options={VAULT_ARCHETYPE_OPTIONS}
+                options={archetypeOptions}
                 value={data.vaultArchetype || VAULT_ARCHETYPES.STANDARD}
                 onChange={onArchetypeChange}
                 hint={VAULT_ARCHETYPE_HINT}
@@ -110,21 +115,40 @@ export const ConfigureVault = ({
               )}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <LavaRadio
-                label="*Vault Preset"
-                name="preset"
-                options={presetOptions}
-                value={presetValue}
-                onChange={onPresetChange}
-                onDeleteOption={onDeletePreset}
-                isOptionDeletable={option => option?.isCustom}
-                deletingOptionId={deletingPresetId}
-                hint="Choose a preset to auto-fill vault configuration fields."
-              />
-              {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
+          {!isCardano && !archetypes.hasChoice && isIndexVault && (
+            <div className="rounded-lg bg-steel-850 p-4">
+              <p className="font-bold uppercase">Index Weighted Vault</p>
+              <p className="mt-2 text-sm text-dark-100">
+                Acquirers fund the vault, and when the acquire window locks it buys the basket you set in the Acquire
+                step at your target weights. Holders can re-weight it later by proposal.
+              </p>
             </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {presetOptions.length > 1 ? (
+              <div>
+                <LavaRadio
+                  label="*Vault Preset"
+                  name="preset"
+                  options={presetOptions}
+                  value={presetValue}
+                  onChange={onPresetChange}
+                  onDeleteOption={onDeletePreset}
+                  isOptionDeletable={option => option?.isCustom}
+                  deletingOptionId={deletingPresetId}
+                  hint="Choose a preset to auto-fill vault configuration fields."
+                />
+                {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
+              </div>
+            ) : (
+              // One preset is not a choice — state it instead of rendering a
+              // radio group the user cannot answer differently.
+              <div>
+                <span className="uppercase font-bold">Vault preset</span>
+                <p className="mt-2 text-sm text-dark-100">{presetOptions[0]?.label || 'Loading…'}</p>
+                {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
+              </div>
+            )}
             <div>
               <LavaRadio
                 label="*Vault privacy"

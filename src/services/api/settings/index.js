@@ -6,4 +6,9 @@ export class SettingsApiProvider {
     const response = await axiosInstance.get(SettingsConfigProvider.getVlrmFeeSettings());
     return response;
   }
+
+  static async getVaultCreationFlags() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getVaultCreationFlags());
+    return response;
+  }
 }

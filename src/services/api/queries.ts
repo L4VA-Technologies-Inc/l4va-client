@@ -805,6 +805,16 @@ export const useVlrmFeeSettings = () => {
   });
 };
 
+/** Which vault types each chain currently offers, plus the EVM NFT-asset flag. */
+export const useVaultCreationFlags = () => {
+  return useQuery({
+    queryKey: ['vault-creation-flags'],
+    queryFn: () => SettingsApiProvider.getVaultCreationFlags(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
 export const useTrackWidgetSwap = () => {
   return useMutation({
     mutationFn: (payload: unknown) => RewardsApiProvider.trackWidgetSwap(payload),

@@ -20,6 +20,7 @@ import { createSmoothTextRevealer } from './smoothTextRevealer';
 import { initialVaultState } from '@/components/vaults/constants/vaults.constants';
 import { environments } from '@/constants/core.constants';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import { AiApiProvider } from '@/services/api/ai';
 import { CoreApiProvider } from '@/services/api/core';
 import { usePresets } from '@/services/api/queries';
@@ -53,7 +54,20 @@ export const useAiVaultBuilder = () => {
   const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isRobinHood)]);
   // The draft is shared with the manual create form via localStorage, so a manual edit made
   // between visits wins over this hook's own (possibly stale) session snapshot.
+  const archetypes = useVaultArchetypes();
   const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
+
+  // The assistant never picks a vault type — it builds the one this chain
+  // offers. Stamping it on the draft keeps the chat, the preview and the launch
+  // payload on the same product.
+  useEffect(() => {
+    if (archetypes.isLoading) return;
+    setVault(prev =>
+      archetypes.isArchetypeAvailable(prev.vaultArchetype)
+        ? prev
+        : enforceVaultCoherence({ ...prev, vaultArchetype: archetypes.defaultArchetype })
+    );
+  }, [archetypes]);
   const [status, setStatus] = useState(restored?.status ?? 'gathering');
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);

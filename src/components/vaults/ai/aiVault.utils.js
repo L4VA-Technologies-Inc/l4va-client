@@ -3,6 +3,11 @@ import {
   initialVaultState,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
+import {
+  basketToAssetsWhitelist,
+  emptyIndexBasket,
+  VAULT_ARCHETYPES,
+} from '@/components/vaults/index/indexVault.utils';
 
 export const AI_VAULT_STORAGE_META_KEY = 'storageVaultAiMeta';
 export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
@@ -168,6 +173,16 @@ export const applyPresetToDraft = (vault, presets) => {
 export const enforceVaultCoherence = vault => {
   const next = { ...vault };
 
+  // An index vault's raise has a fixed shape: acquirers fund it in the native
+  // currency and the vault buys the basket itself, so there is no contribution
+  // window and nothing for the whitelist to gate. The whitelist still mirrors
+  // the basket, because the vault record lists the tokens it will hold.
+  if (next.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+    next.isAcquireOnly = true;
+    next.indexBasket = next.indexBasket?.targets ? next.indexBasket : emptyIndexBasket();
+    next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
+  }
+
   if (next.isAcquireOnly) {
     next.tokensForAcquires = 100;
   }
@@ -220,10 +235,11 @@ export const mergeResolvedAssets = (vault, resolvedAssets) => {
   return { ...vault, assetsWhitelist: [...existing, ...added] };
 };
 
+// Robinhood only offers index-weighted vaults for now, so every starter is one.
 export const RH_VAULT_STARTER_OPTIONS = [
-  { label: 'Launch a memecoin backed by RWAs', value: 'Launch a memecoin backed by RWAs' },
   { label: 'Launch a community managed ETF', value: 'Launch a community managed ETF' },
-  { label: 'Fractionalize a basket of NFTs', value: 'Fractionalize a basket of NFTs' },
+  { label: 'Build a memecoin index', value: 'Build an index of the biggest memecoins' },
+  { label: 'Track a sector', value: 'Build an index that tracks a sector I pick' },
 ];
 
 const CARDANO_AI_GREETING = {
