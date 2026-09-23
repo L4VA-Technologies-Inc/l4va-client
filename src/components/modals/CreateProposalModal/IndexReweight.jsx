@@ -35,7 +35,7 @@ const diffBaskets = (current, proposed) => {
 };
 
 const IndexReweight = ({ vault, onDataChange, error }) => {
-  const { data, isLoading } = useVaultIndex(vault?.id);
+  const { data, isLoading, isFetching, refetch } = useVaultIndex(vault?.id);
   const current = data?.config || vault?.indexConfig;
   const [basket, setBasket] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -74,10 +74,22 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
     }
   };
 
-  if (isLoading || !basket) {
+  if (!basket) {
+    // No basket and nothing in flight means the overview request failed and
+    // `vault.indexConfig` was empty too — a spinner here would never resolve.
+    if (isLoading || isFetching) {
+      return (
+        <div className="flex justify-center py-6">
+          <Spinner />
+        </div>
+      );
+    }
     return (
-      <div className="flex justify-center py-6">
-        <Spinner />
+      <div className="flex flex-col items-center gap-3 py-6">
+        <p className="text-sm text-red-400">The current index basket could not be loaded.</p>
+        <SecondaryButton size="sm" onClick={() => refetch()}>
+          Try again
+        </SecondaryButton>
       </div>
     );
   }

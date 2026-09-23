@@ -74,11 +74,38 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       ? [{ value: 'index_reweight', label: 'Index Re-weight' }, ...evmExecutionOptions]
       : evmExecutionOptions;
   }, [isEvmVault, isIndex]);
+  // Filter execution options based on vault status
+  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
+  const availableExecutionOptions = useMemo(() => {
+    const isExpansion =
+      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
+
+    if (isExpansion) {
+      return activeExecutionOptions.map(option => {
+        if (option.value === 'distribution') {
+          return option;
+        }
+        return {
+          ...option,
+          disabled: true,
+          label: option.label + ' (Not available during expansion)',
+        };
+      });
+    }
+
+    return activeExecutionOptions;
+  }, [vault.vaultStatus, activeExecutionOptions]);
+
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : isIndex ? 'index_reweight' : 'marketplace_action'
-  );
+  // Open on the option the vault is about to use, but never on one the current
+  // status has disabled — during either expansion only Distribution is live.
+  const [selectedOption, setSelectedOption] = useState(() => {
+    const preferred = isIndex ? 'index_reweight' : 'marketplace_action';
+    const isEnabled = value => availableExecutionOptions.some(option => option.value === value && !option.disabled);
+    if (isEnabled(preferred)) return preferred;
+    return availableExecutionOptions.find(option => !option.disabled)?.value ?? preferred;
+  });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -121,28 +148,6 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     return BigInt(feeMap[selectedOption] || 0);
   }, [governanceFees, selectedOption, isEvmVault]);
 
-  // Filter execution options based on vault status
-  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
-  const availableExecutionOptions = useMemo(() => {
-    const isExpansion =
-      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
-
-    if (isExpansion) {
-      return activeExecutionOptions.map(option => {
-        if (option.value === 'distribution') {
-          return option;
-        }
-        return {
-          ...option,
-          disabled: true,
-          label: option.label + ' (Not available during expansion)',
-        };
-      });
-    }
-
-    return activeExecutionOptions;
-  }, [vault.vaultStatus, activeExecutionOptions]);
-
   const handleCreateProposal = () => {
     if (!isWalletConnected) {
       toast.error(`Please connect your ${connectWalletLabel} first`);
@@ -170,7 +175,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const isValidProposal = () => {
+    const selected = availableExecutionOptions.find(option => option.value === selectedOption);
     return (
+      !selected ||
+      selected.disabled ||
       !proposalTitle.trim() ||
       proposalTitle.length > 200 ||
       !proposalDescription.trim() ||
@@ -577,6 +585,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {!availableExecutionOptions.some(option => !option.disabled) && (
+              <p className="text-sm text-red-400">
+                No proposal type is available for this vault right now. Wait for the current expansion to finish.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">

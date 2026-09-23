@@ -72,7 +72,11 @@ export const useVaultIndex = (id: string, enabled = true) => {
     queryKey: ['vault-index', id],
     queryFn: () => VaultsApiProvider.getIndexOverview(id),
     enabled: !!id && enabled,
+    // Holdings are valued from swap quotes the backend caches for a minute,
+    // and a rebalance can progress while the page stays open, so the view
+    // refreshes on the same cadence instead of waiting for a remount.
     staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 };
 
