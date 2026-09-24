@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { InfoRow } from '@/components/ui/infoRow';
 import { formatCompactNumber, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
@@ -56,6 +57,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-xl">{name || 'No name'}</h3>
                 <ChainBadge chainType={vault.chainType} className="bg-steel-850 p-1.5" />
+                <VaultTypeBadge vault={vault} className="bg-steel-850" />
               </div>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>

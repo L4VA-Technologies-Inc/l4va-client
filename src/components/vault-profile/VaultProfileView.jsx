@@ -13,6 +13,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
@@ -486,6 +487,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
               )}
             </div>
+            <VaultTypeBadge vault={vault} variant="banner" className="my-1 self-start" />
             {(vault.vaultTokenTicker || vault.ftTokenSupply) && (
               <div className="flex items-center gap-2 text-sm text-dark-100">
                 {vault.vaultTokenTicker && <span className="font-medium text-white">${vault.vaultTokenTicker}</span>}

@@ -1,4 +1,9 @@
 import { hasNoAcquirePhase } from '@/components/vaults/constants/vaults.constants';
+import {
+  VAULT_ARCHETYPES,
+  basketToAssetsWhitelist,
+  toIndexBasketPayload,
+} from '@/components/vaults/index/indexVault.utils';
 
 export const formatVaultData = (vaultData, isRobinHood = false) => {
   const formattedData = { ...vaultData };
@@ -19,6 +24,14 @@ export const formatVaultData = (vaultData, isRobinHood = false) => {
     formattedData.tokensForAcquires = 0;
     formattedData.acquireWindowDuration = null;
     formattedData.acquireOpenWindowTime = null;
+  }
+
+  if (isRobinHood && formattedData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+    formattedData.indexBasket = toIndexBasketPayload(formattedData.indexBasket);
+    formattedData.assetsWhitelist = basketToAssetsWhitelist(formattedData.indexBasket);
+  } else {
+    formattedData.vaultArchetype = VAULT_ARCHETYPES.STANDARD;
+    delete formattedData.indexBasket;
   }
 
   return formattedData;

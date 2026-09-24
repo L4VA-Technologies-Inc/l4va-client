@@ -53,6 +53,12 @@ import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
 import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
+import {
+  VAULT_ARCHETYPES,
+  basketToAssetsWhitelist,
+  emptyIndexBasket,
+} from '@/components/vaults/index/indexVault.utils';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -88,6 +94,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
   const { isRobinHood } = useNetwork();
+  const archetypes = useVaultArchetypes();
   const { createEvmVault } = useCreateEvmVault();
   const { isConnected: isEvmConnected } = useAccount();
 
@@ -129,6 +136,33 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     }
   }, [isRobinHood, vaultData.privacy]);
 
+  const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+
+  // A vault type the chain no longer offers (a draft moved between chains, or a
+  // type switched off in settings) falls back to whatever that chain does offer.
+  useEffect(() => {
+    if (archetypes.isLoading) return;
+    const current = vaultData.vaultArchetype || VAULT_ARCHETYPES.STANDARD;
+    if (archetypes.isArchetypeAvailable(current)) return;
+
+    const next = archetypes.defaultArchetype;
+    setVaultData(prev => ({
+      ...prev,
+      vaultArchetype: next,
+      ...(next === VAULT_ARCHETYPES.INDEX_WEIGHTED
+        ? { indexBasket: prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket() }
+        : { assetsWhitelist: [createEmptyWhitelistAsset()] }),
+    }));
+
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    if (next === VAULT_ARCHETYPES.INDEX_WEIGHTED && acquireOnlyPreset) {
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
+    }
+    // applySelectedPreset is stable enough for this one-shot correction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archetypes, vaultData.vaultArchetype, presets]);
+
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
   const visibleSteps = steps.filter(s => {
@@ -142,6 +176,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       Array.isArray(presets)
         ? presets
             .filter(preset => preset?.id !== undefined && preset?.id !== null)
+            // Index vaults raise native only, so the acquire-only preset is the single valid choice.
+            .filter(preset => !isIndexVault || preset?.type?.toLowerCase() === 'acquire_only')
             .map(preset => ({
               name: preset.id.toString(),
               label: preset?.name || preset?.type || 'Preset',
@@ -149,7 +185,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
               isCustom: preset?.type === 'custom',
             }))
         : [],
-    [presets]
+    [presets, isIndexVault]
   );
 
   // Whether the form should be fully blocked (loading or fetch error)
@@ -192,12 +228,19 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   useEffect(() => {
     if (isPresetsLoading || isPresetsError || !Array.isArray(presets) || presets.length === 0) return;
+    // Wait for the flags: on an index-only chain the default preset is not the
+    // first one, and resolving twice would overwrite the right answer.
+    if (archetypes.isLoading) return;
 
     const vaultKey = vault?.id?.toString() ?? '__new__';
     if (resolvedForVaultRef.current === vaultKey) return;
     resolvedForVaultRef.current = vaultKey;
 
-    const firstPreset = presets[0];
+    // Index vaults raise native only, so acquire-only is the only preset that fits.
+    const wantsIndexVault =
+      (vaultData.vaultArchetype || archetypes.defaultArchetype) === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    const firstPreset = (wantsIndexVault && acquireOnlyPreset) || presets[0];
 
     const applyPresetData = preset => {
       if (!preset) return;
@@ -258,7 +301,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     }
 
     isPresetManuallyChanged.current = false;
-  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled]);
+    // vaultData.vaultArchetype is read once here, on the run that resolves this
+    // vault; a later archetype change goes through handleArchetypeChange.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled, archetypes]);
 
   // --- Step state sync ---
 
@@ -528,7 +574,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   };
 
   const updateField = async (fieldName, value) => {
-    setVaultData(prev => ({ ...prev, [fieldName]: value }));
+    setVaultData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      // The whitelist of an index vault is derived from its basket, never edited directly.
+      ...(fieldName === 'indexBasket' && isIndexVault ? { assetsWhitelist: basketToAssetsWhitelist(value) } : {}),
+    }));
 
     // When editing a field on a non-config step, auto-switch to the advanced preset if available.
     // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
@@ -591,6 +642,39 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       // Reset minAcquireThreshold when switching away from acquire-only
       minAcquireThreshold: isAcquireOnly ? (prev.minAcquireThreshold ?? null) : null,
     }));
+  };
+
+  const handleArchetypeChange = value => {
+    if (value === vaultData.vaultArchetype) return;
+
+    if (value === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+      const acquireOnlyPreset = presets.find(p => p?.type?.toLowerCase() === 'acquire_only');
+      if (!acquireOnlyPreset) {
+        toast.error('Index vaults need the Acquire-Only preset, which is not available right now.');
+        return;
+      }
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
+      setVaultData(prev => {
+        const indexBasket = prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket();
+        return {
+          ...prev,
+          vaultArchetype: VAULT_ARCHETYPES.INDEX_WEIGHTED,
+          indexBasket,
+          assetsWhitelist: basketToAssetsWhitelist(indexBasket),
+        };
+      });
+    } else {
+      setVaultData(prev => ({
+        ...prev,
+        vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+        assetsWhitelist: [createEmptyWhitelistAsset()],
+      }));
+    }
+
+    if (vault) isPresetManuallyChanged.current = true;
+    clearFieldError('indexBasket');
+    clearFieldError('assetsWhitelist');
   };
 
   const handlePresetChange = value => {
@@ -933,6 +1017,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
             onRemoveWhitelistItem={handleRemoveWhitelistItem}
+            onArchetypeChange={handleArchetypeChange}
           />
         );
       case 2:

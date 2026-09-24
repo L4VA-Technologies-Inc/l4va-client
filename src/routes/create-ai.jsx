@@ -48,8 +48,15 @@ const CreateAiComponent = () => {
     navigate({ to: '/create' });
   };
 
-  // The chat owns the image flow; the asset picker is the one reserved action that needs a modal.
+  // The chat owns the image flow; the pickers are the reserved actions that need a modal.
   const handleOptionSelect = option => {
+    if (option.value === 'choose_basket') {
+      openModal('AiIndexBasketModal', {
+        basket: builder.vault.indexBasket,
+        setBasket: basket => builder.updateVaultField('indexBasket', basket),
+      });
+      return;
+    }
     if (option.value === 'choose_assets') {
       openModal('AiAssetWhitelistModal', {
         whitelist: builder.vault.assetsWhitelist || [],

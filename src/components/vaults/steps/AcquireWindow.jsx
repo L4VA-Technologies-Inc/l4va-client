@@ -13,6 +13,8 @@ import {
   getLiquidityPoolContributionHint,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
+import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
+import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 
 export const AcquireWindow = ({
   data,
@@ -24,6 +26,7 @@ export const AcquireWindow = ({
   const isAcquireOnly = data.isAcquireOnly === true;
   const { currencyLabel: assetSymbol } = useCurrency();
   const { isRobinHood } = useNetwork();
+  const isIndexVault = isRobinHood && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
   const maxAcquireThreshold = 100000;
   const minAcquireThresholdRangeHint = isRobinHood
     ? `Allowed range when set: 0.01 to 100,000 ${assetSymbol}.`
@@ -59,6 +62,15 @@ export const AcquireWindow = ({
 
   return (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16 min-w-0 overflow-x-hidden">
+      {isIndexVault && (
+        <div className="md:col-span-2 rounded-xl border border-steel-750 p-4 md:p-6">
+          <IndexBasketEditor
+            value={data.indexBasket}
+            onChange={basket => updateField('indexBasket', basket)}
+            error={errors.indexBasket}
+          />
+        </div>
+      )}
       <div className="space-y-12 min-w-0">
         <div>
           <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">

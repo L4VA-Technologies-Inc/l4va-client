@@ -11,6 +11,7 @@ import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
 import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
 import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
+import { IndexReweightSummary } from './ProposalInfo/IndexReweightSummary';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
 import { VoteStateBanner } from './ProposalInfo/VoteStateBanner';
@@ -464,6 +465,13 @@ export const ProposalInfo = ({ proposalId }) => {
         return acquireExpansionItems;
       }
 
+      case 'index_reweight': {
+        const reweight = proposalInfo?.metadata?.indexReweight;
+        return reweight
+          ? [executionOptions, { label: 'New weights', value: reweight, type: 'index_reweight' }]
+          : [executionOptions];
+      }
+
       default:
         return [];
     }
@@ -774,6 +782,10 @@ export const ProposalInfo = ({ proposalId }) => {
                             </div>
                           </div>
                         );
+                      }
+
+                      if (item.type === 'index_reweight') {
+                        return <IndexReweightSummary key={index} reweight={item.value} label={item.label} />;
                       }
 
                       if (item.type === 'asset_whitelist_update_list') {

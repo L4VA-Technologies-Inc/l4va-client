@@ -23,6 +23,7 @@ import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal.jsx';
 import { StakingConfirmModal } from '@/components/modals/StakingConfirmModal';
 import { EditUpcomingVaultModal } from '@/components/modals/EditUpcomingVaultModal';
 import { AiAssetWhitelistModal } from '@/components/modals/AiAssetWhitelistModal';
+import { AiIndexBasketModal } from '@/components/modals/AiIndexBasketModal';
 import { AiSocialLinksModal } from '@/components/modals/AiSocialLinksModal';
 import { AiWalletWhitelistModal } from '@/components/modals/AiWalletWhitelistModal';
 
@@ -126,6 +127,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'AiAssetWhitelistModal',
     Component: AiAssetWhitelistModal,
+  },
+  {
+    name: 'AiIndexBasketModal',
+    Component: AiIndexBasketModal,
   },
   {
     name: 'AiWalletWhitelistModal',

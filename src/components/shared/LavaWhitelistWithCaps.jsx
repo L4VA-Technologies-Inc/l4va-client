@@ -1,18 +1,12 @@
-import { X, Plus, ChevronDown, ChevronUp, Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { useWallet } from '@ada-anvil/weld/react';
-import { useAccount } from 'wagmi';
+import { Plus } from 'lucide-react';
+import { useEffect, useRef, useMemo } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { LavaInput, LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
-import { getVerificationPlatformLabel, useAssets } from '@/hooks/useAssets';
-import { useEvmAssets } from '@/hooks/useEvmAssets';
-import { useNetwork } from '@/hooks/useNetwork';
+import { useAssetSource } from '@/hooks/useAssetSource';
 import { cn } from '@/lib/utils';
-import { TokenImage } from '@/components/shared/TokenImage';
 
 const variants = {
   default: {
@@ -64,41 +58,15 @@ export const LavaWhitelistWithCaps = ({
     }
     return <LavaInput {...rest} style={style} onChange={onChange} onBlur={onBlur} />;
   };
-  const [showDropdown, setShowDropdown] = useState({});
-  const [searchResults, setSearchResults] = useState({});
-  const [isSearching, setIsSearching] = useState({});
-  const [focusedUniqueId, setFocusedUniqueId] = useState(null);
-  const [dropdownRects, setDropdownRects] = useState({});
-  const dropdownRefs = useRef({});
-  const portalDropdownRefs = useRef({});
   const rowRefs = useRef({});
   const pendingFocusIdRef = useRef(null);
-  const searchTimers = useRef({});
 
-  const { isRobinHood } = useNetwork();
-  const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'changeAddressBech32');
-  const { isConnected: isEvmConnected } = useAccount();
-
-  // Source assets from the wallet matching the selected network. Both hooks are
-  // called unconditionally (rules of hooks) and the inactive one returns an empty
-  // stub, so only the active chain's wallet is queried.
-  const cardanoAssets = useAssets();
-  const evmAssets = useEvmAssets();
-  const { data, hasMore, isLoadingMore, loadMore, searchPolicies, lookupPolicies } = isRobinHood
-    ? evmAssets
-    : cardanoAssets;
-
-  const isWalletConnected = isRobinHood ? isEvmConnected : wallet.isConnected;
-
-  // On EVM the identifier is a token contract address, not a Cardano policy id.
-  // Only override the default label so explicit caller placeholders still win.
-  const effectivePlaceholder = isRobinHood
-    ? itemPlaceholder.includes('Policy ID')
-      ? 'Search token or paste contract address'
-      : itemPlaceholder
-    : itemPlaceholder;
-
-  const walletPolicyIds = data?.data || [];
+  // One shared source for every row: each `useAssetSource()` owns its paging
+  // state and fires its own wallet requests, so the rows must not each resolve
+  // their own.
+  const assetSource = useAssetSource();
+  const { isRobinHood, lookupPolicies } = assetSource;
+  const walletPolicyIds = assetSource.policies;
 
   const reservedPolicyIdSet = useMemo(
     () => new Set(reservedPolicyIds.map(policyId => policyId?.toLowerCase()).filter(Boolean)),
@@ -113,72 +81,6 @@ export const LavaWhitelistWithCaps = ({
         .map(item => item.policyId.toLowerCase()),
     ]);
 
-  const updateDropdownRect = useCallback(uniqueId => {
-    const anchor = dropdownRefs.current[uniqueId];
-    if (!anchor) return;
-
-    const rect = anchor.getBoundingClientRect();
-    const gap = 4;
-    const spaceBelow = window.innerHeight - rect.bottom - gap;
-    const spaceAbove = rect.top - gap;
-    const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
-    const maxHeight = Math.min(280, Math.max(140, openUp ? spaceAbove : spaceBelow));
-
-    setDropdownRects(prev => ({
-      ...prev,
-      [uniqueId]: {
-        left: rect.left,
-        width: Math.max(rect.width, 300),
-        maxHeight,
-        ...(openUp
-          ? { bottom: window.innerHeight - rect.top + gap, top: 'auto' }
-          : { top: rect.bottom + gap, bottom: 'auto' }),
-      },
-    }));
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = event => {
-      Object.keys(showDropdown).forEach(uniqueId => {
-        if (!showDropdown[uniqueId]) return;
-        const anchor = dropdownRefs.current[uniqueId];
-        const menu = portalDropdownRefs.current[uniqueId];
-        const clickedInside = (anchor && anchor.contains(event.target)) || (menu && menu.contains(event.target));
-        if (!clickedInside) {
-          setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
-        }
-      });
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDropdown]);
-
-  // Keep portal menus aligned while the modal scrolls or the window resizes.
-  useEffect(() => {
-    const openIds = Object.keys(showDropdown).filter(id => showDropdown[id]);
-    if (!openIds.length) return undefined;
-
-    const sync = () => openIds.forEach(updateDropdownRect);
-    sync();
-    window.addEventListener('resize', sync);
-    // Capture scroll from the modal body and anywhere else.
-    window.addEventListener('scroll', sync, true);
-    return () => {
-      window.removeEventListener('resize', sync);
-      window.removeEventListener('scroll', sync, true);
-    };
-  }, [showDropdown, updateDropdownRect]);
-
-  // Cleanup search timers on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(searchTimers.current).forEach(timer => clearTimeout(timer));
-    };
-  }, []);
-
   // Items loaded from a draft (or API) may not have a uniqueId, which causes all
   // dropdowns to share the same undefined key and open simultaneously. Assign stable
   // IDs in a single pass before any interaction can occur.
@@ -191,62 +93,6 @@ export const LavaWhitelistWithCaps = ({
     );
   }, [whitelist, setWhitelist]);
 
-  const handleScroll = useCallback(
-    (e, uniqueId) => {
-      const asset = whitelist.find(item => item.uniqueId === uniqueId);
-      const isSearchMode = asset && asset.policyId;
-
-      if (!isSearchMode) {
-        const { scrollTop, scrollHeight, clientHeight } = e.target;
-        if (scrollHeight - scrollTop - clientHeight < 60 && hasMore && !isLoadingMore) {
-          loadMore();
-        }
-      }
-    },
-    [hasMore, isLoadingMore, loadMore, whitelist]
-  );
-
-  const getFilteredBrowseList = currentUniqueId => {
-    const usedPolicyIds = getUsedPolicyIds(currentUniqueId);
-    return walletPolicyIds.filter(policy => !usedPolicyIds.has(policy.policyId.toLowerCase()));
-  };
-
-  const getFilteredSearchResults = currentUniqueId => {
-    const usedPolicyIds = getUsedPolicyIds(currentUniqueId);
-    const results = searchResults[currentUniqueId] || [];
-    return results.filter(policy => !usedPolicyIds.has(policy.policyId.toLowerCase()));
-  };
-
-  const triggerSearch = useCallback(
-    (uniqueId, query) => {
-      if (searchTimers.current[uniqueId]) {
-        clearTimeout(searchTimers.current[uniqueId]);
-      }
-
-      if (!query) {
-        setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
-        setIsSearching(prev => ({ ...prev, [uniqueId]: false }));
-        return;
-      }
-
-      setIsSearching(prev => ({ ...prev, [uniqueId]: true }));
-
-      // Debounce 300ms
-      searchTimers.current[uniqueId] = setTimeout(async () => {
-        try {
-          const results = await searchPolicies(query);
-          setSearchResults(prev => ({ ...prev, [uniqueId]: results }));
-        } catch (error) {
-          console.error('Search error:', error);
-          setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
-        } finally {
-          setIsSearching(prev => ({ ...prev, [uniqueId]: false }));
-        }
-      }, 300);
-    },
-    [searchPolicies]
-  );
-
   const handleInputChange = (uniqueId, value) => {
     updateAsset(uniqueId, 'policyId', value, {
       name: '',
@@ -258,11 +104,6 @@ export const LavaWhitelistWithCaps = ({
       imageUrl: null,
       image: null,
     });
-    triggerSearch(uniqueId, value);
-
-    if (value) {
-      openDropdown(uniqueId);
-    }
   };
 
   const selectPolicyId = (uniqueId, policy) => {
@@ -276,9 +117,6 @@ export const LavaWhitelistWithCaps = ({
       imageUrl: policy.imageUrl ?? policy.image ?? null,
       image: policy.image ?? policy.imageUrl ?? null,
     });
-    setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
-    setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
-    setFocusedUniqueId(prev => (prev === uniqueId ? null : prev));
   };
 
   // Backfill verification data for pre-populated items (e.g. edit draft)
@@ -445,28 +283,6 @@ export const LavaWhitelistWithCaps = ({
     };
   }, [isRobinHood, whitelist, lookupPolicies, setWhitelist]);
 
-  const openDropdown = useCallback(
-    uniqueId => {
-      setShowDropdown(prev => ({ ...prev, [uniqueId]: true }));
-      // Measure after the open flag flips so the anchor is laid out.
-      requestAnimationFrame(() => updateDropdownRect(uniqueId));
-    },
-    [updateDropdownRect]
-  );
-
-  const toggleDropdown = uniqueId => {
-    const willOpen = !showDropdown[uniqueId];
-    if (willOpen) {
-      openDropdown(uniqueId);
-      const asset = whitelist.find(item => item.uniqueId === uniqueId);
-      if (asset && asset.policyId) {
-        triggerSearch(uniqueId, asset.policyId);
-      }
-    } else {
-      setShowDropdown(prev => ({ ...prev, [uniqueId]: false }));
-    }
-  };
-
   const handleRemoveOrClear = uniqueId => {
     const asset = whitelist.find(item => item.uniqueId === uniqueId);
 
@@ -481,7 +297,6 @@ export const LavaWhitelistWithCaps = ({
         imageUrl: null,
         image: null,
       });
-      setSearchResults(prev => ({ ...prev, [uniqueId]: [] }));
     } else {
       const filteredAssets = whitelist.filter(asset => asset.uniqueId !== uniqueId);
       setWhitelist(filteredAssets);
@@ -556,80 +371,6 @@ export const LavaWhitelistWithCaps = ({
     setWhitelist(updatedAssets);
   };
 
-  const formatTokenDisplayName = policy => {
-    const baseName = policy.collectionName || policy.name || '';
-    if (!isRobinHood) return baseName;
-
-    const ticker = policy.name || policy.assetName || '';
-    if (!baseName) return ticker;
-    if (!ticker || baseName.toLowerCase() === ticker.toLowerCase()) return baseName;
-    return `${baseName} (${ticker})`;
-  };
-
-  const renderAssetItem = (asset, policy) => {
-    const searchText = asset.policyId.toLowerCase();
-    const highlightText = (text, search) => {
-      if (!search || !text) return text;
-      try {
-        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
-        return parts.map((part, i) =>
-          part.toLowerCase() === search.toLowerCase() ? (
-            <span key={i} className="bg-yellow-500 text-black">
-              {part}
-            </span>
-          ) : (
-            part
-          )
-        );
-      } catch {
-        return text;
-      }
-    };
-
-    const displayName = formatTokenDisplayName(policy);
-    const isVerified = policy.isVerified;
-    const verificationBadgeLabel = getVerificationPlatformLabel(policy.verificationPlatform);
-
-    return (
-      <button
-        type="button"
-        disabled={!isVerified}
-        className={`w-full px-4 py-2 text-left flex items-center gap-3 border-b border-steel-700 last:border-b-0 ${
-          isVerified ? 'hover:bg-steel-700 cursor-pointer' : 'opacity-50 cursor-not-allowed'
-        }`}
-        onClick={isVerified ? () => selectPolicyId(asset.uniqueId, policy) : undefined}
-        onMouseDown={event => event.preventDefault()}
-      >
-        <TokenImage
-          asset={policy}
-          alt={displayName || policy.policyId}
-          chainType={isRobinHood ? 'robinhood' : 'cardano'}
-          className="h-8 w-8 rounded-full shrink-0"
-          width={32}
-          height={32}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="font-medium text-white truncate">{highlightText(displayName, searchText)}</div>
-            {isVerified ? (
-              <span className="inline-flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 shrink-0">
-                <ShieldCheck className="h-3 w-3" />
-                {verificationBadgeLabel ? `Verified · ${verificationBadgeLabel}` : 'Verified'}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/30 shrink-0">
-                <ShieldAlert className="h-3 w-3" />
-                Unverified
-              </span>
-            )}
-          </div>
-          <div className="text-sm text-gray-400 truncate font-mono">{highlightText(policy.policyId, searchText)}</div>
-        </div>
-      </button>
-    );
-  };
-
   return (
     <div className="w-full">
       {!hideLabel && (
@@ -700,18 +441,6 @@ export const LavaWhitelistWithCaps = ({
           </div>
         )}
         {whitelist.map((asset, index) => {
-          const isSearchMode = !!asset.policyId;
-          const policiesToShow = isSearchMode
-            ? getFilteredSearchResults(asset.uniqueId)
-            : getFilteredBrowseList(asset.uniqueId);
-          const currentIsSearching = isSearching[asset.uniqueId];
-          const selectedVerificationLabel = getVerificationPlatformLabel(asset.verificationPlatform);
-
-          const resolvedName = formatTokenDisplayName(asset);
-          const isEditing = focusedUniqueId === asset.uniqueId;
-          const hasSelectedAsset = Boolean(asset.policyId && resolvedName && !isEditing);
-          const displayValue = isEditing || !resolvedName ? asset.policyId : resolvedName;
-
           return (
             <div
               key={asset.id || asset.uniqueId || `asset-${index}`}
@@ -721,158 +450,16 @@ export const LavaWhitelistWithCaps = ({
               className={cn('p-4 grid gap-4 items-start', showCountCaps ? tableGridCols : 'grid-cols-1')}
             >
               <div className={styles.itemSpacing}>
-                <div className="relative" ref={el => (dropdownRefs.current[asset.uniqueId] = el)}>
-                  {hasSelectedAsset ? (
-                    <div className="flex items-center gap-3 rounded-lg border border-steel-700 bg-steel-850/80 px-3 py-2.5">
-                      <TokenImage
-                        asset={asset}
-                        alt={resolvedName || asset.policyId}
-                        chainType={isRobinHood ? 'robinhood' : 'cardano'}
-                        className="h-10 w-10 rounded-full shrink-0"
-                        width={40}
-                        height={40}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-white truncate">{resolvedName}</span>
-                          {asset.isVerified === true && (
-                            <span className="inline-flex items-center gap-1 text-[11px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 shrink-0">
-                              <ShieldCheck className="h-3 w-3" />
-                              Verified
-                              {selectedVerificationLabel ? ` · ${selectedVerificationLabel}` : ''}
-                            </span>
-                          )}
-                          {asset.isVerified === false && (
-                            <span className="inline-flex items-center gap-1 text-[11px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full border border-orange-500/30 shrink-0">
-                              <ShieldAlert className="h-3 w-3" />
-                              Unverified
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-dark-100 font-mono truncate mt-0.5">{asset.policyId}</p>
-                      </div>
-                      <Button
-                        className="h-8 w-8 rounded-full shrink-0"
-                        size="icon"
-                        variant="ghost"
-                        type="button"
-                        onClick={() => handleRemoveOrClear(asset.uniqueId)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      {renderInput({
-                        placeholder: effectivePlaceholder,
-                        style: styles.policyInputStyle,
-                        value: displayValue,
-                        className: styles.policyInputClassName,
-                        onChange: e => handleInputChange(asset.uniqueId, e.target.value),
-                        onFocus: () => {
-                          setFocusedUniqueId(asset.uniqueId);
-                          if (walletPolicyIds.length > 0 || asset.policyId) {
-                            openDropdown(asset.uniqueId);
-                            if (asset.policyId) {
-                              triggerSearch(asset.uniqueId, asset.policyId);
-                            }
-                          } else if (isWalletConnected) {
-                            openDropdown(asset.uniqueId);
-                          }
-                        },
-                        onBlur: () => setFocusedUniqueId(prev => (prev === asset.uniqueId ? null : prev)),
-                      })}
-                      {isWalletConnected && (
-                        <Button
-                          type="button"
-                          className="h-8 w-8 rounded-full absolute right-12 top-1/2 transform -translate-y-1/2 bg-steel-700 hover:bg-steel-600"
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => toggleDropdown(asset.uniqueId)}
-                        >
-                          {showDropdown[asset.uniqueId] ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                      <Button
-                        className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
-                        size="icon"
-                        variant="ghost"
-                        type="button"
-                        onClick={() => handleRemoveOrClear(asset.uniqueId)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                  {showDropdown[asset.uniqueId] &&
-                    !hasSelectedAsset &&
-                    typeof document !== 'undefined' &&
-                    createPortal(
-                      <div
-                        ref={el => {
-                          portalDropdownRefs.current[asset.uniqueId] = el;
-                        }}
-                        className={styles.dropdown}
-                        style={dropdownRects[asset.uniqueId] || { visibility: 'hidden' }}
-                        onScroll={e => handleScroll(e, asset.uniqueId)}
-                      >
-                        {!isWalletConnected && !isSearchMode ? (
-                          <div className="px-4 py-5 text-sm text-dark-100 space-y-1">
-                            <p className="text-white font-medium">Connect your wallet to browse holdings</p>
-                            <p>Or paste a Policy ID above to look one up.</p>
-                          </div>
-                        ) : currentIsSearching ? (
-                          <div className="flex items-center justify-center py-6">
-                            <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                          </div>
-                        ) : policiesToShow.length > 0 ? (
-                          <>
-                            <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-dark-100 border-b border-steel-700">
-                              {isSearchMode ? 'Search results' : 'Your wallet collections'}
-                              <span className="ml-2 normal-case tracking-normal text-dark-100/70">
-                                — only verified can be selected
-                              </span>
-                            </div>
-                            <div className="space-y-0">
-                              {policiesToShow.map((policy, policyIndex) => (
-                                <div key={`${policy.policyId}-${policy.name || 'asset'}-${policyIndex}`}>
-                                  {renderAssetItem(asset, policy)}
-                                </div>
-                              ))}
-                            </div>
-                            {!isSearchMode && isLoadingMore && (
-                              <div className="flex items-center justify-center py-3">
-                                <Loader2 className="h-5 w-5 animate-spin text-dark-100" />
-                              </div>
-                            )}
-                            {!isSearchMode && hasMore && !isLoadingMore && (
-                              <div className="text-center text-dark-100 text-xs py-2">Scroll for more</div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center gap-1 py-6 px-4 text-center text-dark-100 text-sm">
-                            {isSearchMode ? (
-                              isRobinHood ? (
-                                <span>No matching tokens found</span>
-                              ) : (
-                                <span>No matching collections in your wallet</span>
-                              )
-                            ) : (
-                              <>
-                                <span className="text-white">No collections to show yet</span>
-                                <span>Type a name or Policy ID to search</span>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>,
-                      document.body
-                    )}
-                </div>
+                <AssetSearchInput
+                  excludePolicyIds={[...getUsedPolicyIds(asset.uniqueId)]}
+                  placeholder={itemPlaceholder}
+                  source={assetSource}
+                  value={asset}
+                  variant={variant}
+                  onChange={text => handleInputChange(asset.uniqueId, text)}
+                  onClear={() => handleRemoveOrClear(asset.uniqueId)}
+                  onSelect={policy => selectPolicyId(asset.uniqueId, policy)}
+                />
                 {(() => {
                   const rowIndex = whitelist.findIndex(item => item.uniqueId === asset.uniqueId);
                   const policyIdError = errors[`assetsWhitelist[${rowIndex}].policyId`];
@@ -885,38 +472,6 @@ export const LavaWhitelistWithCaps = ({
                   const verifiedError = errors[`assetsWhitelist[${rowIndex}].isVerified`];
                   return verifiedError ? <p className="text-red-600 text-sm mt-1">{verifiedError}</p> : null;
                 })()}
-                {!hasSelectedAsset && asset.policyId && asset.isVerified === true && (
-                  <div className="flex items-center gap-2 text-sm text-green-400">
-                    <TokenImage
-                      asset={asset}
-                      alt={resolvedName || asset.policyId}
-                      chainType={isRobinHood ? 'robinhood' : 'cardano'}
-                      className="h-6 w-6 rounded-full shrink-0"
-                      width={24}
-                      height={24}
-                    />
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <ShieldCheck className="h-4 w-4 shrink-0" />
-                      <span className="truncate">
-                        {isRobinHood
-                          ? 'Verified token · Blockscout'
-                          : selectedVerificationLabel
-                            ? `Verified collection · ${selectedVerificationLabel}`
-                            : 'Verified collection'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {!hasSelectedAsset && asset.policyId && asset.isVerified === false && (
-                  <div className="flex items-center gap-1.5 text-sm text-orange-400">
-                    <ShieldAlert className="h-4 w-4" />
-                    <span>
-                      {isRobinHood
-                        ? 'Unverified token — flagged by Blockscout, add with caution'
-                        : 'Unverified collection — cannot be added to a vault'}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {showCountCaps && (

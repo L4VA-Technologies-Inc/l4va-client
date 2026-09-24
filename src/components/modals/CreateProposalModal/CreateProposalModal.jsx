@@ -18,6 +18,8 @@ import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
+import IndexReweight from '@/components/modals/CreateProposalModal/IndexReweight.jsx';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import {
   useCreateProposal,
   useGovernanceFees,
@@ -65,12 +67,45 @@ const initialProposalData = {
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
-  const activeExecutionOptions = isEvmVault ? evmExecutionOptions : cardanoExecutionOptions;
+  const isIndex = isIndexVault(vault);
+  const activeExecutionOptions = useMemo(() => {
+    if (!isEvmVault) return cardanoExecutionOptions;
+    return isIndex
+      ? [{ value: 'index_reweight', label: 'Index Re-weight' }, ...evmExecutionOptions]
+      : evmExecutionOptions;
+  }, [isEvmVault, isIndex]);
+  // Filter execution options based on vault status
+  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
+  const availableExecutionOptions = useMemo(() => {
+    const isExpansion =
+      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
+
+    if (isExpansion) {
+      return activeExecutionOptions.map(option => {
+        if (option.value === 'distribution') {
+          return option;
+        }
+        return {
+          ...option,
+          disabled: true,
+          label: option.label + ' (Not available during expansion)',
+        };
+      });
+    }
+
+    return activeExecutionOptions;
+  }, [vault.vaultStatus, activeExecutionOptions]);
+
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
-  );
+  // Open on the option the vault is about to use, but never on one the current
+  // status has disabled — during either expansion only Distribution is live.
+  const [selectedOption, setSelectedOption] = useState(() => {
+    const preferred = isIndex ? 'index_reweight' : 'marketplace_action';
+    const isEnabled = value => availableExecutionOptions.some(option => option.value === value && !option.disabled);
+    if (isEnabled(preferred)) return preferred;
+    return availableExecutionOptions.find(option => !option.disabled)?.value ?? preferred;
+  });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -105,34 +140,13 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       expansion: fees.proposalFeeExpansion,
       acquire_expansion: fees.proposalFeeExpansion, // Use same fee as expansion
       asset_whitelist_update: fees.proposalFeeAssetWhitelistUpdate,
+      index_reweight: fees.proposalFeeMarketplaceAction, // Same fee as market actions (backend mirrors this)
       staking: fees.proposalFeeStaking,
       termination: fees.proposalFeeTermination,
       burning: fees.proposalFeeBurning,
     };
     return BigInt(feeMap[selectedOption] || 0);
   }, [governanceFees, selectedOption, isEvmVault]);
-
-  // Filter execution options based on vault status
-  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
-  const availableExecutionOptions = useMemo(() => {
-    const isExpansion =
-      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
-
-    if (isExpansion) {
-      return activeExecutionOptions.map(option => {
-        if (option.value === 'distribution') {
-          return option;
-        }
-        return {
-          ...option,
-          disabled: true,
-          label: option.label + ' (Not available during expansion)',
-        };
-      });
-    }
-
-    return activeExecutionOptions;
-  }, [vault.vaultStatus, activeExecutionOptions]);
 
   const handleCreateProposal = () => {
     if (!isWalletConnected) {
@@ -161,7 +175,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const isValidProposal = () => {
+    const selected = availableExecutionOptions.find(option => option.value === selectedOption);
     return (
+      !selected ||
+      selected.disabled ||
       !proposalTitle.trim() ||
       proposalTitle.length > 200 ||
       !proposalDescription.trim() ||
@@ -218,6 +235,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.acquireExpansionNoMax = proposalData.acquireExpansionNoMax || false;
         proposalPayload.acquireExpansionPriceType = proposalData.acquireExpansionPriceType || 'market';
         proposalPayload.acquireExpansionLimitPrice = proposalData.acquireExpansionLimitPrice;
+      } else if (selectedOption === 'index_reweight') {
+        proposalPayload.indexReweight = proposalData.indexReweight;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -566,6 +585,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {!availableExecutionOptions.some(option => !option.disabled) && (
+              <p className="text-sm text-red-400">
+                No proposal type is available for this vault right now. Wait for the current expansion to finish.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -611,6 +635,9 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
+            {selectedOption === 'index_reweight' && (
+              <IndexReweight vault={vault} onDataChange={handleDataChange} error={error} />
             )}
 
             <div className="mt-8">

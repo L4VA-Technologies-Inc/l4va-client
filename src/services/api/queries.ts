@@ -66,6 +66,20 @@ export const useVault = (id: string) => {
   });
 };
 
+/** Basket, live allocation and rebalance history of an index-weighted vault. */
+export const useVaultIndex = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['vault-index', id],
+    queryFn: () => VaultsApiProvider.getIndexOverview(id),
+    enabled: !!id && enabled,
+    // Holdings are valued from swap quotes the backend caches for a minute,
+    // and a rebalance can progress while the page stays open, so the view
+    // refreshes on the same cadence instead of waiting for a remount.
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });
+};
+
 export const useVaultAssets = (
   id: string,
   search = '',
@@ -795,6 +809,16 @@ export const useNftFlagsSettings = () => {
   return useQuery({
     queryKey: ['nft-flags-settings'],
     queryFn: () => SettingsApiProvider.getNftFlagsSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+/** Which vault types each chain currently offers, plus the EVM NFT-asset flag. */
+export const useVaultCreationFlags = () => {
+  return useQuery({
+    queryKey: ['vault-creation-flags'],
+    queryFn: () => SettingsApiProvider.getVaultCreationFlags(),
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });

@@ -55,6 +55,7 @@ export enum ProposalType {
   EXPANSION = 'expansion',
   ASSET_WHITELIST_UPDATE = 'asset_whitelist_update',
   ACQUIRE_EXPANSION = 'acquire_expansion',
+  INDEX_REWEIGHT = 'index_reweight',
 }
 
 export const ProposalTypeLabels = {
@@ -67,6 +68,7 @@ export const ProposalTypeLabels = {
   [ProposalType.EXPANSION]: 'Vault Expansion',
   [ProposalType.ASSET_WHITELIST_UPDATE]: 'Update Asset Whitelist',
   [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
+  [ProposalType.INDEX_REWEIGHT]: 'Index Re-weight',
 };
 
 export enum ClaimStatus {
@@ -222,6 +224,7 @@ export interface VaultShortResponse {
   vaultTokenTicker?: string;
   isOfficialPartner?: boolean;
   chainType?: ChainType;
+  vaultArchetype?: 'standard' | 'index_weighted';
 }
 
 export interface PaginatedResponse<T> {

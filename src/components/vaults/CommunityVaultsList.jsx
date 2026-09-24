@@ -4,6 +4,7 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 import { useNetwork } from '@/hooks/useNetwork';
+import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -82,6 +83,20 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
+  // Vault types only exist on Robinhood; drop the filter when switching to Cardano.
+  const isRobinhood = network === 'robinhood';
+  useEffect(() => {
+    if (!isRobinhood) {
+      setAppliedFilters(prevFilters =>
+        prevFilters.vaultArchetype ? { ...prevFilters, vaultArchetype: undefined, page: 1 } : prevFilters
+      );
+    }
+  }, [isRobinhood]);
+
+  const handleArchetypeChange = vaultArchetype => {
+    setAppliedFilters(prevFilters => ({ ...prevFilters, vaultArchetype, page: 1 }));
+  };
+
   const { data, isLoading, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
@@ -100,6 +115,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
       chainType: network,
+      vaultArchetype: prevFilters.vaultArchetype,
       ...filters,
     }));
   };
@@ -134,6 +150,11 @@ export const CommunityVaultsList = ({ className = '' }) => {
         pagination={pagination}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
+        toolbar={
+          isRobinhood ? (
+            <VaultTypeFilter value={appliedFilters.vaultArchetype} onChange={handleArchetypeChange} />
+          ) : null
+        }
       />
     </div>
   );

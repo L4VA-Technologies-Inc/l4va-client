@@ -21,6 +21,7 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     asset_whitelist_update: 'Asset whitelist update is being prepared and executed...',
     expansion: 'Vault expansion is being prepared and executed...',
     acquire_expansion: 'Acquire expansion is being prepared and executed...',
+    index_reweight: 'The vault is adopting the new weights and trading to them...',
     default: 'Proposal actions are being prepared and executed...',
   },
 
@@ -33,6 +34,7 @@ export const PROPOSAL_EXECUTION_MESSAGES = {
     expansion: 'Vault expansion has been successfully opened. New assets can now be contributed.',
     acquire_expansion: currencyLabel =>
       `Acquire expansion has been successfully opened. The vault is now accepting ${currencyLabel} contributions.`,
+    index_reweight: 'The vault has adopted the new weights and completed its rebalancing trades.',
     termination: {
       default: 'Vault termination has been successfully completed.',
       dao: 'Vault has been successfully terminated by governance vote.',
