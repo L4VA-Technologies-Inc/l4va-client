@@ -7,6 +7,11 @@ export class SettingsApiProvider {
     return response;
   }
 
+  static async getNftFlagsSettings() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getNftFlagsSettings());
+    return response;
+  }
+
   static async getVaultCreationFlags() {
     const response = await axiosInstance.get(SettingsConfigProvider.getVaultCreationFlags());
     return response;

@@ -805,6 +805,15 @@ export const useVlrmFeeSettings = () => {
   });
 };
 
+export const useNftFlagsSettings = () => {
+  return useQuery({
+    queryKey: ['nft-flags-settings'],
+    queryFn: () => SettingsApiProvider.getNftFlagsSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
 /** Which vault types each chain currently offers, plus the EVM NFT-asset flag. */
 export const useVaultCreationFlags = () => {
   return useQuery({
