@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { getNetwork } from '@/hooks/useNetwork';
+
 type CurrencyType = 'ada' | 'usdt' | 'eth';
 type CurrencySymbol = '₳' | '$' | 'ETH ';
 type CurrencyLabel = 'ADA' | 'USD' | 'ETH';
 
-// Normalize currency value to ensure it's always valid
+// Normalize currency value to ensure it's always valid for the active network:
+// ADA isn't offered on Robinhood, so fall back to USD there.
 const normalizeCurrency = (value: string | null): CurrencyType => {
   if (value === 'usdt') return 'usdt';
   if (value === 'eth') return 'eth';
-  return 'ada';
+  return getNetwork() === 'robinhood' ? 'usdt' : 'ada';
 };
 
 let globalCurrency = normalizeCurrency(localStorage.getItem('selectedCurrency'));

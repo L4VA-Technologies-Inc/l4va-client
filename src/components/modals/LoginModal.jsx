@@ -15,7 +15,6 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import WalletIcon from '@/icons/wallet.svg?react';
 import MetaMaskIcon from '@/icons/metamask.svg?react';
-import WalletConnectIcon from '@/icons/walletconnect.svg?react';
 import OkxIcon from '@/icons/okx.svg?react';
 import BinanceIcon from '@/icons/binance.svg?react';
 import CoinbaseIcon from '@/icons/coinbase.svg?react';
@@ -29,12 +28,9 @@ const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
 // SDK connector works even without a detected extension (see coinbaseConnector below).
 const POPULAR_EVM_WALLETS = [
   { key: 'metamask', displayName: 'MetaMask', website: 'https://metamask.io/download/', Icon: MetaMaskIcon },
-  {
-    key: 'walletconnect',
-    displayName: 'WalletConnect',
-    website: 'https://walletconnect.com/',
-    Icon: WalletConnectIcon,
-  },
+  { key: 'uniswap', displayName: 'Uniswap Extension', website: 'https://wallet.uniswap.org/' },
+  { key: 'phantom', displayName: 'Phantom', website: 'https://phantom.com/download' },
+  { key: 'rabby', displayName: 'Rabby', website: 'https://rabby.io/' },
   { key: 'okx', displayName: 'OKX Wallet', website: 'https://www.okx.com/web3', Icon: OkxIcon },
   {
     key: 'binance',

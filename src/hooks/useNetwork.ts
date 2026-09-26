@@ -3,15 +3,36 @@ import { useState, useEffect, useCallback } from 'react';
 export type NetworkType = 'cardano' | 'robinhood';
 
 const NETWORK_STORAGE_KEY = 'selectedNetwork';
+// Bumped when the default chain changes: stored selections made before the
+// migration ran are replaced with the new default exactly once.
+const NETWORK_MIGRATION_KEY = 'selectedNetworkMigration';
+const NETWORK_MIGRATION_VERSION = 'robinhood-default-v1';
+const DEFAULT_NETWORK: NetworkType = 'robinhood';
 const THEME_TRANSITION_CLASS = 'theme-transition';
 const THEME_TRANSITION_DURATION_MS = 320;
 
 // Normalize network value to ensure it's always valid
 const normalizeNetwork = (value: string | null): NetworkType => {
-  return value === 'robinhood' ? 'robinhood' : 'cardano';
+  return value === 'cardano' ? 'cardano' : DEFAULT_NETWORK;
 };
 
-let globalNetwork: NetworkType = normalizeNetwork(localStorage.getItem(NETWORK_STORAGE_KEY));
+// Other modules read `selectedNetwork` straight from localStorage, so the
+// resolved network is always persisted rather than only held in memory.
+const resolveInitialNetwork = (): NetworkType => {
+  const migrated = localStorage.getItem(NETWORK_MIGRATION_KEY) === NETWORK_MIGRATION_VERSION;
+  const stored = localStorage.getItem(NETWORK_STORAGE_KEY);
+  const resolved = migrated ? normalizeNetwork(stored) : DEFAULT_NETWORK;
+
+  localStorage.setItem(NETWORK_STORAGE_KEY, resolved);
+  localStorage.setItem(NETWORK_MIGRATION_KEY, NETWORK_MIGRATION_VERSION);
+
+  return resolved;
+};
+
+let globalNetwork: NetworkType = resolveInitialNetwork();
+
+// Importing this also guarantees the initial network is resolved and persisted.
+export const getNetwork = (): NetworkType => globalNetwork;
 
 let transitionCleanupTimeout: number | null = null;
 
