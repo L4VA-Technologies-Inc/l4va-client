@@ -127,16 +127,25 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   // An AI-prefilled draft already carries explicit values, so it stays editable regardless of preset.
   const isPresetConfigLocked = !aiPrefilled && (!isAdvancedPresetAvailable || vaultData.preset !== 'advanced');
 
-  const isAcquireOnly = vaultData.preset === 'acquire_only';
+  const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  // An AI draft marks index vaults acquire-only without switching the preset, so
+  // the flag and the archetype count too — index vaults never have contributors.
+  const isAcquireOnly = vaultData.preset === 'acquire_only' || !!vaultData.isAcquireOnly || isIndexVault;
   const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
+
+  // Preset resolution can reset isAcquireOnly from a draft's preset (an AI draft
+  // keeps whatever preset it chose), so pin the index-vault shape back in the form.
+  useEffect(() => {
+    if (!isIndexVault) return;
+    if (vaultData.isAcquireOnly && Number(vaultData.tokensForAcquires) === 100) return;
+    setVaultData(prev => ({ ...prev, isAcquireOnly: true, tokensForAcquires: 100 }));
+  }, [isIndexVault, vaultData.isAcquireOnly, vaultData.tokensForAcquires]);
 
   useEffect(() => {
     if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
       setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));
     }
   }, [isRobinHood, vaultData.privacy]);
-
-  const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
 
   // A vault type the chain no longer offers (a draft moved between chains, or a
   // type switched off in settings) falls back to whatever that chain does offer.
@@ -356,8 +365,6 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
-      const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
       const isAdvancedMode = (isAdvancedPresetAvailable && vaultData.preset === 'advanced') || aiPrefilled;
       let nextStep;
       if (isAdvancedMode || isAcquireOnly || isContributionOnly) {
@@ -379,8 +386,6 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
-      const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
       let prevStep = currentStep - 1;
       // Skip contribution step for acquire-only vaults
       if (isAcquireOnly && prevStep === 2) {
@@ -849,8 +854,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const handleStepClick = async stepId => {
     if (stepId === currentStep) return;
     // Prevent navigating to the contribution step for acquire-only vaults
-    if (stepId === 2 && vaultData.preset === 'acquire_only') return;
-    if (stepId === 3 && hasNoAcquirePhase(vaultData.tokensForAcquires)) return;
+    if (stepId === 2 && isAcquireOnly) return;
+    if (stepId === 3 && isContributionOnly) return;
     const skipValidation = stepId < currentStep;
     await changeStep(stepId, skipValidation);
     scrollToTop();

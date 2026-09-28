@@ -129,6 +129,11 @@ export class VaultsApiProvider {
     return response;
   }
 
+  static async getIndexSupportedAssets() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexSupportedAssets());
+    return response.data;
+  }
+
   static async getIndexOverview(vaultId) {
     const response = await axiosInstance.get(VaultsConfigProvider.getIndexOverview(vaultId));
     return response.data;
