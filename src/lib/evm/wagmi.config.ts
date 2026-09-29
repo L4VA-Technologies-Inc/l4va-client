@@ -1,6 +1,6 @@
 import { defineChain, type Chain } from 'viem';
 import { createConfig, http } from 'wagmi';
-import { injected, coinbaseWallet } from 'wagmi/connectors';
+import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors';
 
 // Robinhood Chain — Arbitrum L2 (EVM), mainnet launched 2026-07-01.
 // Chain ID 4663 (mainnet) / 46630 (testnet). ETH is the native gas token.
@@ -74,7 +74,16 @@ export const robinhoodChain: Chain = IS_TESTNET
 // on every connect. MetaMask Flask frequently leaves that RPC hanging
 // ("already pending" / "Unknown response id") — disable it and rely on
 // eth_requestAccounts instead.
-const connectors = [injected({ shimDisconnect: false }), coinbaseWallet({ appName: 'L4VA' })];
+// WalletConnect (QR / deep link for mobile wallets) needs a real Cloud project id; a
+// placeholder fails at the relay handshake, so it's only registered when one is set.
+const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+const hasWalletConnect = Boolean(walletConnectProjectId) && walletConnectProjectId !== 'your_project_id_here';
+
+const connectors = [
+  injected({ shimDisconnect: false }),
+  coinbaseWallet({ appName: 'L4VA' }),
+  ...(hasWalletConnect ? [walletConnect({ projectId: walletConnectProjectId, showQrModal: true })] : []),
+];
 
 const chains =
   robinhoodChain.id === robinhoodUniswapChain.id

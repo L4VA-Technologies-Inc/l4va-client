@@ -152,6 +152,9 @@ export const LoginModal = () => {
   // (extension if present, otherwise a QR code for the mobile app) — so it's always
   // offered as connectable rather than gated behind EIP-6963 detection.
   const coinbaseConnector = connectors.find(c => c.type === 'coinbaseWallet');
+  // WalletConnect (only registered when a project id is configured) opens its own QR
+  // modal, so mobile wallets can connect with no browser extension at all.
+  const walletConnectConnector = connectors.find(c => c.type === 'walletConnect');
 
   // Backend authenticates EVM users by wallet address only (no signature).
   const loginWithRobinhoodAddress = async address => {
@@ -463,6 +466,14 @@ export const LoginModal = () => {
         const coinbasePopular = POPULAR_EVM_WALLETS.find(pw => pw.key === 'coinbase');
         evmConnectableWallets.push({ ...coinbasePopular, key: coinbaseConnector.id });
         detectedKeys.add('coinbase');
+      }
+
+      if (walletConnectConnector) {
+        evmConnectableWallets.push({
+          key: walletConnectConnector.id,
+          displayName: 'WalletConnect',
+          Icon: WalletIcon,
+        });
       }
 
       evmDownloadWallets = POPULAR_EVM_WALLETS.filter(pw => !detectedKeys.has(pw.key));

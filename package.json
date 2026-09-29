@@ -33,6 +33,7 @@
     "@sentry/react": "10.22.0",
     "@tanstack/react-query": "5.81.2",
     "@tanstack/react-router": "1.121.34",
+    "@walletconnect/ethereum-provider": "^2.25.0",
     "axios": "^1.18.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

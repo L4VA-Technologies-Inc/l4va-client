@@ -132,6 +132,22 @@ export const VAULT_TAGS_OPTIONS = [
   { value: 'Wrapped', label: 'Wrapped' },
 ];
 
+// Tags for NFT / real-world-asset vaults, hidden on index vaults (fungible tokens only).
+const NON_INDEX_TAGS = new Set([
+  'NFT',
+  'RWA',
+  'Real Estate',
+  'Insurance',
+  'Commodity',
+  'Precious Metal',
+  'Gem',
+  'PFP',
+  'Music',
+  'Art',
+  'Collectible',
+]);
+export const INDEX_VAULT_TAGS_OPTIONS = VAULT_TAGS_OPTIONS.filter(tag => !NON_INDEX_TAGS.has(tag.value));
+
 export const VAULT_VALUE_METHOD_OPTIONS = [
   { name: 'lbe', label: 'Market / Floor Price' },
   { name: 'fixed', label: 'Fixed' },

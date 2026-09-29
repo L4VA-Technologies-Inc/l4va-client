@@ -12,6 +12,7 @@ import { FullPageLoader } from '@/components/shared/FullPageLoader';
 import { useAuthInterceptor } from '@/hooks/useAxiosInterceptor';
 import { useWalletChangeListener } from '@/hooks/useWalletChangeListener';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useAutoSwitchRobinhoodChain } from '@/hooks/useAutoSwitchRobinhoodChain';
 
 const router = createRouter({
   routeTree,
@@ -25,6 +26,7 @@ const router = createRouter({
 const AppWithInterceptor = () => {
   useAuthInterceptor();
   useWalletChangeListener();
+  useAutoSwitchRobinhoodChain();
   const { updateNetwork } = useNetwork();
 
   useEffect(() => {

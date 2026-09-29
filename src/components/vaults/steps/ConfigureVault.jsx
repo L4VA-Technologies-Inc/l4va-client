@@ -11,6 +11,7 @@ import { LavaWhitelist } from '@/components/shared/LavaWhitelist';
 import {
   VAULT_PRIVACY_OPTIONS,
   VAULT_TAGS_OPTIONS,
+  INDEX_VAULT_TAGS_OPTIONS,
   VAULT_PRIVACY_TYPES,
   PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
@@ -246,7 +247,7 @@ export const ConfigureVault = ({
           <div>
             <LavaSelect
               label="Add vault tags"
-              options={VAULT_TAGS_OPTIONS}
+              options={isIndexVault ? INDEX_VAULT_TAGS_OPTIONS : VAULT_TAGS_OPTIONS}
               value=""
               onChange={handleTagAdd}
               placeholder="Select tags for your vault"
