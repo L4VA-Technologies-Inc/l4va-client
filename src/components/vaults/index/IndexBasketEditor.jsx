@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { useAssetSource } from '@/hooks/useAssetSource';
+import { useIndexSupportedAssets } from '@/services/api/queries';
 import {
   BPS,
   INDEX_MAX_ASSETS,
@@ -136,6 +137,40 @@ const AssetPicker = ({ existing, onAdd, disabled, steel }) => {
 };
 
 /**
+ * Compact picker for when the backend limits baskets to a fixed token list
+ * (testnet: the tokens seeded on the fixed-rate swap adapter).
+ */
+const SupportedAssetPicker = ({ assets, existing, onAdd, disabled, steel }) => (
+  <div className={cn('space-y-2', disabled && 'pointer-events-none opacity-50')}>
+    <p className="text-sm text-dark-100">Supported tokens</p>
+    <div className="flex flex-wrap gap-2">
+      {assets.map(asset => {
+        const added = existing.has(asset.assetAddress.toLowerCase());
+        return (
+          <button
+            key={asset.assetAddress}
+            type="button"
+            title={asset.name || asset.assetAddress}
+            disabled={disabled || added}
+            onClick={() =>
+              onAdd({ address: asset.assetAddress, symbol: asset.symbol, name: asset.name, image: asset.image })
+            }
+            className={cn(
+              'flex items-center gap-2 rounded-full border border-steel-750 py-1 pl-1 pr-3 text-sm transition-colors',
+              steel ? 'bg-steel-800' : 'bg-steel-850',
+              added ? 'opacity-40' : 'hover:border-orange-500'
+            )}
+          >
+            <TokenLogo image={asset.image} symbol={asset.symbol} className="h-6 w-6" />
+            {asset.symbol}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
+/**
  * Edits an index basket: `{ targets: [{ assetAddress, symbol, name, image, weightBps }], reserveBps }`.
  * Weights are entered as percentages and stored as integer basis points.
  */
@@ -145,6 +180,7 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
   const total = totalWeightBps(targets);
   const existing = useMemo(() => new Set(targets.map(t => t.assetAddress.toLowerCase())), [targets]);
   const isFull = targets.length >= INDEX_MAX_ASSETS;
+  const { data: supported } = useIndexSupportedAssets();
 
   const emit = next => onChange({ targets, reserveBps, ...next });
 
@@ -200,7 +236,17 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
         )}
       </div>
 
-      <AssetPicker existing={existing} onAdd={addAsset} disabled={disabled || isFull} steel={steel} />
+      {supported?.restricted ? (
+        <SupportedAssetPicker
+          assets={supported.assets}
+          existing={existing}
+          onAdd={addAsset}
+          disabled={disabled || isFull}
+          steel={steel}
+        />
+      ) : (
+        <AssetPicker existing={existing} onAdd={addAsset} disabled={disabled || isFull} steel={steel} />
+      )}
       {isFull && <p className="text-sm text-dark-100">The basket is full ({INDEX_MAX_ASSETS} assets).</p>}
 
       {targets.length > 0 && (

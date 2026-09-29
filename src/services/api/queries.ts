@@ -66,6 +66,19 @@ export const useVault = (id: string) => {
   });
 };
 
+/**
+ * Tokens an index basket may hold. `restricted: false` means any token the
+ * swap adapter can quote (the free search); testnet limits it to the tokens
+ * seeded on the fixed-rate adapter.
+ */
+export const useIndexSupportedAssets = () => {
+  return useQuery({
+    queryKey: ['index-supported-assets'],
+    queryFn: () => VaultsApiProvider.getIndexSupportedAssets(),
+    staleTime: Infinity,
+  });
+};
+
 /** Basket, live allocation and rebalance history of an index-weighted vault. */
 export const useVaultIndex = (id: string, enabled = true) => {
   return useQuery({

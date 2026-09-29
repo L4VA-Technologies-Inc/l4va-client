@@ -7,6 +7,14 @@ import {
 
 export const formatVaultData = (vaultData, isRobinHood = false) => {
   const formattedData = { ...vaultData };
+  const isIndexVault = isRobinHood && formattedData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+
+  // Index vaults are acquire-only with every token for acquirers — the API rejects
+  // anything else, whatever preset the draft carried in.
+  if (isIndexVault) {
+    formattedData.isAcquireOnly = true;
+    formattedData.tokensForAcquires = 100;
+  }
 
   if (formattedData.socialLinks.length > 0) {
     // eslint-disable-next-line no-unused-vars
@@ -26,7 +34,7 @@ export const formatVaultData = (vaultData, isRobinHood = false) => {
     formattedData.acquireOpenWindowTime = null;
   }
 
-  if (isRobinHood && formattedData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+  if (isIndexVault) {
     formattedData.indexBasket = toIndexBasketPayload(formattedData.indexBasket);
     formattedData.assetsWhitelist = basketToAssetsWhitelist(formattedData.indexBasket);
   } else {
