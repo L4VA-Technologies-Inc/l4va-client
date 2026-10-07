@@ -141,6 +141,16 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     setVaultData(prev => ({ ...prev, isAcquireOnly: true, tokensForAcquires: 100 }));
   }, [isIndexVault, vaultData.isAcquireOnly, vaultData.tokensForAcquires]);
 
+  // Reserve only discounts contributed assets, so it means nothing without contributors.
+  // The input is locked for acquire-only vaults; a preset that carries no value would
+  // otherwise leave a required field empty and uneditable.
+  useEffect(() => {
+    if (!isAcquireOnly) return;
+    if (vaultData.acquireReserve !== null && vaultData.acquireReserve !== undefined && vaultData.acquireReserve !== '')
+      return;
+    setVaultData(prev => ({ ...prev, acquireReserve: 100 }));
+  }, [isAcquireOnly, vaultData.acquireReserve]);
+
   useEffect(() => {
     if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
       setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));

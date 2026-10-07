@@ -80,6 +80,20 @@ export const useIndexSupportedAssets = () => {
 };
 
 /** Basket, live allocation and rebalance history of an index-weighted vault. */
+export const useVaultLp = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['vault-lp', id],
+    queryFn: () => VaultsApiProvider.getVaultLp(id),
+    enabled: !!id && enabled,
+    // 404 = this vault has no pool; nothing to retry.
+    retry: false,
+    // The pool is seeded by a backend cron right after the raise closes, and
+    // its reserves move with every trade.
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+};
+
 export const useVaultIndex = (id: string, enabled = true) => {
   return useQuery({
     queryKey: ['vault-index', id],

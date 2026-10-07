@@ -99,6 +99,10 @@ export class VaultsConfigProvider {
     return `/api/v1/vaults/${id}/index`;
   }
 
+  static getVaultLp(id) {
+    return `/api/v1/vaults/${id}/lp`;
+  }
+
   static previewIndexReweight(id) {
     return `/api/v1/vaults/${id}/index/preview`;
   }

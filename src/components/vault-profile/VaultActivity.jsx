@@ -79,14 +79,14 @@ const formatDate = dateString => {
   }).format(date);
 };
 
-const formatAmount = amount => {
+const formatAmount = (amount, maximumFractionDigits = 2) => {
   if (!amount) return '0';
   const numValue = typeof amount === 'number' ? amount : parseFloat(amount);
   if (isNaN(numValue)) return '0';
 
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   }).format(numValue);
 };
 
@@ -98,9 +98,15 @@ const getActivityTitle = (activity, currencyLabel) => {
       }
 
       case 'acquire': {
+        // The amount is in the asset paid with, not the display currency the viewer picked.
         const adaAsset = activity.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
         if (adaAsset?.quantity) {
-          return `${formatAmount(adaAsset.quantity)} ${currencyLabel} Acquired`;
+          return `${formatAmount(adaAsset.quantity)} ADA Acquired`;
+        }
+        // EVM: the asset row is already in ETH; `activity.amount` is raw wei.
+        const ethAsset = activity.assets?.find(asset => asset.type === 'eth');
+        if (ethAsset?.quantity) {
+          return `${formatAmount(ethAsset.quantity, 6)} ETH Acquired`;
         }
         if (activity.amount) {
           return `${formatAmount(activity.amount)} ${currencyLabel} Acquired`;
