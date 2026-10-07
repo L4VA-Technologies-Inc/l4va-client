@@ -79,21 +79,23 @@ export const useIndexSupportedAssets = () => {
   });
 };
 
-/** Basket, live allocation and rebalance history of an index-weighted vault. */
+/** Liquidity pool an EVM vault seeds on close: status, then live reserves. */
 export const useVaultLp = (id: string, enabled = true) => {
   return useQuery({
     queryKey: ['vault-lp', id],
     queryFn: () => VaultsApiProvider.getVaultLp(id),
     enabled: !!id && enabled,
-    // 404 = this vault has no pool; nothing to retry.
+    // 404 = this vault has no pool; nothing to retry or poll.
     retry: false,
-    // The pool is seeded by a backend cron right after the raise closes, and
-    // its reserves move with every trade.
     staleTime: 30_000,
-    refetchInterval: 30_000,
+    // The pool is seeded by a backend cron right after the raise closes, and its
+    // reserves move with every trade. A failed seed will not recover by itself.
+    refetchInterval: query =>
+      query.state.status === 'error' || query.state.data?.status === 'failed' ? false : 30_000,
   });
 };
 
+/** Basket, live allocation and rebalance history of an index-weighted vault. */
 export const useVaultIndex = (id: string, enabled = true) => {
   return useQuery({
     queryKey: ['vault-index', id],
