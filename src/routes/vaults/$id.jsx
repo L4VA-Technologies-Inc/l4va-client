@@ -3,6 +3,7 @@ import { createFileRoute, useParams, Navigate, useSearch } from '@tanstack/react
 import { EditVault } from '@/components/vaults/EditVault';
 import { VaultProfileView } from '@/components/vault-profile/VaultProfileView';
 import { Spinner } from '@/components/Spinner';
+import LandingBackground from '@/components/shared/LandingBackground';
 import { useVault } from '@/services/api/queries';
 import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 
@@ -37,7 +38,12 @@ function VaultComponent() {
     return <EditVault vault={vault} />;
   }
 
-  return <VaultProfileView vault={vault} activeTab={tab} />;
+  return (
+    <>
+      <LandingBackground />
+      <VaultProfileView vault={vault} activeTab={tab} />
+    </>
+  );
 }
 
 export const Route = createFileRoute('/vaults/$id')({

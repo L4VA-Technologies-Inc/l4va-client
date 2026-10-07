@@ -3,12 +3,18 @@ import { Home, ArrowLeft } from 'lucide-react';
 
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import ShaderBackground from '@/components/shared/ShaderBackground';
 
 export const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+    <div className="relative isolate max-w-7xl mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <ShaderBackground
+        variant="mesh"
+        opacity={0.4}
+        className="absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      />
       <div className="max-w-xl mx-auto text-center">
         <p className="text-base font-semibold text-orange-500">404</p>
         <h1 className="mt-2 text-4xl font-bold tracking-tight  sm:text-5xl">Page not found</h1>

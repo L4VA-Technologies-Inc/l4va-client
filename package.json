@@ -49,6 +49,7 @@
     "react-virtualized-auto-sizer": "1.0.26",
     "react-window": "2.1.1",
     "recharts": "^3.8.1",
+    "shaders": "4.0.1",
     "stream-chat": "9.22.1",
     "stream-chat-react": "12.15.8",
     "tailwind-merge": "3.3.1",

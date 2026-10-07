@@ -13,6 +13,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SwapRouteImport } from './routes/swap'
+import { Route as ShadersTestRouteImport } from './routes/shaders-test'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -53,6 +54,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SwapRoute = SwapRouteImport.update({
   id: '/swap',
   path: '/swap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShadersTestRoute = ShadersTestRouteImport.update({
+  id: '/shaders-test',
+  path: '/shaders-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rewards': typeof RewardsRouteWithChildren
+  '/shaders-test': typeof ShadersTestRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/create-ai': typeof CreateAiRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/shaders-test': typeof ShadersTestRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rewards': typeof RewardsRouteWithChildren
+  '/shaders-test': typeof ShadersTestRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy-policy'
     | '/rewards'
+    | '/shaders-test'
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/create-ai'
     | '/how-it-works'
     | '/privacy-policy'
+    | '/shaders-test'
     | '/swap'
     | '/terms-of-service'
     | '/verify-email'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy-policy'
     | '/rewards'
+    | '/shaders-test'
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
@@ -329,6 +341,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RewardsRoute: typeof RewardsRouteWithChildren
+  ShadersTestRoute: typeof ShadersTestRoute
   SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TokensRoute: typeof TokensRouteWithChildren
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/swap'
       fullPath: '/swap'
       preLoaderRoute: typeof SwapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shaders-test': {
+      id: '/shaders-test'
+      path: '/shaders-test'
+      fullPath: '/shaders-test'
+      preLoaderRoute: typeof ShadersTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -584,6 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RewardsRoute: RewardsRouteWithChildren,
+  ShadersTestRoute: ShadersTestRoute,
   SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TokensRoute: TokensRouteWithChildren,
