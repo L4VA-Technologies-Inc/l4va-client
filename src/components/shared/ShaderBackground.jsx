@@ -26,26 +26,27 @@ const Layers = ({ variant, p }) => {
               { color: p.accentAlt, position: 1 },
             ]}
             count={4}
-            swirl={0.4}
-            speed={0.3}
+            swirl={0.6}
+            drift={0.8}
+            speed={2.5}
           />
-          <FilmGrain strength={0.08} />
+          <FilmGrain strength={0.08} animated />
         </>
       );
     case 'particles':
       return (
         <>
-          <Aurora colorA={p.deep} colorB={p.accent} colorC={p.accentAlt} intensity={0.6} speed={0.4} />
-          <FloatingParticles particleColor={p.accentAlt} count={40} speed={0.2} twinkle={0.6} />
-          <FilmGrain strength={0.06} />
+          <Aurora colorA={p.deep} colorB={p.accent} colorC={p.accentAlt} intensity={0.6} speed={4} />
+          <FloatingParticles particleColor={p.accentAlt} count={40} speed={0.6} twinkle={0.6} />
+          <FilmGrain strength={0.06} animated />
         </>
       );
     case 'aurora':
     default:
       return (
         <>
-          <Aurora colorA={p.deep} colorB={p.accent} colorC={p.accentAlt} intensity={0.7} speed={0.3} />
-          <FilmGrain strength={0.06} />
+          <Aurora colorA={p.deep} colorB={p.accent} colorC={p.accentAlt} intensity={0.7} speed={4} />
+          <FilmGrain strength={0.06} animated />
         </>
       );
   }
