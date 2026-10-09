@@ -171,8 +171,19 @@ export type StakedBoxItem = {
   stakedAt: number;
   estimatedReward: number;
   estimatedPayout: number;
+  /** Staking APY (percent) applied to this box. */
+  apy?: number;
   eligible: boolean;
   cooldownEndsAt: number;
+};
+
+/** Staking APY (percent) per token symbol, e.g. { VLRM: 8, L4VA: 5 }. */
+export type StakingApyByToken = Partial<Record<'VLRM' | 'L4VA', number>>;
+
+const parseStakingApyPayload = (body: unknown): StakingApyByToken => {
+  const root = (body as { data?: unknown })?.data ?? body;
+  const apy = (root as { apy?: unknown })?.apy ?? ((root as { data?: { apy?: unknown } })?.data ?? {}).apy;
+  return apy && typeof apy === 'object' ? (apy as StakingApyByToken) : {};
 };
 
 const parseStakedBoxesPayload = (body: unknown): StakedBoxItem[] => {
@@ -202,7 +213,7 @@ export const useMyStakedBalance = () => {
     queryKey: ['stake', 'balance'],
     queryFn: async () => {
       const res = await StakeApiProvider.getMyStakedBalance();
-      return parseStakedBoxesPayload(res.data);
+      return { boxes: parseStakedBoxesPayload(res.data), apy: parseStakingApyPayload(res.data) };
     },
     enabled: !!localStorage.getItem('jwt'),
   });
