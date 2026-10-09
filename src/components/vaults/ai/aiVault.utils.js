@@ -8,6 +8,10 @@ import {
   emptyIndexBasket,
   VAULT_ARCHETYPES,
 } from '@/components/vaults/index/indexVault.utils';
+import { environments } from '@/constants/core.constants';
+
+/** Testnet release: the AI assistant only builds acquire-only vaults (mirrors the backend spec). */
+const IS_AI_ACQUIRE_ONLY = import.meta.env.VITE_CARDANO_NETWORK !== environments.MAINNET;
 
 export const AI_VAULT_STORAGE_META_KEY = 'storageVaultAiMeta';
 export const AI_VAULT_CHAT_SESSION_KEY = 'aiVaultChat';
@@ -183,6 +187,9 @@ export const enforceVaultCoherence = vault => {
     next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
   }
 
+  if (IS_AI_ACQUIRE_ONLY) {
+    next.isAcquireOnly = true;
+  }
   if (next.isAcquireOnly) {
     next.tokensForAcquires = 100;
   }
@@ -198,6 +205,11 @@ export const enforceVaultCoherence = vault => {
 
 export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   const merged = { ...(previousVault ?? initialVaultState), ...aiDraft };
+  if (IS_AI_ACQUIRE_ONLY) {
+    // The form re-derives isAcquireOnly from the preset type, so the preset must be acquire-only too.
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    if (acquireOnlyPreset) merged.preset_id = acquireOnlyPreset.id;
+  }
   return enforceVaultCoherence(applyPresetToDraft(merged, presets));
 };
 
@@ -254,4 +266,13 @@ const RH_AI_GREETING = {
   options: RH_VAULT_STARTER_OPTIONS,
 };
 
-export const buildAiGreeting = isRobinhood => (isRobinhood ? RH_AI_GREETING : CARDANO_AI_GREETING);
+const CARDANO_TESTNET_AI_GREETING = {
+  role: 'assistant',
+  content:
+    "On testnet I build acquire-only vaults: people fund the vault in ADA and receive its tokens. Tell me what it's for, who can join and how long the acquire window should stay open — I'll fill in the rest.",
+};
+
+export const buildAiGreeting = isRobinhood => {
+  if (isRobinhood) return RH_AI_GREETING;
+  return IS_AI_ACQUIRE_ONLY ? CARDANO_TESTNET_AI_GREETING : CARDANO_AI_GREETING;
+};

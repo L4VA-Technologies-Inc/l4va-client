@@ -12,6 +12,7 @@ import { UserPublicVaultsList } from '@/components/vaults/UserPublicVaultsList.j
 import { Transactions } from '@/pages/profile/Transactions.jsx';
 import { StakingWidget } from '@/pages/profile/StakingWidget';
 import { ProfileRewardsLinkCard } from '@/pages/profile/ProfileRewardsLinkCard';
+import { TestnetFaucetCard } from '@/pages/profile/TestnetFaucetCard';
 import { useNetwork } from '@/hooks/useNetwork';
 
 export const Profile = ({ userId, isEditable }) => {
@@ -46,6 +47,7 @@ export const Profile = ({ userId, isEditable }) => {
             </div>
           </div>
         )}
+        {!userId && isRobinHood && <TestnetFaucetCard />}
         {userId && <UserPublicVaultsList ownerId={userId} />}
         {!userId && <MyVaultsList initialTab={search?.tab} />}
         {!userId && <Claims />}
