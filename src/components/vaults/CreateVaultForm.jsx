@@ -141,6 +141,20 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     setVaultData(prev => ({ ...prev, isAcquireOnly: true, tokensForAcquires: 100 }));
   }, [isIndexVault, vaultData.isAcquireOnly, vaultData.tokensForAcquires]);
 
+  // Acquire-only locks Reserve and LP in the form, but an AI draft keeps its own
+  // values instead of the preset's, so one that left them unset would be stuck
+  // on "required" with no way to type a value. Fill only the gaps from the preset.
+  useEffect(() => {
+    if (!isAcquireOnly) return;
+    if (vaultData.acquireReserve != null && vaultData.liquidityPoolContribution != null) return;
+    const config = presets?.find(p => p?.type?.toLowerCase() === 'acquire_only')?.config || {};
+    setVaultData(prev => ({
+      ...prev,
+      acquireReserve: prev.acquireReserve ?? config.acquireReserve ?? 100,
+      liquidityPoolContribution: prev.liquidityPoolContribution ?? config.liquidityPoolContribution ?? 0,
+    }));
+  }, [isAcquireOnly, vaultData.acquireReserve, vaultData.liquidityPoolContribution, presets]);
+
   useEffect(() => {
     if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
       setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));
@@ -159,7 +173,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       ...prev,
       vaultArchetype: next,
       ...(next === VAULT_ARCHETYPES.INDEX_WEIGHTED
-        ? { indexBasket: prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket() }
+        ? (() => {
+            // The whitelist is derived from the basket; leaving the standard
+            // placeholder row here fails step 1 on a field the index form hides.
+            const indexBasket = prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket();
+            return { indexBasket, assetsWhitelist: basketToAssetsWhitelist(indexBasket) };
+          })()
         : { assetsWhitelist: [createEmptyWhitelistAsset()] }),
     }));
 
@@ -223,7 +242,13 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
         ...vault,
         // A draft saved before any assets were added would otherwise leave the
         // asset table hidden behind an empty array, same as a brand new vault.
-        assetsWhitelist: vault.assetsWhitelist?.length ? vault.assetsWhitelist : [createEmptyWhitelistAsset()],
+        // Index vaults derive the whitelist from their basket instead.
+        assetsWhitelist:
+          vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED
+            ? basketToAssetsWhitelist(vault.indexBasket)
+            : vault.assetsWhitelist?.length
+              ? vault.assetsWhitelist
+              : [createEmptyWhitelistAsset()],
       });
       isPresetManuallyChanged.current = false;
       // Allow the preset resolution effect to re-run for the new vault

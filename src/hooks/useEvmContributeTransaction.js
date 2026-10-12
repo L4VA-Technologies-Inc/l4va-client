@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 import { CoreApiProvider } from '@/services/api/core';
 import { useCreateContributionTx } from '@/services/api/queries';
 import {
@@ -65,7 +66,9 @@ const buildApprovalRequest = (approval, spender) => {
  *
  *  1. POST /contribute/:vaultId → creates one pending Transaction row with all
  *     assets in metadata (same behavior as Cardano).
- *  2. POST /blockchain/evm/contribution/prepare → backend signs one EIP-712
+ *  2. POST /blockchain/evm/contribution/prepare → if a protocol fee is due,
+ *     backend returns `feePayment`; we send that native transfer and call
+ *     prepare again with `feeTxHash`. Backend then signs one EIP-712
  *     ContributionAuthorization per asset and returns the list of approve/
  *     contribute calls the wallet must submit.
  *  3. For each asset: optional token `approve` (or `setApprovalForAll`), then
@@ -84,6 +87,7 @@ export const useEvmContributeTransaction = () => {
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const createContributionTx = useCreateContributionTx();
+  const { payFee } = useEvmGovernanceFee();
 
   const sendTransaction = useCallback(
     async ({ vaultId, selectedNFTs }) => {
@@ -125,7 +129,15 @@ export const useEvmContributeTransaction = () => {
         createdTxId = created.txId;
 
         // ── Step 2: fetch signed authorizations ────────────────────────────
-        const { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
+        // If a protocol fee is due the backend returns `feePayment` and no
+        // calls; pay it, then ask again with the fee tx hash.
+        let { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
+        if (prepared.feePayment) {
+          setStatus('signing');
+          const feeTxHash = await payFee(prepared.feePayment, contributor);
+          setStatus('building');
+          ({ data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId, feeTxHash }));
+        }
         const { vaultAddress, calls } = prepared;
 
         if (!Array.isArray(calls) || calls.length === 0) {
@@ -198,7 +210,7 @@ export const useEvmContributeTransaction = () => {
         return null;
       }
     },
-    [contributor, currentChainId, switchChainAsync, writeContractAsync, createContributionTx]
+    [contributor, currentChainId, switchChainAsync, writeContractAsync, createContributionTx, payFee]
   );
 
   const reset = useCallback(() => {
