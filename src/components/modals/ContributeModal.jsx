@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useAccount } from 'wagmi';
+import { formatEther } from 'viem';
 import toast from 'react-hot-toast';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper.jsx';
@@ -259,6 +260,9 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
   const totalProtocolFeeAda = transactionCostEstimate.protocolFeeAda;
 
+  // EVM: paid as a separate native transfer before the contribute calls.
+  const evmProtocolFeeWei = isEvmChain ? BigInt(feeAssetCount) * BigInt(vault.protocolFeePerAssetWei || '0') : 0n;
+
   // Estimated ADA to Receive (only shown when acquire phase exists)
   // Contributors receive ADA from acquirers (minus LP allocation)
   // Formula: Estimated Value × (Tokens for Acquirers % - LP ADA %)
@@ -428,6 +432,13 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             </PrimaryButton>
           </div>
         </div>
+        {isEvmChain && selectedNFTs.length > 0 && evmProtocolFeeWei > 0n && (
+          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+            Protocol fee: <span className="text-white font-medium">{formatEther(evmProtocolFeeWei)} ETH</span> (
+            {feeAssetCount} asset
+            {feeAssetCount !== 1 ? 's' : ''} × {formatEther(BigInt(vault.protocolFeePerAssetWei))} ETH) + network gas
+          </div>
+        )}
         {!isEvmChain && (
           <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
             {selectedNFTs.length > 0 ? (

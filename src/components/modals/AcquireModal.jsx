@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useAccount, useBalance } from 'wagmi';
-import { formatUnits, parseEther } from 'viem';
+import { formatEther, formatUnits, parseEther } from 'viem';
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown, ArrowLeftRight } from 'lucide-react';
 
@@ -382,6 +382,15 @@ export const AcquireModal = ({ vault, onClose }) => {
                     ? 'ACQUIRE'
                     : status.toUpperCase()}
               </PrimaryButton>
+              {isEth && BigInt(vault.protocolAcquiresFeeWei || '0') > 0n && (
+                <div className="text-xs text-dark-100">
+                  Protocol fee:{' '}
+                  <span className="text-white font-medium">
+                    {formatEther(BigInt(vault.protocolAcquiresFeeWei))} ETH
+                  </span>{' '}
+                  + network gas
+                </div>
+              )}
               {!isEth && (
                 <div className="text-xs text-dark-100">
                   Transaction cost:{' '}

@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
 import { CoreApiProvider } from '@/services/api/core';
 import { useCreateAcquireTx } from '@/services/api/queries';
 import { VAULT_CONTRIBUTION_ABI } from '@/lib/evm/vault.abi';
@@ -28,7 +29,8 @@ const normalizeAuthorization = auth => ({
  * Native asset:
  *
  *  1. POST /acquire/:vaultId → creates the DB Transaction (type=acquire).
- *  2. POST /blockchain/evm/contribution/prepare → backend signs one
+ *  2. POST /blockchain/evm/contribution/prepare → pays the protocol fee first
+ *     if the backend returns `feePayment`, then backend signs one
  *     ContributionAuthorization (kind=Native).
  *  3. `contributeNative(auth, sig)` on the vault with `value = <wei>`.
  *  4. POST /blockchain/evm/contribution/confirm.
@@ -42,6 +44,7 @@ export const useEvmAcquireTransaction = () => {
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const createAcquireTx = useCreateAcquireTx();
+  const { payFee } = useEvmGovernanceFee();
 
   const sendTransaction = useCallback(
     async ({ vaultId, amountWei }) => {
@@ -74,7 +77,15 @@ export const useEvmAcquireTransaction = () => {
         const createdTxId = created.txId;
 
         // ── Step 2: fetch the signed Native authorization ───────────────────
-        const { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
+        // A due protocol fee comes back as `feePayment` with no calls; pay it,
+        // then ask again with the fee tx hash.
+        let { data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId });
+        if (prepared.feePayment) {
+          setStatus('signing');
+          const feeTxHash = await payFee(prepared.feePayment, contributor);
+          setStatus('building');
+          ({ data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId, feeTxHash }));
+        }
         const { vaultAddress, calls } = prepared;
 
         if (!Array.isArray(calls) || calls.length !== 1) {
@@ -134,7 +145,7 @@ export const useEvmAcquireTransaction = () => {
         return null;
       }
     },
-    [contributor, currentChainId, switchChainAsync, writeContractAsync, createAcquireTx]
+    [contributor, currentChainId, switchChainAsync, writeContractAsync, createAcquireTx, payFee]
   );
 
   const reset = useCallback(() => {
