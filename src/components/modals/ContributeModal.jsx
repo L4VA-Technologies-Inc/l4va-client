@@ -261,7 +261,8 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const totalProtocolFeeAda = transactionCostEstimate.protocolFeeAda;
 
   // EVM: paid as a separate native transfer before the contribute calls.
-  const evmProtocolFeeWei = isEvmChain ? BigInt(feeAssetCount) * BigInt(vault.protocolFeePerAssetWei || '0') : 0n;
+  const evmFeePerAssetWei = isEvmChain ? BigInt(vault.protocolFeePerAssetWei || '0') : 0n;
+  const evmProtocolFeeWei = BigInt(feeAssetCount) * evmFeePerAssetWei;
 
   // Estimated ADA to Receive (only shown when acquire phase exists)
   // Contributors receive ADA from acquirers (minus LP allocation)
@@ -432,11 +433,24 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             </PrimaryButton>
           </div>
         </div>
-        {isEvmChain && selectedNFTs.length > 0 && evmProtocolFeeWei > 0n && (
+        {isEvmChain && (
           <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-            Protocol fee: <span className="text-white font-medium">{formatEther(evmProtocolFeeWei)} ETH</span> (
-            {feeAssetCount} asset
-            {feeAssetCount !== 1 ? 's' : ''} × {formatEther(BigInt(vault.protocolFeePerAssetWei))} ETH) + network gas
+            {selectedNFTs.length > 0 ? (
+              <>
+                Transaction cost:{' '}
+                {evmProtocolFeeWei > 0n ? (
+                  <>
+                    <span className="text-white font-medium">{formatEther(evmProtocolFeeWei)} ETH</span> Protocol fee (
+                    {feeAssetCount} asset{feeAssetCount !== 1 ? 's' : ''} × {formatEther(evmFeePerAssetWei)} ETH) +
+                    network gas. Your wallet will ask you to confirm the fee transfer first.
+                  </>
+                ) : (
+                  'network gas only'
+                )}
+              </>
+            ) : (
+              <>Select assets to see estimated transaction cost.</>
+            )}
           </div>
         )}
         {!isEvmChain && (

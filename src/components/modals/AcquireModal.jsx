@@ -30,6 +30,10 @@ export const AcquireModal = ({ vault, onClose }) => {
   // ── Chain awareness ────────────────────────────────────────────────────
   // Robinhood vaults are acquired with ETH (EVM), everything else with ADA.
   const isEth = vault?.chainType === 'robinhood';
+  // Flat per-acquire fee, paid as a separate native transfer before contributeNative.
+  const evmAcquireFeeWei = isEth ? BigInt(vault?.protocolAcquiresFeeWei || '0') : 0n;
+  // On-chain rate: the vault keeps this share of the raised ETH at closeCycle, so no extra transaction.
+  const evmAcquireFeeBps = isEth ? Number(vault?.protocolAcquireFeeBps || 0) : 0;
   const assetSymbol = isEth ? 'ETH' : 'ADA';
   // Chain-appropriate input ergonomics: ETH is fractional, ADA is coarse.
   const minAcquire = isEth ? 0.001 : 5;
@@ -382,13 +386,29 @@ export const AcquireModal = ({ vault, onClose }) => {
                     ? 'ACQUIRE'
                     : status.toUpperCase()}
               </PrimaryButton>
-              {isEth && BigInt(vault.protocolAcquiresFeeWei || '0') > 0n && (
-                <div className="text-xs text-dark-100">
-                  Protocol fee:{' '}
-                  <span className="text-white font-medium">
-                    {formatEther(BigInt(vault.protocolAcquiresFeeWei))} ETH
-                  </span>{' '}
-                  + network gas
+              {isEth && (
+                <div className="text-xs text-dark-100 text-center">
+                  {evmAcquireFeeBps > 0 && (
+                    <div>
+                      Protocol fee:{' '}
+                      <span className="text-white font-medium">
+                        {evmAcquireFeeBps / 100}%
+                        {effectiveAmount > 0 &&
+                          ` (~${((effectiveAmount * evmAcquireFeeBps) / 10000).toFixed(6).replace(/\.?0+$/, '')} ETH)`}
+                      </span>{' '}
+                      of the ETH you send, taken when the vault locks
+                    </div>
+                  )}
+                  Transaction cost:{' '}
+                  {evmAcquireFeeWei > 0n ? (
+                    <>
+                      <span className="text-white font-medium">{formatEther(evmAcquireFeeWei)} ETH</span> flat fee +
+                      network gas
+                      <div className="mt-1">Your wallet will ask you to confirm the fee transfer first.</div>
+                    </>
+                  ) : (
+                    'network gas only'
+                  )}
                 </div>
               )}
               {!isEth && (
