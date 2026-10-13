@@ -44,7 +44,7 @@ const FAVICONS = {
     'favicon-16': '/favicon/favicon-16x16.png',
   },
   robinhood: {
-    'favicon-ico': '/favicon/favicon-rh.ico',
+    'favicon-ico': '/favicon/favicon-rh.ico?v=3',
     'favicon-png': '/favicon/favicon-rh.png',
     'favicon-32': '/favicon/favicon-rh-32x32.png',
     'favicon-16': '/favicon/favicon-rh-16x16.png',

@@ -5,7 +5,8 @@ import { waitForTransactionReceipt } from 'wagmi/actions';
 import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
 
 /**
- * Pays an EVM (Robinhood) governance fee.
+ * Pays an EVM (Robinhood) protocol fee — governance proposals/votes, and the
+ * contribution/acquire fee quoted by /blockchain/evm/contribution/prepare.
  *
  * Unlike the Cardano flow there is no presigned transaction to sign — the
  * backend only quotes `{ to, value, chainId }` and the wallet broadcasts a
@@ -28,7 +29,7 @@ export const useEvmGovernanceFee = () => {
       setError(null);
 
       if (!payment) {
-        throw new Error('No governance fee payment parameters provided');
+        throw new Error('No fee payment parameters provided');
       }
       if (!address) {
         throw new Error('Robinhood wallet is not connected');

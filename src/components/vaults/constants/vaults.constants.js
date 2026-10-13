@@ -365,6 +365,13 @@ export const vaultSchema = yup.object({
   assetsWhitelist: yup
     .array()
     .default([])
+    // Index vaults derive the whitelist from indexBasket, which has its own
+    // validation; their form never shows these rows, so an error here would be
+    // an unexplained step-1 failure.
+    .when('vaultArchetype', {
+      is: VAULT_ARCHETYPES.INDEX_WEIGHTED,
+      then: () => yup.array().default([]),
+    })
     .when('isAcquireOnly', {
       // Acquire-only vaults have no contributors: the whitelist is unused, or (index
       // vaults) derived from the basket, which `indexBasket` validates on the Acquire

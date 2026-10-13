@@ -98,7 +98,8 @@ export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = fal
     refetch: refetchBoxes,
   } = useMyStakedBalance();
 
-  const boxes: StakedBoxItem[] = useMemo(() => stakedBoxes ?? [], [stakedBoxes]);
+  const boxes: StakedBoxItem[] = useMemo(() => stakedBoxes?.boxes ?? [], [stakedBoxes]);
+  const apyByToken = stakedBoxes?.apy ?? {};
 
   const vlrmAmount = useMemo(() => {
     const num = Number(vlrmAmountRaw);
@@ -305,7 +306,12 @@ export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = fal
                     Balance:{' '}
                     <span className="text-white">{isBalanceLoading ? '…' : `${formatNum(vlrmBalance, 4)} VLRM`}</span>
                   </div>
-                  <div className="font-medium text-white tracking-wide">VLRM</div>
+                  <div className="font-medium text-white tracking-wide">
+                    VLRM
+                    {apyByToken.VLRM !== undefined ? (
+                      <span className="ml-2 text-green-400 font-normal">{formatNum(apyByToken.VLRM, 2)}% APY</span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
@@ -333,7 +339,12 @@ export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = fal
                     Balance:{' '}
                     <span className="text-white">{isBalanceLoading ? '…' : `${formatNum(l4vaBalance, 3)} L4VA`}</span>
                   </div>
-                  <div className="font-medium text-white tracking-wide">L4VA</div>
+                  <div className="font-medium text-white tracking-wide">
+                    L4VA
+                    {apyByToken.L4VA !== undefined ? (
+                      <span className="ml-2 text-green-400 font-normal">{formatNum(apyByToken.L4VA, 2)}% APY</span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
@@ -443,6 +454,11 @@ export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = fal
                               <div className="text-[14px] font-semibold text-white truncate">
                                 {formatNum(box.stakedAmount, tokenMaxFractionDigits)}{' '}
                                 <span className="text-dark-100 text-[12px] font-normal">{tokenLabel}</span>
+                                {box.apy !== undefined ? (
+                                  <span className="ml-2 text-dark-100 text-[12px] font-normal">
+                                    {formatNum(box.apy, 2)}% APY
+                                  </span>
+                                ) : null}
                               </div>
                               <div className="mt-1 text-[12px] text-dark-100">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
