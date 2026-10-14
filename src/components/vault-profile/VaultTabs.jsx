@@ -10,6 +10,7 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
 import { VaultIndexAllocation } from '@/components/vault-profile/VaultIndexAllocation';
+import { VaultLiquidityPool } from '@/components/vault-profile/VaultLiquidityPool';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { useModalControls } from '@/lib/modals/modal.context';
 
@@ -27,7 +28,12 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
     ) : (
       <VaultContributedAssetsList vault={vault} />
     ),
-    Token: <VaultAcquiredAssetsList vault={vault} />,
+    Token: (
+      <>
+        <VaultLiquidityPool vault={vault} />
+        <VaultAcquiredAssetsList vault={vault} />
+      </>
+    ),
     Governance: <VaultGovernance vault={vault} />,
     Activity: <VaultActivity vault={vault} />,
   };

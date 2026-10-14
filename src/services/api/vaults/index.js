@@ -139,6 +139,11 @@ export class VaultsApiProvider {
     return response.data;
   }
 
+  static async getVaultLp(vaultId) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getVaultLp(vaultId));
+    return response.data;
+  }
+
   static async previewIndexReweight(vaultId, basket) {
     const response = await axiosInstance.post(VaultsConfigProvider.previewIndexReweight(vaultId), basket);
     return response.data;

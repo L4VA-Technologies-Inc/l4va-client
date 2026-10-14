@@ -364,7 +364,6 @@ export const vaultSchema = yup.object({
     }),
   assetsWhitelist: yup
     .array()
-    .of(assetWhitelistItemSchema)
     .default([])
     // Index vaults derive the whitelist from indexBasket, which has its own
     // validation; their form never shows these rows, so an error here would be
@@ -374,10 +373,14 @@ export const vaultSchema = yup.object({
       then: () => yup.array().default([]),
     })
     .when('isAcquireOnly', {
+      // Acquire-only vaults have no contributors: the whitelist is unused, or (index
+      // vaults) derived from the basket, which `indexBasket` validates on the Acquire
+      // step. Validating its items here flagged step 1 for a basket not yet filled in.
       is: true,
       then: schema => schema.notRequired(),
       otherwise: schema =>
         schema
+          .of(assetWhitelistItemSchema)
           .required('Assets whitelist is required')
           .min(1, 'Assets whitelist must have at least 1 item')
           .max(10, 'Assets whitelist can have a maximum of 10 items'),
