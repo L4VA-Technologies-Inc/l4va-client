@@ -23,9 +23,13 @@ export const EpochsList = () => {
     return new Map(historyData.history.map(item => [item.epochId, item]));
   }, [historyData]);
 
+  // Server totals cover every epoch; `history` is capped to the latest page
   const totalEarned = React.useMemo(() => {
+    if (historyData?.totalEarned != null) return historyData.totalEarned;
     return historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
   }, [historyData]);
+
+  const epochCount = historyData?.epochCount ?? historyData?.history?.length ?? 0;
 
   // Wallet not connected state
   if (!isConnected) {
@@ -105,7 +109,7 @@ export const EpochsList = () => {
                 </div>
                 <div>
                   <p className="text-steel-400 text-xs font-medium uppercase tracking-wide">Total Epochs</p>
-                  <p className="text-2xl font-bold text-white">{historyData.history.length}</p>
+                  <p className="text-2xl font-bold text-white">{epochCount}</p>
                 </div>
               </div>
             </div>
@@ -118,7 +122,7 @@ export const EpochsList = () => {
                 <div>
                   <p className="text-steel-400 text-xs font-medium uppercase tracking-wide">Avg Per Epoch</p>
                   <p className="text-xl font-bold text-white">
-                    {(totalEarned / historyData.history.length).toLocaleString()} $L4VA
+                    {(epochCount ? totalEarned / epochCount : 0).toLocaleString()} $L4VA
                   </p>
                 </div>
               </div>
