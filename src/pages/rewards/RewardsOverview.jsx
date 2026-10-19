@@ -97,7 +97,9 @@ export const RewardsOverview = () => {
   // Calculate totals
   const claimableAmount = claimableData?.totalClaimable || 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
-  const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
+  const totalEarned =
+    historyData?.totalEarned ??
+    (historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0);
 
   // Claiming enabled flag — defaults to true so the button shows while epoch data is loading
   const claimsEnabled = currentEpochData?.claimsEnabled ?? true;
