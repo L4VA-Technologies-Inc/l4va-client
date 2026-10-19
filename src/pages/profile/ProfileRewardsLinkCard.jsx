@@ -15,7 +15,9 @@ export const ProfileRewardsLinkCard = () => {
 
   const epoch = epochData?.epoch;
   const estimateValue = estimateData?.estimatedReward;
-  const totalEarned = historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0;
+  const totalEarned =
+    historyData?.totalEarned ??
+    (historyData?.history?.reduce((sum, item) => sum + (Number(item.finalReward) || 0), 0) || 0);
 
   return (
     <Link
