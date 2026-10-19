@@ -7,8 +7,8 @@ import { L4VA_DECIMALS, VLRM_DECIMALS } from '@/hooks/useTokenBalance';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { formatNum } from '@/utils/core.utils';
 
-export type StakingAction = 'stake' | 'unstake' | 'harvest' | 'compound';
-type ConfirmStatus = 'idle' | 'building' | 'signing' | 'submitting';
+export type StakingAction = 'stake' | 'unstake' | 'harvest' | 'compound' | 'emergencyUnstake';
+type ConfirmStatus = 'idle' | 'building' | 'approving' | 'signing' | 'submitting';
 
 interface StakeToken {
   symbol: string;
@@ -19,6 +19,8 @@ interface SelectedTokenTotal {
   symbol: string;
   reward: string;
   payout: string;
+  /** Deposit only; used by emergencyUnstake. */
+  principal?: string;
   maximumFractionDigits?: number;
 }
 
@@ -33,6 +35,12 @@ export interface StakingConfirmModalProps {
   tokens?: StakeToken[];
   selectedCount?: number;
   selectedTotals?: SelectedTokenTotal[];
+  /** Overrides the stake intro (Robinhood positions are not UTxO boxes). */
+  stakeDescription?: string;
+  /** What one staked unit is called: Cardano 'box', Robinhood 'position'. */
+  positionNoun?: 'box' | 'position';
+  /** Robinhood: native fee charged on stake, as a decimal ETH string. */
+  stakeFeeEth?: string;
 }
 
 const ACTION_META: Record<StakingAction, { title: string; confirmLabel: string; accentClass: string }> = {
@@ -56,6 +64,11 @@ const ACTION_META: Record<StakingAction, { title: string; confirmLabel: string; 
     confirmLabel: 'Compound',
     accentClass: 'text-sky-400',
   },
+  emergencyUnstake: {
+    title: 'Withdraw Deposit Only',
+    confirmLabel: 'Withdraw deposit',
+    accentClass: 'text-amber-400',
+  },
 };
 
 const Row: React.FC<{ label: string; value: React.ReactNode; valueClass?: string }> = ({
@@ -78,6 +91,9 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   tokens = [],
   selectedCount = 0,
   selectedTotals = [],
+  stakeDescription,
+  positionNoun = 'box',
+  stakeFeeEth,
 }) => {
   const { closeModal } = useModalControls();
   const [isConfirming, setIsConfirming] = useState(false);
@@ -116,11 +132,13 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
   const confirmButtonLabel =
     confirmStatus === 'building'
       ? 'Building...'
-      : confirmStatus === 'signing'
-        ? 'Signing...'
-        : confirmStatus === 'submitting'
-          ? 'Submitting...'
-          : confirmLabel;
+      : confirmStatus === 'approving'
+        ? 'Approving...'
+        : confirmStatus === 'signing'
+          ? 'Signing...'
+          : confirmStatus === 'submitting'
+            ? 'Submitting...'
+            : confirmLabel;
   const footer = (
     <div className="flex flex-col md:flex-row gap-3 justify-end">
       <SecondaryButton className="w-full md:w-auto justify-center" disabled={isConfirming} onClick={handleRequestClose}>
@@ -138,7 +156,8 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
         return (
           <>
             <p className="text-[13px] text-dark-100 leading-relaxed">
-              You are about to stake the following tokens into on-chain UTxO boxes. Each token creates a separate box.
+              {stakeDescription ??
+                'You are about to stake the following tokens into on-chain UTxO boxes. Each token creates a separate box.'}
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
               {tokens.map(t => (
@@ -159,12 +178,13 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             <p className="text-[13px] text-dark-100 leading-relaxed">
               You are about to unstake{' '}
               <span className="text-white font-medium">
-                {selectedCount} box{selectedCount !== 1 ? 'es' : ''}
+                {selectedCount} {positionNoun}
+                {selectedCount !== 1 ? (positionNoun === 'box' ? 'es' : 's') : ''}
               </span>
               . Your full deposit plus accumulated rewards will be returned to your wallet.
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
-              <Row label="Selected boxes" value={selectedCount} />
+              <Row label={`Selected ${positionNoun === 'box' ? 'boxes' : 'positions'}`} value={selectedCount} />
               {selectedTotals.map(total => (
                 <div key={total.symbol} className="border-t border-steel-750 pt-2">
                   <Row
@@ -189,12 +209,13 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             <p className="text-[13px] text-dark-100 leading-relaxed">
               You are about to harvest rewards from{' '}
               <span className="text-white font-medium">
-                {selectedCount} box{selectedCount !== 1 ? 'es' : ''}
+                {selectedCount} {positionNoun}
+                {selectedCount !== 1 ? (positionNoun === 'box' ? 'es' : 's') : ''}
               </span>
               . Only the accumulated rewards will be sent to your wallet — your original deposit stays staked.
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
-              <Row label="Selected boxes" value={selectedCount} />
+              <Row label={`Selected ${positionNoun === 'box' ? 'boxes' : 'positions'}`} value={selectedCount} />
               <Row label="Deposit stays staked" value="Yes" valueClass="text-dark-100" />
               {selectedTotals.map(total => (
                 <div key={total.symbol} className="border-t border-steel-750 pt-2">
@@ -215,12 +236,16 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             <p className="text-[13px] text-dark-100 leading-relaxed">
               You are about to compound{' '}
               <span className="text-white font-medium">
-                {selectedCount} box{selectedCount !== 1 ? 'es' : ''}
+                {selectedCount} {positionNoun}
+                {selectedCount !== 1 ? (positionNoun === 'box' ? 'es' : 's') : ''}
               </span>
-              . Your deposit plus rewards will be restaked into new boxes — nothing is sent to your wallet.
+              .{' '}
+              {positionNoun === 'box'
+                ? 'Your deposit plus rewards will be restaked into new boxes — nothing is sent to your wallet.'
+                : 'Your rewards will be added to the staked deposit — nothing is sent to your wallet.'}
             </p>
             <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
-              <Row label="Selected boxes" value={selectedCount} />
+              <Row label={`Selected ${positionNoun === 'box' ? 'boxes' : 'positions'}`} value={selectedCount} />
               {selectedTotals.map(total => (
                 <div key={total.symbol} className="border-t border-steel-750 pt-2">
                   <Row
@@ -238,6 +263,38 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
             </div>
           </>
         );
+
+      case 'emergencyUnstake':
+        return (
+          <>
+            <p className="text-[13px] text-dark-100 leading-relaxed">
+              You are about to close{' '}
+              <span className="text-white font-medium">
+                {selectedCount} {positionNoun}
+                {selectedCount !== 1 ? (positionNoun === 'box' ? 'es' : 's') : ''}
+              </span>{' '}
+              and get back only your deposit.{' '}
+              <span className="text-amber-400">The accrued reward is forfeited and cannot be claimed later.</span>
+            </p>
+            <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3 space-y-2">
+              <Row label={`Selected ${positionNoun === 'box' ? 'boxes' : 'positions'}`} value={selectedCount} />
+              {selectedTotals.map(total => (
+                <div key={total.symbol} className="border-t border-steel-750 pt-2">
+                  <Row
+                    label={`Reward forfeited (${total.symbol})`}
+                    value={`-${formatNum(total.reward, total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass="text-red-400"
+                  />
+                  <Row
+                    label={`You will receive (${total.symbol})`}
+                    value={`${formatNum(total.principal ?? '0', total.maximumFractionDigits ?? getTokenMaxFractionDigits(total.symbol))} ${total.symbol}`}
+                    valueClass={accentClass}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        );
     }
   };
 
@@ -245,6 +302,11 @@ export const StakingConfirmModal: React.FC<StakingConfirmModalProps> = ({
     <ModalWrapper isOpen={isOpen} onClose={handleRequestClose} title={title} size="md" footer={footer}>
       <div className="flex flex-col gap-4">
         {renderDetails()}
+        {action === 'stake' && stakeFeeEth ? (
+          <div className="rounded-xl border border-steel-750 bg-steel-900 px-4 py-3">
+            <Row label="Staking fee" value={`${stakeFeeEth} ETH`} valueClass="text-dark-100" />
+          </div>
+        ) : null}
         <p className="text-[12px] text-dark-100">
           This action will submit an on-chain transaction and cannot be undone.
         </p>

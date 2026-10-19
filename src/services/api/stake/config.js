@@ -22,4 +22,12 @@ export class StakeConfigProvider {
   static getBalance() {
     return '/api/v1/stake/balance';
   }
+
+  static getEvmConfig() {
+    return '/api/v1/stake/evm/config';
+  }
+
+  static confirmEvm() {
+    return '/api/v1/stake/evm/confirm';
+  }
 }

@@ -31,4 +31,14 @@ export class StakeApiProvider {
     const response = await axiosInstance.get(StakeConfigProvider.getBalance());
     return response;
   }
+
+  static async getEvmConfig() {
+    const response = await axiosInstance.get(StakeConfigProvider.getEvmConfig());
+    return response;
+  }
+
+  static async confirmEvm(params) {
+    const response = await axiosInstance.post(StakeConfigProvider.confirmEvm(), params);
+    return response;
+  }
 }

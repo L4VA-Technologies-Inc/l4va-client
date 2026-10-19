@@ -207,6 +207,8 @@ export const useSubmitStakeTx = () => {
 };
 
 export type StakedBoxItem = {
+  /** Robinhood only: L4VAStaking position id. */
+  positionId?: string;
   txHash: string;
   outputIndex: number;
   unit: string;
@@ -260,6 +262,39 @@ export const useMyStakedBalance = () => {
       return { boxes: parseStakedBoxesPayload(res.data), apy: parseStakingApyPayload(res.data) };
     },
     enabled: !!localStorage.getItem('jwt'),
+  });
+};
+
+export type EvmStakeToken = {
+  address: `0x${string}`;
+  symbol: string;
+  type: 'L4VA' | 'VLRM' | null;
+  decimals: number;
+  enabled: boolean;
+  apy: number;
+  /** Raw token units (decimal strings). */
+  minStake: string;
+  totalStaked: string;
+  rewardReserve: string;
+};
+
+export type EvmStakeConfig = {
+  configured: boolean;
+  chainId: number;
+  stakingAddress: `0x${string}` | null;
+  maxBatch: number;
+  /** stakeFee: wei sent as msg.value with every stake. */
+  fees: { recipient: `0x${string}` | null; stakeFee: string };
+  tokens: EvmStakeToken[];
+};
+
+/** Robinhood L4VAStaking address, batch limit and per-token APY / minimum stake. */
+export const useEvmStakeConfig = (enabled = true) => {
+  return useQuery({
+    queryKey: ['stake', 'evm-config'],
+    queryFn: async () => (await StakeApiProvider.getEvmConfig()).data as EvmStakeConfig,
+    enabled,
+    staleTime: 60_000,
   });
 };
 
