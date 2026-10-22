@@ -487,7 +487,6 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
               )}
             </div>
-            <VaultTypeBadge vault={vault} variant="banner" className="my-1 self-start" />
             {(vault.vaultTokenTicker || vault.ftTokenSupply) && (
               <div className="flex items-center gap-2 text-sm text-dark-100">
                 {vault.vaultTokenTicker && <span className="font-medium text-white">${vault.vaultTokenTicker}</span>}
@@ -555,6 +554,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 </div>
               </div>
             )}
+            <VaultTypeBadge vault={vault} variant="icon" />
             <div className="group relative">
               <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
                 <EyeIcon className="w-4 h-4 text-orange-500" />

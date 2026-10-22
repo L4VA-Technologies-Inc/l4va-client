@@ -9,6 +9,7 @@ import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.j
 import { useCurrency } from '@/hooks/useCurrency';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
+const ETH_IMAGE = '/assets/icons/eth.svg';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -196,9 +197,9 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       <img
                         alt={asset.name || 'NFT'}
                         className="w-12 h-12 rounded-lg object-cover"
-                        src={asset.imageUrl || FALLBACK_IMAGE}
+                        src={asset.imageUrl || (isEth ? ETH_IMAGE : FALLBACK_IMAGE)}
                         onError={e => {
-                          e.target.src = FALLBACK_IMAGE;
+                          e.target.src = isEth ? ETH_IMAGE : FALLBACK_IMAGE;
                         }}
                       />
                     </td>

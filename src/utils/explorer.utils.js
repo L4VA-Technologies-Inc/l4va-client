@@ -34,7 +34,15 @@ const EXPLORER_URLS = {
  * @returns {object} Explorer configuration
  */
 const getExplorerConfig = (chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
-  const network = isTestnet ? 'testnet' : 'mainnet';
+  // Robinhood's network is configured on its own; IS_PREPROD is the Cardano network.
+  const network =
+    chainType === ChainType.ROBINHOOD
+      ? import.meta.env.VITE_ROBINHOOD_NETWORK === 'mainnet'
+        ? 'mainnet'
+        : 'testnet'
+      : isTestnet
+        ? 'testnet'
+        : 'mainnet';
   return EXPLORER_URLS[chainType]?.[network] || EXPLORER_URLS[ChainType.CARDANO][network];
 };
 

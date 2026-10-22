@@ -64,7 +64,10 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
   const maxUsd = vault.acquireExpansionMaxUsd || 0;
   const maxEth = vault.acquireExpansionMaxEth || 0;
 
-  const progress = hasMax ? calculateProgress(currentAda, maxAda) : 0;
+  const isEvm = vault?.chainType?.toLowerCase() === 'robinhood';
+  const progress = hasMax ? (isEvm ? calculateProgress(currentEth, maxEth) : calculateProgress(currentAda, maxAda)) : 0;
+  // A real but tiny raise must not read as 0.
+  const fmtRaised = value => (value > 0 && value < 0.01 ? '<0.01' : formatNum(value));
 
   return (
     <div>
@@ -74,7 +77,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">
               Raised:{' '}
-              {`${currencySymbol}${formatNum(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
+              {`${currencySymbol}${fmtRaised(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
             <span className="text-dark-100">{Math.floor(progress)}%</span>
           </div>
@@ -101,7 +104,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
           <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
             Total Raised:{' '}
             <span className="text-white font-medium">
-              {`${currencySymbol}${formatNum(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
+              {`${currencySymbol}${fmtRaised(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
           </div>
           <div className="text-sm text-dark-100 mb-2">
@@ -334,19 +337,23 @@ export const VaultContribution = ({ vault }) => {
                           )}`}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
-                        <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                          {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
-                        </span>
-                      </div>
-                      {!lpMinThresholdMet && (
-                        <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
-                          <span className="text-yellow-300 text-xs">
-                            LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
-                            {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
-                          </span>
-                        </div>
+                      {!isEvmVault && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                            <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                              {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                            </span>
+                          </div>
+                          {!lpMinThresholdMet && (
+                            <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                              <span className="text-yellow-300 text-xs">
+                                LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
+                                {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   )}
@@ -389,19 +396,23 @@ export const VaultContribution = ({ vault }) => {
                               )}`}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
-                            <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                              {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
-                            </span>
-                          </div>
-                          {!lpMinThresholdMet && (
-                            <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
-                              <span className="text-yellow-300 text-xs">
-                                ⚠️ LP minimum not yet met. More acquire contributions needed to reach ₳
-                                {vault.lpMinLiquidityAda} minimum for liquidity pool creation.
-                              </span>
-                            </div>
+                          {!isEvmVault && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                                <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                                  {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                                </span>
+                              </div>
+                              {!lpMinThresholdMet && (
+                                <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                                  <span className="text-yellow-300 text-xs">
+                                    ⚠️ LP minimum not yet met. More acquire contributions needed to reach ₳
+                                    {vault.lpMinLiquidityAda} minimum for liquidity pool creation.
+                                  </span>
+                                </div>
+                              )}
+                            </>
                           )}
                         </>
                       )}

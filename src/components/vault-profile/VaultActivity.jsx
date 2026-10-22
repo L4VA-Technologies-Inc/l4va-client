@@ -347,7 +347,15 @@ const ActivityCard = ({ activity, vault }) => {
                                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750 pointer-events-none"
                                   title={`${asset.quantity} ${asset.name}`}
                                 >
-                                  <img src="/assets/icons/ada.svg" alt={asset.name || 'FT'} className="w-5 h-5" />
+                                  <img
+                                    src={
+                                      vault?.chainType === 'robinhood'
+                                        ? '/assets/icons/eth.svg'
+                                        : '/assets/icons/ada.svg'
+                                    }
+                                    alt={asset.name || 'FT'}
+                                    className="w-5 h-5"
+                                  />
                                   <span className="text-sm font-medium text-white">
                                     {parseFloat(asset.quantity).toLocaleString()} {asset.name}
                                   </span>

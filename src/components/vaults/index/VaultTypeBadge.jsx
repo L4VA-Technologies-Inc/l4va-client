@@ -7,11 +7,26 @@ import { VAULT_ARCHETYPE_META } from '@/components/vaults/index/indexVault.utils
  * Vault archetype label. Standard vaults render nothing — only archetypes that
  * behave differently from the default acquire/contribute flow get a badge.
  *
- * `banner` sits under the vault name on the profile; `chip` fits on cards.
+ * `icon` sits in the profile's icon row (views / share); `banner` is the wide
+ * variant; `chip` fits on cards.
  */
 export const VaultTypeBadge = ({ vault, variant = 'chip', className = '' }) => {
   const meta = VAULT_ARCHETYPE_META[vault?.vaultArchetype];
   if (!meta) return null;
+
+  if (variant === 'icon') {
+    return (
+      <div className={cn('group relative', className)}>
+        <span className="bg-steel-850 px-2 py-1 rounded-full text-sm flex items-center justify-center gap-1 h-7 min-w-[28px]">
+          <PieChart className="w-4 h-4 text-orange-500" aria-label={meta.label} />
+        </span>
+        <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+          <p className="font-medium">{meta.label}</p>
+          <p className="text-dark-100">{meta.description}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'banner') {
     return (
