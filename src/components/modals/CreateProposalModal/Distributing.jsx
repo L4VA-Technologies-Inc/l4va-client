@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
+import { formatEther, parseEther, zeroAddress } from 'viem';
 
 import { NoTreasuryWalletAlert } from './NoTreasuryWalletAlert';
 
@@ -10,13 +11,106 @@ import { formatAdaPrice } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Distributing({ isDisabled, onDataChange, vaultId }) {
+  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
+
+  // EVM vaults have no treasury wallet: the backend returns the vault's own
+  // distributable balance and the proposal carries a wei amount instead.
+  if (data?.data?.chain === 'robinhood') {
+    return <EvmDistributing isDisabled={isDisabled} onDataChange={onDataChange} info={data.data} />;
+  }
+
+  return (
+    <CardanoDistributing
+      isDisabled={isDisabled}
+      onDataChange={onDataChange}
+      distributionInfo={data?.data}
+      isLoading={isLoading}
+    />
+  );
+}
+
+function EvmDistributing({ isDisabled, onDataChange, info }) {
+  const [amount, setAmount] = useState('');
+  const available = BigInt(info.availableAmount || '0');
+  const holderCount = info.vtHolderCount || 0;
+
+  let amountWei = 0n;
+  try {
+    amountWei = amount ? parseEther(amount) : 0n;
+  } catch {
+    amountWei = -1n;
+  }
+  const isInvalidNumber = amountWei < 0n;
+  const isOverBalance = amountWei > available;
+  const hasNoSnapshot = !info.timepoint;
+  const isValid = amountWei > 0n && !isOverBalance && !hasNoSnapshot;
+
+  useEffect(() => {
+    onDataChange?.({
+      distributionAmount: isValid ? amountWei.toString() : null,
+      distributionAsset: info.asset || zeroAddress,
+      isValid,
+    });
+  }, [amountWei, isValid, info.asset, onDataChange]);
+
+  if (isDisabled) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <p className="text-red-400 font-medium">Distribution Not Available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-steel-800 rounded-lg p-4 space-y-4">
+        <LavaSteelInput type="number" label="Amount (ETH)" placeholder="0.00" value={amount} onChange={setAmount} />
+        {isInvalidNumber && <p className="text-red-400 text-sm">Enter a valid ETH amount (up to 18 decimals)</p>}
+        {isOverBalance && <p className="text-red-400 text-sm">Amount exceeds the vault's distributable ETH</p>}
+        {hasNoSnapshot && (
+          <p className="text-red-400 text-sm">No governance snapshot yet — holder weights cannot be fixed</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Wallet className="w-4 h-4" />
+            <span className="text-sm">Distributable in vault</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{formatEther(available)} ETH</p>
+        </div>
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Users className="w-4 h-4" />
+            <span className="text-sm">VT Holders (snapshot)</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{holderCount.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div className="bg-steel-800/50 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 mt-0.5" />
+          <ul className="text-sm text-white/70 space-y-1 list-disc list-inside">
+            <li>The amount is reserved inside the vault contract when the proposal executes</li>
+            <li>Each holder claims a share proportional to their VT at the proposal snapshot</li>
+            <li>
+              Claim window: {Math.round((info.defaultClaimWindowSeconds || 0) / 86400)} days; unclaimed funds go to the
+              treasury
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardanoDistributing({ isDisabled, onDataChange, distributionInfo, isLoading }) {
   const { currencyLabel } = useCurrency();
   const [adaAmount, setAdaAmount] = useState('');
   const [distributeAll, setDistributeAll] = useState(false);
-  const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
 
-  // Distribution info from backend
-  const distributionInfo = data?.data;
   const treasuryBalance = distributionInfo?.treasuryBalance?.lovelace || 0;
   const treasuryBalanceAda = treasuryBalance / 1000000;
   const maxDistributableAda = distributionInfo?.maxDistributableAda || 0;

@@ -29,7 +29,7 @@ export const robinhoodUniswapChain = defineChain({
       url:
         import.meta.env.VITE_ROBINHOOD_MAINNET_BLOCKSCOUT_URL ||
         import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL ||
-        'https://explorer.mainnet.chain.robinhood.com',
+        'https://robinhoodchain.blockscout.com',
     },
   },
 });

@@ -247,8 +247,11 @@ export const VaultContribution = ({ vault }) => {
     vault.requireReservedCostAda,
     vault.liquidityPoolContribution
   );
-  const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
-  const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
+  // The 500 ADA LP minimum is Cardano-only: EVM vaults seed the pool from any raise
+  // (EVM_LP_MIN_USD, off by default), so the warning would be wrong there.
+  const isEvmVault = vault?.chainType?.toLowerCase() === 'robinhood';
+  const canMeetLpMinimum = isEvmVault || vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
+  const lpMinThresholdMet = isEvmVault || (canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition);
 
   return (
     <div className="space-y-4">

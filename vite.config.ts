@@ -8,42 +8,44 @@ import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const env = loadEnv('mock', process.cwd(), '');
-
 // https://vite.dev/config/
-export default defineConfig({
-  server: {
-    proxy: {
-      '/api': env.PUBLIC_VITE_API_URL,
+// `vite --mode mainnet` layers .env.mainnet over .env (local Robinhood-mainnet stack).
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    server: {
+      proxy: {
+        '/api': env.PUBLIC_VITE_API_URL,
+      },
     },
-  },
-  plugins: [
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
-    react({
-      // Enable TypeScript support
-      include: '**/*.{jsx,tsx}',
-    }),
-    svgr(),
-    tailwindcss(),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+    plugins: [
+      tanstackRouter({ target: 'react', autoCodeSplitting: true }),
+      react({
+        // Enable TypeScript support
+        include: '**/*.{jsx,tsx}',
+      }),
+      svgr(),
+      tailwindcss(),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
     },
-    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
-  },
-  build: {
-    target: 'esnext', // enables top-level await in deps like lucid
-    minify: 'esbuild',
-    terserOptions: {
-      ecma: 2020,
-      compress: { passes: 2 },
-      mangle: true,
+    build: {
+      target: 'esnext', // enables top-level await in deps like lucid
+      minify: 'esbuild',
+      terserOptions: {
+        ecma: 2020,
+        compress: { passes: 2 },
+        mangle: true,
+      },
     },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      target: 'esnext',
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'esnext',
+      },
     },
-  },
+  };
 });

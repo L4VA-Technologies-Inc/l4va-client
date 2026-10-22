@@ -213,7 +213,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.fts = proposalData.fts || [];
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
-        proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        if (isEvmVault) {
+          proposalPayload.distributionAmount = proposalData.distributionAmount;
+          proposalPayload.distributionAsset = proposalData.distributionAsset;
+        } else {
+          proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        }
       } else if (selectedOption === 'expansion') {
         if (isEvmVault) {
           proposalPayload.expansionEvmAssets = proposalData.expansionEvmAssets || [];
