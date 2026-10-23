@@ -70,7 +70,8 @@
   transition-timing-function: ease;
 }
 
-:root[data-chain='robinhood'] {
+:root[data-chain='robinhood'],
+:root[data-chain='cardano'] {
   --color-background-primary: #0D0D0C;
   --color-input-bg: #151614;
   --color-accent: #1B1D19;
@@ -96,7 +97,8 @@
   --color-step-accent: var(--color-primary);
 }
 
-:root[data-chain='robinhood'] .bg-orange-500.border-orange-500.text-white {
+:root[data-chain='robinhood'] .bg-orange-500.border-orange-500.text-white,
+:root[data-chain='cardano'] .bg-orange-500.border-orange-500.text-white {
   color: #151614;
 }
 
@@ -158,7 +160,8 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, black 78%, transparent 100%);
 }
 
-:root[data-chain='robinhood'] .home-bg-texture {
+:root[data-chain='robinhood'] .home-bg-texture,
+:root[data-chain='cardano'] .home-bg-texture {
   background-image:
     radial-gradient(circle at 18% 42%, rgba(204, 255, 0, 0.08), transparent 28%),
     linear-gradient(180deg, rgba(13, 13, 12, 0.12) 0%, var(--color-background-primary) 100%),
