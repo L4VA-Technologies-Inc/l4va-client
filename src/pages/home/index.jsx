@@ -13,8 +13,8 @@ export const Home = () => {
         </div>
         <HeroStats /> */}
         {/* <Features /> */}
-        <VaultsFilters />
         <TokensPage />
+        <VaultsFilters />
         {/* <Acquire /> */}
         <Stats />
         <Faq />
