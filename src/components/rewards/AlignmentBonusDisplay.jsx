@@ -66,7 +66,7 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false, isRobi
       progress: l4vaBonus.requiredAmount ? Math.min(100, (l4vaBonus.stakedAmount / l4vaBonus.requiredAmount) * 100) : 0,
       stakedAmount: l4vaBonus.stakedAmount || 0,
       requiredAmount: l4vaBonus.requiredAmount || 100000,
-      iconUrl: '/favicon/favicon.png',
+      iconUrl: '/favicon/favicon-rh.png',
     },
     {
       label: 'VLRM Staking',
