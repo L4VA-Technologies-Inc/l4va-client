@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { addMilliseconds } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, ListChecks, Plus, RotateCcw, Sparkles } from 'lucide-react';
+import { ChevronDown, ExternalLink, ListChecks, Lock, Plus, RotateCcw, Sparkles, Upload } from 'lucide-react';
 
 import { Chip } from '@/components/shared/Chip';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
@@ -9,6 +9,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import {
+  MAX_ACQUIRE_WINDOW_DURATION_MS,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
   MIN_CONTRIBUTION_DURATION_MS,
   MIN_SUPPLY,
@@ -110,38 +111,6 @@ const SECTIONS = [
   },
 ];
 
-const Row = ({ label, value, isAiSet, isChanged, isEmptyAction, actionLabel, onAction }) => (
-  <div
-    className={`group flex items-start justify-between gap-4 py-2.5 border-b border-steel-800/70 last:border-b-0 rounded-md px-2 -mx-2 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
-  >
-    <span className="pt-0.5 text-xs uppercase tracking-wide text-dark-100 font-russo">{label}</span>
-    {isEmptyAction && actionLabel ? (
-      <button
-        className="flex items-center gap-1.5 text-sm transition-[color,transform] duration-150 ease-out active:scale-[0.97]"
-        type="button"
-        onClick={onAction}
-      >
-        <span className="text-dark-100">Not set</span>
-        <span className="font-medium text-orange-300 underline decoration-orange-500/40 underline-offset-2 hover:text-orange-200">
-          {actionLabel}
-        </span>
-      </button>
-    ) : (
-      <span className="flex min-w-0 items-center justify-end gap-1.5 text-right text-sm text-white">
-        <span className="break-words">{value}</span>
-        {isAiSet && (
-          <span
-            className="flex shrink-0 items-center opacity-40 transition-opacity duration-150 group-hover:opacity-100"
-            title="AI suggested this value — ask the assistant to change it, or edit manually"
-          >
-            <Sparkles className="h-3 w-3 text-orange-400/80" />
-          </span>
-        )}
-      </span>
-    )}
-  </div>
-);
-
 const EditableRow = ({
   label,
   value,
@@ -233,7 +202,7 @@ const EditableRow = ({
             <div className="relative">
               <input
                 ref={inputRef}
-                className={`${fieldClassName} ${suffix ? 'pr-5' : ''}`}
+                className={`${fieldClassName} ${suffix ? (String(suffix).length > 1 ? 'pr-12' : 'pr-5') : ''}`}
                 maxLength={maxLength}
                 placeholder={placeholder}
                 type="text"
@@ -350,13 +319,31 @@ const SelectRow = ({ label, value, options, isAiSet, isChanged, onCommit }) => {
   );
 };
 
-const DurationRow = ({ label, value, isAiSet, isChanged, minMs, onCommit }) => (
+const DurationRow = ({ label, value, isAiSet, isChanged, minMs, maxMs, onCommit }) => (
   <FieldShell isAiSet={isAiSet} isChanged={isChanged} label={label}>
     <div className="w-auto [&_div]:mt-0 [&_button]:h-7 [&_button]:min-h-7 [&_button]:w-auto [&_button]:justify-center [&_button]:px-2 [&_button]:py-0 [&_button]:text-xs [&_span]:text-xs [&_svg]:mr-1 [&_svg]:h-3 [&_svg]:w-3">
-      <LavaIntervalPicker margin={0} minMs={minMs} value={value} variant="steel" onChange={onCommit} />
+      <LavaIntervalPicker margin={0} maxMs={maxMs} minMs={minMs} value={value} variant="steel" onChange={onCommit} />
     </div>
   </FieldShell>
 );
+
+/** A value fixed for this launch: shown, not editable, with the reason on hover. */
+const LockedRow = ({ label, value, hint }) => (
+  <FieldShell label={label}>
+    <span className="flex items-center gap-1.5 text-sm text-white" title={hint}>
+      {value}
+      <Lock className="h-3 w-3 text-dark-100" />
+    </span>
+  </FieldShell>
+);
+
+const imageFileName = url => {
+  try {
+    return decodeURIComponent(new URL(url).pathname.split('/').pop() || 'image');
+  } catch {
+    return 'image';
+  }
+};
 
 const DateRow = ({ label, value, isAiSet, isChanged, minDate, onCommit }) => (
   <div
@@ -518,7 +505,10 @@ export const AiVaultPreview = ({
   onUpdateVault,
   onSendMessage,
   onGenerateImageRequest,
+  onUploadImage,
+  isUploadingImage = false,
 }) => {
+  const imageInputRef = useRef(null);
   const { currencyLabel } = useCurrency();
   const { isRobinHood } = useNetwork();
   const { openModal } = useModalControls();
@@ -697,6 +687,10 @@ export const AiVaultPreview = ({
           <RotateCcw className="w-4 h-4" />
         </button>
       </div>
+      <p className="-mt-3 flex items-center gap-1.5 text-xs text-dark-100">
+        <Sparkles className="h-3 w-3 text-orange-400/80" />
+        Suggested by the assistant — click a value to change it, or ask the assistant.
+      </p>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs">
@@ -798,14 +792,53 @@ export const AiVaultPreview = ({
             names={(vault.socialLinks || []).filter(link => link?.url).map(link => link.url)}
             onManage={openSocialLinksModal}
           />
-          <Row
-            actionLabel="Generate image"
-            isChanged={isChanged('vaultImage')}
-            isEmptyAction={!vault.vaultImage}
-            label="Image"
-            value={vault.vaultImage ? 'Added' : '—'}
-            onAction={() => onGenerateImageRequest?.()}
-          />
+          <FieldShell isChanged={isChanged('vaultImage')} label="Image">
+            <input
+              ref={imageInputRef}
+              accept="image/*"
+              className="hidden"
+              type="file"
+              onChange={event => {
+                const file = event.target.files?.[0];
+                if (file) onUploadImage?.(file);
+                event.target.value = '';
+              }}
+            />
+            <div className="flex min-w-0 flex-col items-end gap-1">
+              {vault.vaultImage ? (
+                <a
+                  className="flex min-w-0 max-w-[180px] items-center gap-1 text-sm text-orange-300 hover:text-orange-200"
+                  href={vault.vaultImage}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  title="Open image preview"
+                >
+                  <span className="truncate">{imageFileName(vault.vaultImage)}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              ) : (
+                <span className="text-sm text-dark-100">Not set</span>
+              )}
+              <div className="flex items-center gap-3 text-xs">
+                <button
+                  className="flex items-center gap-1 text-orange-300 underline decoration-orange-500/40 underline-offset-2 hover:text-orange-200 disabled:opacity-50"
+                  disabled={isUploadingImage || !onUploadImage}
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <Upload className="h-3 w-3" />
+                  {isUploadingImage ? 'Uploading…' : 'Upload'}
+                </button>
+                <button
+                  className="text-orange-300 underline decoration-orange-500/40 underline-offset-2 hover:text-orange-200"
+                  type="button"
+                  onClick={() => onGenerateImageRequest?.()}
+                >
+                  {vault.vaultImage ? 'Regenerate' : 'Generate'}
+                </button>
+              </div>
+            </div>
+          </FieldShell>
         </Section>
 
         <Section id="assets" isOpen={openSections.has('assets')} label="Assets" onToggle={toggleSection}>
@@ -915,33 +948,55 @@ export const AiVaultPreview = ({
               }
             />
           )}
-          <EditableRow
-            displayValue={percent(vault.acquireReserve)}
-            isAiSet={isAiSet('acquireReserve')}
-            isChanged={isChanged('acquireReserve')}
-            label="Reserve"
-            placeholder="100"
-            sanitize={sanitizeDecimal}
-            suffix="%"
-            value={vault.acquireReserve === 0 || vault.acquireReserve ? String(vault.acquireReserve) : ''}
-            onCommit={next => commitNumber('acquireReserve', next)}
-          />
-          <SelectRow
-            isAiSet={isAiSet('isAcquireOnly')}
-            isChanged={isChanged('isAcquireOnly')}
-            label="Acquisitions only"
-            options={YES_NO_OPTIONS}
-            value={!!vault.isAcquireOnly}
-            onCommit={next => onUpdateVault('isAcquireOnly', next)}
-          />
-          <SelectRow
-            isAiSet={isAiSet('allowAcquireExpansion')}
-            isChanged={isChanged('allowAcquireExpansion')}
-            label="Acquire expansion"
-            options={YES_NO_OPTIONS}
-            value={!!vault.allowAcquireExpansion}
-            onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
-          />
+          {isIndexVault ? (
+            <>
+              <LockedRow
+                hint="Acquire vaults reserve the whole raise; fixed at 100% for launch."
+                label="Reserve %"
+                value="100%"
+              />
+              <LockedRow
+                hint="Acquire-only for launch. Asset contribution vaults come in a later release."
+                label="Acquisitions only"
+                value="Yes"
+              />
+              <LockedRow
+                hint="Acquire expansion: holders can later vote to reopen the vault for new ETH in exchange for newly minted VT. Always on for launch."
+                label="Acquire expansion"
+                value="Yes"
+              />
+            </>
+          ) : (
+            <>
+              <EditableRow
+                displayValue={percent(vault.acquireReserve)}
+                isAiSet={isAiSet('acquireReserve')}
+                isChanged={isChanged('acquireReserve')}
+                label="Reserve"
+                placeholder="100"
+                sanitize={sanitizeDecimal}
+                suffix="%"
+                value={vault.acquireReserve === 0 || vault.acquireReserve ? String(vault.acquireReserve) : ''}
+                onCommit={next => commitNumber('acquireReserve', next)}
+              />
+              <SelectRow
+                isAiSet={isAiSet('isAcquireOnly')}
+                isChanged={isChanged('isAcquireOnly')}
+                label="Acquisitions only"
+                options={YES_NO_OPTIONS}
+                value={!!vault.isAcquireOnly}
+                onCommit={next => onUpdateVault('isAcquireOnly', next)}
+              />
+              <SelectRow
+                isAiSet={isAiSet('allowAcquireExpansion')}
+                isChanged={isChanged('allowAcquireExpansion')}
+                label="Acquire expansion"
+                options={YES_NO_OPTIONS}
+                value={!!vault.allowAcquireExpansion}
+                onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
+              />
+            </>
+          )}
         </Section>
 
         <Section id="launch" isOpen={openSections.has('launch')} label="Launch" onToggle={toggleSection}>
@@ -1018,7 +1073,8 @@ export const AiVaultPreview = ({
               <DurationRow
                 isAiSet={isAiSet('acquireWindowDuration')}
                 isChanged={isChanged('acquireWindowDuration')}
-                label="Acquire"
+                label="Acquire duration"
+                maxMs={MAX_ACQUIRE_WINDOW_DURATION_MS}
                 minMs={MIN_ACQUIRE_WINDOW_DURATION_MS}
                 value={vault.acquireWindowDuration}
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
@@ -1027,14 +1083,18 @@ export const AiVaultPreview = ({
                 isAiSet={isAiSet('acquireOpenWindowType')}
                 isChanged={isChanged('acquireOpenWindowType')}
                 label="Acquire opens"
-                options={ACQUIRE_OPENS_OPTIONS}
+                options={
+                  isAcquireOnly
+                    ? ACQUIRE_OPENS_OPTIONS.filter(option => option.value !== 'upon-asset-window-closing')
+                    : ACQUIRE_OPENS_OPTIONS
+                }
                 value={vault.acquireOpenWindowType}
                 onCommit={next => onUpdateVault('acquireOpenWindowType', next)}
               />
               {vault.acquireOpenWindowType === 'custom' && (
                 <DateRow
                   isChanged={isChanged('acquireOpenWindowTime')}
-                  label="Acquire date"
+                  label="Acquire launch date"
                   minDate={acquireMinDate}
                   value={vault.acquireOpenWindowTime}
                   onCommit={next => onUpdateVault('acquireOpenWindowTime', next)}
@@ -1047,7 +1107,7 @@ export const AiVaultPreview = ({
               displayValue={vault.minAcquireThreshold ? `${vault.minAcquireThreshold} ${currencyLabel}` : ''}
               isAiSet={isAiSet('minAcquireThreshold')}
               isChanged={isChanged('minAcquireThreshold')}
-              label="Min acquire"
+              label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
               placeholder="Optional"
               sanitize={sanitizeDecimal}
               suffix={currencyLabel}

@@ -140,7 +140,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
-        tabs={VAULT_TABS.map(tab => tab.label)}
+        tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
         title="All Vaults"
         vaults={vaults}
         onTabChange={handleTabChange}

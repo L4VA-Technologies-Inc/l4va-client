@@ -113,7 +113,7 @@ const VaultsFilters = ({ className = '' }) => {
       className={className}
       error={error?.message}
       isLoading={isLoading}
-      tabs={VAULT_TABS.map(tab => tab.label)}
+      tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
       vaults={vaults}
       onTabChange={handleTabChange}
       activeTab={activeTab.label}

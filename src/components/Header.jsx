@@ -20,7 +20,7 @@ import { useNetwork } from '@/hooks/useNetwork';
 const navLinks = [
   { to: '/tokens', label: 'Tokens', isAuth: false },
   { to: '/create-ai', label: 'Create', isAuth: true },
-  { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false },
+  { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false, hideOnRobinhood: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isAuth: false },
   { to: '/vaults?tab=govern', label: 'Govern', isAuth: false },
   { to: '/rewards', label: 'Rewards', isAuth: true },
@@ -46,6 +46,9 @@ export const Header = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
   const { network: selectedNetwork, updateNetwork, isRobinHood, isCardano } = useNetwork();
+
+  // Robinhood launches are acquire-only, so there is nothing to contribute to.
+  const visibleNavLinks = isRobinHood ? navLinks.filter(link => !link.hideOnRobinhood) : navLinks;
 
   const currencyOptions = [
     ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
@@ -220,7 +223,7 @@ export const Header = () => {
           </Link>
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">
-              {navLinks.map(link => (
+              {visibleNavLinks.map(link => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -270,7 +273,7 @@ export const Header = () => {
             </div>
           </div>
           <MenuDrawer
-            navLinks={navLinks}
+            navLinks={visibleNavLinks}
             isOpen={isMobileMenuOpen}
             onClose={closeMobileMenu}
             onNavClick={handleNavClick}

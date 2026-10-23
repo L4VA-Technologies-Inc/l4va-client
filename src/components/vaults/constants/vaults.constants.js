@@ -12,8 +12,8 @@ const environment = import.meta.env.VITE_CARDANO_NETWORK;
 // Duration constants based on environment
 export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD ? 300000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
 export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 300000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
-export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
+export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 24 hours (mainnet)
+export const MAX_ACQUIRE_WINDOW_DURATION_MS = 604800000; // 7 days
 export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 432000000; // 5 min (preprod) / 5 days (mainnet)
 export const MAX_TIME_FOR_VOTING = 1209600000; // 14 days
 export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
@@ -446,7 +446,7 @@ export const vaultSchema = yup.object({
         schema
           .required('Acquire window duration is required')
           .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Duration is below the minimum allowed')
-          .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
+          .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 7 days'),
     }),
   acquireOpenWindowType: yup.string().when('tokensForAcquires', {
     is: value => hasNoAcquirePhase(value),
@@ -560,7 +560,7 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.5, 'Creation threshold must be at least 0.5%'),
+    .min(0.1, 'Proposal threshold must be at least 0.1%'),
   // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
   cosigningThreshold: yup
     .number()
@@ -632,7 +632,7 @@ export const editUpcomingVaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.5, 'Creation threshold must be at least 0.5%')
+    .min(0.1, 'Proposal threshold must be at least 0.1%')
     .max(100, 'Cannot exceed 100%'),
   cosigningThreshold: yup
     .number()
@@ -715,11 +715,11 @@ export const initialVaultState = {
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
-  creationThreshold: null,
+  creationThreshold: 0.1,
   // startThreshold: null,
   voteThreshold: 0,
-  executionThreshold: null,
-  cosigningThreshold: null,
+  executionThreshold: 51,
+  cosigningThreshold: 33,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,

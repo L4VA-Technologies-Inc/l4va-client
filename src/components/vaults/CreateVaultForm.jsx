@@ -54,6 +54,7 @@ import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
+import { getLaunchErrorMessage } from '@/utils/launchError';
 import {
   VAULT_ARCHETYPES,
   basketToAssetsWhitelist,
@@ -778,7 +779,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           }
           if (!handleServerFieldErrors(err)) {
             console.error(err);
-            toast.error('Failed to launch vault on Robinhood Chain.');
+            toast.error(getLaunchErrorMessage(err, 'Failed to launch vault on Robinhood Chain.'));
           }
         } finally {
           setIsSubmitting(false);
@@ -867,7 +868,9 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
         if (!handleServerFieldErrors(err)) {
           console.error(err);
-          toast.error('Failed to launch vault. Your progress has been saved as a draft.');
+          toast.error(
+            `${getLaunchErrorMessage(err, 'Failed to launch vault.')} Your progress has been saved as a draft.`
+          );
           await navigate({ to: '/profile', search: { tab: 'draft' } });
         }
       } finally {

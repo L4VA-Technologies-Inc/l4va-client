@@ -4,10 +4,12 @@ import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { getLaunchErrorMessage } from '@/utils/launchError';
 import { AiVaultChat } from '@/components/vaults/ai/AiVaultChat';
 import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
+import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 import { CREATE_VAULT_STEPS } from '@/components/vaults/constants/vaults.constants';
 import { LaunchVaultConfirmModal } from '@/components/modals/LaunchVaultConfirmModal';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
@@ -50,7 +52,9 @@ const CreateAiComponent = () => {
 
   // The chat owns the image flow; the pickers are the reserved actions that need a modal.
   const handleOptionSelect = option => {
-    if (option.value === 'choose_basket') {
+    // An index vault's tokens are its basket, so an asset picker request opens the basket too.
+    const isIndexVault = builder.vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    if (option.value === 'choose_basket' || (option.value === 'choose_assets' && isIndexVault)) {
       openModal('AiIndexBasketModal', {
         basket: builder.vault.indexBasket,
         setBasket: basket => builder.updateVaultField('indexBasket', basket),
@@ -97,7 +101,7 @@ const CreateAiComponent = () => {
         toast.error('Vault launch cancelled by user');
       } else {
         console.error(error);
-        toast.error('Failed to launch vault. Please try again.');
+        toast.error(getLaunchErrorMessage(error));
       }
     } finally {
       setIsLaunching(false);
@@ -125,7 +129,7 @@ const CreateAiComponent = () => {
             <span className="uppercase font-russo text-sm">Manual setup</span>
           </button>
           <span className="order-first font-russo text-2xl uppercase tracking-tight md:order-none md:text-3xl">
-            Create vault with AI
+            Create token with AI
           </span>
           <span className="hidden w-32 md:block" />
         </div>
@@ -161,7 +165,9 @@ const CreateAiComponent = () => {
                   missingFields={builder.missingFields}
                   status={builder.status}
                   vault={builder.vault}
+                  isUploadingImage={builder.isUploadingImage}
                   onGenerateImageRequest={builder.startImageGeneration}
+                  onUploadImage={builder.uploadImage}
                   onLaunch={handleLaunch}
                   onReset={() => setIsResetModalOpen(true)}
                   onSendMessage={builder.sendMessage}

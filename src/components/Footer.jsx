@@ -20,7 +20,7 @@ const socialLinks = [
 
 const navLinks = [
   { to: '/create-ai', label: 'Create', isRequireAuth: true },
-  { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true },
+  { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true, hideOnRobinhood: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isRequireAuth: true },
   { to: '/how-it-works', label: 'How it works', isRequireAuth: false },
   { to: 'https://l4va.com/', label: 'About us', isRequireAuth: false, isExternal: true },
@@ -88,15 +88,17 @@ export const Footer = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16 text-center">
-        {navLinks.map(link => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            label={link.label}
-            isExternal={link.isExternal}
-            onClick={e => handleNavClick(link, e)}
-          />
-        ))}
+        {navLinks
+          .filter(link => !(isRobinHood && link.hideOnRobinhood))
+          .map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              label={link.label}
+              isExternal={link.isExternal}
+              onClick={e => handleNavClick(link, e)}
+            />
+          ))}
       </div>
       <div className="flex justify-center mb-8">
         <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">

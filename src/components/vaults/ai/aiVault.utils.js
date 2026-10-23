@@ -181,7 +181,18 @@ export const enforceVaultCoherence = vault => {
     next.isAcquireOnly = true;
     next.indexBasket = next.indexBasket?.targets ? next.indexBasket : emptyIndexBasket();
     next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
+    // Launch shape for acquire-only index vaults: expansion is always on, the
+    // acquire window opens on a chosen date (there is no contribution window
+    // to wait for) and the whole raise is the reserve.
+    next.allowAcquireExpansion = true;
+    next.acquireOpenWindowType = 'custom';
+    next.acquireReserve = 100;
   }
+
+  // Governance presets; the assistant or the user can still change them.
+  if (next.creationThreshold === null || next.creationThreshold === undefined) next.creationThreshold = 0.1;
+  if (next.cosigningThreshold === null || next.cosigningThreshold === undefined) next.cosigningThreshold = 33;
+  if (next.executionThreshold === null || next.executionThreshold === undefined) next.executionThreshold = 51;
 
   if (next.isAcquireOnly) {
     next.tokensForAcquires = 100;
