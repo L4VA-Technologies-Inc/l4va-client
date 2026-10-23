@@ -8,15 +8,22 @@ import { Pagination } from '@/components/shared/Pagination';
 import { Spinner } from '@/components/Spinner';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
-import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodNfts, useRobinhoodRwas } from '@/services/api/queries';
+import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
 import { formatLargeNumber } from '@/utils/core.utils';
-import rhFlameLogo from '@/icons/l4va-rh.svg';
 
 const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
 const LIST_TABS = ['Trending', 'Top', 'Gainers', 'New'];
-const RH_TABS = ['Memecoins', 'RWAs', 'NFTs'];
+const RH_TABS = ['RWAs', 'DeFi', 'Memecoins', 'Other'];
+// Tag each Robinhood tab filters on; "Other" is everything that matches none of them
+const RH_TAB_TAGS = { RWAs: 'RWA', DeFi: 'DeFi', Memecoins: 'Memecoins' };
+
+const matchesRhTab = (token, tab) => {
+  const tags = token.tags || [];
+  if (tab === 'Other') return !Object.values(RH_TAB_TAGS).some(tag => tags.includes(tag));
+  return tags.includes(RH_TAB_TAGS[tab]);
+};
 const PAGE_SIZE = 10;
 
 const formatChange = value => {
@@ -142,7 +149,7 @@ export const TokensPage = () => {
   const { isRobinHood: isRobinhood } = useNetwork();
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState('Trending');
-  const [rhTab, setRhTab] = useState('Memecoins');
+  const [rhTab, setRhTab] = useState('RWAs');
   const [page, setPage] = useState(1);
 
   const formatTokenField = (token, field, opts) => {
@@ -164,15 +171,18 @@ export const TokensPage = () => {
   };
 
   const globalQuery = useCardanoMemecoins(!isRobinhood);
-  const rhMemesQuery = useRobinhoodMemecoins(isRobinhood && rhTab === 'Memecoins');
-  const rhRwasQuery = useRobinhoodRwas(isRobinhood && rhTab === 'RWAs');
-  const rhNftsQuery = useRobinhoodNfts(isRobinhood && rhTab === 'NFTs');
+  const rhMemesQuery = useRobinhoodMemecoins(isRobinhood);
+  const rhRwasQuery = useRobinhoodRwas(isRobinhood);
 
-  const activeRhQuery = rhTab === 'RWAs' ? rhRwasQuery : rhTab === 'NFTs' ? rhNftsQuery : rhMemesQuery;
+  const rhTokens = useMemo(() => {
+    const byId = new Map();
+    [...(rhMemesQuery.data || []), ...(rhRwasQuery.data || [])].forEach(token => byId.set(token.id, token));
+    return [...byId.values()].filter(token => matchesRhTab(token, rhTab));
+  }, [rhMemesQuery.data, rhRwasQuery.data, rhTab]);
 
-  const tokens = isRobinhood ? activeRhQuery.data || [] : globalQuery.data || [];
-  const isLoading = isRobinhood ? activeRhQuery.isLoading : globalQuery.isLoading;
-  const error = isRobinhood ? activeRhQuery.error : globalQuery.error;
+  const tokens = isRobinhood ? rhTokens : globalQuery.data || [];
+  const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
+  const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
 
   const openToken = id => {
     navigate({ to: '/tokens/$id', params: { id } });
@@ -186,9 +196,6 @@ export const TokensPage = () => {
 
   const sorted = useMemo(() => {
     const items = [...tokens];
-    if (isRobinhood && rhTab === 'NFTs') {
-      return items.sort((a, b) => (b.holders_count ?? 0) - (a.holders_count ?? 0));
-    }
     if (activeTab === 'Gainers') {
       return items.sort((a, b) => (b.change_24h ?? -Infinity) - (a.change_24h ?? -Infinity));
     }
@@ -199,7 +206,7 @@ export const TokensPage = () => {
       return items.sort((a, b) => (b.market_cap ?? 0) - (a.market_cap ?? 0));
     }
     return items.sort((a, b) => (b.volume_24h ?? b.liquidity_usd ?? 0) - (a.volume_24h ?? a.liquidity_usd ?? 0));
-  }, [tokens, activeTab, isRobinhood, rhTab]);
+  }, [tokens, activeTab]);
 
   const trending = useMemo(
     () =>
@@ -250,10 +257,6 @@ export const TokensPage = () => {
     );
   }
 
-  const isNftTable = isRobinhood && rhTab === 'NFTs';
-  // NFT collections rarely ship an image on testnet — fall back to the RH green flame logo
-  const tokenImageFallback = isNftTable ? rhFlameLogo : DEFAULT_TOKEN_IMAGE;
-
   return (
     <div className="flex flex-col gap-6 pb-10">
       <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
@@ -262,7 +265,7 @@ export const TokensPage = () => {
         <SummaryCard title="Trending">
           <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
             <span>Name</span>
-            <span>{isNftTable ? 'Holders' : 'FDV'}</span>
+            <span>FDV</span>
             <span className="w-14 text-right">24H Δ</span>
           </div>
           {trending.map(item => (
@@ -270,9 +273,8 @@ export const TokensPage = () => {
               key={item.id}
               image={item.image}
               ticker={item.symbol}
-              fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
+              fdv={formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               isVault={item.source === 'vault'}
               onClick={() => openToken(item.id)}
             />
@@ -282,7 +284,7 @@ export const TokensPage = () => {
         <SummaryCard title="Just Minted">
           <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
             <span>Name</span>
-            <span>{isNftTable ? 'Holders' : 'FDV'}</span>
+            <span>FDV</span>
             <span className="w-14 text-right">24H Δ</span>
           </div>
           {graduated.map(item => (
@@ -290,9 +292,8 @@ export const TokensPage = () => {
               key={item.id}
               image={item.image}
               ticker={item.symbol}
-              fdv={isNftTable ? String(item.holders_count ?? '—') : formatTokenField(item, 'fdv')}
+              fdv={formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               isVault={item.source === 'vault'}
               onClick={() => openToken(item.id)}
             />
@@ -312,7 +313,6 @@ export const TokensPage = () => {
               ticker={item.symbol}
               fdv={formatTokenField(item, 'fdv')}
               change={item.change_24h}
-              fallbackImage={tokenImageFallback}
               isVault={item.source === 'vault'}
               onClick={() => openToken(item.id)}
             />
@@ -355,18 +355,23 @@ export const TokensPage = () => {
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-steel-750">
-        {isNftTable ? (
-          <table className="w-full min-w-[800px] text-left">
-            <thead>
-              <tr className="bg-steel-850 border-b border-steel-750 text-xs text-dark-100 uppercase tracking-wide">
-                <th className="px-4 py-3 font-medium">Collection</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Holders</th>
-                <th className="px-4 py-3 font-medium">Supply</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map(token => (
+        <table className="w-full min-w-[1100px] text-left">
+          <thead>
+            <tr className="bg-steel-850 border-b border-steel-750 text-xs text-dark-100 uppercase tracking-wide">
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Price / %Δ</th>
+              <th className="px-4 py-3 font-medium">FDV</th>
+              <th className="px-4 py-3 font-medium">Vol</th>
+              <th className="px-4 py-3 font-medium">{isRobinhood ? 'Liquidity' : 'Last 24h'}</th>
+              <th className="px-4 py-3 font-medium">{isRobinhood ? 'Holders' : '24h Range'}</th>
+              <th className="px-4 py-3 font-medium">Mcap</th>
+              <th className="px-4 py-3 font-medium text-center">Buy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map(token => {
+              const positive = (token.change_24h ?? 0) >= 0;
+              return (
                 <tr
                   key={token.id}
                   onClick={() => openToken(token.id)}
@@ -374,125 +379,85 @@ export const TokensPage = () => {
                 >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <TokenImage src={token.image} alt={token.name} size="md" fallback={tokenImageFallback} />
-                      <div>
-                        <div className="font-medium text-white">{token.name || '—'}</div>
-                        <div className="text-xs text-dark-100 uppercase">{token.symbol}</div>
+                      <div className="relative">
+                        <TokenImage src={token.image} alt={token.name} size="md" />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-steel-850 flex items-center justify-center">
+                          <Flame className="w-2.5 h-2.5 text-orange-400" />
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
+                          {token.source === 'vault' ? (
+                            <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
+                              Vault
+                            </span>
+                          ) : (
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          )}
+                        </div>
+                        <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm text-white">{token.type || '—'}</td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">{token.holders_count ?? '—'}</td>
-                  <td className="px-4 py-4 text-sm text-dark-100 tabular-nums">{token.total_supply ?? '—'}</td>
+                  <td className="px-4 py-4">
+                    <div className="text-white text-sm tabular-nums">
+                      {formatTokenField(token, 'price', { price: true })}
+                    </div>
+                    <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
+                  </td>
+                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
+                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
+                  <td className="px-4 py-4 text-sm text-white tabular-nums">
+                    {isRobinhood ? (
+                      formatTokenField(token, 'liquidity')
+                    ) : (
+                      <Sparkline points={token.sparkline} positive={positive} />
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-white tabular-nums">
+                    {isRobinhood ? (
+                      (token.holders_count ?? '—')
+                    ) : (
+                      <RangeBar
+                        low={pickTokenAmount(token, pickByCurrency, {
+                          usd: 'low_24h',
+                          eth: 'low_24h_eth',
+                          ada: 'low_24h_ada',
+                        })}
+                        high={pickTokenAmount(token, pickByCurrency, {
+                          usd: 'high_24h',
+                          eth: 'high_24h_eth',
+                          ada: 'high_24h_ada',
+                        })}
+                        price={pickTokenAmount(token, pickByCurrency, {
+                          usd: 'price_usd',
+                          eth: 'price_eth',
+                          ada: 'price_ada',
+                        })}
+                        formatMoney={v => formatTokenMoney(v, currency, currencySymbol, { price: true })}
+                      />
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
+                  <td className="px-4 py-4 text-center">
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        openToken(token.id);
+                      }}
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-colors"
+                      aria-label={`Open ${token.symbol}`}
+                    >
+                      <Zap className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <table className="w-full min-w-[1100px] text-left">
-            <thead>
-              <tr className="bg-steel-850 border-b border-steel-750 text-xs text-dark-100 uppercase tracking-wide">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Price / %Δ</th>
-                <th className="px-4 py-3 font-medium">FDV</th>
-                <th className="px-4 py-3 font-medium">Vol</th>
-                <th className="px-4 py-3 font-medium">{isRobinhood ? 'Liquidity' : 'Last 24h'}</th>
-                <th className="px-4 py-3 font-medium">{isRobinhood ? 'Holders' : '24h Range'}</th>
-                <th className="px-4 py-3 font-medium">Mcap</th>
-                <th className="px-4 py-3 font-medium text-center">Buy</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map(token => {
-                const positive = (token.change_24h ?? 0) >= 0;
-                return (
-                  <tr
-                    key={token.id}
-                    onClick={() => openToken(token.id)}
-                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer"
-                  >
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <TokenImage src={token.image} alt={token.name} size="md" />
-                          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-steel-850 flex items-center justify-center">
-                            <Flame className="w-2.5 h-2.5 text-orange-400" />
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
-                            {token.source === 'vault' ? (
-                              <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-                                Vault
-                              </span>
-                            ) : (
-                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            )}
-                          </div>
-                          <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-white text-sm tabular-nums">
-                        {formatTokenField(token, 'price', { price: true })}
-                      </div>
-                      <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
-                    </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">
-                      {isRobinhood ? (
-                        formatTokenField(token, 'liquidity')
-                      ) : (
-                        <Sparkline points={token.sparkline} positive={positive} />
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">
-                      {isRobinhood ? (
-                        (token.holders_count ?? '—')
-                      ) : (
-                        <RangeBar
-                          low={pickTokenAmount(token, pickByCurrency, {
-                            usd: 'low_24h',
-                            eth: 'low_24h_eth',
-                            ada: 'low_24h_ada',
-                          })}
-                          high={pickTokenAmount(token, pickByCurrency, {
-                            usd: 'high_24h',
-                            eth: 'high_24h_eth',
-                            ada: 'high_24h_ada',
-                          })}
-                          price={pickTokenAmount(token, pickByCurrency, {
-                            usd: 'price_usd',
-                            eth: 'price_eth',
-                            ada: 'price_ada',
-                          })}
-                          formatMoney={v => formatTokenMoney(v, currency, currencySymbol, { price: true })}
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
-                    <td className="px-4 py-4 text-center">
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          openToken(token.id);
-                        }}
-                        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-colors"
-                        aria-label={`Open ${token.symbol}`}
-                      >
-                        <Zap className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
