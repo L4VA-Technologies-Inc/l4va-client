@@ -1,4 +1,5 @@
 import {
+  ACQUIRE_OPENS_ON_LAUNCH,
   createEmptyWhitelistAsset,
   initialVaultState,
   vaultSchema,
@@ -182,11 +183,24 @@ export const enforceVaultCoherence = vault => {
     next.indexBasket = next.indexBasket?.targets ? next.indexBasket : emptyIndexBasket();
     next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
     // Launch shape for acquire-only index vaults: expansion is always on, the
-    // acquire window opens on a chosen date (there is no contribution window
-    // to wait for) and the whole raise is the reserve.
+    // acquire window opens when the vault launches (a Robinhood vault's acquire
+    // window starts on-chain at creation, so a later date would not be honoured)
+    // and the whole raise is the reserve.
     next.allowAcquireExpansion = true;
-    next.acquireOpenWindowType = 'custom';
+    next.acquireOpenWindowType = ACQUIRE_OPENS_ON_LAUNCH;
+    next.acquireOpenWindowTime = null;
     next.acquireReserve = 100;
+  }
+
+  // Acquire-only vaults have no contribution window, so leftover contribution
+  // timing from another preset must not fail validation on a field nobody sees.
+  // With no contribution window to wait for, "upon asset window closing" is the
+  // moment the vault launches, which is the default.
+  if (next.isAcquireOnly) {
+    next.contributionOpenWindowType = 'upon-vault-launch';
+    next.contributionOpenWindowTime = null;
+    if (!next.acquireOpenWindowType) next.acquireOpenWindowType = ACQUIRE_OPENS_ON_LAUNCH;
+    if (next.acquireOpenWindowType !== 'custom') next.acquireOpenWindowTime = null;
   }
 
   // Governance presets; the assistant or the user can still change them.
@@ -217,6 +231,8 @@ const MAX_WHITELIST_ASSETS = 10;
 /** Catalog hits from lookup_assets — drop them into the whitelist table, never inventing ids. */
 export const mergeResolvedAssets = (vault, resolvedAssets) => {
   if (!Array.isArray(resolvedAssets) || !resolvedAssets.length) return vault;
+  // An index vault's whitelist is its basket; extra rows would put the two out of sync.
+  if (vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) return vault;
 
   const existing = (vault.assetsWhitelist || []).filter(item => item?.policyId);
   const seen = new Set(existing.map(item => item.policyId.toLowerCase()));
@@ -261,7 +277,7 @@ const CARDANO_AI_GREETING = {
 
 const RH_AI_GREETING = {
   role: 'assistant',
-  content: 'What do you want to build today? You can text your idea, or click one of these options.',
+  content: 'What strategy do you want to launch today? Describe it, or pick one of these to start.',
   options: RH_VAULT_STARTER_OPTIONS,
 };
 

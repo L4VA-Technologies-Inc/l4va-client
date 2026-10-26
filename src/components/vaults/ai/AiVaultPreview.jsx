@@ -9,6 +9,7 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import {
+  ACQUIRE_OPENS_ON_LAUNCH,
   MAX_ACQUIRE_WINDOW_DURATION_MS,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
   MIN_CONTRIBUTION_DURATION_MS,
@@ -43,6 +44,12 @@ const CONTRIBUTION_OPENS_OPTIONS = [
 
 const ACQUIRE_OPENS_OPTIONS = [
   { value: 'upon-asset-window-closing', label: 'Upon contribution closing' },
+  { value: 'custom', label: 'Custom date' },
+];
+
+// Acquire-only vaults have no contribution window, so "upon closing" is the launch itself.
+const ACQUIRE_ONLY_OPENS_OPTIONS = [
+  { value: ACQUIRE_OPENS_ON_LAUNCH, label: 'Upon vault launch' },
   { value: 'custom', label: 'Custom date' },
 ];
 
@@ -516,7 +523,8 @@ export const AiVaultPreview = ({
   const [changedFields, setChangedFields] = useState(() => new Set());
   const [openSections, setOpenSections] = useState(() => {
     const firstIncomplete = SECTIONS.find(section => section.fields.some(field => missingFields.includes(field)));
-    return new Set([firstIncomplete?.id ?? SECTIONS[0].id]);
+    // Launch timing is what most often trips a launch, so it is always shown open.
+    return new Set([firstIncomplete?.id ?? SECTIONS[0].id, 'launch']);
   });
 
   useEffect(() => {
@@ -653,7 +661,7 @@ export const AiVaultPreview = ({
     ...(isRobinHood ? [{ value: 'ETH', label: 'ETH' }] : []),
   ];
   const acquireMinDate =
-    vault.contributionOpenWindowType === 'custom' && vault.contributionOpenWindowTime
+    !isAcquireOnly && vault.contributionOpenWindowType === 'custom' && vault.contributionOpenWindowTime
       ? addMilliseconds(new Date(vault.contributionOpenWindowTime), vault.contributionDuration || 0)
       : undefined;
 
@@ -1079,19 +1087,24 @@ export const AiVaultPreview = ({
                 value={vault.acquireWindowDuration}
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
               />
-              <SelectRow
-                isAiSet={isAiSet('acquireOpenWindowType')}
-                isChanged={isChanged('acquireOpenWindowType')}
-                label="Acquire opens"
-                options={
-                  isAcquireOnly
-                    ? ACQUIRE_OPENS_OPTIONS.filter(option => option.value !== 'upon-asset-window-closing')
-                    : ACQUIRE_OPENS_OPTIONS
-                }
-                value={vault.acquireOpenWindowType}
-                onCommit={next => onUpdateVault('acquireOpenWindowType', next)}
-              />
-              {vault.acquireOpenWindowType === 'custom' && (
+              {isRobinHood && isAcquireOnly ? (
+                // A Robinhood vault's acquire window starts on-chain when the vault is created.
+                <LockedRow
+                  hint="The acquire window opens as soon as the vault launches."
+                  label="Acquire opens"
+                  value="Upon vault launch"
+                />
+              ) : (
+                <SelectRow
+                  isAiSet={isAiSet('acquireOpenWindowType')}
+                  isChanged={isChanged('acquireOpenWindowType')}
+                  label="Acquire opens"
+                  options={isAcquireOnly ? ACQUIRE_ONLY_OPENS_OPTIONS : ACQUIRE_OPENS_OPTIONS}
+                  value={vault.acquireOpenWindowType}
+                  onCommit={next => onUpdateVault('acquireOpenWindowType', next)}
+                />
+              )}
+              {vault.acquireOpenWindowType === 'custom' && !(isRobinHood && isAcquireOnly) && (
                 <DateRow
                   isChanged={isChanged('acquireOpenWindowTime')}
                   label="Acquire launch date"

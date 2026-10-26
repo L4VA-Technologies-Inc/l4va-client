@@ -9,6 +9,7 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import {
+  ACQUIRE_OPENS_ON_LAUNCH,
   getReserveHint,
   getLiquidityPoolContributionHint,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
@@ -51,8 +52,12 @@ export const AcquireWindow = ({
     }
   };
 
+  // A Robinhood vault's acquire window starts on-chain when the vault is created,
+  // so an acquire-only vault there always opens on launch.
+  const opensOnLaunchOnly = isAcquireOnly && isRobinHood;
+
   const getMinAcquireDate = () => {
-    if (data.contributionOpenWindowType === 'custom') {
+    if (!isAcquireOnly && data.contributionOpenWindowType === 'custom') {
       return addMilliseconds(new Date(data.contributionOpenWindowTime), data.contributionDuration);
     }
     return null;
@@ -93,19 +98,16 @@ export const AcquireWindow = ({
               name="acquireOpenWindowType"
               options={[
                 {
-                  name: 'upon-asset-window-closing',
-                  label: 'Upon Asset Window Closing',
+                  name: ACQUIRE_OPENS_ON_LAUNCH,
+                  label: isAcquireOnly ? 'Upon Vault Launch' : 'Upon Asset Window Closing',
                 },
-                {
-                  name: 'custom',
-                  label: 'Custom',
-                },
+                ...(opensOnLaunchOnly ? [] : [{ name: 'custom', label: 'Custom' }]),
               ]}
               value={data.acquireOpenWindowType || ''}
               onChange={value => updateField('acquireOpenWindowType', value)}
             />
             {errors.acquireOpenWindowType && <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>}
-            {data.acquireOpenWindowType === 'custom' && (
+            {data.acquireOpenWindowType === 'custom' && !opensOnLaunchOnly && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}

@@ -58,16 +58,20 @@ export const useAiVaultBuilder = () => {
   const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
 
   // The assistant never picks a vault type — it builds the one this chain
-  // offers. Stamping it on the draft keeps the chat, the preview and the launch
-  // payload on the same product.
+  // offers. Stamping it on every draft (including a reset or a fresh AI draft,
+  // which start from the standard initial state) keeps the chat, the preview and
+  // the launch payload on the same product; otherwise launch hits "Standard
+  // vaults are not available".
+  const withChainArchetype = useCallback(
+    draft =>
+      archetypes.isLoading || archetypes.isArchetypeAvailable(draft.vaultArchetype)
+        ? draft
+        : enforceVaultCoherence({ ...draft, vaultArchetype: archetypes.defaultArchetype }),
+    [archetypes]
+  );
   useEffect(() => {
-    if (archetypes.isLoading) return;
-    setVault(prev =>
-      archetypes.isArchetypeAvailable(prev.vaultArchetype)
-        ? prev
-        : enforceVaultCoherence({ ...prev, vaultArchetype: archetypes.defaultArchetype })
-    );
-  }, [archetypes]);
+    setVault(prev => withChainArchetype(prev));
+  }, [withChainArchetype, vault.vaultArchetype]);
   const [status, setStatus] = useState(restored?.status ?? 'gathering');
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
@@ -174,7 +178,9 @@ export const useAiVaultBuilder = () => {
         let base = response.resetDraft ? initialVaultState : vault;
         let draft = response.vaultDraft ?? {};
         let resolvedAssets = [...(response.resolvedAssets ?? [])];
-        let candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
+        let candidate = withChainArchetype(
+          mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+        );
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
         // Feed the live yup errors back so a stale prompt degrades to a retry, never to a bad draft.
@@ -183,13 +189,17 @@ export const useAiVaultBuilder = () => {
           base = response.resetDraft ? initialVaultState : vault;
           draft = response.vaultDraft ?? {};
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
-          candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
+          candidate = withChainArchetype(
+            mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+          );
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
         }
 
         if (errors.length) {
           draft = dropInvalidFields(draft, errors);
-          candidate = mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets);
+          candidate = withChainArchetype(
+            mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+          );
         }
 
         const nextMessages = [
@@ -227,7 +237,7 @@ export const useAiVaultBuilder = () => {
         setIsSending(false);
       }
     },
-    [aiFields, isSending, messages, persist, presets, requestTurn, streamTurn, vault]
+    [aiFields, isSending, messages, persist, presets, requestTurn, streamTurn, vault, withChainArchetype]
   );
 
   /**
@@ -313,24 +323,24 @@ export const useAiVaultBuilder = () => {
     clearVaultCreationDrafts();
     setPendingAction(null);
     setMessages([buildAiGreeting(isRobinHood)]);
-    setVault(initialVaultState);
+    setVault(withChainArchetype(initialVaultState));
     setStatus('gathering');
     setMissingFields([]);
     setAiFields([]);
-  }, [isRobinHood]);
+  }, [isRobinHood, withChainArchetype]);
 
   // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
   const updateVaultField = useCallback(
     async (field, value) => {
       const patch = field && typeof field === 'object' && value === undefined ? field : { [field]: value };
-      const next = enforceVaultCoherence({ ...vault, ...patch });
+      const next = withChainArchetype(enforceVaultCoherence({ ...vault, ...patch }));
       const nextMissingFields = await collectIncompleteFields(next);
 
       setVault(next);
       setMissingFields(nextMissingFields);
       persist(messages, next, status, nextMissingFields, aiFields);
     },
-    [aiFields, messages, persist, status, vault]
+    [aiFields, messages, persist, status, vault, withChainArchetype]
   );
 
   return {

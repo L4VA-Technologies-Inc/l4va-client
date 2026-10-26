@@ -329,18 +329,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       buttonText = 'Contribution Limit Reached';
     }
 
+    const acquireAction = {
+      text: 'Acquire',
+      handleClick: () => openModal('AcquireModal', { vault }),
+      available: vault.isAcquireWindowActive,
+    };
+
     const buttonConfig = {
-      Assets: {
-        text: buttonText,
-        handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
-        available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
-        disabled: isInvalidStatus || isContributionFull || isExpansionFull,
-      },
-      Token: {
-        text: 'Acquire',
-        handleClick: () => openModal('AcquireModal', { vault }),
-        available: vault.isAcquireWindowActive,
-      },
+      // Acquire-only vaults never take contributions; Assets is the landing tab, so it must offer Acquire.
+      Assets: vault.isAcquireOnly
+        ? acquireAction
+        : {
+            text: buttonText,
+            handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
+            available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
+            disabled: isInvalidStatus || isContributionFull || isExpansionFull,
+          },
+      Token: acquireAction,
       Governance: {
         text: 'Create Proposal',
         available:
