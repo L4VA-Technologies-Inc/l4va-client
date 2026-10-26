@@ -52,11 +52,11 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
             </div>
           )}
-          <ChainBadge
-            chainType={vault.chainType}
-            className="absolute top-3 right-3 bg-black/60 p-1.5 backdrop-blur-sm"
-          />
-          <VaultTypeBadge vault={vault} className="absolute top-3 left-3" />
+          {/* Vault type sits with the chain icon so both read as one "what is this" group. */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            <VaultTypeBadge vault={vault} className="h-7" />
+            <ChainBadge chainType={vault.chainType} className="bg-black/60 p-1.5 backdrop-blur-sm" />
+          </div>
           {shouldShowCountdown && (
             <div className="absolute bottom-0 left-0 w-3/4">
               <VaultCountdown

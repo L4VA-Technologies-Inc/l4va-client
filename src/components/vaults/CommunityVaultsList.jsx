@@ -5,6 +5,7 @@ import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 import { useNetwork } from '@/hooks/useNetwork';
 import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -23,6 +24,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
   const communityVaultsListRef = useRef(null);
+  const archetypes = useVaultArchetypes();
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
@@ -151,7 +153,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
         onPageChange={handlePageChange}
         onSearch={handleSearch}
         toolbar={
-          isRobinhood ? (
+          // Nothing to filter by when the chain only offers one vault type.
+          isRobinhood && archetypes.hasChoice ? (
             <VaultTypeFilter value={appliedFilters.vaultArchetype} onChange={handleArchetypeChange} />
           ) : null
         }

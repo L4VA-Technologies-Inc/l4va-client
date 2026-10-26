@@ -22,7 +22,7 @@ export const Launch = ({ data, setCurrentStep }) => {
 
   const shouldShowVlrmFee = vlrmFeeSettings.vlrm_creator_fee_enabled && !isVlrmFeeLoading;
   const showAcquireWindow = !hasNoAcquirePhase(data.tokensForAcquires);
-  const showContribution = data.preset !== 'acquire_only';
+  const showContribution = data.preset !== 'acquire_only' && !data.isAcquireOnly && !isIndexVault;
 
   return (
     <div className="space-y-12 mt-16 min-w-0 overflow-x-hidden">

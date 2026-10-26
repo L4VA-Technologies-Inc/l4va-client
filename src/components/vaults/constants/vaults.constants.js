@@ -357,8 +357,9 @@ export const vaultSchema = yup.object({
   contributionOpenWindowTime: yup
     .number()
     .typeError('Time is required')
-    .when('contributionOpenWindowType', {
-      is: 'custom',
+    .when(['contributionOpenWindowType', 'isAcquireOnly'], {
+      // Acquire-only vaults have no contribution window, whatever a stale draft carries.
+      is: (type, isAcquireOnly) => type === 'custom' && !isAcquireOnly,
       then: schema => schema.required('Time is required for custom window type'),
       otherwise: schema => schema.nullable(),
     }),
@@ -453,7 +454,20 @@ export const vaultSchema = yup.object({
     then: schema => schema.nullable().notRequired(),
     otherwise: schema => schema.required('Acquire window type is required'),
   }),
-  acquireOpenWindowTime: yup.mixed().nullable(),
+  acquireOpenWindowTime: yup
+    .mixed()
+    .nullable()
+    .when(['acquireOpenWindowType', 'tokensForAcquires'], {
+      // The API rejects a custom open type without a time; catch it here instead of at launch.
+      is: (type, tokensForAcquires) => type === 'custom' && !hasNoAcquirePhase(tokensForAcquires),
+      then: schema =>
+        schema
+          .required('Acquire open time is required for a custom start')
+          .test('acquire-open-future', 'Acquire launch date must be in the future', value => {
+            const ms = typeof value === 'number' ? value : new Date(value).getTime();
+            return Number.isFinite(ms) && ms > Date.now();
+          }),
+    }),
   acquirerWhitelist: yup
     .array()
     .of(acquirerWhitelistItemSchema)
@@ -670,6 +684,12 @@ export const createEmptyWhitelistAsset = () => ({
   countCapMax: 1000,
   uniqueId: Date.now() + Math.floor(Math.random() * 1000),
 });
+
+/**
+ * Acquire window opens with no wait. For an acquire-only vault there is no
+ * contribution window, so the API starts acquire when the vault launches.
+ */
+export const ACQUIRE_OPENS_ON_LAUNCH = 'upon-asset-window-closing';
 
 export const initialVaultState = {
   // Step 1: Configure Vault

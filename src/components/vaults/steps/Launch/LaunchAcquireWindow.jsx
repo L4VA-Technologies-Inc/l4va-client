@@ -10,9 +10,9 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
 
   const formatTime = (type, time) => {
     if (type === 'upon-asset-window-closing') {
-      return 'Upon asset window closing';
+      return data.isAcquireOnly ? 'Upon vault launch' : 'Upon asset window closing';
     }
-    return formatDateTime(new Date(time));
+    return time ? formatDateTime(new Date(time)) : 'Not set';
   };
 
   const getAcquireWindowDuration = () => formatInterval(new Date(data.acquireWindowDuration));

@@ -90,7 +90,9 @@ const CreateAiComponent = () => {
       toast.success('Vault launched successfully');
     } catch (error) {
       if (error?.name === 'ValidationError') {
-        toast.error('Please complete all required vault fields before launching.');
+        // Name the fields, otherwise the user has no way to tell what blocked the launch.
+        const reasons = [...new Set((error.inner?.length ? error.inner : [error]).map(issue => issue.message))];
+        toast.error(`Can't launch yet: ${reasons.slice(0, 3).join('; ')}`, { duration: 8000 });
       } else if (error?.code === 'INSUFFICIENT_VLRM') {
         toast.error(error.message);
       } else if (

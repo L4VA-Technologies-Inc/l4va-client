@@ -34,6 +34,7 @@ import {
 } from '@/components/vaults/utils/stepCompletion';
 import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
+  ACQUIRE_OPENS_ON_LAUNCH,
   CREATE_VAULT_STEPS,
   createEmptyWhitelistAsset,
   hasNoAcquirePhase,
@@ -141,6 +142,27 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     if (vaultData.isAcquireOnly && Number(vaultData.tokensForAcquires) === 100) return;
     setVaultData(prev => ({ ...prev, isAcquireOnly: true, tokensForAcquires: 100 }));
   }, [isIndexVault, vaultData.isAcquireOnly, vaultData.tokensForAcquires]);
+
+  // Acquire-only vaults have no contribution window: leftover contribution timing
+  // from another preset or an old draft must not fail validation on hidden fields.
+  useEffect(() => {
+    if (!isAcquireOnly) return;
+    const needsContributionReset =
+      vaultData.contributionOpenWindowType !== 'upon-vault-launch' || vaultData.contributionOpenWindowTime != null;
+    const needsAcquireDefault = !vaultData.acquireOpenWindowType;
+    if (!needsContributionReset && !needsAcquireDefault) return;
+    setVaultData(prev => ({
+      ...prev,
+      contributionOpenWindowType: 'upon-vault-launch',
+      contributionOpenWindowTime: null,
+      ...(needsAcquireDefault ? { acquireOpenWindowType: ACQUIRE_OPENS_ON_LAUNCH, acquireOpenWindowTime: null } : {}),
+    }));
+  }, [
+    isAcquireOnly,
+    vaultData.contributionOpenWindowType,
+    vaultData.contributionOpenWindowTime,
+    vaultData.acquireOpenWindowType,
+  ]);
 
   // Acquire-only locks Reserve and LP in the form, but an AI draft keeps its own
   // values instead of the preset's, so one that left them unset would be stuck
@@ -763,7 +785,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             const formattedErrors = transformYupErrors(err);
             setErrors(formattedErrors);
             updateStepErrorIndicators(formattedErrors);
-            toast.error('Please fix the validation errors before submitting');
+            toast.error(
+              `Please fix before launching: ${[...new Set(Object.values(formattedErrors))].slice(0, 3).join('; ')}`,
+              {
+                duration: 8000,
+              }
+            );
             return;
           }
           // Walk the viem error cause chain to detect wallet rejection
@@ -1000,8 +1027,19 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     skipPersistRef.current = true;
     clearVaultCreationDrafts();
 
-    const firstPreset = presets[0] ?? null;
+    // On an index-only chain the starting point is the acquire-only index vault,
+    // not whatever preset happens to be first.
+    const startsAsIndexVault = archetypes.defaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    const firstPreset = (startsAsIndexVault && acquireOnlyPreset) || presets[0] || null;
     const resetData = { ...initialVaultState };
+
+    if (startsAsIndexVault) {
+      const indexBasket = emptyIndexBasket();
+      resetData.vaultArchetype = VAULT_ARCHETYPES.INDEX_WEIGHTED;
+      resetData.indexBasket = indexBasket;
+      resetData.assetsWhitelist = basketToAssetsWhitelist(indexBasket);
+    }
 
     if (firstPreset?.config) {
       const config = firstPreset.config;
@@ -1014,6 +1052,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       resetData.voteThreshold = 0;
       resetData.cosigningThreshold = config.cosigningThreshold ?? null;
       resetData.executionThreshold = config.executionThreshold ?? null;
+    }
+    if (firstPreset?.type?.toLowerCase() === 'acquire_only') {
+      resetData.isAcquireOnly = true;
+      resetData.tokensForAcquires = 100;
     }
 
     skipPersistRef.current = false;

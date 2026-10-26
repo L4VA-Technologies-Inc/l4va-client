@@ -855,6 +855,16 @@ export const useNftFlagsSettings = () => {
 };
 
 /** Which vault types each chain currently offers, plus the EVM NFT-asset flag. */
+/** ADA and ETH prices in USD, for entering USD amounts in the create-vault form. */
+export const useNativePrices = () => {
+  return useQuery({
+    queryKey: ['native-prices'],
+    queryFn: () => SettingsApiProvider.getNativePrices(),
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
 export const useVaultCreationFlags = () => {
   return useQuery({
     queryKey: ['vault-creation-flags'],
