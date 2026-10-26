@@ -25,8 +25,10 @@ export const AcquireWindow = ({
   isAdvancedPresetAvailable = true,
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
-  const { currencyLabel: assetSymbol } = useCurrency();
+  const { currencyLabel } = useCurrency();
   const { isRobinHood } = useNetwork();
+  // The threshold is entered and stored in the chain's native unit, whatever display currency is picked.
+  const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
   const isIndexVault = isRobinHood && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
   const maxAcquireThreshold = 100000;
   const minAcquireThresholdRangeHint = isRobinHood
@@ -51,10 +53,6 @@ export const AcquireWindow = ({
       updateField(name, null);
     }
   };
-
-  // A Robinhood vault's acquire window starts on-chain when the vault is created,
-  // so an acquire-only vault there always opens on launch.
-  const opensOnLaunchOnly = isAcquireOnly && isRobinHood;
 
   const getMinAcquireDate = () => {
     if (!isAcquireOnly && data.contributionOpenWindowType === 'custom') {
@@ -101,13 +99,13 @@ export const AcquireWindow = ({
                   name: ACQUIRE_OPENS_ON_LAUNCH,
                   label: isAcquireOnly ? 'Upon Vault Launch' : 'Upon Asset Window Closing',
                 },
-                ...(opensOnLaunchOnly ? [] : [{ name: 'custom', label: 'Custom' }]),
+                { name: 'custom', label: 'Custom' },
               ]}
               value={data.acquireOpenWindowType || ''}
               onChange={value => updateField('acquireOpenWindowType', value)}
             />
             {errors.acquireOpenWindowType && <p className="text-red-600 mt-1">{errors.acquireOpenWindowType}</p>}
-            {data.acquireOpenWindowType === 'custom' && !opensOnLaunchOnly && (
+            {data.acquireOpenWindowType === 'custom' && (
               <div className="mt-4">
                 <LavaDatePicker
                   minDate={minDate}
@@ -233,7 +231,7 @@ export const AcquireWindow = ({
             type="text"
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
-            hint={getReserveHint(assetSymbol)}
+            hint={getReserveHint(currencyLabel)}
             disabled={isPresetConfigLocked || isAcquireOnly || data.tokensForAcquires === 0}
           />
           {!isAcquireOnly && data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
@@ -261,7 +259,7 @@ export const AcquireWindow = ({
             }
             onChange={handleChange}
             disabled={isAcquireOnly ? false : isPresetConfigLocked}
-            hint={getLiquidityPoolContributionHint(assetSymbol)}
+            hint={getLiquidityPoolContributionHint(currencyLabel)}
           />
           {data.liquidityPoolContribution === 0 && (
             <p className="text-orange-500 mt-1">

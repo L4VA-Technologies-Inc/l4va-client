@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ExternalLink, ListChecks, Lock, Plus, RotateCcw, Sparkles, Upload } from 'lucide-react';
 
 import { Chip } from '@/components/shared/Chip';
+import { HoverHelp } from '@/components/shared/HoverHelp';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -22,10 +23,10 @@ import {
   VAULT_VALUE_METHOD_OPTIONS,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
-import { useCurrency } from '@/hooks/useCurrency';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useNativePrices } from '@/services/api/queries';
 import {
   formatBps,
   INDEX_MAX_ASSETS,
@@ -122,7 +123,6 @@ const EditableRow = ({
   label,
   value,
   displayValue,
-  isAiSet,
   isChanged,
   isEmptyAction,
   actionLabel,
@@ -190,7 +190,7 @@ const EditableRow = ({
     <div
       className={`group flex items-start justify-between gap-4 py-2.5 border-b border-steel-800/70 last:border-b-0 rounded-md px-2 -mx-2 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
     >
-      <span className="pt-0.5 text-xs uppercase tracking-wide text-dark-100 font-russo shrink-0">{label}</span>
+      <FieldLabel className="pt-0.5" label={label} />
       {editing ? (
         <div className="min-w-0 flex-1">
           {multiline ? (
@@ -242,41 +242,58 @@ const EditableRow = ({
             >
               {actionLabel}
             </button>
-          ) : (
-            isAiSet && (
-              <span
-                className="flex shrink-0 items-center pt-0.5 opacity-40 transition-opacity duration-150 group-hover:opacity-100"
-                title="AI suggested this value — click to edit, or ask the assistant"
-              >
-                <Sparkles className="h-3 w-3 text-orange-400/80" />
-              </span>
-            )
-          )}
+          ) : null}
         </div>
       )}
     </div>
   );
 };
 
+// Helpful hints for terms unique to L4VA, shown on hover next to the field label.
+const TERM_HINTS = {
+  'Acquire duration':
+    'How long the acquire window stays open. Acquirers send ETH during this window and receive vault tokens when it closes.',
+  'Acquire opens': 'When the acquire window starts. Acquire-only vaults open the moment the vault launches.',
+  'Acquire launch date': 'The date and time the acquire window opens.',
+  'Acquisitions only': 'The vault raises ETH from acquirers only; there is no asset contribution phase.',
+  'Acquire expansion':
+    'Holders can later vote to reopen the vault for new ETH in exchange for newly minted vault tokens.',
+  'Reserve %': 'Share of the ETH raised that stays in the vault. Fixed at 100% for acquire vaults.',
+  'Reserve amount':
+    'Minimum the acquire window must raise, entered in USD and stored in ETH at the current price. If less is raised, the vault fails and every acquirer is refunded. Optional.',
+  'Min acquire':
+    'Minimum ETH the acquire window must raise. If less is raised, the vault fails and every acquirer is refunded. Optional.',
+  'For acquirers': 'Share of vault tokens that goes to acquirers. Fixed at 100% for acquire vaults.',
+  'LP contribution':
+    'Share of vault tokens and ETH used to seed a liquidity pool when the vault locks. 0% means no pool.',
+  'Proposal threshold': 'Share of vault tokens a holder needs to create a governance proposal.',
+  Quorum: 'Share of all vault tokens that must vote for a proposal to count.',
+  Approval: 'Share of the votes cast that must be "yes" for a proposal to pass.',
+  Termination: 'How the vault can be wound down. DAO: holders vote to terminate.',
+  'Token supply': 'Total number of vault tokens minted.',
+};
+
+const FieldLabel = ({ label, hint, className = '' }) => {
+  const text = hint ?? TERM_HINTS[label];
+  return (
+    <span
+      className={`flex shrink-0 items-center gap-1 text-xs uppercase tracking-wide text-dark-100 font-russo ${className}`}
+    >
+      {label}
+      {text && <HoverHelp hint={text} />}
+    </span>
+  );
+};
+
 const compactControlClass =
   'inline-flex h-7 items-center justify-center gap-1 rounded-md border border-steel-750 bg-steel-850 px-2 text-xs leading-none text-white';
 
-const FieldShell = ({ label, isAiSet, isChanged, children }) => (
+const FieldShell = ({ label, hint, isChanged, children }) => (
   <div
     className={`group flex items-center justify-between gap-3 py-2 border-b border-steel-800/70 last:border-b-0 rounded-md px-2 -mx-2 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
   >
-    <span className="text-xs uppercase tracking-wide text-dark-100 font-russo shrink-0">{label}</span>
-    <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
-      {children}
-      {isAiSet && (
-        <span
-          className="flex shrink-0 items-center opacity-40 transition-opacity duration-150 group-hover:opacity-100"
-          title="AI suggested this value — click to change it"
-        >
-          <Sparkles className="h-3 w-3 text-orange-400/80" />
-        </span>
-      )}
-    </div>
+    <FieldLabel hint={hint} label={label} />
+    <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">{children}</div>
   </div>
 );
 
@@ -336,13 +353,15 @@ const DurationRow = ({ label, value, isAiSet, isChanged, minMs, maxMs, onCommit 
 
 /** A value fixed for this launch: shown, not editable, with the reason on hover. */
 const LockedRow = ({ label, value, hint }) => (
-  <FieldShell label={label}>
-    <span className="flex items-center gap-1.5 text-sm text-white" title={hint}>
+  <FieldShell hint={hint} label={label}>
+    <span className="flex items-center gap-1.5 text-sm text-white">
       {value}
       <Lock className="h-3 w-3 text-dark-100" />
     </span>
   </FieldShell>
 );
+
+const formatUsd = value => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
 
 const imageFileName = url => {
   try {
@@ -352,17 +371,12 @@ const imageFileName = url => {
   }
 };
 
-const DateRow = ({ label, value, isAiSet, isChanged, minDate, onCommit }) => (
+const DateRow = ({ label, value, isChanged, minDate, onCommit }) => (
   <div
     className={`rounded-md px-2 -mx-2 py-2.5 border-b border-steel-800/70 last:border-b-0 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
   >
     <div className="flex items-center justify-between gap-2">
-      <span className="text-xs uppercase tracking-wide text-dark-100 font-russo">{label}</span>
-      {isAiSet && (
-        <span className="flex shrink-0 items-center opacity-40" title="AI suggested this value — click to change it">
-          <Sparkles className="h-3 w-3 text-orange-400/80" />
-        </span>
-      )}
+      <FieldLabel label={label} />
     </div>
     <div className="mt-2 w-full min-w-0 [&_button]:h-auto [&_button]:min-h-10 [&_button]:min-w-0 [&_button]:shrink [&_button]:whitespace-normal">
       <LavaDatePicker minDate={minDate} value={value} variant="steel" onChange={onCommit} />
@@ -516,9 +530,9 @@ export const AiVaultPreview = ({
   isUploadingImage = false,
 }) => {
   const imageInputRef = useRef(null);
-  const { currencyLabel } = useCurrency();
   const { isRobinHood } = useNetwork();
   const { openModal } = useModalControls();
+  const { data: nativePrices } = useNativePrices();
   const previousVault = useRef(vault);
   const [changedFields, setChangedFields] = useState(() => new Set());
   const [openSections, setOpenSections] = useState(() => {
@@ -665,6 +679,29 @@ export const AiVaultPreview = ({
       ? addMilliseconds(new Date(vault.contributionOpenWindowTime), vault.contributionDuration || 0)
       : undefined;
 
+  const nativeLabel = isRobinHood ? 'ETH' : 'ADA';
+  const usdPerNative = Number(isRobinHood ? nativePrices?.data?.ethUsd : nativePrices?.data?.adaUsd) || 0;
+  const thresholdNative = Number(vault.minAcquireThreshold);
+  const hasThreshold =
+    vault.minAcquireThreshold !== null && vault.minAcquireThreshold !== undefined && thresholdNative > 0;
+  // Robinhood rejects thresholds under 0.01 ETH; Cardano takes whole ADA.
+  const minThresholdNative = isRobinHood ? 0.01 : 1;
+
+  const commitThreshold = raw => {
+    if (raw === '') {
+      onUpdateVault('minAcquireThreshold', null);
+      return;
+    }
+    const parsed = Number(String(raw).replace(',', '.'));
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      onUpdateVault('minAcquireThreshold', null);
+      return;
+    }
+    let native = usdPerNative ? parsed / usdPerNative : parsed;
+    native = isRobinHood ? Math.round(native * 1e6) / 1e6 : Math.round(native);
+    onUpdateVault('minAcquireThreshold', Math.min(100000, Math.max(minThresholdNative, native)));
+  };
+
   const commitNumber = (field, raw, { min = 0, max = 100, emptyValue = null, integer = false } = {}) => {
     if (raw === '') {
       onUpdateVault(field, emptyValue);
@@ -696,7 +733,6 @@ export const AiVaultPreview = ({
         </button>
       </div>
       <p className="-mt-3 flex items-center gap-1.5 text-xs text-dark-100">
-        <Sparkles className="h-3 w-3 text-orange-400/80" />
         Suggested by the assistant — click a value to change it, or ask the assistant.
       </p>
 
@@ -1087,24 +1123,15 @@ export const AiVaultPreview = ({
                 value={vault.acquireWindowDuration}
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
               />
-              {isRobinHood && isAcquireOnly ? (
-                // A Robinhood vault's acquire window starts on-chain when the vault is created.
-                <LockedRow
-                  hint="The acquire window opens as soon as the vault launches."
-                  label="Acquire opens"
-                  value="Upon vault launch"
-                />
-              ) : (
-                <SelectRow
-                  isAiSet={isAiSet('acquireOpenWindowType')}
-                  isChanged={isChanged('acquireOpenWindowType')}
-                  label="Acquire opens"
-                  options={isAcquireOnly ? ACQUIRE_ONLY_OPENS_OPTIONS : ACQUIRE_OPENS_OPTIONS}
-                  value={vault.acquireOpenWindowType}
-                  onCommit={next => onUpdateVault('acquireOpenWindowType', next)}
-                />
-              )}
-              {vault.acquireOpenWindowType === 'custom' && !(isRobinHood && isAcquireOnly) && (
+              <SelectRow
+                isAiSet={isAiSet('acquireOpenWindowType')}
+                isChanged={isChanged('acquireOpenWindowType')}
+                label="Acquire opens"
+                options={isAcquireOnly ? ACQUIRE_ONLY_OPENS_OPTIONS : ACQUIRE_OPENS_OPTIONS}
+                value={vault.acquireOpenWindowType}
+                onCommit={next => onUpdateVault('acquireOpenWindowType', next)}
+              />
+              {vault.acquireOpenWindowType === 'custom' && (
                 <DateRow
                   isChanged={isChanged('acquireOpenWindowTime')}
                   label="Acquire launch date"
@@ -1116,18 +1143,29 @@ export const AiVaultPreview = ({
             </>
           )}
           {isAcquireOnly && (
+            // Stored in the chain's native unit (what the API takes), entered in USD when a price is known.
             <EditableRow
-              displayValue={vault.minAcquireThreshold ? `${vault.minAcquireThreshold} ${currencyLabel}` : ''}
+              displayValue={
+                hasThreshold
+                  ? usdPerNative
+                    ? `$${formatUsd(thresholdNative * usdPerNative)} (≈ ${thresholdNative} ${nativeLabel})`
+                    : `${thresholdNative} ${nativeLabel}`
+                  : ''
+              }
               isAiSet={isAiSet('minAcquireThreshold')}
               isChanged={isChanged('minAcquireThreshold')}
               label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
               placeholder="Optional"
               sanitize={sanitizeDecimal}
-              suffix={currencyLabel}
+              suffix={usdPerNative ? 'USD' : nativeLabel}
               value={
-                vault.minAcquireThreshold === 0 || vault.minAcquireThreshold ? String(vault.minAcquireThreshold) : ''
+                hasThreshold
+                  ? usdPerNative
+                    ? String(Math.round(thresholdNative * usdPerNative * 100) / 100)
+                    : String(thresholdNative)
+                  : ''
               }
-              onCommit={next => commitNumber('minAcquireThreshold', next, { min: 0, max: 100000 })}
+              onCommit={commitThreshold}
             />
           )}
         </Section>

@@ -182,13 +182,10 @@ export const enforceVaultCoherence = vault => {
     next.isAcquireOnly = true;
     next.indexBasket = next.indexBasket?.targets ? next.indexBasket : emptyIndexBasket();
     next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
-    // Launch shape for acquire-only index vaults: expansion is always on, the
-    // acquire window opens when the vault launches (a Robinhood vault's acquire
-    // window starts on-chain at creation, so a later date would not be honoured)
-    // and the whole raise is the reserve.
+    // Launch shape for acquire-only index vaults: expansion is always on and the
+    // whole raise is the reserve. The acquire window opens on launch unless a
+    // date is picked (handled for every acquire-only vault below).
     next.allowAcquireExpansion = true;
-    next.acquireOpenWindowType = ACQUIRE_OPENS_ON_LAUNCH;
-    next.acquireOpenWindowTime = null;
     next.acquireReserve = 100;
   }
 
@@ -223,6 +220,12 @@ export const enforceVaultCoherence = vault => {
 
 export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   const merged = { ...(previousVault ?? initialVaultState), ...aiDraft };
+  // Index vaults only fit the acquire-only preset; another preset the assistant
+  // picks would bring its own governance values instead of the launch defaults.
+  if (merged.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+    const acquireOnly = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    if (acquireOnly) merged.preset_id = acquireOnly.id;
+  }
   return enforceVaultCoherence(applyPresetToDraft(merged, presets));
 };
 

@@ -145,30 +145,23 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   // Acquire-only vaults have no contribution window: leftover contribution timing
   // from another preset or an old draft must not fail validation on hidden fields.
-  // On Robinhood the acquire window starts on-chain at creation, so it opens on launch.
   useEffect(() => {
     if (!isAcquireOnly) return;
-    const opensOnLaunchOnly = isRobinHood;
     const needsContributionReset =
       vaultData.contributionOpenWindowType !== 'upon-vault-launch' || vaultData.contributionOpenWindowTime != null;
-    const needsAcquireReset =
-      !vaultData.acquireOpenWindowType ||
-      (opensOnLaunchOnly &&
-        (vaultData.acquireOpenWindowType !== ACQUIRE_OPENS_ON_LAUNCH || vaultData.acquireOpenWindowTime != null));
-    if (!needsContributionReset && !needsAcquireReset) return;
+    const needsAcquireDefault = !vaultData.acquireOpenWindowType;
+    if (!needsContributionReset && !needsAcquireDefault) return;
     setVaultData(prev => ({
       ...prev,
       contributionOpenWindowType: 'upon-vault-launch',
       contributionOpenWindowTime: null,
-      ...(needsAcquireReset ? { acquireOpenWindowType: ACQUIRE_OPENS_ON_LAUNCH, acquireOpenWindowTime: null } : {}),
+      ...(needsAcquireDefault ? { acquireOpenWindowType: ACQUIRE_OPENS_ON_LAUNCH, acquireOpenWindowTime: null } : {}),
     }));
   }, [
     isAcquireOnly,
-    isRobinHood,
     vaultData.contributionOpenWindowType,
     vaultData.contributionOpenWindowTime,
     vaultData.acquireOpenWindowType,
-    vaultData.acquireOpenWindowTime,
   ]);
 
   // Acquire-only locks Reserve and LP in the form, but an AI draft keeps its own
@@ -792,7 +785,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             const formattedErrors = transformYupErrors(err);
             setErrors(formattedErrors);
             updateStepErrorIndicators(formattedErrors);
-            toast.error('Please fix the validation errors before submitting');
+            toast.error(
+              `Please fix before launching: ${[...new Set(Object.values(formattedErrors))].slice(0, 3).join('; ')}`,
+              {
+                duration: 8000,
+              }
+            );
             return;
           }
           // Walk the viem error cause chain to detect wallet rejection
@@ -1287,15 +1285,19 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           </div>
         </div>
       )}
-      <button
-        onClick={handleResetVault}
-        disabled={isSubmitting || isSavingDraft}
-        className="fixed top-25 right-8 z-50 w-12 h-12 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-        aria-label="Reset vault creation"
-        title="Reset vault creation"
-      >
-        <RotateCcw className="w-5 h-5" />
-      </button>
+      {/* In the page flow, not fixed: a fixed button sat on top of the header's "Back to chat" link. */}
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={handleResetVault}
+          disabled={isSubmitting || isSavingDraft}
+          className="flex items-center gap-2 h-10 px-4 bg-steel-800 hover:bg-steel-700 text-dark-100 hover:text-white rounded-full border border-steel-700 hover:border-steel-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Reset vault creation"
+          title="Reset vault creation"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span className="uppercase font-russo text-sm">Reset</span>
+        </button>
+      </div>
       <PrimaryButton
         onClick={scrollToTutorial}
         className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"

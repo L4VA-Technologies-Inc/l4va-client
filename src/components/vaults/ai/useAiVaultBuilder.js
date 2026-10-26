@@ -18,6 +18,7 @@ import {
 import { createSmoothTextRevealer } from './smoothTextRevealer';
 
 import { initialVaultState } from '@/components/vaults/constants/vaults.constants';
+import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 import { environments } from '@/constants/core.constants';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
@@ -27,6 +28,13 @@ import { usePresets } from '@/services/api/queries';
 
 const MAX_CORRECTION_ATTEMPTS = 2;
 const MAX_HISTORY_MESSAGES = 30;
+
+/** Tokens the user named in chat become the basket; the server matched them to the supported list. */
+const withAiBasket = (vault, response) => {
+  const targets = response?.indexBasket?.targets;
+  if (vault.vaultArchetype !== VAULT_ARCHETYPES.INDEX_WEIGHTED || !targets?.length) return vault;
+  return enforceVaultCoherence({ ...vault, indexBasket: { ...vault.indexBasket, targets } });
+};
 
 const readSession = () => {
   try {
@@ -178,8 +186,9 @@ export const useAiVaultBuilder = () => {
         let base = response.resetDraft ? initialVaultState : vault;
         let draft = response.vaultDraft ?? {};
         let resolvedAssets = [...(response.resolvedAssets ?? [])];
-        let candidate = withChainArchetype(
-          mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+        let candidate = withAiBasket(
+          withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+          response
         );
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
@@ -189,16 +198,18 @@ export const useAiVaultBuilder = () => {
           base = response.resetDraft ? initialVaultState : vault;
           draft = response.vaultDraft ?? {};
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
-          candidate = withChainArchetype(
-            mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+          candidate = withAiBasket(
+            withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+            response
           );
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
         }
 
         if (errors.length) {
           draft = dropInvalidFields(draft, errors);
-          candidate = withChainArchetype(
-            mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)
+          candidate = withAiBasket(
+            withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+            response
           );
         }
 
@@ -211,7 +222,10 @@ export const useAiVaultBuilder = () => {
           },
         ];
         const nextStatus = errors.length ? 'gathering' : response.status;
-        const resolvedKeys = resolvedAssets.length ? ['assetsWhitelist'] : [];
+        const resolvedKeys = [
+          ...(resolvedAssets.length ? ['assetsWhitelist'] : []),
+          ...(response.indexBasket?.targets?.length ? ['indexBasket'] : []),
+        ];
         const nextAiFields = response.resetDraft
           ? [...new Set([...Object.keys(draft), ...resolvedKeys])]
           : [...new Set([...aiFields, ...Object.keys(draft), ...resolvedKeys])];

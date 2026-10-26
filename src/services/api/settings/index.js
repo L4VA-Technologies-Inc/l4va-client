@@ -16,4 +16,9 @@ export class SettingsApiProvider {
     const response = await axiosInstance.get(SettingsConfigProvider.getVaultCreationFlags());
     return response;
   }
+
+  static async getNativePrices() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getNativePrices());
+    return response;
+  }
 }

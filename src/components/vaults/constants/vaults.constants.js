@@ -460,7 +460,13 @@ export const vaultSchema = yup.object({
     .when(['acquireOpenWindowType', 'tokensForAcquires'], {
       // The API rejects a custom open type without a time; catch it here instead of at launch.
       is: (type, tokensForAcquires) => type === 'custom' && !hasNoAcquirePhase(tokensForAcquires),
-      then: schema => schema.required('Acquire open time is required for a custom start'),
+      then: schema =>
+        schema
+          .required('Acquire open time is required for a custom start')
+          .test('acquire-open-future', 'Acquire launch date must be in the future', value => {
+            const ms = typeof value === 'number' ? value : new Date(value).getTime();
+            return Number.isFinite(ms) && ms > Date.now();
+          }),
     }),
   acquirerWhitelist: yup
     .array()

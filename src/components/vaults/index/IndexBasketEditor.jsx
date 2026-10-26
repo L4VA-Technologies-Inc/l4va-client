@@ -307,7 +307,7 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
       <div className={cn('flex flex-wrap items-center justify-between gap-3 rounded-lg px-3 py-3', rowBg)}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Cash reserve</span>
-          <HoverHelp hint="Share of the vault kept in ETH and never spent on the basket. Use it for the liquidity pool or as a buffer. Basket weights apply to the rest." />
+          <HoverHelp hint="Share of the vault kept in ETH and set aside: it is never spent on the basket and does not go to the liquidity pool (that is funded separately by LP contribution). Basket weights apply to the rest." />
         </div>
         <label className="flex items-center gap-1">
           <span className="sr-only">Cash reserve percentage</span>
