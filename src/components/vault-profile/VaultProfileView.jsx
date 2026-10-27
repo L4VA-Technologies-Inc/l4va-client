@@ -473,7 +473,16 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         usd: vault.vaultStats?.tvlUsd ?? vault.assetsPrices?.totalValueUsd ?? vault.totalValueUsd,
         eth: vault.vaultStats?.tvlEth ?? vault.assetsPrices?.totalValueEth ?? vault.totalValueEth,
       });
-      return formatVaultStatCurrency(val);
+      // Like FDV / TVL, always show two decimals: 0 → 0.00.
+      const numericValue = Number(val);
+      if (val == null || Number.isNaN(numericValue)) return 'N/A';
+      if (numericValue === 0) return `${currencySymbol}0.00`;
+      if (currency === 'eth') return formatVaultStatCurrency(val);
+      const sign = numericValue < 0 ? '-' : '';
+      return `${sign}${currencySymbol}${Math.abs(numericValue).toLocaleString('en', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
     })(),
   };
 

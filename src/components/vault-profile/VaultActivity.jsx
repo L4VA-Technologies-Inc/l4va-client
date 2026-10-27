@@ -13,8 +13,10 @@ import {
   CheckCircle,
   XCircle,
   Download,
+  ArrowLeftRight,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { formatUnits } from 'viem';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
@@ -65,7 +67,47 @@ const ACTIVITY_TYPES = {
     icon: CheckCircle,
     iconColor: 'text-orange-500',
   },
+  index_rebalance: {
+    label: 'Rebalance',
+    icon: ArrowLeftRight,
+    iconColor: 'text-orange-500',
+  },
 };
+
+const REBALANCE_STATUS = {
+  completed: { label: 'Completed', color: 'bg-emerald-500/20 text-emerald-500' },
+  executing: { label: 'Executing', color: 'bg-orange-500/20 text-orange-500' },
+  pending: { label: 'Pending', color: 'bg-orange-500/20 text-orange-500' },
+  failed: { label: 'Failed', color: 'bg-rose-500/20 text-rose-500' },
+};
+
+const formatTokenAmount = (raw, decimals) => {
+  if (raw === null || raw === undefined || raw === '') return '-';
+  try {
+    return formatAmount(formatUnits(BigInt(raw), decimals ?? 18), 6);
+  } catch {
+    return '-';
+  }
+};
+
+const getRebalanceTitle = activity => (activity.trigger === 'initial_buy' ? 'Basket Purchased' : 'Basket Rebalanced');
+
+const getRebalanceDescription = activity => {
+  const legs = activity.legs || [];
+  const buys = legs.filter(leg => leg.side === 'buy').length;
+  const sells = legs.length - buys;
+  const parts = [];
+  if (sells) parts.push(`${sells} ${sells === 1 ? 'sell' : 'sells'}`);
+  if (buys) parts.push(`${buys} ${buys === 1 ? 'buy' : 'buys'}`);
+  const source = activity.trigger === 'initial_buy' ? 'Initial basket buy' : 'Governance re-weight';
+  return parts.length ? `${source}: ${parts.join(', ')}` : source;
+};
+
+const formatLeg = leg =>
+  `${leg.side} ${formatTokenAmount(leg.amountIn, leg.assetIn?.decimals)} ${leg.assetIn?.symbol} → ${formatTokenAmount(
+    leg.amountOut,
+    leg.assetOut?.decimals
+  )} ${leg.assetOut?.symbol}`;
 
 const formatDate = dateString => {
   if (!dateString) return '-';
@@ -133,6 +175,8 @@ const getActivityTitle = (activity, currencyLabel) => {
       locked: 'Vault Locked',
     };
     return phaseLabels[activity.phase] || 'Phase Transition';
+  } else if (activity.activityType === 'index_rebalance') {
+    return getRebalanceTitle(activity);
   } else {
     return `Proposal "${activity.title || 'Untitled'}"`;
   }
@@ -168,8 +212,12 @@ const ActivityCard = ({ activity, vault }) => {
 
   const isTransaction = activity.activityType === 'transaction';
   const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+  const isRebalance = activity.activityType === 'index_rebalance';
   const hasDetails =
-    activity.user || (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) || isProposal;
+    activity.user ||
+    (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) ||
+    isProposal ||
+    isRebalance;
 
   const handleOwnerClick = ownerId => {
     if (ownerId) {
@@ -252,6 +300,16 @@ const ActivityCard = ({ activity, vault }) => {
                         </span>
                       ) : null;
                     })()}
+                  {isRebalance && REBALANCE_STATUS[activity.status] && (
+                    <span
+                      className={clsx(
+                        'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                        REBALANCE_STATUS[activity.status].color
+                      )}
+                    >
+                      {REBALANCE_STATUS[activity.status].label}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-dark-100">
                   <Calendar className="w-3.5 h-3.5" />
@@ -270,7 +328,7 @@ const ActivityCard = ({ activity, vault }) => {
                     </span>
                   </button>
                 )}
-                {isProposal && activity.proposalId && (
+                {(isProposal || isRebalance) && activity.proposalId && (
                   <button
                     onClick={handleProposalClick}
                     className="flex-shrink-0 inline-flex items-center gap-1 p-1.5 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
@@ -300,7 +358,53 @@ const ActivityCard = ({ activity, vault }) => {
 
             {expanded && (
               <div className="mt-3 pt-3 border-t border-steel-750">
-                {isProposal ? (
+                {isRebalance ? (
+                  <>
+                    <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
+                    <div className="flex flex-col gap-2">
+                      {(activity.legs || []).map(leg => (
+                        <div
+                          key={leg.index}
+                          className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750"
+                        >
+                          <span
+                            className={clsx(
+                              'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                              leg.side === 'buy' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'
+                            )}
+                          >
+                            {leg.side}
+                          </span>
+                          <span className="text-sm text-white">
+                            {formatTokenAmount(leg.amountIn, leg.assetIn?.decimals)} {leg.assetIn?.symbol}
+                          </span>
+                          <ArrowLeftRight className="w-3.5 h-3.5 text-dark-100" />
+                          <span className="text-sm text-white">
+                            {leg.status === 'confirmed' ? '' : '~'}
+                            {formatTokenAmount(leg.amountOut, leg.assetOut?.decimals)} {leg.assetOut?.symbol}
+                          </span>
+                          {leg.status !== 'confirmed' && (
+                            <span className="text-xs uppercase text-dark-100">{leg.status}</span>
+                          )}
+                          {leg.txHash && (
+                            <button
+                              onClick={() => window.open(getTransactionUrl(leg.txHash, vault?.chainType), '_blank')}
+                              className="ml-auto inline-flex items-center gap-1 text-xs text-dark-100 hover:text-orange-500 transition-colors cursor-pointer"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Tx
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {activity.status === 'failed' && activity.lastError && (
+                      <div className="mt-3 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                        <p className="text-xs text-rose-400">{activity.lastError}</p>
+                      </div>
+                    )}
+                  </>
+                ) : isProposal ? (
                   <>
                     <div className="mb-3">
                       <p className="text-sm font-medium text-white mb-2">Proposal Description</p>
@@ -460,12 +564,14 @@ const EmptyState = () => (
 );
 
 const ACTIVITY_FILTERS = ['All', 'Contribute', 'Acquire', 'Governance'];
+const INDEX_ACTIVITY_FILTERS = [...ACTIVITY_FILTERS, 'Rebalance'];
 
 const FILTER_MAP = {
   All: 'all',
   Contribute: 'contribute',
   Acquire: 'acquire',
   Governance: 'governance',
+  Rebalance: 'rebalance',
 };
 
 export const VaultActivity = ({ vault }) => {
@@ -473,6 +579,7 @@ export const VaultActivity = ({ vault }) => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [activeFilter, setActiveFilter] = useState('All');
+  const filters = vault?.vaultArchetype === 'index_weighted' ? INDEX_ACTIVITY_FILTERS : ACTIVITY_FILTERS;
 
   const { data, isLoading, error } = useVaultActivity(vault?.id, {
     page,
@@ -532,12 +639,15 @@ export const VaultActivity = ({ vault }) => {
         const isTransaction = activity.activityType === 'transaction';
         const isPhaseTransition = activity.activityType === 'phase_transition';
         const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+        const isRebalance = activity.activityType === 'index_rebalance';
 
         let activityType = '';
         if (isTransaction) {
           activityType = activity.type;
         } else if (isPhaseTransition) {
           activityType = 'phase_transition';
+        } else if (isRebalance) {
+          activityType = 'index_rebalance';
         } else if (isProposal) {
           activityType = activity.activityType.replace('proposal_', 'proposal ');
         }
@@ -562,6 +672,8 @@ export const VaultActivity = ({ vault }) => {
             locked: 'Vault has been locked and is now in the final phase',
           };
           description = phaseDescriptions[activity.phase] || 'Vault moved to next phase';
+        } else if (isRebalance) {
+          description = `${getRebalanceDescription(activity)} (${activity.status})`;
         } else {
           description = activity.description || '';
         }
@@ -582,6 +694,9 @@ export const VaultActivity = ({ vault }) => {
             .join('; ');
           policyIds = contributedAssets.map(asset => asset.policy_id || 'Unknown').join('; ');
         }
+        if (isRebalance) {
+          assetNames = (activity.legs || []).map(formatLeg).join('; ');
+        }
 
         return [
           formatDateTime(activity.created_at),
@@ -591,7 +706,12 @@ export const VaultActivity = ({ vault }) => {
           userAddress,
           assetNames,
           policyIds,
-          activity.tx_hash || '',
+          isRebalance
+            ? (activity.legs || [])
+                .map(leg => leg.txHash)
+                .filter(Boolean)
+                .join('; ')
+            : activity.tx_hash || '',
         ];
       });
 
@@ -634,7 +754,7 @@ export const VaultActivity = ({ vault }) => {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
               <LavaTabs
-                tabs={ACTIVITY_FILTERS}
+                tabs={filters}
                 activeTab={activeFilter}
                 onTabChange={handleFilterChange}
                 className="w-full sm:w-auto"
