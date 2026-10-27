@@ -35,3 +35,5 @@ dist-ssr
 
 # Documentation
 documentation/
+# Local Robinhood-mainnet test stack (contains test keys)
+.env.mainnet

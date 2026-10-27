@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import { CoreApiProvider } from '@/services/api/core';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
+import { useNetwork } from '@/hooks/useNetwork';
 
 export const UploadZone = ({
   label,
@@ -22,6 +23,7 @@ export const UploadZone = ({
   const [preview, setPreview] = useState(null);
   const [fileInfo, setFileInfo] = useState(null);
   const fileInputRef = useRef(null);
+  const { isRobinHood } = useNetwork();
 
   useEffect(() => {
     if (image) {
@@ -209,7 +211,7 @@ export const UploadZone = ({
           <div className="text-center">
             <div className="mb-4 flex justify-center">
               <div className="p-4 rounded-full bg-transparent">
-                <img alt="upload-icon" src="/assets/icons/upload.svg" />
+                <img alt="upload-icon" src={isRobinHood ? '/assets/icons/upload-rh.svg' : '/assets/icons/upload.svg'} />
               </div>
             </div>
             <p className="text-dark-100 mb-2">Upload image into the selected area</p>

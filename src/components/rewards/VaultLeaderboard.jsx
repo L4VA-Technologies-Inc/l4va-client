@@ -23,7 +23,7 @@ export const VaultLeaderboard = ({ scores = [], currentWalletAddress = null }) =
           <div
             key={entry.walletAddress || index}
             className={`p-3 rounded-lg flex items-center gap-4 ${
-              isCurrentWallet ? 'bg-blue-500/20 border border-blue-500/30' : 'bg-gray-800/50'
+              isCurrentWallet ? 'bg-steel-500/20 border border-blue-500/30' : 'bg-steel-800/50'
             }`}
           >
             {/* Rank */}

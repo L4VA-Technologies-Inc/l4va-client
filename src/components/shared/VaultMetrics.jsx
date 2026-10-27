@@ -28,7 +28,7 @@ const MetricsSkeleton = () => (
 );
 
 const VaultMetrics = ({ marketData, isLoading }) => {
-  const { currency, currencySymbol } = useCurrency();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   if (isLoading) {
     return <MetricsSkeleton />;
@@ -48,11 +48,18 @@ const VaultMetrics = ({ marketData, isLoading }) => {
   const adaPrice = marketData.adaPrice != null ? Number(marketData.adaPrice) : null;
   const totalVolumeUsd =
     totalVolumeAda != null && adaPrice != null && !Number.isNaN(adaPrice) ? totalVolumeAda * adaPrice : null;
+  const adaEthPrice = marketData.adaEthPrice != null ? Number(marketData.adaEthPrice) : null;
+  const totalVolumeEth =
+    totalVolumeAda != null && adaEthPrice != null && !Number.isNaN(adaEthPrice) ? totalVolumeAda * adaEthPrice : null;
 
-  const priceValue = currency === 'ada' ? marketData.price_ada : marketData.price_usd;
-  const tvlValue = currency === 'ada' ? marketData.tvl_ada : marketData.tvl_usd;
-  const fdvValue = currency === 'ada' ? marketData.fdv_ada : marketData.fdv_usd;
-  const totalVolumeValue = currency === 'ada' ? totalVolumeAda : totalVolumeUsd;
+  const priceValue = pickByCurrency({
+    ada: marketData.price_ada,
+    usd: marketData.price_usd,
+    eth: marketData.price_eth,
+  });
+  const tvlValue = pickByCurrency({ ada: marketData.tvl_ada, usd: marketData.tvl_usd, eth: marketData.tvl_eth });
+  const fdvValue = pickByCurrency({ ada: marketData.fdv_ada, usd: marketData.fdv_usd, eth: marketData.fdv_eth });
+  const totalVolumeValue = pickByCurrency({ ada: totalVolumeAda, usd: totalVolumeUsd, eth: totalVolumeEth });
 
   const fdvTvl = marketData.fdv_tvl != null && marketData.fdv_tvl !== '' ? Number(marketData.fdv_tvl).toFixed(2) : null;
 
@@ -61,7 +68,7 @@ const VaultMetrics = ({ marketData, isLoading }) => {
       <div className="grid grid-cols-2 gap-3">
         <MetricCard
           label="Price"
-          value={currency === 'ada' ? `${currencySymbol}${formatAdaPrice(priceValue)}` : formatUsdCurrency(priceValue)}
+          value={currency === 'usdt' ? formatUsdCurrency(priceValue) : `${currencySymbol}${formatAdaPrice(priceValue)}`}
         />
         <MetricCard label="Market Cap" value={formatLargeNumber(marketData.mcap)} />
       </div>

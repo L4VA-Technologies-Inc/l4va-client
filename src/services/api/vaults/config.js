@@ -90,4 +90,20 @@ export class VaultsConfigProvider {
   static editUpcomingVaultSettings(id) {
     return `/api/v1/vaults/${id}/upcoming-settings`;
   }
+
+  static getIndexSupportedAssets() {
+    return '/api/v1/vaults/index/assets';
+  }
+
+  static getIndexOverview(id) {
+    return `/api/v1/vaults/${id}/index`;
+  }
+
+  static getVaultLp(id) {
+    return `/api/v1/vaults/${id}/lp`;
+  }
+
+  static previewIndexReweight(id) {
+    return `/api/v1/vaults/${id}/index/preview`;
+  }
 }

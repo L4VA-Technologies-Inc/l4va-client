@@ -3,10 +3,12 @@ import { useMemo } from 'react';
 
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
+import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { InfoRow } from '@/components/ui/infoRow';
 import { formatCompactNumber, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 
 type VaultListItemProps = {
   vault: VaultShortResponse;
@@ -45,14 +47,18 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
             <img alt={`${name} vault avatar`} src={vaultImage} className="object-cover w-full h-full" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
-              <L4vaIcon className="h-12 w-12 text-white" />
+              <L4vaIcon chainType={vault.chainType} className="h-12 w-12 text-white" />
             </div>
           )}
         </div>
         <div className="flex md:ml-[120px] items-center justify-between gap-4 mb-3">
           <div className="flex items-center gap-4">
             <div>
-              <h3 className="font-bold text-xl">{name || 'No name'}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-xl">{name || 'No name'}</h3>
+                <ChainBadge chainType={vault.chainType} className="bg-steel-850 p-1.5" />
+                <VaultTypeBadge vault={vault} className="bg-steel-850" />
+              </div>
               <p className="text-sm text-dark-100">{description || 'No description'}</p>
             </div>
           </div>
@@ -84,15 +90,12 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
             </div>
           )}
           <div className="flex items-center justify-center gap-3 h-10">
-            {socialLinks.length > 0 ? (
+            {socialLinks.length > 0 &&
               socialLinks.map((social, index) => (
                 <a key={index} href={social.url} rel="noopener noreferrer" target="_blank">
                   <SocialPlatformIcon className="text-white" platformId={social.name} />
                 </a>
-              ))
-            ) : (
-              <span className="text-dark-100 text-sm">No social links</span>
-            )}
+              ))}
           </div>
         </div>
       </Link>

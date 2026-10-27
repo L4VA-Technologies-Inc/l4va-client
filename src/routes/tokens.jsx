@@ -1,11 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
-import { VaultTokensStatistics } from '@/components/vaults/VaultTokensStatistics.jsx';
-
-export const TokensComponent = () => {
-  return <VaultTokensStatistics />;
-};
+const TokensLayout = () => <Outlet />;
 
 export const Route = createFileRoute('/tokens')({
-  component: TokensComponent,
+  component: TokensLayout,
 });

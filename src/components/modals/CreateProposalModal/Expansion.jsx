@@ -6,9 +6,12 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { formatPolicyId } from '@/utils/core.utils';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
+import { ChainType } from '@/utils/types';
 
 export default function Expansion({ onDataChange, error, vault }) {
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
   const [selectedPolicies, setSelectedPolicies] = useState([]);
+  const [evmAssets, setEvmAssets] = useState([]);
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false);
   const [assetMax, setAssetMax] = useState('');
@@ -16,7 +19,7 @@ export default function Expansion({ onDataChange, error, vault }) {
   const [priceType, setPriceType] = useState('market');
   const [limitPrice, setLimitPrice] = useState('');
 
-  // Get whitelisted policies from vault
+  // Get whitelisted policies/contracts from vault
   const whitelistedPolicies =
     vault?.assetsWhitelist?.map(w => ({
       value: w.policyId,
@@ -25,23 +28,33 @@ export default function Expansion({ onDataChange, error, vault }) {
     })) || [];
 
   const selectedPolicyValues = selectedPolicies.map(p => p.policyId || p);
+  // EVM selected values mirror the same shape; contractAddress === policyId on EVM
+  const selectedEvmValues = evmAssets.map(a => a.contractAddress);
 
   const priceTypeOptions = [
     { value: 'market', label: 'Market Price' },
     { value: 'limit', label: 'Limit Price' },
   ];
 
-  useEffect(() => {
-    // Cannot have both noLimit and noMax true - at least one limit must be set
-    const hasAtLeastOneLimit = !(noLimit && noMax);
+  const handleEvmAssetChange = values => {
+    const assetObjects = values.map(value => {
+      const option = whitelistedPolicies.find(opt => opt.value === value);
+      return { contractAddress: value, label: option?.label || value };
+    });
+    setEvmAssets(assetObjects);
+  };
 
+  useEffect(() => {
+    const hasAtLeastOneLimit = !(noLimit && noMax);
     const assetMaxNum = parseInt(assetMax) || 0;
     const limitPriceNum = parseFloat(limitPrice) || 0;
-    const MAX_ASSET_LIMIT = 1000000000000; // 1 trillion
-    const MAX_LIMIT_PRICE = 1000000; // 1 million VT
+    const MAX_ASSET_LIMIT = 1000000000000;
+    const MAX_LIMIT_PRICE = 1000000;
+
+    const assetsSelected = isEvmVault ? evmAssets.length > 0 : selectedPolicies.length > 0;
 
     const isValid =
-      selectedPolicies.length > 0 &&
+      assetsSelected &&
       (noLimit || duration > 0) &&
       (noMax || (assetMax && assetMaxNum > 0 && assetMaxNum <= MAX_ASSET_LIMIT)) &&
       hasAtLeastOneLimit &&
@@ -49,7 +62,8 @@ export default function Expansion({ onDataChange, error, vault }) {
       (priceType === 'market' || (limitPrice && limitPriceNum > 0 && limitPriceNum <= MAX_LIMIT_PRICE));
 
     onDataChange?.({
-      expansionPolicyIds: selectedPolicies,
+      expansionPolicyIds: isEvmVault ? [] : selectedPolicies,
+      expansionEvmAssets: isEvmVault ? evmAssets : [],
       expansionDuration: noLimit ? null : duration,
       expansionNoLimit: noLimit,
       expansionAssetMax: noMax ? null : Math.min(assetMaxNum, MAX_ASSET_LIMIT) || null,
@@ -58,15 +72,23 @@ export default function Expansion({ onDataChange, error, vault }) {
       expansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
       isValid,
     });
-  }, [selectedPolicies, duration, noLimit, assetMax, noMax, priceType, limitPrice, onDataChange]);
+  }, [
+    selectedPolicies,
+    evmAssets,
+    duration,
+    noLimit,
+    assetMax,
+    noMax,
+    priceType,
+    limitPrice,
+    onDataChange,
+    isEvmVault,
+  ]);
 
   const handlePolicyChange = values => {
     const policyObjects = values.map(value => {
       const option = whitelistedPolicies.find(opt => opt.value === value);
-      return {
-        policyId: value,
-        label: option?.label || value,
-      };
+      return { policyId: value, label: option?.label || value };
     });
     setSelectedPolicies(policyObjects);
   };
@@ -83,23 +105,42 @@ export default function Expansion({ onDataChange, error, vault }) {
           </p>
         </div>
 
-        {/* Policy Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Collections*</label>
-          <LavaMultiSelect
-            options={whitelistedPolicies}
-            placeholder="Select Asset Collections"
-            value={selectedPolicyValues}
-            onChange={handlePolicyChange}
-            className="min-w-full"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Select which whitelisted asset collections will be accepted during expansion
-          </p>
-          {error && selectedPolicies.length === 0 && (
-            <p className="text-red-500 text-sm mt-1">Select at least one policy</p>
-          )}
-        </div>
+        {/* Asset selection — Cardano: policy multiselect; EVM: contract address input */}
+        {isEvmVault ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Contracts*</label>
+            <LavaMultiSelect
+              options={whitelistedPolicies}
+              placeholder="Select Asset Contracts"
+              value={selectedEvmValues}
+              onChange={handleEvmAssetChange}
+              className="min-w-full"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Select which whitelisted contracts will be accepted during expansion
+            </p>
+            {error && evmAssets.length === 0 && (
+              <p className="text-red-500 text-sm mt-1">Select at least one contract</p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Select Asset Collections*</label>
+            <LavaMultiSelect
+              options={whitelistedPolicies}
+              placeholder="Select Asset Collections"
+              value={selectedPolicyValues}
+              onChange={handlePolicyChange}
+              className="min-w-full"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Select which whitelisted asset collections will be accepted during expansion
+            </p>
+            {error && selectedPolicies.length === 0 && (
+              <p className="text-red-500 text-sm mt-1">Select at least one policy</p>
+            )}
+          </div>
+        )}
 
         {/* Duration */}
         <div>
@@ -224,20 +265,28 @@ export default function Expansion({ onDataChange, error, vault }) {
                   <strong>Market Price Calculation:</strong>
                 </p>
                 <p className="text-sm text-gray-300">Contributors will receive VT based on fair market value:</p>
-                <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
-                  VT Amount = (Asset Floor Price ₳) ÷ (VT Price ₳)
-                </div>
+                {isEvmVault ? (
+                  <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
+                    VT Amount = (Asset Floor Price) ÷ (VT Price from Uniswap)
+                  </div>
+                ) : (
+                  <div className="p-3 bg-steel-800 rounded font-mono text-sm text-primary">
+                    VT Amount = (Asset Floor Price ₳) ÷ (VT Price ₳)
+                  </div>
+                )}
                 <p className="text-xs text-gray-400">
-                  This ensures contributors receive a fair value equivalent in vault tokens based on current market
-                  prices
+                  {isEvmVault
+                    ? 'VT price is fetched from the Uniswap pool on Robinhood Chain at contribution close time'
+                    : 'This ensures contributors receive a fair value equivalent in vault tokens based on current market prices'}
                 </p>
               </div>
               {!vault?.hasActiveLp && (
                 <div className="p-3 bg-yellow-900/20 border border-yellow-600/50 rounded-lg">
                   <p className="text-yellow-400 text-sm font-medium">Market Pricing Requirements:</p>
                   <p className="text-yellow-300/90 text-xs mt-1">
-                    This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP
-                    with liquidity. Please use <strong>Limit Price</strong> instead.
+                    {isEvmVault
+                      ? 'This vault does not have an active Uniswap pool. Market pricing requires an active pool with liquidity. Please use Limit Price instead.'
+                      : 'This vault does not have an active Liquidity Pool on DEXes. Market pricing requires an active LP with liquidity. Please use Limit Price instead.'}
                   </p>
                 </div>
               )}
@@ -251,7 +300,13 @@ export default function Expansion({ onDataChange, error, vault }) {
           <div className="space-y-1 text-sm text-gray-300">
             <p>
               <span className="text-gray-400">Collections:</span>{' '}
-              {selectedPolicies.length > 0 ? `${selectedPolicies.length} selected` : 'None selected'}
+              {isEvmVault
+                ? evmAssets.length > 0
+                  ? `${evmAssets.length} contract(s)`
+                  : 'None added'
+                : selectedPolicies.length > 0
+                  ? `${selectedPolicies.length} selected`
+                  : 'None selected'}
             </p>
             <p>
               <span className="text-gray-400">Duration:</span>{' '}

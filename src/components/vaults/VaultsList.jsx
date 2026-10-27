@@ -43,6 +43,7 @@ export const VaultList = ({
   pagination,
   onPageChange,
   onSearch,
+  toolbar = null,
 }) => {
   const [internalActiveTab, setInternalActiveTab] = useState(tabs[0]);
   const [viewType, setViewType] = useState('grid');
@@ -102,6 +103,7 @@ export const VaultList = ({
     <div ref={vaultsListRef}>
       <div className="flex flex-col gap-6 md:gap-8">
         {title ? <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">{title}</h2> : null}
+        {toolbar}
         {tabs.length > 0 && (
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 w-full">
             <div className="flex-1 w-full lg:w-auto">

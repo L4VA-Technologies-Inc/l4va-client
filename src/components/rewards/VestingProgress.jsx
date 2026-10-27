@@ -28,7 +28,7 @@ export const VestingProgress = ({ position }) => {
   const statusColor = isCompleted ? statusColors.completed : isExpired ? statusColors.expired : statusColors.active;
 
   return (
-    <div className="p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg">
+    <div className="p-4 bg-steel-800/50 border border-gray-700/50 rounded-lg">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">

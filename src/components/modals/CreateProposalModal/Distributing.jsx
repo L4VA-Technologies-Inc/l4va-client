@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
+import { formatEther, parseEther, zeroAddress } from 'viem';
 
 import { NoTreasuryWalletAlert } from './NoTreasuryWalletAlert';
 
@@ -7,14 +8,109 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatAdaPrice } from '@/utils/core.utils';
+import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Distributing({ isDisabled, onDataChange, vaultId }) {
-  const [adaAmount, setAdaAmount] = useState('');
-  const [distributeAll, setDistributeAll] = useState(false);
   const { data, isLoading } = useVaultAssetsForProposalByType(vaultId, 'distribute');
 
-  // Distribution info from backend
-  const distributionInfo = data?.data;
+  // EVM vaults have no treasury wallet: the backend returns the vault's own
+  // distributable balance and the proposal carries a wei amount instead.
+  if (data?.data?.chain === 'robinhood') {
+    return <EvmDistributing isDisabled={isDisabled} onDataChange={onDataChange} info={data.data} />;
+  }
+
+  return (
+    <CardanoDistributing
+      isDisabled={isDisabled}
+      onDataChange={onDataChange}
+      distributionInfo={data?.data}
+      isLoading={isLoading}
+    />
+  );
+}
+
+function EvmDistributing({ isDisabled, onDataChange, info }) {
+  const [amount, setAmount] = useState('');
+  const available = BigInt(info.availableAmount || '0');
+  const holderCount = info.vtHolderCount || 0;
+
+  let amountWei = 0n;
+  try {
+    amountWei = amount ? parseEther(amount) : 0n;
+  } catch {
+    amountWei = -1n;
+  }
+  const isInvalidNumber = amountWei < 0n;
+  const isOverBalance = amountWei > available;
+  const hasNoSnapshot = !info.timepoint;
+  const isValid = amountWei > 0n && !isOverBalance && !hasNoSnapshot;
+
+  useEffect(() => {
+    onDataChange?.({
+      distributionAmount: isValid ? amountWei.toString() : null,
+      distributionAsset: info.asset || zeroAddress,
+      isValid,
+    });
+  }, [amountWei, isValid, info.asset, onDataChange]);
+
+  if (isDisabled) {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+        <p className="text-red-400 font-medium">Distribution Not Available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-steel-800 rounded-lg p-4 space-y-4">
+        <LavaSteelInput type="number" label="Amount (ETH)" placeholder="0.00" value={amount} onChange={setAmount} />
+        {isInvalidNumber && <p className="text-red-400 text-sm">Enter a valid ETH amount (up to 18 decimals)</p>}
+        {isOverBalance && <p className="text-red-400 text-sm">Amount exceeds the vault's distributable ETH</p>}
+        {hasNoSnapshot && (
+          <p className="text-red-400 text-sm">No governance snapshot yet — holder weights cannot be fixed</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Wallet className="w-4 h-4" />
+            <span className="text-sm">Distributable in vault</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{formatEther(available)} ETH</p>
+        </div>
+        <div className="bg-steel-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-white/60 mb-2">
+            <Users className="w-4 h-4" />
+            <span className="text-sm">VT Holders (snapshot)</span>
+          </div>
+          <p className="text-2xl font-semibold text-white">{holderCount.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div className="bg-steel-800/50 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-400 mt-0.5" />
+          <ul className="text-sm text-white/70 space-y-1 list-disc list-inside">
+            <li>The amount is reserved inside the vault contract when the proposal executes</li>
+            <li>Each holder claims a share proportional to their VT at the proposal snapshot</li>
+            <li>
+              Claim window: {Math.round((info.defaultClaimWindowSeconds || 0) / 86400)} days; unclaimed funds go to the
+              treasury
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardanoDistributing({ isDisabled, onDataChange, distributionInfo, isLoading }) {
+  const { currencyLabel } = useCurrency();
+  const [adaAmount, setAdaAmount] = useState('');
+  const [distributeAll, setDistributeAll] = useState(false);
+
   const treasuryBalance = distributionInfo?.treasuryBalance?.lovelace || 0;
   const treasuryBalanceAda = treasuryBalance / 1000000;
   const maxDistributableAda = distributionInfo?.maxDistributableAda || 0;
@@ -106,7 +202,7 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex-1">
               <LavaSteelInput
                 type="number"
-                label="Amount (ADA)"
+                label={`Amount (${currencyLabel})`}
                 placeholder="0.00"
                 value={adaAmount}
                 onChange={handleAdaAmountChange}
@@ -120,8 +216,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>
-                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} ADA). Fee reserve required for
-                transaction.
+                Amount exceeds max distributable ({maxDistributableAda.toLocaleString()} {currencyLabel}). Fee reserve
+                required for transaction.
               </span>
             </div>
           )}
@@ -129,7 +225,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           {noOneWillReceive && (
             <div className="flex items-center gap-2 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
-              <span>Minimum {minAdaPerHolder} ADA required for at least one holder to receive distribution</span>
+              <span>
+                Minimum {minAdaPerHolder} {currencyLabel} required for at least one holder to receive distribution
+              </span>
             </div>
           )}
 
@@ -137,8 +235,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <div className="flex items-center gap-2 text-yellow-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>
-                Some holders with smaller VT balances may not receive distribution (minimum {minAdaPerHolder} ADA per
-                recipient)
+                Some holders with smaller VT balances may not receive distribution (minimum {minAdaPerHolder}{' '}
+                {currencyLabel} per recipient)
               </span>
             </div>
           )}
@@ -151,10 +249,14 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <Wallet className="w-4 h-4" />
             <span className="text-sm">Treasury Balance</span>
           </div>
-          <p className="text-2xl font-semibold text-white">{treasuryBalanceAda.toLocaleString()} ADA</p>
-          <p className="text-xs text-green-400 mt-1">Max Distributable: {maxDistributableAda.toLocaleString()} ADA</p>
+          <p className="text-2xl font-semibold text-white">
+            {treasuryBalanceAda.toLocaleString()} {currencyLabel}
+          </p>
+          <p className="text-xs text-green-400 mt-1">
+            Max Distributable: {maxDistributableAda.toLocaleString()} {currencyLabel}
+          </p>
           <p className="text-xs text-white/40">
-            (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} ADA)
+            (Fees reserved: {formatAdaPrice(treasuryBalanceAda - maxDistributableAda)} {currencyLabel})
           </p>
         </div>
 
@@ -164,7 +266,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
             <span className="text-sm">VT Holders</span>
           </div>
           <p className="text-2xl font-semibold text-white">{vtHolderCount.toLocaleString()}</p>
-          <p className="text-xs text-white/40 mt-1">Min {minAdaPerHolder} ADA per holder required</p>
+          <p className="text-xs text-white/40 mt-1">
+            Min {minAdaPerHolder} {currencyLabel} per holder required
+          </p>
         </div>
       </div>
 
@@ -175,8 +279,8 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           <div className="text-sm text-white/70">
             <p className="font-medium text-white/90 mb-2">How Distribution Works</p>
             <ul className="space-y-1 list-disc list-inside">
-              <li>ADA is distributed proportionally based on VT holdings</li>
-              <li>Minimum 2 ADA per recipient (Cardano UTXO requirement)</li>
+              <li>{currencyLabel} is distributed proportionally based on VT holdings</li>
+              <li>Minimum 2 {currencyLabel} per recipient</li>
               <li>Distribution is processed in batches of ~200 recipients</li>
               <li>Claims are created for each recipient to track status</li>
             </ul>
@@ -206,7 +310,9 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-white/60">Total Amount:</span>
-              <span className="ml-2 text-white">{enteredAda.toLocaleString()} ADA</span>
+              <span className="ml-2 text-white">
+                {enteredAda.toLocaleString()} {currencyLabel}
+              </span>
             </div>
             <div>
               <span className="text-white/60">Recipients:</span>

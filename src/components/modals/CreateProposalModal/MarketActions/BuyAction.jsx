@@ -16,6 +16,7 @@ import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { useVaultAssetsForProposalByType, useAssetMetadata } from '@/services/api/queries';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { IS_MAINNET } from '@/utils/networkValidation.ts';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const buyTypeOptions = [
   { value: 'Offer', label: 'Offer' },
@@ -84,6 +85,7 @@ const BuyOptionMetadataHandler = ({ option, onMetadataChange }) => {
 };
 
 export const BuyAction = ({ vaultId, assetsWhitelist = [], onDataChange, error }) => {
+  const { currencyLabel } = useCurrency();
   const [options, setOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
   const [assetMetadataMap, setAssetMetadataMap] = useState({}); // Map of optionId -> metadata
@@ -202,7 +204,9 @@ export const BuyAction = ({ vaultId, assetsWhitelist = [], onDataChange, error }
           <Wallet className="w-4 h-4" />
           <span className="text-sm">Treasury Balance</span>
         </div>
-        <p className="text-2xl font-semibold text-white">{treasuryBalance.toLocaleString()} ADA</p>
+        <p className="text-2xl font-semibold text-white">
+          {treasuryBalance.toLocaleString()} {currencyLabel}
+        </p>
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">Buy Options</h3>
@@ -314,7 +318,9 @@ export const BuyAction = ({ vaultId, assetsWhitelist = [], onDataChange, error }
                     </div>
                     <div>
                       <p className="text-sm text-gray-400 mb-2">
-                        {option.sellType === 'Offer' ? 'Offer Price (ADA)' : 'Max Buy Price (ADA)'}
+                        {option.sellType === 'Offer'
+                          ? `Offer Price (${currencyLabel})`
+                          : `Max Buy Price (${currencyLabel})`}
                       </p>
                       <LavaSteelInput
                         type="number"

@@ -1,23 +1,20 @@
 import { X } from 'lucide-react';
 
-import { LazyImage } from '@/components/shared/LazyImage';
+import { TokenImage } from '@/components/shared/TokenImage';
 import { formatNum, formatPolicyId } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { getPolicyUrl } from '@/utils/explorer.utils';
 
-const getPolicyExplorerUrl = policyId =>
-  IS_PREPROD ? `https://preprod.cardanoscan.io/tokenPolicy/${policyId}` : `https://pool.pm/policy/${policyId}`;
-
-export const SelectedAssetItem = ({ asset, onRemove }) => (
+export const SelectedAssetItem = ({ asset, chainType, onRemove }) => (
   <div className="flex items-center gap-3">
     <div className="flex flex-1 items-center justify-between px-4 py-2 rounded-md gap-3 bg-steel-800 overflow-hidden">
       <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-        <LazyImage
-          src={asset.src}
+        <TokenImage
+          asset={asset}
           alt={asset.name}
+          chainType={chainType || asset.chainType}
           className="rounded-full shrink-0"
           width={32}
           height={32}
-          fallbackSrc="/assets/icons/ada.svg"
         />
         <span className="font-medium truncate">
           {!asset.isNft && asset.amount
@@ -28,7 +25,7 @@ export const SelectedAssetItem = ({ asset, onRemove }) => (
       <div className="flex items-center gap-3 shrink-0">
         {asset.metadata?.policyId && (
           <a
-            href={getPolicyExplorerUrl(asset.metadata.policyId)}
+            href={getPolicyUrl(asset.metadata.policyId, chainType || asset.chainType)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}

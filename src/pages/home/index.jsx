@@ -1,32 +1,20 @@
 import Faq from '@/pages/home/Faq';
 import VaultsFilters from '@/pages/home/VaultsFilters';
 import Stats from '@/pages/home/Stats';
-import { VaultTokensStatistics } from '@/components/vaults/VaultTokensStatistics.jsx';
+import { TokensPage } from '@/pages/tokens/TokensPage';
 
 export const Home = () => {
   return (
     <>
-      <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[750px]">
-        <img
-          src="/assets/banner-bg.webp"
-          alt="Banner"
-          className="absolute inset-0 w-full h-full object-cover object-top"
-          fetchPriority="high"
-          decoding="async"
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-          }}
-        />
-      </div>
+      <div className="home-bg-texture absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[750px]" />
       <div className="space-y-20">
         {/* <div className="pt-12 relative">
           <Hero />
         </div>
-        <HeroStats />
-        <Features /> */}
+        <HeroStats /> */}
+        {/* <Features /> */}
+        <TokensPage />
         <VaultsFilters />
-        <VaultTokensStatistics />
         {/* <Acquire /> */}
         <Stats />
         <Faq />

@@ -2,15 +2,21 @@ import { Copy, EyeIcon, User, Share, BarChart3, Info, Pencil } from 'lucide-reac
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
+import { useReadContract } from 'wagmi';
 
 import { SwapComponent } from '../swap/Swap';
+import { UniswapSwapPanel } from '../swap/UniswapSwapPanel';
 
 import { useCurrency } from '@/hooks/useCurrency';
 import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
+import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
+import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
+import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
     .then(module => ({
@@ -74,11 +80,12 @@ import {
   getCountdownTime,
   substringAddress,
 } from '@/utils/core.utils';
+import { getAddressUrl, getPolicyUrl } from '@/utils/explorer.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets } from '@/services/api/queries';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET, IS_PREPROD } from '@/utils/networkValidation.ts';
+import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -184,7 +191,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
-  const { isAda, currencySymbol } = useCurrency();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
   const [deferredReady, setDeferredReady] = useState(false);
@@ -263,6 +270,22 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
+  const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  const { data: evmVaultTokenAddress } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [
+      {
+        type: 'function',
+        stateMutability: 'view',
+        name: 'vaultToken',
+        inputs: [],
+        outputs: [{ type: 'address' }],
+      },
+    ],
+    functionName: 'vaultToken',
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+  });
+
   const handleTabChange = tab => setActiveTab(tab);
 
   const isPhaseTransitioning = () => {
@@ -306,18 +329,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       buttonText = 'Contribution Limit Reached';
     }
 
+    const acquireAction = {
+      text: 'Acquire',
+      handleClick: () => openModal('AcquireModal', { vault }),
+      available: vault.isAcquireWindowActive,
+    };
+
     const buttonConfig = {
-      Assets: {
-        text: buttonText,
-        handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
-        available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
-        disabled: isInvalidStatus || isContributionFull || isExpansionFull,
-      },
-      Token: {
-        text: 'Acquire',
-        handleClick: () => openModal('AcquireModal', { vault }),
-        available: vault.isAcquireWindowActive,
-      },
+      // Acquire-only vaults never take contributions; Assets is the landing tab, so it must offer Acquire.
+      Assets: vault.isAcquireOnly
+        ? acquireAction
+        : {
+            text: buttonText,
+            handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
+            available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
+            disabled: isInvalidStatus || isContributionFull || isExpansionFull,
+          },
+      Token: acquireAction,
       Governance: {
         text: 'Create Proposal',
         available:
@@ -385,18 +413,45 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     }
   };
 
+  const formatVaultStatCurrency = (value, maximumFractionDigits = 2) => {
+    if (value == null) return 'N/A';
+
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return 'N/A';
+
+    const sign = numericValue < 0 ? '-' : '';
+    const absValue = Math.abs(numericValue);
+
+    // ETH values can be much smaller than ADA/USD-denominated values.
+    // Keep extra precision so non-zero values don't collapse to 0.
+    if (currency === 'eth') {
+      if (absValue > 0 && absValue < 0.000001) {
+        return `${sign}${currencySymbol}< 0.000001`;
+      }
+      return `${sign}${currencySymbol}${formatNum(absValue, 6)}`;
+    }
+
+    return `${sign}${currencySymbol}${formatNum(absValue, maximumFractionDigits)}`;
+  };
+
   // Calculate vault statistics - values computed on the backend in vault.vaultStats
   const vaultStats = {
     assetValue: vault.vaultStatus,
     ftGains: (() => {
-      const val = isAda ? vault.vaultStats?.ftGainsAda : vault.vaultStats?.ftGainsUsd;
-      if (val == null) return 'N/A';
-      return `${val < 0 ? '-' : ''}${currencySymbol}${formatNum(Math.abs(val))}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.ftGainsAda,
+        usd: vault.vaultStats?.ftGainsUsd,
+        eth: vault.vaultStats?.ftGainsEth,
+      });
+      return formatVaultStatCurrency(val);
     })(),
     fdv: (() => {
-      const val = isAda ? vault.vaultStats?.fdvAda : vault.vaultStats?.fdvUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.fdvAda,
+        usd: vault.vaultStats?.fdvUsd,
+        eth: vault.vaultStats?.fdvEth,
+      });
+      return formatVaultStatCurrency(val);
     })(),
     fdvTvl: (() => {
       const val = vault.vaultStats?.fdvTvl;
@@ -405,25 +460,47 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       return val.toFixed(2);
     })(),
     vtPrice: (() => {
-      const val = isAda ? vault.vaultStats?.vtPriceAda : vault.vaultStats?.vtPriceUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val, 4)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.vtPriceAda,
+        usd: vault.vaultStats?.vtPriceUsd,
+        eth: vault.vaultStats?.vtPriceEth,
+      });
+      return formatVaultStatCurrency(val, 4);
     })(),
     tvl: (() => {
-      const val = isAda ? vault.vaultStats?.tvlAda : vault.vaultStats?.tvlUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.tvlAda ?? vault.assetsPrices?.totalValueAda ?? vault.totalValueAda,
+        usd: vault.vaultStats?.tvlUsd ?? vault.assetsPrices?.totalValueUsd ?? vault.totalValueUsd,
+        eth: vault.vaultStats?.tvlEth ?? vault.assetsPrices?.totalValueEth ?? vault.totalValueEth,
+      });
+      return formatVaultStatCurrency(val);
     })(),
   };
+
+  const showTokenDetails =
+    [VAULT_STATUSES.LOCKED, VAULT_STATUSES.EXPANSION, VAULT_STATUSES.ACQUIRE_EXPANSION].includes(vault?.vaultStatus) &&
+    Boolean(vault?.vaultTokenTicker || vault?.policyId);
 
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
-        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
-          <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
-            {vault.isOfficialPartner && (
-              <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-start">
+          <div className="flex flex-col min-w-0 gap-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
+              {vault.isOfficialPartner && (
+                <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+              )}
+            </div>
+            {(vault.vaultTokenTicker || vault.ftTokenSupply) && (
+              <div className="flex items-center gap-2 text-sm text-dark-100">
+                {vault.vaultTokenTicker && <span className="font-medium text-white">${vault.vaultTokenTicker}</span>}
+                {vault.ftTokenSupply ? (
+                  <span>
+                    Total Supply: <span className="text-white">{formatNum(vault.ftTokenSupply)}</span>
+                  </span>
+                ) : null}
+              </div>
             )}
           </div>
           <div className="flex gap-2 items-center">
@@ -454,6 +531,20 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 </div>
               </div>
             )}
+            {showTokenDetails && (
+              <div className="group relative">
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: '/tokens/$id', params: { id: vault.id } })}
+                  className="bg-steel-850 px-3 py-1 rounded-full text-sm flex items-center justify-center hover:bg-steel-750 transition-colors h-7 text-white whitespace-nowrap"
+                >
+                  Token details
+                </button>
+                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
+                  Open vault token page
+                </div>
+              </div>
+            )}
             {/* Statistic */}
             {vault?.hasActiveLp && IS_MAINNET && (
               <div className="group relative">
@@ -468,6 +559,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 </div>
               </div>
             )}
+            <VaultTypeBadge vault={vault} variant="icon" />
             <div className="group relative">
               <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
                 <EyeIcon className="w-4 h-4 text-orange-500" />
@@ -500,11 +592,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={
-                IS_PREPROD
-                  ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
-                  : `https://pool.pm/${vault.contractAddress}`
-              }
+              href={getAddressUrl(vault.contractAddress, vault.chainType)}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"
@@ -524,11 +612,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <div className="flex items-center gap-2 text-sm text-dark-100">
               <span className="font-medium">Policy ID:</span>
               <a
-                href={
-                  IS_PREPROD
-                    ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
-                    : `https://pool.pm/policy/${vault.policyId}`
-                }
+                href={getPolicyUrl(vault.policyId)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline hover:text-orange-500 transition-colors"
@@ -628,24 +712,44 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const vaultSwapToken = activeLpTokenOut || import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
   const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
 
-  const renderSwapBlock = () => (
-    <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
-      <SwapComponent
-        key={swapInstanceKey}
-        config={{
-          defaultTokenOut: vaultSwapToken,
-          style: { width: '100%' },
-        }}
-      />
-    </div>
-  );
+  const renderSwapBlock = () => {
+    if (isRobinhoodVault) {
+      if (!evmVaultTokenAddress) return null;
+
+      return (
+        <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+          <UniswapSwapPanel
+            tokenAddress={evmVaultTokenAddress}
+            tokenSymbol={vault.vaultTokenTicker || 'VT'}
+            tokenImage={vault.vaultImage}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+        <SwapComponent
+          key={swapInstanceKey}
+          config={{
+            defaultTokenOut: vaultSwapToken,
+            style: { width: '100%' },
+          }}
+        />
+      </div>
+    );
+  };
 
   return (
     <>
       {renderPublishedOverlay()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
-          <div className="overflow-hidden rounded-lg">
+          <div className="relative overflow-hidden rounded-lg">
+            <ChainBadge
+              chainType={vault.chainType}
+              className="absolute top-3 right-3 z-10 bg-black/60 p-1.5 backdrop-blur-sm"
+            />
             <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
               {vault.vaultImage ? (
                 <img
@@ -657,7 +761,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 />
               ) : (
                 <div className="w-full h-full bg-steel-850 flex items-center justify-center">
-                  <L4vaIcon className="h-16 w-16 text-white" />
+                  <L4vaIcon chainType={vault.chainType} className="h-16 w-16 text-white" />
                 </div>
               )}
             </div>
@@ -672,6 +776,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             {isPhaseTransitioning() && <PhaseTransitionInfo />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
+          {isRobinhoodVault && vault.vaultStatus === VAULT_STATUSES.TERMINATING && (
+            <div className="mb-6">
+              <VaultTerminationRedeem vault={vault} vaultTokenAddress={evmVaultTokenAddress} />
+            </div>
+          )}
           {vault.vaultStatus !== 'locked' ? (
             deferredReady ? (
               <Suspense fallback={<ContributionSkeleton />}>

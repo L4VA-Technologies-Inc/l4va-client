@@ -3,15 +3,17 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 
 import { substringAddress, formatAdaPrice, formatNum } from '@/utils/core.utils.js';
+import { TokenImage } from '@/components/shared/TokenImage.jsx';
 
-const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
+const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinhoodVault }) => {
+  const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
+
   const handleCopy = (e, text, message) => {
     e.stopPropagation();
     navigator.clipboard.writeText(text);
     toast.success(message);
   };
 
-  const imageUrl = asset.image ? asset.image : '/assets/icons/ada.svg';
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
 
   return (
@@ -27,7 +29,14 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
         onClick={onClick}
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <img alt={assetName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={imageUrl} />
+          <TokenImage
+            asset={asset}
+            alt={assetName}
+            className="rounded-lg flex-shrink-0"
+            width={48}
+            height={48}
+            chainType={isRobinhoodVault ? 'robinhood' : 'cardano'}
+          />
           <p className="font-medium text-white truncate">{assetName}</p>
         </div>
 
@@ -75,29 +84,31 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
             </div>
 
             <div className="col-span-2 sm:col-span-1">
-              <p className="font-medium text-gray-300">Policy ID:</p>
+              <p className="font-medium text-gray-300">{policyLabel}:</p>
               <div className="flex items-center gap-2">
                 <p className="break-all">{substringAddress(asset.policyId)}</p>
                 <button
-                  onClick={e => handleCopy(e, asset.policyId, 'Policy ID copied')}
+                  onClick={e => handleCopy(e, asset.policyId, `${policyLabel} copied`)}
                   className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
             </div>
-            <div className="col-span-2 sm:col-span-1">
-              <p className="font-medium text-gray-300">Asset ID:</p>
-              <div className="flex items-center gap-2">
-                <p className="break-all">{substringAddress(asset.assetId)}</p>
-                <button
-                  onClick={e => handleCopy(e, asset.assetId, 'Asset ID copied')}
-                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
+            {!isRobinhoodVault && (
+              <div className="col-span-2 sm:col-span-1">
+                <p className="font-medium text-gray-300">Asset ID:</p>
+                <div className="flex items-center gap-2">
+                  <p className="break-all">{substringAddress(asset.assetId)}</p>
+                  <button
+                    onClick={e => handleCopy(e, asset.assetId, 'Asset ID copied')}
+                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <p className="font-medium text-gray-300">Updated At:</p>
@@ -117,7 +128,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda }) => {
   );
 };
 
-export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda }) => {
+export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda, isRobinhoodVault = false }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
 
   return (
@@ -130,6 +141,7 @@ export const VaultContributedAssetsCard = ({ assets, currencySymbol, isAda }) =>
           onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
           currencySymbol={currencySymbol}
           isAda={isAda}
+          isRobinhoodVault={isRobinhoodVault}
         />
       ))}
     </div>

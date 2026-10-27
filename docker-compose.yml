@@ -2,7 +2,7 @@
 
 services:
   l4va-client:
-    container_name: l4va-client
+    container_name: ${CONTAINER_PREFIX:-l4va}-client
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,7 +11,7 @@ services:
         - VITE_VLRM_TOKEN_ID=${VITE_VLRM_TOKEN_ID}
         - VITE_SWAP_VLRM_TOKEN_ID=${VITE_SWAP_VLRM_TOKEN_ID}
     ports:
-      - "127.0.0.1:5173:80"
+      - "127.0.0.1:${CLIENT_HOST_PORT:-5173}:80"
     networks:
       - l4va-network
     restart: unless-stopped
@@ -23,4 +23,5 @@ services:
 
 networks:
   l4va-network:
+    name: ${L4VA_NETWORK_NAME:-l4va-network}
     external: true # References the network created by infrastructure compose

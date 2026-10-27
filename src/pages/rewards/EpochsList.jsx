@@ -1,21 +1,26 @@
 import React from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Calendar, Wallet, ArrowLeft, TrendingUp } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
 
 import { useEpochs } from '@/hooks/useRewardsEpochs';
 import { useWalletHistory } from '@/hooks/useRewardsScore';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { EpochRewardRow, TotalEarnedCard } from '@/components/rewards';
+import { Pagination } from '@/components/shared/Pagination.jsx';
+
+const EPOCHS_PER_PAGE = 20;
 
 export const EpochsList = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
+  const [page, setPage] = React.useState(1);
 
-  const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs();
+  const { data: epochsData, isLoading: isLoadingEpochs } = useEpochs(EPOCHS_PER_PAGE, (page - 1) * EPOCHS_PER_PAGE);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
 
-  // Data is already normalized by backend
+  // Pagination is server-side: backend returns only the current page's epochs plus the total count
   const epochs = epochsData?.epochs || [];
+  const totalPages = Math.ceil((epochsData?.total || 0) / EPOCHS_PER_PAGE);
 
   // Create a map of epoch rewards for quick lookup
   const rewardsByEpoch = React.useMemo(() => {
@@ -32,7 +37,7 @@ export const EpochsList = () => {
   const epochCount = historyData?.epochCount ?? historyData?.history?.length ?? 0;
 
   // Wallet not connected state
-  if (!isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
@@ -40,8 +45,14 @@ export const EpochsList = () => {
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-12">
             <div className="text-center">
               <Wallet className="w-16 h-16 text-steel-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-steel-400">Please connect your wallet to view your epoch rewards</p>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+              </h2>
+              <p className="text-steel-400">
+                {isRobinHood
+                  ? 'Please connect your Robinhood wallet to view your epoch rewards.'
+                  : 'Please connect your wallet to view your epoch rewards'}
+              </p>
             </div>
           </div>
         </div>
@@ -137,6 +148,12 @@ export const EpochsList = () => {
             return <EpochRewardRow key={epoch.id} epoch={epoch} reward={reward} score={reward?.score} />;
           })}
         </div>
+
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} className="justify-center" />
+          </div>
+        )}
 
         {isLoadingHistory && (
           <div className="text-center py-8">

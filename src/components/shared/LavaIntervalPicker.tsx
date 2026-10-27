@@ -73,6 +73,11 @@ export const LavaIntervalPicker = ({
   const days = Array.from({ length: dayCount }, (_, i) => i + minInterval.days);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+  const optionBaseClasses =
+    'w-12 h-12 transition-all duration-200 bg-steel-850 text-steel-300 hover:bg-steel-800 hover:text-white';
+  const optionActiveClasses = 'bg-orange-500 text-steel-950 hover:bg-orange-500 hover:text-steel-950';
+  const optionDisabledClasses =
+    'bg-steel-900 text-steel-600 cursor-not-allowed hover:bg-steel-900 hover:text-steel-600';
   const isValidSelection = (newInterval: { days: number; hours: number; minutes: number }) => {
     const totalMs = intervalToMs(newInterval);
     const minTotalMs = minMs > 0 ? minMs : intervalToMs(minInterval);
@@ -135,17 +140,27 @@ export const LavaIntervalPicker = ({
                   <div className="p-4">
                     <div className="text-sm font-medium mb-2 text-center">Days</div>
                     <div className="grid gap-1 max-h-64 overflow-y-auto w-fit pr-1">
-                      {days.map(day => (
-                        <Button
-                          key={day}
-                          className="w-12 h-12"
-                          size="icon"
-                          variant={interval.days === day ? 'default' : 'ghost'}
-                          onClick={() => handleIntervalChange('days', day.toString())}
-                        >
-                          {day}
-                        </Button>
-                      ))}
+                      {days.map(day => {
+                        // Match the hours/minutes columns: an unselectable value
+                        // reads as disabled rather than silently ignoring the tap.
+                        const isDisabled = !isValidSelection({ ...interval, days: day });
+                        return (
+                          <Button
+                            key={day}
+                            className={cn(
+                              optionBaseClasses,
+                              interval.days === day ? optionActiveClasses : 'text-steel-400',
+                              isDisabled && optionDisabledClasses
+                            )}
+                            size="icon"
+                            variant="ghost"
+                            disabled={isDisabled}
+                            onClick={() => handleIntervalChange('days', day.toString())}
+                          >
+                            {day}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                   <ScrollBar className="sm:hidden" orientation="horizontal" />
@@ -160,9 +175,13 @@ export const LavaIntervalPicker = ({
                         return (
                           <Button
                             key={hour}
-                            className="w-12 h-12"
+                            className={cn(
+                              optionBaseClasses,
+                              interval.hours === hour ? optionActiveClasses : 'text-steel-400',
+                              isDisabled && optionDisabledClasses
+                            )}
                             size="icon"
-                            variant={interval.hours === hour ? 'default' : 'ghost'}
+                            variant="ghost"
                             disabled={isDisabled}
                             onClick={() => handleIntervalChange('hours', hour.toString())}
                           >
@@ -184,9 +203,13 @@ export const LavaIntervalPicker = ({
                         return (
                           <Button
                             key={minute}
-                            className="w-12 h-12"
+                            className={cn(
+                              optionBaseClasses,
+                              interval.minutes === minute ? optionActiveClasses : 'text-steel-400',
+                              isDisabled && optionDisabledClasses
+                            )}
                             size="icon"
-                            variant={interval.minutes === minute ? 'default' : 'ghost'}
+                            variant="ghost"
                             disabled={isDisabled}
                             onClick={() => handleIntervalChange('minutes', minute.toString())}
                           >

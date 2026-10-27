@@ -95,6 +95,10 @@ export class RewardsConfigProvider {
     return '/api/v1/rewards/me/claims/cancel';
   }
 
+  static claimEvm() {
+    return '/api/v1/rewards/me/claims/evm';
+  }
+
   // ============================================================================
   // Vesting Endpoints
   // ============================================================================

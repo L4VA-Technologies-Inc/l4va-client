@@ -55,14 +55,19 @@ const ProgressBubble = ({ value, progress }) => {
   );
 };
 
-const AcquireExpansionProgress = ({ vault, currency }) => {
+const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, currencyLabel }) => {
   const hasMax = !vault.acquireExpansionNoMax && vault.acquireExpansionMaxAda > 0;
   const currentAda = vault.acquireExpansionCurrentAda || 0;
   const currentUsd = vault.acquireExpansionCurrentUsd || 0;
+  const currentEth = vault.acquireExpansionCurrentEth || 0;
   const maxAda = vault.acquireExpansionMaxAda || 0;
   const maxUsd = vault.acquireExpansionMaxUsd || 0;
+  const maxEth = vault.acquireExpansionMaxEth || 0;
 
-  const progress = hasMax ? calculateProgress(currentAda, maxAda) : 0;
+  const isEvm = vault?.chainType?.toLowerCase() === 'robinhood';
+  const progress = hasMax ? (isEvm ? calculateProgress(currentEth, maxEth) : calculateProgress(currentAda, maxAda)) : 0;
+  // A real but tiny raise must not read as 0.
+  const fmtRaised = value => (value > 0 && value < 0.01 ? '<0.01' : formatNum(value));
 
   return (
     <div>
@@ -71,7 +76,8 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
         <>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">
-              Raised: {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+              Raised:{' '}
+              {`${currencySymbol}${fmtRaised(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
             <span className="text-dark-100">{Math.floor(progress)}%</span>
           </div>
@@ -81,14 +87,16 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
               segments={[
                 {
                   progress: Math.min(progress, 100),
-                  className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                  className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                 },
               ]}
             />
           </div>
           <div className="flex justify-between w-full text-xs text-dark-100">
-            <span>min 0 ADA</span>
-            <span>max {currency === 'ada' ? `₳${formatNum(maxAda)}` : `$${formatNum(maxUsd)}`}</span>
+            <span>min 0 {currencyLabel}</span>
+            <span>
+              max {`${currencySymbol}${formatNum(pickByCurrency({ ada: maxAda, usd: maxUsd, eth: maxEth }))}`}
+            </span>
           </div>
         </>
       ) : (
@@ -96,11 +104,11 @@ const AcquireExpansionProgress = ({ vault, currency }) => {
           <div className="flex w-full justify-start gap-1 text-sm text-dark-100 mb-2">
             Total Raised:{' '}
             <span className="text-white font-medium">
-              {currency === 'ada' ? `₳${formatNum(currentAda)}` : `$${formatNum(currentUsd)}`}
+              {`${currencySymbol}${fmtRaised(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
           </div>
           <div className="text-sm text-dark-100 mb-2">
-            No ADA limit - contributions accepted until the current phase expires
+            No {currencyLabel} limit - contributions accepted until the current phase expires
           </div>
         </>
       )}
@@ -133,7 +141,7 @@ const ContributionProgress = ({
                 segments={[
                   {
                     progress: contributionProgress,
-                    className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                    className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                   },
                 ]}
               />
@@ -187,7 +195,7 @@ const ContributionProgress = ({
                             segments={[
                               {
                                 progress: assetProgress,
-                                className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                                className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                               },
                             ]}
                           />
@@ -219,7 +227,7 @@ const ContributionProgress = ({
 
 export const VaultContribution = ({ vault }) => {
   const [showMoreInfo, setShowMoreInfo] = useState(false);
-  const { currency } = useCurrency();
+  const { currencySymbol, currencyLabel, pickByCurrency } = useCurrency();
 
   const isContribution = vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION;
   const isAcquire = vault.vaultStatus === VAULT_STATUSES.ACQUIRE;
@@ -242,8 +250,11 @@ export const VaultContribution = ({ vault }) => {
     vault.requireReservedCostAda,
     vault.liquidityPoolContribution
   );
-  const canMeetLpMinimum = vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
-  const lpMinThresholdMet = canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition;
+  // The 500 ADA LP minimum is Cardano-only: EVM vaults seed the pool from any raise
+  // (EVM_LP_MIN_USD, off by default), so the warning would be wrong there.
+  const isEvmVault = vault?.chainType?.toLowerCase() === 'robinhood';
+  const canMeetLpMinimum = isEvmVault || vault.projectedLpAdaAmount >= vault.lpMinLiquidityAda;
+  const lpMinThresholdMet = isEvmVault || (canMeetLpMinimum && acquireProgress >= lpMinThresholdPosition);
 
   return (
     <div className="space-y-4">
@@ -271,9 +282,13 @@ export const VaultContribution = ({ vault }) => {
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-dark-100">
                   Reserve:{' '}
-                  {currency === 'ada'
-                    ? `₳${formatNum(vault.requireReservedCostAda)}`
-                    : `$${formatNum(vault.requireReservedCostUsd)}`}
+                  {`${currencySymbol}${formatNum(
+                    pickByCurrency({
+                      ada: vault.requireReservedCostAda,
+                      usd: vault.requireReservedCostUsd,
+                      eth: vault.requireReservedCostEth ?? vault.requireReservedCostAda,
+                    })
+                  )}`}
                 </span>
                 <span className="text-dark-100">{Math.floor(acquireProgress)}%</span>
               </div>
@@ -283,7 +298,7 @@ export const VaultContribution = ({ vault }) => {
                   segments={[
                     {
                       progress: Math.min(acquireProgress, 100),
-                      className: 'bg-gradient-to-r from-[#F9731600] to-[#F97316]',
+                      className: 'bg-gradient-to-r from-orange-500/0 to-orange-500',
                     },
                     ...(reserveThresholdMet
                       ? [
@@ -302,34 +317,43 @@ export const VaultContribution = ({ vault }) => {
                     <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded mt-1">
                       <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
                       <span className="text-red-300 text-xs">
-                        LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
-                        below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will fail
+                        LP is required but estimated {currencyLabel} portion of LP (
+                        {formatNum(vault.projectedLpAdaAmount)} {currencyLabel}) is below minimum (
+                        {vault.lpMinLiquidityAda} {currencyLabel}). Vault needs more acquire contributions or will fail
                         and refund users.
                       </span>
                     </div>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-dark-100">Current ADA LP amount:</span>
+                        <span className="text-dark-100">Current {currencyLabel} LP amount:</span>
                         <span className="text-dark-100">
-                          {currency === 'ada'
-                            ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                            : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                          {`${currencySymbol}${formatNum(
+                            pickByCurrency({
+                              ada: vault.projectedLpAdaAmount,
+                              usd: vault.projectedLpUsdAmount,
+                              eth: vault.projectedLpEthAmount,
+                            })
+                          )}`}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
-                        <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                          {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
-                        </span>
-                      </div>
-                      {!lpMinThresholdMet && (
-                        <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
-                          <span className="text-yellow-300 text-xs">
-                            LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
-                            {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
-                          </span>
-                        </div>
+                      {!isEvmVault && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                            <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                              {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                            </span>
+                          </div>
+                          {!lpMinThresholdMet && (
+                            <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                              <span className="text-yellow-300 text-xs">
+                                LP minimum not yet met. Vault will fail to lock if acquire contributions don't reach{' '}
+                                {Math.ceil(lpMinThresholdPosition)}% reserve threshold.
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   )}
@@ -349,9 +373,9 @@ export const VaultContribution = ({ vault }) => {
                         <div className="flex flex-col gap-1 p-2 border border-red-500/30 bg-red-500/5 rounded">
                           <span className="text-red-400 font-medium">Vault will FAIL at lock</span>
                           <span className="text-red-300 text-xs">
-                            LP is required but estimated ADA portion of LP (₳{formatNum(vault.projectedLpAdaAmount)}) is
-                            below minimum (₳{vault.lpMinLiquidityAda}). Vault needs more acquire contributions or will
-                            fail and refund users.
+                            LP is required but estimated {currencyLabel} portion of LP (₳
+                            {formatNum(vault.projectedLpAdaAmount)}) is below minimum (₳{vault.lpMinLiquidityAda}).
+                            Vault needs more acquire contributions or will fail and refund users.
                           </span>
                         </div>
                       ) : (
@@ -361,26 +385,34 @@ export const VaultContribution = ({ vault }) => {
                             <span className="text-white font-medium">{vault.liquidityPoolContribution}%</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-dark-100">Current ADA LP amount:</span>
+                            <span className="text-dark-100">Current {currencyLabel} LP amount:</span>
                             <span className="text-dark-100">
-                              {currency === 'ada'
-                                ? `₳${formatNum(vault.projectedLpAdaAmount)}`
-                                : `$${formatNum(vault.projectedLpUsdAmount)}`}
+                              {`${currencySymbol}${formatNum(
+                                pickByCurrency({
+                                  ada: vault.projectedLpAdaAmount,
+                                  usd: vault.projectedLpUsdAmount,
+                                  eth: vault.projectedLpEthAmount,
+                                })
+                              )}`}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
-                            <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
-                              {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
-                            </span>
-                          </div>
-                          {!lpMinThresholdMet && (
-                            <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
-                              <span className="text-yellow-300 text-xs">
-                                ⚠️ LP minimum not yet met. More acquire contributions needed to reach ₳
-                                {vault.lpMinLiquidityAda} minimum for liquidity pool creation.
-                              </span>
-                            </div>
+                          {!isEvmVault && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-dark-100">LP Minimum (₳{vault.lpMinLiquidityAda}):</span>
+                                <span className={lpMinThresholdMet ? 'text-green-400' : 'text-yellow-400'}>
+                                  {lpMinThresholdMet ? '✓ LP Threshold met' : 'Not yet reached'}
+                                </span>
+                              </div>
+                              {!lpMinThresholdMet && (
+                                <div className="flex flex-col gap-1 p-2 border border-yellow-500/30 bg-yellow-500/5 rounded mt-1">
+                                  <span className="text-yellow-300 text-xs">
+                                    ⚠️ LP minimum not yet met. More acquire contributions needed to reach ₳
+                                    {vault.lpMinLiquidityAda} minimum for liquidity pool creation.
+                                  </span>
+                                </div>
+                              )}
+                            </>
                           )}
                         </>
                       )}
@@ -398,10 +430,14 @@ export const VaultContribution = ({ vault }) => {
           <div className="w-full">
             <div className="text-sm text-dark-100 font-medium">
               Total Acquired Amount:{' '}
-              <span className="text-[#F97316]">
-                {currency === 'ada'
-                  ? `₳${formatNumber(vault.assetsPrices.totalAcquiredAda || 0)}`
-                  : `$${formatNumber(vault.assetsPrices.totalAcquiredUsd || 0)}`}
+              <span className="text-orange-500">
+                {`${currencySymbol}${formatNumber(
+                  pickByCurrency({
+                    ada: vault.assetsPrices.totalAcquiredAda || 0,
+                    usd: vault.assetsPrices.totalAcquiredUsd || 0,
+                    eth: vault.assetsPrices.totalAcquiredEth || 0,
+                  })
+                )}`}
               </span>
             </div>
           </div>
@@ -422,7 +458,12 @@ export const VaultContribution = ({ vault }) => {
             setShowMoreInfo={setShowMoreInfo}
           />
         ) : isAcquireExpansion ? (
-          <AcquireExpansionProgress vault={vault} currency={currency} />
+          <AcquireExpansionProgress
+            vault={vault}
+            currencySymbol={currencySymbol}
+            pickByCurrency={pickByCurrency}
+            currencyLabel={currencyLabel}
+          />
         ) : null}
       </div>
 

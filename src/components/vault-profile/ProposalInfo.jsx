@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useWallet } from '@ada-anvil/weld/react';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
@@ -10,18 +11,32 @@ import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
 import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
 import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
+import { IndexReweightSummary } from './ProposalInfo/IndexReweightSummary';
 import { AssetsList } from './ProposalInfo/AssetsList';
 import { VoteButton } from './ProposalInfo/VoteButton';
+import { VoteStateBanner } from './ProposalInfo/VoteStateBanner';
 import { VoteResultBar } from './ProposalInfo/VoteResultBar';
 import { ProposalEndDate } from './ProposalEndDate';
 import { VaultSkeleton } from './VaultSkeleton';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
-import { ProposalTypeLabels } from '@/utils/types';
-import { useGovernanceProposal, useVoteOnProposal } from '@/services/api/queries.js';
+import { ChainType, ProposalTypeLabels } from '@/utils/types';
+import {
+  useBuildVoteFeePayment,
+  useBuildVoteFeeTransaction,
+  useGovernanceFees,
+  useGovernanceProposal,
+  useVoteOnProposal,
+} from '@/services/api/queries.js';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { getInProgressMessage, getSuccessMessage, getTerminationStatusMessage } from '@/constants/proposalMessages';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
+
+const VOTE_LABELS = { yes: 'Yes', no: 'No', abstain: 'Abstain' };
 
 const ProposalInfoSkeleton = () => (
   <div>
@@ -104,13 +119,16 @@ const ProposalInfoSkeleton = () => (
 );
 
 export const ProposalInfo = ({ proposalId }) => {
+  const { currencyLabel } = useCurrency();
   const { user } = useAuth();
+  const { walletAddress, isWalletConnected } = useRewardsWalletConnection();
   const { openModal } = useModalControls();
   const router = useRouter();
 
   const { data: response, refetch } = useGovernanceProposal(proposalId);
 
   const proposalInfo = response?.data?.proposal;
+  useRefetchWhenProposalStatusMayChange(proposalInfo, refetch);
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
   const proposalDistributionInfo = response?.data?.distributionInfo;
   const proposalDistributionStatus = response?.data?.distributionStatus;
@@ -122,6 +140,7 @@ export const ProposalInfo = ({ proposalId }) => {
   const totalVotes = response?.data?.votes?.length;
   const proposer = response?.data?.proposer;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
+  const [detailPage, setDetailPage] = useState('vote');
 
   const getTerminationProgress = status => {
     const statuses = [
@@ -261,7 +280,7 @@ export const ProposalInfo = ({ proposalId }) => {
         if (proposalDistributionInfo) {
           distributionItems.push({
             label: 'Total Amount',
-            value: `${proposalDistributionInfo.totalAdaAmount?.toLocaleString()} ADA`,
+            value: `${proposalDistributionInfo.totalAdaAmount?.toLocaleString()} ${currencyLabel}`,
           });
           distributionItems.push({
             label: 'Eligible Recipients',
@@ -270,7 +289,7 @@ export const ProposalInfo = ({ proposalId }) => {
           if (proposalDistributionInfo.skippedHolders > 0) {
             distributionItems.push({
               label: 'Skipped Recipients',
-              value: `${proposalDistributionInfo.skippedHolders} (below min ${proposalDistributionInfo.minAdaPerRecipient} ADA)`,
+              value: `${proposalDistributionInfo.skippedHolders} (below min ${proposalDistributionInfo.minAdaPerRecipient} ${currencyLabel})`,
             });
           }
         }
@@ -285,7 +304,7 @@ export const ProposalInfo = ({ proposalId }) => {
             const distributedAda = parseInt(proposalDistributionStatus.totalDistributed) / 1000000;
             distributionItems.push({
               label: 'Distributed',
-              value: `${distributedAda.toLocaleString()} ADA`,
+              value: `${distributedAda.toLocaleString()} ${currencyLabel}`,
             });
           }
         }
@@ -413,7 +432,7 @@ export const ProposalInfo = ({ proposalId }) => {
           // Max ADA / Progress
           if (acquireExpansionConfig.noMax) {
             acquireExpansionItems.push({
-              label: 'ADA Limit',
+              label: `${currencyLabel} Limit`,
               value: 'No limit',
             });
           } else if (acquireExpansionConfig.maxAda) {
@@ -421,7 +440,7 @@ export const ProposalInfo = ({ proposalId }) => {
             const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
             const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
             acquireExpansionItems.push({
-              label: 'ADA Limit',
+              label: `${currencyLabel} Limit`,
               value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
             });
           }
@@ -446,6 +465,13 @@ export const ProposalInfo = ({ proposalId }) => {
         return acquireExpansionItems;
       }
 
+      case 'index_reweight': {
+        const reweight = proposalInfo?.metadata?.indexReweight;
+        return reweight
+          ? [executionOptions, { label: 'New weights', value: reweight, type: 'index_reweight' }]
+          : [executionOptions];
+      }
+
       default:
         return [];
     }
@@ -453,8 +479,64 @@ export const ProposalInfo = ({ proposalId }) => {
 
   const voteOnProposal = useVoteOnProposal(proposalInfo?.vaultId);
 
+  const isEvmVault = proposalInfo?.vault?.chainType === ChainType.ROBINHOOD;
+  const { data: governanceFees } = useGovernanceFees();
+  const { payFee: payEvmFee } = useEvmGovernanceFee();
+  const buildVoteFeePayment = useBuildVoteFeePayment();
+  const buildVoteFeeTransaction = useBuildVoteFeeTransaction();
+  const wallet = useWallet('handler');
+
+  // Wei string (EVM) or lovelace number (Cardano); 0 by default, which keeps
+  // voting free and this whole path inert.
+  const votingFee = BigInt((isEvmVault ? governanceFees?.data?.evm?.votingFee : governanceFees?.data?.votingFee) || 0);
+
+  /**
+   * Pay the voting fee, returning the proof fields to merge into the vote
+   * request. Returns an empty object when no fee applies.
+   *
+   * Throws if payment fails, so the caller never records an unpaid vote.
+   */
+  const payVotingFee = async proposalId => {
+    if (votingFee <= 0n) return {};
+
+    if (isEvmVault) {
+      const { data } = await buildVoteFeePayment.mutateAsync({ proposalId });
+      const payment = data?.payment;
+      if (!payment) return {};
+      const feeTxHash = await payEvmFee(payment, walletAddress || user?.address);
+      return { feeTxHash };
+    }
+
+    if (!wallet.handler) {
+      throw new Error('Cardano wallet is required to pay the voting fee');
+    }
+    const { data } = await buildVoteFeeTransaction.mutateAsync({
+      proposalId,
+      data: { userAddress: walletAddress || user?.address },
+    });
+    const presignedTx = data?.presignedTx;
+    if (!presignedTx) return {};
+
+    const signature = await wallet.handler.signTx(presignedTx, true);
+    if (!signature) {
+      throw new Error('Voting fee signing was cancelled');
+    }
+    return { feeTransaction: presignedTx, feeSignatures: [signature] };
+  };
+
+  // `canVote: false` collapses three very different situations. Separating them
+  // is what lets the UI say why an option is unavailable instead of going dead.
+  const voteState = useMemo(() => {
+    if (selectedVote) return 'voted';
+    if (canVote) return 'open';
+    if (!user || !isWalletConnected) return 'signed-out';
+    return 'no-power';
+  }, [selectedVote, canVote, user, isWalletConnected]);
+
   const handleVote = async (proposalId, voteType) => {
-    if (!user) {
+    const activeVoterAddress = walletAddress || user?.address;
+
+    if (!user || !isWalletConnected || !activeVoterAddress) {
       openModal('LoginModal');
       return;
     }
@@ -462,24 +544,28 @@ export const ProposalInfo = ({ proposalId }) => {
     openModal('VoteConfirmModal', {
       voteType,
       proposalTitle: proposalInfo?.title,
+      votingFee,
+      isEvmVault,
+      // Errors deliberately propagate: VoteConfirmModal keeps itself open and
+      // renders the failure next to the action, instead of closing into a
+      // detached toast while a wallet prompt is still on screen.
       onConfirm: async () => {
-        try {
-          await voteOnProposal.mutateAsync({
-            proposalId,
-            voteData: {
-              vote: voteType.toLowerCase(),
-              voterAddress: user.address,
-            },
-          });
-          setCanVote(false);
-          setSelectedVote(voteType);
-          toast.success('Your vote has been recorded successfully');
-          await refetch();
-        } catch (error) {
-          console.error('Error voting on proposal:', error);
-          const errorMessage = error.response?.data?.message || error.message || 'Failed to submit vote';
-          toast.error(errorMessage);
-        }
+        // Pay the voting fee first, when one is configured. Zero fee — the
+        // default — skips this entirely and votes exactly as before.
+        const feeProof = await payVotingFee(proposalId);
+
+        await voteOnProposal.mutateAsync({
+          proposalId,
+          voteData: {
+            vote: voteType.toLowerCase(),
+            voterAddress: activeVoterAddress,
+            ...feeProof,
+          },
+        });
+        setCanVote(false);
+        setSelectedVote(voteType);
+        toast.success('Your vote has been recorded successfully');
+        await refetch();
       },
     });
   };
@@ -532,15 +618,48 @@ export const ProposalInfo = ({ proposalId }) => {
     }
   }, [response?.data?.canVote, response?.data?.selectedVote]);
 
+  useEffect(() => {
+    const status = proposalInfo?.status;
+    if (!status) return;
+    const openForVoting = status === 'active' && !response?.data?.selectedVote;
+    setDetailPage(openForVoting ? 'vote' : 'results');
+  }, [proposalId, proposalInfo?.status, response?.data?.selectedVote]);
+
   if (!proposalInfo) {
     return <ProposalInfoSkeleton />;
   }
 
+  const isActive = proposalInfo.status === 'active';
+  const showVotePanel = !isActive || detailPage === 'vote';
+  const showResultsPanel = !isActive || detailPage === 'results';
+
   return (
     <div>
+      {isActive && (
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-2xl border border-steel-750 bg-steel-900 p-1">
+          <button
+            type="button"
+            onClick={() => setDetailPage('vote')}
+            className={`rounded-xl py-3 text-base font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100 ${
+              detailPage === 'vote' ? 'bg-orange-gradient text-slate-950' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Vote
+          </button>
+          <button
+            type="button"
+            onClick={() => setDetailPage('results')}
+            className={`rounded-xl py-3 text-base font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100 ${
+              detailPage === 'results' ? 'bg-orange-gradient text-slate-950' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Results
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-8">
-          <div className="space-y-2">
+        <div className="col-span-1 md:col-span-2 md:row-span-3 bg-steel-950 border border-steel-750 rounded-lg p-6 flex flex-col gap-8">
+          <div className="order-1 space-y-2">
             <div className="text-dark-100 text-md mb-3">
               <ProposalEndDate
                 startDate={proposalInfo?.startDate}
@@ -550,7 +669,11 @@ export const ProposalInfo = ({ proposalId }) => {
             </div>
           </div>
 
-          <div className="flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col">
+          <div
+            className={`order-3 flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col ${
+              showResultsPanel ? '' : 'hidden'
+            }`}
+          >
             <div className="w-full space-y-2">
               <div className="flex justify-between">
                 <h3 className="text-gray-400">Proposal title</h3>
@@ -578,11 +701,25 @@ export const ProposalInfo = ({ proposalId }) => {
                       }
 
                       if (item.type === 'marketplace_actions_list') {
-                        return <MarketplaceActionsList key={index} actions={item.value} type="marketplace" />;
+                        return (
+                          <MarketplaceActionsList
+                            key={index}
+                            actions={item.value}
+                            type="marketplace"
+                            chainType={proposalInfo?.vault?.chainType}
+                          />
+                        );
                       }
 
                       if (item.type === 'buy_sell_list') {
-                        return <MarketplaceActionsList key={index} actions={item.value} type="buy_sell" />;
+                        return (
+                          <MarketplaceActionsList
+                            key={index}
+                            actions={item.value}
+                            type="buy_sell"
+                            chainType={proposalInfo?.vault?.chainType}
+                          />
+                        );
                       }
 
                       if (item.type === 'distribution_assets_list') {
@@ -647,6 +784,10 @@ export const ProposalInfo = ({ proposalId }) => {
                         );
                       }
 
+                      if (item.type === 'index_reweight') {
+                        return <IndexReweightSummary key={index} reweight={item.value} label={item.label} />;
+                      }
+
                       if (item.type === 'asset_whitelist_update_list') {
                         return <AssetWhitelistUpdateList key={index} assets={item.value} label={item.label} />;
                       }
@@ -657,7 +798,7 @@ export const ProposalInfo = ({ proposalId }) => {
               </div>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className={`order-2 space-y-4 ${showVotePanel ? '' : 'hidden'}`}>
             {proposalInfo?.executionError ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
                 <div className="flex items-center space-x-2">
@@ -677,42 +818,62 @@ export const ProposalInfo = ({ proposalId }) => {
               </div>
             ) : proposalInfo.status === 'active' ? (
               <>
-                <VoteButton
-                  voteType="yes"
-                  icon={CheckCircle}
-                  label="Yes, pass this Proposal"
-                  canVote={canVote}
-                  isSelected={selectedVote === 'yes'}
-                  onClick={() => setSelectedVote('yes')}
-                />
-                <VoteButton
-                  voteType="no"
-                  icon={XCircle}
-                  label="No, do not pass this Proposal"
-                  canVote={canVote}
-                  isSelected={selectedVote === 'no'}
-                  onClick={() => setSelectedVote('no')}
-                />
-                {proposalInfo?.abstain && (
-                  <VoteButton
-                    voteType="abstain"
-                    icon={Ellipsis}
-                    label="Do nothing"
-                    canVote={canVote}
-                    isSelected={selectedVote === 'abstain'}
-                    onClick={() => setSelectedVote('abstain')}
-                  />
-                )}
-
-                <div className="flex justify-center">
-                  <PrimaryButton
-                    className="w-60 rounded-lg flex items-center px-3 py-2 gap-2 cursor-pointer"
-                    onClick={() => (canVote && selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
-                    disabled={!canVote || !selectedVote}
-                  >
-                    <span className="text-white-500 text-2md flex items-center">Vote</span>
-                  </PrimaryButton>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-semibold tracking-tight text-white">{proposalInfo?.title}</h2>
+                  <p className="text-sm text-gray-400">
+                    Pick an option, then confirm below. You can vote once, and only while the window is open.
+                  </p>
                 </div>
+
+                <VoteStateBanner
+                  state={voteState}
+                  selectedVote={selectedVote}
+                  tokenTicker={proposalInfo?.vault?.vault_token_ticker}
+                  snapshotDate={proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : null}
+                  onConnect={() => openModal('LoginModal')}
+                />
+
+                <div aria-label="Vote options" className="space-y-4" role="radiogroup">
+                  <VoteButton
+                    voteType="yes"
+                    icon={CheckCircle}
+                    label="Yes, pass this Proposal"
+                    canVote={canVote}
+                    isSelected={selectedVote === 'yes'}
+                    onClick={() => setSelectedVote('yes')}
+                  />
+                  <VoteButton
+                    voteType="no"
+                    icon={XCircle}
+                    label="No, do not pass this Proposal"
+                    canVote={canVote}
+                    isSelected={selectedVote === 'no'}
+                    onClick={() => setSelectedVote('no')}
+                  />
+                  {proposalInfo?.abstain && (
+                    <VoteButton
+                      voteType="abstain"
+                      icon={Ellipsis}
+                      label="Do nothing"
+                      canVote={canVote}
+                      isSelected={selectedVote === 'abstain'}
+                      onClick={() => setSelectedVote('abstain')}
+                    />
+                  )}
+                </div>
+
+                {canVote && (
+                  <div className="flex flex-col items-center gap-2">
+                    <PrimaryButton
+                      className="w-full sm:w-60"
+                      disabled={!selectedVote}
+                      onClick={() => (selectedVote ? handleVote(proposalInfo.id, selectedVote) : null)}
+                    >
+                      {selectedVote ? `Vote ${VOTE_LABELS[selectedVote] ?? selectedVote}` : 'Vote'}
+                    </PrimaryButton>
+                    {!selectedVote && <span className="text-xs text-gray-500">Select an option above to continue</span>}
+                  </div>
+                )}
 
                 <div className="text-center text-sm text-gray-400 italic">
                   * Voting power was calculated on{' '}
@@ -749,8 +910,8 @@ export const ProposalInfo = ({ proposalId }) => {
                     {proposalInfo.vault.terminationMetadata.status === 'claims_created' ||
                     proposalInfo.vault.terminationMetadata.status === 'claims_processing' ? (
                       <div className="text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 rounded p-3">
-                        VT holders can now claim their share of assets and ADA. Check the Claims tab to process your
-                        claim.
+                        VT holders can now claim their share of assets and {currencyLabel}. Check the Claims tab to
+                        process your claim.
                       </div>
                     ) : (
                       <div className="text-sm text-gray-400">
@@ -824,7 +985,7 @@ export const ProposalInfo = ({ proposalId }) => {
           </div>
         </div>
 
-        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6">
+        <div className={`bg-steel-950 border border-steel-750 rounded-lg p-6 ${showResultsPanel ? '' : 'hidden'}`}>
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <h3 className="text-1xl font-bold">Votes</h3>
@@ -850,7 +1011,11 @@ export const ProposalInfo = ({ proposalId }) => {
             )}
           </div>
         </div>
-        <div className="bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6">
+        <div
+          className={`bg-steel-950 border border-steel-750 rounded-lg p-6 space-y-6 ${
+            showResultsPanel ? '' : 'hidden'
+          }`}
+        >
           <div className="space-y-3">
             <h3 className="text-1xl font-bold">Information</h3>
             {informationItems.map((item, index) => (

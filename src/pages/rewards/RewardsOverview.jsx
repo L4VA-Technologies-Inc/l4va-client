@@ -1,5 +1,4 @@
 import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -28,10 +27,11 @@ import { AlignmentBonusDisplay } from '@/components/rewards/AlignmentBonusDispla
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   // Fetch all rewards data
@@ -103,6 +103,7 @@ export const RewardsOverview = () => {
 
   // Claiming enabled flag — defaults to true so the button shows while epoch data is loading
   const claimsEnabled = currentEpochData?.claimsEnabled ?? true;
+  const canClaim = claimsEnabled;
 
   // Get current epoch estimate
   const currentEpochEstimate = estimateData?.estimatedReward || 0;
@@ -111,7 +112,7 @@ export const RewardsOverview = () => {
   const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;
 
   // Wallet not connected state
-  if (!isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
@@ -119,8 +120,14 @@ export const RewardsOverview = () => {
           <Card className="p-12">
             <div className="text-center">
               <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-gray-400">Please connect your wallet to view your rewards</p>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+              </h2>
+              <p className="text-gray-400">
+                {isRobinHood
+                  ? 'Please connect your Robinhood wallet to view your rewards.'
+                  : 'Please connect your wallet to view your rewards'}
+              </p>
             </div>
           </Card>
         </div>
@@ -137,7 +144,7 @@ export const RewardsOverview = () => {
             <h1 className="text-3xl font-bold text-white">Rewards Dashboard</h1>
             <button
               onClick={() => setIsInfoModalOpen(true)}
-              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-colors"
+              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 transition-colors"
               aria-label="How rewards work"
             >
               <Info className="w-5 h-5" />
@@ -170,7 +177,7 @@ export const RewardsOverview = () => {
                     {formatCompactNumber(claimableAmount)} $L4VA
                   </p>
                 </div>
-                {claimsEnabled ? (
+                {canClaim ? (
                   <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
                 ) : (
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
@@ -184,7 +191,7 @@ export const RewardsOverview = () => {
         </div>
 
         {/* Alignment Bonuses */}
-        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} />
+        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} isRobinHood={isRobinHood} />
 
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}

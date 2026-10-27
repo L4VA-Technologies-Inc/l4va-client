@@ -49,8 +49,8 @@ export const Pagination = ({
     'flex items-center justify-center w-10 h-10 text-sm font-medium transition-all duration-200 rounded-lg border';
   const activeClasses = 'bg-orange-500 text-white border-orange-500 shadow-lg';
   const inactiveClasses =
-    'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700 hover:text-white hover:border-gray-600';
-  const disabledClasses = 'bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed';
+    'bg-steel-850 text-steel-400 border-steel-750 hover:bg-steel-800 hover:text-white hover:border-steel-600';
+  const disabledClasses = 'bg-steel-900 text-steel-600 border-steel-850 cursor-not-allowed';
 
   return (
     <div className={clsx('flex items-center justify-center gap-2', className)}>
@@ -73,7 +73,7 @@ export const Pagination = ({
               >
                 1
               </button>
-              {showFirstEllipsis && <span className="text-gray-500 px-2">...</span>}
+              {showFirstEllipsis && <span className="text-steel-400 px-2">...</span>}
             </>
           )}
 
@@ -89,7 +89,7 @@ export const Pagination = ({
 
           {showLastPage && (
             <>
-              {showLastEllipsis && <span className="text-gray-500 px-2">...</span>}
+              {showLastEllipsis && <span className="text-steel-400 px-2">...</span>}
               <button
                 onClick={() => handlePageClick(totalPages)}
                 className={clsx(buttonBaseClasses, currentPage === totalPages ? activeClasses : inactiveClasses)}

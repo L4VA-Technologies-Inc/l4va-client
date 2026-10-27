@@ -16,8 +16,8 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getStatistics() {
-    const response = await axiosInstance.get(VaultsConfigProvider.getStatistics());
+  static async getStatistics(params = {}) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getStatistics(), { params });
     return response;
   }
 
@@ -127,5 +127,25 @@ export class VaultsApiProvider {
   static async editUpcomingVaultSettings(vaultId, data) {
     const response = await axiosInstance.patch(VaultsConfigProvider.editUpcomingVaultSettings(vaultId), data);
     return response;
+  }
+
+  static async getIndexSupportedAssets() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexSupportedAssets());
+    return response.data;
+  }
+
+  static async getIndexOverview(vaultId) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexOverview(vaultId));
+    return response.data;
+  }
+
+  static async getVaultLp(vaultId) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getVaultLp(vaultId));
+    return response.data;
+  }
+
+  static async previewIndexReweight(vaultId, basket) {
+    const response = await axiosInstance.post(VaultsConfigProvider.previewIndexReweight(vaultId), basket);
+    return response.data;
   }
 }

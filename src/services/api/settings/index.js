@@ -6,4 +6,19 @@ export class SettingsApiProvider {
     const response = await axiosInstance.get(SettingsConfigProvider.getVlrmFeeSettings());
     return response;
   }
+
+  static async getNftFlagsSettings() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getNftFlagsSettings());
+    return response;
+  }
+
+  static async getVaultCreationFlags() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getVaultCreationFlags());
+    return response;
+  }
+
+  static async getNativePrices() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getNativePrices());
+    return response;
+  }
 }

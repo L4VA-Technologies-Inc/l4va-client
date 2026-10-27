@@ -9,6 +9,7 @@ import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.j
 import { useCurrency } from '@/hooks/useCurrency';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
+const ETH_IMAGE = '/assets/icons/eth.svg';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -24,7 +25,8 @@ const StatBadge = ({ icon: Icon, label, value }) => (
 
 export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
-  const { currencySymbol, isAda, currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
+  const isEth = vault?.chainType === 'robinhood';
   const limit = 10;
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -71,6 +73,12 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
     setExpandedAsset(null);
   };
 
+  const selectedTotalAcquired = pickByCurrency({
+    ada: data?.data?.totalAcquired ?? 0,
+    usd: data?.data?.totalAcquiredUsd ?? 0,
+    eth: data?.data?.totalAcquiredEth ?? data?.data?.totalAcquired ?? 0,
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-steel-800 backdrop-blur-md shadow-lg shadow-black/10">
@@ -83,7 +91,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
             <div className="flex items-baseline gap-1 text-white">
               <span className="text-3xl md:text-2xl font-bold tracking-tight">
                 {currencySymbol}
-                {formatLargeNumber(isAda ? data?.data?.totalAcquired || 0 : data?.data?.totalAcquiredUsd || 0)}
+                {formatLargeNumber(selectedTotalAcquired)}
               </span>
             </div>
           </div>
@@ -96,13 +104,22 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               value={
                 vault.vaultStatus === 'locked'
                   ? (() => {
-                      const val = isAda ? data?.data?.totalAdaLiquidityAda : data?.data?.totalAdaLiquidityUsd;
-                      return val != null ? (isAda ? `₳${formatNum(2 * val)}` : `$${formatNum(2 * val)}`) : 'N/A';
+                      const val = pickByCurrency({
+                        ada: data?.data?.totalAdaLiquidityAda,
+                        usd: data?.data?.totalAdaLiquidityUsd,
+                        eth: data?.data?.totalAdaLiquidityEth,
+                      });
+                      return val != null ? `${currencySymbol}${formatNum(2 * val)}` : 'N/A';
                     })()
                   : vault.projectedLpAdaAmount || vault.projectedLpUsdAmount
-                    ? currency === 'ada'
-                      ? `₳${formatNum(2 * vault.projectedLpAdaAmount)}`
-                      : `$${formatNum(2 * vault.projectedLpUsdAmount)}`
+                    ? `${currencySymbol}${formatNum(
+                        2 *
+                          pickByCurrency({
+                            ada: vault.projectedLpAdaAmount,
+                            usd: vault.projectedLpUsdAmount,
+                            eth: vault.projectedLpEthAmount,
+                          })
+                      )}`
                     : 'N/A'
               }
             />
@@ -162,7 +179,6 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               <tr className="text-dark-100 text-sm border-b border-steel-750">
                 <th className="px-4 py-3 text-left">Image</th>
                 <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Type</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Quantity</th>
                 <th className="px-4 py-3"></th>
@@ -181,14 +197,13 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                       <img
                         alt={asset.name || 'NFT'}
                         className="w-12 h-12 rounded-lg object-cover"
-                        src={asset.imageUrl || FALLBACK_IMAGE}
+                        src={asset.imageUrl || (isEth ? ETH_IMAGE : FALLBACK_IMAGE)}
                         onError={e => {
-                          e.target.src = FALLBACK_IMAGE;
+                          e.target.src = isEth ? ETH_IMAGE : FALLBACK_IMAGE;
                         }}
                       />
                     </td>
-                    <td className="px-4 py-3 font-medium">ADA</td>
-                    <td className="px-4 py-3 capitalize">{asset.type}</td>
+                    <td className="px-4 py-3 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
                     <td className="px-4 py-3 capitalize">{asset.status}</td>
                     <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
                     <td className="px-4 py-3 text-center">
@@ -206,40 +221,44 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                   </tr>
                   {expandedAsset === index && (
                     <tr className="bg-steel-750">
-                      <td colSpan="6" className="px-4 py-2">
+                      <td colSpan="5" className="px-4 py-2">
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
-                          <div>
-                            <p className="font-medium">Policy ID:</p>
-                            <div className="flex items-center gap-2">
-                              <p className="break-all">{substringAddress(asset.policyId)}</p>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(asset.policyId);
-                                  toast.success('Policy ID copied to clipboard');
-                                }}
-                                className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
+                          {!isEth && (
+                            <div>
+                              <p className="font-medium">Policy ID:</p>
+                              <div className="flex items-center gap-2">
+                                <p className="break-all">{substringAddress(asset.policyId)}</p>
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(asset.policyId);
+                                    toast.success('Policy ID copied to clipboard');
+                                  }}
+                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <div>
-                            <p className="font-medium">Asset ID:</p>
-                            <div className="flex items-center gap-2">
-                              <p className="break-all">{substringAddress(asset.assetId)}</p>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(asset.assetId);
-                                  toast.success('Asset ID copied to clipboard');
-                                }}
-                                className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                              >
-                                <Copy className="w-4 h-4" />
-                              </button>
+                          )}
+                          {!isEth && (
+                            <div>
+                              <p className="font-medium">Asset ID:</p>
+                              <div className="flex items-center gap-2">
+                                <p className="break-all">{substringAddress(asset.assetId)}</p>
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(asset.assetId);
+                                    toast.success('Asset ID copied to clipboard');
+                                  }}
+                                  className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div>
                             <p className="font-medium">Added At:</p>
                             <p>{new Date(asset.addedAt).toLocaleDateString()}</p>

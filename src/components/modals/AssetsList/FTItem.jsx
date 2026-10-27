@@ -1,5 +1,5 @@
 import { LavaSteelInput } from '@/components/shared/LavaInput';
-import { LazyImage } from '@/components/shared/LazyImage';
+import { TokenImage } from '@/components/shared/TokenImage';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import {
   formatTokenQuantity,
@@ -7,19 +7,18 @@ import {
   formatPolicyId,
   getMaxDecimalTokenAmount,
 } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { getPolicyUrl } from '@/utils/explorer.utils';
 
-const getPolicyExplorerUrl = policyId =>
-  IS_PREPROD ? `https://preprod.cardanoscan.io/tokenPolicy/${policyId}` : `https://pool.pm/policy/${policyId}`;
-
-const PolicyIdRow = ({ policyId }) => {
+const PolicyIdRow = ({ policyId, chainType }) => {
   if (!policyId) return null;
 
   return (
     <div className="flex items-center gap-1.5 min-w-0 border-t border-steel-750/50 pt-2.5 mt-1 ml-10 sm:ml-11">
-      <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">Policy</span>
+      <span className="text-[10px] uppercase tracking-wider text-dark-100/70 shrink-0">
+        {chainType === 'robinhood' ? 'Contract' : 'Policy'}
+      </span>
       <a
-        href={getPolicyExplorerUrl(policyId)}
+        href={getPolicyUrl(policyId, chainType)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={e => e.stopPropagation()}
@@ -32,29 +31,32 @@ const PolicyIdRow = ({ policyId }) => {
   );
 };
 
-export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
+export const FTItem = ({ ft, amount, isDisabled, onAmountChange, chainType }) => {
   const decimals = ft.metadata?.decimals ?? 6;
   const displayName = ft?.ticker || ft?.displayName || ft?.name;
-  const availableDisplay = formatTokenQuantity(ft.quantity, decimals, decimals);
-  const availableExact = formatTokenQuantityExact(ft.quantity, decimals);
+  // EVM payloads include decimal-adjusted `quantity` plus base-unit `rawQuantity`.
+  // Formatting and max calculations operate on base units, so prefer `rawQuantity`.
+  const availableRawQuantity = ft.rawQuantity ?? ft.quantity;
+  const availableDisplay = formatTokenQuantity(availableRawQuantity, decimals, decimals);
+  const availableExact = formatTokenQuantityExact(availableRawQuantity, decimals);
 
   const handleMax = e => {
     e.stopPropagation();
     if (isDisabled) return;
-    onAmountChange(ft, getMaxDecimalTokenAmount(ft.quantity, decimals));
+    onAmountChange(ft, getMaxDecimalTokenAmount(availableRawQuantity, decimals));
   };
 
   return (
     <div className={isDisabled ? 'opacity-50' : ''}>
       <div className="rounded-md bg-steel-800 px-3 py-2.5 space-y-0">
         <div className="flex items-center gap-3 min-w-0 mb-2">
-          <LazyImage
-            src={ft.src}
+          <TokenImage
+            asset={ft}
             alt={displayName}
+            chainType={ft.chainType || chainType}
             className="rounded-full shrink-0"
             width={32}
             height={32}
-            fallbackSrc="/assets/icons/ada.svg"
           />
           <div className="flex flex-col flex-1 min-w-0 gap-0.5">
             <span className="font-medium text-sm sm:text-base truncate">{displayName}</span>
@@ -85,7 +87,7 @@ export const FTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
             </button>
           </div>
         </div>
-        <PolicyIdRow policyId={ft.metadata?.policyId} />
+        <PolicyIdRow policyId={ft.metadata?.policyId} chainType={ft.chainType || chainType} />
       </div>
     </div>
   );

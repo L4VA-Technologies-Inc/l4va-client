@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
+import { formatEther } from 'viem';
 import toast from 'react-hot-toast';
 
 import { ModalWrapper } from '@/components/shared/ModalWrapper.jsx';
@@ -7,22 +9,52 @@ import PrimaryButton from '@/components/shared/PrimaryButton.tsx';
 import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
 import MetricCard from '@/components/shared/MetricCard.jsx';
 import { useTransaction } from '@/hooks/useTransaction.js';
+import { useEvmContributeTransaction } from '@/hooks/useEvmContributeTransaction.js';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
-import { useVaultAssets } from '@/services/api/queries.js';
+import { useVaultAssets, useNftFlagsSettings } from '@/services/api/queries.js';
 import { useInfiniteWalletAssets } from '@/hooks/useInfiniteWalletAssets.ts';
 import { AssetsList } from '@/components/modals/AssetsList/AssetsList.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-import { getDecimalAdjustedQuantity, getRawQuantity } from '@/utils/core.utils';
 import { estimateContributionTransactionCost } from '@/utils/contributionTransactionCost.js';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
-// Maximum safe quantity for raw blockchain quantities
-const MAX_SAFE_QUANTITY = Number.MAX_SAFE_INTEGER; // 9,007,199,254,740,991
+const ESTIMATED_VALUE_MAX_DECIMALS = 6;
+const ESTIMATED_VALUE_MIN_THRESHOLD = 10 ** -ESTIMATED_VALUE_MAX_DECIMALS;
+
+const toRawQuantityString = (decimalQuantity, decimals = 6) => {
+  if (decimalQuantity === null || decimalQuantity === undefined || decimalQuantity === '') return '0';
+
+  const safeDecimals = Math.max(0, Math.min(Number(decimals) || 0, 20));
+  const normalized = String(decimalQuantity).trim();
+
+  if (!/^\d+(\.\d+)?$/.test(normalized)) return '0';
+
+  const [integerPart = '0', fractionalPart = ''] = normalized.split('.');
+  const paddedFraction = safeDecimals ? fractionalPart.padEnd(safeDecimals, '0').substring(0, safeDecimals) : '';
+  const rawString = `${integerPart}${paddedFraction}`.replace(/^0+(?=\d)/, '');
+
+  return (rawString || '0').toString();
+};
+
+const rawQuantityToDisplayAmount = (rawQuantity, decimals = 6, maxDisplayDecimals = 8) => {
+  const safeDecimals = Math.max(0, Math.min(Number(decimals) || 0, 20));
+  const displayDecimals = Math.min(safeDecimals, maxDisplayDecimals);
+  const raw = BigInt(String(rawQuantity ?? 0));
+
+  if (safeDecimals === 0) return raw.toString();
+
+  const divisor = 10n ** BigInt(safeDecimals);
+  const integerPart = raw / divisor;
+  const fractionFull = (raw % divisor).toString().padStart(safeDecimals, '0');
+  const fractionDisplay = fractionFull.substring(0, displayDecimals);
+
+  return displayDecimals > 0 ? `${integerPart.toString()}.${fractionDisplay}` : integerPart.toString();
+};
 
 export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
-  const { currencySymbol, isAda } = useCurrency();
+  const { currencySymbol, currencyLabel, pickByCurrency } = useCurrency();
   const { name, recipientAddress, assetsWhitelist } = vault;
   const [selectedNFTs, setSelectedNFTs] = useState([]);
   const [activeTab, setActiveTab] = useState('NFT');
@@ -42,7 +74,20 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     'isUpdatingUtxos',
     'changeAddressBech32'
   );
-  const { sendTransaction, status, error } = useTransaction();
+  // Wallet address is chain-specific: Cardano comes from the weld wallet
+  // (bech32), Robinhood/EVM comes from the wagmi wallet (0x). The backend
+  // resolves the holdings per `chain`, so we just forward the matching address.
+  const { address: evmAddress } = useAccount();
+  const chain = vault?.chainType || 'cardano';
+  const isEvmChain = chain === 'robinhood';
+  const walletAddress = isEvmChain ? evmAddress : wallet?.changeAddressBech32;
+  const { data: nftFlagsData } = useNftFlagsSettings();
+  // Defaults to enabled until the flag loads, matching the backend's default-true kill switch.
+  const nftAssetsEnabled = nftFlagsData?.data?.evm_nft_assets_enabled ?? true;
+  const nftContributionAllowed = !isEvmChain || nftAssetsEnabled;
+  const cardanoTransaction = useTransaction();
+  const evmTransaction = useEvmContributeTransaction();
+  const { sendTransaction, status, error } = isEvmChain ? evmTransaction : cardanoTransaction;
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
 
   const whitelistedPolicies = useMemo(() => {
@@ -72,11 +117,12 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     loadMoreAssets,
     refresh,
   } = useInfiniteWalletAssets({
-    walletAddress: wallet?.changeAddressBech32,
+    walletAddress,
     whitelistedPolicies,
     activeTab,
     search: searchQuery.trim() || '',
     vaultId: vault?.id, // Pass vault ID for custom pricing
+    chain, // Chain type so the backend resolves the correct wallet holdings
   });
 
   // Calculate estimated value
@@ -90,15 +136,32 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         // asset.priceAda is per decimal-adjusted unit
         // So we can directly multiply: decimalAmount * pricePerDecimalUnit
         const selectedDecimalQty = Number(asset.amount) || 0;
-        const pricePerDecimalUnit = isAda ? asset.priceAda : asset.priceUsd;
+        const pricePerDecimalUnit = pickByCurrency({ ada: asset.priceAda, usd: asset.priceUsd, eth: asset.priceEth });
         total += selectedDecimalQty * pricePerDecimalUnit;
       } else {
         // For NFTs, use full value
-        total += isAda ? asset.valueAda : asset.valueUsd;
+        total += pickByCurrency({ ada: asset.valueAda, usd: asset.valueUsd, eth: asset.valueEth });
       }
     });
     return total;
-  }, [selectedNFTs, isAda]);
+  }, [selectedNFTs, pickByCurrency]);
+
+  // Same sum always expressed in ADA - VT math below is denominated in ADA regardless of the
+  // display currency, and the ADA<->display rate is derived from this pair (no separate rate field).
+  const estimatedValueAda = useMemo(() => {
+    let total = 0;
+    selectedNFTs.forEach(asset => {
+      if (asset.isFungibleToken) {
+        total += (Number(asset.amount) || 0) * asset.priceAda;
+      } else {
+        total += asset.valueAda;
+      }
+    });
+    return total;
+  }, [selectedNFTs]);
+
+  // Units of the active display currency per 1 ADA (1 when the display currency is ADA).
+  const displayPerAda = estimatedValueAda > 0 ? estimatedValue / estimatedValueAda : 1;
 
   // Vault Allocation Formula: (1 - tokens for acq %) × (1 - ((LP % Contribution)/2))
   const tokensForAcqPercent = vault.tokensForAcquires / 100;
@@ -112,7 +175,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   const expansionVTAmount = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets) return 0;
 
-    const assetValueAda = isAda ? estimatedValue : estimatedValue / (vault.adaPrice || 1);
+    const assetValueAda = estimatedValueAda;
     const decimals = vault.ftTokenDecimals ?? 6;
     const decimalMultiplier = Math.pow(10, decimals);
 
@@ -136,7 +199,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       if (!currentVtPrice || currentVtPrice === 0) return 0;
       return (assetValueAda / currentVtPrice) * decimalMultiplier;
     }
-  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, isAda, estimatedValue, vault]);
+  }, [isExpansionMode, hasSelectedAssets, selectedNFTs, estimatedValueAda, vault]);
 
   const expansionVTValue = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets) return 0;
@@ -144,10 +207,14 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     const decimals = vault.ftTokenDecimals ?? 6;
     const decimalMultiplier = Math.pow(10, decimals);
     const vtCount = expansionVTAmount / decimalMultiplier;
-    const vtPriceInCurrency = isAda ? vault.vtPrice : vault.vtPrice * (vault.adaPrice || 1);
+    const vtPriceInCurrency = pickByCurrency({
+      ada: vault.vtPrice,
+      usd: vault.vtPrice * (vault.adaPrice || 1),
+      eth: vault.vtPrice * displayPerAda,
+    });
 
     return vtCount * vtPriceInCurrency;
-  }, [isExpansionMode, hasSelectedAssets, expansionVTAmount, isAda, vault]);
+  }, [isExpansionMode, hasSelectedAssets, expansionVTAmount, pickByCurrency, displayPerAda, vault]);
 
   const expansionValueDifference = useMemo(() => {
     if (!isExpansionMode || !hasSelectedAssets || estimatedValue === 0) return 0;
@@ -155,9 +222,11 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
   }, [isExpansionMode, hasSelectedAssets, expansionVTValue, estimatedValue]);
 
   // Get current vault TVL (what contributors have already contributed)
-  const currentVaultTVL = isAda
-    ? vault.assetsPrices?.totalValueAda || vault.totalAssetsCostAda || 0
-    : vault.assetsPrices?.totalValueUsd || vault.totalAssetsCostUsd || 0;
+  const currentVaultTVL = pickByCurrency({
+    ada: vault.assetsPrices?.totalValueAda || vault.totalAssetsCostAda || 0,
+    usd: vault.assetsPrices?.totalValueUsd || vault.totalAssetsCostUsd || 0,
+    eth: vault.assetsPrices?.totalValueEth || vault.totalAssetsCostEth || 0,
+  });
 
   // Calculate user's share of the total contributor pool
   const totalContributorValue = currentVaultTVL + estimatedValue;
@@ -191,6 +260,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
   const totalProtocolFeeAda = transactionCostEstimate.protocolFeeAda;
 
+  // EVM: paid as a separate native transfer before the contribute calls.
+  const evmFeePerAssetWei = isEvmChain ? BigInt(vault.protocolFeePerAssetWei || '0') : 0n;
+  const evmProtocolFeeWei = BigInt(feeAssetCount) * evmFeePerAssetWei;
+
   // Estimated ADA to Receive (only shown when acquire phase exists)
   // Contributors receive ADA from acquirers (minus LP allocation)
   // Formula: Estimated Value × (Tokens for Acquirers % - LP ADA %)
@@ -200,7 +273,27 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
     hasSelectedAssets && hasAcquirePhase
       ? ((tokensForAcqPercent - lpContributionPercent / 2) * estimatedValue).toFixed(2).toLocaleString()
       : '0.00';
-  const estimatedReceivedLabel = isAda ? 'Estimated ADA Received' : 'Estimated USD Received';
+  const estimatedReceivedLabel = pickByCurrency({
+    ada: `Estimated ${currencyLabel} Received`,
+    usd: 'Estimated USD Received',
+    eth: 'Estimated ETH Received',
+  });
+
+  const estimatedValueDisplay = useMemo(() => {
+    if (estimatedValue > 0 && estimatedValue < ESTIMATED_VALUE_MIN_THRESHOLD) {
+      const threshold = ESTIMATED_VALUE_MIN_THRESHOLD.toLocaleString(undefined, {
+        minimumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+        maximumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+        useGrouping: false,
+      });
+      return `<${currencySymbol}${threshold}`;
+    }
+
+    return `${currencySymbol}${estimatedValue.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: ESTIMATED_VALUE_MAX_DECIMALS,
+    })}`;
+  }, [currencySymbol, estimatedValue]);
 
   const toggleNFT = useCallback(asset => {
     if (asset.isFungibleToken) return;
@@ -231,25 +324,16 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
 
     if (!isValid) return;
 
-    const numDecimalAmount = Number(amount);
+    // Convert to raw quantity for validation against available balance
+    const rawAmount = BigInt(toRawQuantityString(amount, decimals));
 
-    // Convert to raw quantity for validation against MAX_SAFE_QUANTITY
-    const rawAmount = getRawQuantity(numDecimalAmount, decimals);
-    if (rawAmount > MAX_SAFE_QUANTITY) {
-      toast.error(`Quantity exceeds maximum safe value`);
-      return;
-    }
-
-    // Cap at available quantity (work in raw units to avoid rounding issues)
-    if (rawAmount > ft.quantity) {
+    // Cap at available quantity (work in raw units to avoid rounding issues).
+    // EVM assets provide decimal-adjusted `quantity` and base-unit `rawQuantity`.
+    // Cardano assets keep using `quantity` as the raw balance.
+    const availableRawQuantity = BigInt(String(ft.rawQuantity ?? ft.quantity ?? 0));
+    if (rawAmount > availableRawQuantity) {
       // Cap to available raw quantity, then convert back to decimal for display
-      const cappedRawAmount = ft.quantity;
-      const cappedDecimalAmount = getDecimalAdjustedQuantity(cappedRawAmount, decimals);
-      // Truncate to display precision (max 8 decimals) without rounding up
-      const displayDecimals = Math.min(decimals, 8);
-      const multiplier = Math.pow(10, displayDecimals);
-      const truncatedAmount = Math.floor(cappedDecimalAmount * multiplier) / multiplier;
-      amount = truncatedAmount.toFixed(displayDecimals);
+      amount = rawQuantityToDisplayAmount(availableRawQuantity, decimals, 8);
     }
 
     setSelectedAmount(prev => ({
@@ -295,10 +379,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
         if (asset.isFungibleToken) {
           // Convert decimal to raw quantity for backend
           const decimals = asset.metadata?.decimals ?? 6;
-          const rawQuantity = getRawQuantity(Number(asset.amount), decimals);
+          const rawQuantity = toRawQuantityString(asset.amount, decimals);
           return {
             ...asset,
-            quantity: rawQuantity, // Send raw blockchain quantity
+            quantity: rawQuantity, // Send raw blockchain quantity as string for bigint-safe APIs
           };
         }
         // For NFTs, quantity is always 1 (raw blockchain unit)
@@ -349,20 +433,43 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
             </PrimaryButton>
           </div>
         </div>
-        <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
-          {selectedNFTs.length > 0 ? (
-            <>
-              Transaction cost:{' '}
-              <span className="text-white font-medium">~{transactionCostEstimate.totalWalletAda.toFixed(2)} ADA</span> (
-              {totalProtocolFeeAda > 0
-                ? `${totalProtocolFeeAda.toFixed(2)} ADA Protocol fees (${feeAssetCount} asset${feeAssetCount !== 1 ? 's' : ''} × ${feePerAssetAda} ADA) + ~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`
-                : `~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`}
-              )
-            </>
-          ) : (
-            <>Select assets to see estimated transaction cost.</>
-          )}
-        </div>
+        {isEvmChain && (
+          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+            {selectedNFTs.length > 0 ? (
+              <>
+                Transaction cost:{' '}
+                {evmProtocolFeeWei > 0n ? (
+                  <>
+                    <span className="text-white font-medium">{formatEther(evmProtocolFeeWei)} ETH</span> Protocol fee (
+                    {feeAssetCount} asset{feeAssetCount !== 1 ? 's' : ''} × {formatEther(evmFeePerAssetWei)} ETH) +
+                    network gas. Your wallet will ask you to confirm the fee transfer first.
+                  </>
+                ) : (
+                  'network gas only'
+                )}
+              </>
+            ) : (
+              <>Select assets to see estimated transaction cost.</>
+            )}
+          </div>
+        )}
+        {!isEvmChain && (
+          <div className="text-xs text-dark-100 border-t border-steel-800 pt-2">
+            {selectedNFTs.length > 0 ? (
+              <>
+                Transaction cost:{' '}
+                <span className="text-white font-medium">~{transactionCostEstimate.totalWalletAda.toFixed(2)} ADA</span>{' '}
+                (
+                {totalProtocolFeeAda > 0
+                  ? `${totalProtocolFeeAda.toFixed(2)} ADA Protocol fees (${feeAssetCount} asset${feeAssetCount !== 1 ? 's' : ''} × ${feePerAssetAda} ADA) + ~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`
+                  : `~${transactionCostEstimate.cardanoOverheadAda.toFixed(2)} ADA Cardano costs`}
+                )
+              </>
+            ) : (
+              <>Select assets to see estimated transaction cost.</>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -374,6 +481,14 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
       toast.error('Failed to load wallet assets');
     }
   }, [walletError]);
+
+  // If NFTs are disabled for this chain, don't let the modal sit on the NFT tab
+  // (covers both the initial 'NFT' default and the flag loading in after mount).
+  useEffect(() => {
+    if (!nftContributionAllowed && activeTab === 'NFT') {
+      setActiveTab('FT');
+    }
+  }, [nftContributionAllowed, activeTab]);
 
   return (
     <ModalWrapper
@@ -390,8 +505,10 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           isLoadingMore={isLoadingMore}
           hasNextPage={hasNextPage}
           loadMoreAssets={loadMoreAssets}
+          chainType={chain}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          nftEnabled={nftContributionAllowed}
           selectedNFTs={selectedNFTs}
           selectedAmount={selectedAmount}
           onToggleNFT={toggleNFT}
@@ -418,7 +535,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
           <div className="grid grid-cols-2 gap-3">
             <MetricCard
               label={isExpansionMode ? 'Estimated Asset(s) Value' : 'Estimated Value'}
-              value={`${currencySymbol}${estimatedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              value={estimatedValueDisplay}
               hint={
                 isExpansionMode
                   ? 'Total estimated value of your selected assets at current market prices.'
@@ -438,7 +555,7 @@ export const ContributeModal = ({ vault, onClose, isOpen, isExpansion }) => {
               <MetricCard
                 label="Estimated Vault Token Received"
                 value={estimatedTickerVal}
-                hint="Estimated number of vault tokens you will receive. Final amount depends on asset values at the end of the contribution window and total ADA sent in the acquire phase."
+                hint={`Estimated number of vault tokens you will receive. Final amount depends on asset values at the end of the contribution window and total ${currencyLabel} sent in the acquire phase.`}
               />
             )}
 

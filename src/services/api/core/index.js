@@ -2,11 +2,12 @@ import { CoreConfigProvider } from '@/services/api/core/config';
 import { axiosInstance } from '@/services/api';
 
 export class CoreApiProvider {
-  static async login({ signature, stakeAddress, walletAddress }) {
+  static async login({ signature, stakeAddress, walletAddress, chainType }) {
     const response = await axiosInstance.post(CoreConfigProvider.login(), {
       signature,
       stakeAddress,
       walletAddress,
+      chainType,
     });
     return response;
   }
@@ -28,6 +29,14 @@ export class CoreApiProvider {
   static async updateProfile(profileData) {
     const response = await axiosInstance.patch(CoreConfigProvider.updateProfile(), profileData);
     return response;
+  }
+
+  static async verifyEmail(token) {
+    return await axiosInstance.post(CoreConfigProvider.verifyEmail(), { token });
+  }
+
+  static async resendEmailVerification() {
+    return await axiosInstance.post(CoreConfigProvider.resendEmailVerification());
   }
 
   static async uploadImage(file, imageType = '') {
@@ -83,6 +92,23 @@ export class CoreApiProvider {
   static async updateTransactionHash({ txId, txHash }) {
     const response = await axiosInstance.patch(CoreConfigProvider.updateTransactionHash(txId), {
       txHash,
+    });
+    return response;
+  }
+
+  static async prepareEvmContribution({ txId, feeTxHash }) {
+    const response = await axiosInstance.post(CoreConfigProvider.prepareEvmContribution(), {
+      txId,
+      ...(feeTxHash ? { feeTxHash } : {}),
+    });
+    return response;
+  }
+
+  static async confirmEvmContribution({ txId, txHash, childTxHashes }) {
+    const response = await axiosInstance.post(CoreConfigProvider.confirmEvmContribution(), {
+      txId,
+      txHash,
+      childTxHashes,
     });
     return response;
   }

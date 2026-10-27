@@ -1,7 +1,9 @@
 import { useAcquire } from '@/services/api/queries.js';
 import { formatNum } from '@/utils/core.utils.js';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const Acquire = () => {
+  const { currencyLabel } = useCurrency();
   const { data } = useAcquire();
   const acquires = data?.data || [];
 
@@ -28,9 +30,9 @@ const Acquire = () => {
             <thead>
               <tr className="text-steel-300 text-sm">
                 <th className="px-4 py-3 text-left">VAULT</th>
-                <th className="px-4 py-3 text-right">INVESTED (ADA)</th>
+                <th className="px-4 py-3 text-right">INVESTED ({currencyLabel})</th>
                 <th className="px-4 py-3 text-right">VAL</th>
-                <th className="px-4 py-3 text-right">ASSETS TVL (ADA)</th>
+                <th className="px-4 py-3 text-right">ASSETS TVL ({currencyLabel})</th>
                 <th className="px-4 py-3 text-right">TIME LEFT</th>
                 <th className="px-4 py-3 text-center">ACCESS</th>
                 <th className="px-4 py-3 text-center">STATUS</th>

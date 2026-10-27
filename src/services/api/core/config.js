@@ -19,6 +19,14 @@ export class CoreConfigProvider {
     return '/api/v1/users/profile';
   }
 
+  static verifyEmail() {
+    return '/api/v1/users/email/verify';
+  }
+
+  static resendEmailVerification() {
+    return '/api/v1/users/email/resend-verification';
+  }
+
   static uploadImage() {
     return '/api/v1/upload';
   }
@@ -41,5 +49,13 @@ export class CoreConfigProvider {
 
   static updateTransactionHash(txId) {
     return `/api/v1/contribute/transaction/${txId}/hash`;
+  }
+
+  static prepareEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/prepare';
+  }
+
+  static confirmEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/confirm';
   }
 }

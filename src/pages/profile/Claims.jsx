@@ -9,10 +9,11 @@ import { LavaTabs } from '@/components/shared/LavaTabs';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { useClaims, useBuildTerminationClaim, useSubmitTerminationClaim } from '@/services/api/queries';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { LavaTable } from '@/components/shared/LavaTable';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const tabOptions = [
   { id: 'distribution', name: 'Distribution', type: 'distribution' },
@@ -30,6 +31,7 @@ const ASSET_TYPE_LABELS = {
 const DEFAULT_TAB = 'distribution';
 
 export const Claims = () => {
+  const { currencyLabel } = useCurrency();
   const initialTab = tabOptions.find(tab => tab.id === DEFAULT_TAB);
 
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
@@ -147,7 +149,7 @@ export const Claims = () => {
 
     let rewardDisplay = null;
     if (claim.adaAmount && claim.adaAmount > 0) {
-      rewardDisplay = `${(claim.adaAmount / 1000000).toLocaleString()} ADA`;
+      rewardDisplay = `${(claim.adaAmount / 1000000).toLocaleString()} ${currencyLabel}`;
     }
 
     let ftDisplay = null;

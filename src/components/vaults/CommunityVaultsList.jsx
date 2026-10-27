@@ -3,6 +3,9 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
+import { useNetwork } from '@/hooks/useNetwork';
+import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -21,9 +24,12 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
   const communityVaultsListRef = useRef(null);
+  const archetypes = useVaultArchetypes();
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+
+  const { network } = useNetwork();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [appliedFilters, setAppliedFilters] = useState({
@@ -31,6 +37,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     limit: 12,
     filter: initialTab.filter,
     search: '',
+    chainType: network,
   });
 
   useEffect(() => {
@@ -42,6 +49,15 @@ export const CommunityVaultsList = ({ className = '' }) => {
       filter: newTab.filter,
     }));
   }, [tabParam]);
+
+  // Keep the vault search in sync with the network selected in the header.
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      chainType: network,
+      page: 1,
+    }));
+  }, [network]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
@@ -69,6 +85,20 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
+  // Vault types only exist on Robinhood; drop the filter when switching to Cardano.
+  const isRobinhood = network === 'robinhood';
+  useEffect(() => {
+    if (!isRobinhood) {
+      setAppliedFilters(prevFilters =>
+        prevFilters.vaultArchetype ? { ...prevFilters, vaultArchetype: undefined, page: 1 } : prevFilters
+      );
+    }
+  }, [isRobinhood]);
+
+  const handleArchetypeChange = vaultArchetype => {
+    setAppliedFilters(prevFilters => ({ ...prevFilters, vaultArchetype, page: 1 }));
+  };
+
   const { data, isLoading, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
@@ -86,6 +116,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
       page: 1,
       limit: prevFilters.limit || 12,
       filter: prevFilters.filter || 'contribution',
+      chainType: network,
+      vaultArchetype: prevFilters.vaultArchetype,
       ...filters,
     }));
   };
@@ -110,7 +142,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
-        tabs={VAULT_TABS.map(tab => tab.label)}
+        tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
         title="All Vaults"
         vaults={vaults}
         onTabChange={handleTabChange}
@@ -120,6 +152,12 @@ export const CommunityVaultsList = ({ className = '' }) => {
         pagination={pagination}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
+        toolbar={
+          // Nothing to filter by when the chain only offers one vault type.
+          isRobinhood && archetypes.hasChoice ? (
+            <VaultTypeFilter value={appliedFilters.vaultArchetype} onChange={handleArchetypeChange} />
+          ) : null
+        }
       />
     </div>
   );

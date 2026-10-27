@@ -18,16 +18,16 @@ import clsx from 'clsx';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
-import L4vaIcon from '@/icons/l4va.svg?react';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
 import { formatDateTime } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { getTransactionUrl } from '@/utils/explorer.utils';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { getSuccessMessage } from '@/constants/proposalMessages';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -79,18 +79,18 @@ const formatDate = dateString => {
   }).format(date);
 };
 
-const formatAmount = amount => {
+const formatAmount = (amount, maximumFractionDigits = 2) => {
   if (!amount) return '0';
   const numValue = typeof amount === 'number' ? amount : parseFloat(amount);
   if (isNaN(numValue)) return '0';
 
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   }).format(numValue);
 };
 
-const getActivityTitle = activity => {
+const getActivityTitle = (activity, currencyLabel) => {
   if (activity.activityType === 'transaction') {
     switch (activity.type) {
       case 'create-vault': {
@@ -98,12 +98,18 @@ const getActivityTitle = activity => {
       }
 
       case 'acquire': {
+        // The amount is in the asset paid with, not the display currency the viewer picked.
         const adaAsset = activity.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
         if (adaAsset?.quantity) {
           return `${formatAmount(adaAsset.quantity)} ADA Acquired`;
         }
+        // EVM: the asset row is already in ETH; `activity.amount` is raw wei.
+        const ethAsset = activity.assets?.find(asset => asset.type === 'eth');
+        if (ethAsset?.quantity) {
+          return `${formatAmount(ethAsset.quantity, 6)} ETH Acquired`;
+        }
         if (activity.amount) {
-          return `${formatAmount(activity.amount)} ADA Acquired`;
+          return `${formatAmount(activity.amount)} ${currencyLabel} Acquired`;
         }
         return 'Acquire';
       }
@@ -149,15 +155,16 @@ const getProposalStatus = activityType => {
   }
 };
 
-const ActivityCard = ({ activity }) => {
+const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
+  const { currencyLabel } = useCurrency();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
 
   const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
   const Icon = config.icon;
-  const title = getActivityTitle(activity);
+  const title = getActivityTitle(activity, currencyLabel);
 
   const isTransaction = activity.activityType === 'transaction';
   const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
@@ -183,7 +190,7 @@ const ActivityCard = ({ activity }) => {
           return 'Assets contributed to vault';
         }
         case 'acquire': {
-          return 'ADA spent on acquire';
+          return `${currencyLabel} spent on acquire`;
         }
         default:
           return config.label;
@@ -203,8 +210,7 @@ const ActivityCard = ({ activity }) => {
 
   const openCardanoScan = () => {
     if (activity.tx_hash) {
-      const baseUrl = IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io';
-      window.open(`${baseUrl}/transaction/${activity.tx_hash}`, '_blank');
+      window.open(getTransactionUrl(activity.tx_hash, vault?.chainType), '_blank');
     }
   };
 
@@ -341,7 +347,15 @@ const ActivityCard = ({ activity }) => {
                                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750 pointer-events-none"
                                   title={`${asset.quantity} ${asset.name}`}
                                 >
-                                  <img src="/assets/icons/ada.svg" alt={asset.name || 'FT'} className="w-5 h-5" />
+                                  <img
+                                    src={
+                                      vault?.chainType === 'robinhood'
+                                        ? '/assets/icons/eth.svg'
+                                        : '/assets/icons/ada.svg'
+                                    }
+                                    alt={asset.name || 'FT'}
+                                    className="w-5 h-5"
+                                  />
                                   <span className="text-sm font-medium text-white">
                                     {parseFloat(asset.quantity).toLocaleString()} {asset.name}
                                   </span>
@@ -455,6 +469,7 @@ const FILTER_MAP = {
 };
 
 export const VaultActivity = ({ vault }) => {
+  const { currencyLabel } = useCurrency();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -537,7 +552,7 @@ export const VaultActivity = ({ vault }) => {
               description = 'Assets contributed to vault';
               break;
             case 'acquire':
-              description = 'ADA spent on acquire';
+              description = `${currencyLabel} spent on acquire`;
               break;
           }
         } else if (isPhaseTransition) {
@@ -571,7 +586,7 @@ export const VaultActivity = ({ vault }) => {
         return [
           formatDateTime(activity.created_at),
           activityType,
-          getActivityTitle(activity),
+          getActivityTitle(activity, currencyLabel),
           description,
           userAddress,
           assetNames,
@@ -606,21 +621,6 @@ export const VaultActivity = ({ vault }) => {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center mb-6">
-          {vault.vaultImage ? (
-            <img
-              alt={vault.name}
-              className="w-[100px] h-[100px] rounded-full mb-4 object-cover border-4 border-steel-750"
-              src={vault.vaultImage}
-            />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center border-4 border-steel-750">
-              <L4vaIcon className="h-8 w-8 text-white" />
-            </div>
-          )}
-          <h1 className="text-3xl font-bold text-white">{vault.name}</h1>
-        </div>
-
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -656,7 +656,7 @@ export const VaultActivity = ({ vault }) => {
             <>
               <div className="grid grid-cols-1 gap-4">
                 {items.map((activity, index) => (
-                  <ActivityCard key={activity.id || index} activity={activity} />
+                  <ActivityCard key={activity.id || index} activity={activity} vault={vault} />
                 ))}
               </div>
 

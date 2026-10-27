@@ -10,8 +10,14 @@ import {
   MIN_CONTRIBUTION_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 
-export const Private = ({ data, errors = {}, updateField }) => {
+export const Private = ({ data, errors = {}, updateField, isRobinHood = false }) => {
   const { valueMethod, privacy: vaultPrivacy } = data;
+
+  const valuationCurrencyOptions = [
+    ...(isRobinHood ? [] : [{ id: 'ADA', label: 'ADA' }]),
+    { id: 'USD', label: 'USD' },
+    ...(isRobinHood ? [{ id: 'ETH', label: 'ETH' }] : []),
+  ];
 
   const valueMethodOptions =
     vaultPrivacy === VAULT_PRIVACY_TYPES.PRIVATE
@@ -48,10 +54,7 @@ export const Private = ({ data, errors = {}, updateField }) => {
                 required
                 error={errors.valuationCurrency}
                 label="Valuation Currency"
-                options={[
-                  { id: 'ADA', label: 'ADA' },
-                  { id: 'USD', label: 'USD' },
-                ]}
+                options={valuationCurrencyOptions}
                 placeholder="Select currency"
                 value={data.valuationCurrency || ''}
                 onChange={value => updateField('valuationCurrency', value)}

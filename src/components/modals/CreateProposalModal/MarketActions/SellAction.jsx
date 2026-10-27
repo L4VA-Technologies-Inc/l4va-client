@@ -11,6 +11,7 @@ import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { IS_MAINNET } from '@/utils/networkValidation.ts';
+import { useCurrency } from '@/hooks/useCurrency';
 
 const methodOptions = [
   { value: 'N/A', label: 'Time Limit' },
@@ -23,6 +24,7 @@ const sellTypeOptions = [
 ];
 
 export const SellAction = ({ vaultId, onDataChange, error }) => {
+  const { currencyLabel } = useCurrency();
   const [options, setOptions] = useState([]);
   const [assetOptions, setAssetOptions] = useState([]);
   const [abstain, setAbstain] = useState(false);
@@ -162,7 +164,9 @@ export const SellAction = ({ vaultId, onDataChange, error }) => {
           <Wallet className="w-4 h-4" />
           <span className="text-sm">Treasury Balance</span>
         </div>
-        <p className="text-2xl font-semibold text-white">{treasuryBalance.toLocaleString()} ADA</p>
+        <p className="text-2xl font-semibold text-white">
+          {treasuryBalance.toLocaleString()} {currencyLabel}
+        </p>
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <h3 className="text-lg font-medium">Sell Options</h3>

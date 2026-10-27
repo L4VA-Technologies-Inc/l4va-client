@@ -15,11 +15,13 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get all epochs
-   * @returns {Promise<Array>} List of all epochs
+   * Get paginated epochs
+   * @param {number} limit
+   * @param {number} offset
+   * @returns {Promise<{epochs: Array, total: number}>}
    */
-  static async getEpochs() {
-    const response = await axiosInstance.get(RewardsConfigProvider.epochs());
+  static async getEpochs(limit = 20, offset = 0) {
+    const response = await axiosInstance.get(RewardsConfigProvider.epochs(), { params: { limit, offset } });
     return response.data;
   }
 
@@ -208,6 +210,17 @@ export class RewardsApiProvider {
    */
   static async cancelClaimTransaction(body) {
     const response = await axiosInstance.post(RewardsConfigProvider.cancelClaim(), body);
+    return response.data;
+  }
+
+  /**
+   * Claim rewards on Robinhood Chain. Server broadcasts the ERC-20 transfer;
+   * the user does not sign a transaction.
+   * @param {Object} options - { epochIds?, claimImmediate?, claimVested? }
+   * @returns {Promise<{ success, txHash, claimedAmount, ... }>}
+   */
+  static async claimEvmRewards(options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.claimEvm(), options);
     return response.data;
   }
 

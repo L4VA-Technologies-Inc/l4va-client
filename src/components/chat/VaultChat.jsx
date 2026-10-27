@@ -59,6 +59,12 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
         return;
       }
 
+      if (!userId) {
+        setError('You must be signed in to use chat');
+        setLoading(false);
+        return;
+      }
+
       if (actualApiKey === 'your-stream-api-key') {
         setError('Need to set real Stream API key instead of placeholder');
         setLoading(false);

@@ -7,7 +7,7 @@ export const TotalEarnedCard = ({
   showIcon = true,
   label = 'Total Earned',
   labelClassName = 'text-steel-400 text-xs font-medium uppercase tracking-wide',
-  valueClassName = 'text-xl font-bold text-orange-400',
+  valueClassName = 'text-xl font-bold text-orange-gradient',
 }) => {
   return (
     <div className={`bg-steel-850 border border-steel-750 rounded-2xl p-5 ${className}`.trim()}>

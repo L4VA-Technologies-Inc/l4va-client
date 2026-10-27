@@ -1,6 +1,9 @@
 import { useCallback, useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { formatUnits } from 'viem';
+import { useAccount } from 'wagmi';
 
 import Staking from '@/components/modals/CreateProposalModal/Staking';
 import Distributing from '@/components/modals/CreateProposalModal/Distributing';
@@ -15,9 +18,10 @@ import Terminating from '@/components/modals/CreateProposalModal/Terminating.jsx
 import Burning from '@/components/modals/CreateProposalModal/Burning.jsx';
 import Expansion from '@/components/modals/CreateProposalModal/Expansion.jsx';
 import AcquireExpansion from '@/components/modals/CreateProposalModal/AcquireExpansion.jsx';
+import IndexReweight from '@/components/modals/CreateProposalModal/IndexReweight.jsx';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import {
   useCreateProposal,
-  useGovernanceProposals,
   useGovernanceFees,
   useSubmitProposalFeePayment,
   useDeleteProposal,
@@ -31,8 +35,13 @@ import {
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker.jsx';
 import { MarketActions } from '@/components/modals/CreateProposalModal/MarketActions/MarketActions.jsx';
 import AssetWhitelistUpdate from '@/components/modals/CreateProposalModal/AssetWhitelistUpdate.jsx';
+import { ChainType } from '@/utils/types';
+import { useAuth } from '@/lib/auth/auth';
+import { getWalletErrorMessage, isUserRejectedError } from '@/utils/walletErrors';
+import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
+import { formatDurationHuman } from '@/utils/core.utils';
 
-const executionOptions = [
+const cardanoExecutionOptions = [
   { value: 'marketplace_action', label: 'Market Actions' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'asset_whitelist_update', label: 'Update Asset Whitelist' },
@@ -44,16 +53,59 @@ const executionOptions = [
   { value: 'add_remove_lp', label: 'Add/Remove LP - Coming Soon', disabled: true },
 ];
 
+const evmExecutionOptions = [
+  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  { value: 'expansion', label: 'Vault Expansion' },
+  { value: 'acquire_expansion', label: 'Acquire Expansion' },
+  { value: 'distribution', label: 'Distribution' },
+  { value: 'termination', label: 'Termination' },
+];
+
 const initialProposalData = {
   isValid: true,
 };
 
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
+  const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  const isIndex = isIndexVault(vault);
+  const activeExecutionOptions = useMemo(() => {
+    if (!isEvmVault) return cardanoExecutionOptions;
+    return isIndex
+      ? [{ value: 'index_reweight', label: 'Index Re-weight' }, ...evmExecutionOptions]
+      : evmExecutionOptions;
+  }, [isEvmVault, isIndex]);
+  // Filter execution options based on vault status
+  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
+  const availableExecutionOptions = useMemo(() => {
+    const isExpansion =
+      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
+
+    if (isExpansion) {
+      return activeExecutionOptions.map(option => {
+        if (option.value === 'distribution') {
+          return option;
+        }
+        return {
+          ...option,
+          disabled: true,
+          label: option.label + ' (Not available during expansion)',
+        };
+      });
+    }
+
+    return activeExecutionOptions;
+  }, [vault.vaultStatus, activeExecutionOptions]);
+
   const [proposalTitle, setProposalTitle] = useState('');
   const [proposalDescription, setProposalDescription] = useState('');
-  const [selectedOption, setSelectedOption] = useState(
-    vault.vaultStatus === VAULT_STATUSES.EXPANSION ? 'distribution' : 'marketplace_action'
-  );
+  // Open on the option the vault is about to use, but never on one the current
+  // status has disabled — during either expansion only Distribution is live.
+  const [selectedOption, setSelectedOption] = useState(() => {
+    const preferred = isIndex ? 'index_reweight' : 'marketplace_action';
+    const isEnabled = value => availableExecutionOptions.some(option => option.value === value && !option.disabled);
+    if (isEnabled(preferred)) return preferred;
+    return availableExecutionOptions.find(option => !option.disabled)?.value ?? preferred;
+  });
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [proposalData, setProposalData] = useState(initialProposalData);
   const [proposalStartDate, setProposalStartDate] = useState(null);
@@ -61,13 +113,20 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const [error, setError] = useState(false);
   const [status, setStatus] = useState('idle');
 
+  const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected');
+  const { isConnected: isEvmConnected } = useAccount();
+  const queryClient = useQueryClient();
   const createProposalMutation = useCreateProposal();
   const submitProposalFeePayment = useSubmitProposalFeePayment();
   const deleteProposalMutation = useDeleteProposal();
   const { data: governanceFees } = useGovernanceFees();
+  const { payFee: payEvmFee } = useEvmGovernanceFee();
 
-  const { refetch } = useGovernanceProposals(vault.id);
+  const isWalletConnected = isEvmVault ? isEvmConnected : wallet.isConnected;
+  const connectWalletLabel = isEvmVault ? 'Robinhood wallet' : 'Cardano wallet';
+
+  const refreshProposals = () => queryClient.invalidateQueries({ queryKey: ['governance-proposals', vault.id] });
 
   // Market action proposals are charged per NFT/item acted on (one fee unit per
   // marketplace action), matching the backend's per-item governance fee. Mirrors
@@ -96,53 +155,40 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     }
   }, [selectedOption, proposalData]);
 
-  // Get fee for current proposal type
+  // Get fee for current proposal type. Cardano fees are lovelace numbers; EVM
+  // fees live in a separate `evm` block as wei decimal strings, so both are
+  // normalised to BigInt here and formatted per chain at render time.
   const currentProposalFee = useMemo(() => {
-    if (!governanceFees?.data) return 0;
+    const fees = isEvmVault ? governanceFees?.data?.evm : governanceFees?.data;
+    if (!fees) return 0n;
     const feeMap = {
-      marketplace_action: governanceFees.data.proposalFeeMarketplaceAction,
-      distribution: governanceFees.data.proposalFeeDistribution,
-      expansion: governanceFees.data.proposalFeeExpansion,
-      acquire_expansion: governanceFees.data.proposalFeeExpansion, // Use same fee as expansion
-      asset_whitelist_update: governanceFees.data.proposalFeeAssetWhitelistUpdate,
-      staking: governanceFees.data.proposalFeeStaking,
-      termination: governanceFees.data.proposalFeeTermination,
-      burning: governanceFees.data.proposalFeeBurning,
+      marketplace_action: fees.proposalFeeMarketplaceAction,
+      distribution: fees.proposalFeeDistribution,
+      expansion: fees.proposalFeeExpansion,
+      acquire_expansion: fees.proposalFeeExpansion, // Use same fee as expansion
+      asset_whitelist_update: fees.proposalFeeAssetWhitelistUpdate,
+      index_reweight: fees.proposalFeeMarketplaceAction, // Same fee as market actions (backend mirrors this)
+      staking: fees.proposalFeeStaking,
+      termination: fees.proposalFeeTermination,
+      burning: fees.proposalFeeBurning,
     };
-    const perUnitFee = feeMap[selectedOption] || 0;
-    const quantity = selectedOption === 'marketplace_action' ? marketplaceActionsCount : 1;
-    return perUnitFee * quantity;
-  }, [governanceFees, selectedOption, marketplaceActionsCount]);
-
-  // Filter execution options based on vault status
-  // During expansion or acquire_expansion, only Distribution is allowed (doesn't extract from vault)
-  const availableExecutionOptions = useMemo(() => {
-    const isExpansion =
-      vault.vaultStatus === VAULT_STATUSES.EXPANSION || vault.vaultStatus === VAULT_STATUSES.ACQUIRE_EXPANSION;
-
-    if (isExpansion) {
-      return executionOptions.map(option => {
-        if (option.value === 'distribution') {
-          return option;
-        }
-        return {
-          ...option,
-          disabled: true,
-          label: option.label + ' (Not available during expansion)',
-        };
-      });
-    }
-
-    return executionOptions;
-  }, [vault.vaultStatus]);
+    // Per-item scaling is Cardano only: the EVM fee is a flat per-type transfer (backend mirrors this).
+    const quantity = !isEvmVault && selectedOption === 'marketplace_action' ? marketplaceActionsCount : 1;
+    return BigInt(feeMap[selectedOption] || 0) * BigInt(quantity);
+  }, [governanceFees, selectedOption, isEvmVault, marketplaceActionsCount]);
 
   const handleCreateProposal = () => {
+    if (!isWalletConnected) {
+      toast.error(`Please connect your ${connectWalletLabel} first`);
+      return;
+    }
+
     // Validate voting duration constraints
     if (proposalDuration && (proposalDuration < MIN_TIME_FOR_VOTING || proposalDuration > MAX_TIME_FOR_VOTING)) {
-      const minHours = MIN_TIME_FOR_VOTING / (1000 * 60 * 60);
-      const maxDays = MAX_TIME_FOR_VOTING / (1000 * 60 * 60 * 24);
       toast.error(
-        `Voting duration must be between ${minHours} hours and ${maxDays} days. Please adjust the voting period.`,
+        `Voting duration must be between ${formatDurationHuman(MIN_TIME_FOR_VOTING)} and ${formatDurationHuman(
+          MAX_TIME_FOR_VOTING
+        )}. Please adjust the voting period.`,
         { duration: 5000 }
       );
       setError(true);
@@ -158,7 +204,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const isValidProposal = () => {
+    const selected = availableExecutionOptions.find(option => option.value === selectedOption);
     return (
+      !selected ||
+      selected.disabled ||
       !proposalTitle.trim() ||
       proposalTitle.length > 200 ||
       !proposalDescription.trim() ||
@@ -174,8 +223,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     setStatus('creating');
     try {
       // Step 1: Check if wallet is connected
-      if (!wallet.isConnected || !wallet.handler) {
-        toast.error('Please connect your wallet first');
+      if (!isWalletConnected) {
+        toast.error(`Please connect your ${connectWalletLabel} first`);
         setStatus('idle');
         return;
       }
@@ -193,9 +242,18 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.fts = proposalData.fts || [];
         proposalPayload.nfts = proposalData.nfts || [];
       } else if (selectedOption === 'distribution') {
-        proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        if (isEvmVault) {
+          proposalPayload.distributionAmount = proposalData.distributionAmount;
+          proposalPayload.distributionAsset = proposalData.distributionAsset;
+        } else {
+          proposalPayload.distributionLovelaceAmount = proposalData.distributionLovelaceAmount;
+        }
       } else if (selectedOption === 'expansion') {
-        proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        if (isEvmVault) {
+          proposalPayload.expansionEvmAssets = proposalData.expansionEvmAssets || [];
+        } else {
+          proposalPayload.expansionPolicyIds = proposalData.expansionPolicyIds || [];
+        }
         proposalPayload.expansionDuration = proposalData.expansionDuration;
         proposalPayload.expansionNoLimit = proposalData.expansionNoLimit || false;
         proposalPayload.expansionAssetMax = proposalData.expansionAssetMax;
@@ -211,6 +269,8 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         proposalPayload.acquireExpansionNoMax = proposalData.acquireExpansionNoMax || false;
         proposalPayload.acquireExpansionPriceType = proposalData.acquireExpansionPriceType || 'market';
         proposalPayload.acquireExpansionLimitPrice = proposalData.acquireExpansionLimitPrice;
+      } else if (selectedOption === 'index_reweight') {
+        proposalPayload.indexReweight = proposalData.indexReweight;
       } else if (selectedOption === 'termination') {
         proposalPayload.metadata = {
           proposalStart: proposalData.proposalStart || null,
@@ -223,7 +283,32 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       } else if (selectedOption === 'marketplace_action') {
         const marketActionType = proposalData.marketActionType || 'buy';
 
-        if (marketActionType === 'swap') {
+        // EVM: Uniswap swap proposal
+        if (marketActionType === 'evm_swap') {
+          proposalPayload.marketplaceActions = (proposalData.evmSwapActions || []).map(action => ({
+            exec: 'SELL',
+            inputAsset: action.inputAsset,
+            expectedOutputAsset: action.outputAsset,
+            amount: action.amount,
+            humanAmount: action.humanAmount,
+            market: 'Uniswap',
+            assetId: '',
+          }));
+          // EVM: close position proposal
+        } else if (marketActionType === 'evm_close_position') {
+          const a = proposalData.evmClosePositionAction || {};
+          proposalPayload.marketplaceActions = [
+            {
+              exec: 'CLOSE_POSITION',
+              assetId: a.positionAsset || '',
+              positionId: a.positionId,
+              positionAsset: a.positionAsset,
+              underlyingAsset: a.underlyingAsset,
+              positionAmount: a.positionAmount,
+              market: 'Uniswap',
+            },
+          ];
+        } else if (marketActionType === 'swap') {
           proposalPayload.marketplaceActions = (proposalData.swapActions || []).map(action => ({
             assetId: action.assetId,
             exec: 'SELL',
@@ -280,39 +365,96 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
         throw new Error('Failed to create proposal');
       }
 
-      const { proposal, requiresPayment, presignedTx } = createResponse.data;
+      const { proposal, requiresPayment, presignedTx, evmPayment } = createResponse.data;
 
       // Step 4: Handle payment if required
-      if (requiresPayment && presignedTx) {
+      if (requiresPayment && (presignedTx || evmPayment)) {
+        // Set once the EVM transfer is broadcast. From that moment the fee is
+        // real money on chain, so a later failure must NOT delete the proposal
+        // — the backend can still be retried against the same hash.
+        let evmFeePaid = false;
         try {
-          // Sign fee transaction
-          setStatus('signing');
-          const signature = await wallet.handler.signTx(presignedTx, true);
+          if (isEvmVault) {
+            // EVM: the wallet sends the native transfer itself, then we hand
+            // the backend the hash to verify.
+            setStatus('signing');
+            // The backend verifies the fee came from the proposal creator's
+            // registered address, so pay from that exact account.
+            const feeTxHash = await payEvmFee(evmPayment, user?.address);
+            evmFeePaid = true;
 
-          if (!signature) {
-            throw new Error('Fee transaction signing was cancelled');
-          }
+            // The backend verifies against its own RPC, which can trail the
+            // wallet's by a block or two. Retry a few times before treating a
+            // paid fee as a failure.
+            setStatus('submitting');
+            let submitResponse;
+            for (let attempt = 0; attempt < 3; attempt++) {
+              if (attempt > 0) {
+                await new Promise(resolve => setTimeout(resolve, 4000));
+              }
+              try {
+                submitResponse = await submitProposalFeePayment.mutateAsync({
+                  proposalId: proposal.id,
+                  txHash: feeTxHash,
+                });
+                break;
+              } catch (submitError) {
+                if (attempt === 2) throw submitError;
+                console.warn(`Fee confirmation attempt ${attempt + 1} failed, retrying`, submitError);
+              }
+            }
 
-          // Submit transaction with signatures to backend
-          setStatus('submitting');
-          const submitResponse = await submitProposalFeePayment.mutateAsync({
-            proposalId: proposal.id,
-            transaction: presignedTx,
-            signatures: [signature],
-          });
+            if (!submitResponse?.data?.success) {
+              throw new Error(submitResponse?.data?.message || 'Failed to confirm fee payment');
+            }
+          } else {
+            if (!wallet.handler) {
+              throw new Error('Cardano wallet is required to sign the proposal fee transaction');
+            }
 
-          if (!submitResponse?.data?.success) {
-            throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
+            // Sign fee transaction
+            setStatus('signing');
+            const signature = await wallet.handler.signTx(presignedTx, true);
+
+            if (!signature) {
+              throw new Error('Fee transaction signing was cancelled');
+            }
+
+            // Submit transaction with signatures to backend
+            setStatus('submitting');
+            const submitResponse = await submitProposalFeePayment.mutateAsync({
+              proposalId: proposal.id,
+              transaction: presignedTx,
+              signatures: [signature],
+            });
+
+            if (!submitResponse?.data?.success) {
+              throw new Error(submitResponse?.data?.message || 'Failed to submit fee transaction');
+            }
           }
         } catch (feeError) {
           console.error('Fee transaction failed:', feeError);
 
           // Check if user declined to sign
-          const userCancelled = feeError?.message === 'user declined sign tx';
+          const userCancelled = isUserRejectedError(feeError);
+
+          // The fee is already on chain — deleting the proposal here would
+          // throw away something the user has paid for.
+          if (evmFeePaid) {
+            toast.error(
+              'Your fee payment went through but the proposal could not be activated yet. ' +
+                'The payment is recorded against the proposal — please contact support with the ' +
+                'proposal title so it can be completed.',
+              { duration: 12000 }
+            );
+            setStatus('idle');
+            await refreshProposals();
+            return;
+          }
 
           let errorMsg = userCancelled
-            ? 'Payment cancelled. Proposal was not created.'
-            : 'Payment failed. Proposal was not created.';
+            ? 'Payment cancelled — the proposal was not created and you have not been charged.'
+            : `${getWalletErrorMessage(feeError, 'Payment failed.')} The proposal was not created.`;
 
           // Always delete the unpaid proposal when payment fails
           try {
@@ -321,19 +463,19 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             console.error('Failed to delete unpaid proposal:', deleteError);
             errorMsg = userCancelled
               ? 'Payment cancelled. Your proposal was saved as unpaid and can be deleted from the Governance tab.'
-              : 'Payment failed. Your proposal was saved as unpaid and can be deleted from the Governance tab.';
+              : `${getWalletErrorMessage(feeError, 'Payment failed.')} Your proposal was saved as unpaid and can be deleted from the Governance tab.`;
           }
 
           toast.error(errorMsg, { duration: 7000 });
           setStatus('idle');
-          await refetch();
+          await refreshProposals();
           return;
         }
       }
 
       // Step 6: Success
       setStatus('success');
-      await refetch();
+      await refreshProposals();
       toast.success('Proposal created successfully!');
       onClose();
     } catch (error) {
@@ -373,7 +515,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   }, []);
 
   const handleChangeExecutionOption = value => {
-    const option = executionOptions.find(opt => opt.value === value);
+    const option = availableExecutionOptions.find(opt => opt.value === value);
     if (option?.disabled) {
       return;
     }
@@ -383,9 +525,16 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const renderFooter = () => {
     const isInvalid = isValidProposal();
-    const feeInAda = currentProposalFee / 1000000;
-    const perUnitFeeInAda = marketplaceActionsCount > 0 ? feeInAda / marketplaceActionsCount : feeInAda;
-    const showFeeBreakdown = selectedOption === 'marketplace_action' && marketplaceActionsCount > 1;
+    // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
+    // precision loss a Number division would introduce for wei.
+    const formattedFee = formatUnits(currentProposalFee, isEvmVault ? 18 : 6);
+    // The fee is always paid in the chain's native asset, so it is labelled by
+    // chain rather than by the user's display-currency preference.
+    const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
+    const showFeeBreakdown = !isEvmVault && selectedOption === 'marketplace_action' && marketplaceActionsCount > 1;
+    const formattedPerUnitFee = showFeeBreakdown
+      ? formatUnits(currentProposalFee / BigInt(marketplaceActionsCount), isEvmVault ? 18 : 6)
+      : formattedFee;
     const isProcessing = status !== 'idle';
 
     const getButtonText = () => {
@@ -406,12 +555,12 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     return (
       <div className="flex justify-between items-center">
         <div className="text-sm">
-          {currentProposalFee > 0 ? (
+          {currentProposalFee > 0n ? (
             <div className="flex flex-col">
               <span className="text-gray-400">New proposal</span>
               <span className="text-yellow-500 text-xs">
-                Governance fee: {feeInAda.toFixed(2)} ADA
-                {showFeeBreakdown && ` (${marketplaceActionsCount} × ${perUnitFeeInAda.toFixed(2)} ADA)`}
+                Governance fee: {formattedFee} {feeCurrencyLabel}
+                {showFeeBreakdown && ` (${marketplaceActionsCount} × ${formattedPerUnitFee} ${feeCurrencyLabel})`}
               </span>
             </div>
           ) : (
@@ -473,6 +622,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {!availableExecutionOptions.some(option => !option.disabled) && (
+              <p className="text-sm text-red-400">
+                No proposal type is available for this vault right now. Wait for the current expansion to finish.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -481,7 +635,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'distribution' && (
               <Distributing
-                isDisabled={executionOptions.find(opt => opt.value === 'distribution')?.disabled}
+                isDisabled={availableExecutionOptions.find(opt => opt.value === 'distribution')?.disabled}
                 vaultId={vault?.id}
                 onDataChange={handleDataChange}
               />
@@ -507,6 +661,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}
                 error={error}
+                isEvmVault={isEvmVault}
               />
             )}
             {selectedOption === 'expansion' && (
@@ -518,9 +673,17 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             {selectedOption === 'acquire_expansion' && (
               <AcquireExpansion vault={vault} onDataChange={handleDataChange} error={error} />
             )}
+            {selectedOption === 'index_reweight' && (
+              <IndexReweight vault={vault} onDataChange={handleDataChange} error={error} />
+            )}
 
             <div className="mt-8">
-              <h4 className="text-lg font-medium mb-4">Voting Period</h4>
+              <h4 className="text-lg font-medium mb-1">Voting Period</h4>
+              <p className="text-sm text-dark-100 mb-4">
+                Voting stays open for {formatDurationHuman(MIN_TIME_FOR_VOTING)} to{' '}
+                {formatDurationHuman(MAX_TIME_FOR_VOTING)}. Longer windows give holders across time zones a fair chance
+                to take part.
+              </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center text-sm">
                 <div className="flex-1 relative">
                   <LavaDatePicker

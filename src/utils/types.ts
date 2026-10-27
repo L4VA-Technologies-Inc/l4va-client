@@ -55,6 +55,7 @@ export enum ProposalType {
   EXPANSION = 'expansion',
   ASSET_WHITELIST_UPDATE = 'asset_whitelist_update',
   ACQUIRE_EXPANSION = 'acquire_expansion',
+  INDEX_REWEIGHT = 'index_reweight',
 }
 
 export const ProposalTypeLabels = {
@@ -67,6 +68,7 @@ export const ProposalTypeLabels = {
   [ProposalType.EXPANSION]: 'Vault Expansion',
   [ProposalType.ASSET_WHITELIST_UPDATE]: 'Update Asset Whitelist',
   [ProposalType.ACQUIRE_EXPANSION]: 'Acquire Expansion',
+  [ProposalType.INDEX_REWEIGHT]: 'Index Re-weight',
 };
 
 export enum ClaimStatus {
@@ -75,12 +77,23 @@ export enum ClaimStatus {
   CLAIMED = 'claimed',
 }
 
+export enum ChainType {
+  CARDANO = 'cardano',
+  ROBINHOOD = 'robinhood',
+}
+
+export const ChainTypeLabels: Record<ChainType, string> = {
+  [ChainType.CARDANO]: 'Cardano',
+  [ChainType.ROBINHOOD]: 'Robinhood',
+};
+
 // Type interfaces based on @Expose annotations
 export interface IUser {
   id: string;
   username?: string;
   walletAddress: string;
   email?: string;
+  emailVerified?: boolean;
   biography?: string;
   twitterUsername?: string;
   discordUsername?: string;
@@ -195,6 +208,7 @@ export interface VaultShortResponse {
   tvl?: number;
   totalValueAda?: number;
   totalValueUsd?: number;
+  totalValueEth?: number;
   baseAllocation?: number;
   total?: number;
   invested?: number;
@@ -209,6 +223,8 @@ export interface VaultShortResponse {
   ftTokenImg?: string;
   vaultTokenTicker?: string;
   isOfficialPartner?: boolean;
+  chainType?: ChainType;
+  vaultArchetype?: 'standard' | 'index_weighted';
 }
 
 export interface PaginatedResponse<T> {

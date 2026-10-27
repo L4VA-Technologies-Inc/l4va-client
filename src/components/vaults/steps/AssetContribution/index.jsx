@@ -3,13 +3,14 @@ import { Private } from '@/components/vaults/steps/AssetContribution/Private';
 import { SemiPrivate } from '@/components/vaults/steps/AssetContribution/SemiPrivate';
 import { VAULT_PRIVACY_TYPES } from '@/components/vaults/constants/vaults.constants';
 
-export const AssetContribution = ({ data, errors = {}, updateField }) => {
+export const AssetContribution = ({ data, errors = {}, updateField, isRobinHood = false }) => {
   const vaultPrivacy = data.privacy;
 
   const props = {
     data,
     errors,
     updateField,
+    isRobinHood,
   };
 
   if (vaultPrivacy === VAULT_PRIVACY_TYPES.PUBLIC) {

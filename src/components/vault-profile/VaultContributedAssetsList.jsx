@@ -8,9 +8,8 @@ import { substringAddress, formatAdaPrice, formatNumber, formatLargeNumber, form
 import { VaultContributedAssetsCard } from '@/components/vault-profile/VaultContributedAssetsCard.jsx';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
+import { TokenImage } from '@/components/shared/TokenImage.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
-
-const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -28,6 +27,8 @@ const VaultContributedAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, isAda } = useCurrency();
   const limit = 10;
+  const isRobinhoodVault = vault?.chainType?.toLowerCase() === 'robinhood' || vault?.id === 'robinhood';
+  const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
 
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -176,7 +177,12 @@ const VaultContributedAssetsList = ({ vault }) => {
         </div>
       ) : (
         <>
-          <VaultContributedAssetsCard assets={assets} currencySymbol={currencySymbol} isAda={isAda} />
+          <VaultContributedAssetsCard
+            assets={assets}
+            currencySymbol={currencySymbol}
+            isAda={isAda}
+            isRobinhoodVault={isRobinhoodVault}
+          />
           <div className="md:block overflow-x-auto rounded-2xl border border-steel-750 hidden">
             <table className="w-full">
               <thead>
@@ -205,13 +211,13 @@ const VaultContributedAssetsList = ({ vault }) => {
                         onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
                       >
                         <td className="px-4 py-3">
-                          <img
+                          <TokenImage
+                            asset={asset}
                             alt={asset.name || 'NFT'}
-                            className="w-12 h-12 rounded-lg object-cover"
-                            src={asset.image || FALLBACK_IMAGE}
-                            onError={e => {
-                              e.target.src = FALLBACK_IMAGE;
-                            }}
+                            className="rounded-lg"
+                            width={48}
+                            height={48}
+                            chainType={isRobinhoodVault ? 'robinhood' : 'cardano'}
                           />
                         </td>
                         <td
@@ -244,14 +250,14 @@ const VaultContributedAssetsList = ({ vault }) => {
                           <td colSpan="8" className="px-4 py-2">
                             <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                               <div>
-                                <p className="font-medium">Policy ID:</p>
+                                <p className="font-medium">{policyLabel}:</p>
                                 <div className="flex items-center gap-2">
                                   <p className="break-all">{substringAddress(asset.policyId)}</p>
                                   <button
                                     onClick={e => {
                                       e.stopPropagation();
                                       navigator.clipboard.writeText(asset.policyId);
-                                      toast.success('Policy ID copied to clipboard');
+                                      toast.success(`${policyLabel} copied to clipboard`);
                                     }}
                                     className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                   >
@@ -259,22 +265,24 @@ const VaultContributedAssetsList = ({ vault }) => {
                                   </button>
                                 </div>
                               </div>
-                              <div>
-                                <p className="font-medium">Asset ID:</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="break-all">{substringAddress(asset.assetId)}</p>
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      navigator.clipboard.writeText(asset.assetId);
-                                      toast.success('Asset ID copied to clipboard');
-                                    }}
-                                    className="p-1 hover:bg-steel-850 rounded-md transition-colors"
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </button>
+                              {!isRobinhoodVault && (
+                                <div>
+                                  <p className="font-medium">Asset ID:</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="break-all">{substringAddress(asset.assetId)}</p>
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(asset.assetId);
+                                        toast.success('Asset ID copied to clipboard');
+                                      }}
+                                      className="p-1 hover:bg-steel-850 rounded-md transition-colors"
+                                    >
+                                      <Copy className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                               <div>
                                 <p className="font-medium">Added At:</p>
                                 <p>{new Date(asset.addedAt).toLocaleDateString()}</p>

@@ -77,7 +77,7 @@ export const VestingGrouped = ({ positions, groupBy = 'epoch' }) => {
             {/* Group Header */}
             <button
               onClick={() => toggleGroup(key)}
-              className="w-full px-4 py-3 bg-gray-800/30 hover:bg-gray-800/50 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-steel-800/30 hover:bg-steel-800/50 transition-colors flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
                 <span className="font-semibold text-white">{group.label}</span>

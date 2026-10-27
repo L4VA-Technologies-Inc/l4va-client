@@ -6,11 +6,18 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useNativePrices } from '@/services/api/queries';
+import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
-  RESERVE_HINT,
-  LIQUIDITY_POOL_CONTRIBUTION_HINT,
+  ACQUIRE_OPENS_ON_LAUNCH,
+  getReserveHint,
+  getLiquidityPoolContributionHint,
   MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
+import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
+import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 
 export const AcquireWindow = ({
   data,
@@ -20,6 +27,17 @@ export const AcquireWindow = ({
   isAdvancedPresetAvailable = true,
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
+  const { currencyLabel } = useCurrency();
+  const { data: nativePrices } = useNativePrices();
+  const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
+  const { isRobinHood } = useNetwork();
+  // The threshold is entered and stored in the chain's native unit, whatever display currency is picked.
+  const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
+  const isIndexVault = isRobinHood && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  const maxAcquireThreshold = 100000;
+  const minAcquireThresholdRangeHint = isRobinHood
+    ? `Allowed range when set: 0.01 to 100,000 ${assetSymbol}.`
+    : `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -41,7 +59,7 @@ export const AcquireWindow = ({
   };
 
   const getMinAcquireDate = () => {
-    if (data.contributionOpenWindowType === 'custom') {
+    if (!isAcquireOnly && data.contributionOpenWindowType === 'custom') {
       return addMilliseconds(new Date(data.contributionOpenWindowTime), data.contributionDuration);
     }
     return null;
@@ -51,6 +69,15 @@ export const AcquireWindow = ({
 
   return (
     <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16 min-w-0 overflow-x-hidden">
+      {isIndexVault && (
+        <div className="md:col-span-2 rounded-xl border border-steel-750 p-4 md:p-6">
+          <IndexBasketEditor
+            value={data.indexBasket}
+            onChange={basket => updateField('indexBasket', basket)}
+            error={errors.indexBasket}
+          />
+        </div>
+      )}
       <div className="space-y-12 min-w-0">
         <div>
           <Label className="uppercase font-bold" htmlFor="acquireWindowDuration">
@@ -73,13 +100,10 @@ export const AcquireWindow = ({
               name="acquireOpenWindowType"
               options={[
                 {
-                  name: 'upon-asset-window-closing',
-                  label: 'Upon Asset Window Closing',
+                  name: ACQUIRE_OPENS_ON_LAUNCH,
+                  label: isAcquireOnly ? 'Upon Vault Launch' : 'Upon Asset Window Closing',
                 },
-                {
-                  name: 'custom',
-                  label: 'Custom',
-                },
+                { name: 'custom', label: 'Custom' },
               ]}
               value={data.acquireOpenWindowType || ''}
               onChange={value => updateField('acquireOpenWindowType', value)}
@@ -101,18 +125,45 @@ export const AcquireWindow = ({
           </div>
         </div>
         {isAcquireOnly && (
-          <div>
-            <Label className="uppercase font-bold" htmlFor="minAcquireThreshold">
-              MINIMUM ADA THRESHOLD (OPTIONAL)
-            </Label>
-            <div className="mt-4">
+          <div className="mt-4">
+            {isRobinHood ? (
+              // Entered in USD (what the creator thinks in), stored in ETH (what the API and contract take).
               <LavaInput
                 error={errors.minAcquireThreshold}
-                label=""
+                label={isIndexVault ? 'RESERVE AMOUNT (OPTIONAL)' : 'MINIMUM THRESHOLD (OPTIONAL)'}
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
-                placeholder="e.g. 10000"
-                suffix="ADA"
+                placeholder={ethUsd ? 'e.g. 500' : 'Loading ETH price…'}
+                suffix="USD"
+                type="text"
+                disabled={!ethUsd}
+                value={
+                  data.minAcquireThresholdUsd != null
+                    ? String(data.minAcquireThresholdUsd)
+                    : data.minAcquireThreshold && ethUsd
+                      ? String(Math.round(Number(data.minAcquireThreshold) * ethUsd * 100) / 100)
+                      : ''
+                }
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                  const eth = usdToEthThreshold(raw, ethUsd);
+                  updateField('minAcquireThresholdUsd', raw === '' ? null : raw);
+                  updateField('minAcquireThreshold', eth === null ? null : Math.min(eth, maxAcquireThreshold));
+                }}
+                hint={
+                  data.minAcquireThreshold
+                    ? `≈ ${data.minAcquireThreshold} ETH at the current price. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}). Vault locks only if at least this much is acquired; otherwise every acquirer is refunded.`
+                    : `Optional. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}) when set. If not set, any acquired ETH can lock the vault.`
+                }
+              />
+            ) : (
+              <LavaInput
+                error={errors.minAcquireThreshold}
+                label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
+                id="minAcquireThreshold"
+                name="minAcquireThreshold"
+                placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
+                suffix={assetSymbol}
                 type="text"
                 value={
                   data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
@@ -120,28 +171,62 @@ export const AcquireWindow = ({
                     : ''
                 }
                 onChange={e => {
+                  if (isRobinHood) {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+
+                    // Allow natural partial typing, but block committed values below 0.01 ETH.
+                    if (raw !== '') {
+                      const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
+                      const parsed = Number(raw);
+                      if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
+                        return;
+                      }
+                      if (!Number.isNaN(parsed) && parsed > maxAcquireThreshold) {
+                        return;
+                      }
+                    }
+
+                    updateField('minAcquireThreshold', raw === '' ? null : raw);
+                    return;
+                  }
                   const raw = e.target.value.replace(/[^0-9]/g, '');
-                  updateField('minAcquireThreshold', raw === '' ? null : Number(raw));
+                  updateField('minAcquireThreshold', raw === '' ? null : Math.min(Number(raw), maxAcquireThreshold));
+                }}
+                onBlur={() => {
+                  if (!isRobinHood) return;
+                  if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
+                  const parsed = Number(data.minAcquireThreshold);
+                  if (Number.isNaN(parsed)) {
+                    updateField('minAcquireThreshold', null);
+                    return;
+                  }
+                  if (parsed > 0 && parsed < 0.01) {
+                    updateField('minAcquireThreshold', '0.01');
+                    return;
+                  }
+                  if (parsed > maxAcquireThreshold) {
+                    updateField('minAcquireThreshold', String(maxAcquireThreshold));
+                  }
                 }}
                 hint={
                   data.liquidityPoolContribution > 0
-                    ? `Optional. Sets the minimum ADA required for the vault to lock. Important: When LP Contribution is ${data.liquidityPoolContribution}%, the vault needs enough ADA to meet BOTH your minimum threshold AND the LP minimum liquidity requirement. If either threshold is not met, the vault will fail and all ADA is refunded. If not set, only the LP minimum must be met.`
-                    : 'Optional. If set, the vault will only lock if this minimum amount of ADA is acquired. If not set, the vault will lock if ANY amount of ADA is acquired. If no ADA is acquired, the vault will fail and all ADA is refunded.'
+                    ? `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
+                    : `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
                 }
               />
-              {data.liquidityPoolContribution > 0 && (
-                <p className="text-orange-500 mt-2 text-sm">
-                  Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that
-                  must be met:
-                  <br />
-                  1. Your minimum ADA threshold (if set)
-                  <br />
-                  2. LP minimum liquidity requirement (calculated automatically)
-                  <br />
-                  The vault will fail if EITHER threshold is not reached during the acquire window.
-                </p>
-              )}
-            </div>
+            )}
+            {data.liquidityPoolContribution > 0 && (
+              <p className="text-orange-500 mt-2 text-sm">
+                Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that must
+                be met:
+                <br />
+                1. Your minimum {assetSymbol} threshold (if set)
+                <br />
+                2. LP minimum liquidity requirement (calculated automatically)
+                <br />
+                The vault will fail if EITHER threshold is not reached during the acquire window.
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -182,7 +267,7 @@ export const AcquireWindow = ({
             type="text"
             value={data.acquireReserve === 0 ? '0' : data.acquireReserve ? String(data.acquireReserve) : ''}
             onChange={handleChange}
-            hint={RESERVE_HINT}
+            hint={getReserveHint(currencyLabel)}
             disabled={isPresetConfigLocked || isAcquireOnly || data.tokensForAcquires === 0}
           />
           {!isAcquireOnly && data.acquireReserve < 100 && data.tokensForAcquires > 0 && (
@@ -210,7 +295,7 @@ export const AcquireWindow = ({
             }
             onChange={handleChange}
             disabled={isAcquireOnly ? false : isPresetConfigLocked}
-            hint={LIQUIDITY_POOL_CONTRIBUTION_HINT}
+            hint={getLiquidityPoolContributionHint(currencyLabel)}
           />
           {data.liquidityPoolContribution === 0 && (
             <p className="text-orange-500 mt-1">

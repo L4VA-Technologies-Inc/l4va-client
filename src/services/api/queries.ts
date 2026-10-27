@@ -11,6 +11,7 @@ import { TapToolsApiProvider } from '@/services/api/taptools';
 import { PresetsApiProvider } from '@/services/api/presets/index.js';
 import { SettingsApiProvider } from '@/services/api/settings/index.js';
 import { RewardsApiProvider } from '@/services/api/rewards/index.js';
+import { TokensApiProvider } from '@/services/api/tokens/index.js';
 
 export const useVaults = (filters: any) => {
   return useQuery({
@@ -29,10 +30,10 @@ export const useAcquire = () => {
   });
 };
 
-export const useStatistics = () => {
+export const useStatistics = (params = {}) => {
   return useQuery({
-    queryKey: ['statistics'],
-    queryFn: () => VaultsApiProvider.getStatistics(),
+    queryKey: ['statistics', params],
+    queryFn: () => VaultsApiProvider.getStatistics(params),
   });
 };
 
@@ -62,6 +63,49 @@ export const useVault = (id: string) => {
     queryKey: ['vault', id],
     queryFn: () => VaultsApiProvider.getVault(id),
     enabled: !!id,
+  });
+};
+
+/**
+ * Tokens an index basket may hold. `restricted: false` means any token the
+ * swap adapter can quote (the free search); testnet limits it to the tokens
+ * seeded on the fixed-rate adapter.
+ */
+export const useIndexSupportedAssets = () => {
+  return useQuery({
+    queryKey: ['index-supported-assets'],
+    queryFn: () => VaultsApiProvider.getIndexSupportedAssets(),
+    staleTime: Infinity,
+  });
+};
+
+/** Liquidity pool an EVM vault seeds on close: status, then live reserves. */
+export const useVaultLp = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['vault-lp', id],
+    queryFn: () => VaultsApiProvider.getVaultLp(id),
+    enabled: !!id && enabled,
+    // 404 = this vault has no pool; nothing to retry or poll.
+    retry: false,
+    staleTime: 30_000,
+    // The pool is seeded by a backend cron right after the raise closes, and its
+    // reserves move with every trade. A failed seed will not recover by itself.
+    refetchInterval: query =>
+      query.state.status === 'error' || query.state.data?.status === 'failed' ? false : 30_000,
+  });
+};
+
+/** Basket, live allocation and rebalance history of an index-weighted vault. */
+export const useVaultIndex = (id: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['vault-index', id],
+    queryFn: () => VaultsApiProvider.getIndexOverview(id),
+    enabled: !!id && enabled,
+    // Holdings are valued from swap quotes the backend caches for a minute,
+    // and a rebalance can progress while the page stays open, so the view
+    // refreshes on the same cadence instead of waiting for a remount.
+    staleTime: 60_000,
+    refetchInterval: 60_000,
   });
 };
 
@@ -261,7 +305,7 @@ export const usePublicProfile = (userId: string) => {
 // Core Mutations
 export const useLogin = () => {
   return useMutation({
-    mutationFn: (credentials: { signature: string; stakeAddress: string; walletAddress: string }) =>
+    mutationFn: (credentials: { signature: string; stakeAddress: string; walletAddress: string; chainType: string }) =>
       CoreApiProvider.login(credentials),
   });
 };
@@ -277,6 +321,23 @@ export const useUpdateProfile = () => {
         queryClient.setQueryData(['profile'], response);
       }
     },
+  });
+};
+
+export const useVerifyEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => CoreApiProvider.verifyEmail(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+};
+
+export const useResendEmailVerification = () => {
+  return useMutation({
+    mutationFn: () => CoreApiProvider.resendEmailVerification(),
   });
 };
 
@@ -319,6 +380,7 @@ export const useWalletSummaryPaginated = ({
   whitelistedPolicies,
   search,
   vaultId,
+  chain,
 }: {
   address: string;
   page?: number;
@@ -327,9 +389,10 @@ export const useWalletSummaryPaginated = ({
   whitelistedPolicies?: string[];
   search?: string;
   vaultId?: string;
+  chain?: string;
 }) => {
   return useQuery({
-    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId],
+    queryKey: ['wallet-summary', address, page, limit, filter, whitelistedPolicies, search, vaultId, chain],
     queryFn: () =>
       TapToolsApiProvider.getWalletSummaryPaginated({
         address,
@@ -339,6 +402,7 @@ export const useWalletSummaryPaginated = ({
         whitelistedPolicies,
         search,
         vaultId,
+        chain,
       }),
     enabled: !!address,
   });
@@ -373,11 +437,12 @@ export const useSubmitTerminationClaim = () => {
   });
 };
 
-export const useGovernanceProposals = (vaultId: string) => {
+export const useGovernanceProposals = (vaultId: string, params: { page?: number; limit?: number } = {}) => {
   return useQuery({
-    queryKey: ['governance-proposals', vaultId],
-    queryFn: () => GovernanceApiProvider.getProposals(vaultId),
+    queryKey: ['governance-proposals', vaultId, params],
+    queryFn: () => GovernanceApiProvider.getProposals(vaultId, params),
     enabled: !!vaultId,
+    staleTime: 0,
   });
 };
 
@@ -386,12 +451,17 @@ export const useGovernanceProposal = (proposalId: string) => {
     queryKey: ['governance-proposal', proposalId],
     queryFn: () => GovernanceApiProvider.getProposal(proposalId),
     enabled: !!proposalId,
+    staleTime: 0,
   });
 };
 
 export const useDeleteProposal = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (proposalId: string) => GovernanceApiProvider.deleteProposal(proposalId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
+    },
   });
 };
 
@@ -469,9 +539,13 @@ export const useOffersToCancel = (vaultId: string, { limit = 20, search = '' } =
 };
 
 export const useCreateProposal = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ vaultId, proposalData }: { vaultId: string; proposalData: any }) =>
       GovernanceApiProvider.createProposal(vaultId, proposalData),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals', variables.vaultId] });
+    },
   });
 };
 
@@ -496,17 +570,31 @@ export const useBuildVoteFeeTransaction = () => {
   });
 };
 
-export const useSubmitProposalFeePayment = () => {
+export const useBuildVoteFeePayment = () => {
   return useMutation({
+    mutationFn: ({ proposalId }: { proposalId: string }) => GovernanceApiProvider.buildVoteFeePayment(proposalId),
+  });
+};
+
+export const useSubmitProposalFeePayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // Cardano sends { transaction, signatures }; EVM sends { txHash }. Only the
+    // provided keys are forwarded so the backend can tell the shapes apart.
     mutationFn: ({
       proposalId,
       transaction,
       signatures,
+      txHash,
     }: {
       proposalId: string;
-      transaction: string;
-      signatures: string[];
-    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, { transaction, signatures }),
+      transaction?: string;
+      signatures?: string[];
+      txHash?: string;
+    }) => GovernanceApiProvider.submitProposalFeePayment(proposalId, txHash ? { txHash } : { transaction, signatures }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
+    },
   });
 };
 
@@ -552,6 +640,12 @@ export const useMarketWithOHLCV = (vaultId: string, interval: string = '1d') => 
     queryKey: ['markets', 'ohlcv', vaultId, interval],
     queryFn: () => VaultsApiProvider.getMarketByIdWithOHLCV(vaultId, interval),
     enabled: !!vaultId,
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 };
 
@@ -560,6 +654,138 @@ export const useMarketStatistics = (params = {}) => {
     queryKey: ['vaults', 'market-statistics', params],
     queryFn: () => VaultsApiProvider.getMarketStatistics(params),
     staleTime: 0,
+  });
+};
+
+export const useMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins'],
+    queryFn: () => TokensApiProvider.getMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useMemecoin = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins', id],
+    queryFn: () => TokensApiProvider.getMemecoin(id),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useMemecoinOhlc = (id: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'memecoins', id, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getMemecoinOhlc(id, days),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', 'memecoins'],
+    queryFn: () => TokensApiProvider.getCardanoMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoin = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', id],
+    queryFn: () => TokensApiProvider.getCardanoMemecoin(id),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useCardanoMemecoinOhlc = (id: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'cardano', id, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getCardanoMemecoinOhlc(id, days),
+    enabled: !!id,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodMemecoins = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', 'memecoins'],
+    queryFn: () => TokensApiProvider.getRobinhoodMemecoins(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodRwas = (enabled = true) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', 'rwas'],
+    queryFn: () => TokensApiProvider.getRobinhoodRwas(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodToken = (address: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address],
+    queryFn: () => TokensApiProvider.getRobinhoodToken(address),
+    enabled: !!address,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodTokenOhlc = (address: string, days: number = 7) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address, 'ohlc', days],
+    queryFn: () => TokensApiProvider.getRobinhoodTokenOhlc(address, days),
+    enabled: !!address,
+    staleTime: 60_000,
+  });
+};
+
+export const useRobinhoodTokenTrades = (address: string, limit: number = 40) => {
+  return useQuery({
+    queryKey: ['tokens', 'robinhood', address, 'trades', limit],
+    queryFn: () => TokensApiProvider.getRobinhoodTokenTrades(address, limit),
+    enabled: !!address,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+};
+
+export const useTokenDetail = (id: string) => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id],
+    queryFn: () => TokensApiProvider.getTokenDetail(id),
+    enabled: !!id,
+    staleTime: 30_000,
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useTokenOhlc = (id: string, interval: string = '1d') => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id, 'ohlc', interval],
+    queryFn: () => TokensApiProvider.getTokenOhlc(id, interval),
+    enabled: !!id,
+    staleTime: 30_000,
+  });
+};
+
+export const useTokenTrades = (id: string, limit: number = 40, enabled = false) => {
+  return useQuery({
+    queryKey: ['tokens', 'detail', id, 'trades', limit],
+    queryFn: () => TokensApiProvider.getTokenTrades(id, limit),
+    enabled: !!id && enabled,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
   });
 };
 
@@ -605,6 +831,35 @@ export const useVlrmFeeSettings = () => {
   return useQuery({
     queryKey: ['vlrm-fee-settings'],
     queryFn: () => SettingsApiProvider.getVlrmFeeSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useNftFlagsSettings = () => {
+  return useQuery({
+    queryKey: ['nft-flags-settings'],
+    queryFn: () => SettingsApiProvider.getNftFlagsSettings(),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+/** Which vault types each chain currently offers, plus the EVM NFT-asset flag. */
+/** ADA and ETH prices in USD, for entering USD amounts in the create-vault form. */
+export const useNativePrices = () => {
+  return useQuery({
+    queryKey: ['native-prices'],
+    queryFn: () => SettingsApiProvider.getNativePrices(),
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useVaultCreationFlags = () => {
+  return useQuery({
+    queryKey: ['vault-creation-flags'],
+    queryFn: () => SettingsApiProvider.getVaultCreationFlags(),
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });

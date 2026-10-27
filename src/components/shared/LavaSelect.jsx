@@ -200,11 +200,15 @@ export const LavaSteelSelect = ({
   placeholder = 'Select an option',
   className,
   transparent = false,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => setIsOpen(!isOpen);
+  const toggleDropdown = () => {
+    if (disabled) return;
+    setIsOpen(!isOpen);
+  };
 
   const handleOptionClick = optionValue => {
     const option = options.find(opt => opt.value === optionValue);
@@ -219,20 +223,25 @@ export const LavaSteelSelect = ({
 
   useClickOutside(dropdownRef, () => setIsOpen(false));
 
-  const selectedOption = options.find(option => option.value === value)?.label || placeholder;
+  const selectedOption = options.find(option => option.value === value);
 
   return (
     <div ref={dropdownRef} className="relative">
       <button
         className={`
-          flex items-center justify-between w-full px-4 py-2 ${transparent ? 'bg-transparent' : 'bg-steel-850'} rounded-lg 
+          flex items-center justify-between w-full px-4 py-2 ${transparent ? 'bg-transparent' : 'bg-steel-850'} rounded-lg
           border border-steel-750
+          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           ${className}
         `}
         type="button"
+        disabled={disabled}
         onClick={toggleDropdown}
       >
-        <span className="truncate mr-2">{selectedOption}</span>
+        <span className="flex items-center gap-2 truncate mr-2">
+          {selectedOption?.icon}
+          <span className="truncate">{selectedOption?.label || placeholder}</span>
+        </span>
         <ChevronDown className={`h-5 w-5 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       {isOpen && (
@@ -250,9 +259,12 @@ export const LavaSteelSelect = ({
                 type="button"
                 onClick={() => handleOptionClick(option.value)}
                 disabled={option.disabled}
-                title={option.label}
+                title={typeof option.label === 'string' ? option.label : undefined}
               >
-                <span className="block truncate">{option.label}</span>
+                <span className="flex items-center gap-2 truncate">
+                  {option.icon}
+                  <span className="truncate">{option.label}</span>
+                </span>
               </button>
             ))}
           </div>
