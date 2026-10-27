@@ -6,6 +6,17 @@ import { EmojiPicker } from 'stream-chat-react/emojis';
 import { useAuth } from '@/lib/auth/auth.js';
 import 'stream-chat-react/dist/css/v2/index.css';
 
+const getChatAuthHeaders = () => {
+  const token = localStorage.getItem('jwt');
+  if (!token) {
+    throw new Error('You must be signed in to use chat');
+  }
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const VaultChannelHeader = ({ vault }) => {
   return (
     <div className="flex items-center px-4 py-3 bg-steel-850">
@@ -16,14 +27,6 @@ const VaultChannelHeader = ({ vault }) => {
       </div>
     </div>
   );
-};
-
-const chatHeaders = () => {
-  const jwt = localStorage.getItem('jwt');
-  return {
-    'Content-Type': 'application/json',
-    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-  };
 };
 
 const VaultChat = ({ vault, vaultId, apiKey }) => {
@@ -37,9 +40,19 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
   const [error, setError] = useState(null);
   const userId = user?.id;
   const userName = user?.name || user?.username || 'Anonymous User';
+  const userImage = user?.profileImage || `https://getstream.io/random_png/?id=${userId}&name=${userName}`;
 
   useEffect(() => {
+    let cancelled = false;
+    let chatClient;
+
     const initChat = async () => {
+      if (!userId) {
+        setError('You must be signed in to use chat');
+        setLoading(false);
+        return;
+      }
+
       if (!actualVaultId || !actualApiKey) {
         setError('Missing required parameters: vaultId or apiKey');
         setLoading(false);
@@ -62,14 +75,14 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
         setLoading(true);
         setError(null);
 
-        const headers = chatHeaders();
+        const headers = getChatAuthHeaders();
 
-        const userResponse = await fetch('/api/v1/chat/user', {
+        const userResponse = await fetch(`/api/v1/chat/user/${userId}`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
             name: userName,
-            image: user?.avatar || `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
+            image: userImage,
           }),
         });
 
@@ -78,24 +91,31 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
           throw new Error(`${userError}`);
         }
 
-        const tokenResponse = await fetch('/api/v1/chat/token', { headers });
-        if (!tokenResponse.ok) {
-          const tokenError = await tokenResponse.text();
-          throw new Error(`${tokenError}`);
-        }
-
-        const tokenData = await tokenResponse.json();
-        const { token } = tokenData;
-
-        const chatClient = StreamChat.getInstance(actualApiKey);
-
-        const userData = {
-          id: userId,
-          name: userName,
-          image: user?.avatar || `https://getstream.io/random_png/?id=${userId}&name=${userName}`,
+        const fetchStreamToken = async () => {
+          const tokenResponse = await fetch(`/api/v1/chat/token/${userId}`, { headers: getChatAuthHeaders() });
+          if (!tokenResponse.ok) {
+            const tokenError = await tokenResponse.text();
+            throw new Error(`${tokenError}`);
+          }
+          const tokenData = await tokenResponse.json();
+          return tokenData.token;
         };
 
-        await chatClient.connectUser(userData, token);
+        chatClient = StreamChat.getInstance(actualApiKey);
+
+        await chatClient.connectUser(
+          {
+            id: userId,
+            name: userName,
+            image: userImage,
+          },
+          fetchStreamToken
+        );
+
+        if (cancelled) {
+          await chatClient.disconnectUser().catch(() => undefined);
+          return;
+        }
 
         const channelResponse = await fetch(`/api/v1/chat/vault/${actualVaultId}/channel`, {
           method: 'POST',
@@ -118,23 +138,36 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
 
         await chatChannel.watch();
 
-        try {
-          await chatChannel.addMembers([userId]);
-        } catch (memberError) {
-          console.log('User already a member or error adding:', memberError);
+        if (cancelled) {
+          await chatClient.disconnectUser().catch(() => undefined);
+          return;
         }
 
         setClient(chatClient);
         setChannel(chatChannel);
       } catch (error) {
-        setError(`${error}`);
+        if (!cancelled) {
+          setError(`${error}`);
+        }
+        if (chatClient) {
+          await chatClient.disconnectUser().catch(() => undefined);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     initChat();
-  }, [actualVaultId, userId, userName, actualApiKey, user?.avatar, vault?.name, vault?.description, vaultImage]);
+
+    return () => {
+      cancelled = true;
+      if (chatClient) {
+        chatClient.disconnectUser().catch(() => undefined);
+      }
+    };
+  }, [actualVaultId, userId, userName, actualApiKey, userImage, vault?.name, vault?.description, vaultImage]);
 
   const validateAndSendMessage = async message => {
     const urls = message.text.match(/https?:\/\/[^\s]+/g) || [];

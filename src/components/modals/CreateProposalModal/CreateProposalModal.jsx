@@ -128,6 +128,33 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
 
   const refreshProposals = () => queryClient.invalidateQueries({ queryKey: ['governance-proposals', vault.id] });
 
+  // Market action proposals are charged per NFT/item acted on (one fee unit per
+  // marketplace action), matching the backend's per-item governance fee. Mirrors
+  // the item-count logic used when building the marketplaceActions payload below.
+  const marketplaceActionsCount = useMemo(() => {
+    if (selectedOption !== 'marketplace_action') return 1;
+    const marketActionType = proposalData.marketActionType || 'buy';
+    switch (marketActionType) {
+      case 'swap':
+        return Math.max((proposalData.swapActions || []).length, 1);
+      case 'update_list':
+        return Math.max(
+          (proposalData.updateListingAssets || []).filter(asset => asset.newPrice && Number(asset.newPrice) > 0).length,
+          1
+        );
+      case 'sell':
+      case 'buy_sell':
+      case 'buy':
+        return Math.max((proposalData.buyingSellingOptions || []).length, 1);
+      case 'cancel_offer':
+        return Math.max((proposalData.cancelOfferAssets || []).length, 1);
+      case 'unlist':
+        return Math.max((proposalData.unlistAssets || []).length, 1);
+      default:
+        return 1;
+    }
+  }, [selectedOption, proposalData]);
+
   // Get fee for current proposal type. Cardano fees are lovelace numbers; EVM
   // fees live in a separate `evm` block as wei decimal strings, so both are
   // normalised to BigInt here and formatted per chain at render time.
@@ -145,8 +172,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       termination: fees.proposalFeeTermination,
       burning: fees.proposalFeeBurning,
     };
-    return BigInt(feeMap[selectedOption] || 0);
-  }, [governanceFees, selectedOption, isEvmVault]);
+    // Per-item scaling is Cardano only: the EVM fee is a flat per-type transfer (backend mirrors this).
+    const quantity = !isEvmVault && selectedOption === 'marketplace_action' ? marketplaceActionsCount : 1;
+    return BigInt(feeMap[selectedOption] || 0) * BigInt(quantity);
+  }, [governanceFees, selectedOption, isEvmVault, marketplaceActionsCount]);
 
   const handleCreateProposal = () => {
     if (!isWalletConnected) {
@@ -498,12 +527,14 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
     const isInvalid = isValidProposal();
     // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
     // precision loss a Number division would introduce for wei.
-    // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
-    // precision loss a Number division would introduce for wei.
     const formattedFee = formatUnits(currentProposalFee, isEvmVault ? 18 : 6);
     // The fee is always paid in the chain's native asset, so it is labelled by
     // chain rather than by the user's display-currency preference.
     const feeCurrencyLabel = isEvmVault ? 'ETH' : 'ADA';
+    const showFeeBreakdown = !isEvmVault && selectedOption === 'marketplace_action' && marketplaceActionsCount > 1;
+    const formattedPerUnitFee = showFeeBreakdown
+      ? formatUnits(currentProposalFee / BigInt(marketplaceActionsCount), isEvmVault ? 18 : 6)
+      : formattedFee;
     const isProcessing = status !== 'idle';
 
     const getButtonText = () => {
@@ -529,6 +560,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               <span className="text-gray-400">New proposal</span>
               <span className="text-yellow-500 text-xs">
                 Governance fee: {formattedFee} {feeCurrencyLabel}
+                {showFeeBreakdown && ` (${marketplaceActionsCount} × ${formattedPerUnitFee} ${feeCurrencyLabel})`}
               </span>
             </div>
           ) : (
