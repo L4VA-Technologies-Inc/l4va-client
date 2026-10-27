@@ -8,6 +8,8 @@ import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useNativePrices } from '@/services/api/queries';
+import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
   getReserveHint,
@@ -26,6 +28,8 @@ export const AcquireWindow = ({
 }) => {
   const isAcquireOnly = data.isAcquireOnly === true;
   const { currencyLabel } = useCurrency();
+  const { data: nativePrices } = useNativePrices();
+  const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
   const { isRobinHood } = useNetwork();
   // The threshold is entered and stored in the chain's native unit, whatever display currency is picked.
   const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
@@ -122,63 +126,95 @@ export const AcquireWindow = ({
         </div>
         {isAcquireOnly && (
           <div className="mt-4">
-            <LavaInput
-              error={errors.minAcquireThreshold}
-              label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
-              id="minAcquireThreshold"
-              name="minAcquireThreshold"
-              placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
-              suffix={assetSymbol}
-              type="text"
-              value={
-                data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
-                  ? String(data.minAcquireThreshold)
-                  : ''
-              }
-              onChange={e => {
-                if (isRobinHood) {
+            {isRobinHood ? (
+              // Entered in USD (what the creator thinks in), stored in ETH (what the API and contract take).
+              <LavaInput
+                error={errors.minAcquireThreshold}
+                label={isIndexVault ? 'RESERVE AMOUNT (OPTIONAL)' : 'MINIMUM THRESHOLD (OPTIONAL)'}
+                id="minAcquireThreshold"
+                name="minAcquireThreshold"
+                placeholder={ethUsd ? 'e.g. 500' : 'Loading ETH price…'}
+                suffix="USD"
+                type="text"
+                disabled={!ethUsd}
+                value={
+                  data.minAcquireThresholdUsd != null
+                    ? String(data.minAcquireThresholdUsd)
+                    : data.minAcquireThreshold && ethUsd
+                      ? String(Math.round(Number(data.minAcquireThreshold) * ethUsd * 100) / 100)
+                      : ''
+                }
+                onChange={e => {
                   const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                  const eth = usdToEthThreshold(raw, ethUsd);
+                  updateField('minAcquireThresholdUsd', raw === '' ? null : raw);
+                  updateField('minAcquireThreshold', eth === null ? null : Math.min(eth, maxAcquireThreshold));
+                }}
+                hint={
+                  data.minAcquireThreshold
+                    ? `≈ ${data.minAcquireThreshold} ETH at the current price. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}). Vault locks only if at least this much is acquired; otherwise every acquirer is refunded.`
+                    : `Optional. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}) when set. If not set, any acquired ETH can lock the vault.`
+                }
+              />
+            ) : (
+              <LavaInput
+                error={errors.minAcquireThreshold}
+                label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
+                id="minAcquireThreshold"
+                name="minAcquireThreshold"
+                placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
+                suffix={assetSymbol}
+                type="text"
+                value={
+                  data.minAcquireThreshold !== null && data.minAcquireThreshold !== undefined
+                    ? String(data.minAcquireThreshold)
+                    : ''
+                }
+                onChange={e => {
+                  if (isRobinHood) {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
 
-                  // Allow natural partial typing, but block committed values below 0.01 ETH.
-                  if (raw !== '') {
-                    const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
-                    const parsed = Number(raw);
-                    if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
-                      return;
+                    // Allow natural partial typing, but block committed values below 0.01 ETH.
+                    if (raw !== '') {
+                      const isPartialInput = raw === '0' || raw === '0.' || raw === '0.0';
+                      const parsed = Number(raw);
+                      if (!isPartialInput && !Number.isNaN(parsed) && parsed < 0.01) {
+                        return;
+                      }
+                      if (!Number.isNaN(parsed) && parsed > maxAcquireThreshold) {
+                        return;
+                      }
                     }
-                    if (!Number.isNaN(parsed) && parsed > maxAcquireThreshold) {
-                      return;
-                    }
+
+                    updateField('minAcquireThreshold', raw === '' ? null : raw);
+                    return;
                   }
-
-                  updateField('minAcquireThreshold', raw === '' ? null : raw);
-                  return;
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  updateField('minAcquireThreshold', raw === '' ? null : Math.min(Number(raw), maxAcquireThreshold));
+                }}
+                onBlur={() => {
+                  if (!isRobinHood) return;
+                  if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
+                  const parsed = Number(data.minAcquireThreshold);
+                  if (Number.isNaN(parsed)) {
+                    updateField('minAcquireThreshold', null);
+                    return;
+                  }
+                  if (parsed > 0 && parsed < 0.01) {
+                    updateField('minAcquireThreshold', '0.01');
+                    return;
+                  }
+                  if (parsed > maxAcquireThreshold) {
+                    updateField('minAcquireThreshold', String(maxAcquireThreshold));
+                  }
+                }}
+                hint={
+                  data.liquidityPoolContribution > 0
+                    ? `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
+                    : `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
                 }
-                const raw = e.target.value.replace(/[^0-9]/g, '');
-                updateField('minAcquireThreshold', raw === '' ? null : Math.min(Number(raw), maxAcquireThreshold));
-              }}
-              onBlur={() => {
-                if (!isRobinHood) return;
-                if (data.minAcquireThreshold === null || data.minAcquireThreshold === undefined) return;
-                const parsed = Number(data.minAcquireThreshold);
-                if (Number.isNaN(parsed)) {
-                  updateField('minAcquireThreshold', null);
-                  return;
-                }
-                if (parsed > 0 && parsed < 0.01) {
-                  updateField('minAcquireThreshold', '0.01');
-                  return;
-                }
-                if (parsed > maxAcquireThreshold) {
-                  updateField('minAcquireThreshold', String(maxAcquireThreshold));
-                }
-              }}
-              hint={
-                data.liquidityPoolContribution > 0
-                  ? `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
-                  : `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
-              }
-            />
+              />
+            )}
             {data.liquidityPoolContribution > 0 && (
               <p className="text-orange-500 mt-2 text-sm">
                 Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that must

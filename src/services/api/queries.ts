@@ -729,15 +729,6 @@ export const useRobinhoodRwas = (enabled = true) => {
   });
 };
 
-export const useRobinhoodNfts = (enabled = true) => {
-  return useQuery({
-    queryKey: ['tokens', 'robinhood', 'nfts'],
-    queryFn: () => TokensApiProvider.getRobinhoodNfts(),
-    enabled,
-    staleTime: 60_000,
-  });
-};
-
 export const useRobinhoodToken = (address: string) => {
   return useQuery({
     queryKey: ['tokens', 'robinhood', address],

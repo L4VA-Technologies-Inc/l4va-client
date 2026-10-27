@@ -162,7 +162,6 @@ const CreateAiComponent = () => {
                 transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
               >
                 <AiVaultPreview
-                  aiFields={builder.aiFields}
                   isLaunching={isLaunching}
                   missingFields={builder.missingFields}
                   status={builder.status}

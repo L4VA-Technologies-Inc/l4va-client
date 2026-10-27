@@ -1,3 +1,4 @@
+import { getNetwork } from '@/hooks/useNetwork';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
   createEmptyWhitelistAsset,
@@ -201,7 +202,9 @@ export const enforceVaultCoherence = vault => {
   }
 
   // Governance presets; the assistant or the user can still change them.
-  if (next.creationThreshold === null || next.creationThreshold === undefined) next.creationThreshold = 0.1;
+  if (next.creationThreshold === null || next.creationThreshold === undefined) {
+    next.creationThreshold = getNetwork() === 'robinhood' ? 0.1 : 0.5;
+  }
   if (next.cosigningThreshold === null || next.cosigningThreshold === undefined) next.cosigningThreshold = 33;
   if (next.executionThreshold === null || next.executionThreshold === undefined) next.executionThreshold = 51;
 

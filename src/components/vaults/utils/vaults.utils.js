@@ -5,8 +5,23 @@ import {
   toIndexBasketPayload,
 } from '@/components/vaults/index/indexVault.utils';
 
+/** Robinhood refuses acquire thresholds below this (ETH). */
+export const MIN_EVM_THRESHOLD_ETH = 0.01;
+
+/**
+ * Converts a USD reserve amount to the ETH the API stores, rounded to 1e-6 ETH.
+ * Returns null for an empty or invalid amount.
+ */
+export const usdToEthThreshold = (usd, ethUsd) => {
+  const amount = Number(String(usd ?? '').replace(',', '.'));
+  if (!ethUsd || !Number.isFinite(amount) || amount <= 0) return null;
+  return Math.round((amount / ethUsd) * 1e6) / 1e6;
+};
+
 export const formatVaultData = (vaultData, isRobinHood = false) => {
   const formattedData = { ...vaultData };
+  // The USD figure is only what the creator typed; the API takes the ETH value.
+  delete formattedData.minAcquireThresholdUsd;
   const isIndexVault = isRobinHood && formattedData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
 
   // Index vaults are acquire-only with every token for acquirers — the API rejects

@@ -19,10 +19,12 @@ const RH_TABS = ['RWAs', 'DeFi', 'Memecoins', 'Other'];
 // Tag each Robinhood tab filters on; "Other" is everything that matches none of them
 const RH_TAB_TAGS = { RWAs: 'RWA', DeFi: 'DeFi', Memecoins: 'Memecoins' };
 
+// Tags are typed by vault creators, so "defi" and "DeFi" must land in the same tab.
 const matchesRhTab = (token, tab) => {
-  const tags = token.tags || [];
-  if (tab === 'Other') return !Object.values(RH_TAB_TAGS).some(tag => tags.includes(tag));
-  return tags.includes(RH_TAB_TAGS[tab]);
+  const tags = (token.tags || []).map(tag => String(tag).toLowerCase());
+  const has = tag => tags.includes(tag.toLowerCase());
+  if (tab === 'Other') return !Object.values(RH_TAB_TAGS).some(has);
+  return has(RH_TAB_TAGS[tab]);
 };
 const PAGE_SIZE = 10;
 

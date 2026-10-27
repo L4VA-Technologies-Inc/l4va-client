@@ -5,10 +5,10 @@
 // Transfer logs and exposes it, so we use it as the enumeration source. The
 // wallet address itself still comes from wagmi (`useAccount`).
 
+import { IS_ROBINHOOD_TESTNET } from '@/lib/evm/network';
+
 const BLOCKSCOUT_URL = import.meta.env.VITE_ROBINHOOD_BLOCKSCOUT_URL;
-const ROBINHOOD_NETWORK = String(import.meta.env.VITE_ROBINHOOD_NETWORK || '').toLowerCase();
-const IS_BLOCKSCOUT_TESTNET =
-  ROBINHOOD_NETWORK === 'testnet' || (ROBINHOOD_NETWORK !== 'mainnet' && /(^|\.)testnet\./i.test(BLOCKSCOUT_URL || ''));
+const IS_BLOCKSCOUT_TESTNET = IS_ROBINHOOD_TESTNET;
 
 // Safety cap so a paginating wallet with thousands of tokens can't loop forever.
 const MAX_PAGES = 10;

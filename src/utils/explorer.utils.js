@@ -1,5 +1,6 @@
 import { ChainType } from '@/utils/types';
 import { IS_PREPROD } from '@/utils/networkValidation';
+import { ROBINHOOD_NETWORK } from '@/lib/evm/network';
 
 /**
  * Centralized blockchain explorer URL configuration
@@ -35,14 +36,7 @@ const EXPLORER_URLS = {
  */
 const getExplorerConfig = (chainType = ChainType.CARDANO, isTestnet = IS_PREPROD) => {
   // Robinhood's network is configured on its own; IS_PREPROD is the Cardano network.
-  const network =
-    chainType === ChainType.ROBINHOOD
-      ? import.meta.env.VITE_ROBINHOOD_NETWORK === 'mainnet'
-        ? 'mainnet'
-        : 'testnet'
-      : isTestnet
-        ? 'testnet'
-        : 'mainnet';
+  const network = chainType === ChainType.ROBINHOOD ? ROBINHOOD_NETWORK : isTestnet ? 'testnet' : 'mainnet';
   return EXPLORER_URLS[chainType]?.[network] || EXPLORER_URLS[ChainType.CARDANO][network];
 };
 

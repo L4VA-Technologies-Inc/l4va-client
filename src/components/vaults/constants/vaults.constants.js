@@ -574,7 +574,12 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.1, 'Proposal threshold must be at least 0.1%'),
+    // 0.1% is the Robinhood launch default; Cardano governance keeps its 0.5% floor.
+    .test('min-by-chain', 'Proposal threshold is below the minimum', function validateMinByChain(value) {
+      if (value === null || value === undefined) return true;
+      const min = localStorage.getItem('selectedNetwork') === 'robinhood' ? 0.1 : 0.5;
+      return value >= min || this.createError({ message: `Proposal threshold must be at least ${min}%` });
+    }),
   // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
   cosigningThreshold: yup
     .number()
@@ -646,7 +651,12 @@ export const editUpcomingVaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.1, 'Proposal threshold must be at least 0.1%')
+    // 0.1% is the Robinhood launch default; Cardano governance keeps its 0.5% floor.
+    .test('min-by-chain', 'Proposal threshold is below the minimum', function validateMinByChain(value) {
+      if (value === null || value === undefined) return true;
+      const min = localStorage.getItem('selectedNetwork') === 'robinhood' ? 0.1 : 0.5;
+      return value >= min || this.createError({ message: `Proposal threshold must be at least ${min}%` });
+    })
     .max(100, 'Cannot exceed 100%'),
   cosigningThreshold: yup
     .number()

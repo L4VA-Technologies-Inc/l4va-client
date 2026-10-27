@@ -2,12 +2,13 @@ import { defineChain, type Chain } from 'viem';
 import { createConfig, http } from 'wagmi';
 import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors';
 
+import { IS_ROBINHOOD_TESTNET } from '@/lib/evm/network';
+
 // Robinhood Chain — Arbitrum L2 (EVM), mainnet launched 2026-07-01.
 // Chain ID 4663 (mainnet) / 46630 (testnet). ETH is the native gas token.
 // Active network is selected via VITE_ROBINHOOD_NETWORK ('mainnet' | 'testnet'),
 // mirroring the Cardano VITE_CARDANO_NETWORK convention.
-const ROBINHOOD_NETWORK = import.meta.env.VITE_ROBINHOOD_NETWORK || 'mainnet';
-const IS_TESTNET = ROBINHOOD_NETWORK === 'testnet';
+const IS_TESTNET = IS_ROBINHOOD_TESTNET;
 
 /** Uniswap Trading API + token markets target Robinhood mainnet. */
 export const robinhoodUniswapChain = defineChain({

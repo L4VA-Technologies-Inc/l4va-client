@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import { addMilliseconds } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ExternalLink, ListChecks, Lock, Plus, RotateCcw, Sparkles, Upload } from 'lucide-react';
@@ -27,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useNativePrices } from '@/services/api/queries';
+import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
   formatBps,
   INDEX_MAX_ASSETS,
@@ -297,12 +299,12 @@ const FieldShell = ({ label, hint, isChanged, children }) => (
   </div>
 );
 
-const SelectRow = ({ label, value, options, isAiSet, isChanged, onCommit }) => {
+const SelectRow = ({ label, value, options, isChanged, onCommit }) => {
   const [open, setOpen] = useState(false);
   const selected = options.find(option => option.value === value);
 
   return (
-    <FieldShell isAiSet={isAiSet} isChanged={isChanged} label={label}>
+    <FieldShell isChanged={isChanged} label={label}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -343,8 +345,8 @@ const SelectRow = ({ label, value, options, isAiSet, isChanged, onCommit }) => {
   );
 };
 
-const DurationRow = ({ label, value, isAiSet, isChanged, minMs, maxMs, onCommit }) => (
-  <FieldShell isAiSet={isAiSet} isChanged={isChanged} label={label}>
+const DurationRow = ({ label, value, isChanged, minMs, maxMs, onCommit }) => (
+  <FieldShell isChanged={isChanged} label={label}>
     <div className="w-auto [&_div]:mt-0 [&_button]:h-7 [&_button]:min-h-7 [&_button]:w-auto [&_button]:justify-center [&_button]:px-2 [&_button]:py-0 [&_button]:text-xs [&_span]:text-xs [&_svg]:mr-1 [&_svg]:h-3 [&_svg]:w-3">
       <LavaIntervalPicker margin={0} maxMs={maxMs} minMs={minMs} value={value} variant="steel" onChange={onCommit} />
     </div>
@@ -384,13 +386,13 @@ const DateRow = ({ label, value, isChanged, minDate, onCommit }) => (
   </div>
 );
 
-const TagsRow = ({ value = [], isAiSet, isChanged, isEmptyAction, onAction, onCommit }) => {
+const TagsRow = ({ value = [], isChanged, isEmptyAction, onAction, onCommit }) => {
   const [open, setOpen] = useState(false);
   const selected = value || [];
   const available = VAULT_TAGS_OPTIONS.filter(option => !selected.includes(option.value));
 
   return (
-    <FieldShell isAiSet={isAiSet} isChanged={isChanged} label="Tags">
+    <FieldShell isChanged={isChanged} label="Tags">
       <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
         {selected.length > 0 && (
           <div className="flex flex-wrap justify-end gap-1.5">
@@ -518,7 +520,6 @@ const Section = ({ id, label, isOpen, onToggle, children }) => (
 
 export const AiVaultPreview = ({
   vault,
-  aiFields,
   missingFields = [],
   onLaunch,
   isLaunching,
@@ -574,7 +575,6 @@ export const AiVaultPreview = ({
     });
   };
 
-  const isAiSet = field => aiFields.includes(field);
   const isChanged = field => changedFields.has(field);
   // Mirrors the manual form's own gate (same schema powers "Confirm & launch" there) instead of
   // trusting the assistant's self-reported status, which can lag behind an already-valid draft.
@@ -680,26 +680,37 @@ export const AiVaultPreview = ({
       : undefined;
 
   const nativeLabel = isRobinHood ? 'ETH' : 'ADA';
-  const usdPerNative = Number(isRobinHood ? nativePrices?.data?.ethUsd : nativePrices?.data?.adaUsd) || 0;
+  // Robinhood: entered in USD, stored in ETH. Cardano: entered and stored in ADA.
+  const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
   const thresholdNative = Number(vault.minAcquireThreshold);
   const hasThreshold =
     vault.minAcquireThreshold !== null && vault.minAcquireThreshold !== undefined && thresholdNative > 0;
-  // Robinhood rejects thresholds under 0.01 ETH; Cardano takes whole ADA.
-  const minThresholdNative = isRobinHood ? 0.01 : 1;
+  // What the creator typed, so re-editing does not drift through the ETH rounding.
+  const thresholdUsd = hasThreshold
+    ? (vault.minAcquireThresholdUsd ?? Math.round(thresholdNative * ethUsd * 100) / 100)
+    : null;
 
   const commitThreshold = raw => {
     if (raw === '') {
-      onUpdateVault('minAcquireThreshold', null);
+      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
       return;
     }
-    const parsed = Number(String(raw).replace(',', '.'));
-    if (Number.isNaN(parsed) || parsed <= 0) {
-      onUpdateVault('minAcquireThreshold', null);
+    if (!isRobinHood) {
+      commitNumber('minAcquireThreshold', raw, { min: 1, max: 100000, integer: true });
       return;
     }
-    let native = usdPerNative ? parsed / usdPerNative : parsed;
-    native = isRobinHood ? Math.round(native * 1e6) / 1e6 : Math.round(native);
-    onUpdateVault('minAcquireThreshold', Math.min(100000, Math.max(minThresholdNative, native)));
+    const eth = usdToEthThreshold(raw, ethUsd);
+    if (eth === null) {
+      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
+      return;
+    }
+    if (eth < MIN_EVM_THRESHOLD_ETH) {
+      toast.error(
+        `The reserve amount must be at least ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${formatUsd(MIN_EVM_THRESHOLD_ETH * ethUsd)}).`
+      );
+      return;
+    }
+    onUpdateVault({ minAcquireThreshold: Math.min(100000, eth), minAcquireThresholdUsd: Number(raw) });
   };
 
   const commitNumber = (field, raw, { min = 0, max = 100, emptyValue = null, integer = false } = {}) => {
@@ -768,7 +779,6 @@ export const AiVaultPreview = ({
           <EditableRow
             actionLabel="Generate"
             displayValue={vault.name}
-            isAiSet={isAiSet('name')}
             isChanged={isChanged('name')}
             isEmptyAction={!vault.name}
             label="Name"
@@ -781,7 +791,6 @@ export const AiVaultPreview = ({
           <EditableRow
             actionLabel="Generate"
             displayValue={vault.vaultTokenTicker}
-            isAiSet={isAiSet('vaultTokenTicker')}
             isChanged={isChanged('vaultTokenTicker')}
             isEmptyAction={!vault.vaultTokenTicker}
             label="Ticker"
@@ -796,7 +805,6 @@ export const AiVaultPreview = ({
             multiline
             actionLabel="Generate"
             displayValue={vault.description}
-            isAiSet={isAiSet('description')}
             isChanged={isChanged('description')}
             isEmptyAction={!vault.description}
             label="Description"
@@ -810,7 +818,6 @@ export const AiVaultPreview = ({
             multiline
             actionLabel="Generate"
             displayValue={vault.tokenDescription}
-            isAiSet={isAiSet('tokenDescription')}
             isChanged={isChanged('tokenDescription')}
             isEmptyAction={!vault.tokenDescription}
             label="Token description"
@@ -821,7 +828,6 @@ export const AiVaultPreview = ({
             onCommit={next => onUpdateVault('tokenDescription', next)}
           />
           <TagsRow
-            isAiSet={isAiSet('tags')}
             isChanged={isChanged('tags')}
             isEmptyAction={!vault.tags?.length}
             value={vault.tags || []}
@@ -1014,7 +1020,6 @@ export const AiVaultPreview = ({
             <>
               <EditableRow
                 displayValue={percent(vault.acquireReserve)}
-                isAiSet={isAiSet('acquireReserve')}
                 isChanged={isChanged('acquireReserve')}
                 label="Reserve"
                 placeholder="100"
@@ -1024,7 +1029,6 @@ export const AiVaultPreview = ({
                 onCommit={next => commitNumber('acquireReserve', next)}
               />
               <SelectRow
-                isAiSet={isAiSet('isAcquireOnly')}
                 isChanged={isChanged('isAcquireOnly')}
                 label="Acquisitions only"
                 options={YES_NO_OPTIONS}
@@ -1032,7 +1036,6 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('isAcquireOnly', next)}
               />
               <SelectRow
-                isAiSet={isAiSet('allowAcquireExpansion')}
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
@@ -1045,7 +1048,6 @@ export const AiVaultPreview = ({
 
         <Section id="launch" isOpen={openSections.has('launch')} label="Launch" onToggle={toggleSection}>
           <SelectRow
-            isAiSet={isAiSet('privacy')}
             isChanged={isChanged('privacy')}
             label="Privacy"
             options={privacyOptions}
@@ -1055,7 +1057,6 @@ export const AiVaultPreview = ({
           {isPrivate && (
             <>
               <SelectRow
-                isAiSet={isAiSet('valueMethod')}
                 isChanged={isChanged('valueMethod')}
                 label="Value method"
                 options={valueMethodOptions}
@@ -1087,7 +1088,6 @@ export const AiVaultPreview = ({
           {!isAcquireOnly && (
             <>
               <DurationRow
-                isAiSet={isAiSet('contributionDuration')}
                 isChanged={isChanged('contributionDuration')}
                 label="Contribution"
                 minMs={MIN_CONTRIBUTION_DURATION_MS}
@@ -1095,7 +1095,6 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('contributionDuration', next)}
               />
               <SelectRow
-                isAiSet={isAiSet('contributionOpenWindowType')}
                 isChanged={isChanged('contributionOpenWindowType')}
                 label="Contribution opens"
                 options={CONTRIBUTION_OPENS_OPTIONS}
@@ -1115,7 +1114,6 @@ export const AiVaultPreview = ({
           {hasAcquireWindow && (
             <>
               <DurationRow
-                isAiSet={isAiSet('acquireWindowDuration')}
                 isChanged={isChanged('acquireWindowDuration')}
                 label="Acquire duration"
                 maxMs={MAX_ACQUIRE_WINDOW_DURATION_MS}
@@ -1124,7 +1122,6 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
               />
               <SelectRow
-                isAiSet={isAiSet('acquireOpenWindowType')}
                 isChanged={isChanged('acquireOpenWindowType')}
                 label="Acquire opens"
                 options={isAcquireOnly ? ACQUIRE_ONLY_OPENS_OPTIONS : ACQUIRE_OPENS_OPTIONS}
@@ -1142,38 +1139,37 @@ export const AiVaultPreview = ({
               )}
             </>
           )}
-          {isAcquireOnly && (
-            // Stored in the chain's native unit (what the API takes), entered in USD when a price is known.
-            <EditableRow
-              displayValue={
-                hasThreshold
-                  ? usdPerNative
-                    ? `$${formatUsd(thresholdNative * usdPerNative)} (≈ ${thresholdNative} ${nativeLabel})`
-                    : `${thresholdNative} ${nativeLabel}`
-                  : ''
-              }
-              isAiSet={isAiSet('minAcquireThreshold')}
-              isChanged={isChanged('minAcquireThreshold')}
-              label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
-              placeholder="Optional"
-              sanitize={sanitizeDecimal}
-              suffix={usdPerNative ? 'USD' : nativeLabel}
-              value={
-                hasThreshold
-                  ? usdPerNative
-                    ? String(Math.round(thresholdNative * usdPerNative * 100) / 100)
-                    : String(thresholdNative)
-                  : ''
-              }
-              onCommit={commitThreshold}
-            />
-          )}
+          {isAcquireOnly &&
+            (isRobinHood && !ethUsd ? (
+              // Without a price the USD amount cannot be converted; never read the number as ETH instead.
+              <LockedRow
+                hint="Waiting for the ETH price to convert the USD amount."
+                label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
+                value="Loading price…"
+              />
+            ) : (
+              <EditableRow
+                displayValue={
+                  hasThreshold
+                    ? isRobinHood
+                      ? `$${formatUsd(thresholdUsd)} (≈ ${thresholdNative} ETH)`
+                      : `${thresholdNative} ${nativeLabel}`
+                    : ''
+                }
+                isChanged={isChanged('minAcquireThreshold')}
+                label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
+                placeholder="Optional"
+                sanitize={sanitizeDecimal}
+                suffix={isRobinHood ? 'USD' : nativeLabel}
+                value={hasThreshold ? String(isRobinHood ? thresholdUsd : thresholdNative) : ''}
+                onCommit={commitThreshold}
+              />
+            ))}
         </Section>
 
         <Section id="tokenomics" isOpen={openSections.has('tokenomics')} label="Tokenomics" onToggle={toggleSection}>
           <EditableRow
             displayValue={vault.ftTokenSupply?.toLocaleString() ?? ''}
-            isAiSet={isAiSet('ftTokenSupply')}
             isChanged={isChanged('ftTokenSupply')}
             label="Token supply"
             placeholder="1,000,000"
@@ -1182,17 +1178,12 @@ export const AiVaultPreview = ({
             onCommit={next => commitNumber('ftTokenSupply', next, { min: MIN_SUPPLY, max: MAX_SUPPLY, integer: true })}
           />
           {isAcquireOnly ? (
-            <FieldShell
-              isAiSet={isAiSet('tokensForAcquires')}
-              isChanged={isChanged('tokensForAcquires')}
-              label="For acquirers"
-            >
+            <FieldShell isChanged={isChanged('tokensForAcquires')} label="For acquirers">
               <span className="text-sm text-white">100%</span>
             </FieldShell>
           ) : (
             <EditableRow
               displayValue={percent(vault.tokensForAcquires)}
-              isAiSet={isAiSet('tokensForAcquires')}
               isChanged={isChanged('tokensForAcquires')}
               label="For acquirers"
               placeholder="50"
@@ -1204,7 +1195,6 @@ export const AiVaultPreview = ({
           )}
           <EditableRow
             displayValue={percent(vault.liquidityPoolContribution)}
-            isAiSet={isAiSet('liquidityPoolContribution')}
             isChanged={isChanged('liquidityPoolContribution')}
             label="LP contribution"
             placeholder="10"
@@ -1222,7 +1212,6 @@ export const AiVaultPreview = ({
         <Section id="governance" isOpen={openSections.has('governance')} label="Governance" onToggle={toggleSection}>
           <EditableRow
             displayValue={percent(vault.creationThreshold)}
-            isAiSet={isAiSet('creationThreshold')}
             isChanged={isChanged('creationThreshold')}
             label="Proposal threshold"
             placeholder="1"
@@ -1233,7 +1222,6 @@ export const AiVaultPreview = ({
           />
           <EditableRow
             displayValue={percent(vault.cosigningThreshold)}
-            isAiSet={isAiSet('cosigningThreshold')}
             isChanged={isChanged('cosigningThreshold')}
             label="Quorum"
             placeholder="35"
@@ -1244,7 +1232,6 @@ export const AiVaultPreview = ({
           />
           <EditableRow
             displayValue={percent(vault.executionThreshold)}
-            isAiSet={isAiSet('executionThreshold')}
             isChanged={isChanged('executionThreshold')}
             label="Approval"
             placeholder="51"
@@ -1254,7 +1241,6 @@ export const AiVaultPreview = ({
             onCommit={next => commitNumber('executionThreshold', next, { min: 1 })}
           />
           <SelectRow
-            isAiSet={isAiSet('terminationType')}
             isChanged={isChanged('terminationType')}
             label="Termination"
             options={TERMINATION_TYPE_OPTIONS.map(option => ({ value: option.name, label: option.label }))}
