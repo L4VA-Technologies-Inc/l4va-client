@@ -57,19 +57,9 @@ const ACTIVITY_TYPES = {
     icon: Settings,
     iconColor: 'text-orange-500',
   },
-  proposal_created: {
-    label: 'Proposal Created',
+  proposal: {
+    label: 'Proposal',
     icon: Vote,
-    iconColor: 'text-orange-500',
-  },
-  proposal_started: {
-    label: 'Voting Started',
-    icon: Play,
-    iconColor: 'text-orange-500',
-  },
-  proposal_ended: {
-    label: 'Voting Ended',
-    icon: CheckCircle,
     iconColor: 'text-orange-500',
   },
   index_rebalance: {
@@ -202,21 +192,174 @@ const getActivityTitle = (activity, currencyLabel) => {
   }
 };
 
-const getProposalStatus = activityType => {
-  switch (activityType) {
-    case 'proposal_created': {
-      return { label: 'Created', color: 'bg-orange-500/20 text-orange-500' };
-    }
-    case 'proposal_started': {
-      return { label: 'Started', color: 'bg-emerald-500/20 text-emerald-500' };
-    }
-    case 'proposal_ended': {
-      return { label: 'Finished', color: 'bg-blue-500/20 text-blue-500' };
-    }
-    default: {
-      return null;
-    }
-  }
+const PROPOSAL_STAGES = {
+  created: {
+    label: 'Created',
+    timelineLabel: 'Proposal created',
+    icon: Vote,
+    color: 'bg-orange-500/20 text-orange-500',
+  },
+  started: {
+    label: 'Started',
+    timelineLabel: 'Voting started',
+    icon: Play,
+    color: 'bg-emerald-500/20 text-emerald-500',
+  },
+  ended: { label: 'Finished', timelineLabel: 'Voting ended', icon: CheckCircle, color: 'bg-blue-500/20 text-blue-500' },
+};
+
+/** Lifecycle stages and executed actions of a proposal, oldest first. */
+const getProposalTimeline = activity =>
+  [
+    ...(activity.lifecycle || []).map(event => ({ kind: 'stage', at: event.at, stage: event.stage })),
+    ...(activity.actions || []).map(action => ({ kind: 'action', at: action.created_at, action })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+
+const getProposalActionTitle = action =>
+  action.activityType === 'index_rebalance' ? getRebalanceTitle(action) : `Swapped ${getSwapSummary(action)}`;
+
+const getProposalActionTxHashes = action =>
+  action.activityType === 'index_rebalance'
+    ? (action.legs || []).map(leg => leg.txHash).filter(Boolean)
+    : [action.tx_hash].filter(Boolean);
+
+const TIMELINE_TONES = {
+  orange: 'bg-orange-500/15 text-orange-500 ring-orange-500/30',
+  emerald: 'bg-emerald-500/15 text-emerald-500 ring-emerald-500/30',
+  blue: 'bg-blue-500/15 text-blue-500 ring-blue-500/30',
+  rose: 'bg-rose-500/15 text-rose-500 ring-rose-500/30',
+};
+
+const STAGE_TONES = { created: 'orange', started: 'emerald', ended: 'blue' };
+
+/** One node on the proposal timeline: a ringed icon on the rail, content to its right. */
+const TimelineNode = ({ icon: NodeIcon, tone, isLast, children }) => (
+  <div className="relative flex gap-3">
+    {!isLast && <span className="absolute left-4 top-9 bottom-0 w-px -translate-x-1/2 bg-steel-750" />}
+    <div
+      className={clsx(
+        'relative z-10 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ring-1',
+        TIMELINE_TONES[tone]
+      )}
+    >
+      <NodeIcon className="w-4 h-4" />
+    </div>
+    <div className={clsx('flex-1 min-w-0', isLast ? 'pb-0' : 'pb-5')}>{children}</div>
+  </div>
+);
+
+const ProposalTimeline = ({ activity, vault }) => {
+  const entries = getProposalTimeline(activity);
+  const outcome = activity.executionError
+    ? { icon: XCircle, tone: 'rose', title: 'Execution', text: activity.executionError }
+    : activity.stage === 'ended' && activity.status === 'executed'
+      ? {
+          icon: CheckCircle,
+          tone: 'emerald',
+          title: 'Execution',
+          text: getSuccessMessage(activity.proposalType, activity.vault),
+        }
+      : null;
+
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      {entries.map((entry, index) => {
+        const isLast = index === entries.length - 1 && !outcome;
+
+        if (entry.kind === 'stage') {
+          const stage = PROPOSAL_STAGES[entry.stage];
+          return (
+            <TimelineNode
+              key={`stage-${entry.stage}`}
+              icon={stage?.icon || Vote}
+              tone={STAGE_TONES[entry.stage] || 'orange'}
+              isLast={isLast}
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+                <span className="text-sm font-medium text-white">{stage?.timelineLabel || entry.stage}</span>
+                <span className="text-xs text-dark-100">{formatDate(entry.at)}</span>
+              </div>
+            </TimelineNode>
+          );
+        }
+
+        const { action } = entry;
+        const txHashes = getProposalActionTxHashes(action);
+        const rebalanceStatus = action.activityType === 'index_rebalance' && REBALANCE_STATUS[action.status];
+        return (
+          <TimelineNode key={`action-${action.id}`} icon={ArrowLeftRight} tone="orange" isLast={isLast}>
+            <div className="rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-steel-850 to-steel-850 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-orange-500">Action executed</span>
+                <span className="text-xs text-dark-100">{formatDate(entry.at)}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="text-base font-semibold text-white">{getProposalActionTitle(action)}</span>
+                {rebalanceStatus && (
+                  <span className={clsx('text-xs font-medium uppercase px-2 py-0.5 rounded', rebalanceStatus.color)}>
+                    {rebalanceStatus.label}
+                  </span>
+                )}
+              </div>
+              {txHashes.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {txHashes.map((hash, i) => (
+                    <button
+                      key={hash}
+                      onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-xs text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {txHashes.length > 1 ? `Tx ${i + 1}` : 'View transaction'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TimelineNode>
+        );
+      })}
+
+      {outcome && (
+        <TimelineNode icon={outcome.icon} tone={outcome.tone} isLast>
+          <div className="relative overflow-hidden rounded-xl border border-steel-750 bg-steel-850 py-3 pl-4 pr-3">
+            <span
+              className={clsx(
+                'absolute inset-y-0 left-0 w-1',
+                outcome.tone === 'rose' ? 'bg-rose-500' : 'bg-emerald-500'
+              )}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-white">{outcome.title}</span>
+              <span
+                className={clsx(
+                  'inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                  outcome.tone === 'rose' ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'
+                )}
+              >
+                <span
+                  className={clsx(
+                    'w-1.5 h-1.5 rounded-full',
+                    outcome.tone === 'rose' ? 'bg-rose-400' : 'bg-emerald-400 animate-pulse'
+                  )}
+                />
+                {outcome.tone === 'rose' ? 'Failed' : 'Executed'}
+              </span>
+            </div>
+            {outcome.text &&
+              (outcome.tone === 'rose' ? (
+                <p className="mt-2 rounded-md bg-steel-950/60 border border-steel-750 px-2 py-1.5 font-mono text-xs text-rose-300 break-words">
+                  {outcome.text}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-dark-100">{outcome.text}</p>
+              ))}
+          </div>
+        </TimelineNode>
+      )}
+    </div>
+  );
 };
 
 const ActivityCard = ({ activity, vault }) => {
@@ -227,11 +370,12 @@ const ActivityCard = ({ activity, vault }) => {
 
   const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
-  const Icon = config.icon;
+  const Icon =
+    activity.activityType === 'proposal' ? PROPOSAL_STAGES[activity.stage]?.icon || config.icon : config.icon;
   const title = getActivityTitle(activity, currencyLabel);
 
   const isTransaction = activity.activityType === 'transaction';
-  const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+  const isProposal = activity.activityType === 'proposal';
   const isRebalance = activity.activityType === 'index_rebalance';
   const hasDetails =
     activity.user ||
@@ -314,15 +458,21 @@ const ActivityCard = ({ activity, vault }) => {
               <div className="flex-1">
                 <div className="flex sm:flex-row flex-col sm:items-center items-start gap-2 mb-1">
                   <h3 className="text-lg font-bold text-white">{title}</h3>
-                  {isProposal &&
-                    (() => {
-                      const status = getProposalStatus(activity.activityType);
-                      return status ? (
-                        <span className={clsx('text-xs font-medium uppercase px-2 py-0.5 rounded', status.color)}>
-                          {status.label}
-                        </span>
-                      ) : null;
-                    })()}
+                  {isProposal && PROPOSAL_STAGES[activity.stage] && (
+                    <span
+                      className={clsx(
+                        'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                        PROPOSAL_STAGES[activity.stage].color
+                      )}
+                    >
+                      {PROPOSAL_STAGES[activity.stage].label}
+                    </span>
+                  )}
+                  {isProposal && activity.actions?.length > 0 && (
+                    <span className="text-xs text-dark-100">
+                      {activity.actions.length} {activity.actions.length === 1 ? 'action' : 'actions'} executed
+                    </span>
+                  )}
                   {isRebalance && REBALANCE_STATUS[activity.status] && (
                     <span
                       className={clsx(
@@ -429,36 +579,11 @@ const ActivityCard = ({ activity, vault }) => {
                   </>
                 ) : isProposal ? (
                   <>
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-white mb-2">Proposal Description</p>
-                      <p className="text-sm text-dark-100">{activity.description || 'No description provided'}</p>
-                    </div>
-
-                    {activity.executionError && (
-                      <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 mb-3">
-                        <div className="flex items-start gap-2">
-                          <XCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-rose-500 mb-1">Execution Error</p>
-                            <p className="text-xs text-rose-400">{activity.executionError}</p>
-                          </div>
-                        </div>
-                      </div>
+                    {activity.description && activity.description !== activity.title && (
+                      <p className="text-sm text-dark-100 leading-relaxed">{activity.description}</p>
                     )}
 
-                    {activity.activityType === 'proposal_ended' && activity.status === 'executed' && (
-                      <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                        <div className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-emerald-500 mb-1">Successfully Executed</p>
-                            <p className="text-xs text-emerald-400">
-                              {getSuccessMessage(activity.proposalType, activity.vault)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    <ProposalTimeline activity={activity} vault={vault} />
                   </>
                 ) : (
                   <>
@@ -661,7 +786,7 @@ export const VaultActivity = ({ vault }) => {
       const rows = allActivities.map(activity => {
         const isTransaction = activity.activityType === 'transaction';
         const isPhaseTransition = activity.activityType === 'phase_transition';
-        const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+        const isProposal = activity.activityType === 'proposal';
         const isRebalance = activity.activityType === 'index_rebalance';
 
         let activityType = '';
@@ -672,7 +797,7 @@ export const VaultActivity = ({ vault }) => {
         } else if (isRebalance) {
           activityType = 'index_rebalance';
         } else if (isProposal) {
-          activityType = activity.activityType.replace('proposal_', 'proposal ');
+          activityType = `proposal ${activity.stage}`;
         }
 
         let description = '';
@@ -723,6 +848,9 @@ export const VaultActivity = ({ vault }) => {
         if (isRebalance) {
           assetNames = (activity.legs || []).map(formatLeg).join('; ');
         }
+        if (isProposal) {
+          assetNames = (activity.actions || []).map(getProposalActionTitle).join('; ');
+        }
 
         return [
           formatDateTime(activity.created_at),
@@ -737,7 +865,9 @@ export const VaultActivity = ({ vault }) => {
                 .map(leg => leg.txHash)
                 .filter(Boolean)
                 .join('; ')
-            : activity.tx_hash || '',
+            : isProposal
+              ? (activity.actions || []).flatMap(getProposalActionTxHashes).join('; ')
+              : activity.tx_hash || '',
         ];
       });
 
