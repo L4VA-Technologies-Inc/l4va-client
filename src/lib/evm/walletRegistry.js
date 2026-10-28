@@ -46,6 +46,8 @@ export const EVM_WALLETS = {
     Icon: MetaMaskIcon,
     kind: 'Mobile Wallet and Extension',
     download: 'https://metamask.io/download/',
+    // Mobile: MetaMask SDK connector (wagmi `metaMask()`), WalletConnect is the fallback.
+    sdkConnectorType: 'metaMask',
     // iOS ignores universal links (metamask.app.link) navigated from async code — the
     // pairing uri arrives after the tap — while a custom scheme still prompts "Open in MetaMask?".
     wcDeepLink: uri =>

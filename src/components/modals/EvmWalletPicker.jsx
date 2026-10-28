@@ -140,6 +140,11 @@ export const EvmWalletPicker = ({
       }
       return;
     }
+    const sdkConnector = wallet.sdkConnectorType && connectors.find(c => c.type === wallet.sdkConnectorType);
+    if (isMobile && sdkConnector) {
+      onConnect(sdkConnector, { walletId: wallet.id });
+      return;
+    }
     if (wallet.connect === 'coinbase') {
       if (coinbaseConnector) onConnect(coinbaseConnector, { walletId: wallet.id });
       return;
@@ -259,7 +264,7 @@ export const EvmWalletPicker = ({
           ]
         : []),
       ...MOBILE_WALLET_IDS.map(id => EVM_WALLETS[id])
-        .filter(wallet => wallet.connect || wcConnector)
+        .filter(wallet => wallet.connect || wallet.sdkConnectorType || wcConnector)
         .map(wallet => ({
           key: wallet.id,
           label: wallet.shortName || wallet.name,
