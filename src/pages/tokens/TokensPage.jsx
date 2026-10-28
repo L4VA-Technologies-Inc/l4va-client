@@ -5,7 +5,6 @@ import { useNavigate } from '@tanstack/react-router';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { Pagination } from '@/components/shared/Pagination';
-import { Spinner } from '@/components/Spinner';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
@@ -147,6 +146,59 @@ const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVa
   </button>
 );
 
+// Loading placeholders sized like the real rows, so the page doesn't jump when data lands.
+const Bone = ({ className = '' }) => <div className={clsx('animate-pulse rounded bg-steel-750', className)} />;
+
+const SummaryCardSkeleton = ({ title }) => (
+  <SummaryCard title={title}>
+    <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+      <span>Name</span>
+      <span>FDV</span>
+      <span className="w-14 text-right">24H Δ</span>
+    </div>
+    {Array.from({ length: 6 }, (_, i) => (
+      <div key={i} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 py-0.5">
+        <div className="flex items-center gap-2">
+          <Bone className="w-6 h-6 rounded-full" />
+          <Bone className="h-3.5 w-16" />
+        </div>
+        <Bone className="h-3 w-12" />
+        <div className="w-14 flex justify-end">
+          <Bone className="h-3 w-10" />
+        </div>
+      </div>
+    ))}
+  </SummaryCard>
+);
+
+const TokenTableRowSkeleton = () => (
+  <tr className="bg-steel-850 border-b border-steel-750 last:border-b-0">
+    <td className="px-4 py-4">
+      <div className="flex items-center gap-3">
+        <Bone className="w-10 h-10 rounded-full" />
+        <div className="space-y-2">
+          <Bone className="h-4 w-28" />
+          <Bone className="h-3 w-14" />
+        </div>
+      </div>
+    </td>
+    <td className="px-4 py-4">
+      <div className="space-y-2">
+        <Bone className="h-4 w-24" />
+        <Bone className="h-3 w-10" />
+      </div>
+    </td>
+    {Array.from({ length: 5 }, (_, i) => (
+      <td key={i} className="px-4 py-4">
+        <Bone className="h-4 w-16" />
+      </td>
+    ))}
+    <td className="px-4 py-4">
+      <Bone className="w-9 h-9 rounded-full mx-auto" />
+    </td>
+  </tr>
+);
+
 export const TokensPage = () => {
   const navigate = useNavigate();
   const { isRobinHood: isRobinhood } = useNetwork();
@@ -251,14 +303,6 @@ export const TokensPage = () => {
     setPage(1);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-20">
-        <Spinner />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="flex flex-col gap-6 pb-10">
@@ -272,64 +316,72 @@ export const TokensPage = () => {
     <div className="flex flex-col gap-6 pb-10">
       <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <SummaryCard title="Trending">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
-            <span>Name</span>
-            <span>FDV</span>
-            <span className="w-14 text-right">24H Δ</span>
-          </div>
-          {trending.map(item => (
-            <TokenMiniRow
-              key={item.id}
-              image={item.image}
-              ticker={item.symbol}
-              fdv={formatTokenField(item, 'fdv')}
-              change={item.change_24h}
-              isVault={item.source === 'vault'}
-              onClick={() => openToken(item.id)}
-            />
-          ))}
-        </SummaryCard>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <SummaryCardSkeleton title="Trending" />
+          <SummaryCardSkeleton title="Just Minted" />
+          <SummaryCardSkeleton title="Gainers" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <SummaryCard title="Trending">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {trending.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                isVault={item.source === 'vault'}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
 
-        <SummaryCard title="Just Minted">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
-            <span>Name</span>
-            <span>FDV</span>
-            <span className="w-14 text-right">24H Δ</span>
-          </div>
-          {graduated.map(item => (
-            <TokenMiniRow
-              key={item.id}
-              image={item.image}
-              ticker={item.symbol}
-              fdv={formatTokenField(item, 'fdv')}
-              change={item.change_24h}
-              isVault={item.source === 'vault'}
-              onClick={() => openToken(item.id)}
-            />
-          ))}
-        </SummaryCard>
+          <SummaryCard title="Just Minted">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {graduated.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                isVault={item.source === 'vault'}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
 
-        <SummaryCard title="Gainers">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
-            <span>Name</span>
-            <span>FDV</span>
-            <span className="w-14 text-right">24H Δ</span>
-          </div>
-          {gainers.map(item => (
-            <TokenMiniRow
-              key={item.id}
-              image={item.image}
-              ticker={item.symbol}
-              fdv={formatTokenField(item, 'fdv')}
-              change={item.change_24h}
-              isVault={item.source === 'vault'}
-              onClick={() => openToken(item.id)}
-            />
-          ))}
-        </SummaryCard>
-      </div>
+          <SummaryCard title="Gainers">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {gainers.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                isVault={item.source === 'vault'}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {isRobinhood ? (
@@ -380,98 +432,108 @@ export const TokensPage = () => {
             </tr>
           </thead>
           <tbody>
-            {pageRows.map(token => {
-              const positive = (token.change_24h ?? 0) >= 0;
-              return (
-                <tr
-                  key={token.id}
-                  onClick={() => openToken(token.id)}
-                  className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer"
-                >
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <TokenImage src={token.image} alt={token.name} size="md" />
-                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-steel-850 flex items-center justify-center">
-                          <Flame className="w-2.5 h-2.5 text-orange-400" />
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
-                          {token.source === 'vault' ? (
-                            <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-                              Vault
-                            </span>
-                          ) : (
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          )}
+            {isLoading && Array.from({ length: PAGE_SIZE }, (_, i) => <TokenTableRowSkeleton key={i} />)}
+            {!isLoading &&
+              pageRows.map(token => {
+                const positive = (token.change_24h ?? 0) >= 0;
+                return (
+                  <tr
+                    key={token.id}
+                    onClick={() => openToken(token.id)}
+                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer"
+                  >
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <TokenImage src={token.image} alt={token.name} size="md" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-steel-850 flex items-center justify-center">
+                            <Flame className="w-2.5 h-2.5 text-orange-500" />
+                          </span>
                         </div>
-                        <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
+                            {token.source === 'vault' ? (
+                              <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
+                                Vault
+                              </span>
+                            ) : (
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            )}
+                          </div>
+                          <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-white text-sm tabular-nums">
-                      {formatTokenField(token, 'price', { price: true })}
-                    </div>
-                    <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
-                  </td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">
-                    {isRobinhood ? (
-                      formatTokenField(token, 'liquidity')
-                    ) : (
-                      <Sparkline points={token.sparkline} positive={positive} />
-                    )}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">
-                    {isRobinhood ? (
-                      (token.holders_count ?? '—')
-                    ) : (
-                      <RangeBar
-                        low={pickTokenAmount(token, pickByCurrency, {
-                          usd: 'low_24h',
-                          eth: 'low_24h_eth',
-                          ada: 'low_24h_ada',
-                        })}
-                        high={pickTokenAmount(token, pickByCurrency, {
-                          usd: 'high_24h',
-                          eth: 'high_24h_eth',
-                          ada: 'high_24h_ada',
-                        })}
-                        price={pickTokenAmount(token, pickByCurrency, {
-                          usd: 'price_usd',
-                          eth: 'price_eth',
-                          ada: 'price_ada',
-                        })}
-                        formatMoney={v => formatTokenMoney(v, currency, currencySymbol, { price: true })}
-                      />
-                    )}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
-                  <td className="px-4 py-4 text-center">
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        openToken(token.id);
-                      }}
-                      className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-400 hover:bg-orange-500/25 transition-colors"
-                      aria-label={`Open ${token.symbol}`}
-                    >
-                      <Zap className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-white text-sm tabular-nums">
+                        {formatTokenField(token, 'price', { price: true })}
+                      </div>
+                      <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">
+                      {isRobinhood ? (
+                        formatTokenField(token, 'liquidity')
+                      ) : (
+                        <Sparkline points={token.sparkline} positive={positive} />
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">
+                      {isRobinhood ? (
+                        (token.holders_count ?? '—')
+                      ) : (
+                        <RangeBar
+                          low={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'low_24h',
+                            eth: 'low_24h_eth',
+                            ada: 'low_24h_ada',
+                          })}
+                          high={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'high_24h',
+                            eth: 'high_24h_eth',
+                            ada: 'high_24h_ada',
+                          })}
+                          price={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'price_usd',
+                            eth: 'price_eth',
+                            ada: 'price_ada',
+                          })}
+                          formatMoney={v => formatTokenMoney(v, currency, currencySymbol, { price: true })}
+                        />
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          openToken(token.id);
+                        }}
+                        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-500 hover:bg-orange-500/25 transition-colors"
+                        aria-label={`Open ${token.symbol}`}
+                      >
+                        <Zap className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
 
-      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      {isLoading ? (
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Bone key={i} className="w-10 h-10 rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      )}
     </div>
   );
 };

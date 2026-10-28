@@ -5,18 +5,72 @@ import clsx from 'clsx';
 import VaultListItem from '@/components/vaults/VaultListItem';
 import VaultFilter from '@/components/shared/VaultFilter';
 import { VaultCard } from '@/components/vaults/VaultCard';
-import { Spinner } from '@/components/Spinner';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { Pagination } from '@/components/shared/Pagination';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaTabs } from '@/components/shared/LavaTabs.jsx';
 
-const LoadingState = () => (
-  <div className="py-8 flex items-center justify-center">
-    <Spinner />
+// Loading placeholders shaped like VaultCard / VaultListItem, so the page doesn't jump.
+const Bone = ({ className = '' }) => <div className={clsx('animate-pulse rounded bg-steel-850', className)} />;
+
+const VaultCardSkeleton = () => (
+  <div className="w-full max-w-md rounded-xl bg-steel-950 overflow-hidden flex flex-col" aria-hidden="true">
+    <Bone className="h-52 rounded-none" />
+    <div className="p-6 flex-1 flex flex-col">
+      <div className="flex items-center gap-4 mb-6">
+        <Bone className="h-16 w-16 rounded-xl shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Bone className="h-4 w-1/2" />
+          <Bone className="h-3 w-full" />
+          <Bone className="h-3 w-3/4" />
+        </div>
+      </div>
+      <div className="mb-6 grid grid-cols-3 gap-4 mt-auto">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <Bone className="h-3 w-10" />
+            <Bone className="h-4 w-14" />
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="h-10 px-6 pb-6" />
   </div>
 );
+
+const VaultListItemSkeleton = () => (
+  <div className="relative mb-6" aria-hidden="true">
+    <Bone className="hidden md:block absolute bottom-9 left-2.5 w-[98px] h-[98px] rounded-2xl" />
+    <div className="md:ml-[120px] mb-3 space-y-2">
+      <Bone className="h-6 w-48" />
+      <Bone className="h-3.5 w-72 max-w-full" />
+    </div>
+    <div className="grid grid-cols-4 md:grid-cols-5 gap-4 py-4 border-[var(--color-steel-750)] border rounded-2xl bg-[var(--color-steel-950)] md:pl-[110px]">
+      {Array.from({ length: 5 }, (_, i) => (
+        <div key={i} className={clsx('flex flex-col items-center gap-2', i === 4 && 'hidden md:flex')}>
+          <Bone className="h-3.5 w-10" />
+          <Bone className="h-4 w-14" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const LoadingState = ({ viewType }) =>
+  viewType === 'table' ? (
+    <div className="flex flex-col gap-6 mt-6">
+      {Array.from({ length: 4 }, (_, i) => (
+        <VaultListItemSkeleton key={i} />
+      ))}
+    </div>
+  ) : (
+    <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 flex-wrap items-stretch justify-center w-full gap-6">
+      {Array.from({ length: 6 }, (_, i) => (
+        <VaultCardSkeleton key={i} />
+      ))}
+    </div>
+  );
 
 const EmptyState = () => (
   <div className="py-8">
@@ -34,6 +88,8 @@ export const VaultList = ({
   tabs = [],
   vaults = [],
   isLoading = false,
+  // Showing the previous result while the next one loads (tab / filter / page switch).
+  isRefreshing = false,
   error = null,
   onTabChange,
   renderEmptyState = EmptyState,
@@ -121,14 +177,19 @@ export const VaultList = ({
           </div>
         )}
         {isLoading ? (
-          <LoadingState />
+          <LoadingState viewType={viewType} />
         ) : error ? (
           <div className="text-center text-red-600 py-8">Something went wrong</div>
         ) : vaults.length === 0 ? (
           renderEmptyState()
         ) : (
           <>
-            {renderVaultsView()}
+            <div
+              className={clsx('transition-opacity duration-200', isRefreshing && 'opacity-50 pointer-events-none')}
+              aria-busy={isRefreshing}
+            >
+              {renderVaultsView()}
+            </div>
             {pagination && pagination.totalPages > 1 && (
               <div className="mt-8">
                 <Pagination

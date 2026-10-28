@@ -70,7 +70,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -111,6 +111,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
+        isRefreshing={isPlaceholderData}
         tabs={VAULT_TABS.map(tab => tab.label)}
         title="User Public Vaults"
         vaults={vaults}

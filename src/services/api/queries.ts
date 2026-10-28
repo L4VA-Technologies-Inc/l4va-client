@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { ClaimsApiProvider } from './claims';
 import { GovernanceApiProvider } from './governance';
@@ -20,6 +20,9 @@ export const useVaults = (filters: any) => {
       return VaultsApiProvider.getVaults(filters);
     },
     staleTime: 0,
+    // Tab / filter / page switches keep the current list on screen (dimmed via
+    // isPlaceholderData) instead of flashing a skeleton before the next result.
+    placeholderData: keepPreviousData,
   });
 };
 
