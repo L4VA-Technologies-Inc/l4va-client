@@ -301,21 +301,22 @@ const ProposalTimeline = ({ activity, vault }) => {
                     {rebalanceStatus.label}
                   </span>
                 )}
+                {txHashes.length > 0 && (
+                  <div className="ml-auto flex items-center gap-1">
+                    {txHashes.map((hash, i) => (
+                      <button
+                        key={hash}
+                        onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+                        title={txHashes.length > 1 ? `View transaction ${i + 1}` : 'View transaction'}
+                        aria-label={txHashes.length > 1 ? `View transaction ${i + 1}` : 'View transaction'}
+                        className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {txHashes.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {txHashes.map((hash, i) => (
-                    <button
-                      key={hash}
-                      onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-xs text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      {txHashes.length > 1 ? `Tx ${i + 1}` : 'View transaction'}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </TimelineNode>
         );
