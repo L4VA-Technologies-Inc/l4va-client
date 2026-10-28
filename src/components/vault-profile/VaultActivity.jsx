@@ -399,6 +399,7 @@ const LockSummary = ({ summary, vault }) => {
   ].map(part => ({ ...part, pct: pctOf(part.amount, summary.vtSupply) }));
 
   const hasLp = BigInt(summary.lpVt || 0) > 0n || BigInt(summary.lpNative || 0) > 0n;
+  const hasNativeFlow = BigInt(summary.contributorsNative || 0) > 0n || BigInt(summary.lpNative || 0) > 0n;
 
   return (
     <div className="flex flex-col gap-4">
@@ -406,8 +407,8 @@ const LockSummary = ({ summary, vault }) => {
         The vault closed its acquire window and locked in its valuation. {fmtVt(summary.vtSupply)} {vt} were split
         between {summary.contributorsCount} {summary.contributorsCount === 1 ? 'contributor' : 'contributors'} and{' '}
         {summary.acquirersCount} {summary.acquirersCount === 1 ? 'acquirer' : 'acquirers'}
-        {hasLp ? ', and part was set aside to seed a liquidity pool' : ''}. Raised {native} went to contributors
-        {hasLp ? ' and the pool' : ''}.
+        {hasLp ? ', and part was set aside to seed a liquidity pool' : ''}.
+        {hasNativeFlow && ` Raised ${native} went to contributors${hasLp ? ' and the pool' : ''}.`}
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -455,13 +456,15 @@ const LockSummary = ({ summary, vault }) => {
         </div>
       </div>
 
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-2">Where the {native} went</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <LockStat label="To contributors" value={`${fmtNative(summary.contributorsNative)} ${native}`} />
-          <LockStat label="Paired into LP" value={hasLp ? `${fmtNative(summary.lpNative)} ${native}` : 'No LP'} />
+      {hasNativeFlow && (
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-2">Where the {native} went</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <LockStat label="To contributors" value={`${fmtNative(summary.contributorsNative)} ${native}`} />
+            <LockStat label="Paired into LP" value={hasLp ? `${fmtNative(summary.lpNative)} ${native}` : 'No LP'} />
+          </div>
         </div>
-      </div>
+      )}
 
       {summary.txHash && (
         <button
