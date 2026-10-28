@@ -372,13 +372,15 @@ export const LoginModal = () => {
     }
   };
 
+  // The "sign" step signs with the Cardano (Weld) wallet. On Robinhood a still-connected
+  // Cardano wallet (e.g. Eternl) must not hijack it — EVM login goes through wagmi.
   useEffect(() => {
-    if (wallet.isConnected) {
+    if (!isRobinHood && wallet.isConnected) {
       setView('sign');
     } else {
       setView('wallets');
     }
-  }, [wallet.isConnected]);
+  }, [wallet.isConnected, isRobinHood]);
 
   const renderWalletsList = () => {
     const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];

@@ -59,6 +59,7 @@ const AppWithInterceptor = () => {
 // hi
 export function AppCore() {
   const { user, isLoading } = useAuth();
+  const { isRobinHood } = useNetwork();
 
   if (isLoading) {
     return <FullPageLoader />;
@@ -66,7 +67,9 @@ export function AppCore() {
 
   return (
     <NovuProvider applicationIdentifier="yf1FEY4EziuC" subscriberId={user?.address || 'guest'}>
-      <WeldProvider>
+      {/* Weld re-connects the last Cardano wallet (e.g. Eternl) on load; on Robinhood that
+          popup hijacks the EVM login, so persistence is only on for Cardano. */}
+      <WeldProvider enablePersistence={!isRobinHood}>
         <AppWithInterceptor />
       </WeldProvider>
     </NovuProvider>

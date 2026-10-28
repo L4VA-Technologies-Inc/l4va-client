@@ -47,6 +47,11 @@ const ACTIVITY_TYPES = {
     icon: Coins,
     iconColor: 'text-orange-500',
   },
+  'evm-swap': {
+    label: 'Swap',
+    icon: ArrowLeftRight,
+    iconColor: 'text-orange-500',
+  },
   phase_transition: {
     label: 'Phase Transition',
     icon: Settings,
@@ -88,6 +93,17 @@ const formatTokenAmount = (raw, decimals) => {
   } catch {
     return '-';
   }
+};
+
+/** "0.00099 ETH → 2,089.73 L4VA" for a vault swap; falls back to symbols only. */
+const getSwapSummary = activity => {
+  const m = activity.metadata || {};
+  const symIn = m.assetInSymbol || 'token';
+  const symOut = m.assetOutSymbol || 'token';
+  const amountIn = formatTokenAmount(m.amountIn, m.assetInDecimals);
+  const amountOut = formatTokenAmount(m.grossOut, m.assetOutDecimals);
+  if (amountOut === '-') return `${amountIn} ${symIn} → ${symOut}`;
+  return `${amountIn} ${symIn} → ${amountOut} ${symOut}`;
 };
 
 const getRebalanceTitle = activity => (activity.trigger === 'initial_buy' ? 'Basket Purchased' : 'Basket Rebalanced');
@@ -154,6 +170,10 @@ const getActivityTitle = (activity, currencyLabel) => {
           return `${formatAmount(activity.amount)} ${currencyLabel} Acquired`;
         }
         return 'Acquire';
+      }
+
+      case 'evm-swap': {
+        return `Swapped ${getSwapSummary(activity)}`;
       }
 
       case 'contribute': {
@@ -239,6 +259,9 @@ const ActivityCard = ({ activity, vault }) => {
         }
         case 'acquire': {
           return `${currencyLabel} spent on acquire`;
+        }
+        case 'evm-swap': {
+          return 'Vault swap executed by a governance proposal';
         }
         default:
           return config.label;
@@ -663,6 +686,9 @@ export const VaultActivity = ({ vault }) => {
               break;
             case 'acquire':
               description = `${currencyLabel} spent on acquire`;
+              break;
+            case 'evm-swap':
+              description = `Vault swap: ${getSwapSummary(activity)}`;
               break;
           }
         } else if (isPhaseTransition) {
