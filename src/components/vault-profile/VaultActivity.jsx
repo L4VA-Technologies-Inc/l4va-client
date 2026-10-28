@@ -362,6 +362,120 @@ const ProposalTimeline = ({ activity, vault }) => {
   );
 };
 
+const pctOf = (part, whole) => {
+  try {
+    const w = BigInt(whole || 0);
+    return w > 0n ? Number((BigInt(part || 0) * 10000n) / w) / 100 : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const LockStat = ({ label, value, hint }) => (
+  <div className="rounded-xl border border-steel-750 bg-steel-850 p-3">
+    <p className="text-[10px] font-medium uppercase tracking-wider text-dark-100">{label}</p>
+    <p className="mt-1 text-base font-semibold text-white truncate">{value}</p>
+    {hint && <p className="mt-0.5 text-xs text-dark-100">{hint}</p>}
+  </div>
+);
+
+/** What the lock settled: valuation, the VT split and where the raised native went. */
+const LockSummary = ({ summary, vault }) => {
+  const vt = summary.vtTicker || 'VT';
+  const native = summary.nativeSymbol;
+  const fmtVt = raw => formatTokenAmount(raw, summary.vtDecimals);
+  const fmtNative = raw => formatTokenAmount(raw, summary.nativeDecimals);
+
+  const split = [
+    {
+      key: 'contributors',
+      label: 'Contributors',
+      amount: summary.contributorsVt,
+      bar: 'bg-orange-500',
+      dot: 'bg-orange-500',
+    },
+    { key: 'acquirers', label: 'Acquirers', amount: summary.acquirersVt, bar: 'bg-emerald-500', dot: 'bg-emerald-500' },
+    { key: 'lp', label: 'Liquidity pool', amount: summary.lpVt, bar: 'bg-blue-500', dot: 'bg-blue-500' },
+  ].map(part => ({ ...part, pct: pctOf(part.amount, summary.vtSupply) }));
+
+  const hasLp = BigInt(summary.lpVt || 0) > 0n || BigInt(summary.lpNative || 0) > 0n;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-dark-100 leading-relaxed">
+        The vault closed its acquire window and locked in its valuation. {fmtVt(summary.vtSupply)} {vt} were split
+        between {summary.contributorsCount} {summary.contributorsCount === 1 ? 'contributor' : 'contributors'} and{' '}
+        {summary.acquirersCount} {summary.acquirersCount === 1 ? 'acquirer' : 'acquirers'}
+        {hasLp ? ', and part was set aside to seed a liquidity pool' : ''}. Raised {native} went to contributors
+        {hasLp ? ' and the pool' : ''}.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <LockStat label="Assets value" value={`${fmtNative(summary.assetsValue)} ${native}`} />
+        <LockStat label="Raised" value={`${fmtNative(summary.totalRaised)} ${native}`} />
+        <LockStat label="FDV" value={summary.fdv ? `${fmtNative(summary.fdv)} ${native}` : '-'} />
+        <LockStat
+          label="Participants"
+          value={summary.contributorsCount + summary.acquirersCount}
+          hint={`${summary.contributorsCount} contrib · ${summary.acquirersCount} acq`}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-baseline justify-between mb-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-dark-100">{vt} distribution</p>
+          <p className="text-xs text-dark-100">
+            {fmtVt(summary.vtSupply)} {vt} total
+          </p>
+        </div>
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-steel-850 ring-1 ring-steel-750">
+          {split
+            .filter(part => part.pct > 0)
+            .map(part => (
+              <div key={part.key} className={clsx('h-full', part.bar)} style={{ width: `${part.pct}%` }} />
+            ))}
+        </div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {split.map(part => (
+            <div
+              key={part.key}
+              className="flex items-center gap-2 rounded-lg bg-steel-850 border border-steel-750 px-3 py-2"
+            >
+              <span className={clsx('w-2 h-2 rounded-full flex-shrink-0', part.dot)} />
+              <div className="min-w-0">
+                <p className="text-xs text-dark-100">
+                  {part.label} · <span className="text-white font-medium">{part.pct}%</span>
+                </p>
+                <p className="text-sm text-white truncate">
+                  {fmtVt(part.amount)} {vt}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-2">Where the {native} went</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <LockStat label="To contributors" value={`${fmtNative(summary.contributorsNative)} ${native}`} />
+          <LockStat label="Paired into LP" value={hasLp ? `${fmtNative(summary.lpNative)} ${native}` : 'No LP'} />
+        </div>
+      </div>
+
+      {summary.txHash && (
+        <button
+          onClick={() => window.open(getTransactionUrl(summary.txHash, vault?.chainType), '_blank')}
+          className="self-start inline-flex items-center gap-1 px-2 py-1 rounded-md bg-steel-850 border border-steel-750 hover:border-orange-500/50 text-xs text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          View lock transaction
+        </button>
+      )}
+    </div>
+  );
+};
+
 const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
   const { currencyLabel } = useCurrency();
@@ -377,7 +491,10 @@ const ActivityCard = ({ activity, vault }) => {
   const isTransaction = activity.activityType === 'transaction';
   const isProposal = activity.activityType === 'proposal';
   const isRebalance = activity.activityType === 'index_rebalance';
+  const lockSummary =
+    activity.activityType === 'phase_transition' && activity.phase === 'locked' ? activity.summary : null;
   const hasDetails =
+    lockSummary ||
     activity.user ||
     (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) ||
     isProposal ||
@@ -531,7 +648,9 @@ const ActivityCard = ({ activity, vault }) => {
 
             {expanded && (
               <div className="mt-3 pt-3 border-t border-steel-750">
-                {isRebalance ? (
+                {lockSummary ? (
+                  <LockSummary summary={lockSummary} vault={vault} />
+                ) : isRebalance ? (
                   <>
                     <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
                     <div className="flex flex-col gap-2">
