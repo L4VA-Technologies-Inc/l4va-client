@@ -17,11 +17,12 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
   const [noLimit, setNoLimit] = useState(false); // eslint-disable-line no-unused-vars -- "No Limit" toggle is commented out below
   const [maxAda, setMaxAda] = useState('');
   const [noMax, setNoMax] = useState(false);
-  const [priceType, setPriceType] = useState('market');
+  // Market price is not supported for Robinhood acquire expansion yet (the API rejects it).
+  const [priceType, setPriceType] = useState(isEvmVault ? 'limit' : 'market');
   const [limitPrice, setLimitPrice] = useState('');
 
   const priceTypeOptions = [
-    { value: 'market', label: 'Market Price' },
+    { value: 'market', label: isEvmVault ? 'Market Price - Coming Soon' : 'Market Price', disabled: isEvmVault },
     { value: 'limit', label: 'Limit Price' },
   ];
 
