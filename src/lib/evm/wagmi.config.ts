@@ -77,13 +77,28 @@ export const robinhoodChain: Chain = IS_TESTNET
 // eth_requestAccounts instead.
 // WalletConnect (QR / deep link for mobile wallets) needs a real Cloud project id; a
 // placeholder fails at the relay handshake, so it's only registered when one is set.
+// showQrModal is off: LoginModal renders its own QR (desktop) and wallet deep links
+// (mobile) from the connector's `display_uri` message.
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 const hasWalletConnect = Boolean(walletConnectProjectId) && walletConnectProjectId !== 'your_project_id_here';
 
 const connectors = [
   injected({ shimDisconnect: false }),
   coinbaseWallet({ appName: 'L4VA' }),
-  ...(hasWalletConnect ? [walletConnect({ projectId: walletConnectProjectId, showQrModal: true })] : []),
+  ...(hasWalletConnect
+    ? [
+        walletConnect({
+          projectId: walletConnectProjectId,
+          showQrModal: false,
+          metadata: {
+            name: 'L4VA',
+            description: 'L4VA vaults',
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://l4va.io',
+            icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon/apple-touch-icon-rh.png` : ''],
+          },
+        }),
+      ]
+    : []),
 ];
 
 const chains =
