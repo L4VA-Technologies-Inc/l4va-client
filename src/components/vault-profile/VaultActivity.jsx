@@ -1217,14 +1217,15 @@ export const VaultActivity = ({ vault }) => {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full min-w-0">
               <LavaTabs
                 tabs={filters}
                 activeTab={activeFilter}
                 onTabChange={handleFilterChange}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                tabClassName="shrink-0 whitespace-nowrap"
               />
-              <SecondaryButton className="w-full sm:w-auto" onClick={handleDownloadCSV}>
+              <SecondaryButton className="w-full sm:w-auto shrink-0" onClick={handleDownloadCSV}>
                 <Download className="w-4 h-4" />
                 Export CSV
               </SecondaryButton>
