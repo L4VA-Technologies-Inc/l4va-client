@@ -47,7 +47,7 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
             <img alt={`${name} vault avatar`} src={vaultImage} className="object-cover w-full h-full" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
-              <L4vaIcon chainType={vault.chainType} className="h-12 w-12 text-white" />
+              <L4vaIcon className="h-12 w-12 text-white" />
             </div>
           )}
         </div>

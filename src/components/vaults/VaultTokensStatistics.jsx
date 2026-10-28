@@ -136,7 +136,7 @@ export const VaultTokensStatistics = () => {
         render: item => (
           <div className="flex items-center gap-3">
             <img
-              src={item?.token_image || '/favicon/favicon.ico'}
+              src={item?.token_image || '/favicon/favicon-rh.png'}
               alt={item.ticker || '-'}
               className="w-8 h-8 rounded-full"
               onError={e => {
