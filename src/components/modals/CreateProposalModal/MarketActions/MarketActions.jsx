@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 
 import SwapAction from './SwapAction';
 import EvmSwapAction from './EvmSwapAction';
-import EvmClosePositionAction from './EvmClosePositionAction';
 
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { UnlistAction } from '@/components/modals/CreateProposalModal/MarketActions/UnlistAction.jsx';
@@ -20,12 +19,9 @@ const cardanoMarketOptions = [
   { value: 'swap', label: 'Swap (DexHunter)' },
 ];
 
-const evmMarketOptions = [
-  { value: 'evm_swap', label: 'Swap (Uniswap V3)' },
-  { value: 'evm_close_position', label: 'Close Position' },
-];
+const evmMarketOptions = [{ value: 'evm_swap', label: 'Swap (Uniswap)' }];
 
-export const MarketActions = ({ vaultId, assetsWhitelist, onDataChange, error, isEvmVault }) => {
+export const MarketActions = ({ vault, vaultId, assetsWhitelist, onDataChange, error, isEvmVault }) => {
   const marketOptions = isEvmVault ? evmMarketOptions : cardanoMarketOptions;
   const [selectedOption, setSelectedOption] = useState(marketOptions[0].value);
 
@@ -85,10 +81,7 @@ export const MarketActions = ({ vaultId, assetsWhitelist, onDataChange, error, i
       )}
       {/* EVM actions */}
       {isEvmVault && selectedOption === 'evm_swap' && (
-        <EvmSwapAction onDataChange={handleActionDataChange} error={error} />
-      )}
-      {isEvmVault && selectedOption === 'evm_close_position' && (
-        <EvmClosePositionAction onDataChange={handleActionDataChange} error={error} />
+        <EvmSwapAction vault={vault} onDataChange={handleActionDataChange} error={error} />
       )}
     </div>
   );

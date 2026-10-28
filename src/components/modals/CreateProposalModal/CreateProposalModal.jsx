@@ -54,7 +54,7 @@ const cardanoExecutionOptions = [
 ];
 
 const evmExecutionOptions = [
-  { value: 'marketplace_action', label: 'Market Actions (Swap / Close Position)' },
+  { value: 'marketplace_action', label: 'Market Actions (Swap)' },
   { value: 'expansion', label: 'Vault Expansion' },
   { value: 'acquire_expansion', label: 'Acquire Expansion' },
   { value: 'distribution', label: 'Distribution' },
@@ -71,7 +71,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const activeExecutionOptions = useMemo(() => {
     if (!isEvmVault) return cardanoExecutionOptions;
     return isIndex
-      ? [{ value: 'index_reweight', label: 'Index Re-weight' }, ...evmExecutionOptions]
+      ? [
+          { value: 'index_reweight', label: 'Index Re-weight' },
+          // Vault Expansion is disabled for index vaults for now; they grow via Acquire Expansion only.
+          ...evmExecutionOptions.filter(option => option.value !== 'expansion'),
+        ]
       : evmExecutionOptions;
   }, [isEvmVault, isIndex]);
   // Filter execution options based on vault status
@@ -657,6 +661,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'marketplace_action' && (
               <MarketActions
+                vault={vault}
                 vaultId={vault.id}
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}

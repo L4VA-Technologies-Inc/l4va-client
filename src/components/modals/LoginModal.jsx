@@ -2,11 +2,12 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import toast from 'react-hot-toast';
 
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
+import { CoreApiProvider } from '@/services/api/core';
 import { useNetwork } from '@/hooks/useNetwork';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -82,7 +83,7 @@ export const LoginModal = () => {
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
 
-  // Robinhood Chain (EVM) — connect via wagmi, then log in by address (no signature).
+  // Robinhood Chain (EVM) — connect via wagmi, then log in by signing a backend challenge.
   const {
     isConnected: isRobinhoodConnected,
     address: robinhoodAddress,
@@ -95,6 +96,7 @@ export const LoginModal = () => {
     variables: robinhoodConnectVars,
   } = useConnect();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   // Guards against double-clicks / overlapping connects — wagmi's isPending alone
   // is not enough (MetaMask Flask keeps a pending requestPermissions across calls).
   const robinhoodConnectLockRef = useRef(false);
@@ -156,10 +158,12 @@ export const LoginModal = () => {
   // modal, so mobile wallets can connect with no browser extension at all.
   const walletConnectConnector = connectors.find(c => c.type === 'walletConnect');
 
-  // Backend authenticates EVM users by wallet address only (no signature).
+  // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
   const loginWithRobinhoodAddress = async address => {
     if (!address) return;
-    const res = await login(null, null, address, network);
+    const { data: challenge } = await CoreApiProvider.evmChallenge(address);
+    const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
+    const res = await login(null, null, address, network, evmSignature);
     if (!res?.user) return;
 
     closeModal();
@@ -189,6 +193,13 @@ export const LoginModal = () => {
     ) {
       try {
         await loginWithRobinhoodAddress(robinhoodAddress);
+      } catch (error) {
+        const msg = String(error?.shortMessage || error?.message || '');
+        if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
+          toast.error('Signature rejected in wallet');
+        } else {
+          toast.error(msg || 'Failed to sign in');
+        }
       } finally {
         robinhoodConnectLockRef.current = false;
       }

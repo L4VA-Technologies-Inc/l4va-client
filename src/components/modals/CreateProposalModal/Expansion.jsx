@@ -13,7 +13,7 @@ export default function Expansion({ onDataChange, error, vault }) {
   const [selectedPolicies, setSelectedPolicies] = useState([]);
   const [evmAssets, setEvmAssets] = useState([]);
   const [duration, setDuration] = useState(null);
-  const [noLimit, setNoLimit] = useState(false);
+  const [noLimit, setNoLimit] = useState(false); // eslint-disable-line no-unused-vars -- "No Limit" toggle is commented out below
   const [assetMax, setAssetMax] = useState('');
   const [noMax, setNoMax] = useState(false);
   const [priceType, setPriceType] = useState('market');
@@ -146,13 +146,14 @@ export default function Expansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-300">Expansion Duration*</label>
+            {/* "No Limit" disabled for now: every expansion proposal must have an end time.
             <LavaCheckbox
               name="expansionNoLimit"
               checked={noLimit}
               onChange={e => setNoLimit(e.target.checked)}
               description="No Limit"
               disabled={noMax}
-            />
+            /> */}
           </div>
           {!noLimit ? (
             <>

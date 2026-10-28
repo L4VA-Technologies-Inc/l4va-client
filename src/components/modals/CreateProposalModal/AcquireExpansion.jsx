@@ -14,7 +14,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
   const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
-  const [noLimit, setNoLimit] = useState(false);
+  const [noLimit, setNoLimit] = useState(false); // eslint-disable-line no-unused-vars -- "No Limit" toggle is commented out below
   const [maxAda, setMaxAda] = useState('');
   const [noMax, setNoMax] = useState(false);
   const [priceType, setPriceType] = useState('market');
@@ -80,13 +80,14 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               Expansion Duration*
               <HoverHelp hint={`How long the vault will accept new ${currencyLabel} contributions`} />
             </label>
+            {/* "No Limit" disabled for now: every expansion proposal must have an end time.
             <LavaCheckbox
               name="acquireExpansionNoLimit"
               checked={noLimit}
               onChange={e => setNoLimit(e.target.checked)}
               description="No Limit"
               disabled={noMax}
-            />
+            /> */}
           </div>
           {!noLimit ? (
             <>

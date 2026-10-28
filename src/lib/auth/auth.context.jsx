@@ -17,14 +17,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, [queryClient]);
 
-  const login = async (signature, stakeAddress, walletAddress, chainType) => {
+  const login = async (signature, stakeAddress, walletAddress, chainType, evmSignature) => {
     try {
       const response = await loginMutation.mutateAsync({
         signature,
         stakeAddress,
         walletAddress,
         chainType,
+        evmSignature,
       });
+      if (!response.data?.accessToken) {
+        throw new Error(response.data?.message || 'Login failed');
+      }
       localStorage.setItem('jwt', response.data.accessToken);
       if (stakeAddress) {
         localStorage.setItem('authenticated_stake_address', stakeAddress);

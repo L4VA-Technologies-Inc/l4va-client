@@ -3,6 +3,10 @@ export class CoreConfigProvider {
     return '/api/v1/auth/login';
   }
 
+  static evmChallenge() {
+    return '/api/v1/auth/evm/challenge';
+  }
+
   static sendNotification() {
     return '/api/v1/send-notification';
   }

@@ -6,8 +6,10 @@ import { useAccount, useBalance, useReadContract, useSendTransaction, useSignTyp
 import { waitForTransactionReceipt } from 'wagmi/actions';
 
 import { Spinner } from '@/components/Spinner';
+import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { robinhoodUniswapChain, wagmiConfig } from '@/lib/evm/wagmi.config';
+import { RewardsApiProvider } from '@/services/api/rewards';
 import { UniswapApiProvider } from '@/services/api/uniswap';
 
 const NATIVE_ETH = '0x0000000000000000000000000000000000000000';
@@ -77,6 +79,11 @@ export function UniswapSwapPanel({
 }) {
   const { openModal } = useModalControls();
   const { address, isConnected, chainId } = useAccount();
+  const { isAuthenticated, user } = useAuth();
+  // Same rule as the Cardano DexHunter widget: swapping needs a signed-in session, and
+  // for EVM the session must belong to the connected wallet so the swap can be credited.
+  const isSignedIn =
+    isAuthenticated && isConnected && !!address && user?.address?.toLowerCase() === address.toLowerCase();
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
   const { signTypedDataAsync } = useSignTypedData();
@@ -199,7 +206,7 @@ export function UniswapSwapPanel({
   };
 
   const executeSwap = useCallback(async () => {
-    if (!isConnected || !address) {
+    if (!isSignedIn) {
       openModal('LoginModal');
       return;
     }
@@ -269,6 +276,11 @@ export function UniswapSwapPanel({
         const hash = await sendTransactionAsync(toTxRequest(swap, targetChainId));
         await waitForTransactionReceipt(wagmiConfig, { hash, confirmations: 1 });
         toast.success(`Swap confirmed · ${truncateAddr(hash)}`);
+        // The API verifies the swap on-chain and credits the logged-in wallet; failing to
+        // record it must not surface as a failed swap.
+        RewardsApiProvider.trackWidgetSwap({ chainType: 'robinhood', tx_hash: hash }).catch(error =>
+          console.error('Failed to track widget swap:', error)
+        );
       } else if (UX_ROUTINGS.has(routing)) {
         if (!signature) {
           throw new Error('UniswapX route requires a signature but none was returned');
@@ -295,7 +307,7 @@ export function UniswapSwapPanel({
     amountIn,
     decimalsIn,
     ensureChain,
-    isConnected,
+    isSignedIn,
     openModal,
     sendTransactionAsync,
     signTypedDataAsync,
@@ -420,7 +432,7 @@ export function UniswapSwapPanel({
 
       <button
         type="button"
-        disabled={busy || (isConnected && (!amountIn || Number(amountIn) <= 0))}
+        disabled={busy || (isSignedIn && (!amountIn || Number(amountIn) <= 0))}
         onClick={executeSwap}
         className={clsx(
           'w-full rounded-xl py-2.5 text-sm font-medium transition-colors',
@@ -434,8 +446,8 @@ export function UniswapSwapPanel({
             </span>
             Swapping…
           </span>
-        ) : !isConnected ? (
-          'Connect wallet'
+        ) : !isSignedIn ? (
+          'Sign in to swap'
         ) : side === 'buy' ? (
           `Buy ${tokenSymbol}`
         ) : (
