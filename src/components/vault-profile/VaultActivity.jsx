@@ -32,6 +32,11 @@ import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { getSuccessMessage } from '@/constants/proposalMessages';
 import { useCurrency } from '@/hooks/useCurrency';
+import {
+  TERMINATION_STEPS,
+  TERMINATION_TITLES,
+  TerminationActivityCard,
+} from '@/components/vault-profile/TerminationActivityCard';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -242,6 +247,8 @@ const getActivityTitle = (activity, currencyLabel) => {
     return phaseLabels[activity.phase] || 'Phase Transition';
   } else if (activity.activityType === 'index_rebalance') {
     return getRebalanceTitle(activity);
+  } else if (activity.activityType === 'termination') {
+    return TERMINATION_TITLES[activity.status] || 'Vault Termination';
   } else {
     return `Proposal "${activity.title || 'Untitled'}"`;
   }
@@ -1080,6 +1087,7 @@ export const VaultActivity = ({ vault }) => {
         const isPhaseTransition = activity.activityType === 'phase_transition';
         const isProposal = activity.activityType === 'proposal';
         const isRebalance = activity.activityType === 'index_rebalance';
+        const isTermination = activity.activityType === 'termination';
 
         let activityType = '';
         if (isTransaction) {
@@ -1088,6 +1096,8 @@ export const VaultActivity = ({ vault }) => {
           activityType = 'phase_transition';
         } else if (isRebalance) {
           activityType = 'index_rebalance';
+        } else if (isTermination) {
+          activityType = `termination ${activity.status}`;
         } else if (isProposal) {
           activityType = `proposal ${activity.stage}`;
         }
@@ -1125,6 +1135,8 @@ export const VaultActivity = ({ vault }) => {
           description = phaseDescriptions[activity.phase] || 'Vault moved to next phase';
         } else if (isRebalance) {
           description = `${getRebalanceDescription(activity)} (${activity.status})`;
+        } else if (isTermination) {
+          description = `Proposal "${activity.proposal?.title || ''}" (${activity.proposal?.status || ''})`;
         } else {
           description = activity.description || '';
         }
@@ -1151,6 +1163,12 @@ export const VaultActivity = ({ vault }) => {
         if (isProposal) {
           assetNames = (activity.actions || []).map(getProposalActionTitle).join('; ');
         }
+        if (isTermination) {
+          assetNames = activity.steps
+            .filter(step => step.status !== 'upcoming')
+            .map(step => TERMINATION_STEPS[step.key]?.label || step.key)
+            .join('; ');
+        }
         const isFailedPhase = isPhaseTransition && activity.phase === 'failed';
         if (isFailedPhase) {
           assetNames = (activity.actions || []).map(getFailureActionTitle).join('; ');
@@ -1171,12 +1189,17 @@ export const VaultActivity = ({ vault }) => {
                 .join('; ')
             : isProposal
               ? (activity.actions || []).flatMap(getProposalActionTxHashes).join('; ')
-              : isFailedPhase
-                ? (activity.actions || [])
-                    .map(action => action.tx_hash)
+              : isTermination
+                ? activity.steps
+                    .map(step => step.txHash)
                     .filter(Boolean)
                     .join('; ')
-                : activity.tx_hash || '',
+                : isFailedPhase
+                  ? (activity.actions || [])
+                      .map(action => action.tx_hash)
+                      .filter(Boolean)
+                      .join('; ')
+                  : activity.tx_hash || '',
         ];
       });
 
@@ -1241,9 +1264,13 @@ export const VaultActivity = ({ vault }) => {
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4">
-                {items.map((activity, index) => (
-                  <ActivityCard key={activity.id || index} activity={activity} vault={vault} />
-                ))}
+                {items.map((activity, index) =>
+                  activity.activityType === 'termination' ? (
+                    <TerminationActivityCard key={activity.id || index} activity={activity} vault={vault} />
+                  ) : (
+                    <ActivityCard key={activity.id || index} activity={activity} vault={vault} />
+                  )
+                )}
               </div>
 
               {pagination.totalPages > 1 && (
