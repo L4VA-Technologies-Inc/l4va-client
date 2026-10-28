@@ -657,6 +657,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
             )}
             {selectedOption === 'marketplace_action' && (
               <MarketActions
+                vault={vault}
                 vaultId={vault.id}
                 assetsWhitelist={vault?.assetsWhitelist || []}
                 onDataChange={handleDataChange}
