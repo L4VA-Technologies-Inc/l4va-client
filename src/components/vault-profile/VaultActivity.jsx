@@ -14,6 +14,8 @@ import {
   XCircle,
   Download,
   ArrowLeftRight,
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { formatUnits } from 'viem';
@@ -51,6 +53,26 @@ const ACTIVITY_TYPES = {
     label: 'Swap',
     icon: ArrowLeftRight,
     iconColor: 'text-orange-500',
+  },
+  cancel: {
+    label: 'Refund',
+    icon: RotateCcw,
+    iconColor: 'text-rose-500',
+  },
+  'evm-cancel-cycle': {
+    label: 'Cycle Cancelled',
+    icon: XCircle,
+    iconColor: 'text-rose-500',
+  },
+  'evm-refund': {
+    label: 'Refund',
+    icon: RotateCcw,
+    iconColor: 'text-rose-500',
+  },
+  phase_failed: {
+    label: 'Vault Failed',
+    icon: AlertTriangle,
+    iconColor: 'text-rose-500',
   },
   phase_transition: {
     label: 'Phase Transition',
@@ -138,6 +160,29 @@ const formatAmount = (amount, maximumFractionDigits = 2) => {
   }).format(numValue);
 };
 
+const FAILURE_REASONS = {
+  asset_threshold_violation: 'Contributed assets did not meet the vault asset limits',
+  acquire_threshold_not_met: 'Acquire threshold was not reached',
+  no_contributions: 'No assets were contributed',
+  no_confirmed_transactions: 'No confirmed transactions',
+  manual_cancellation: 'Vault was cancelled',
+  insufficient_lp_liquidity: 'Not enough liquidity to create the LP',
+};
+
+const getFailureReason = activity =>
+  FAILURE_REASONS[activity.failure?.reason] || activity.failure?.message || 'Vault did not reach its goals';
+
+/** Holders covered by a refund tx: Cardano claim count, or expected ContributionCancelled events on EVM. */
+const getRefundCount = activity =>
+  activity.metadata?.claimCount ??
+  activity.expected_events?.find(e => e.name === 'ContributionCancelled')?.count ??
+  null;
+
+const getRefundTitle = activity => {
+  const count = getRefundCount(activity);
+  return count ? `Refunded ${count} ${count === 1 ? 'Position' : 'Positions'}` : 'Refund Sent';
+};
+
 const getActivityTitle = (activity, currencyLabel) => {
   if (activity.activityType === 'transaction') {
     switch (activity.type) {
@@ -166,6 +211,15 @@ const getActivityTitle = (activity, currencyLabel) => {
         return `Swapped ${getSwapSummary(activity)}`;
       }
 
+      case 'cancel':
+      case 'evm-refund': {
+        return getRefundTitle(activity);
+      }
+
+      case 'evm-cancel-cycle': {
+        return 'Cycle Cancelled';
+      }
+
       case 'contribute': {
         const nftCount = activity.assets?.length || 0;
         if (nftCount > 0) {
@@ -183,6 +237,7 @@ const getActivityTitle = (activity, currencyLabel) => {
       contribution: 'Contribution Phase Started',
       acquire: 'Acquire Phase Started',
       locked: 'Vault Locked',
+      failed: 'Vault Failed',
     };
     return phaseLabels[activity.phase] || 'Phase Transition';
   } else if (activity.activityType === 'index_rebalance') {
@@ -480,13 +535,110 @@ const LockSummary = ({ summary, vault }) => {
   );
 };
 
+const FailureSummary = ({ failure }) => {
+  const details = failure?.details || {};
+  let required = null;
+  let actual = null;
+  if (details.required != null && details.actual != null) {
+    // EVM stores raw wei strings.
+    required = `${formatTokenAmount(details.required, 18)} ETH`;
+    actual = `${formatTokenAmount(details.actual, 18)} ETH`;
+  } else if (details.requiredAda != null && details.actualAda != null) {
+    required = `${formatAmount(details.requiredAda)} ADA`;
+    actual = `${formatAmount(details.actualAda)} ADA`;
+  }
+
+  return (
+    <div className="mt-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30">
+      <p className="text-sm text-rose-400 font-medium">{FAILURE_REASONS[failure?.reason] || 'Vault failed'}</p>
+      {failure?.message && failure.message !== FAILURE_REASONS[failure?.reason] && (
+        <p className="text-xs text-rose-300/80 mt-1">{failure.message}</p>
+      )}
+      {required && (
+        <p className="text-xs text-dark-100 mt-2">
+          Required <span className="text-white">{required}</span> · Collected{' '}
+          <span className="text-white">{actual}</span>
+        </p>
+      )}
+    </div>
+  );
+};
+
+const getFailureActionTitle = action =>
+  action.type === 'evm-cancel-cycle' ? 'Cycle cancelled on-chain' : getRefundTitle(action);
+
+/** Failure → on-chain cancel → refund batches, oldest first. */
+const FailureTimeline = ({ activity, vault }) => {
+  const actions = activity.actions || [];
+  const isEvm = vault?.chainType && vault.chainType !== 'cardano';
+  const nothingToRefund = activity.failure?.reason === 'no_contributions' || activity.failure?.hasDeposits === false;
+  const outcome = nothingToRefund
+    ? {
+        tone: 'emerald',
+        icon: CheckCircle,
+        text: 'Nothing was contributed or acquired, so there is nothing to refund.',
+      }
+    : actions.some(a => a.type !== 'evm-cancel-cycle')
+      ? {
+          tone: 'emerald',
+          icon: CheckCircle,
+          text: isEvm
+            ? 'Contributed assets and acquire payments were refunded to their owners.'
+            : 'Contributed assets and ADA were returned to their owners.',
+        }
+      : { tone: 'orange', icon: RotateCcw, text: 'Refunds to contributors and acquirers are pending.' };
+
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      <TimelineNode icon={AlertTriangle} tone="rose" isLast={false}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+          <span className="text-sm font-medium text-white">Vault failed</span>
+          <span className="text-xs text-dark-100">{formatDate(activity.created_at)}</span>
+        </div>
+      </TimelineNode>
+      {actions.map(action => {
+        const isCancel = action.type === 'evm-cancel-cycle';
+        return (
+          <TimelineNode key={action.id} icon={isCancel ? XCircle : RotateCcw} tone={isCancel ? 'rose' : 'blue'}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+              <span className="text-sm font-medium text-white">{getFailureActionTitle(action)}</span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-dark-100">{formatDate(action.created_at)}</span>
+                {action.tx_hash && (
+                  <button
+                    onClick={() => window.open(getTransactionUrl(action.tx_hash, vault?.chainType), '_blank')}
+                    title="View transaction"
+                    aria-label="View transaction"
+                    className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </TimelineNode>
+        );
+      })}
+      <TimelineNode icon={outcome.icon} tone={outcome.tone} isLast>
+        <p className="text-sm text-dark-100 pt-1.5">{outcome.text}</p>
+      </TimelineNode>
+    </div>
+  );
+};
+
 const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
   const { currencyLabel } = useCurrency();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
 
-  const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
+  const isFailedPhase = activity.activityType === 'phase_transition' && activity.phase === 'failed';
+  const activityType = isFailedPhase
+    ? 'phase_failed'
+    : activity.activityType === 'transaction'
+      ? activity.type
+      : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
   const Icon =
     activity.activityType === 'proposal' ? PROPOSAL_STAGES[activity.stage]?.icon || config.icon : config.icon;
@@ -499,6 +651,7 @@ const ActivityCard = ({ activity, vault }) => {
     activity.activityType === 'phase_transition' && activity.phase === 'locked' ? activity.summary : null;
   const hasDetails =
     lockSummary ||
+    isFailedPhase ||
     activity.user ||
     (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) ||
     isProposal ||
@@ -528,6 +681,13 @@ const ActivityCard = ({ activity, vault }) => {
         case 'evm-swap': {
           return 'Vault swap executed by a governance proposal';
         }
+        case 'cancel':
+        case 'evm-refund': {
+          return 'Assets returned to their owners after the vault failed';
+        }
+        case 'evm-cancel-cycle': {
+          return 'Vault cycle cancelled on-chain, opening refunds';
+        }
         default:
           return config.label;
       }
@@ -536,6 +696,7 @@ const ActivityCard = ({ activity, vault }) => {
         contribution: 'Vault entered contribution phase where users can contribute assets',
         acquire: 'Vault entered acquire phase where assets can be acquired',
         locked: 'Vault has been locked and is now in the final phase',
+        failed: getFailureReason(activity),
       };
       return phaseDescriptions[activity.phase] || 'Vault moved to next phase';
     } else if (isProposal) {
@@ -594,6 +755,11 @@ const ActivityCard = ({ activity, vault }) => {
                       {activity.actions.length} {activity.actions.length === 1 ? 'action' : 'actions'} executed
                     </span>
                   )}
+                  {isFailedPhase && activity.actions?.length > 0 && (
+                    <span className="text-xs text-dark-100">
+                      {activity.actions.length} {activity.actions.length === 1 ? 'transaction' : 'transactions'}
+                    </span>
+                  )}
                   {isRebalance && REBALANCE_STATUS[activity.status] && (
                     <span
                       className={clsx(
@@ -609,6 +775,7 @@ const ActivityCard = ({ activity, vault }) => {
                   <Calendar className="w-3.5 h-3.5" />
                   {formatDate(activity.created_at)}
                 </div>
+                {isFailedPhase && <FailureSummary failure={activity.failure} />}
               </div>
               <div className="flex items-center gap-2">
                 {isTransaction && activity.tx_hash && (
@@ -654,6 +821,8 @@ const ActivityCard = ({ activity, vault }) => {
               <div className="mt-3 pt-3 border-t border-steel-750">
                 {lockSummary ? (
                   <LockSummary summary={lockSummary} vault={vault} />
+                ) : isFailedPhase ? (
+                  <FailureTimeline activity={activity} vault={vault} />
                 ) : isRebalance ? (
                   <>
                     <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
@@ -938,12 +1107,20 @@ export const VaultActivity = ({ vault }) => {
             case 'evm-swap':
               description = `Vault swap: ${getSwapSummary(activity)}`;
               break;
+            case 'cancel':
+            case 'evm-refund':
+              description = 'Assets returned to their owners after the vault failed';
+              break;
+            case 'evm-cancel-cycle':
+              description = 'Vault cycle cancelled on-chain, opening refunds';
+              break;
           }
         } else if (isPhaseTransition) {
           const phaseDescriptions = {
             contribution: 'Vault entered contribution phase where users can contribute assets',
             acquire: 'Vault entered acquire phase where assets can be acquired',
             locked: 'Vault has been locked and is now in the final phase',
+            failed: getFailureReason(activity),
           };
           description = phaseDescriptions[activity.phase] || 'Vault moved to next phase';
         } else if (isRebalance) {
@@ -974,6 +1151,10 @@ export const VaultActivity = ({ vault }) => {
         if (isProposal) {
           assetNames = (activity.actions || []).map(getProposalActionTitle).join('; ');
         }
+        const isFailedPhase = isPhaseTransition && activity.phase === 'failed';
+        if (isFailedPhase) {
+          assetNames = (activity.actions || []).map(getFailureActionTitle).join('; ');
+        }
 
         return [
           formatDateTime(activity.created_at),
@@ -990,7 +1171,12 @@ export const VaultActivity = ({ vault }) => {
                 .join('; ')
             : isProposal
               ? (activity.actions || []).flatMap(getProposalActionTxHashes).join('; ')
-              : activity.tx_hash || '',
+              : isFailedPhase
+                ? (activity.actions || [])
+                    .map(action => action.tx_hash)
+                    .filter(Boolean)
+                    .join('; ')
+                : activity.tx_hash || '',
         ];
       });
 
