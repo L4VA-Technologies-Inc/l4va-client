@@ -15,7 +15,7 @@ import { formatLargeNumber } from '@/utils/core.utils';
 const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
 const LIST_TABS = ['Trending', 'Top', 'Gainers', 'New'];
-const RH_TABS = ['RWAs', 'DeFi', 'Memecoins', 'Other'];
+const RH_TABS = ['All', 'RWAs', 'DeFi', 'Memecoins', 'Other'];
 // Tag each Robinhood tab filters on; "Other" is everything that matches none of them
 const RH_TAB_TAGS = { RWAs: 'RWA', DeFi: 'DeFi', Memecoins: 'Memecoins' };
 
@@ -23,6 +23,7 @@ const RH_TAB_TAGS = { RWAs: 'RWA', DeFi: 'DeFi', Memecoins: 'Memecoins' };
 const matchesRhTab = (token, tab) => {
   const tags = (token.tags || []).map(tag => String(tag).toLowerCase());
   const has = tag => tags.includes(tag.toLowerCase());
+  if (tab === 'All') return true;
   if (tab === 'Other') return !Object.values(RH_TAB_TAGS).some(has);
   return has(RH_TAB_TAGS[tab]);
 };
@@ -151,7 +152,7 @@ export const TokensPage = () => {
   const { isRobinHood: isRobinhood } = useNetwork();
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState('Trending');
-  const [rhTab, setRhTab] = useState('RWAs');
+  const [rhTab, setRhTab] = useState('All');
   const [page, setPage] = useState(1);
 
   const formatTokenField = (token, field, opts) => {
@@ -176,13 +177,21 @@ export const TokensPage = () => {
   const rhMemesQuery = useRobinhoodMemecoins(isRobinhood);
   const rhRwasQuery = useRobinhoodRwas(isRobinhood);
 
-  const rhTokens = useMemo(() => {
+  const rhAllTokens = useMemo(() => {
     const byId = new Map();
     [...(rhMemesQuery.data || []), ...(rhRwasQuery.data || [])].forEach(token => byId.set(token.id, token));
-    return [...byId.values()].filter(token => matchesRhTab(token, rhTab));
-  }, [rhMemesQuery.data, rhRwasQuery.data, rhTab]);
+    return [...byId.values()];
+  }, [rhMemesQuery.data, rhRwasQuery.data]);
 
-  const tokens = isRobinhood ? rhTokens : globalQuery.data || [];
+  // Summary cards always cover every token; only the list below follows the category tab.
+  const allTokens = useMemo(
+    () => (isRobinhood ? rhAllTokens : globalQuery.data || []),
+    [isRobinhood, rhAllTokens, globalQuery.data]
+  );
+  const tokens = useMemo(
+    () => (isRobinhood ? rhAllTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
+    [isRobinhood, rhAllTokens, rhTab, allTokens]
+  );
   const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
   const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
 
@@ -212,21 +221,21 @@ export const TokensPage = () => {
 
   const trending = useMemo(
     () =>
-      [...tokens]
+      [...allTokens]
         .sort((a, b) => (b.volume_24h ?? b.holders_count ?? 0) - (a.volume_24h ?? a.holders_count ?? 0))
         .slice(0, 6),
-    [tokens]
+    [allTokens]
   );
   const graduated = useMemo(
     () =>
-      [...tokens]
+      [...allTokens]
         .sort((a, b) => (b.market_cap ?? b.holders_count ?? 0) - (a.market_cap ?? a.holders_count ?? 0))
         .slice(6, 12),
-    [tokens]
+    [allTokens]
   );
   const gainers = useMemo(
-    () => [...tokens].sort((a, b) => (b.change_24h ?? -Infinity) - (a.change_24h ?? -Infinity)).slice(0, 6),
-    [tokens]
+    () => [...allTokens].sort((a, b) => (b.change_24h ?? -Infinity) - (a.change_24h ?? -Infinity)).slice(0, 6),
+    [allTokens]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
