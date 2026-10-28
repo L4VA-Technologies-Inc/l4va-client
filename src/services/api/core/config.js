@@ -7,6 +7,10 @@ export class CoreConfigProvider {
     return '/api/v1/auth/evm/challenge';
   }
 
+  static supportRequest() {
+    return '/api/v1/support';
+  }
+
   static sendNotification() {
     return '/api/v1/send-notification';
   }

@@ -18,6 +18,10 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async sendSupportRequest(data) {
+    return await axiosInstance.post(CoreConfigProvider.supportRequest(), data);
+  }
+
   static async sendNotification(data) {
     const response = await axiosInstance.post(CoreConfigProvider.sendNotification(), data);
     return response;

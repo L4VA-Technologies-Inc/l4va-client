@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { SupportButton } from '@/components/SupportButton';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -19,6 +20,7 @@ const MainLayout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4 xl:px-0">{children}</div>
       </main>
       <Footer />
+      <SupportButton />
     </div>
   );
 };
