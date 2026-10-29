@@ -1,6 +1,7 @@
 import { ExternalLink, PieChart, RefreshCcw } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/hooks/useCurrency';
 import { Spinner } from '@/components/Spinner';
 import { useVaultIndex } from '@/services/api/queries';
 import { BasketAllocationBar } from '@/components/vaults/index/IndexBasketEditor';
@@ -13,7 +14,7 @@ import {
 } from '@/components/vaults/index/indexVault.utils';
 import { getTransactionUrl } from '@/utils/explorer.utils';
 import { ChainType } from '@/utils/types';
-import { formatDateWithTime } from '@/utils/core.utils';
+import { formatDateWithTime, formatNum } from '@/utils/core.utils';
 
 const TokenCell = ({ asset, color }) => (
   <div className="flex items-center gap-3 min-w-0">
@@ -123,6 +124,12 @@ const RebalanceHistory = ({ rebalances }) => {
  */
 export const VaultIndexAllocation = ({ vault }) => {
   const { data, isLoading, error } = useVaultIndex(vault?.id);
+  const { currency, currencySymbol, currencyLabel, pickByCurrency } = useCurrency();
+  // Portfolio values carry native wei plus USD/ADA; ETH stays exact from wei.
+  const formatValue = v =>
+    currency === 'eth'
+      ? formatNativeWei(v.valueNative)
+      : `${currencySymbol}${formatNum(pickByCurrency({ ada: v.valueAda, usd: v.valueUsd, eth: 0 }) ?? 0)}`;
   const config = data?.config || vault?.indexConfig;
   const portfolio = data?.portfolio;
 
@@ -153,8 +160,11 @@ export const VaultIndexAllocation = ({ vault }) => {
         </div>
         {hasHoldings && (
           <div className="text-right">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-dark-100">Basket value</p>
-            <p className="text-2xl font-bold tabular-nums">{formatNativeWei(portfolio.navNative)} ETH</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-dark-100">Total value</p>
+            <p className="text-2xl font-bold tabular-nums">
+              {formatValue(portfolio.total)}
+              {currency === 'eth' && ' ETH'}
+            </p>
           </div>
         )}
       </div>
@@ -208,7 +218,7 @@ export const VaultIndexAllocation = ({ vault }) => {
                   <th className="px-3 py-2 text-right font-medium">Target</th>
                   <th className="px-3 py-2 text-right font-medium">Actual</th>
                   <th className="px-3 py-2 text-right font-medium">Drift</th>
-                  <th className="px-3 py-2 text-right font-medium">Value (ETH)</th>
+                  <th className="px-3 py-2 text-right font-medium">Value ({currencyLabel})</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,7 +235,7 @@ export const VaultIndexAllocation = ({ vault }) => {
                       <td className="px-3 py-2 text-right">
                         <DriftCell driftBps={asset.driftBps} />
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums">{formatNativeWei(asset.valueNative)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{formatValue(asset)}</td>
                     </tr>
                   );
                 })}
@@ -236,16 +246,23 @@ export const VaultIndexAllocation = ({ vault }) => {
                   <td className="px-3 py-2 text-right">
                     <DriftCell driftBps={portfolio.reserve.actualBps - portfolio.reserve.targetBps} />
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">
-                    {formatNativeWei(portfolio.reserve.valueNative)}
-                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatValue(portfolio.reserve)}</td>
                 </tr>
+                {portfolio.lp && (
+                  <tr className="border-t border-steel-800">
+                    <td className="px-3 py-2 text-dark-100">Liquidity pool position</td>
+                    <td className="px-3 py-2 text-right text-dark-100" colSpan={3}>
+                      outside the basket
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums">{formatValue(portfolio.lp)}</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
           <p className="text-xs text-dark-100">
-            Values are live swap quotes into ETH, refreshed every minute. Drift is actual minus target, as a share of
-            the whole vault.
+            Values are live swap quotes into ETH, refreshed every minute. The liquidity position is valued at the pool
+            price and is not part of the basket weights. Drift is actual minus target, as a share of basket plus cash.
           </p>
         </>
       )}
