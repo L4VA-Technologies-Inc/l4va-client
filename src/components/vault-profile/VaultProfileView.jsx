@@ -431,6 +431,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       return `${sign}${currencySymbol}${formatNum(absValue, 6)}`;
     }
 
+    // Below the shown precision (e.g. a $0.0000102 VT price), say so instead of rounding to 0.
+    const smallest = 10 ** -maximumFractionDigits;
+    if (absValue > 0 && absValue < smallest) {
+      return `${sign}< ${currencySymbol}${smallest.toFixed(maximumFractionDigits)}`;
+    }
+
     return `${sign}${currencySymbol}${formatNum(absValue, maximumFractionDigits)}`;
   };
 

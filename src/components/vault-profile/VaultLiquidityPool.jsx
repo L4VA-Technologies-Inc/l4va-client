@@ -1,6 +1,7 @@
 import { Droplets, ExternalLink } from 'lucide-react';
 
 import { useVaultLp } from '@/services/api/queries';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { getAddressUrl } from '@/utils/explorer.utils';
 import { ChainType } from '@/utils/types';
 
@@ -31,7 +32,8 @@ const Stat = ({ label, value }) => (
  * contribution. Shows the pending state until the pool exists, then live reserves.
  */
 export const VaultLiquidityPool = ({ vault }) => {
-  const enabled = vault?.chainType === ChainType.ROBINHOOD && Number(vault?.liquidityPoolContribution) > 0;
+  const enabled =
+    vault?.chainType === ChainType.ROBINHOOD && (Number(vault?.liquidityPoolContribution) > 0 || isIndexVault(vault));
   const { data: lp } = useVaultLp(vault?.id, enabled);
 
   if (!enabled || !lp) return null;

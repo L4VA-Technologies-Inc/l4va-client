@@ -20,14 +20,7 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
   const router = useRouter();
 
   const baseTabContent = {
-    Assets: isIndexVault(vault) ? (
-      <>
-        <VaultIndexAllocation vault={vault} />
-        <VaultContributedAssetsList vault={vault} />
-      </>
-    ) : (
-      <VaultContributedAssetsList vault={vault} />
-    ),
+    Assets: isIndexVault(vault) ? <VaultIndexAllocation vault={vault} /> : <VaultContributedAssetsList vault={vault} />,
     Token: (
       <>
         <VaultLiquidityPool vault={vault} />
