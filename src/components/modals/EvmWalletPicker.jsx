@@ -74,7 +74,8 @@ export const EvmWalletPicker = ({
   const recentId = useMemo(getRecentWalletId, []);
 
   const coinbaseConnector = connectors.find(c => c.type === 'coinbaseWallet');
-  const wcConnector = connectors.find(c => c.type === 'walletConnect');
+  // Two WalletConnect connectors share the type; ours (QR / deep links) is id 'walletConnect'.
+  const wcConnector = connectors.find(c => c.id === 'walletConnect');
   const injectedConnector = connectors.find(c => c.id === 'injected');
 
   // The relay normally hands over a pairing uri within a couple of seconds; surface a stall
@@ -143,6 +144,12 @@ export const EvmWalletPicker = ({
     const sdkConnector = wallet.sdkConnectorType && connectors.find(c => c.type === wallet.sdkConnectorType);
     if (isMobile && sdkConnector) {
       onConnect(sdkConnector, { walletId: wallet.id });
+      return;
+    }
+    const modalConnector = wallet.modalConnectorId && connectors.find(c => c.id === wallet.modalConnectorId);
+    if (isMobile && modalConnector) {
+      // The official WalletConnect modal opens on top and handles wallet choice + deep link.
+      onConnect(modalConnector, { walletId: wallet.id });
       return;
     }
     if (wallet.connect === 'coinbase') {
@@ -291,7 +298,7 @@ export const EvmWalletPicker = ({
               ) : (
                 <WalletLogo className="w-14 h-14" connector={tile.connector} wallet={tile.wallet} />
               )}
-              <span className="text-xs text-center leading-tight">{tile.label}</span>
+              <span className="text-xs text-center leading-tight w-full truncate">{tile.label}</span>
             </button>
           ))}
         </div>

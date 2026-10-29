@@ -79,7 +79,7 @@ export const EVM_WALLETS = {
     name: 'Rabby Wallet',
     shortName: 'Rabby',
     iconUrl: rabbyIconUrl,
-    kind: 'Browser Extension',
+    kind: 'Mobile Wallet and Extension',
     download: 'https://rabby.io/',
   },
   trust: {
@@ -137,6 +137,8 @@ export const EVM_WALLETS = {
     name: 'WalletConnect',
     Icon: WalletConnectIcon,
     kind: 'Any WalletConnect wallet',
+    // Mobile: the official WalletConnect modal (connector id walletConnectModal).
+    modalConnectorId: 'walletConnectModal',
   },
 };
 
@@ -152,7 +154,16 @@ export const RECOMMENDED_WALLET_IDS = [
   'uniswap',
   'phantom',
 ];
-export const MOBILE_WALLET_IDS = ['metamask', 'coinbase', 'rainbow', 'trust', 'phantom', 'okx', 'binance', 'uniswap'];
+export const MOBILE_WALLET_IDS = [
+  'metamask',
+  'coinbase',
+  'rainbow',
+  'trust',
+  'walletconnect',
+  'okx',
+  'binance',
+  'uniswap',
+];
 export const GET_WALLET_IDS = [
   'rabby',
   'metamask',
