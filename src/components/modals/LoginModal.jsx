@@ -71,6 +71,8 @@ export const LoginModal = () => {
   const robinhoodConnectLockRef = useRef(false);
   // Bumped per connect attempt; a result from an older (cancelled) attempt is ignored.
   const robinhoodAttemptRef = useRef(0);
+  // Wallet the in-flight attempt is for — picking a different wallet supersedes it.
+  const robinhoodPendingWalletRef = useRef(null);
 
   // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and keep only
   // real, browser-detected extensions — drops the generic "injected" fallback as well
@@ -153,6 +155,7 @@ export const LoginModal = () => {
     robinhoodConnectLockRef.current = true;
     const attempt = ++robinhoodAttemptRef.current;
     walletId = walletId || connector.id;
+    robinhoodPendingWalletRef.current = walletId;
 
     // Already connected — login in place. Never switch chain during login (second
     // MetaMask popup → accountsChanged flicker → "Wallet changed" logout).
@@ -230,6 +233,13 @@ export const LoginModal = () => {
     if (!isChecked || !isCheckedService) {
       toast.error('Please accept the terms and conditions');
       return;
+    }
+    // An attempt the user never finished (e.g. MetaMask app opened, then came back without
+    // approving) would otherwise hold the lock and silently swallow every later tap.
+    // Re-picking the *same* wallet is still ignored — that's the double-click guard.
+    const walletId = options?.walletId || connector?.id;
+    if (robinhoodConnectLockRef.current && robinhoodPendingWalletRef.current !== walletId) {
+      cancelRobinhoodConnect();
     }
     return handleRobinhoodConnect(connector, options);
   };
