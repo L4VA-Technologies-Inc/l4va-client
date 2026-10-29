@@ -770,7 +770,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 />
               ) : (
                 <div className="w-full h-full bg-steel-850 flex items-center justify-center">
-                  <L4vaIcon chainType={vault.chainType} className="h-16 w-16 text-white" />
+                  <L4vaIcon className="h-16 w-16 text-white" />
                 </div>
               )}
             </div>

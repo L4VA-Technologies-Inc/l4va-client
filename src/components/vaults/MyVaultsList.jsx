@@ -109,7 +109,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
     });
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -151,6 +151,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
+        isRefreshing={isPlaceholderData}
         tabs={TABS}
         title="My Vaults"
         vaults={vaults}

@@ -59,7 +59,9 @@ function toTxRequest(tx, chainId) {
     to: tx.to,
     data: tx.data,
     value: tx.value != null ? BigInt(tx.value) : 0n,
-    ...(tx.gasLimit ? { gas: BigInt(tx.gasLimit) } : {}),
+    // No gas limit from the API: its estimate (~126k) is for a plain ERC-20, but vault tokens
+    // checkpoint balances on transfer and need ~370k on Robinhood, so the swap ran out of gas.
+    // The wallet estimates against the real call instead.
     ...(tx.maxFeePerGas ? { maxFeePerGas: BigInt(tx.maxFeePerGas) } : {}),
     ...(tx.maxPriorityFeePerGas ? { maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas) } : {}),
     ...(tx.gasPrice && !tx.maxFeePerGas ? { gasPrice: BigInt(tx.gasPrice) } : {}),

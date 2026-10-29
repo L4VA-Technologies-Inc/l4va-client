@@ -49,7 +49,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             <img alt="Vault avatar" className="h-full w-full object-cover" src={vaultImage} loading="lazy" />
           ) : (
             <div className="h-full w-full bg-steel-850 flex items-center justify-center">
-              <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
+              <L4vaIcon className="h-8 w-8 text-white" />
             </div>
           )}
           {/* Vault type sits with the chain icon so both read as one "what is this" group. */}
@@ -74,7 +74,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <img alt="Token icon" className="h-16 w-16 rounded-xl object-cover" src={ftTokenImg} loading="lazy" />
             ) : (
               <div className="h-16 w-16 rounded-xl bg-primary-background flex items-center justify-center flex-shrink-0">
-                <L4vaIcon chainType={vault.chainType} className="h-8 w-8 text-white" />
+                <L4vaIcon className="h-8 w-8 text-white" />
               </div>
             )}
             <div>

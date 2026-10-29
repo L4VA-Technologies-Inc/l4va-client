@@ -36,24 +36,16 @@ export const getNetwork = (): NetworkType => globalNetwork;
 
 let transitionCleanupTimeout: number | null = null;
 
+// Green L4VA brand favicon on every chain.
 const FAVICONS = {
-  cardano: {
-    'favicon-ico': '/favicon/favicon.ico?v=2',
-    'favicon-png': '/favicon/favicon.png',
-    'favicon-32': '/favicon/favicon-32x32.png',
-    'favicon-16': '/favicon/favicon-16x16.png',
-  },
-  robinhood: {
-    'favicon-ico': '/favicon/favicon-rh.ico?v=3',
-    'favicon-png': '/favicon/favicon-rh.png',
-    'favicon-32': '/favicon/favicon-rh-32x32.png',
-    'favicon-16': '/favicon/favicon-rh-16x16.png',
-  },
+  'favicon-ico': '/favicon/favicon-rh.ico?v=3',
+  'favicon-png': '/favicon/favicon-rh.png',
+  'favicon-32': '/favicon/favicon-rh-32x32.png',
+  'favicon-16': '/favicon/favicon-rh-16x16.png',
 } as const;
 
-const applyFavicon = (newNetwork: NetworkType) => {
-  const hrefsById = FAVICONS[newNetwork];
-  Object.entries(hrefsById).forEach(([id, href]) => {
+const applyFavicon = () => {
+  Object.entries(FAVICONS).forEach(([id, href]) => {
     const link = document.getElementById(id);
     if (link instanceof HTMLLinkElement) {
       link.href = href;
@@ -63,7 +55,7 @@ const applyFavicon = (newNetwork: NetworkType) => {
 
 const applyNetworkTheme = (newNetwork: NetworkType, animate = true) => {
   const root = document.documentElement;
-  applyFavicon(newNetwork);
+  applyFavicon();
 
   if (!animate) {
     root.setAttribute('data-chain', newNetwork);

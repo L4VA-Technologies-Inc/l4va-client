@@ -79,7 +79,7 @@ const VaultsFilters = ({ className = '' }) => {
       });
     }
   };
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -113,6 +113,7 @@ const VaultsFilters = ({ className = '' }) => {
       className={className}
       error={error?.message}
       isLoading={isLoading}
+      isRefreshing={isPlaceholderData}
       tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
       vaults={vaults}
       onTabChange={handleTabChange}

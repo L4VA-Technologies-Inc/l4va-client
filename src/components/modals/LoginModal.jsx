@@ -5,6 +5,8 @@ import { useExtensions, useWallet } from '@ada-anvil/weld/react';
 import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import toast from 'react-hot-toast';
 
+import { EvmWalletPicker } from './EvmWalletPicker';
+
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { CoreApiProvider } from '@/services/api/core';
@@ -15,43 +17,10 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import WalletIcon from '@/icons/wallet.svg?react';
-import MetaMaskIcon from '@/icons/metamask.svg?react';
-import OkxIcon from '@/icons/okx.svg?react';
-import BinanceIcon from '@/icons/binance.svg?react';
-import CoinbaseIcon from '@/icons/coinbase.svg?react';
-import TrustWalletIcon from '@/icons/trustwallet.svg?react';
+import { setRecentWalletId } from '@/lib/evm/walletRegistry';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
-
-// Curated EVM wallets shown as a "download" row when not detected as installed
-// (EIP-6963 only announces wallets actually present) — Coinbase is the exception, its
-// SDK connector works even without a detected extension (see coinbaseConnector below).
-const POPULAR_EVM_WALLETS = [
-  { key: 'metamask', displayName: 'MetaMask', website: 'https://metamask.io/download/', Icon: MetaMaskIcon },
-  { key: 'uniswap', displayName: 'Uniswap Extension', website: 'https://wallet.uniswap.org/' },
-  { key: 'phantom', displayName: 'Phantom', website: 'https://phantom.com/download' },
-  { key: 'rabby', displayName: 'Rabby', website: 'https://rabby.io/' },
-  { key: 'okx', displayName: 'OKX Wallet', website: 'https://www.okx.com/web3', Icon: OkxIcon },
-  {
-    key: 'binance',
-    displayName: 'Binance Wallet',
-    website: 'https://www.binance.com/en/web3wallet',
-    Icon: BinanceIcon,
-  },
-  {
-    key: 'coinbase',
-    displayName: 'Coinbase Wallet',
-    website: 'https://www.coinbase.com/wallet/downloads',
-    Icon: CoinbaseIcon,
-  },
-  {
-    key: 'trust',
-    displayName: 'Trust Wallet',
-    website: 'https://trustwallet.com/download',
-    Icon: TrustWalletIcon,
-  },
-];
 
 const messageHex = msg =>
   Array.from(msg)
@@ -100,6 +69,10 @@ export const LoginModal = () => {
   // Guards against double-clicks / overlapping connects — wagmi's isPending alone
   // is not enough (MetaMask Flask keeps a pending requestPermissions across calls).
   const robinhoodConnectLockRef = useRef(false);
+  // Bumped per connect attempt; a result from an older (cancelled) attempt is ignored.
+  const robinhoodAttemptRef = useRef(0);
+  // Wallet the in-flight attempt is for — picking a different wallet supersedes it.
+  const robinhoodPendingWalletRef = useRef(null);
 
   // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and keep only
   // real, browser-detected extensions — drops the generic "injected" fallback as well
@@ -150,22 +123,15 @@ export const LoginModal = () => {
     return hasMetaMask && hasFlask;
   }, [connectors]);
 
-  // Coinbase's SDK connector works without browser detection — it opens its own popup
-  // (extension if present, otherwise a QR code for the mobile app) — so it's always
-  // offered as connectable rather than gated behind EIP-6963 detection.
-  const coinbaseConnector = connectors.find(c => c.type === 'coinbaseWallet');
-  // WalletConnect (only registered when a project id is configured) opens its own QR
-  // modal, so mobile wallets can connect with no browser extension at all.
-  const walletConnectConnector = connectors.find(c => c.type === 'walletConnect');
-
   // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
-  const loginWithRobinhoodAddress = async address => {
+  const loginWithRobinhoodAddress = async (address, walletId) => {
     if (!address) return;
     const { data: challenge } = await CoreApiProvider.evmChallenge(address);
     const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
     const res = await login(null, null, address, network, evmSignature);
     if (!res?.user) return;
 
+    setRecentWalletId(walletId);
     closeModal();
     if (!res.user.email) {
       openModal('EmailModal');
@@ -180,9 +146,16 @@ export const LoginModal = () => {
     sessionStorage.removeItem('evm_login_in_progress');
   };
 
-  const handleRobinhoodConnect = async connector => {
-    if (!connector || isRobinhoodConnecting || robinhoodConnectLockRef.current) return;
+  // onDisplayUri: WalletConnect pairing uri, rendered by EvmWalletPicker as a QR (desktop)
+  // or handed to the wallet app via deep link (mobile).
+  // Not gated on wagmi's isPending: an abandoned WalletConnect pairing never settles,
+  // so cancelRobinhoodConnect releases the lock and the stale attempt is ignored.
+  const handleRobinhoodConnect = async (connector, { walletId, onDisplayUri } = {}) => {
+    if (!connector || robinhoodConnectLockRef.current) return;
     robinhoodConnectLockRef.current = true;
+    const attempt = ++robinhoodAttemptRef.current;
+    walletId = walletId || connector.id;
+    robinhoodPendingWalletRef.current = walletId;
 
     // Already connected — login in place. Never switch chain during login (second
     // MetaMask popup → accountsChanged flicker → "Wallet changed" logout).
@@ -192,7 +165,7 @@ export const LoginModal = () => {
       (!activeRobinhoodConnector || activeRobinhoodConnector.id === connector.id)
     ) {
       try {
-        await loginWithRobinhoodAddress(robinhoodAddress);
+        await loginWithRobinhoodAddress(robinhoodAddress, walletId);
       } catch (error) {
         const msg = String(error?.shortMessage || error?.message || '');
         if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
@@ -209,6 +182,11 @@ export const LoginModal = () => {
     sessionStorage.setItem('evm_intentional_disconnect', '1');
     sessionStorage.setItem('evm_login_in_progress', '1');
 
+    const onConnectorMessage = ({ type, data }) => {
+      if (type === 'display_uri' && attempt === robinhoodAttemptRef.current) onDisplayUri?.(data);
+    };
+    if (onDisplayUri) connector.emitter.on('message', onConnectorMessage);
+
     try {
       if (isRobinhoodConnected) {
         await disconnectRobinhood();
@@ -218,14 +196,16 @@ export const LoginModal = () => {
       // eth_accounts. Extra RPC traffic desyncs MetaMask Flask's inpage stream
       // ("StreamMiddleware - Unknown response id" spam) and blocks connect.
       const data = await connectRobinhoodAsync({ connector });
+      if (attempt !== robinhoodAttemptRef.current) return;
       const address = data?.accounts?.[0];
       if (!address) {
         toast.error('Wallet connection was not completed');
         return;
       }
 
-      await loginWithRobinhoodAddress(address);
+      await loginWithRobinhoodAddress(address, walletId);
     } catch (error) {
+      if (attempt !== robinhoodAttemptRef.current) return;
       const msg = String(error?.shortMessage || error?.message || '');
       if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
         toast.error('Connection rejected in wallet');
@@ -235,9 +215,33 @@ export const LoginModal = () => {
         toast.error(msg || 'Failed to connect wallet');
       }
     } finally {
-      clearEvmLoginFlags();
-      robinhoodConnectLockRef.current = false;
+      if (onDisplayUri) connector.emitter.off('message', onConnectorMessage);
+      if (attempt === robinhoodAttemptRef.current) {
+        clearEvmLoginFlags();
+        robinhoodConnectLockRef.current = false;
+      }
     }
+  };
+
+  const cancelRobinhoodConnect = () => {
+    robinhoodAttemptRef.current += 1;
+    robinhoodConnectLockRef.current = false;
+    clearEvmLoginFlags();
+  };
+
+  const handleEvmWalletPick = (connector, options) => {
+    if (!isChecked || !isCheckedService) {
+      toast.error('Please accept the terms and conditions');
+      return;
+    }
+    // An attempt the user never finished (e.g. MetaMask app opened, then came back without
+    // approving) would otherwise hold the lock and silently swallow every later tap.
+    // Re-picking the *same* wallet is still ignored — that's the double-click guard.
+    const walletId = options?.walletId || connector?.id;
+    if (robinhoodConnectLockRef.current && robinhoodPendingWalletRef.current !== walletId) {
+      cancelRobinhoodConnect();
+    }
+    return handleRobinhoodConnect(connector, options);
   };
 
   const wallet = useWallet(
@@ -372,13 +376,53 @@ export const LoginModal = () => {
     }
   };
 
+  // The "sign" step signs with the Cardano (Weld) wallet. On Robinhood a still-connected
+  // Cardano wallet (e.g. Eternl) must not hijack it — EVM login goes through wagmi.
   useEffect(() => {
-    if (wallet.isConnected) {
+    if (!isRobinHood && wallet.isConnected) {
       setView('sign');
     } else {
       setView('wallets');
     }
-  }, [wallet.isConnected]);
+  }, [wallet.isConnected, isRobinHood]);
+
+  const termsCheckboxes = (
+    <div className="mt-4 md:mt-6">
+      <LavaCheckbox
+        checked={isChecked}
+        description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
+        name="terms"
+        onChange={handleTermsAcceptance}
+      />
+      <LavaCheckbox
+        checked={isCheckedService}
+        description={<TermsAgreementText />}
+        name="service-terms"
+        onChange={handleTermsAcceptanceService}
+      />
+    </div>
+  );
+
+  const renderEvmWallets = () => (
+    <>
+      {hasConflictingMetaMasks && (
+        <p className="mb-3 text-sm text-orange-500 px-1">
+          MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions, then refresh — both at
+          once breaks connect.
+        </p>
+      )}
+      <EvmWalletPicker
+        connectingId={isRobinhoodConnecting ? robinhoodConnectVars?.connector?.id : null}
+        connectors={connectors}
+        detectedConnectors={robinhoodConnectors}
+        disabled={!isChecked || !isCheckedService}
+        onCancel={cancelRobinhoodConnect}
+        onConnect={handleEvmWalletPick}
+      >
+        {termsCheckboxes}
+      </EvmWalletPicker>
+    </>
+  );
 
   const renderWalletsList = () => {
     const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];
@@ -389,9 +433,7 @@ export const LoginModal = () => {
     );
 
     const renderWalletRow = walletItem => {
-      const isConnecting = isRobinHood
-        ? isRobinhoodConnecting && robinhoodConnectVars?.connector?.id === walletItem.key
-        : walletItem.isConnectingTo === walletItem.key;
+      const isConnecting = walletItem.isConnectingTo === walletItem.key;
       return (
         <div
           key={walletItem.key}
@@ -406,9 +448,7 @@ export const LoginModal = () => {
             type="button"
             onClick={() => handleConnect(walletItem.key)}
           >
-            {walletItem.Icon ? (
-              <walletItem.Icon className="w-6 h-6 rounded-md" />
-            ) : walletItem.icon ? (
+            {walletItem.icon ? (
               <img alt="" aria-hidden="true" className="w-6 h-6" src={walletItem.icon} />
             ) : (
               <WalletIcon className="w-6 h-6" />
@@ -417,7 +457,7 @@ export const LoginModal = () => {
           </button>
           <div className="flex items-center">
             {isConnecting && <Spinner />}
-            {!isRobinHood && !installed.has(walletItem.key) && (
+            {!installed.has(walletItem.key) && (
               <a
                 className="text-sm text-dark-100 p-1"
                 href={walletItem.website}
@@ -433,95 +473,10 @@ export const LoginModal = () => {
       );
     };
 
-    const renderDownloadWalletRow = walletItem => {
-      const Icon = walletItem.Icon || WalletIcon;
-      return (
-        <a
-          key={walletItem.key}
-          className="flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg transition-colors hover:bg-steel-750"
-          href={walletItem.website}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <div className="flex items-center gap-2">
-            <Icon className="w-6 h-6 rounded-md" />
-            <span className="font-bold text-sm">{walletItem.displayName}</span>
-          </div>
-          <Download className="w-4 h-4 text-dark-100" size={14} />
-        </a>
-      );
-    };
-
-    // Name-match a detected EVM connector against our curated wallet list (e.g. a
-    // browser's EIP-6963 "MetaMask" connector matches the 'metamask' entry) so it gets
-    // the brand icon and isn't also listed as a separate download prompt.
-    const matchPopularEvmWallet = displayName => {
-      const name = displayName?.toLowerCase() || '';
-      return POPULAR_EVM_WALLETS.find(pw => name.includes(pw.key));
-    };
-
-    let evmConnectableWallets = [];
-    let evmDownloadWallets = [];
-    if (isRobinHood) {
-      const detectedKeys = new Set();
-      evmConnectableWallets = robinhoodConnectors.map(connector => {
-        const match = matchPopularEvmWallet(connector.displayName);
-        if (match) detectedKeys.add(match.key);
-        return match ? { ...connector, Icon: match.Icon } : connector;
-      });
-
-      // Coinbase's SDK connector works without a detected extension (it opens its own
-      // popup, falling back to a QR code) — offer it as a connect button unless its
-      // browser extension was already picked up above.
-      if (!detectedKeys.has('coinbase') && coinbaseConnector) {
-        const coinbasePopular = POPULAR_EVM_WALLETS.find(pw => pw.key === 'coinbase');
-        evmConnectableWallets.push({ ...coinbasePopular, key: coinbaseConnector.id });
-        detectedKeys.add('coinbase');
-      }
-
-      if (walletConnectConnector) {
-        evmConnectableWallets.push({
-          key: walletConnectConnector.id,
-          displayName: 'WalletConnect',
-          Icon: WalletIcon,
-        });
-      }
-
-      evmDownloadWallets = POPULAR_EVM_WALLETS.filter(pw => !detectedKeys.has(pw.key));
-    }
-
     return (
       <>
-        {isRobinHood && hasConflictingMetaMasks && (
-          <p className="mb-3 text-sm text-orange-500 px-1">
-            MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions, then refresh — both at
-            once breaks connect.
-          </p>
-        )}
-        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-          {isRobinHood ? (
-            <>
-              {evmConnectableWallets.map(renderWalletRow)}
-              {evmDownloadWallets.map(renderDownloadWalletRow)}
-            </>
-          ) : (
-            sortedCardanoWallets.map(renderWalletRow)
-          )}
-        </div>
-        <div className="mt-4 md:mt-6">
-          <LavaCheckbox
-            checked={isChecked}
-            description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
-            name="terms"
-            onChange={handleTermsAcceptance}
-          />
-          <LavaCheckbox
-            checked={isCheckedService}
-            description={<TermsAgreementText />}
-            name="service-terms"
-            onChange={handleTermsAcceptanceService}
-          />
-        </div>
+        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">{sortedCardanoWallets.map(renderWalletRow)}</div>
+        {termsCheckboxes}
       </>
     );
   };
@@ -563,7 +518,7 @@ export const LoginModal = () => {
 
   return (
     <ModalWrapper isOpen title="Connect Wallet" onClose={closeModal} size="md">
-      {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
+      {view !== 'wallets' ? renderSignMessage() : isRobinHood ? renderEvmWallets() : renderWalletsList()}
     </ModalWrapper>
   );
 };

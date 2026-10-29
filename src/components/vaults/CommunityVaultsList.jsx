@@ -99,7 +99,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({ ...prevFilters, vaultArchetype, page: 1 }));
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -142,6 +142,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
+        isRefreshing={isPlaceholderData}
         tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
         title="All Vaults"
         vaults={vaults}

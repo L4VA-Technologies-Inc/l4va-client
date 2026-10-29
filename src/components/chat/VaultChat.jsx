@@ -101,7 +101,11 @@ const VaultChat = ({ vault, vaultId, apiKey }) => {
           return tokenData.token;
         };
 
-        chatClient = StreamChat.getInstance(actualApiKey);
+        // One client per effect run, not the shared singleton: a re-run (StrictMode, a dep
+        // such as the vault image loading) disconnects the previous run's client in its
+        // cleanup, which on a singleton tore down this run's connection mid-setup and
+        // failed with "Call connectUser … before creating a channel".
+        chatClient = new StreamChat(actualApiKey);
 
         await chatClient.connectUser(
           {
