@@ -235,10 +235,16 @@ export const TokensPage = () => {
     return [...byId.values()];
   }, [rhMemesQuery.data, rhRwasQuery.data]);
 
+  // Cardano lists vault tokens only, like Robinhood (the API also returns market tokens).
+  const cardanoVaultTokens = useMemo(
+    () => (globalQuery.data || []).filter(token => token.source === 'vault'),
+    [globalQuery.data]
+  );
+
   // Summary cards always cover every token; only the list below follows the category tab.
   const allTokens = useMemo(
-    () => (isRobinhood ? rhAllTokens : globalQuery.data || []),
-    [isRobinhood, rhAllTokens, globalQuery.data]
+    () => (isRobinhood ? rhAllTokens : cardanoVaultTokens),
+    [isRobinhood, rhAllTokens, cardanoVaultTokens]
   );
   const tokens = useMemo(
     () => (isRobinhood ? rhAllTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
