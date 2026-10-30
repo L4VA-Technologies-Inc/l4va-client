@@ -1,9 +1,10 @@
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { createAppKit } from '@reown/appkit/react';
+import { defineChain as defineAppKitChain, type AppKitNetwork } from '@reown/appkit/networks';
 import { defineChain, type Chain } from 'viem';
-import { createConfig, createConnector, http } from 'wagmi';
-import { injected, coinbaseWallet, metaMask, walletConnect } from 'wagmi/connectors';
+import { http } from 'wagmi';
 
 import { IS_ROBINHOOD_TESTNET } from '@/lib/evm/network';
-import { isMobileDevice } from '@/lib/evm/walletRegistry';
 
 // Robinhood Chain — Arbitrum L2 (EVM), mainnet launched 2026-07-01.
 // Chain ID 4663 (mainnet) / 46630 (testnet). ETH is the native gas token.
@@ -72,69 +73,28 @@ export const robinhoodChain: Chain = IS_TESTNET
       },
     });
 
-// shimDisconnect defaults to true in wagmi v3 and forces wallet_requestPermissions
-// on every connect. MetaMask Flask frequently leaves that RPC hanging
-// ("already pending" / "Unknown response id") — disable it and rely on
-// eth_requestAccounts instead.
-// WalletConnect (QR / deep link for mobile wallets) needs a real Cloud project id; a
-// placeholder fails at the relay handshake, so it's only registered when one is set.
-// The main connector has showQrModal off: LoginModal renders its own QR (desktop) and
-// wallet deep links (mobile) from the connector's `display_uri` message. On mobile a second
-// one ("walletConnectModal") opens the official WalletConnect modal for the generic
-// WalletConnect tile — same split as RainbowKit.
+// Wallet connection (wallet list, EIP-6963, WalletConnect QR / mobile deep links, Coinbase)
+// is Reown AppKit's modal. The adapter builds the wagmi config, so every wagmi hook in the
+// app keeps working unchanged. WalletConnect needs a real Reown Cloud project id, and the
+// app's domains must be in that project's allowlist.
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-const hasWalletConnect = Boolean(walletConnectProjectId) && walletConnectProjectId !== 'your_project_id_here';
+if (!walletConnectProjectId) {
+  console.error('VITE_WALLETCONNECT_PROJECT_ID is not set — wallet connection will not work');
+}
 
-const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://l4va.io';
+const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://app.l4va.org';
 
-// Mobile MetaMask goes through MetaMask's own SDK (app handoff + request deep links), as
-// RainbowKit does — MetaMask mobile over plain WalletConnect is unreliable. Mobile-only:
-// the connector claims rdns io.metamask, which would hide the desktop extension's
-// EIP-6963 entry from the "Installed" list.
-const isMobile = typeof window !== 'undefined' && isMobileDevice();
+const toAppKitNetwork = (chain: Chain): AppKitNetwork =>
+  defineAppKitChain({
+    ...chain,
+    chainNamespace: 'eip155',
+    caipNetworkId: `eip155:${chain.id}`,
+  } as Parameters<typeof defineAppKitChain>[0]);
 
-const walletConnectMetadata = {
-  name: 'L4VA',
-  description: 'L4VA vaults',
-  url: appOrigin,
-  icons: [`${appOrigin}/favicon/apple-touch-icon-rh.png`],
-};
-
-const walletConnectModal = createConnector(config => ({
-  ...walletConnect({
-    projectId: walletConnectProjectId,
-    showQrModal: true,
-    metadata: walletConnectMetadata,
-    // Separate session storage so the two WalletConnect connectors don't restore each
-    // other's sessions (supported by the provider, missing from wagmi's types).
-    ...({ customStoragePrefix: 'l4va-wc-modal' } as object),
-  })(config),
-  id: 'walletConnectModal',
-  name: 'WalletConnect',
-}));
-
-const connectors = [
-  injected({ shimDisconnect: false }),
-  coinbaseWallet({ appName: 'L4VA' }),
-  ...(isMobile
-    ? [metaMask({ dapp: { name: 'L4VA', url: appOrigin, iconUrl: `${appOrigin}/favicon/apple-touch-icon-rh.png` } })]
-    : []),
-  ...(hasWalletConnect
-    ? [
-        walletConnect({
-          projectId: walletConnectProjectId,
-          showQrModal: false,
-          metadata: walletConnectMetadata,
-        }),
-        ...(isMobile ? [walletConnectModal] : []),
-      ]
-    : []),
-];
-
-const chains =
+const networks: [AppKitNetwork, ...AppKitNetwork[]] =
   robinhoodChain.id === robinhoodUniswapChain.id
-    ? ([robinhoodChain] as const)
-    : ([robinhoodChain, robinhoodUniswapChain] as const);
+    ? [toAppKitNetwork(robinhoodChain)]
+    : [toAppKitNetwork(robinhoodChain), toAppKitNetwork(robinhoodUniswapChain)];
 
 const transports: Record<number, ReturnType<typeof http>> = {
   [robinhoodChain.id]: http(robinhoodChain.rpcUrls.default.http[0]),
@@ -143,8 +103,41 @@ if (robinhoodUniswapChain.id !== robinhoodChain.id) {
   transports[robinhoodUniswapChain.id] = http(robinhoodUniswapChain.rpcUrls.default.http[0]);
 }
 
-export const wagmiConfig = createConfig({
-  chains,
-  connectors,
+const wagmiAdapter = new WagmiAdapter({
+  networks,
+  projectId: walletConnectProjectId,
   transports,
+});
+
+export const wagmiConfig = wagmiAdapter.wagmiConfig;
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks,
+  defaultNetwork: networks[0],
+  projectId: walletConnectProjectId,
+  metadata: {
+    name: 'L4VA',
+    description: 'L4VA vaults',
+    url: appOrigin,
+    icons: [`${appOrigin}/favicon/apple-touch-icon-rh.png`],
+  },
+  // Terms acceptance lives in AppKit's legal checkbox — the login opens AppKit directly.
+  termsConditionsUrl: `${appOrigin}/terms-of-service`,
+  privacyPolicyUrl: `${appOrigin}/privacy-policy`,
+  // Wallets only: sign-in is our own backend challenge (LoginModal), not Reown accounts.
+  features: {
+    legalCheckbox: true,
+    email: false,
+    socials: false,
+    swaps: false,
+    onramp: false,
+    send: false,
+    receive: false,
+    history: false,
+    analytics: false,
+  },
+  themeMode: 'dark',
+  // Accent = Robinhood --color-primary (css/index.css).
+  themeVariables: { '--w3m-accent': '#00C805', '--w3m-z-index': 1000 },
 });
