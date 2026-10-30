@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useAppKit, useAppKitState } from '@reown/appkit/react';
 import toast from 'react-hot-toast';
-
-import { EvmWalletPicker } from './EvmWalletPicker';
 
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
@@ -17,7 +16,6 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import WalletIcon from '@/icons/wallet.svg?react';
-import { setRecentWalletId } from '@/lib/evm/walletRegistry';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
@@ -52,197 +50,94 @@ export const LoginModal = () => {
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
 
-  // Robinhood Chain (EVM) — connect via wagmi, then log in by signing a backend challenge.
-  const {
-    isConnected: isRobinhoodConnected,
-    address: robinhoodAddress,
-    connector: activeRobinhoodConnector,
-  } = useAccount();
-  const {
-    connectors,
-    connectAsync: connectRobinhoodAsync,
-    isPending: isRobinhoodConnecting,
-    variables: robinhoodConnectVars,
-  } = useConnect();
+  // Robinhood Chain (EVM) — no modal of ours: Reown AppKit's modal connects the wallet
+  // (terms are its legal checkbox), then we log in by signing a backend challenge with it.
+  const { isConnected: isRobinhoodConnected, address: robinhoodAddress } = useAccount();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
-  // Guards against double-clicks / overlapping connects — wagmi's isPending alone
-  // is not enough (MetaMask Flask keeps a pending requestPermissions across calls).
-  const robinhoodConnectLockRef = useRef(false);
-  // Bumped per connect attempt; a result from an older (cancelled) attempt is ignored.
-  const robinhoodAttemptRef = useRef(0);
-  // Wallet the in-flight attempt is for — picking a different wallet supersedes it.
-  const robinhoodPendingWalletRef = useRef(null);
-
-  // Dedupe EIP-6963 wallets by id (StrictMode can announce them twice) and keep only
-  // real, browser-detected extensions — drops the generic "injected" fallback as well
-  // as SDK-based connectors (e.g. Coinbase), which are merged in separately below.
-  // MetaMask + MetaMask Flask both inject and corrupt each other's RPC stream — if both
-  // are present, keep only Flask in the list (still tell the user to disable the other).
-  const robinhoodConnectors = useMemo(() => {
-    const seen = new Set();
-    const tempConnectors = connectors.map(v => ({
-      ...v,
-      displayName: v.name,
-      key: v.id,
-      installed: v.type === 'injected',
-    }));
-    const unique = tempConnectors.filter(connector => {
-      if (seen.has(connector.id)) return false;
-      seen.add(connector.id);
-      return true;
-    });
-    const injectedOnly = unique.filter(connector => connector.id !== 'injected' && connector.type === 'injected');
-
-    const metamaskFamily = injectedOnly.filter(c => (c.name || c.displayName || '').toLowerCase().includes('metamask'));
-    if (metamaskFamily.length <= 1) return injectedOnly;
-
-    const flask = metamaskFamily.find(c => (c.name || c.displayName || '').toLowerCase().includes('flask'));
-    const keepId = (flask || metamaskFamily[0]).id;
-    return injectedOnly.filter(c => {
-      const name = (c.name || c.displayName || '').toLowerCase();
-      if (!name.includes('metamask')) return true;
-      return c.id === keepId;
-    });
-  }, [connectors]);
-
-  const hasConflictingMetaMasks = useMemo(() => {
-    // Prefer rdns/id (EIP-6963) over display name — "MetaMask Flask" contains
-    // "metamask" and was falsely tripping a name-based check.
-    const injected = connectors.filter(c => c.type === 'injected' && c.id !== 'injected');
-    const hasMetaMask = injected.some(c => {
-      const id = (c.id || '').toLowerCase();
-      const name = (c.name || '').toLowerCase();
-      return id === 'io.metamask' || (name === 'metamask' && !name.includes('flask'));
-    });
-    const hasFlask = injected.some(c => {
-      const id = (c.id || '').toLowerCase();
-      const name = (c.name || '').toLowerCase();
-      return id === 'io.metamask.flask' || name.includes('flask');
-    });
-    return hasMetaMask && hasFlask;
-  }, [connectors]);
+  const { open: openAppKit } = useAppKit();
+  const { open: isAppKitOpen } = useAppKitState();
+  // Bumped every time the login is opened. A wallet can leave a request hanging forever
+  // (e.g. OKX when its popup is closed instead of rejected); a newer attempt supersedes it
+  // and the stale one's result is ignored.
+  const evmAttemptRef = useRef(0);
+  // AppKit reports open=false until its modal has actually opened; only a close after
+  // that means the user dismissed it.
+  const appKitWasOpenRef = useRef(false);
 
   // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
-  const loginWithRobinhoodAddress = async (address, walletId) => {
-    if (!address) return;
-    const { data: challenge } = await CoreApiProvider.evmChallenge(address);
-    const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
-    const res = await login(null, null, address, network, evmSignature);
-    if (!res?.user) return;
-
-    setRecentWalletId(walletId);
-    closeModal();
-    if (!res.user.email) {
-      openModal('EmailModal');
-    }
-    if (activeModalData?.props?.onSuccess) {
-      activeModalData.props.onSuccess();
-    }
-  };
-
-  const clearEvmLoginFlags = () => {
-    sessionStorage.removeItem('evm_intentional_disconnect');
-    sessionStorage.removeItem('evm_login_in_progress');
-  };
-
-  // onDisplayUri: WalletConnect pairing uri, rendered by EvmWalletPicker as a QR (desktop)
-  // or handed to the wallet app via deep link (mobile).
-  // Not gated on wagmi's isPending: an abandoned WalletConnect pairing never settles,
-  // so cancelRobinhoodConnect releases the lock and the stale attempt is ignored.
-  const handleRobinhoodConnect = async (connector, { walletId, onDisplayUri } = {}) => {
-    if (!connector || robinhoodConnectLockRef.current) return;
-    robinhoodConnectLockRef.current = true;
-    const attempt = ++robinhoodAttemptRef.current;
-    walletId = walletId || connector.id;
-    robinhoodPendingWalletRef.current = walletId;
-
-    // Already connected — login in place. Never switch chain during login (second
-    // MetaMask popup → accountsChanged flicker → "Wallet changed" logout).
-    if (
-      isRobinhoodConnected &&
-      robinhoodAddress &&
-      (!activeRobinhoodConnector || activeRobinhoodConnector.id === connector.id)
-    ) {
-      try {
-        await loginWithRobinhoodAddress(robinhoodAddress, walletId);
-      } catch (error) {
-        const msg = String(error?.shortMessage || error?.message || '');
-        if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
-          toast.error('Signature rejected in wallet');
-        } else {
-          toast.error(msg || 'Failed to sign in');
-        }
-      } finally {
-        robinhoodConnectLockRef.current = false;
-      }
-      return;
-    }
-
-    sessionStorage.setItem('evm_intentional_disconnect', '1');
+  const loginWithRobinhoodAddress = async (address, attempt) => {
+    const isCurrent = () => attempt === evmAttemptRef.current;
     sessionStorage.setItem('evm_login_in_progress', '1');
-
-    const onConnectorMessage = ({ type, data }) => {
-      if (type === 'display_uri' && attempt === robinhoodAttemptRef.current) onDisplayUri?.(data);
-    };
-    if (onDisplayUri) connector.emitter.on('message', onConnectorMessage);
-
     try {
-      if (isRobinhoodConnected) {
-        await disconnectRobinhood();
-      }
-
-      // Single wagmi connect only — do NOT also call eth_requestAccounts / poll
-      // eth_accounts. Extra RPC traffic desyncs MetaMask Flask's inpage stream
-      // ("StreamMiddleware - Unknown response id" spam) and blocks connect.
-      const data = await connectRobinhoodAsync({ connector });
-      if (attempt !== robinhoodAttemptRef.current) return;
-      const address = data?.accounts?.[0];
-      if (!address) {
-        toast.error('Wallet connection was not completed');
+      const { data: challenge } = await CoreApiProvider.evmChallenge(address);
+      const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
+      if (!isCurrent()) return;
+      const res = await login(null, null, address, network, evmSignature);
+      closeModal();
+      if (!res?.user) {
+        toast.error(res?.message || 'Failed to sign in');
         return;
       }
-
-      await loginWithRobinhoodAddress(address, walletId);
+      if (!res.user.email) {
+        openModal('EmailModal');
+      }
+      if (activeModalData?.props?.onSuccess) {
+        activeModalData.props.onSuccess();
+      }
     } catch (error) {
-      if (attempt !== robinhoodAttemptRef.current) return;
-      const msg = String(error?.shortMessage || error?.message || '');
+      if (!isCurrent()) return;
+      closeModal();
+      const msg = String(error?.shortMessage || error?.response?.data?.message || error?.message || '');
       if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
-        toast.error('Connection rejected in wallet');
-      } else if (error?.code === -32002 || msg.includes('already pending')) {
-        toast.error('Pending request in Flask — reject it, then click Connect once');
+        toast.error('Signature rejected in wallet');
       } else {
-        toast.error(msg || 'Failed to connect wallet');
+        toast.error(msg || 'Failed to sign in');
       }
     } finally {
-      if (onDisplayUri) connector.emitter.off('message', onConnectorMessage);
-      if (attempt === robinhoodAttemptRef.current) {
-        clearEvmLoginFlags();
-        robinhoodConnectLockRef.current = false;
+      if (isCurrent()) {
+        sessionStorage.removeItem('evm_login_in_progress');
+        sessionStorage.removeItem('evm_intentional_disconnect');
       }
     }
   };
 
-  const cancelRobinhoodConnect = () => {
-    robinhoodAttemptRef.current += 1;
-    robinhoodConnectLockRef.current = false;
-    clearEvmLoginFlags();
-  };
+  // Every open of the login on Robinhood (openModal sets a new activeModalData each time,
+  // even when the login is already active) goes straight to AppKit's wallet list. A wallet
+  // left connected from an unfinished login is disconnected first, so the user can always
+  // pick a different wallet.
+  useEffect(() => {
+    if (!isRobinHood) return;
+    const attempt = ++evmAttemptRef.current;
+    appKitWasOpenRef.current = false;
+    (async () => {
+      if (isRobinhoodConnected) {
+        // The wallet-change watchdog must not log out between disconnect and the new connect.
+        sessionStorage.setItem('evm_intentional_disconnect', '1');
+        await disconnectRobinhood().catch(() => {});
+      }
+      if (attempt === evmAttemptRef.current) openAppKit({ view: 'Connect' });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRobinHood, activeModalData]);
 
-  const handleEvmWalletPick = (connector, options) => {
-    if (!isChecked || !isCheckedService) {
-      toast.error('Please accept the terms and conditions');
+  useEffect(() => {
+    if (!isRobinHood) return;
+    if (isAppKitOpen) {
+      appKitWasOpenRef.current = true;
       return;
     }
-    // An attempt the user never finished (e.g. MetaMask app opened, then came back without
-    // approving) would otherwise hold the lock and silently swallow every later tap.
-    // Re-picking the *same* wallet is still ignored — that's the double-click guard.
-    const walletId = options?.walletId || connector?.id;
-    if (robinhoodConnectLockRef.current && robinhoodPendingWalletRef.current !== walletId) {
-      cancelRobinhoodConnect();
+    if (!appKitWasOpenRef.current) return;
+    appKitWasOpenRef.current = false;
+    if (isRobinhoodConnected && robinhoodAddress) {
+      loginWithRobinhoodAddress(robinhoodAddress, evmAttemptRef.current);
+    } else {
+      // Dismissed without connecting.
+      sessionStorage.removeItem('evm_intentional_disconnect');
+      closeModal();
     }
-    return handleRobinhoodConnect(connector, options);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRobinHood, isAppKitOpen, isRobinhoodConnected, robinhoodAddress]);
 
   const wallet = useWallet(
     'isConnectingTo',
@@ -297,32 +192,27 @@ export const LoginModal = () => {
     }
 
     setIsLoading(true);
-    if (isRobinHood) {
-      const connector = connectors.find(c => c.id === walletKey);
-      handleRobinhoodConnect(connector);
-    } else {
-      connect(walletKey, {
-        onSuccess: ({ changeAddressBech32 }) => {
-          const { isValid, networkType } = validateWalletNetwork(changeAddressBech32);
+    connect(walletKey, {
+      onSuccess: ({ changeAddressBech32 }) => {
+        const { isValid, networkType } = validateWalletNetwork(changeAddressBech32);
 
-          if (!isValid) {
-            disconnect();
-            closeModal();
-            openModal('MainNetModal', {
-              networkType,
-              onDisconnect: handleDisconnect,
-            });
-          } else {
-            console.log('Successfully connected to wallet');
-          }
-        },
-        onError: error => {
-          const errorMessage = error?.message || 'Failed to connect to wallet';
-          toast.error(errorMessage);
-          console.error('Error connecting to wallet:', error);
-        },
-      });
-    }
+        if (!isValid) {
+          disconnect();
+          closeModal();
+          openModal('MainNetModal', {
+            networkType,
+            onDisconnect: handleDisconnect,
+          });
+        } else {
+          console.log('Successfully connected to wallet');
+        }
+      },
+      onError: error => {
+        const errorMessage = error?.message || 'Failed to connect to wallet';
+        toast.error(errorMessage);
+        console.error('Error connecting to wallet:', error);
+      },
+    });
 
     setIsLoading(false);
   };
@@ -401,27 +291,6 @@ export const LoginModal = () => {
         onChange={handleTermsAcceptanceService}
       />
     </div>
-  );
-
-  const renderEvmWallets = () => (
-    <>
-      {hasConflictingMetaMasks && (
-        <p className="mb-3 text-sm text-orange-500 px-1">
-          MetaMask and MetaMask Flask are both enabled. Disable one in your browser extensions, then refresh — both at
-          once breaks connect.
-        </p>
-      )}
-      <EvmWalletPicker
-        connectingId={isRobinhoodConnecting ? robinhoodConnectVars?.connector?.id : null}
-        connectors={connectors}
-        detectedConnectors={robinhoodConnectors}
-        disabled={!isChecked || !isCheckedService}
-        onCancel={cancelRobinhoodConnect}
-        onConnect={handleEvmWalletPick}
-      >
-        {termsCheckboxes}
-      </EvmWalletPicker>
-    </>
   );
 
   const renderWalletsList = () => {
@@ -516,9 +385,11 @@ export const LoginModal = () => {
     </div>
   );
 
+  if (isRobinHood) return null;
+
   return (
     <ModalWrapper isOpen title="Connect Wallet" onClose={closeModal} size="md">
-      {view !== 'wallets' ? renderSignMessage() : isRobinHood ? renderEvmWallets() : renderWalletsList()}
+      {view !== 'wallets' ? renderSignMessage() : renderWalletsList()}
     </ModalWrapper>
   );
 };
