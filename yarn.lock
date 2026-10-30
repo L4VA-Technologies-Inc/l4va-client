@@ -447,6 +447,20 @@
     viem "^2.47.0"
     zod "^3.25.76"
 
+"@coinbase/wallet-sdk@4.3.6":
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/@coinbase/wallet-sdk/-/wallet-sdk-4.3.6.tgz#bf9935fea404ecaa4aa5f00ea508fa01c007b3a8"
+  integrity sha512-4q8BNG1ViL4mSAAvPAtpwlOs1gpC+67eQtgIwNvT3xyeyFFd+guwkc8bcX5rTmQhXpqnhzC4f0obACbP9CqMSA==
+  dependencies:
+    "@noble/hashes" "1.4.0"
+    clsx "1.2.1"
+    eventemitter3 "5.0.1"
+    idb-keyval "6.2.1"
+    ox "0.6.9"
+    preact "10.24.2"
+    viem "^2.27.2"
+    zustand "5.0.3"
+
 "@coinbase/wallet-sdk@4.3.7":
   version "4.3.7"
   resolved "https://registry.yarnpkg.com/@coinbase/wallet-sdk/-/wallet-sdk-4.3.7.tgz#e67d47238714a6f288d59d1b83c7c2c9656fecba"
@@ -2151,6 +2165,23 @@
     redux-thunk "^3.1.0"
     reselect "^5.1.0"
 
+"@reown/appkit-adapter-wagmi@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-adapter-wagmi/-/appkit-adapter-wagmi-1.8.24.tgz#cd3c4a097e26ae25aca84e4b8d715485f19759fe"
+  integrity sha512-PHEOjalW3f1xgQ6jWRSr5Km4DIngRonDFFxVOQJFgjzKWXWCacjmywviXIngzdJ2nN1ta9L+urzXPkBu2vOGAQ==
+  dependencies:
+    "@reown/appkit" "1.8.24"
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-polyfills" "1.8.24"
+    "@reown/appkit-scaffold-ui" "1.8.24"
+    "@reown/appkit-utils" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
+    "@walletconnect/universal-provider" "2.23.7"
+    valtio "2.1.7"
+  optionalDependencies:
+    "@wagmi/connectors" ">=5.9.9"
+
 "@reown/appkit-common@1.8.19":
   version "1.8.19"
   resolved "https://registry.yarnpkg.com/@reown/appkit-common/-/appkit-common-1.8.19.tgz#8cede6a600757376f4de3f57e5d36f5a8e3c9cee"
@@ -2159,6 +2190,15 @@
     big.js "6.2.2"
     dayjs "1.11.13"
     viem ">=2.45.0"
+
+"@reown/appkit-common@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-common/-/appkit-common-1.8.24.tgz#c7bb6fd9b0505e6de93f1d9a9de86693c8d25543"
+  integrity sha512-BoAGwKwGm4WJ4nkOPk4OsIVGf9NmdINbk5QaCo50j6QJIaIAcL7GVnsV322NBiSuBxobmwbZ3lIezsZCd3G45A==
+  dependencies:
+    big.js "6.2.2"
+    dayjs "1.11.13"
+    viem ">=2.55.13"
 
 "@reown/appkit-controllers@1.8.19":
   version "1.8.19"
@@ -2170,6 +2210,17 @@
     "@walletconnect/universal-provider" "2.23.7"
     valtio "2.1.7"
     viem ">=2.45.0"
+
+"@reown/appkit-controllers@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-controllers/-/appkit-controllers-1.8.24.tgz#fcfd20ec8c2e73814719b0fd82294d36e509b33e"
+  integrity sha512-ZEB17sTYfNSMGO5lkWWGn4Q53N0tOSFAqHZt4f5Sxj8certjFXNAcKNjf0Z+bxNgU4Pjv3tisZ+6S4ShOxe6Zw==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
+    "@walletconnect/universal-provider" "2.23.7"
+    valtio "2.1.7"
+    viem ">=2.55.13"
 
 "@reown/appkit-pay@1.8.19":
   version "1.8.19"
@@ -2183,10 +2234,29 @@
     lit "3.3.0"
     valtio "2.1.7"
 
+"@reown/appkit-pay@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-pay/-/appkit-pay-1.8.24.tgz#5f0b63cd1aaf4e69f31e634b3b90ebf04149df57"
+  integrity sha512-/djGjg2xfSLDxI9Bk0DGxplgzg9npFCa5bY+OUTXaSCBPDNFKMBD8e/EAq+UL43fv/wfJewuK0F4FiLnlVDR8w==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-ui" "1.8.24"
+    "@reown/appkit-utils" "1.8.24"
+    lit "3.3.0"
+    valtio "2.1.7"
+
 "@reown/appkit-polyfills@1.8.19":
   version "1.8.19"
   resolved "https://registry.yarnpkg.com/@reown/appkit-polyfills/-/appkit-polyfills-1.8.19.tgz#afa28ef61daccbda32a0c8e62edfbe64b140397b"
   integrity sha512-PSoetRSuZg7f2YFPzdfs4BayQl51zcGqYr7frwOe6td0XEsspLrrVFn/zk5QFbFHZVsMdfRZ+TTunt84ozRdnQ==
+  dependencies:
+    buffer "6.0.3"
+
+"@reown/appkit-polyfills@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-polyfills/-/appkit-polyfills-1.8.24.tgz#efe948ed07a86154a04248190d46490e9394a36f"
+  integrity sha512-HQr6p5lvx73Q+NHSNQpw9IHuxkpT9ri+z5Hpa/W3hrFsA+Z20x5+H3oQoUivEqQGV2LVVQ75v6h7dfWBnRKy1g==
   dependencies:
     buffer "6.0.3"
 
@@ -2203,6 +2273,19 @@
     "@reown/appkit-wallet" "1.8.19"
     lit "3.3.0"
 
+"@reown/appkit-scaffold-ui@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-scaffold-ui/-/appkit-scaffold-ui-1.8.24.tgz#04f61814b5a42fc56b3d47e3fa5cea8a4ddf5bee"
+  integrity sha512-bA5fJQAYAejwWeNUvOQM3luGE1mK9jfzvixx/tNZnatBOavUX07793hXrXksi82QpxOM/H9notgwGGeryDK00w==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-pay" "1.8.24"
+    "@reown/appkit-ui" "1.8.24"
+    "@reown/appkit-utils" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
+    lit "3.3.0"
+
 "@reown/appkit-ui@1.8.19":
   version "1.8.19"
   resolved "https://registry.yarnpkg.com/@reown/appkit-ui/-/appkit-ui-1.8.19.tgz#7e28d35aafd62013de28a9b208d6510c055960cb"
@@ -2212,6 +2295,18 @@
     "@reown/appkit-common" "1.8.19"
     "@reown/appkit-controllers" "1.8.19"
     "@reown/appkit-wallet" "1.8.19"
+    lit "3.3.0"
+    qrcode "1.5.3"
+
+"@reown/appkit-ui@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-ui/-/appkit-ui-1.8.24.tgz#9017ac7e08a916d37c98f00cf0ae2417c72ebbb1"
+  integrity sha512-Ex4/s9TtFZfrj0vjNBeH3uy23bIkZbOikcfJ3rInjGAN2ujyrb0ed9ZUWaiNTveVh06hjglYdgQ7B6nYDTBxSw==
+  dependencies:
+    "@phosphor-icons/webcomponents" "2.1.5"
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
     lit "3.3.0"
     qrcode "1.5.3"
 
@@ -2234,6 +2329,26 @@
     "@safe-global/safe-apps-provider" "0.18.6"
     "@safe-global/safe-apps-sdk" "9.1.0"
 
+"@reown/appkit-utils@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-utils/-/appkit-utils-1.8.24.tgz#dd90e205d930f5e235930b72d7ae95dc9079e1d9"
+  integrity sha512-HsGAgbWg4SPlZJJGNaKeynrtRZwa9iDPIXQ3iSi/Rc4g0IxZ6ahIGciZzLR/t1QM2Ehmx2MhM6LXVHa4PGbC3A==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-polyfills" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
+    "@wallet-standard/wallet" "1.1.0"
+    "@walletconnect/logger" "3.0.2"
+    "@walletconnect/universal-provider" "2.23.7"
+    valtio "2.1.7"
+    viem ">=2.55.13"
+  optionalDependencies:
+    "@base-org/account" "2.4.0"
+    "@coinbase/wallet-sdk" "4.3.6"
+    "@safe-global/safe-apps-provider" "0.18.6"
+    "@safe-global/safe-apps-sdk" "9.1.0"
+
 "@reown/appkit-wallet@1.8.19":
   version "1.8.19"
   resolved "https://registry.yarnpkg.com/@reown/appkit-wallet/-/appkit-wallet-1.8.19.tgz#5fac1c8c564f8c92c2299397a5ff12c35aa113e9"
@@ -2241,6 +2356,16 @@
   dependencies:
     "@reown/appkit-common" "1.8.19"
     "@reown/appkit-polyfills" "1.8.19"
+    "@walletconnect/logger" "3.0.2"
+    zod "3.22.4"
+
+"@reown/appkit-wallet@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit-wallet/-/appkit-wallet-1.8.24.tgz#59bb9f9512b8ed8313b2fe9c2e5c8382c210a7c3"
+  integrity sha512-MgJ5H25m7PgHwPzzv5nKnzdrMI6F+9zU3oIYsIWT/I/h4EfnN2COt+WuI7uX2Z2J2pWyHi0uDrysRgHU7DPAOw==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-polyfills" "1.8.24"
     "@walletconnect/logger" "3.0.2"
     zod "3.22.4"
 
@@ -2262,6 +2387,27 @@
     semver "7.7.2"
     valtio "2.1.7"
     viem ">=2.45.0"
+  optionalDependencies:
+    "@lit/react" "1.0.8"
+
+"@reown/appkit@1.8.24":
+  version "1.8.24"
+  resolved "https://registry.yarnpkg.com/@reown/appkit/-/appkit-1.8.24.tgz#5bf85af4f45ada612cf4507d947fa4b7da2e399a"
+  integrity sha512-FXxZk+H/1PMABskdaMo+iuzr/9Oi6EYUw75PxeqzvGFVdB5YLAv9HIlIEc/nQiYv8SPoRy6y19TAae9ndiHmqA==
+  dependencies:
+    "@reown/appkit-common" "1.8.24"
+    "@reown/appkit-controllers" "1.8.24"
+    "@reown/appkit-pay" "1.8.24"
+    "@reown/appkit-polyfills" "1.8.24"
+    "@reown/appkit-scaffold-ui" "1.8.24"
+    "@reown/appkit-ui" "1.8.24"
+    "@reown/appkit-utils" "1.8.24"
+    "@reown/appkit-wallet" "1.8.24"
+    "@walletconnect/universal-provider" "2.23.7"
+    bs58 "6.0.0"
+    semver "7.7.2"
+    valtio "2.1.7"
+    viem ">=2.55.13"
   optionalDependencies:
     "@lit/react" "1.0.8"
 
@@ -3825,6 +3971,11 @@
   version "8.0.23"
   resolved "https://registry.yarnpkg.com/@wagmi/connectors/-/connectors-8.0.23.tgz#8cc1d83fcf12042a13c39a0b7f9b86e85540ee0e"
   integrity sha512-mik/CxDQRZbS0kRololx5aKEFh8EjuxozUVIwhwqv+GB5qBaiaf0J8TzJFmXgHNOEb9SfW86/RrPUxN/+4rl3g==
+
+"@wagmi/connectors@>=5.9.9":
+  version "8.2.2"
+  resolved "https://registry.yarnpkg.com/@wagmi/connectors/-/connectors-8.2.2.tgz#5a574a82d4c25ac3a0f97bc02a9144bae1599b29"
+  integrity sha512-lueq1h2hNQhBqTFjG3iT0dNpkt4+G5s7mJq6I1zavX1B8bv+lHx3wowlXCpvTuLBmtchjDQzQB85uad0pIw4aA==
 
 "@wagmi/core@3.6.2":
   version "3.6.2"
@@ -7701,20 +7852,6 @@ own-keys@^1.0.1:
     object-keys "^1.1.1"
     safe-push-apply "^1.0.0"
 
-ox@0.14.30:
-  version "0.14.30"
-  resolved "https://registry.yarnpkg.com/ox/-/ox-0.14.30.tgz#aee7e72c8f179d8666a7f14e1ae7e28a0fcbea98"
-  integrity sha512-LI11uu+8iiM1B3CLckgd++YF1a0A2k5wDoM9ZeQMiL21BOzQs6L//BLS6hb1HSEKCyycdDIQLsVQx9MjpcC0hA==
-  dependencies:
-    "@adraffy/ens-normalize" "^1.11.0"
-    "@noble/ciphers" "^1.3.0"
-    "@noble/curves" "1.9.1"
-    "@noble/hashes" "^1.8.0"
-    "@scure/bip32" "^1.7.0"
-    "@scure/bip39" "^1.6.0"
-    abitype "^1.2.3"
-    eventemitter3 "5.0.1"
-
 ox@0.14.33:
   version "0.14.33"
   resolved "https://registry.yarnpkg.com/ox/-/ox-0.14.33.tgz#977ab8c0692fa9240444d7db88ca026f19f81e28"
@@ -7729,10 +7866,38 @@ ox@0.14.33:
     abitype "^1.2.3"
     eventemitter3 "5.0.1"
 
+ox@0.14.34:
+  version "0.14.34"
+  resolved "https://registry.yarnpkg.com/ox/-/ox-0.14.34.tgz#6eebf1d19771bedfdac477f5e325349f945eb399"
+  integrity sha512-12seOIk7dv8eAoGQhcWaeKZxNz304IVcDvb9U5Y7JZAEVe21Nm1YMxLjhWah+su5BD4Omx4Zz0z5x3ij9M4GYQ==
+  dependencies:
+    "@adraffy/ens-normalize" "^1.11.0"
+    "@noble/ciphers" "^1.3.0"
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "^1.8.0"
+    "@scure/bip32" "^1.7.0"
+    "@scure/bip39" "^1.6.0"
+    abitype "^1.2.3"
+    eventemitter3 "5.0.1"
+
 ox@0.14.45:
   version "0.14.45"
   resolved "https://registry.yarnpkg.com/ox/-/ox-0.14.45.tgz#30c656f485d5fb07cb6d570292f9d1dc9cc3234a"
   integrity sha512-jpsQ+p0JZh9mKCxxzxz0d5qFHZZg2/O9xW18IpEC/dNXXPVqmDJ0c//9RMz0CILkbSGPA42+cbU0fC/ghwJ03w==
+  dependencies:
+    "@adraffy/ens-normalize" "^1.11.0"
+    "@noble/ciphers" "^1.3.0"
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "^1.8.0"
+    "@scure/bip32" "^1.7.0"
+    "@scure/bip39" "^1.6.0"
+    abitype "^1.2.3"
+    eventemitter3 "5.0.1"
+
+ox@0.14.59:
+  version "0.14.59"
+  resolved "https://registry.yarnpkg.com/ox/-/ox-0.14.59.tgz#815d60b1f89afc306623536794a8a9ef3170c53d"
+  integrity sha512-Y+DPEQScTEGKteQATjtytE1JRQ5cg1R2+DvYQ/lbhUCm/xS9n0Jnkkf2AqQyIntefQxs8xY6dZ+kyNZ7zf2FzA==
   dependencies:
     "@adraffy/ens-normalize" "^1.11.0"
     "@noble/ciphers" "^1.3.0"
@@ -9530,6 +9695,20 @@ viem@>=2.45.0, viem@^2.1.1, viem@^2.31.7, viem@^2.47.0:
     ox "0.14.45"
     ws "8.21.0"
 
+viem@>=2.55.13:
+  version "2.57.13"
+  resolved "https://registry.yarnpkg.com/viem/-/viem-2.57.13.tgz#f3ff0a801d3e6cf74ddd22a2d0562f57f01a519d"
+  integrity sha512-hSIsR4Y47BKrp89idH11WC3pqYOJFq9nVYBYxuJ9zXCA8Qg3pQhnlhnHn4qnjo7Z5wXs920XhtWbnrAtFidk+Q==
+  dependencies:
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "1.8.0"
+    "@scure/bip32" "1.7.0"
+    "@scure/bip39" "1.6.0"
+    abitype "1.2.3"
+    isows "1.0.7"
+    ox "0.14.59"
+    ws "8.21.0"
+
 viem@^2.27.2:
   version "2.55.10"
   resolved "https://registry.yarnpkg.com/viem/-/viem-2.55.10.tgz#e9ddc7f020248210ea282012965a2a2ec0717593"
@@ -9544,10 +9723,10 @@ viem@^2.27.2:
     ox "0.14.33"
     ws "8.21.0"
 
-viem@^2.55.2:
-  version "2.55.2"
-  resolved "https://registry.yarnpkg.com/viem/-/viem-2.55.2.tgz#cdb330898223a48879365edb8eff6545fcb3581d"
-  integrity sha512-XlJeyNAZ96dQfOHlxLTK1FKgtWw/TtxENKNMBSBgxqALjiWiBWrFmSSzwwMivryKnBwkbt5E+90jSCLnVEilLA==
+viem@~2.55.19:
+  version "2.55.19"
+  resolved "https://registry.yarnpkg.com/viem/-/viem-2.55.19.tgz#c5ccd1e54755b2361911283204fb564611543590"
+  integrity sha512-4QPIX0eYPLsOBk53NKswVMkQoxuP7GlOBnB4wM6dkDokREO4QENNc3bmyPKK1PBTViXh0TPJCHLjIuU20Qi3fg==
   dependencies:
     "@noble/curves" "1.9.1"
     "@noble/hashes" "1.8.0"
@@ -9555,7 +9734,7 @@ viem@^2.55.2:
     "@scure/bip39" "1.6.0"
     abitype "1.2.3"
     isows "1.0.7"
-    ox "0.14.30"
+    ox "0.14.34"
     ws "8.21.0"
 
 vite-plugin-svgr@4.3.0:

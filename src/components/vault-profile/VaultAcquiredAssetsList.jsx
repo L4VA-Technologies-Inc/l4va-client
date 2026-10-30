@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Copy, Search, Coins, Users, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { useVaultAcquiredAssets } from '@/services/api/queries';
+import { useVaultAcquiredAssets, useVaultLp } from '@/services/api/queries';
 import { formatNumber, substringAddress, formatNum, formatLargeNumber } from '@/utils/core.utils';
 import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
@@ -28,6 +28,17 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
   const { currencySymbol, pickByCurrency } = useCurrency();
   const isEth = vault?.chainType === 'robinhood';
   const limit = 10;
+  // EVM pools live on-chain (no Cardano market row): one side of the pool, in each currency.
+  const { data: lp } = useVaultLp(vault?.id, isEth);
+  const lpSideNative = lp?.reserveNative != null ? Number(lp.reserveNative) : null;
+  const lpSide =
+    lpSideNative != null && lp.prices
+      ? {
+          eth: lpSideNative,
+          usd: lpSideNative * lp.prices.ethUsd,
+          ada: lp.prices.adaUsd > 0 ? (lpSideNative * lp.prices.ethUsd) / lp.prices.adaUsd : 0,
+        }
+      : null;
 
   const [appliedFilters, setAppliedFilters] = useState({
     page: 1,
@@ -104,11 +115,13 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               value={
                 vault.vaultStatus === 'locked'
                   ? (() => {
-                      const val = pickByCurrency({
-                        ada: data?.data?.totalAdaLiquidityAda,
-                        usd: data?.data?.totalAdaLiquidityUsd,
-                        eth: data?.data?.totalAdaLiquidityEth,
-                      });
+                      const val = pickByCurrency(
+                        lpSide ?? {
+                          ada: data?.data?.totalAdaLiquidityAda,
+                          usd: data?.data?.totalAdaLiquidityUsd,
+                          eth: data?.data?.totalAdaLiquidityEth,
+                        }
+                      );
                       return val != null ? `${currencySymbol}${formatNum(2 * val)}` : 'N/A';
                     })()
                   : vault.projectedLpAdaAmount || vault.projectedLpUsdAmount
