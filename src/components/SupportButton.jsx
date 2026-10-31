@@ -2,7 +2,7 @@ import { MessageCircleQuestion } from 'lucide-react';
 
 import { useModalControls } from '@/lib/modals/modal.context';
 
-/** Floating "Support" entry point, available on every page (no login needed). */
+/** Floating "Support" entry point on every page; opens the support chat (login required to write). */
 export const SupportButton = () => {
   const { openModal } = useModalControls();
 
