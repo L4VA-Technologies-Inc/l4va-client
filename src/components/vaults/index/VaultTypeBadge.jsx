@@ -21,8 +21,8 @@ export const VaultTypeBadge = ({ vault, variant = 'chip', className = '' }) => {
           <PieChart className="w-4 h-4 text-orange-500" aria-label={meta.label} />
         </span>
         <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-          <p className="font-medium">{meta.label}</p>
-          <p className="text-dark-100">{meta.description}</p>
+          <span className="font-medium">{meta.label}</span>
+          <span className="text-dark-100"> · {meta.description}</span>
         </div>
       </div>
     );
