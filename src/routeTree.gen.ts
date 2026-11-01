@@ -32,6 +32,7 @@ import { Route as RewardsEpochsRouteImport } from './routes/rewards/epochs'
 import { Route as RewardsClaimsRouteImport } from './routes/rewards/claims'
 import { Route as ProposalsIdRouteImport } from './routes/proposals/$id'
 import { Route as ProfileIdRouteImport } from './routes/profile/$id'
+import { Route as DevIndexBasketRouteImport } from './routes/dev.index-basket'
 import { Route as RewardsEpochsIndexRouteImport } from './routes/rewards/epochs/index'
 import { Route as RewardsVaultsVaultIdRouteImport } from './routes/rewards/vaults/$vaultId'
 
@@ -150,6 +151,11 @@ const ProfileIdRoute = ProfileIdRouteImport.update({
   path: '/profile/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevIndexBasketRoute = DevIndexBasketRouteImport.update({
+  id: '/dev/index-basket',
+  path: '/dev/index-basket',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RewardsEpochsIndexRoute = RewardsEpochsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/index-basket': typeof DevIndexBasketRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/index-basket': typeof DevIndexBasketRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
+  '/dev/index-basket': typeof DevIndexBasketRoute
   '/profile/$id': typeof ProfileIdRoute
   '/proposals/$id': typeof ProposalsIdRoute
   '/rewards/claims': typeof RewardsClaimsRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tokens'
     | '/verify-email'
+    | '/dev/index-basket'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/swap'
     | '/terms-of-service'
     | '/verify-email'
+    | '/dev/index-basket'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tokens'
     | '/verify-email'
+    | '/dev/index-basket'
     | '/profile/$id'
     | '/proposals/$id'
     | '/rewards/claims'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TokensRoute: typeof TokensRouteWithChildren
   VerifyEmailRoute: typeof VerifyEmailRoute
+  DevIndexBasketRoute: typeof DevIndexBasketRoute
   ProfileIdRoute: typeof ProfileIdRoute
   ProposalsIdRoute: typeof ProposalsIdRoute
   VaultsIdRoute: typeof VaultsIdRoute
@@ -503,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dev/index-basket': {
+      id: '/dev/index-basket'
+      path: '/dev/index-basket'
+      fullPath: '/dev/index-basket'
+      preLoaderRoute: typeof DevIndexBasketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rewards/epochs/': {
       id: '/rewards/epochs/'
       path: '/'
@@ -588,6 +608,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TokensRoute: TokensRouteWithChildren,
   VerifyEmailRoute: VerifyEmailRoute,
+  DevIndexBasketRoute: DevIndexBasketRoute,
   ProfileIdRoute: ProfileIdRoute,
   ProposalsIdRoute: ProposalsIdRoute,
   VaultsIdRoute: VaultsIdRoute,

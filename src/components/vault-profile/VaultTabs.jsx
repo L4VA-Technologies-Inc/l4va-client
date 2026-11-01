@@ -12,11 +12,9 @@ import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
 import { VaultIndexAllocation } from '@/components/vault-profile/VaultIndexAllocation';
 import { VaultLiquidityPool } from '@/components/vault-profile/VaultLiquidityPool';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
-import { useModalControls } from '@/lib/modals/modal.context';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
-  const { isAuthenticated, user } = useAuth();
-  const { openModal } = useModalControls();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const baseTabContent = {
@@ -41,17 +39,12 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
 
   const handleTabSelect = useCallback(
     selectedTab => {
-      if (selectedTab === 'Activity' && !user) {
-        openModal('LoginModal');
-        return;
-      }
-
       onTabChange(selectedTab);
       router.navigate({
         search: prev => ({ ...prev, tab: selectedTab }),
       });
     },
-    [user, onTabChange, router, openModal]
+    [onTabChange, router]
   );
 
   useEffect(() => {
