@@ -31,6 +31,27 @@ const errorMessage = (error, fallback) =>
     ? error?.response?.data?.message || 'Too many messages — please wait a moment'
     : error?.response?.data?.message || fallback;
 
+// Shown the moment the user hits send, before the API (and Discord) answer.
+const PendingBubble = ({ pending, onRetry }) => (
+  <div className="flex flex-col items-end gap-1">
+    <div
+      className={cn(CHAT_USER_BUBBLE, 'whitespace-pre-wrap break-words', pending.failed ? 'opacity-80' : 'opacity-60')}
+    >
+      {pending.content}
+    </div>
+    {pending.failed ? (
+      <span className="px-2 text-[11px] text-red-400">
+        Not sent ·{' '}
+        <button className="underline hover:text-red-300" type="button" onClick={onRetry}>
+          Retry
+        </button>
+      </span>
+    ) : (
+      <span className="px-2 text-[11px] text-dark-100">Sending…</span>
+    )}
+  </div>
+);
+
 const MessageBubble = ({ message }) => {
   if (message.author === 'system') {
     return <p className="py-1 text-center text-xs text-dark-100">{message.content}</p>;
@@ -69,7 +90,9 @@ export const SupportModal = () => {
   const { network } = useNetwork();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState('');
-  const [isSending, setIsSending] = useState(false);
+  // The message in flight, shown optimistically; `failed` keeps it on screen with a retry.
+  const [pending, setPending] = useState(null);
+  const isSending = Boolean(pending && !pending.failed);
   const [isClosing, setIsClosing] = useState(false);
   // After a closed chat the user can start over; until then the closed history stays visible.
   const [startingNew, setStartingNew] = useState(false);
@@ -90,25 +113,28 @@ export const SupportModal = () => {
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messageCount, startingNew]);
+  }, [messageCount, startingNew, pending]);
 
-  const handleSend = async () => {
-    const message = draft.trim();
-    if (!message || isSending) return;
-
-    setIsSending(true);
+  const send = async message => {
+    setPending({ content: message, failed: false });
     try {
       const { data } = isOpenChat
         ? await CoreApiProvider.sendSupportMessage(ticket.id, message)
         : await CoreApiProvider.openSupportTicket({ message, chain: network, pageUrl: window.location.href });
       queryClient.setQueryData(SUPPORT_TICKET_QUERY_KEY, data.ticket);
-      setDraft('');
+      setPending(null);
       setStartingNew(false);
     } catch (error) {
+      setPending({ content: message, failed: true });
       toast.error(errorMessage(error, 'Could not send your message, please try again'));
-    } finally {
-      setIsSending(false);
     }
+  };
+
+  const handleSend = () => {
+    const message = draft.trim();
+    if (!message || isSending) return;
+    setDraft('');
+    send(message);
   };
 
   const handleClose = async () => {
@@ -154,14 +180,17 @@ export const SupportModal = () => {
       <div className="flex flex-col gap-3">
         {/* Same fixed height while the ticket loads, so the modal doesn't jump; it just stays empty. */}
         <div ref={listRef} className="flex flex-col gap-5 h-[45vh] min-h-64 overflow-y-auto pr-1">
-          {isLoading ? null : showHistory ? (
-            ticket.messages.map(message => <MessageBubble key={message.id} message={message} />)
+          {isLoading ? null : showHistory || pending ? (
+            <>
+              {showHistory && ticket.messages.map(message => <MessageBubble key={message.id} message={message} />)}
+              {pending && <PendingBubble pending={pending} onRetry={() => send(pending.content)} />}
+            </>
           ) : (
             <p className="m-auto max-w-xs text-center text-sm text-dark-100">
               Ask us anything about vaults, tokens or your wallet. The L4VA team replies right here
             </p>
           )}
-          {isOpenChat && ticket.messages.every(message => message.author !== 'team') && (
+          {isOpenChat && !pending && ticket.messages.every(message => message.author !== 'team') && (
             <p className="text-center text-xs text-dark-100 py-1">
               The team has your message and will reply here. You can close this window — the chat stays saved.
             </p>
