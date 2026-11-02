@@ -1302,22 +1302,23 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       <button
         onClick={handleResetVault}
         disabled={isSubmitting || isSavingDraft}
-        className="fixed bottom-[124px] right-4 z-50 flex h-11 items-center gap-2 px-3.5 sm:px-6 md:bottom-[136px] md:right-6 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="fixed bottom-[124px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-[136px] md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Reset vault creation"
         title="Reset vault creation"
       >
         <RotateCcw className="w-5 h-5 group-hover:-rotate-45 transition-transform duration-300" />
-        <span className="hidden sm:inline font-russo uppercase text-sm">Reset</span>
+        <span className="hidden sm:inline text-sm font-semibold">Reset</span>
       </button>
-      <PrimaryButton
+      <button
         onClick={scrollToTutorial}
-        className="fixed bottom-[68px] right-4 z-50 h-11 text-white font-bold px-3.5 sm:px-6 md:bottom-20 md:right-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+        className="fixed bottom-[68px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-20 md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750"
         aria-label="Scroll to tutorial"
+        type="button"
       >
         <BookOpen className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-        <span className="hidden sm:inline font-russo uppercase text-sm">Tutorial</span>
+        <span className="hidden sm:inline text-sm font-semibold">Tutorial</span>
         <ChevronDown className="hidden sm:block w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
-      </PrimaryButton>
+      </button>
       {vault?.id && (
         <div className="mb-6 flex justify-end">
           <button
