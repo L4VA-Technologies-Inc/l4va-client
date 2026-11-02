@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PanelRightClose, PanelRightOpen, Sparkles } from 'lucide-react';
+import { PanelRightClose, PanelRightOpen, Rocket, SlidersHorizontal, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultImageCard } from './AiVaultImageCard';
@@ -14,6 +14,8 @@ import {
   ChatComposer,
   ChatMarkdown,
 } from '@/components/shared/chat/ChatPrimitives';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 
 // Options arrive as { label, value }; plain strings are tolerated for transcripts persisted
 // before the assistant started returning structured options.
@@ -72,11 +74,15 @@ export const AiVaultChat = ({
   onGenerateImage,
   onUploadImage,
   onTogglePreview,
+  canLaunch = false,
+  isLaunching = false,
+  onLaunch,
 }) => {
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const [input, setInput] = useState('');
   const isImageBusy = isGeneratingImage || isUploadingImage;
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   // The image belongs to the vault, not to a single message, so only the newest card can replace it.
   const lastImageIndex = messages.reduce(
     (last, message, index) => (message.attachment?.type === 'vault-image' ? index : last),
@@ -128,8 +134,22 @@ export const AiVaultChat = ({
   };
 
   return (
-    <div className="relative flex h-[calc(100dvh-220px)] max-h-[860px] min-h-[560px] flex-col">
-      <div className="flex shrink-0 items-center justify-end pb-2">
+    // Mobile: the page itself scrolls and the composer sticks to the bottom (like ChatGPT), so there is
+    // no scroll area nested inside a scrolling page. Desktop keeps the fixed-height panel.
+    <div className="relative flex flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
+      {/* Mobile: pinned under the header so the settings sheet is one tap away at any scroll depth. */}
+      <div className="sticky top-[var(--header-height)] z-20 -mx-4 flex shrink-0 justify-end bg-primary-background/90 px-4 py-2 backdrop-blur-md lg:hidden">
+        <button
+          className="flex items-center gap-2 rounded-full border border-steel-750 bg-steel-850 px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[0.97]"
+          type="button"
+          onClick={onTogglePreview}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Vault settings
+          {canLaunch && <span className="h-2 w-2 rounded-full bg-orange-500" />}
+        </button>
+      </div>
+      <div className="hidden shrink-0 items-center justify-end pb-2 lg:flex">
         <button
           className="rounded-lg p-2 text-dark-100 transition-[color,background-color,transform] duration-150 ease-out hover:bg-steel-850 hover:text-white active:scale-90"
           title={isPreviewOpen ? 'Hide settings' : 'Show settings'}
@@ -140,7 +160,7 @@ export const AiVaultChat = ({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 lg:overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-4 sm:px-2">
           {messages.map((message, index) => {
             const isLiveAssistant = isStreamingAssistant && index === messages.length - 1;
@@ -197,17 +217,31 @@ export const AiVaultChat = ({
             );
           })}
           {showThinking && <TypingIndicator />}
-          <div ref={bottomRef} />
+          <div ref={bottomRef} className="scroll-mb-32 lg:scroll-mb-0" />
         </div>
         {/* Fades the last bit of content under the floating composer instead of a hard divider. */}
-        <div className="pointer-events-none sticky bottom-0 -mt-10 h-10 bg-gradient-to-t from-primary-background to-transparent" />
+        <div className="pointer-events-none sticky bottom-0 -mt-10 hidden h-10 lg:block bg-gradient-to-t from-primary-background to-transparent" />
       </div>
 
       <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
-      <div className="shrink-0 pt-1">
-        <div className="mx-auto w-full max-w-[720px] px-4 sm:px-2">
+      <div className="sticky bottom-0 z-20 shrink-0 bg-gradient-to-t from-primary-background from-70% to-transparent pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:bg-none lg:pb-0 lg:pt-1">
+        <div className="mx-auto w-full max-w-[720px] px-2 sm:px-2">
+          {/* On mobile the draft lives in a closed sheet, so surface the launch right where the user is. */}
+          {canLaunch && (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 lg:hidden"
+              initial={{ opacity: 0, y: 8 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+            >
+              <PrimaryButton className="w-full uppercase" disabled={isLaunching} onClick={onLaunch}>
+                <Rocket className="h-4 w-4" />
+                {isLaunching ? 'Launching...' : 'Ready · Confirm & launch'}
+              </PrimaryButton>
+            </motion.div>
+          )}
           <ChatComposer
-            autoFocus
+            autoFocus={isDesktop}
             disabled={isSending}
             placeholder="Ask L4VA AI"
             value={input}

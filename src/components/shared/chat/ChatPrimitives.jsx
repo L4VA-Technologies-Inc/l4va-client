@@ -109,7 +109,7 @@ export const ChatComposer = ({
         <textarea
           ref={textareaRef}
           autoFocus={autoFocus}
-          className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] text-white outline-none placeholder:text-dark-100"
+          className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-white sm:text-[15px] outline-none placeholder:text-dark-100"
           disabled={disabled}
           maxLength={maxLength}
           placeholder={placeholder}
