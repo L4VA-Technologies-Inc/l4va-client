@@ -82,7 +82,7 @@ export const basketToAssetsWhitelist = basket =>
   (basket?.targets || []).map(t => ({
     assetName: '',
     count: 1,
-    policyName: 'N/A',
+    policyName: t.symbol || t.name || 'N/A',
     isVerified: null,
     verificationPlatform: null,
     valuationMethod: 'market',

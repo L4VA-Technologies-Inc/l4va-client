@@ -4,8 +4,10 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
 
-export const VaultCreationTutorial = () => {
+// Acquire-only vaults skip the Contribute step, so the guide drops it and renumbers to match the form.
+export const VaultCreationTutorial = ({ isAcquireOnly = false }) => {
   const { isRobinHood } = useNetwork();
+  const stepNo = { acquire: isAcquireOnly ? 2 : 3, govern: isAcquireOnly ? 3 : 4, confirm: isAcquireOnly ? 4 : 5 };
   const { currencyLabel } = useCurrency();
   const anyTokenLabel = isRobinHood ? 'Any Token' : 'Any CNT';
   const anyTokenDescription = isRobinHood ? 'Any Robinhood-supported token' : 'Any Cardano Native Token';
@@ -49,7 +51,12 @@ export const VaultCreationTutorial = () => {
               these tokens represent governance rights over the vault's assets.
             </p>
             <p>
-              The vault creation process involves 5 key steps: <strong>Configure</strong>, <strong>Contribute</strong>,{' '}
+              The vault creation process involves {isAcquireOnly ? 4 : 5} key steps: <strong>Configure</strong>,{' '}
+              {!isAcquireOnly && (
+                <>
+                  <strong>Contribute</strong>,{' '}
+                </>
+              )}
               <strong>Acquire</strong>, <strong>Govern</strong>, and <strong>Confirm</strong>. Each step is crucial for
               setting up a successful vault.
             </p>
@@ -107,50 +114,51 @@ export const VaultCreationTutorial = () => {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="step2" className="border-b border-steel-750">
-          <AccordionTrigger className="text-left font-bold text-lg hover:no-underline py-4">
-            Step 2: Asset Contribution
-          </AccordionTrigger>
-          <AccordionContent className="text-dark-100 pb-4 space-y-3">
-            <p>
-              <strong>Purpose:</strong> Define how assets can be contributed to your vault and when the contribution
-              window opens.
-            </p>
-            <div className="space-y-2">
+        {!isAcquireOnly && (
+          <AccordionItem value="step2" className="border-b border-steel-750">
+            <AccordionTrigger className="text-left font-bold text-lg hover:no-underline py-4">
+              Step 2: Asset Contribution
+            </AccordionTrigger>
+            <AccordionContent className="text-dark-100 pb-4 space-y-3">
               <p>
-                <strong>• Asset Whitelist:</strong> Specify which assets (by Policy ID) can be contributed. For public
-                vaults, this ensures only approved assets enter the vault.
+                <strong>Purpose:</strong> Define how assets can be contributed to your vault and when the contribution
+                window opens.
               </p>
-              <p>
-                <strong>• Value Method:</strong> How your vault's value is calculated:
-              </p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li>
-                  <strong>Market/Floor Price:</strong> Uses current market prices (recommended for most vaults)
-                </li>
-                <li>
-                  <strong>Fixed:</strong> Set a fixed value per asset
-                </li>
-              </ul>
-              <p>
-                <strong>• Contribution Duration:</strong> How long the contribution window stays open. Minimum is 10
-                minutes, but consider longer periods (days/weeks) for better participation.
-              </p>
-              <p>
-                <strong>• Contribution Window:</strong> When contributions can start - either immediately upon launch or
-                at a custom date/time.
-              </p>
-              <p>
-                <strong>• Contributor Whitelist:</strong> (Private/Semi-Private only) Specify which wallets can
-                contribute assets.
-              </p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
+              <div className="space-y-2">
+                <p>
+                  <strong>• Asset Whitelist:</strong> Specify which assets (by Policy ID) can be contributed. For public
+                  vaults, this ensures only approved assets enter the vault.
+                </p>
+                <p>
+                  <strong>• Value Method:</strong> How your vault's value is calculated:
+                </p>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li>
+                    <strong>Market/Floor Price:</strong> Uses current market prices (recommended for most vaults)
+                  </li>
+                  <li>
+                    <strong>Fixed:</strong> Set a fixed value per asset
+                  </li>
+                </ul>
+                <p>
+                  <strong>• Contribution Duration:</strong> How long the contribution window stays open. Minimum is 10
+                  minutes, but consider longer periods (days/weeks) for better participation.
+                </p>
+                <p>
+                  <strong>• Contribution Window:</strong> When contributions can start - either immediately upon launch
+                  or at a custom date/time.
+                </p>
+                <p>
+                  <strong>• Contributor Whitelist:</strong> (Private/Semi-Private only) Specify which wallets can
+                  contribute assets.
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        )}
         <AccordionItem value="step3" className="border-b border-steel-750">
           <AccordionTrigger className="text-left font-bold text-lg hover:no-underline py-4">
-            Step 3: Acquire Window
+            Step {stepNo.acquire}: Acquire Window
           </AccordionTrigger>
           <AccordionContent className="text-dark-100 pb-4 space-y-3">
             <p>
@@ -205,7 +213,7 @@ export const VaultCreationTutorial = () => {
 
         <AccordionItem value="step4" className="border-b border-steel-750">
           <AccordionTrigger className="text-left font-bold text-lg hover:no-underline py-4">
-            Step 4: Governance
+            Step {stepNo.govern}: Governance
           </AccordionTrigger>
           <AccordionContent className="text-dark-100 pb-4 space-y-3">
             <p>
@@ -223,9 +231,6 @@ export const VaultCreationTutorial = () => {
               <ul className="list-disc list-inside ml-4 space-y-1">
                 <li>
                   <strong>DAO:</strong> Token holders vote on all decisions (most flexible)
-                </li>
-                <li>
-                  <strong>Programmed:</strong> Automatic termination after a set time or appreciation target
                 </li>
               </ul>
               <p>
@@ -268,7 +273,7 @@ export const VaultCreationTutorial = () => {
 
         <AccordionItem value="step5" className="border-b border-steel-750">
           <AccordionTrigger className="text-left font-bold text-lg hover:no-underline py-4">
-            Step 5: Confirm & Launch
+            Step {stepNo.confirm}: Confirm & Launch
           </AccordionTrigger>
           <AccordionContent className="text-dark-100 pb-4 space-y-3">
             <p>
@@ -315,10 +320,12 @@ export const VaultCreationTutorial = () => {
                   <p className="text-dark-200 text-sm mb-1">Token Ticker</p>
                   <p className="font-bold">{sampleVault.ticker}</p>
                 </div>
-                <div>
-                  <p className="text-dark-200 text-sm mb-1">Contribution Duration</p>
-                  <p className="font-bold">{sampleVault.contributionDuration}</p>
-                </div>
+                {!isAcquireOnly && (
+                  <div>
+                    <p className="text-dark-200 text-sm mb-1">Contribution Duration</p>
+                    <p className="font-bold">{sampleVault.contributionDuration}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-dark-200 text-sm mb-1">Token Supply</p>
                   <p className="font-bold">{sampleVault.tokenSupply}</p>

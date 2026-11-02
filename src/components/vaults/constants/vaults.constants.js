@@ -800,6 +800,9 @@ Private Vault HH: Private vaults allow contribution only by the creator and/or w
 Semi-private Vault HH: Semi-private vaults can be configured to allow public or private whitelisted access for users to contribute assets and/or acquire Vault Tokens.
 `;
 
+// EVM chains only support public vaults for now, so the hint must not describe options the user can't pick.
+export const PUBLIC_ONLY_PRIVACY_HINT = `Public Vault HH: Public vaults allow anyone to contribute assets and acquire Vault Tokens.`;
+
 export const VALUE_METHOD_HINT = `Market / Floor Price: Vault value for reserve % purposes set equal to aggregated price of all assets in the vault at end of the Contribution Window.\n
 Fixed: Vault value for reserve % purposes set as fixed amount.
 `;

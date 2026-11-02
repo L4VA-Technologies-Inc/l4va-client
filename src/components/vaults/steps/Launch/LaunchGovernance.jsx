@@ -76,7 +76,7 @@ export const LaunchGovernance = ({ data, setCurrentStep }) => {
               </div>
               <div>
                 <div className="flex items-center gap-2 min-w-0">
-                  <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Execution Threshold %</p>
+                  <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Approval Threshold %</p>
                   <HoverHelp hint="Minimum Vault tokens votes for a given proposal option (as % of total votes) for a proposal to be approved." />
                 </div>
                 <p className="break-words">{formatPercent(data.executionThreshold)}</p>
