@@ -1288,7 +1288,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       <button
         onClick={handleResetVault}
         disabled={isSubmitting || isSavingDraft}
-        className="fixed bottom-24 right-8 z-50 flex items-center gap-2 py-3 px-6 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="fixed bottom-[124px] right-4 z-50 flex h-11 items-center gap-2 px-3.5 sm:px-6 md:bottom-[136px] md:right-6 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         aria-label="Reset vault creation"
         title="Reset vault creation"
       >
@@ -1297,12 +1297,12 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       </button>
       <PrimaryButton
         onClick={scrollToTutorial}
-        className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+        className="fixed bottom-[68px] right-4 z-50 h-11 text-white font-bold px-3.5 sm:px-6 md:bottom-20 md:right-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
         aria-label="Scroll to tutorial"
       >
         <BookOpen className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
         <span className="hidden sm:inline font-russo uppercase text-sm">Tutorial</span>
-        <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
+        <ChevronDown className="hidden sm:block w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
       </PrimaryButton>
       <div className="md:hidden mb-8">
         <LavaSelect
