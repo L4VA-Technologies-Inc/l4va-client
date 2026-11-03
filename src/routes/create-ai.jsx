@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
-import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { AnimatePresence, motion, MotionConfig, useDragControls } from 'framer-motion';
+import { ArrowLeft, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { getLaunchErrorMessage } from '@/utils/launchError';
@@ -10,12 +10,14 @@ import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
 import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
-import { CREATE_VAULT_STEPS } from '@/components/vaults/constants/vaults.constants';
+import { CREATE_VAULT_STEPS, vaultSchema } from '@/components/vaults/constants/vaults.constants';
+import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LaunchVaultConfirmModal } from '@/components/modals/LaunchVaultConfirmModal';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { useLaunchVault } from '@/hooks/useLaunchVault';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -25,16 +27,34 @@ const CreateAiComponent = () => {
   const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const sheetDrag = useDragControls();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  // On mobile the draft is a sheet over the chat, so it stays closed until the user asks for it.
+  const [showPreview, setShowPreview] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
   const userCollapsedPreview = useRef(false);
 
   // Slide the draft open as soon as the conversation starts populating it, so fields appear live.
   useEffect(() => {
-    if (userCollapsedPreview.current) return;
+    if (!isDesktop || userCollapsedPreview.current) return;
     if (builder.isSending || builder.aiFields.length > 0) {
       setShowPreview(true);
     }
-  }, [builder.isSending, builder.aiFields.length]);
+  }, [isDesktop, builder.isSending, builder.aiFields.length]);
+
+  // Close the sheet when shrinking to mobile, and lock the page behind it while it is open.
+  useEffect(() => {
+    if (!isDesktop) setShowPreview(false);
+  }, [isDesktop]);
+
+  const isSheetOpen = !isDesktop && showPreview;
+  useEffect(() => {
+    if (!isSheetOpen) return;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [isSheetOpen]);
 
   const togglePreview = () => {
     setShowPreview(prev => {
@@ -110,6 +130,35 @@ const CreateAiComponent = () => {
     }
   };
 
+  // Same gate the preview's own launch button uses.
+  const canLaunch = vaultSchema.isValidSync(builder.vault);
+  // The assistant can call the draft ready while the schema still rejects it (e.g. a stale date), so
+  // the chat CTA follows either signal and, when the schema disagrees, shows what is blocking.
+  const showLaunchCta = canLaunch || builder.status === 'ready';
+  const handleChatLaunch = () => {
+    if (!canLaunch) {
+      userCollapsedPreview.current = false;
+      setShowPreview(true);
+    }
+    handleLaunch();
+  };
+
+  const previewPanel = (
+    <AiVaultPreview
+      isLaunching={isLaunching}
+      missingFields={builder.missingFields}
+      status={builder.status}
+      vault={builder.vault}
+      isUploadingImage={builder.isUploadingImage}
+      onGenerateImageRequest={builder.startImageGeneration}
+      onUploadImage={builder.uploadImage}
+      onLaunch={handleLaunch}
+      onReset={() => setIsResetModalOpen(true)}
+      onSendMessage={builder.sendMessage}
+      onUpdateVault={builder.updateVaultField}
+    />
+  );
+
   if (isLoading) {
     return null;
   }
@@ -120,7 +169,7 @@ const CreateAiComponent = () => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="pb-8">
+      <div className="flex min-h-[calc(100dvh-var(--header-height)-var(--content-space-top))] flex-col lg:block lg:min-h-0 lg:pb-8">
         <div className="flex flex-col items-start gap-2 py-4 md:flex-row md:items-center md:justify-between">
           <button
             className="group order-last flex items-center gap-2 text-dark-100 transition-colors duration-150 hover:text-white active:opacity-70 md:order-none"
@@ -135,8 +184,8 @@ const CreateAiComponent = () => {
           </span>
           <span className="hidden w-32 md:block" />
         </div>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <div className="min-w-0 flex-1">
+        <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex min-w-0 flex-1 flex-col">
             <AiVaultChat
               isGeneratingImage={builder.isGeneratingImage}
               isPreviewOpen={showPreview}
@@ -149,10 +198,13 @@ const CreateAiComponent = () => {
               onStartImageGeneration={builder.startImageGeneration}
               onTogglePreview={togglePreview}
               onUploadImage={builder.uploadImage}
+              canLaunch={showLaunchCta}
+              isLaunching={isLaunching}
+              onLaunch={handleChatLaunch}
             />
           </div>
           <AnimatePresence initial={false}>
-            {showPreview && (
+            {isDesktop && showPreview && (
               <motion.div
                 key="preview"
                 animate={{ opacity: 1, x: 0 }}
@@ -161,23 +213,65 @@ const CreateAiComponent = () => {
                 initial={{ opacity: 0, x: 16 }}
                 transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
               >
-                <AiVaultPreview
-                  isLaunching={isLaunching}
-                  missingFields={builder.missingFields}
-                  status={builder.status}
-                  vault={builder.vault}
-                  isUploadingImage={builder.isUploadingImage}
-                  onGenerateImageRequest={builder.startImageGeneration}
-                  onUploadImage={builder.uploadImage}
-                  onLaunch={handleLaunch}
-                  onReset={() => setIsResetModalOpen(true)}
-                  onSendMessage={builder.sendMessage}
-                  onUpdateVault={builder.updateVaultField}
-                />
+                {previewPanel}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+        <AnimatePresence>
+          {isSheetOpen && (
+            <motion.div key="preview-sheet" className="fixed inset-0 z-50">
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-black/60"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                onClick={togglePreview}
+              />
+              <motion.div
+                animate={{ y: 0 }}
+                className="absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col rounded-t-3xl border-t border-steel-750 bg-primary-background"
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={{ top: 0, bottom: 0.6 }}
+                dragListener={false}
+                dragControls={sheetDrag}
+                exit={{ y: '100%' }}
+                initial={{ y: '100%' }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+                onDragEnd={(_, info) => {
+                  if (info.offset.y > 100 || info.velocity.y > 500) togglePreview();
+                }}
+              >
+                <div
+                  className="flex shrink-0 touch-none items-center justify-between px-4 pb-2 pt-3"
+                  onPointerDown={event => sheetDrag.start(event)}
+                >
+                  <span className="w-8" />
+                  <span className="h-1.5 w-10 rounded-full bg-steel-750" />
+                  <button
+                    aria-label="Close settings"
+                    className="rounded-lg p-1.5 text-dark-100"
+                    type="button"
+                    onClick={togglePreview}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+                  {previewPanel}
+                </div>
+                {canLaunch && (
+                  <div className="shrink-0 border-t border-steel-850 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
+                    <PrimaryButton className="w-full uppercase" disabled={isLaunching} onClick={handleLaunch}>
+                      {isLaunching ? 'Launching...' : 'Confirm & launch'}
+                    </PrimaryButton>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {launchRequest && (
           <LaunchVaultConfirmModal
             description={launchRequest.description}

@@ -14,6 +14,7 @@ import {
   INDEX_VAULT_TAGS_OPTIONS,
   VAULT_PRIVACY_TYPES,
   PRIVACY_HINT,
+  PUBLIC_ONLY_PRIVACY_HINT,
 } from '@/components/vaults/constants/vaults.constants';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -54,9 +55,11 @@ export const ConfigureVault = ({
 
   const handleTagAdd = tagValue => {
     const currentTags = data.tags || [];
-    if (!currentTags.includes(tagValue)) {
-      updateField('tags', [...currentTags, tagValue]);
-    }
+    // Picking an already-selected (checked) tag again removes it.
+    updateField(
+      'tags',
+      currentTags.includes(tagValue) ? currentTags.filter(tag => tag !== tagValue) : [...currentTags, tagValue]
+    );
   };
 
   const handleTagRemove = tagToRemove => {
@@ -126,8 +129,8 @@ export const ConfigureVault = ({
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {presetOptions.length > 1 ? (
-              <div>
+            <div>
+              {presetOptions.length ? (
                 <LavaRadio
                   label="*Vault Preset"
                   name="preset"
@@ -139,17 +142,14 @@ export const ConfigureVault = ({
                   deletingOptionId={deletingPresetId}
                   hint="Choose a preset to auto-fill vault configuration fields."
                 />
-                {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
-              </div>
-            ) : (
-              // One preset is not a choice — state it instead of rendering a
-              // radio group the user cannot answer differently.
-              <div>
-                <span className="uppercase font-bold">Vault preset</span>
-                <p className="mt-2 text-sm text-dark-100">{presetOptions[0]?.label || 'Loading…'}</p>
-                {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
-              </div>
-            )}
+              ) : (
+                <>
+                  <span className="uppercase font-bold">Vault preset</span>
+                  <p className="mt-2 text-sm text-dark-100">Loading…</p>
+                </>
+              )}
+              {errors.preset && <p className="text-red-600 mt-2 text-sm">{errors.preset}</p>}
+            </div>
             <div>
               <LavaRadio
                 label="*Vault privacy"
@@ -157,7 +157,7 @@ export const ConfigureVault = ({
                 options={privacyOptions}
                 value={data.privacy || ''}
                 onChange={value => updateField('privacy', value)}
-                hint={PRIVACY_HINT}
+                hint={isCardano ? PRIVACY_HINT : PUBLIC_ONLY_PRIVACY_HINT}
               />
               {errors.privacy && <p className="text-red-600 mt-2 text-sm">{errors.privacy}</p>}
             </div>
@@ -169,6 +169,7 @@ export const ConfigureVault = ({
               checked={data.allowAcquireExpansion || false}
               onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
               label="Allow Acquire Expansion"
+              labelClassName="!text-base font-bold uppercase"
               description={`If enabled, vault token holders can create governance proposals to open additional acquire windows (${currencyLabel} to Vault Token minting) after the vault is locked.`}
             />
           </div>
@@ -191,6 +192,7 @@ export const ConfigureVault = ({
             <LavaTextarea
               error={errors.description}
               label="Vault description"
+              maxLength={500}
               name="description"
               placeholder="Add a description for your Vault"
               value={data.description || ''}
@@ -203,6 +205,7 @@ export const ConfigureVault = ({
             <LavaTextarea
               error={errors.tokenDescription}
               label="Vault token description"
+              maxLength={300}
               name="tokenDescription"
               placeholder="Add a description for your Vault token"
               value={data.tokenDescription || ''}
@@ -249,6 +252,7 @@ export const ConfigureVault = ({
               label="Add vault tags"
               options={isIndexVault ? INDEX_VAULT_TAGS_OPTIONS : VAULT_TAGS_OPTIONS}
               value=""
+              selectedValues={data.tags || []}
               onChange={handleTagAdd}
               placeholder="Select tags for your vault"
               error={errors.tags}

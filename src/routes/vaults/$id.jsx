@@ -37,12 +37,13 @@ function VaultComponent() {
     return <EditVault vault={vault} />;
   }
 
-  return <VaultProfileView vault={vault} activeTab={tab} />;
+  return <VaultProfileView vault={vault} activeTab={tab || 'Assets'} />;
 }
 
 export const Route = createFileRoute('/vaults/$id')({
   component: VaultComponent,
   validateSearch: search => ({
-    tab: search.tab || 'Assets',
+    // Optional: a draft opens the edit form, which has no tabs, so the URL must not carry one.
+    tab: search.tab || undefined,
   }),
 });

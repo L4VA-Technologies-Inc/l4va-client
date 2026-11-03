@@ -82,7 +82,7 @@ export const basketToAssetsWhitelist = basket =>
   (basket?.targets || []).map(t => ({
     assetName: '',
     count: 1,
-    policyName: 'N/A',
+    policyName: t.symbol || t.name || 'N/A',
     isVerified: null,
     verificationPlatform: null,
     valuationMethod: 'market',
@@ -130,9 +130,9 @@ export const REBALANCE_STATUS_STYLES = {
 
 // Categorical palette for basket segments; the reserve is always neutral steel.
 const SEGMENT_COLORS = [
-  '#F97316',
-  '#38BDF8',
   '#A3E635',
+  '#38BDF8',
+  '#F97316',
   '#E879F9',
   '#FACC15',
   '#2DD4BF',

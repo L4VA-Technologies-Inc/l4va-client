@@ -21,6 +21,7 @@ import {
   VAULT_PRIVACY_OPTIONS,
   VAULT_PRIVACY_TYPES,
   VAULT_TAGS_OPTIONS,
+  INDEX_VAULT_TAGS_OPTIONS,
   VAULT_VALUE_METHOD_OPTIONS,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
@@ -386,10 +387,11 @@ const DateRow = ({ label, value, isChanged, minDate, onCommit }) => (
   </div>
 );
 
-const TagsRow = ({ value = [], isChanged, isEmptyAction, onAction, onCommit }) => {
+// Same lists as the manual form: index vaults hold fungible tokens, so NFT/RWA-type tags are excluded.
+const TagsRow = ({ value = [], options = VAULT_TAGS_OPTIONS, isChanged, isEmptyAction, onAction, onCommit }) => {
   const [open, setOpen] = useState(false);
   const selected = value || [];
-  const available = VAULT_TAGS_OPTIONS.filter(option => !selected.includes(option.value));
+  const available = options.filter(option => !selected.includes(option.value));
 
   return (
     <FieldShell isChanged={isChanged} label="Tags">
@@ -828,6 +830,7 @@ export const AiVaultPreview = ({
             onCommit={next => onUpdateVault('tokenDescription', next)}
           />
           <TagsRow
+            options={isIndexVault ? INDEX_VAULT_TAGS_OPTIONS : VAULT_TAGS_OPTIONS}
             isChanged={isChanged('tags')}
             isEmptyAction={!vault.tags?.length}
             value={vault.tags || []}

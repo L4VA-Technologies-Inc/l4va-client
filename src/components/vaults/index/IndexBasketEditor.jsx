@@ -59,7 +59,8 @@ export const BasketAllocationBar = ({ targets, reserveBps = 0, className = '' })
       {reserveBps > 0 && (
         <div
           title={`Cash reserve: ${formatBps(reserveBps)}`}
-          className="bg-steel-600"
+          // Striped so the reserve reads as a filled share, not as empty track.
+          className="bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.45)_0_4px,rgba(255,255,255,0.15)_4px_8px)]"
           style={{ width: `${(reserveBps / BPS) * 100}%` }}
         />
       )}
@@ -296,11 +297,25 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
         <div className="space-y-2">
           <BasketAllocationBar targets={targets} reserveBps={reserveBps} />
           <div className="flex justify-between text-sm">
-            <span className="text-dark-100">Basket weights</span>
+            <span className="text-dark-100">Basket weights{reserveBps > 0 ? ' (of the non-reserve part)' : ''}</span>
             <span className={cn('tabular-nums font-medium', total === BPS ? 'text-green-500' : 'text-red-500')}>
               {formatBps(total, 2)} of 100%
             </span>
           </div>
+          {reserveBps > 0 && (
+            // Weights and reserve are different bases; spell out the split of the whole vault
+            // so they are not read as adding up to more than 100%.
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-100">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                Basket {formatBps(BPS - reserveBps)} of vault
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-white/40" />
+                Cash reserve {formatBps(reserveBps)} of vault
+              </span>
+            </div>
+          )}
         </div>
       )}
 

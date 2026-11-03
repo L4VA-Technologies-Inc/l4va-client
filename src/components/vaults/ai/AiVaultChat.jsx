@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PanelRightClose, PanelRightOpen, SendHorizonal, Sparkles } from 'lucide-react';
+import { PanelRightClose, PanelRightOpen, Rocket, SlidersHorizontal, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultImageCard } from './AiVaultImageCard';
 import { AiVaultImageGenerator } from './AiVaultImageGenerator';
 import { validateImageFile } from './aiVault.utils';
 
+import {
+  CHAT_OTHER_TEXT,
+  CHAT_USER_BUBBLE,
+  ChatAvatar,
+  ChatComposer,
+  ChatMarkdown,
+} from '@/components/shared/chat/ChatPrimitives';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 
 // Options arrive as { label, value }; plain strings are tolerated for transcripts persisted
@@ -29,70 +37,7 @@ const OptionButtons = ({ options, onSelect, disabled, stacked }) => (
   </div>
 );
 
-// Renders **bold**, `code` and inline text, splitting on the markers so no dangerouslySetInnerHTML is needed.
-const renderInline = text =>
-  text
-    .split(/(\*\*[^*]+\*\*|`[^`]+`)/g)
-    .filter(Boolean)
-    .map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return (
-          <strong key={index} className="font-semibold text-white">
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      if (part.startsWith('`') && part.endsWith('`')) {
-        return (
-          <code key={index} className="rounded bg-steel-750 px-1.5 py-0.5 text-sm text-orange-300">
-            {part.slice(1, -1)}
-          </code>
-        );
-      }
-      return part;
-    });
-
-// Minimal markdown renderer for chat messages: supports paragraphs and "- " bullet lists.
-const renderMessageContent = content => {
-  const lines = content.split('\n');
-  const blocks = [];
-  let listItems = [];
-
-  const flushList = () => {
-    if (listItems.length) {
-      blocks.push(
-        <ul key={`list-${blocks.length}`} className="list-disc space-y-1 pl-5">
-          {listItems.map((item, index) => (
-            <li key={index}>{renderInline(item)}</li>
-          ))}
-        </ul>
-      );
-      listItems = [];
-    }
-  };
-
-  lines.forEach((line, index) => {
-    const trimmed = line.trim();
-    const bulletMatch = trimmed.match(/^[-*]\s+(.*)$/);
-    if (bulletMatch) {
-      listItems.push(bulletMatch[1]);
-      return;
-    }
-    flushList();
-    if (trimmed) {
-      blocks.push(<p key={`line-${index}`}>{renderInline(trimmed)}</p>);
-    }
-  });
-  flushList();
-
-  return <div className="flex flex-col gap-2">{blocks}</div>;
-};
-
-const AssistantAvatar = () => (
-  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-gradient">
-    <Sparkles className="h-3.5 w-3.5 text-slate-950" />
-  </div>
-);
+const AssistantAvatar = () => <ChatAvatar icon={Sparkles} />;
 
 const TypingIndicator = () => (
   <motion.div
@@ -129,12 +74,15 @@ export const AiVaultChat = ({
   onGenerateImage,
   onUploadImage,
   onTogglePreview,
+  canLaunch = false,
+  isLaunching = false,
+  onLaunch,
 }) => {
-  const textareaRef = useRef(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const [input, setInput] = useState('');
   const isImageBusy = isGeneratingImage || isUploadingImage;
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   // The image belongs to the vault, not to a single message, so only the newest card can replace it.
   const lastImageIndex = messages.reduce(
     (last, message, index) => (message.attachment?.type === 'vault-image' ? index : last),
@@ -180,18 +128,28 @@ export const AiVaultChat = ({
     onOptionSelect?.(option);
   };
 
-  const submit = event => {
-    event.preventDefault();
+  const submit = () => {
     onSend(input);
     setInput('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = '';
-    }
   };
 
   return (
-    <div className="relative flex h-[calc(100dvh-220px)] max-h-[860px] min-h-[560px] flex-col">
-      <div className="flex shrink-0 items-center justify-end pb-2">
+    // Mobile: the page itself scrolls and the composer sticks to the bottom (like ChatGPT), so there is
+    // no scroll area nested inside a scrolling page. Desktop keeps the fixed-height panel.
+    <div className="relative flex flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
+      {/* Mobile: pinned under the header so the settings sheet is one tap away at any scroll depth. */}
+      <div className="sticky top-[var(--header-height)] z-20 -mx-4 flex shrink-0 justify-end bg-primary-background/90 px-4 py-2 backdrop-blur-md lg:hidden">
+        <button
+          className="flex items-center gap-2 rounded-full border border-steel-750 bg-steel-850 px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[0.97]"
+          type="button"
+          onClick={onTogglePreview}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Vault settings
+          {canLaunch && <span className="h-2 w-2 rounded-full bg-orange-500" />}
+        </button>
+      </div>
+      <div className="hidden shrink-0 items-center justify-end pb-2 lg:flex">
         <button
           className="rounded-lg p-2 text-dark-100 transition-[color,background-color,transform] duration-150 ease-out hover:bg-steel-850 hover:text-white active:scale-90"
           title={isPreviewOpen ? 'Hide settings' : 'Show settings'}
@@ -202,7 +160,7 @@ export const AiVaultChat = ({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 lg:overflow-y-auto">
         <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-4 sm:px-2">
           {messages.map((message, index) => {
             const isLiveAssistant = isStreamingAssistant && index === messages.length - 1;
@@ -220,20 +178,14 @@ export const AiVaultChat = ({
                 transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
               >
                 {!isUser && <AssistantAvatar />}
-                <div
-                  className={
-                    isUser
-                      ? 'max-w-[75%] rounded-3xl bg-steel-850 px-4 py-2.5 text-[15px] leading-relaxed text-white'
-                      : 'min-w-0 flex-1 space-y-3 pt-0.5 text-[15px] leading-relaxed text-dark-100'
-                  }
-                >
+                <div className={isUser ? CHAT_USER_BUBBLE : CHAT_OTHER_TEXT}>
                   {isLiveAssistant ? (
                     <p className="whitespace-pre-wrap">
                       {message.content}
                       <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-orange-400 align-text-bottom" />
                     </p>
                   ) : (
-                    renderMessageContent(message.content)
+                    <ChatMarkdown content={message.content} />
                   )}
                   {message.widget?.type === 'image-generator' && !isLiveAssistant && (
                     <AiVaultImageGenerator
@@ -265,49 +217,39 @@ export const AiVaultChat = ({
             );
           })}
           {showThinking && <TypingIndicator />}
-          <div ref={bottomRef} />
+          <div ref={bottomRef} className="scroll-mb-32 lg:scroll-mb-0" />
         </div>
         {/* Fades the last bit of content under the floating composer instead of a hard divider. */}
-        <div className="pointer-events-none sticky bottom-0 -mt-10 h-10 bg-gradient-to-t from-primary-background to-transparent" />
+        <div className="pointer-events-none sticky bottom-0 -mt-10 hidden h-10 lg:block bg-gradient-to-t from-primary-background to-transparent" />
       </div>
 
       <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
-      <form className="shrink-0 pt-1" onSubmit={submit}>
-        <div className="mx-auto w-full max-w-[720px] px-4 sm:px-2">
-          <div className="relative flex items-end gap-2 rounded-[26px] border border-steel-750 bg-steel-850/90 px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md transition-colors duration-150 focus-within:border-orange-500/60">
-            <textarea
-              ref={textareaRef}
-              autoFocus
-              className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] text-white outline-none placeholder:text-dark-100"
-              disabled={isSending}
-              maxLength={4000}
-              placeholder="Ask L4VA AI"
-              rows={1}
-              value={input}
-              onChange={event => {
-                const textarea = event.currentTarget;
-                textarea.style.height = 'auto';
-                textarea.style.height = `${textarea.scrollHeight}px`;
-                setInput(textarea.value);
-              }}
-              onKeyDown={event => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  submit(event);
-                }
-              }}
-            />
-            <PrimaryButton
-              aria-label="Send message"
-              className="mb-0.5 h-9 w-9 shrink-0 rounded-full p-0"
-              disabled={isSending || !input.trim()}
-              onClick={submit}
-              title="Send message"
+      <div className="sticky bottom-0 z-20 shrink-0 bg-gradient-to-t from-primary-background from-70% to-transparent pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:bg-none lg:pb-0 lg:pt-1">
+        <div className="mx-auto w-full max-w-[720px] px-2 sm:px-2">
+          {/* On mobile the draft lives in a closed sheet, so surface the launch right where the user is. */}
+          {canLaunch && (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 lg:hidden"
+              initial={{ opacity: 0, y: 8 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
             >
-              <SendHorizonal className="h-4 w-4" />
-            </PrimaryButton>
-          </div>
+              <PrimaryButton className="w-full uppercase" disabled={isLaunching} onClick={onLaunch}>
+                <Rocket className="h-4 w-4" />
+                {isLaunching ? 'Launching...' : 'Ready · Confirm & launch'}
+              </PrimaryButton>
+            </motion.div>
+          )}
+          <ChatComposer
+            autoFocus={isDesktop}
+            disabled={isSending}
+            placeholder="Ask L4VA AI"
+            value={input}
+            onChange={setInput}
+            onSubmit={submit}
+          />
         </div>
-      </form>
+      </div>
     </div>
   );
 };

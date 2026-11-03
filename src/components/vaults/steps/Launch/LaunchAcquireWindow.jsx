@@ -4,9 +4,14 @@ import { formatNum, formatDateTime, formatInterval } from '@/utils/core.utils';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { getLiquidityPoolContributionHint, getReserveHint } from '@/components/vaults/constants/vaults.constants';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
 
 export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
   const { currencyLabel } = useCurrency();
+  const { isRobinHood } = useNetwork();
+  // 0 is a real choice (e.g. no LP), so only a missing value reads as "Not set".
+  const formatPercentValue = value =>
+    value === null || value === undefined || value === '' ? 'Not set' : `${formatNum(value)}%`;
 
   const formatTime = (type, time) => {
     if (type === 'upon-asset-window-closing') {
@@ -51,12 +56,22 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
               {data.tokensForAcquires ? `${formatNum(data.tokensForAcquires)}%` : 'Not set'}
             </p>
           </div>
+          {isRobinHood && data.isAcquireOnly && (
+            <div>
+              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Minimum raise</p>
+              <p className="break-words">
+                {data.minAcquireThreshold
+                  ? `${data.minAcquireThresholdUsd ? `$${formatNum(data.minAcquireThresholdUsd)} ≈ ` : ''}${data.minAcquireThreshold} ETH`
+                  : 'Not set'}
+              </p>
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2 min-w-0">
-              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Reserve (%)</p>
+              <p className="uppercase font-semibold text-dark-100 break-words min-w-0">Lock Reserve (%)</p>
               <HoverHelp hint={getReserveHint(currencyLabel)} />
             </div>
-            <p className="break-words">{data.acquireReserve ? `${formatNum(data.acquireReserve)}%` : 'Not set'}</p>
+            <p className="break-words">{formatPercentValue(data.acquireReserve)}</p>
           </div>
           <div>
             <div className="flex items-center gap-2 min-w-0">
@@ -65,9 +80,7 @@ export const LaunchAcquireWindow = ({ data, setCurrentStep }) => {
               </p>
               <HoverHelp hint={getLiquidityPoolContributionHint(currencyLabel)} />
             </div>
-            <p className="break-words">
-              {data.liquidityPoolContribution ? `${formatNum(data.liquidityPoolContribution)}%` : 'Not set'}
-            </p>
+            <p className="break-words">{formatPercentValue(data.liquidityPoolContribution)}</p>
           </div>
         </div>
       </div>

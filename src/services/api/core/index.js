@@ -18,6 +18,22 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async getSupportTicket() {
+    return await axiosInstance.get(CoreConfigProvider.supportTicket());
+  }
+
+  static async openSupportTicket(data) {
+    return await axiosInstance.post(CoreConfigProvider.supportTicket(), data);
+  }
+
+  static async sendSupportMessage(ticketId, message) {
+    return await axiosInstance.post(CoreConfigProvider.supportTicketMessages(ticketId), { message });
+  }
+
+  static async closeSupportTicket(ticketId) {
+    return await axiosInstance.post(CoreConfigProvider.closeSupportTicket(ticketId));
+  }
+
   static async sendNotification(data) {
     const response = await axiosInstance.post(CoreConfigProvider.sendNotification(), data);
     return response;

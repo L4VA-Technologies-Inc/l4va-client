@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   AlertCircle,
   RefreshCcw,
+  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -51,7 +52,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
-import { clearVaultCreationDrafts } from '@/components/vaults/ai/aiVault.utils';
+import { clearVaultCreationDrafts, writeStoredVaultDraft } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
@@ -916,6 +917,15 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     scrollToTop();
   };
 
+  // A saved draft opens here (/vaults/$id), not on /create, so it needs its own way into the AI flow.
+  // The draft id rides along, so saving or launching from the chat updates this draft instead of
+  // creating a second one; the previous chat session belongs to another draft and is dropped.
+  const continueInAi = () => {
+    clearVaultCreationDrafts();
+    writeStoredVaultDraft({ ...vaultData, id: vaultData?.id ?? vault?.id });
+    navigate({ to: '/create-ai' });
+  };
+
   const saveDraft = async () => {
     try {
       setIsSavingDraft(true);
@@ -1227,6 +1237,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
             onClick={handlePreviousStep}
           >
             <ChevronLeft size={24} />
+            <span className="uppercase">Back</span>
           </SecondaryButton>
         )}
         {vault && vault.vaultStatus === 'draft' && (
@@ -1254,7 +1265,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
               <Spinner size="sm" />
             </div>
           ) : (
-            <ChevronRight size={24} />
+            <>
+              <span className="uppercase">Next</span>
+              <ChevronRight size={24} />
+            </>
           )}
         </PrimaryButton>
       </div>
@@ -1288,22 +1302,35 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       <button
         onClick={handleResetVault}
         disabled={isSubmitting || isSavingDraft}
-        className="fixed bottom-24 right-8 z-50 flex items-center gap-2 py-3 px-6 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="fixed bottom-[124px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-[136px] md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Reset vault creation"
         title="Reset vault creation"
       >
         <RotateCcw className="w-5 h-5 group-hover:-rotate-45 transition-transform duration-300" />
-        <span className="hidden sm:inline font-russo uppercase text-sm">Reset</span>
+        <span className="hidden sm:inline text-sm font-semibold">Reset</span>
       </button>
-      <PrimaryButton
+      <button
         onClick={scrollToTutorial}
-        className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+        className="fixed bottom-[68px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-20 md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750"
         aria-label="Scroll to tutorial"
+        type="button"
       >
         <BookOpen className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-        <span className="hidden sm:inline font-russo uppercase text-sm">Tutorial</span>
-        <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
-      </PrimaryButton>
+        <span className="hidden sm:inline text-sm font-semibold">Tutorial</span>
+        <ChevronDown className="hidden sm:block w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
+      </button>
+      {vault?.id && (
+        <div className="mb-6 flex justify-end">
+          <button
+            className="flex items-center gap-2 text-dark-100 transition-colors hover:text-white"
+            type="button"
+            onClick={continueInAi}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="font-russo text-sm uppercase">Continue with AI</span>
+          </button>
+        </div>
+      )}
       <div className="md:hidden mb-8">
         <LavaSelect
           label="Current Step"
@@ -1387,7 +1414,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
         onClose={() => setIsResetModalOpen(false)}
         onConfirm={resetVault}
       />
-      <VaultCreationTutorial />
+      <VaultCreationTutorial isAcquireOnly={!!vaultData.isAcquireOnly} />
     </div>
   );
 };

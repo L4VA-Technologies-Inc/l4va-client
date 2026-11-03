@@ -130,7 +130,8 @@ export const AcquireWindow = ({
               // Entered in USD (what the creator thinks in), stored in ETH (what the API and contract take).
               <LavaInput
                 error={errors.minAcquireThreshold}
-                label={isIndexVault ? 'RESERVE AMOUNT (OPTIONAL)' : 'MINIMUM THRESHOLD (OPTIONAL)'}
+                // Not "reserve": that word already means the lock % and the index cash reserve.
+                label="MINIMUM RAISE (OPTIONAL)"
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
                 placeholder={ethUsd ? 'e.g. 500' : 'Loading ETH price…'}
@@ -260,7 +261,7 @@ export const AcquireWindow = ({
           <LavaInput
             required
             error={errors.acquireReserve}
-            label="RESERVE (%)"
+            label="LOCK RESERVE (%)"
             name="acquireReserve"
             placeholder="XX"
             suffix="%"

@@ -8,6 +8,7 @@ import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 import { ChartModal } from '@/components/modals/ChartModal';
 import { BannerModal } from '@/components/modals/BannerModal.jsx';
 import { EmailModal } from '@/components/modals/EmailModal.jsx';
+import { SupportModal } from '@/components/modals/SupportModal.jsx';
 import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
@@ -67,6 +68,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'EmailModal',
     Component: EmailModal,
+  },
+  {
+    name: 'SupportModal',
+    Component: SupportModal,
   },
   {
     name: 'MainNetModal',

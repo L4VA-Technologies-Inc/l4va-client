@@ -22,6 +22,8 @@ export const LavaSelect = ({
   useOldStyle = true,
   noMargin = false,
   disabled = false,
+  // Multi-pick fields (e.g. tags) reuse this select as an "add" menu; these get a checkmark.
+  selectedValues = [],
 }) => {
   const generatedId = useId();
   const selectId = id || generatedId;
@@ -86,10 +88,17 @@ export const LavaSelect = ({
               {options.map(option => (
                 <SelectItem
                   key={option.id || option.value}
-                  className="text-dark-100 hover:text-white hover:bg-slate-950 cursor-pointer py-3"
+                  className={`hover:bg-slate-950 cursor-pointer py-3 ${
+                    selectedValues.includes(option.id || option.value)
+                      ? 'text-orange-500 hover:text-orange-400'
+                      : 'text-dark-100 hover:text-white'
+                  }`}
                   value={option.id || option.value}
                 >
-                  {option.label}
+                  <span className="flex items-center gap-2">
+                    {option.label}
+                    {selectedValues.includes(option.id || option.value) && <Check className="h-4 w-4" />}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
