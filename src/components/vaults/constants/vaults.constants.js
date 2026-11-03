@@ -9,10 +9,20 @@ export const MAX_SUPPLY = 1000000000000; // 10^12 VT
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
 
-// Duration constants based on environment
-export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD ? 300000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
+/** Positive ms from an env var, e.g. to shorten phases on staging; null when unset. */
+const durationOverride = value => {
+  const ms = Number(value);
+  return Number.isFinite(ms) && ms > 0 ? ms : null;
+};
+
+// Duration constants based on environment; VITE_MIN_*_DURATION_MS overrides (e.g. staging)
+export const MIN_CONTRIBUTION_DURATION_MS =
+  durationOverride(import.meta.env.VITE_MIN_CONTRIBUTION_DURATION_MS) ??
+  (environment === environments.PREPROD ? 300000 : 432000000); // 5 min (preprod) / 5 days (mainnet)
 export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 24 hours (mainnet)
+export const MIN_ACQUIRE_WINDOW_DURATION_MS =
+  durationOverride(import.meta.env.VITE_MIN_ACQUIRE_WINDOW_DURATION_MS) ??
+  (environment === environments.PREPROD ? 300000 : 86400000); // 5 min (preprod) / 24 hours (mainnet)
 export const MAX_ACQUIRE_WINDOW_DURATION_MS = 604800000; // 7 days
 export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 432000000; // 5 min (preprod) / 5 days (mainnet)
 export const MAX_TIME_FOR_VOTING = 1209600000; // 14 days
