@@ -284,11 +284,12 @@ export const TokensPage = () => {
         .slice(0, 6),
     [allTokens]
   );
-  const graduated = useMemo(
+  // Newest mints first; tokens without a mint time sink to the bottom.
+  const justMinted = useMemo(
     () =>
       [...allTokens]
-        .sort((a, b) => (b.market_cap ?? b.holders_count ?? 0) - (a.market_cap ?? a.holders_count ?? 0))
-        .slice(6, 12),
+        .sort((a, b) => (Date.parse(b.minted_at) || 0) - (Date.parse(a.minted_at) || 0))
+        .slice(0, 6),
     [allTokens]
   );
   const gainers = useMemo(
@@ -355,7 +356,7 @@ export const TokensPage = () => {
               <span>FDV</span>
               <span className="w-14 text-right">24H Δ</span>
             </div>
-            {graduated.map(item => (
+            {justMinted.map(item => (
               <TokenMiniRow
                 key={item.id}
                 image={item.image}
