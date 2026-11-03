@@ -286,10 +286,7 @@ export const TokensPage = () => {
   );
   // Newest mints first; tokens without a mint time sink to the bottom.
   const justMinted = useMemo(
-    () =>
-      [...allTokens]
-        .sort((a, b) => (Date.parse(b.minted_at) || 0) - (Date.parse(a.minted_at) || 0))
-        .slice(0, 6),
+    () => [...allTokens].sort((a, b) => (Date.parse(b.minted_at) || 0) - (Date.parse(a.minted_at) || 0)).slice(0, 6),
     [allTokens]
   );
   const gainers = useMemo(
