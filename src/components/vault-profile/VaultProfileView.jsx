@@ -194,6 +194,36 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
+  // End of the open contribution/acquire window. The backend flips the status a little later,
+  // so between the timer hitting zero and that flip the actions must already be closed.
+  const phaseWindowEnd = (() => {
+    if (!vault) return null;
+    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
+      return new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
+    }
+    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
+      return new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
+    }
+    return null;
+  })();
+  const [isPhaseWindowEnded, setIsPhaseWindowEnded] = useState(
+    () => phaseWindowEnd !== null && Date.now() >= phaseWindowEnd
+  );
+
+  // Re-render exactly when the window closes, not only on the next unrelated render.
+  useEffect(() => {
+    if (phaseWindowEnd === null) {
+      setIsPhaseWindowEnded(false);
+      return undefined;
+    }
+    const msLeft = phaseWindowEnd - Date.now();
+    setIsPhaseWindowEnded(msLeft <= 0);
+    if (msLeft <= 0) return undefined;
+    // setTimeout overflows past ~24.8 days; re-arm on the next render in that case.
+    const timer = setTimeout(() => setIsPhaseWindowEnded(true), Math.min(msLeft, 2 ** 31 - 1));
+    return () => clearTimeout(timer);
+  }, [phaseWindowEnd]);
+
   const [deferredReady, setDeferredReady] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => {
     if (typeof window === 'undefined') {
@@ -288,22 +318,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleTabChange = tab => setActiveTab(tab);
 
-  const isPhaseTransitioning = () => {
-    if (!vault) return false;
-    const now = Date.now();
-
-    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
-      const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
-      return now >= contributionEnd;
-    }
-
-    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
-      const acquireEnd = new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
-      return now >= acquireEnd;
-    }
-
-    return false;
-  };
+  const isPhaseTransitioning = () => isPhaseWindowEnded;
 
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
@@ -333,6 +348,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       text: 'Acquire',
       handleClick: () => openModal('AcquireModal', { vault }),
       available: vault.isAcquireWindowActive,
+      disabled: isPhaseWindowEnded,
     };
 
     const buttonConfig = {
@@ -343,7 +359,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             text: buttonText,
             handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
             available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
-            disabled: isInvalidStatus || isContributionFull || isExpansionFull,
+            disabled: isInvalidStatus || isContributionFull || isExpansionFull || isPhaseWindowEnded,
           },
       Token: acquireAction,
       Governance: {
