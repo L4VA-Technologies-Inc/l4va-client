@@ -129,7 +129,7 @@ const Faq = () => {
     },
     {
       id: 'acquire',
-      label: 'Acquire-only',
+      label: 'Acquisition Fund',
       comingSoon: true,
       tagline: 'Raise ETH together',
       icon: Coins,
@@ -154,14 +154,14 @@ const Faq = () => {
         },
         {
           number: 4,
-          title: 'Govern',
-          description: 'Holders propose and vote on what the Vault does next with its assets.',
+          title: 'Govern & Buy',
+          description: 'Holders propose and vote on which assets the Vault buys with the raised ETH.',
         },
       ],
     },
     {
       id: 'contribute-only',
-      label: 'Contribution-only',
+      label: 'Pooled Assets',
       comingSoon: true,
       tagline: 'Pool assets, share ownership',
       icon: Boxes,
