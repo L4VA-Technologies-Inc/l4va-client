@@ -1,17 +1,52 @@
+import { useState } from 'react';
+import { Boxes, ChevronRight, Coins, Layers, PieChart, Sparkles } from 'lucide-react';
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useCurrency } from '@/hooks/useCurrency';
+import { cn } from '@/lib/utils';
 
-const StepCard = ({ number, title, description }) => (
-  <div className="w-full flex flex-col sm:flex-row items-center p-6 sm:py-[30px] sm:pl-[60px] sm:pr-[54px] gap-4 sm:gap-[60px] bg-steel-900/50 backdrop-blur-sm rounded-[10px]">
-    <div className="min-w-[80px] text-center text-4xl sm:text-6xl lg:text-8xl xl:text-[128px] font-extrabold text-[var(--color-step-accent)] font-satoshi">
-      {number}
-    </div>
-    <div className="text-center sm:text-left">
-      <h3 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold mb-2">{title}</h3>
-      <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-dark-100">{description}</p>
-    </div>
-  </div>
+const accentMix = pct => `color-mix(in srgb, var(--color-step-accent) ${pct}%, transparent)`;
+
+/** Horizontal stepper: four cards with an outlined ghost number, joined by chevrons; rises in on flow change. */
+const StepTimeline = ({ steps, flowKey }) => (
+  <ol
+    className={cn(
+      'grid grid-cols-1 sm:grid-cols-2 gap-4 xl:gap-8',
+      steps.length === 5 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
+    )}
+  >
+    {steps.map((step, i) => (
+      <li
+        key={`${flowKey}-${step.number}`}
+        className="animate-step-rise relative"
+        style={{ animationDelay: `${i * 90}ms` }}
+      >
+        <div className="group relative h-full overflow-hidden rounded-[10px] border border-white/5 bg-steel-900/50 backdrop-blur-sm p-5 sm:p-6 pt-14 sm:pt-16 transition-colors hover:border-white/15">
+          <span
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-[2px] origin-left scale-x-25 bg-[var(--color-step-accent)] transition-transform duration-500 group-hover:scale-x-100"
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -top-3 right-3 select-none font-russo text-[96px] leading-none text-transparent opacity-60 transition-opacity group-hover:opacity-100"
+            style={{ WebkitTextStroke: `1.5px ${accentMix(70)}` }}
+          >
+            {String(step.number).padStart(2, '0')}
+          </span>
+          <h3 className="relative text-lg sm:text-xl lg:text-2xl font-bold mb-2">{step.title}</h3>
+          <p className="relative text-sm sm:text-base text-dark-100">{step.description}</p>
+        </div>
+        {i < steps.length - 1 && (
+          <ChevronRight
+            aria-hidden
+            size={22}
+            className="hidden xl:block absolute top-1/2 -right-[27px] -translate-y-1/2 text-[var(--color-step-accent)]"
+          />
+        )}
+      </li>
+    ))}
+  </ol>
 );
 
 const FaqItem = ({ question, answer, index }) => (
@@ -28,6 +63,7 @@ const FaqItem = ({ question, answer, index }) => (
 
 const Faq = () => {
   const { isRobinHood } = useNetwork();
+  const [flowId, setFlowId] = useState('index');
   const { currencyLabel } = useCurrency();
   const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
   const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
@@ -58,30 +94,138 @@ const Faq = () => {
     },
   ];
 
-  const robinhoodSteps = [
+  // Robinhood explains each vault type as its own short flow instead of one generic sequence.
+  const robinhoodFlows = [
     {
-      number: 1,
-      title: 'Create',
-      description:
-        'Create a new Vault by meeting the required protocol conditions, then define the strategy, eligible assets, contribution rules, and governance settings.',
+      id: 'index',
+      label: 'Index Vault',
+      tagline: 'A basket in one token',
+      icon: PieChart,
+      summary: 'One token for a basket of assets, bought for you with ETH.',
+      steps: [
+        {
+          number: 1,
+          title: 'Create',
+          description: 'Pick the assets for the basket and their target weights, e.g. 60% A, 30% B, 10% ETH reserve.',
+        },
+        {
+          number: 2,
+          title: 'Acquire',
+          description:
+            'During the acquire window anyone can send ETH to the Vault. Your share of the ETH is your share of the Vault.',
+        },
+        {
+          number: 3,
+          title: 'Lock & Buy',
+          description:
+            'When the window closes the Vault buys the basket on Uniswap and Vault Tokens land in your wallet automatically.',
+        },
+        {
+          number: 4,
+          title: 'Govern',
+          description: 'Holders vote to change weights, add assets, or rebalance. One token, one diversified position.',
+        },
+      ],
     },
     {
-      number: 2,
-      title: 'Contribute',
-      description:
-        'Approved contributors add eligible tokenized assets to the Vault during its contribution window and receive a proportional share of the Vault Tokens.',
+      id: 'acquire',
+      label: 'Acquire-only',
+      comingSoon: true,
+      tagline: 'Raise ETH together',
+      icon: Coins,
+      summary: 'Raise ETH from the community around a thesis, then govern how it is used.',
+      steps: [
+        {
+          number: 1,
+          title: 'Create',
+          description:
+            'Set the token, the acquire window, an optional minimum raise, and how much goes to a liquidity pool.',
+        },
+        {
+          number: 2,
+          title: 'Acquire',
+          description: 'Participants send ETH and receive Vault Tokens in proportion to what they sent.',
+        },
+        {
+          number: 3,
+          title: 'Lock',
+          description:
+            'If the minimum is met the Vault locks and tokens are distributed. If not, everyone is refunded automatically.',
+        },
+        {
+          number: 4,
+          title: 'Govern',
+          description: 'Holders propose and vote on what the Vault does next with its assets.',
+        },
+      ],
     },
     {
-      number: 3,
-      title: 'Acquire',
-      description:
-        'Participants use ETH or USDC to acquire a proportional share of the Vault Tokens, providing capital and liquidity to the strategy.',
+      id: 'contribute-only',
+      label: 'Contribution-only',
+      comingSoon: true,
+      tagline: 'Pool assets, share ownership',
+      icon: Boxes,
+      summary: 'Holders pool their tokenized assets into one Vault and own it together. No ETH raise.',
+      steps: [
+        {
+          number: 1,
+          title: 'Create',
+          description:
+            'Choose which assets are eligible. All Vault Tokens go to contributors, so there is no acquire window.',
+        },
+        {
+          number: 2,
+          title: 'Contribute',
+          description: 'Holders deposit eligible assets during the contribution window.',
+        },
+        {
+          number: 3,
+          title: 'Lock',
+          description: 'The Vault locks and Vault Tokens are split by the value each contributor brought in.',
+        },
+        {
+          number: 4,
+          title: 'Govern',
+          description: 'Contributors govern the pooled assets together: keep, sell, expand, or rebalance.',
+        },
+      ],
     },
     {
-      number: 4,
-      title: 'Govern',
-      description:
-        'After launch, Vault Token holders collectively govern the Vault through transparent on-chain proposals and voting—guiding how the strategy and its assets evolve.',
+      id: 'contribute',
+      label: 'Contribute + Acquire',
+      comingSoon: true,
+      tagline: 'Bring assets, get ETH',
+      icon: Layers,
+      summary: 'Turn tokenized assets you hold into a shared, tradable Vault and get ETH for part of it.',
+      steps: [
+        {
+          number: 1,
+          title: 'Create',
+          description: 'Choose which assets are eligible and what share of Vault Tokens is offered to acquirers.',
+        },
+        {
+          number: 2,
+          title: 'Contribute',
+          description:
+            'Asset holders deposit eligible assets during the contribution window and receive Vault Tokens for their value.',
+        },
+        {
+          number: 3,
+          title: 'Acquire',
+          description: 'Others send ETH during the acquire window for the share of Vault Tokens on offer.',
+        },
+        {
+          number: 4,
+          title: 'Lock',
+          description:
+            'If the raise meets its minimum the Vault locks: contributors get Vault Tokens plus the ETH, acquirers get their tokens. If not, everything is returned.',
+        },
+        {
+          number: 5,
+          title: 'Govern',
+          description: 'All holders, contributors and acquirers alike, govern the Vault and its assets together.',
+        },
+      ],
     },
   ];
 
@@ -95,16 +239,15 @@ const Faq = () => {
   };
 
   const robinhoodHeroContent = {
-    subtitle: 'Create, own, and govern programmable investment products on Robinhood Chain.',
+    subtitle: 'Create, own, and govern investment products on Robinhood Chain.',
     paragraphs: [
-      'Create a Vault, define its strategy and governance settings, and invite contributors to add eligible tokenized assets. Participants can then acquire Vault Tokens using ETH or USDC, gaining proportional exposure to the Vault and a voice in its future.',
-      'Vault creators, asset contributors, token acquirers, liquidity providers, and governance participants can earn L4VA rewards for activities that expand the protocol. Rewards are designed around active contribution—not passive ownership or total value locked.',
-      'Once launched, every Vault becomes a community-governed on-chain market. Vault Token holders can propose and vote on how the strategy, assets, and rules evolve over time.',
-      'Open, programmable infrastructure for transforming tokenized assets into investment products that communities can launch, own, and govern.',
+      'A Vault is a shared on-chain fund. It holds assets, issues Vault Tokens to the people who fund it, and is run by those token holders. Pick a Vault type to see how it works.',
     ],
+    note: 'Creators, contributors, acquirers, liquidity providers, and voters earn $L4VA rewards for active participation, not passive holding.',
   };
 
-  const steps = isRobinHood ? robinhoodSteps : defaultSteps;
+  const activeFlow = robinhoodFlows.find(flow => flow.id === flowId) ?? robinhoodFlows[0];
+  const steps = isRobinHood ? activeFlow.steps : defaultSteps;
   const heroContent = isRobinHood ? robinhoodHeroContent : defaultHeroContent;
 
   const defaultFaqItems = [
@@ -311,27 +454,83 @@ const Faq = () => {
   return (
     <div className="relative py-8 sm:py-12 lg:py-16">
       <div className="container mx-auto px-4 sm:px-6 font-satoshi">
-        <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-[70px]">
-            <div className="space-y-4 text-dark-100 lg:pr-[135px]">
-              <h3 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-primary-text font-russo">
-                How it Works
-              </h3>
-              <h4 className="text-2xl sm:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
-                {heroContent.subtitle}
-              </h4>
-              {heroContent.paragraphs.map(paragraph => (
-                <p key={paragraph} className="text-base sm:text-lg lg:text-xl xl:text-2xl">
-                  {paragraph}
-                </p>
-              ))}
+        <section className="mb-8 sm:mb-12 lg:mb-16 space-y-6 sm:space-y-8">
+          <header className="max-w-3xl space-y-4">
+            <h3 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold text-primary-text font-russo">
+              How it Works
+            </h3>
+            <h4 className="text-xl sm:text-2xl font-bold font-russo text-dark-100">{heroContent.subtitle}</h4>
+            {heroContent.paragraphs.map(paragraph => (
+              <p key={paragraph} className="text-base sm:text-lg lg:text-xl text-dark-100">
+                {paragraph}
+              </p>
+            ))}
+          </header>
+          {isRobinHood && (
+            <div
+              role="tablist"
+              aria-label="Vault type"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
+            >
+              {robinhoodFlows.map(({ id, label, tagline, icon: Icon, comingSoon }) => {
+                const active = id === flowId;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setFlowId(id)}
+                    className={cn(
+                      'group relative flex items-center gap-3 text-left p-4 rounded-[10px] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-step-accent)]',
+                      active
+                        ? 'border-[var(--color-step-accent)] bg-[color-mix(in_srgb,var(--color-step-accent)_12%,transparent)]'
+                        : 'border-white/5 bg-steel-900/50 hover:border-white/20'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
+                        active
+                          ? 'bg-[var(--color-step-accent)] text-steel-950'
+                          : 'bg-steel-750 text-dark-100 group-hover:text-white'
+                      )}
+                    >
+                      <Icon size={20} />
+                    </span>
+                    <span>
+                      <span
+                        className={cn('block font-bold text-base lg:text-lg', active ? 'text-white' : 'text-dark-100')}
+                      >
+                        {label}
+                      </span>
+                      <span className="block text-sm text-dark-100">{tagline}</span>
+                    </span>
+                    {comingSoon && (
+                      <span className="absolute -top-2 right-3 rounded-full border border-white/10 bg-steel-900 px-2 py-px text-[9px] font-semibold uppercase leading-4 tracking-wider text-dark-100">
+                        Soon
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            <div className="space-y-4 sm:space-y-6">
-              {steps.map(step => (
-                <StepCard key={step.number} {...step} />
-              ))}
-            </div>
-          </div>
+          )}
+          {isRobinHood && (
+            <p key={activeFlow.id} className="animate-step-rise text-base sm:text-lg text-white">
+              {activeFlow.summary}
+              {activeFlow.comingSoon && (
+                <span className="ml-2 text-sm text-dark-100">Coming soon on Robinhood Chain.</span>
+              )}
+            </p>
+          )}
+          <StepTimeline steps={steps} flowKey={isRobinHood ? activeFlow.id : 'default'} />
+          {heroContent.note && (
+            <p className="flex items-center gap-2 text-sm sm:text-base text-dark-100">
+              <Sparkles size={16} className="shrink-0 text-[var(--color-step-accent)]" />
+              {heroContent.note}
+            </p>
+          )}
         </section>
         <section>
           <h2 className="text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 font-russo">
