@@ -82,7 +82,7 @@ import {
 } from '@/utils/core.utils';
 import { getAddressUrl, getPolicyUrl } from '@/utils/explorer.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
-import { useVaultAssets } from '@/services/api/queries';
+import { useVaultAssets, useVaultLp } from '@/services/api/queries';
 import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
 import { IS_MAINNET } from '@/utils/networkValidation.ts';
@@ -301,6 +301,8 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
   const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  // 404 = the vault seeded no pool (0% LP), so there is nothing to swap against.
+  const { data: evmLp, isError: evmLpMissing, isLoading: evmLpLoading } = useVaultLp(vault?.id, isRobinhoodVault);
   const { data: evmVaultTokenAddress } = useReadContract({
     address: vault?.contractAddress,
     abi: [
@@ -745,7 +747,23 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const renderSwapBlock = () => {
     if (isRobinhoodVault) {
-      if (!evmVaultTokenAddress) return null;
+      if (!evmVaultTokenAddress || evmLpLoading) return null;
+
+      if (evmLpMissing || evmLp?.status !== 'provided') {
+        const ticker = vault.vaultTokenTicker || 'VT';
+        return (
+          <div className="bg-steel-950 rounded-xl p-4 lg:p-6 mx-auto w-full mt-4">
+            <p className="font-medium">Swap</p>
+            <p className="text-dark-100 text-sm mt-2">
+              {evmLp?.status === 'pending'
+                ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
+                : evmLp?.status === 'failed'
+                  ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
+                  : `${ticker} has no liquidity pool, so it can't be traded on Uniswap. This vault was created with 0% LP contribution.`}
+            </p>
+          </div>
+        );
+      }
 
       return (
         <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
