@@ -25,8 +25,8 @@ import toast from 'react-hot-toast';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
-import { formatDateTime } from '@/utils/core.utils';
-import { getTransactionUrl } from '@/utils/explorer.utils';
+import { formatDateTime, substringAddress } from '@/utils/core.utils';
+import { getAddressUrl, getTransactionUrl } from '@/utils/explorer.utils';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -188,6 +188,36 @@ const getRefundTitle = activity => {
   return count ? `Refunded ${count} ${count === 1 ? 'Position' : 'Positions'}` : 'Refund Sent';
 };
 
+const EXPANSION_CLOSE_REASONS = {
+  duration_expired: 'Window duration ended',
+  asset_max_reached: 'Asset cap reached',
+  max_ada_reached: 'Raise cap reached',
+};
+
+const getExpansionTitle = activity => {
+  const { number, stage, outcome } = activity.expansion;
+  const name = `${activity.phase === 'acquire_expansion' ? 'Acquire Expansion' : 'Contribution Expansion'} #${number}`;
+  if (stage === 'started') return `${name} Started`;
+  return outcome === 'cancelled' ? `${name} Cancelled` : `${name} Closed`;
+};
+
+const getExpansionDescription = activity => {
+  const { stage, outcome, reason } = activity.expansion;
+  if (stage === 'started') {
+    return activity.phase === 'acquire_expansion'
+      ? 'Expansion window opened: new acquires mint vault tokens'
+      : 'Expansion window opened: new assets can be contributed';
+  }
+  if (outcome === 'cancelled') {
+    return activity.expansion.reasonMessage
+      ? `Expansion cycle cancelled: ${activity.expansion.reasonMessage}`
+      : 'Expansion cycle cancelled, deposits are refunded';
+  }
+  const closed = EXPANSION_CLOSE_REASONS[reason] || 'Expansion window closed';
+  const distribution = activity.expansion.distribution;
+  return distribution?.recipientsCount ? `${closed}. ${getDistributionSummary(distribution)}` : closed;
+};
+
 const getActivityTitle = (activity, currencyLabel) => {
   if (activity.activityType === 'transaction') {
     switch (activity.type) {
@@ -238,6 +268,7 @@ const getActivityTitle = (activity, currencyLabel) => {
       }
     }
   } else if (activity.activityType === 'phase_transition') {
+    if (activity.expansion) return getExpansionTitle(activity);
     const phaseLabels = {
       contribution: 'Contribution Phase Started',
       acquire: 'Acquire Phase Started',
@@ -634,6 +665,111 @@ const FailureTimeline = ({ activity, vault }) => {
   );
 };
 
+const TxLinkButton = ({ hash, vault }) => (
+  <button
+    onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+    title="View transaction"
+    aria-label="View transaction"
+    className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+  >
+    <ExternalLink className="w-3.5 h-3.5" />
+  </button>
+);
+
+/** Cancelled expansion window: why, then the on-chain cancel and refund batches. */
+const ExpansionCancelTimeline = ({ activity, vault }) => {
+  const actions = activity.actions || [];
+  const refunded = actions.some(action => action.type !== 'evm-cancel-cycle');
+
+  return (
+    <div>
+      <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 mb-4">
+        <p className="text-sm text-rose-400 font-medium">Expansion cancelled</p>
+        <p className="text-xs text-rose-300/80 mt-1">
+          {activity.expansion.reasonMessage ||
+            'The expansion cycle was cancelled on-chain before vault tokens were issued.'}
+        </p>
+      </div>
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      {actions.map(action => {
+        const isCancel = action.type === 'evm-cancel-cycle';
+        return (
+          <TimelineNode key={action.id} icon={isCancel ? XCircle : RotateCcw} tone={isCancel ? 'rose' : 'blue'}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+              <span className="text-sm font-medium text-white">{getFailureActionTitle(action)}</span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-dark-100">{formatDate(action.created_at)}</span>
+                {action.tx_hash && <TxLinkButton hash={action.tx_hash} vault={vault} />}
+              </div>
+            </div>
+          </TimelineNode>
+        );
+      })}
+      <TimelineNode icon={refunded ? CheckCircle : RotateCcw} tone={refunded ? 'emerald' : 'orange'} isLast>
+        <p className="text-sm text-dark-100 pt-1.5">
+          {refunded
+            ? 'Deposits made during the window were refunded to their owners.'
+            : 'Refunds of deposits made during the window are pending.'}
+        </p>
+      </TimelineNode>
+    </div>
+  );
+};
+
+const getDistributionSummary = distribution => {
+  const amount = formatTokenAmount(distribution.totalVt, distribution.vtDecimals);
+  const holders = `${distribution.recipientsCount} ${distribution.recipientsCount === 1 ? 'holder' : 'holders'}`;
+  return `${amount} ${distribution.vtTicker || 'VT'} issued to ${holders}`;
+};
+
+/** Closed expansion window: who received vault tokens for it. */
+const ExpansionDistributionList = ({ distribution, vault }) => {
+  const isEvm = vault?.chainType && vault.chainType !== 'cardano';
+  const ticker = distribution.vtTicker || 'VT';
+  const hidden = distribution.recipientsCount - distribution.recipients.length;
+
+  return (
+    <div>
+      <p className="text-sm text-dark-100 mb-3">
+        {getDistributionSummary(distribution)} · {distribution.receivedCount}/{distribution.recipientsCount}{' '}
+        {isEvm ? 'claimed' : 'sent'}
+      </p>
+      <div className="flex flex-col gap-2">
+        {distribution.recipients.map((recipient, index) => (
+          <div
+            key={`${recipient.address}-${index}`}
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750"
+          >
+            {recipient.address ? (
+              <button
+                onClick={() => window.open(getAddressUrl(recipient.address, vault?.chainType), '_blank')}
+                className="text-sm text-white hover:text-orange-500 transition-colors cursor-pointer"
+              >
+                {substringAddress(recipient.address)}
+              </button>
+            ) : (
+              <span className="text-sm text-dark-100">Unknown wallet</span>
+            )}
+            <span className="text-sm text-white">
+              {formatTokenAmount(recipient.vtAmount, distribution.vtDecimals)} {ticker}
+            </span>
+            <span
+              className={clsx(
+                'ml-auto text-xs font-medium uppercase px-2 py-0.5 rounded',
+                recipient.received ? 'bg-emerald-500/20 text-emerald-500' : 'bg-orange-500/20 text-orange-500'
+              )}
+            >
+              {recipient.received ? (isEvm ? 'Claimed' : 'Sent') : isEvm ? 'Unclaimed' : 'Pending'}
+            </span>
+            {recipient.txHash && <TxLinkButton hash={recipient.txHash} vault={vault} />}
+          </div>
+        ))}
+      </div>
+      {hidden > 0 && <p className="text-xs text-dark-100 mt-2">and {hidden} more</p>}
+    </div>
+  );
+};
+
 const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
   const { currencyLabel } = useCurrency();
@@ -641,11 +777,17 @@ const ActivityCard = ({ activity, vault }) => {
   const [showAllAssets, setShowAllAssets] = useState(false);
 
   const isFailedPhase = activity.activityType === 'phase_transition' && activity.phase === 'failed';
+  const isCancelledExpansion = activity.expansion?.outcome === 'cancelled';
+  const expansionDistribution = activity.expansion?.distribution?.recipientsCount
+    ? activity.expansion.distribution
+    : null;
   const activityType = isFailedPhase
     ? 'phase_failed'
-    : activity.activityType === 'transaction'
-      ? activity.type
-      : activity.activityType;
+    : isCancelledExpansion
+      ? 'evm-cancel-cycle'
+      : activity.activityType === 'transaction'
+        ? activity.type
+        : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
   const Icon =
     activity.activityType === 'proposal' ? PROPOSAL_STAGES[activity.stage]?.icon || config.icon : config.icon;
@@ -659,6 +801,8 @@ const ActivityCard = ({ activity, vault }) => {
   const hasDetails =
     lockSummary ||
     isFailedPhase ||
+    isCancelledExpansion ||
+    expansionDistribution ||
     activity.user ||
     (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) ||
     isProposal ||
@@ -699,6 +843,7 @@ const ActivityCard = ({ activity, vault }) => {
           return config.label;
       }
     } else if (activity.activityType === 'phase_transition') {
+      if (activity.expansion) return getExpansionDescription(activity);
       const phaseDescriptions = {
         contribution: 'Vault entered contribution phase where users can contribute assets',
         acquire: 'Vault entered acquire phase where assets can be acquired',
@@ -762,7 +907,7 @@ const ActivityCard = ({ activity, vault }) => {
                       {activity.actions.length} {activity.actions.length === 1 ? 'action' : 'actions'} executed
                     </span>
                   )}
-                  {isFailedPhase && activity.actions?.length > 0 && (
+                  {(isFailedPhase || isCancelledExpansion) && activity.actions?.length > 0 && (
                     <span className="text-xs text-dark-100">
                       {activity.actions.length} {activity.actions.length === 1 ? 'transaction' : 'transactions'}
                     </span>
@@ -783,6 +928,9 @@ const ActivityCard = ({ activity, vault }) => {
                   {formatDate(activity.created_at)}
                 </div>
                 {isFailedPhase && <FailureSummary failure={activity.failure} />}
+                {expansionDistribution && (
+                  <p className="text-sm text-dark-100 mt-1">{getDistributionSummary(expansionDistribution)}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {isTransaction && activity.tx_hash && (
@@ -830,6 +978,10 @@ const ActivityCard = ({ activity, vault }) => {
                   <LockSummary summary={lockSummary} vault={vault} />
                 ) : isFailedPhase ? (
                   <FailureTimeline activity={activity} vault={vault} />
+                ) : isCancelledExpansion ? (
+                  <ExpansionCancelTimeline activity={activity} vault={vault} />
+                ) : expansionDistribution ? (
+                  <ExpansionDistributionList distribution={expansionDistribution} vault={vault} />
                 ) : isRebalance ? (
                   <>
                     <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
@@ -1125,6 +1277,8 @@ export const VaultActivity = ({ vault }) => {
               description = 'Vault cycle cancelled on-chain, opening refunds';
               break;
           }
+        } else if (isPhaseTransition && activity.expansion) {
+          description = getExpansionDescription(activity);
         } else if (isPhaseTransition) {
           const phaseDescriptions = {
             contribution: 'Vault entered contribution phase where users can contribute assets',
