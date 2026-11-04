@@ -16,6 +16,7 @@ import {
   ArrowLeftRight,
   RotateCcw,
   AlertTriangle,
+  Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { formatUnits } from 'viem';
@@ -293,7 +294,8 @@ const PROPOSAL_STAGES = {
     color: 'bg-orange-500/20 text-orange-500',
   },
   started: {
-    label: 'Started',
+    // A started proposal is still collecting votes until it ends.
+    label: 'Voting',
     timelineLabel: 'Voting started',
     icon: Play,
     color: 'bg-emerald-500/20 text-emerald-500',
@@ -353,12 +355,14 @@ const ProposalTimeline = ({ activity, vault }) => {
           text: getSuccessMessage(activity.proposalType, activity.vault),
         }
       : null;
+  // While voting is open, show when it closes (as the termination card does).
+  const votingEndsAt = activity.stage === 'started' && activity.endDate ? activity.endDate : null;
 
   return (
     <div className="mt-4">
       <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
       {entries.map((entry, index) => {
-        const isLast = index === entries.length - 1 && !outcome;
+        const isLast = index === entries.length - 1 && !outcome && !votingEndsAt;
 
         if (entry.kind === 'stage') {
           const stage = PROPOSAL_STAGES[entry.stage];
@@ -415,6 +419,14 @@ const ProposalTimeline = ({ activity, vault }) => {
         );
       })}
 
+      {votingEndsAt && (
+        <TimelineNode icon={Clock} tone="emerald" isLast={!outcome}>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+            <span className="text-sm font-medium text-white">Voting ends</span>
+            <span className="text-xs text-dark-100">{formatDate(votingEndsAt)}</span>
+          </div>
+        </TimelineNode>
+      )}
       {outcome && (
         <TimelineNode icon={outcome.icon} tone={outcome.tone} isLast>
           <div className="relative overflow-hidden rounded-xl border border-steel-750 bg-steel-850 py-3 pl-4 pr-3">

@@ -553,9 +553,14 @@ export const useCreateProposal = () => {
 };
 
 export const useVoteOnProposal = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ proposalId, voteData }: { proposalId: string; voteData: any }) =>
       GovernanceApiProvider.voteOnProposal(proposalId, voteData),
+    // The list shows "You voted / haven't voted" per proposal, so it must refetch after a vote.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['governance-proposals'] });
+    },
   });
 };
 

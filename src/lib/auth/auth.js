@@ -7,10 +7,24 @@ export function clearAuthLocalStorage() {
   localStorage.removeItem('authenticated_wallet_address');
   localStorage.removeItem('authenticated_chain_type');
   localStorage.removeItem('vlrm_balance_cache');
-  localStorage.removeItem('storageVault');
+  clearVaultCreationStorage();
 
   // Clear DexHunter swap component state
   localStorage.removeItem('dexhunter-selected-wallet');
+}
+
+/** Vault-creation drafts (manual form + AI chat) belong to one account. */
+export const VAULT_DRAFT_OWNER_KEY = 'storageVaultOwner';
+
+export function clearVaultCreationStorage() {
+  localStorage.removeItem('storageVault');
+  localStorage.removeItem('storageVaultAiMeta');
+  localStorage.removeItem(VAULT_DRAFT_OWNER_KEY);
+  try {
+    sessionStorage.removeItem('aiVaultChat');
+  } catch {
+    // Best-effort.
+  }
 }
 
 export const AuthContext = createContext(null);
