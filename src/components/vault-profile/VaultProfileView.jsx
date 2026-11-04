@@ -458,8 +458,11 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     return `${sign}${currencySymbol}${formatNum(absValue, maximumFractionDigits)}`;
   };
 
+  // A burned vault's VT is gone and its assets are distributed: price-based stats are meaningless.
+  const isBurned = vault?.vaultStatus === VAULT_STATUSES.BURNED;
+
   // Calculate vault statistics - values computed on the backend in vault.vaultStats
-  const vaultStats = {
+  const computedVaultStats = {
     assetValue: vault.vaultStatus,
     ftGains: (() => {
       const val = pickByCurrency({
@@ -509,6 +512,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       })}`;
     })(),
   };
+
+  const vaultStats = isBurned
+    ? { ...computedVaultStats, vtPrice: 'N/A', ftGains: 'N/A', fdv: 'N/A', fdvTvl: 'N/A', tvl: 'N/A' }
+    : computedVaultStats;
 
   const showTokenDetails =
     [VAULT_STATUSES.LOCKED, VAULT_STATUSES.EXPANSION, VAULT_STATUSES.ACQUIRE_EXPANSION].includes(vault?.vaultStatus) &&
@@ -751,13 +758,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
       const ticker = vault.vaultTokenTicker || 'VT';
       const lpReady = !evmLpMissing && evmLp?.status === 'provided';
-      const swapDisabledReason = lpReady
-        ? null
-        : evmLp?.status === 'pending'
-          ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
-          : evmLp?.status === 'failed'
-            ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
-            : `${ticker} can't be swapped: there is no liquidity pool. This vault was created with 0% LP contribution.`;
+      const swapDisabledReason = isBurned
+        ? `This vault was terminated and ${ticker} was burned, so it can't be swapped.`
+        : lpReady
+          ? null
+          : evmLp?.status === 'pending'
+            ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
+            : evmLp?.status === 'failed'
+              ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
+              : `${ticker} can't be swapped: there is no liquidity pool. This vault was created with 0% LP contribution.`;
 
       return (
         <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
@@ -851,7 +860,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <StatsSkeleton />
               )}
             </div>
-            <div className="flex justify-center mb-6">{renderActionButton()}</div>
+            {!isBurned && <div className="flex justify-center mb-6">{renderActionButton()}</div>}
             {deferredReady ? (
               <Suspense fallback={<TabsSkeleton />}>
                 <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />

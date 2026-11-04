@@ -57,6 +57,7 @@ export const VAULT_STATUSES = {
   EXPANSION: 'expansion',
   ACQUIRE_EXPANSION: 'acquire_expansion',
   TERMINATING: 'terminating',
+  BURNED: 'burned',
   FAILED: 'failed',
 };
 

@@ -213,7 +213,7 @@ const RebalanceHistory = ({ rebalances }) => {
  * Presentational basket view, fed by `VaultIndexAllocation` (live data) or by
  * the dev mock page. `formatValue` renders a `{ valueNative, valueUsd, valueAda }`.
  */
-export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error, formatValue }) => {
+export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error, formatValue, terminated = false }) => {
   if (!config?.targets?.length) {
     return error ? <p className="py-6 text-center text-dark-100">The index basket could not be loaded.</p> : null;
   }
@@ -265,9 +265,11 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
       {!hasHoldings ? (
         <>
           <p className="text-sm text-dark-100">
-            {portfolio?.error
-              ? `${portfolio.error}. Showing the target weights.`
-              : 'When the acquire window locks, the vault buys these assets with the ETH raised, at these weights.'}
+            {terminated
+              ? 'This vault was terminated and its holdings were distributed to VT holders. These were its target weights.'
+              : portfolio?.error
+                ? `${portfolio.error}. Showing the target weights.`
+                : 'When the acquire window locks, the vault buys these assets with the ETH raised, at these weights.'}
           </p>
           <TargetBasket config={config} />
         </>
@@ -377,6 +379,7 @@ export const VaultIndexAllocation = ({ vault }) => {
       rebalances={data?.rebalances}
       error={error}
       formatValue={formatValue}
+      terminated={vault?.vaultStatus === 'burned'}
     />
   );
 };
