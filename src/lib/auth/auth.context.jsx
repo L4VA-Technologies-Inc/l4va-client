@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { AuthContext, clearAuthLocalStorage } from '@/lib/auth/auth';
+import { AuthContext, VAULT_DRAFT_OWNER_KEY, clearAuthLocalStorage, clearVaultCreationStorage } from '@/lib/auth/auth';
 import { useProfile, useLogin } from '@/services/api/queries';
 
 export const AuthProvider = ({ children }) => {
@@ -16,6 +16,24 @@ export const AuthProvider = ({ children }) => {
       queryClient.setQueryData(['profile'], null);
     }
   }, [queryClient]);
+
+  // Switching accounts without logging out must not carry one user's vault draft and AI chat
+  // into another's: drafts are tagged with their owner and dropped when someone else signs in.
+  // Runs during render, not in an effect: the provider renders before the pages, and the AI
+  // builder reads storage in its own render, so an effect would fire after the stale read.
+  const userId = profileData?.data?.id;
+  const checkedOwnerRef = useRef(null);
+  if (userId && checkedOwnerRef.current !== userId) {
+    checkedOwnerRef.current = userId;
+    try {
+      if (localStorage.getItem(VAULT_DRAFT_OWNER_KEY) !== userId) {
+        clearVaultCreationStorage();
+        localStorage.setItem(VAULT_DRAFT_OWNER_KEY, userId);
+      }
+    } catch {
+      // Storage unavailable: nothing persisted to leak either.
+    }
+  }
 
   const login = async (signature, stakeAddress, walletAddress, chainType, evmSignature) => {
     try {

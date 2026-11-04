@@ -749,21 +749,15 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     if (isRobinhoodVault) {
       if (!evmVaultTokenAddress || evmLpLoading) return null;
 
-      if (evmLpMissing || evmLp?.status !== 'provided') {
-        const ticker = vault.vaultTokenTicker || 'VT';
-        return (
-          <div className="bg-steel-950 rounded-xl p-4 lg:p-6 mx-auto w-full mt-4">
-            <p className="font-medium">Swap</p>
-            <p className="text-dark-100 text-sm mt-2">
-              {evmLp?.status === 'pending'
-                ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
-                : evmLp?.status === 'failed'
-                  ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
-                  : `${ticker} has no liquidity pool, so it can't be traded on Uniswap. This vault was created with 0% LP contribution.`}
-            </p>
-          </div>
-        );
-      }
+      const ticker = vault.vaultTokenTicker || 'VT';
+      const lpReady = !evmLpMissing && evmLp?.status === 'provided';
+      const swapDisabledReason = lpReady
+        ? null
+        : evmLp?.status === 'pending'
+          ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
+          : evmLp?.status === 'failed'
+            ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
+            : `${ticker} can't be swapped: there is no liquidity pool. This vault was created with 0% LP contribution.`;
 
       return (
         <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
@@ -771,6 +765,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             tokenAddress={evmVaultTokenAddress}
             tokenSymbol={vault.vaultTokenTicker || 'VT'}
             tokenImage={vault.vaultImage}
+            disabledReason={swapDisabledReason}
           />
         </div>
       );

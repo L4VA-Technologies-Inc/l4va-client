@@ -63,62 +63,38 @@ const FaqItem = ({ question, answer, index }) => (
 
 const Faq = () => {
   const { isRobinHood } = useNetwork();
-  const [flowId, setFlowId] = useState('index');
+  const [flowId, setFlowId] = useState(null);
   const { currencyLabel } = useCurrency();
   const chainName = isRobinHood ? 'Robinhood' : 'Cardano';
   const nativeAssetDescription = isRobinHood ? 'Robinhood-supported' : 'Cardano-native';
 
-  const defaultSteps = [
-    {
-      number: 1,
-      title: 'Create',
-      description:
-        'Create a new vault by locking the required $VLRM, then configure the vault settings and governance options.',
-    },
-    {
-      number: 2,
-      title: 'Contribute',
-      description:
-        'Contributors with vault access then send eligible assets to the vault during the contribution window, for their pro-rata share of Vault Tokens.',
-    },
-    {
-      number: 3,
-      title: 'Acquire',
-      description: `Acquirers with vault access then have the opportunity to send ${currencyLabel} to the vault for a pro-rata share of the Vault Tokens.`,
-    },
-    {
-      number: 4,
-      title: 'Govern',
-      description:
-        'Once successfully locked the Vault Tokens holders now control the fate of the vault and its assets.',
-    },
-  ];
-
-  // Robinhood explains each vault type as its own short flow instead of one generic sequence.
-  const robinhoodFlows = [
+  // Each vault type is explained as its own short flow. Availability is per chain: Robinhood runs
+  // Index Vaults only, Cardano runs everything except Index Vaults.
+  const payAsset = isRobinHood ? 'ETH' : 'ADA';
+  const chainLabel = isRobinHood ? 'Robinhood Chain' : 'Cardano';
+  const vaultFlows = [
     {
       id: 'index',
       label: 'Index Vault',
+      comingSoon: !isRobinHood,
       tagline: 'A basket in one token',
       icon: PieChart,
-      summary: 'One token for a basket of assets, bought for you with ETH.',
+      summary: `One token for a basket of assets, bought for you with ${payAsset}.`,
       steps: [
         {
           number: 1,
           title: 'Create',
-          description: 'Pick the assets for the basket and their target weights, e.g. 60% A, 30% B, 10% ETH reserve.',
+          description: `Pick the assets for the basket and their target weights, e.g. 60% A, 30% B, 10% ${payAsset} reserve.`,
         },
         {
           number: 2,
           title: 'Acquire',
-          description:
-            'During the acquire window anyone can send ETH to the Vault. Your share of the ETH is your share of the Vault.',
+          description: `During the acquire window anyone can send ${payAsset} to the Vault. Your share of the ${payAsset} is your share of the Vault.`,
         },
         {
           number: 3,
           title: 'Lock & Buy',
-          description:
-            'When the window closes the Vault buys the basket on Uniswap and Vault Tokens land in your wallet automatically.',
+          description: `When the window closes the Vault buys the basket on ${isRobinHood ? 'Uniswap' : 'a DEX'} and Vault Tokens land in your wallet automatically.`,
         },
         {
           number: 4,
@@ -129,11 +105,11 @@ const Faq = () => {
     },
     {
       id: 'acquire',
-      label: 'Acquire-only',
-      comingSoon: true,
-      tagline: 'Raise ETH together',
+      label: 'Acquisition Fund',
+      comingSoon: isRobinHood,
+      tagline: `Raise ${payAsset} together`,
       icon: Coins,
-      summary: 'Raise ETH from the community around a thesis, then govern how it is used.',
+      summary: `Raise ${payAsset} from the community around a thesis, then govern how it is used.`,
       steps: [
         {
           number: 1,
@@ -144,7 +120,7 @@ const Faq = () => {
         {
           number: 2,
           title: 'Acquire',
-          description: 'Participants send ETH and receive Vault Tokens in proportion to what they sent.',
+          description: `Participants send ${payAsset} and receive Vault Tokens in proportion to what they sent.`,
         },
         {
           number: 3,
@@ -154,18 +130,18 @@ const Faq = () => {
         },
         {
           number: 4,
-          title: 'Govern',
-          description: 'Holders propose and vote on what the Vault does next with its assets.',
+          title: 'Govern & Buy',
+          description: `Holders propose and vote on which assets the Vault buys with the raised ${payAsset}.`,
         },
       ],
     },
     {
       id: 'contribute-only',
-      label: 'Contribution-only',
-      comingSoon: true,
+      label: 'Pooled Assets',
+      comingSoon: isRobinHood,
       tagline: 'Pool assets, share ownership',
       icon: Boxes,
-      summary: 'Holders pool their tokenized assets into one Vault and own it together. No ETH raise.',
+      summary: `Holders pool their tokenized assets into one Vault and own it together. No ${payAsset} raise.`,
       steps: [
         {
           number: 1,
@@ -193,10 +169,10 @@ const Faq = () => {
     {
       id: 'contribute',
       label: 'Contribute + Acquire',
-      comingSoon: true,
-      tagline: 'Bring assets, get ETH',
+      comingSoon: isRobinHood,
+      tagline: `Bring assets, get ${payAsset}`,
       icon: Layers,
-      summary: 'Turn tokenized assets you hold into a shared, tradable Vault and get ETH for part of it.',
+      summary: `Turn tokenized assets you hold into a shared, tradable Vault and get ${payAsset} for part of it.`,
       steps: [
         {
           number: 1,
@@ -212,13 +188,12 @@ const Faq = () => {
         {
           number: 3,
           title: 'Acquire',
-          description: 'Others send ETH during the acquire window for the share of Vault Tokens on offer.',
+          description: `Others send ${payAsset} during the acquire window for the share of Vault Tokens on offer.`,
         },
         {
           number: 4,
           title: 'Lock',
-          description:
-            'If the raise meets its minimum the Vault locks: contributors get Vault Tokens plus the ETH, acquirers get their tokens. If not, everything is returned.',
+          description: `If the raise meets its minimum the Vault locks: contributors get Vault Tokens plus the ${payAsset}, acquirers get their tokens. If not, everything is returned.`,
         },
         {
           number: 5,
@@ -232,10 +207,10 @@ const Faq = () => {
   const defaultHeroContent = {
     subtitle: `Unlock liquidity, access, and governance for any asset on ${chainName}.`,
     paragraphs: [
-      `Create a vault, customize settings, and invite contributors to add assets, then acquirers send ${currencyLabel} in exchange for governance tokens -- fractional asset tokens with real decision making power.`,
-      'Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault tokens retained. Token holders have the power to manage the future of assets in the vault.',
+      'A Vault is a shared on-chain fund. It holds assets, issues Vault Tokens to the people who fund it, and is run by those token holders. Pick a Vault type to see how it works.',
       'Open-source, permissionless, and designed for anyone to fractionalize, acquire, and govern digital assets.',
     ],
+    note: 'Creators, contributors, and acquirers receive $L4VA rewards based on total value locked (TVL) and vault tokens retained.',
   };
 
   const robinhoodHeroContent = {
@@ -246,8 +221,9 @@ const Faq = () => {
     note: 'Creators, contributors, acquirers, liquidity providers, and voters earn $L4VA rewards for active participation, not passive holding.',
   };
 
-  const activeFlow = robinhoodFlows.find(flow => flow.id === flowId) ?? robinhoodFlows[0];
-  const steps = isRobinHood ? activeFlow.steps : defaultSteps;
+  // Default to the first flow that is live on this chain (Index on Robinhood, Acquisition Fund on Cardano).
+  const activeFlow =
+    vaultFlows.find(flow => flow.id === flowId) ?? vaultFlows.find(flow => !flow.comingSoon) ?? vaultFlows[0];
   const heroContent = isRobinHood ? robinhoodHeroContent : defaultHeroContent;
 
   const defaultFaqItems = [
@@ -466,65 +442,55 @@ const Faq = () => {
               </p>
             ))}
           </header>
-          {isRobinHood && (
-            <div
-              role="tablist"
-              aria-label="Vault type"
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
-            >
-              {robinhoodFlows.map(({ id, label, tagline, icon: Icon, comingSoon }) => {
-                const active = id === flowId;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setFlowId(id)}
+          <div role="tablist" aria-label="Vault type" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            {vaultFlows.map(({ id, label, tagline, icon: Icon, comingSoon }) => {
+              const active = id === activeFlow.id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setFlowId(id)}
+                  className={cn(
+                    'group relative flex items-center gap-3 text-left p-4 rounded-[10px] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-step-accent)]',
+                    active
+                      ? 'border-[var(--color-step-accent)] bg-[color-mix(in_srgb,var(--color-step-accent)_12%,transparent)]'
+                      : 'border-white/5 bg-steel-900/50 hover:border-white/20'
+                  )}
+                >
+                  <span
                     className={cn(
-                      'group relative flex items-center gap-3 text-left p-4 rounded-[10px] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-step-accent)]',
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
                       active
-                        ? 'border-[var(--color-step-accent)] bg-[color-mix(in_srgb,var(--color-step-accent)_12%,transparent)]'
-                        : 'border-white/5 bg-steel-900/50 hover:border-white/20'
+                        ? 'bg-[var(--color-step-accent)] text-steel-950'
+                        : 'bg-steel-750 text-dark-100 group-hover:text-white'
                     )}
                   >
+                    <Icon size={20} />
+                  </span>
+                  <span>
                     <span
-                      className={cn(
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
-                        active
-                          ? 'bg-[var(--color-step-accent)] text-steel-950'
-                          : 'bg-steel-750 text-dark-100 group-hover:text-white'
-                      )}
+                      className={cn('block font-bold text-base lg:text-lg', active ? 'text-white' : 'text-dark-100')}
                     >
-                      <Icon size={20} />
+                      {label}
                     </span>
-                    <span>
-                      <span
-                        className={cn('block font-bold text-base lg:text-lg', active ? 'text-white' : 'text-dark-100')}
-                      >
-                        {label}
-                      </span>
-                      <span className="block text-sm text-dark-100">{tagline}</span>
+                    <span className="block text-sm text-dark-100">{tagline}</span>
+                  </span>
+                  {comingSoon && (
+                    <span className="absolute -top-2 right-3 rounded-full border border-white/10 bg-steel-900 px-2 py-px text-[9px] font-semibold uppercase leading-4 tracking-wider text-dark-100">
+                      Soon
                     </span>
-                    {comingSoon && (
-                      <span className="absolute -top-2 right-3 rounded-full border border-white/10 bg-steel-900 px-2 py-px text-[9px] font-semibold uppercase leading-4 tracking-wider text-dark-100">
-                        Soon
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {isRobinHood && (
-            <p key={activeFlow.id} className="animate-step-rise text-base sm:text-lg text-white">
-              {activeFlow.summary}
-              {activeFlow.comingSoon && (
-                <span className="ml-2 text-sm text-dark-100">Coming soon on Robinhood Chain.</span>
-              )}
-            </p>
-          )}
-          <StepTimeline steps={steps} flowKey={isRobinHood ? activeFlow.id : 'default'} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <p key={activeFlow.id} className="animate-step-rise text-base sm:text-lg text-white">
+            {activeFlow.summary}
+            {activeFlow.comingSoon && <span className="ml-2 text-sm text-dark-100">Coming soon on {chainLabel}.</span>}
+          </p>
+          <StepTimeline steps={activeFlow.steps} flowKey={activeFlow.id} />
           {heroContent.note && (
             <p className="flex items-center gap-2 text-sm sm:text-base text-dark-100">
               <Sparkles size={16} className="shrink-0 text-[var(--color-step-accent)]" />
