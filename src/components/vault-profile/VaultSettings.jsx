@@ -26,6 +26,10 @@ const pricingMethodLabel = valuationMethod => {
   return 'Market / Floor';
 };
 
+// Acquirers paid this much for their share of the supply, so the whole vault is worth acquired / share.
+const impliedValuation = (acquired, tokensForAcquires) =>
+  acquired && tokensForAcquires ? parseFloat((acquired / (tokensForAcquires * 0.01)).toFixed(2)) : 0;
+
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
@@ -226,8 +230,15 @@ export const VaultSettings = ({ vault }) => {
             />
             <InfoRow
               label="Implied Vault Valuation @ Lock"
-              symbol="ADA"
-              value={vault.valuationAmount ? vault.valuationAmount : 0}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={impliedValuation(
+                pickByCurrency({
+                  ada: vault.assetsPrices.totalAcquiredAda,
+                  usd: vault.assetsPrices.totalAcquiredUsd,
+                  eth: vault.assetsPrices.totalAcquiredEth,
+                }),
+                vault.tokensForAcquires
+              )}
             />
             <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
             <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />

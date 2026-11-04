@@ -78,6 +78,7 @@ export function UniswapSwapPanel({
   tokenSymbol = 'TOKEN',
   tokenDecimals: tokenDecimalsProp,
   tokenImage,
+  disabledReason,
 }) {
   const { openModal } = useModalControls();
   const { address, isConnected, chainId } = useAccount();
@@ -149,7 +150,7 @@ export function UniswapSwapPanel({
   useEffect(() => {
     setQuotePreview(null);
     const trimmed = amountIn.trim();
-    if (!trimmed || !address || !isConnected || Number(trimmed) <= 0) return undefined;
+    if (disabledReason || !trimmed || !address || !isConnected || Number(trimmed) <= 0) return undefined;
 
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -188,7 +189,7 @@ export function UniswapSwapPanel({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [amountIn, address, isConnected, tokenIn, tokenOut, decimalsIn, slippage]);
+  }, [amountIn, address, isConnected, tokenIn, tokenOut, decimalsIn, slippage, disabledReason]);
 
   const ensureChain = useCallback(async () => {
     if (chainId === targetChainId) return;
@@ -329,7 +330,12 @@ export function UniswapSwapPanel({
   const chainMismatch = isConnected && targetChainId && chainId != null && Number(chainId) !== Number(targetChainId);
 
   return (
-    <div className="bg-steel-850 border border-steel-750 rounded-2xl p-4 flex flex-col gap-3">
+    <div
+      className={clsx(
+        'bg-steel-850 border border-steel-750 rounded-2xl p-4 flex flex-col gap-3',
+        disabledReason && '[&_input]:cursor-not-allowed [&_input]:opacity-50'
+      )}
+    >
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium text-white">Swap</h2>
         <span className="text-[11px] text-dark-100">Uniswap · RH</span>
@@ -340,6 +346,7 @@ export function UniswapSwapPanel({
           <button
             key={s}
             type="button"
+            disabled={!!disabledReason}
             onClick={() => {
               setSide(s);
               setAmountIn('');
@@ -358,7 +365,12 @@ export function UniswapSwapPanel({
       <div className="rounded-xl bg-steel-900/50 border border-steel-750 p-3 space-y-2">
         <div className="flex items-center justify-between text-[11px] text-dark-100">
           <span>You pay</span>
-          <button type="button" onClick={onMax} className="hover:text-white transition-colors">
+          <button
+            type="button"
+            onClick={onMax}
+            disabled={!!disabledReason}
+            className="hover:text-white transition-colors disabled:hover:text-dark-100 disabled:cursor-not-allowed"
+          >
             Bal {balanceLabel} {side === 'buy' ? 'ETH' : tokenSymbol}
           </button>
         </div>
@@ -370,6 +382,7 @@ export function UniswapSwapPanel({
             step="any"
             placeholder="0.0"
             value={amountIn}
+            disabled={!!disabledReason}
             onChange={e => setAmountIn(e.target.value)}
             className="flex-1 bg-transparent text-xl text-white font-medium outline-none tabular-nums min-w-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
           />
@@ -411,6 +424,7 @@ export function UniswapSwapPanel({
           <button
             key={opt.value}
             type="button"
+            disabled={!!disabledReason}
             onClick={() => setSlippage(opt.value)}
             className={clsx(
               'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors',
@@ -422,7 +436,13 @@ export function UniswapSwapPanel({
         ))}
       </div>
 
-      {chainMismatch && (
+      {disabledReason && (
+        <p className="text-[11px] text-amber-400 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2">
+          {disabledReason}
+        </p>
+      )}
+
+      {!disabledReason && chainMismatch && (
         <p className="text-[11px] text-amber-400">
           Wallet is on chain {chainId}. Swap targets Robinhood {targetChainId} — you will be prompted to switch.
         </p>
@@ -434,7 +454,7 @@ export function UniswapSwapPanel({
 
       <button
         type="button"
-        disabled={busy || (isSignedIn && (!amountIn || Number(amountIn) <= 0))}
+        disabled={!!disabledReason || busy || (isSignedIn && (!amountIn || Number(amountIn) <= 0))}
         onClick={executeSwap}
         className={clsx(
           'w-full rounded-xl py-2.5 text-sm font-medium transition-colors',
@@ -448,6 +468,8 @@ export function UniswapSwapPanel({
             </span>
             Swapping…
           </span>
+        ) : disabledReason ? (
+          'Swap unavailable'
         ) : !isSignedIn ? (
           'Sign in to swap'
         ) : side === 'buy' ? (
