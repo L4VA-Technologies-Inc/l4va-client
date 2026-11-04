@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, Info, XCircle } from 'lucide-react';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
@@ -116,6 +116,15 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium text-white">Terminating All Assets</h3>
+        </div>
+
+        {/* Mirrors the backend: a passed termination closes every other open proposal of the vault. */}
+        <div className="flex gap-2">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-dark-100" />
+          <p className="text-sm text-dark-100">
+            If this proposal passes, all other upcoming and active proposals of this vault will be closed as rejected,
+            and their creation fees refunded.
+          </p>
         </div>
 
         <div className="space-y-4">

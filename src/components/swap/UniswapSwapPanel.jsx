@@ -4,9 +4,11 @@ import toast from 'react-hot-toast';
 import { erc20Abi, formatUnits, parseUnits } from 'viem';
 import { useAccount, useBalance, useReadContract, useSendTransaction, useSignTypedData, useSwitchChain } from 'wagmi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
+import { ArrowLeftRight } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
 import { useAuth } from '@/lib/auth/auth';
+import { useNativePrices } from '@/services/api/queries';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { robinhoodUniswapChain, wagmiConfig } from '@/lib/evm/wagmi.config';
 import { RewardsApiProvider } from '@/services/api/rewards';
@@ -98,6 +100,26 @@ export function UniswapSwapPanel({
   const [quotePreview, setQuotePreview] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [apiConfig, setApiConfig] = useState(null);
+  // Buying can be typed in USD (as in the acquire modal); `amountIn` always stays the ETH amount sent.
+  const [isUsdInput, setIsUsdInput] = useState(false);
+  const [usdInput, setUsdInput] = useState('');
+  const { data: nativePrices } = useNativePrices();
+  const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
+  const usdMode = side === 'buy' && isUsdInput && ethUsd > 0;
+
+  /** Sets the ETH amount and keeps the USD field in step with it. */
+  const setEthAmount = eth => {
+    setAmountIn(eth);
+    const num = Number(eth);
+    setUsdInput(eth === '' || !ethUsd || !Number.isFinite(num) ? '' : (num * ethUsd).toFixed(2));
+  };
+
+  const onUsdChange = value => {
+    setUsdInput(value);
+    const usd = Number(value);
+    // 8 decimals is well under a cent of ETH and keeps parseUnits happy.
+    setAmountIn(value === '' || !Number.isFinite(usd) || !ethUsd ? '' : String(+(usd / ethUsd).toFixed(8)));
+  };
 
   const token = tokenAddress;
   const tokenIn = side === 'buy' ? NATIVE_ETH : token;
@@ -202,7 +224,7 @@ export function UniswapSwapPanel({
     if (side === 'buy') {
       const leave = parseUnits('0.0005', 18);
       const usable = balanceRaw > leave ? balanceRaw - leave : 0n;
-      setAmountIn(formatUnits(usable, 18));
+      setEthAmount(formatUnits(usable, 18));
       return;
     }
     setAmountIn(formatUnits(balanceRaw, decimalsIn));
@@ -298,6 +320,7 @@ export function UniswapSwapPanel({
       }
 
       setAmountIn('');
+      setUsdInput('');
       setQuotePreview(null);
     } catch (err) {
       console.error(err);
@@ -349,7 +372,7 @@ export function UniswapSwapPanel({
             disabled={!!disabledReason}
             onClick={() => {
               setSide(s);
-              setAmountIn('');
+              setEthAmount('');
               setQuotePreview(null);
             }}
             className={clsx(
@@ -381,16 +404,34 @@ export function UniswapSwapPanel({
             min="0"
             step="any"
             placeholder="0.0"
-            value={amountIn}
+            value={usdMode ? usdInput : amountIn}
             disabled={!!disabledReason}
-            onChange={e => setAmountIn(e.target.value)}
+            onChange={e => (usdMode ? onUsdChange(e.target.value) : setEthAmount(e.target.value))}
             className="flex-1 bg-transparent text-xl text-white font-medium outline-none tabular-nums min-w-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
           />
-          <div className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white">
-            {side === 'sell' && tokenImage ? <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" /> : null}
-            {side === 'buy' ? 'ETH' : tokenSymbol}
-          </div>
+          {side === 'buy' && ethUsd > 0 ? (
+            <button
+              type="button"
+              disabled={!!disabledReason}
+              title={usdMode ? 'Enter the amount in ETH' : 'Enter the amount in USD'}
+              onClick={() => setIsUsdInput(prev => !prev)}
+              className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white transition-colors hover:border-steel-600 disabled:cursor-not-allowed"
+            >
+              {usdMode ? 'USD' : 'ETH'}
+              <ArrowLeftRight className="h-3 w-3 text-dark-100" />
+            </button>
+          ) : (
+            <div className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white">
+              {side === 'sell' && tokenImage ? <img src={tokenImage} alt="" className="w-4 h-4 rounded-full" /> : null}
+              {side === 'buy' ? 'ETH' : tokenSymbol}
+            </div>
+          )}
         </div>
+        {side === 'buy' && ethUsd > 0 && Number(amountIn) > 0 && (
+          <div className="text-[11px] text-dark-100 tabular-nums">
+            ≈ {usdMode ? `${+Number(amountIn).toFixed(6)} ETH` : `$${(Number(amountIn) * ethUsd).toFixed(2)}`}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl bg-steel-900/50 border border-steel-750 p-3 space-y-2">
