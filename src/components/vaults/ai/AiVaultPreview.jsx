@@ -462,6 +462,14 @@ const TagsRow = ({ value = [], options = VAULT_TAGS_OPTIONS, isChanged, isEmptyA
   );
 };
 
+const IDENTITY_FIELDS = [
+  { key: 'name', label: 'name' },
+  { key: 'vaultTokenTicker', label: 'ticker' },
+  { key: 'description', label: 'description' },
+  { key: 'tokenDescription', label: 'token description' },
+  { key: 'tags', label: 'tags' },
+];
+
 const ManageList = ({ label, count, max, emptyHint, names = [], onManage, manageLabel }) => (
   <div className="border-b border-steel-800/70 pb-3 last:border-b-0">
     <div className="flex items-center justify-between">
@@ -614,8 +622,16 @@ export const AiVaultPreview = ({
     ? Math.round(((requiredKeys.length - missingRequired.length) / requiredKeys.length) * 100)
     : 100;
 
+  // Only ask for the identity fields that are still empty; filled ones are locked for this turn
+  // so the assistant can't silently overwrite what the user already wrote.
   const requestIdentityGeneration = () => {
-    onSendMessage?.('Please generate the vault name, ticker, description and tags now.');
+    const empty = IDENTITY_FIELDS.filter(field => isEmptyValue(vault[field.key]));
+    const filled = IDENTITY_FIELDS.filter(field => !isEmptyValue(vault[field.key]));
+    if (!empty.length) return;
+    const keep = filled.length ? ` Keep the existing ${filled.map(field => field.label).join(', ')} unchanged.` : '';
+    onSendMessage?.(`Please generate the vault ${empty.map(field => field.label).join(', ')} now.${keep}`, {
+      keepFields: filled.map(field => field.key),
+    });
   };
 
   const openBasketModal = () => {
