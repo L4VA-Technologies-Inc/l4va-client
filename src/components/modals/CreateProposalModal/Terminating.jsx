@@ -294,6 +294,7 @@ function EvmTerminationSteps({ evm }) {
   ].filter(Boolean);
   return (
     <ProposalOutcome
+      collapsible={false}
       steps={[
         lp
           ? {

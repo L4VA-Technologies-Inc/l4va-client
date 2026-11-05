@@ -182,6 +182,12 @@ function EvmDistributing({ isDisabled, onDataChange, info }) {
       </div>
 
       <ProposalOutcome
+        storageKey="distribution"
+        summary={
+          amountWei > 0n
+            ? `Pays ${formatEthShort(amountWei)} ETH to ${holderCount.toLocaleString()} holders automatically, by VT at the snapshot.`
+            : 'Pays the amount to VT holders automatically, by VT at the snapshot.'
+        }
         steps={[
           {
             title: 'Shares are fixed at the snapshot.',
