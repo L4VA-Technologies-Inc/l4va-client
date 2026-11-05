@@ -131,10 +131,10 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
         isOpen={isModalOpen}
         onClose={handleClose}
         onConfirm={handleConfirm}
-        title="You cannot proceed with the Termination flow if you have NFTs in this Vault."
-        understanding={`I understand that the NFTs will be sent to a central exchange and the vault will receive the refund of the value in ${currencyLabel}. This action will permanently burn these NFTs and cannot be undone.`}
+        title="Terminating this vault burns every NFT in it."
+        understanding={`I understand that if this proposal passes, every NFT in the vault is sent to a burn address and destroyed. Nothing is paid back for them: holders receive only the vault's ${currencyLabel} and fungible tokens. This cannot be undone.`}
         confirming="By selecting this checkbox and continuing, you confirm that you want to include burning all NFTs in this vault as part of the termination process. I agree to proceed with termination and burning all NFTs."
-        description="If you wish to proceed with a Burn and Terminate flow, you must select the box below indicating that you understand how the NFT burn process works."
+        description="To propose a termination, confirm below that you understand the NFTs are destroyed, not sold."
       />
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -196,6 +196,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
         </div>
 
         {!isLoading && evm && <EvmTerminationSteps evm={evm} />}
+        {!isLoading && terminationData?.data && !evm && <CardanoTerminationSteps currencyLabel={currencyLabel} />}
 
         {/* LP Pool Validation Info */}
         {!isLoading && terminationData?.data?.lpInfo?.hasLp && (
@@ -321,6 +322,33 @@ function EvmTerminationSteps({ evm }) {
         {
           title: `Redemption window: ${evm.claimWindowDays} days.`,
           detail: 'Whatever is not redeemed by then goes to the treasury.',
+        },
+      ]}
+    />
+  );
+}
+
+/** What a Cardano termination does (termination.service), step by step. Not collapsible: irreversible. */
+function CardanoTerminationSteps({ currencyLabel }) {
+  return (
+    <ProposalOutcome
+      collapsible={false}
+      steps={[
+        {
+          title: 'NFTs are burned.',
+          detail: `Every NFT in the vault is sent to a burn address and destroyed. Nothing is paid back for them. Fungible tokens move to the treasury to be shared out.`,
+        },
+        {
+          title: 'Liquidity is removed.',
+          detail: `Recoverable LP (VyFi) is withdrawn: the VT that comes back is burned and the ${currencyLabel} goes to the treasury.`,
+        },
+        {
+          title: 'Holders claim their share.',
+          detail: `Each holder burns their VT and receives their share of the treasury ${currencyLabel} and of every fungible token. Whoever holds the VT at that moment can claim, even if it changed hands after the snapshot.`,
+        },
+        {
+          title: 'The vault closes when all VT is burned.',
+          detail: 'Then the vault NFT is burned and the treasury wallet is emptied.',
         },
       ]}
     />

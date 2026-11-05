@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
+import { AlertCircle, Wallet, Users } from 'lucide-react';
 import { formatEther, parseEther, zeroAddress } from 'viem';
 
 import { NoTreasuryWalletAlert } from './NoTreasuryWalletAlert';
@@ -383,21 +383,34 @@ function CardanoDistributing({ isDisabled, onDataChange, distributionInfo, isLoa
         </div>
       </div>
 
-      {/* Info Section */}
-      <div className="bg-steel-800/50 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-400 mt-0.5" />
-          <div className="text-sm text-white/70">
-            <p className="font-medium text-white/90 mb-2">How Distribution Works</p>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>{currencyLabel} is distributed proportionally based on VT holdings</li>
-              <li>Minimum 2 {currencyLabel} per recipient</li>
-              <li>Distribution is processed in batches of ~200 recipients</li>
-              <li>Claims are created for each recipient to track status</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <ProposalOutcome
+        storageKey="distribution-cardano"
+        summary={
+          enteredAda > 0
+            ? `Sends ${enteredAda.toLocaleString()} ${currencyLabel} from the treasury to up to ${vtHolderCount.toLocaleString()} holders, in batches.`
+            : `Sends ${currencyLabel} from the vault's treasury straight to VT holders, in batches.`
+        }
+        steps={[
+          {
+            title: 'Shares are fixed at the snapshot.',
+            detail:
+              'Only VT held when this proposal is created counts, including VT provided as DEX liquidity. ' +
+              'The vault and DEX pool contracts get no share.',
+          },
+          {
+            title: `${currencyLabel} is sent from the vault's treasury wallet.`,
+            detail: `Straight to holders' wallets in batches of up to 200 — nobody needs to claim. About 2 ${currencyLabel} per batch is kept for transaction fees.`,
+          },
+          {
+            title: `Shares under ${minAdaPerHolder} ${currencyLabel} are skipped.`,
+            detail: `Cardano can't send smaller amounts. Those holders get nothing and their share stays in the treasury.`,
+          },
+          {
+            title: 'Failed batches are retried.',
+            detail: `Up to 3 times. If the treasury holds less ${currencyLabel} than this when the vote passes, some batches can't be sent and part of the holders won't be paid.`,
+          },
+        ]}
+      />
 
       {/* Warnings from Backend */}
       {warnings.length > 0 && (
