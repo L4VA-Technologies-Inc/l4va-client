@@ -145,6 +145,7 @@ const CreateAiComponent = () => {
 
   const previewPanel = (
     <AiVaultPreview
+      aiFields={builder.aiFields}
       isLaunching={isLaunching}
       missingFields={builder.missingFields}
       status={builder.status}
