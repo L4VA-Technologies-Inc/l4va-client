@@ -749,7 +749,7 @@ export const initialVaultState = {
   vaultArchetype: VAULT_ARCHETYPES.STANDARD,
   indexBasket: emptyIndexBasket(),
   minAcquireThreshold: null, // in ADA (converted to lovelace before API call) on Cardano, in ETH as-is on Robinhood
-  allowAcquireExpansion: false,
+  allowAcquireExpansion: true,
 
   // Step 4: Governance
   ftTokenSupply: MIN_SUPPLY,

@@ -1013,10 +1013,12 @@ export const AiVaultPreview = ({
                 label="Acquisitions only"
                 value="Yes"
               />
-              <LockedRow
-                hint="Acquire expansion: holders can later vote to reopen the vault for new ETH in exchange for newly minted VT. Always on for launch."
+              <SelectRow
+                isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
-                value="Yes"
+                options={YES_NO_OPTIONS}
+                value={vault.allowAcquireExpansion ?? true}
+                onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
               />
             </>
           ) : (
@@ -1042,7 +1044,7 @@ export const AiVaultPreview = ({
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
-                value={!!vault.allowAcquireExpansion}
+                value={vault.allowAcquireExpansion ?? true}
                 onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
               />
             </>
