@@ -3,6 +3,7 @@ import { CheckCircle, Info, XCircle } from 'lucide-react';
 import { formatEther } from 'viem';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
+import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
 import { formatNum } from '@/utils/core.utils.js';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -287,36 +288,40 @@ const formatEthShort = wei => {
 /** What a Robinhood termination does, step by step, for this vault. */
 function EvmTerminationSteps({ evm }) {
   const lp = evm.lp;
+  const lpParts = [
+    lp?.vaultSharePct != null ? `${formatNum(lp.vaultSharePct, 1)}% of the pool` : null,
+    lp?.valueNative ? `≈ ${formatEthShort(lp.valueNative)} ETH` : null,
+  ].filter(Boolean);
   return (
-    <div className="bg-steel-800 rounded-lg p-4 space-y-3 text-sm">
-      <h4 className="text-white font-medium">What happens if this passes</h4>
-      <ol className="list-decimal list-inside space-y-2 text-white/70">
-        <li>
-          {lp ? (
-            <>
-              <span className="text-white">Liquidity is withdrawn from Uniswap.</span> The vault&apos;s position
-              {lp.vaultSharePct != null && ` (${formatNum(lp.vaultSharePct, 1)}% of the pool`}
-              {lp.valueNative && `${lp.vaultSharePct != null ? ', ' : ' ('}≈ ${formatEthShort(lp.valueNative)} ETH`}
-              {(lp.vaultSharePct != null || lp.valueNative) && ')'} is removed before termination starts. The pool
-              itself stays on Uniswap with any liquidity other people added, but VT has no backing after termination.
-            </>
-          ) : (
-            <>The vault has no Uniswap liquidity position, so nothing needs to be withdrawn.</>
-          )}
-        </li>
-        <li>
-          <span className="text-white">Governance ends.</span> All other open proposals of this vault are closed as
-          rejected and their fees refunded.
-        </li>
-        <li>
-          <span className="text-white">Holders redeem.</span> Each holder burns all of their VT and receives their share
-          of every asset above in one transaction. Holders who don&apos;t act can be paid out by the operator.
-        </li>
-        <li>
-          <span className="text-white">Redemption window: {evm.claimWindowDays} days.</span> Whatever is not redeemed by
-          then goes to the treasury.
-        </li>
-      </ol>
-    </div>
+    <ProposalOutcome
+      steps={[
+        lp
+          ? {
+              title: 'Liquidity is withdrawn from Uniswap.',
+              detail:
+                `The vault's position${lpParts.length ? ` (${lpParts.join(', ')})` : ''} is removed before ` +
+                'termination starts. The pool stays on Uniswap with any liquidity other people added, but VT ' +
+                'has no backing after termination.',
+            }
+          : {
+              title: 'No liquidity to withdraw.',
+              detail: 'The vault has no Uniswap liquidity position.',
+            },
+        {
+          title: 'Governance ends.',
+          detail: 'All other open proposals of this vault are closed as rejected and their fees refunded.',
+        },
+        {
+          title: 'Holders redeem.',
+          detail:
+            'Each holder burns all of their VT and receives their share of every asset above in one ' +
+            "transaction. Holders who don't act can be paid out by the operator.",
+        },
+        {
+          title: `Redemption window: ${evm.claimWindowDays} days.`,
+          detail: 'Whatever is not redeemed by then goes to the treasury.',
+        },
+      ]}
+    />
   );
 }

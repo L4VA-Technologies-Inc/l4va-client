@@ -3,6 +3,7 @@ import { AlertCircle, Wallet, Users, Info } from 'lucide-react';
 import { formatEther, parseEther, zeroAddress } from 'viem';
 
 import { NoTreasuryWalletAlert } from './NoTreasuryWalletAlert';
+import { ProposalOutcome } from './ProposalOutcome';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
@@ -180,19 +181,32 @@ function EvmDistributing({ isDisabled, onDataChange, info }) {
         </div>
       </div>
 
-      <div className="bg-steel-800/50 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-400 mt-0.5" />
-          <ul className="text-sm text-white/70 space-y-1 list-disc list-inside">
-            <li>The amount is reserved inside the vault contract when the proposal executes</li>
-            <li>Each holder claims a share proportional to their VT at the proposal snapshot</li>
-            <li>
-              Claim window: {Math.round((info.defaultClaimWindowSeconds || 0) / 86400)} days; unclaimed funds go to the
-              treasury
-            </li>
-          </ul>
-        </div>
-      </div>
+      <ProposalOutcome
+        steps={[
+          {
+            title: 'Shares are fixed at the snapshot.',
+            detail:
+              'Only VT held when this proposal is created counts, including VT provided as Uniswap liquidity. ' +
+              'The vault and Uniswap v4 pool contracts get no share.',
+          },
+          {
+            title: 'The amount is reserved in the vault contract.',
+            detail:
+              'If the vault holds less ETH than this when the vote passes (e.g. other proposals spent it), the ' +
+              'proposal fails to execute and nothing is distributed.',
+          },
+          {
+            title: 'Holders are paid automatically.',
+            detail: 'Each holder’s share is sent to their wallet — no action needed.',
+          },
+          {
+            title: `Manual claim for ${Math.round((info.defaultClaimWindowSeconds || 0) / 86400)} days.`,
+            detail:
+              'If an automatic payment fails (e.g. a wallet that can’t receive ETH), the holder can claim it ' +
+              'themselves; after that, anything unpaid goes to the treasury.',
+          },
+        ]}
+      />
     </div>
   );
 }
