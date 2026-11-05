@@ -126,6 +126,7 @@ const EditableRow = ({
   label,
   value,
   displayValue,
+  isAiSet,
   isChanged,
   isEmptyAction,
   actionLabel,
@@ -245,6 +246,13 @@ const EditableRow = ({
             >
               {actionLabel}
             </button>
+          ) : isAiSet ? (
+            <span
+              className="flex shrink-0 items-center pt-1 opacity-40 transition-opacity duration-150 group-hover:opacity-100"
+              title="AI suggested this value — click to change it, or ask the assistant"
+            >
+              <Sparkles className="h-3 w-3 text-orange-400/80" />
+            </span>
           ) : null}
         </div>
       )}
@@ -291,21 +299,31 @@ const FieldLabel = ({ label, hint, className = '' }) => {
 const compactControlClass =
   'inline-flex h-7 items-center justify-center gap-1 rounded-md border border-steel-750 bg-steel-850 px-2 text-xs leading-none text-white';
 
-const FieldShell = ({ label, hint, isChanged, children }) => (
+const FieldShell = ({ label, hint, isAiSet, isChanged, children }) => (
   <div
     className={`group flex items-center justify-between gap-3 py-2 border-b border-steel-800/70 last:border-b-0 rounded-md px-2 -mx-2 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
   >
     <FieldLabel hint={hint} label={label} />
-    <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">{children}</div>
+    <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
+      {children}
+      {isAiSet && (
+        <span
+          className="flex shrink-0 items-center opacity-40 transition-opacity duration-150 group-hover:opacity-100"
+          title="AI suggested this value — click to change it, or ask the assistant"
+        >
+          <Sparkles className="h-3 w-3 text-orange-400/80" />
+        </span>
+      )}
+    </div>
   </div>
 );
 
-const SelectRow = ({ label, value, options, isChanged, onCommit }) => {
+const SelectRow = ({ label, value, options, isAiSet, isChanged, onCommit }) => {
   const [open, setOpen] = useState(false);
   const selected = options.find(option => option.value === value);
 
   return (
-    <FieldShell isChanged={isChanged} label={label}>
+    <FieldShell isAiSet={isAiSet} isChanged={isChanged} label={label}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
@@ -346,8 +364,8 @@ const SelectRow = ({ label, value, options, isChanged, onCommit }) => {
   );
 };
 
-const DurationRow = ({ label, value, isChanged, minMs, maxMs, onCommit }) => (
-  <FieldShell isChanged={isChanged} label={label}>
+const DurationRow = ({ label, value, isAiSet, isChanged, minMs, maxMs, onCommit }) => (
+  <FieldShell isAiSet={isAiSet} isChanged={isChanged} label={label}>
     <div className="w-auto [&_div]:mt-0 [&_button]:h-7 [&_button]:min-h-7 [&_button]:w-auto [&_button]:justify-center [&_button]:px-2 [&_button]:py-0 [&_button]:text-xs [&_span]:text-xs [&_svg]:mr-1 [&_svg]:h-3 [&_svg]:w-3">
       <LavaIntervalPicker margin={0} maxMs={maxMs} minMs={minMs} value={value} variant="steel" onChange={onCommit} />
     </div>
@@ -374,12 +392,20 @@ const imageFileName = url => {
   }
 };
 
-const DateRow = ({ label, value, isChanged, minDate, onCommit }) => (
+const DateRow = ({ label, value, isAiSet, isChanged, minDate, onCommit }) => (
   <div
     className={`rounded-md px-2 -mx-2 py-2.5 border-b border-steel-800/70 last:border-b-0 transition-colors duration-700 ${isChanged ? 'bg-orange-500/15' : ''}`}
   >
     <div className="flex items-center justify-between gap-2">
       <FieldLabel label={label} />
+      {isAiSet && (
+        <span
+          className="flex shrink-0 items-center opacity-40 transition-opacity duration-150 group-hover:opacity-100"
+          title="AI suggested this value — click to change it, or ask the assistant"
+        >
+          <Sparkles className="h-3 w-3 text-orange-400/80" />
+        </span>
+      )}
     </div>
     <div className="mt-2 w-full min-w-0 [&_button]:h-auto [&_button]:min-h-10 [&_button]:min-w-0 [&_button]:shrink [&_button]:whitespace-normal">
       <LavaDatePicker minDate={minDate} value={value} variant="steel" onChange={onCommit} />
@@ -388,13 +414,21 @@ const DateRow = ({ label, value, isChanged, minDate, onCommit }) => (
 );
 
 // Same lists as the manual form: index vaults hold fungible tokens, so NFT/RWA-type tags are excluded.
-const TagsRow = ({ value = [], options = VAULT_TAGS_OPTIONS, isChanged, isEmptyAction, onAction, onCommit }) => {
+const TagsRow = ({
+  value = [],
+  options = VAULT_TAGS_OPTIONS,
+  isAiSet,
+  isChanged,
+  isEmptyAction,
+  onAction,
+  onCommit,
+}) => {
   const [open, setOpen] = useState(false);
   const selected = value || [];
   const available = options.filter(option => !selected.includes(option.value));
 
   return (
-    <FieldShell isChanged={isChanged} label="Tags">
+    <FieldShell isAiSet={isAiSet} isChanged={isChanged} label="Tags">
       <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
         {selected.length > 0 && (
           <div className="flex flex-wrap justify-end gap-1.5">
@@ -530,6 +564,7 @@ const Section = ({ id, label, isOpen, onToggle, children }) => (
 
 export const AiVaultPreview = ({
   vault,
+  aiFields = [],
   missingFields = [],
   onLaunch,
   isLaunching,
@@ -585,6 +620,7 @@ export const AiVaultPreview = ({
     });
   };
 
+  const isAiSet = field => aiFields.includes(field);
   const isChanged = field => changedFields.has(field);
   // Mirrors the manual form's own gate (same schema powers "Confirm & launch" there) instead of
   // trusting the assistant's self-reported status, which can lag behind an already-valid draft.
@@ -762,6 +798,7 @@ export const AiVaultPreview = ({
         </button>
       </div>
       <p className="-mt-3 flex items-center gap-1.5 text-xs text-dark-100">
+        <Sparkles className="h-3 w-3 shrink-0 text-orange-400/80" />
         Suggested by the assistant — click a value to change it, or ask the assistant.
       </p>
 
@@ -797,6 +834,7 @@ export const AiVaultPreview = ({
           <EditableRow
             actionLabel="Generate"
             displayValue={vault.name}
+            isAiSet={isAiSet('name')}
             isChanged={isChanged('name')}
             isEmptyAction={!vault.name}
             label="Name"
@@ -809,6 +847,7 @@ export const AiVaultPreview = ({
           <EditableRow
             actionLabel="Generate"
             displayValue={vault.vaultTokenTicker}
+            isAiSet={isAiSet('vaultTokenTicker')}
             isChanged={isChanged('vaultTokenTicker')}
             isEmptyAction={!vault.vaultTokenTicker}
             label="Ticker"
@@ -823,6 +862,7 @@ export const AiVaultPreview = ({
             multiline
             actionLabel="Generate"
             displayValue={vault.description}
+            isAiSet={isAiSet('description')}
             isChanged={isChanged('description')}
             isEmptyAction={!vault.description}
             label="Description"
@@ -836,6 +876,7 @@ export const AiVaultPreview = ({
             multiline
             actionLabel="Generate"
             displayValue={vault.tokenDescription}
+            isAiSet={isAiSet('tokenDescription')}
             isChanged={isChanged('tokenDescription')}
             isEmptyAction={!vault.tokenDescription}
             label="Token description"
@@ -847,6 +888,7 @@ export const AiVaultPreview = ({
           />
           <TagsRow
             options={isIndexVault ? INDEX_VAULT_TAGS_OPTIONS : VAULT_TAGS_OPTIONS}
+            isAiSet={isAiSet('tags')}
             isChanged={isChanged('tags')}
             isEmptyAction={!vault.tags?.length}
             value={vault.tags || []}
@@ -861,7 +903,7 @@ export const AiVaultPreview = ({
             names={(vault.socialLinks || []).filter(link => link?.url).map(link => link.url)}
             onManage={openSocialLinksModal}
           />
-          <FieldShell isChanged={isChanged('vaultImage')} label="Image">
+          <FieldShell isAiSet={isAiSet('vaultImage')} isChanged={isChanged('vaultImage')} label="Image">
             <input
               ref={imageInputRef}
               accept="image/*"
@@ -1030,6 +1072,7 @@ export const AiVaultPreview = ({
                 value="Yes"
               />
               <SelectRow
+                isAiSet={isAiSet('allowAcquireExpansion')}
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
@@ -1041,6 +1084,7 @@ export const AiVaultPreview = ({
             <>
               <EditableRow
                 displayValue={percent(vault.acquireReserve)}
+                isAiSet={isAiSet('acquireReserve')}
                 isChanged={isChanged('acquireReserve')}
                 label="Reserve"
                 placeholder="100"
@@ -1050,6 +1094,7 @@ export const AiVaultPreview = ({
                 onCommit={next => commitNumber('acquireReserve', next)}
               />
               <SelectRow
+                isAiSet={isAiSet('isAcquireOnly')}
                 isChanged={isChanged('isAcquireOnly')}
                 label="Acquisitions only"
                 options={YES_NO_OPTIONS}
@@ -1057,6 +1102,7 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('isAcquireOnly', next)}
               />
               <SelectRow
+                isAiSet={isAiSet('allowAcquireExpansion')}
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
@@ -1069,6 +1115,7 @@ export const AiVaultPreview = ({
 
         <Section id="launch" isOpen={openSections.has('launch')} label="Launch" onToggle={toggleSection}>
           <SelectRow
+            isAiSet={isAiSet('privacy')}
             isChanged={isChanged('privacy')}
             label="Privacy"
             options={privacyOptions}
@@ -1078,6 +1125,7 @@ export const AiVaultPreview = ({
           {isPrivate && (
             <>
               <SelectRow
+                isAiSet={isAiSet('valueMethod')}
                 isChanged={isChanged('valueMethod')}
                 label="Value method"
                 options={valueMethodOptions}
@@ -1087,6 +1135,7 @@ export const AiVaultPreview = ({
               {vault.valueMethod === 'fixed' && (
                 <>
                   <SelectRow
+                    isAiSet={isAiSet('valuationCurrency')}
                     isChanged={isChanged('valuationCurrency')}
                     label="Valuation currency"
                     options={valuationCurrencyOptions}
@@ -1095,6 +1144,7 @@ export const AiVaultPreview = ({
                   />
                   <EditableRow
                     displayValue={vault.valuationAmount ? String(vault.valuationAmount) : ''}
+                    isAiSet={isAiSet('valuationAmount')}
                     isChanged={isChanged('valuationAmount')}
                     label="Valuation amount"
                     placeholder="Amount"
@@ -1109,6 +1159,7 @@ export const AiVaultPreview = ({
           {!isAcquireOnly && (
             <>
               <DurationRow
+                isAiSet={isAiSet('contributionDuration')}
                 isChanged={isChanged('contributionDuration')}
                 label="Contribution"
                 minMs={MIN_CONTRIBUTION_DURATION_MS}
@@ -1116,6 +1167,7 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('contributionDuration', next)}
               />
               <SelectRow
+                isAiSet={isAiSet('contributionOpenWindowType')}
                 isChanged={isChanged('contributionOpenWindowType')}
                 label="Contribution opens"
                 options={CONTRIBUTION_OPENS_OPTIONS}
@@ -1124,6 +1176,7 @@ export const AiVaultPreview = ({
               />
               {vault.contributionOpenWindowType === 'custom' && (
                 <DateRow
+                  isAiSet={isAiSet('contributionOpenWindowTime')}
                   isChanged={isChanged('contributionOpenWindowTime')}
                   label="Contribution date"
                   value={vault.contributionOpenWindowTime}
@@ -1135,6 +1188,7 @@ export const AiVaultPreview = ({
           {hasAcquireWindow && (
             <>
               <DurationRow
+                isAiSet={isAiSet('acquireWindowDuration')}
                 isChanged={isChanged('acquireWindowDuration')}
                 label="Acquire duration"
                 maxMs={MAX_ACQUIRE_WINDOW_DURATION_MS}
@@ -1143,6 +1197,7 @@ export const AiVaultPreview = ({
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
               />
               <SelectRow
+                isAiSet={isAiSet('acquireOpenWindowType')}
                 isChanged={isChanged('acquireOpenWindowType')}
                 label="Acquire opens"
                 options={isAcquireOnly ? ACQUIRE_ONLY_OPENS_OPTIONS : ACQUIRE_OPENS_OPTIONS}
@@ -1151,6 +1206,7 @@ export const AiVaultPreview = ({
               />
               {vault.acquireOpenWindowType === 'custom' && (
                 <DateRow
+                  isAiSet={isAiSet('acquireOpenWindowTime')}
                   isChanged={isChanged('acquireOpenWindowTime')}
                   label="Acquire launch date"
                   minDate={acquireMinDate}
@@ -1177,6 +1233,7 @@ export const AiVaultPreview = ({
                       : `${thresholdNative} ${nativeLabel}`
                     : ''
                 }
+                isAiSet={isAiSet('minAcquireThreshold')}
                 isChanged={isChanged('minAcquireThreshold')}
                 label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
                 placeholder="Optional"
@@ -1191,6 +1248,7 @@ export const AiVaultPreview = ({
         <Section id="tokenomics" isOpen={openSections.has('tokenomics')} label="Tokenomics" onToggle={toggleSection}>
           <EditableRow
             displayValue={vault.ftTokenSupply?.toLocaleString() ?? ''}
+            isAiSet={isAiSet('ftTokenSupply')}
             isChanged={isChanged('ftTokenSupply')}
             label="Token supply"
             placeholder="1,000,000"
@@ -1199,12 +1257,17 @@ export const AiVaultPreview = ({
             onCommit={next => commitNumber('ftTokenSupply', next, { min: MIN_SUPPLY, max: MAX_SUPPLY, integer: true })}
           />
           {isAcquireOnly ? (
-            <FieldShell isChanged={isChanged('tokensForAcquires')} label="For acquirers">
+            <FieldShell
+              isAiSet={isAiSet('tokensForAcquires')}
+              isChanged={isChanged('tokensForAcquires')}
+              label="For acquirers"
+            >
               <span className="text-sm text-white">100%</span>
             </FieldShell>
           ) : (
             <EditableRow
               displayValue={percent(vault.tokensForAcquires)}
+              isAiSet={isAiSet('tokensForAcquires')}
               isChanged={isChanged('tokensForAcquires')}
               label="For acquirers"
               placeholder="50"
@@ -1216,6 +1279,7 @@ export const AiVaultPreview = ({
           )}
           <EditableRow
             displayValue={percent(vault.liquidityPoolContribution)}
+            isAiSet={isAiSet('liquidityPoolContribution')}
             isChanged={isChanged('liquidityPoolContribution')}
             label="LP contribution"
             placeholder="10"
@@ -1233,6 +1297,7 @@ export const AiVaultPreview = ({
         <Section id="governance" isOpen={openSections.has('governance')} label="Governance" onToggle={toggleSection}>
           <EditableRow
             displayValue={percent(vault.creationThreshold)}
+            isAiSet={isAiSet('creationThreshold')}
             isChanged={isChanged('creationThreshold')}
             label="Proposal threshold"
             placeholder="1"
@@ -1243,6 +1308,7 @@ export const AiVaultPreview = ({
           />
           <EditableRow
             displayValue={percent(vault.cosigningThreshold)}
+            isAiSet={isAiSet('cosigningThreshold')}
             isChanged={isChanged('cosigningThreshold')}
             label="Quorum"
             placeholder="35"
@@ -1253,6 +1319,7 @@ export const AiVaultPreview = ({
           />
           <EditableRow
             displayValue={percent(vault.executionThreshold)}
+            isAiSet={isAiSet('executionThreshold')}
             isChanged={isChanged('executionThreshold')}
             label="Approval"
             placeholder="51"
@@ -1262,6 +1329,7 @@ export const AiVaultPreview = ({
             onCommit={next => commitNumber('executionThreshold', next, { min: 1 })}
           />
           <SelectRow
+            isAiSet={isAiSet('terminationType')}
             isChanged={isChanged('terminationType')}
             label="Termination"
             options={TERMINATION_TYPE_OPTIONS.map(option => ({ value: option.name, label: option.label }))}
