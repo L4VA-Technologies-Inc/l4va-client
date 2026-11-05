@@ -359,7 +359,7 @@ function buildEvmOutcome({ duration, maxEth, noMax, price, supply, ticker }) {
       detail:
         !noMax && maxEth > 0
           ? 'Contributions that would go over it are refused. Once it is reached, the window closes ' +
-            'within minutes (at most an hour, while started contributions finish) and the new VT is minted to buyers.'
+            'within minutes (at most ~15 minutes, while started contributions finish) and the new VT is minted to buyers.'
           : 'The window takes any amount of ETH until it ends.',
     },
     {
