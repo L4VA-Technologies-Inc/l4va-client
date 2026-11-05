@@ -91,7 +91,7 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
 
   // The NFT burn / CEX acknowledgement is Cardano-only.
   useEffect(() => {
-    if (!isLoading && terminationData?.data && !terminationData.data.evm) setIsModalOpen(true);
+    if (!isLoading && !terminationData?.data?.evm) setIsModalOpen(true);
   }, [isLoading, terminationData]);
 
   useEffect(() => {
