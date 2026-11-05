@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
 import SecondaryButton from '@/components/shared/SecondaryButton';
+import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
 import {
   formatBps,
@@ -139,10 +140,7 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-dark-100">
-        Set the new target weights. If the proposal passes, the vault adopts them and trades automatically: it sells
-        what is over target, then buys what is under target with the proceeds.
-      </p>
+      <p className="text-sm text-dark-100">Set the new target weights for the vault&apos;s basket and cash reserve.</p>
 
       <IndexBasketEditor
         steel
@@ -263,6 +261,37 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
             </div>
           )}
         </div>
+      )}
+
+      {!unchanged && !problem && (
+        <ProposalOutcome
+          storageKey="index-reweight"
+          summary="Saves the new weights, then sells over target and buys under target on Uniswap."
+          steps={[
+            {
+              title: 'The new weights are saved.',
+              detail: 'The vault adopts this basket and cash reserve as its targets.',
+            },
+            {
+              title: 'The vault trades to them on Uniswap.',
+              detail:
+                'It sells what is over target first, then buys what is under target with the proceeds. Trades ' +
+                'are sized from live prices at that moment, so they can differ from the estimate above.',
+            },
+            {
+              title: 'Small differences are left alone.',
+              detail: `Assets within ${formatBps(
+                current?.driftToleranceBps ?? 200
+              )} of their target, or trades under the minimum trade size, are not traded.`,
+            },
+            {
+              title: 'Failed trades are retried.',
+              detail:
+                'Trades resume from where they stopped: the run is retried automatically, and an operator can ' +
+                'retry it after that. Trades already made stay made.',
+            },
+          ]}
+        />
       )}
     </div>
   );

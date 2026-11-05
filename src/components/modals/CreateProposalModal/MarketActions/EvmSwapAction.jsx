@@ -5,6 +5,7 @@ import { useBalance, useReadContract } from 'wagmi';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
+import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import { useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
@@ -271,11 +272,6 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
         </button>
       </div>
 
-      <p className="text-sm text-white/40">
-        If the proposal passes, the vault trades on Uniswap (v3 or v4, whichever pool gives the better price) on
-        Robinhood Chain. The price is quoted at execution with a 0.5% slippage limit.
-      </p>
-
       {actions.map((action, index) => (
         <SwapRow
           key={action.id}
@@ -289,6 +285,35 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
           onRemove={remove}
         />
       ))}
+
+      <ProposalOutcome
+        storageKey="swap"
+        summary={`${actions.length} swap${actions.length === 1 ? '' : 's'} on Uniswap, in order, with a 0.5% slippage limit. Bought tokens stay in the vault.`}
+        steps={[
+          {
+            title: 'Amounts are fixed now, prices are not.',
+            detail:
+              'The vault sells exactly the amounts above; how much it receives depends on the Uniswap price when ' +
+              'the vote passes.',
+          },
+          {
+            title: 'Swaps run in order on Uniswap.',
+            detail:
+              'Each one trades through whichever v3 or v4 pool gives the better price, with a 0.5% slippage ' +
+              'limit — if the price moved more than that, the swap fails instead of filling badly.',
+          },
+          {
+            title: 'A failed swap stops the rest.',
+            detail:
+              'Swaps already made stay made; later ones do not run. A swap also fails if the vault holds less ' +
+              'than its amount by then (e.g. other proposals spent it).',
+          },
+          {
+            title: 'Bought tokens stay in the vault.',
+            detail: 'They become vault assets: they count toward its value and are paid out on termination.',
+          },
+        ]}
+      />
     </div>
   );
 };
