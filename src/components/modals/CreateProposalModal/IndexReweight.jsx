@@ -34,6 +34,20 @@ const diffBaskets = (current, proposed) => {
   return [...rows.entries()].map(([assetAddress, row]) => ({ assetAddress, ...row }));
 };
 
+const PREVIEW_DEBOUNCE_MS = 600;
+
+/** Why a needed trade will not happen (from the API's `skipped` legs). */
+const skipMessage = (leg, minTradeNative) => {
+  const action = leg.side === 'sell' ? 'Sell' : 'Buy';
+  if (leg.reason === 'below_min_trade') {
+    return `${action} ≈ ${formatNativeWei(leg.valueNative)} ETH is below the ${formatNativeWei(minTradeNative)} ETH minimum trade`;
+  }
+  if (leg.reason === 'no_free_native') {
+    return `${action} ≈ ${formatNativeWei(leg.valueNative)} ETH has no ETH above the cash reserve to fund it`;
+  }
+  return `Within the drift tolerance (≈ ${formatNativeWei(leg.valueNative)} ETH off target)`;
+};
+
 const IndexReweight = ({ vault, onDataChange, error }) => {
   const { data, isLoading, isFetching, refetch } = useVaultIndex(vault?.id);
   const current = data?.config || vault?.indexConfig;
@@ -63,16 +77,35 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
     current?.targets.find(t => t.assetAddress === address)?.symbol ||
     `${address.slice(0, 6)}…`;
 
-  const runPreview = async () => {
-    setPreviewState('loading');
-    try {
-      setPreview(await VaultsApiProvider.previewIndexReweight(vault.id, toIndexBasketPayload(basket)));
-      setPreviewState('idle');
-    } catch (err) {
+  // Estimate automatically once the edited basket is valid and settles for a moment; a newer
+  // basket supersedes any request still in flight, so a slow old answer never overwrites it.
+  const canPreview = !!basket && !unchanged && !problem && !!vault?.contractAddress;
+  const payloadKey = canPreview ? JSON.stringify(toIndexBasketPayload(basket)) : null;
+  useEffect(() => {
+    if (!payloadKey) {
       setPreview(null);
-      setPreviewState(err?.response?.data?.message || 'The trade preview is unavailable right now.');
+      setPreviewState('idle');
+      return undefined;
     }
-  };
+    let cancelled = false;
+    setPreviewState('loading');
+    const timer = setTimeout(async () => {
+      try {
+        const result = await VaultsApiProvider.previewIndexReweight(vault.id, JSON.parse(payloadKey));
+        if (cancelled) return;
+        setPreview(result);
+        setPreviewState('idle');
+      } catch (err) {
+        if (cancelled) return;
+        setPreview(null);
+        setPreviewState(err?.response?.data?.message || 'The trade preview is unavailable right now.');
+      }
+    }, PREVIEW_DEBOUNCE_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [payloadKey, vault?.id]);
 
   if (!basket) {
     // No basket and nothing in flight means the overview request failed and
@@ -104,10 +137,7 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
       <IndexBasketEditor
         steel
         value={basket}
-        onChange={next => {
-          setBasket(next);
-          setPreview(null);
-        }}
+        onChange={setBasket}
         error={
           error ? problem || (unchanged ? 'Change at least one weight to create a re-weight proposal' : null) : null
         }
@@ -143,18 +173,53 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
         </div>
       )}
 
-      {!unchanged && !problem && vault?.contractAddress && (
+      {canPreview && (
         <div className="space-y-3">
-          <SecondaryButton size="sm" onClick={runPreview} disabled={previewState === 'loading'}>
-            {previewState === 'loading' ? 'Estimating trades…' : 'Estimate trades at current prices'}
-          </SecondaryButton>
+          <h4 className="flex items-center gap-2 text-sm font-medium">
+            Estimated trades at current prices
+            {previewState === 'loading' && <Spinner size="sm" />}
+          </h4>
           {previewState !== 'idle' && previewState !== 'loading' && (
             <p className="text-sm text-red-400">{previewState}</p>
           )}
           {preview && (
-            <div className="space-y-2 rounded-lg bg-steel-800 p-4 text-sm">
+            <div
+              className={`space-y-2 rounded-lg bg-steel-800 p-4 text-sm ${previewState === 'loading' ? 'opacity-60' : ''}`}
+            >
               {preview.sells.length === 0 && preview.buys.length === 0 ? (
-                <p className="text-dark-100">All assets are within tolerance of the new weights — no trades needed.</p>
+                (() => {
+                  // An empty plan only means "on target" when nothing was held back for another reason.
+                  const blocking = (preview.skipped || []).filter(s => s.reason !== 'within_tolerance');
+                  if (blocking.length === 0) {
+                    return (
+                      <p className="text-dark-100">
+                        All assets are within tolerance of the new weights — no trades needed.
+                      </p>
+                    );
+                  }
+                  const tooSmall = blocking.every(s => s.reason === 'below_min_trade');
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-amber-400">
+                        {tooSmall
+                          ? `No trades would run: the vault is too small to trade. Each trade must be at least ${formatNativeWei(preview.minTradeNative)} ETH (vault value ≈ ${formatNativeWei(preview.navNative)} ETH).`
+                          : 'No trades would run with the vault as it is now:'}
+                      </p>
+                      <ul className="space-y-1 text-dark-100">
+                        {blocking.map(leg => (
+                          <li key={`${leg.side}-${leg.asset}`} className="flex justify-between gap-3">
+                            <span>{symbolOf(leg.asset)}</span>
+                            <span className="text-right">{skipMessage(leg, preview.minTradeNative)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-dark-100">
+                        If the proposal passes, the new weights are saved but these trades are not made, and there is no
+                        automatic rebalance later — another re-weight proposal is needed once the vault is larger.
+                      </p>
+                    </div>
+                  );
+                })()
               ) : (
                 <>
                   {preview.sells.map(sell => (
@@ -172,6 +237,14 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
                       <span className="tabular-nums text-green-500">≈ {formatNativeWei(buy.nativeIn)} ETH</span>
                     </p>
                   ))}
+                  {(preview.skipped || [])
+                    .filter(s => s.reason !== 'within_tolerance')
+                    .map(leg => (
+                      <p key={`skip-${leg.side}-${leg.asset}`} className="flex justify-between gap-3 text-amber-400">
+                        <span>{symbolOf(leg.asset)} skipped</span>
+                        <span className="text-right">{skipMessage(leg, preview.minTradeNative)}</span>
+                      </p>
+                    ))}
                 </>
               )}
               <p className="pt-1 text-xs text-dark-100">
