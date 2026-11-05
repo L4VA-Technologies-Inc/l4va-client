@@ -172,3 +172,32 @@ createAppKit({
   // Accent = Robinhood --color-primary (css/index.css).
   themeVariables: { '--w3m-accent': '#00C805', '--w3m-z-index': 1000 },
 });
+
+// AppKit styles the legal-checkbox links (terms / privacy) exactly like the surrounding
+// text — no underline or colour — so they don't read as clickable. They live inside the
+// <w3m-legal-checkbox> shadow root, so page CSS can't reach them; append a stylesheet to
+// the Lit element's adopted styles instead (before the modal is first opened).
+if (typeof window !== 'undefined' && 'customElements' in window) {
+  void customElements.whenDefined('w3m-legal-checkbox').then(() => {
+    const ctor = customElements.get('w3m-legal-checkbox') as
+      | (CustomElementConstructor & { elementStyles?: unknown[] })
+      | undefined;
+    if (!ctor?.elementStyles || typeof CSSStyleSheet === 'undefined') return;
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(`
+        a {
+          color: #00C805;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+          cursor: pointer;
+        }
+        a:hover { text-decoration-thickness: 2px; }
+        a:focus-visible { outline: 2px solid #00C805; outline-offset: 2px; border-radius: 2px; }
+      `);
+      ctor.elementStyles.push(sheet);
+    } catch {
+      // Constructable stylesheets unsupported — links keep AppKit's default styling.
+    }
+  });
+}

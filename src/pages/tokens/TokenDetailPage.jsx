@@ -98,6 +98,13 @@ export const TokenDetailPage = ({ tokenId }) => {
   const tradesQuery = useTokenTrades(tokenId, 40, Boolean(token?.has_live_trades));
 
   const ticker = (token?.symbol || '').toUpperCase();
+  // Same venue the swap panel trades on: Uniswap for Robinhood, DexHunter for Cardano.
+  const dexLink =
+    token?.swap?.kind === 'uniswap' && token.swap.token
+      ? { href: `https://app.uniswap.org/explore/tokens/robinhood/${token.swap.token}`, label: 'Uniswap' }
+      : token?.swap?.kind === 'dexhunter' && token.swap.token
+        ? { href: `https://app.dexhunter.io/swap?tokenIdSell=&tokenIdBuy=${token.swap.token}`, label: 'DexHunter' }
+        : null;
   const copyValue = token?.copy_value || tokenId;
   const copyLabel = copyValue.length > 22 ? `${copyValue.slice(0, 10)}…${copyValue.slice(-8)}` : copyValue;
   const ohlcvData = Array.isArray(chartQuery.data?.ohlcv) ? chartQuery.data.ohlcv : [];
@@ -213,6 +220,18 @@ export const TokenDetailPage = ({ tokenId }) => {
         <span className="inline-flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-3 py-1.5 text-xs text-white">
           {SOURCE_LABEL[token.source] || token.source}
         </span>
+
+        {dexLink && (
+          <a
+            href={dexLink.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-3 py-1.5 text-xs text-dark-100 hover:text-white transition-colors"
+          >
+            {dexLink.label}
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           {token.vault_id ? (
