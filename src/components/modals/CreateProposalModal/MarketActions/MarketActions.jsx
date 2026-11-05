@@ -48,13 +48,19 @@ export const MarketActions = ({ vault, vaultId, assetsWhitelist, onDataChange, e
 
   return (
     <div className="space-y-5">
-      <h3 className="text-lg font-medium">Market Options</h3>
-      <LavaSteelSelect
-        options={marketOptions}
-        placeholder="Select market option"
-        value={selectedOption}
-        onChange={handleOptionChange}
-      />
+      {/* Robinhood vaults only swap on Uniswap, so a one-option picker is noise; the swap
+          form below already says it trades on Uniswap. */}
+      {!isEvmVault && (
+        <>
+          <h3 className="text-lg font-medium">Market Options</h3>
+          <LavaSteelSelect
+            options={marketOptions}
+            placeholder="Select market option"
+            value={selectedOption}
+            onChange={handleOptionChange}
+          />
+        </>
+      )}
       {/* Cardano actions */}
       {!isEvmVault && selectedOption === 'buy' && (
         <BuyAction
