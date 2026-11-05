@@ -6,8 +6,8 @@ import { NoTreasuryWalletAlert } from './NoTreasuryWalletAlert';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox.jsx';
-import { useVaultAssetsForProposalByType } from '@/services/api/queries';
-import { formatAdaPrice } from '@/utils/core.utils';
+import { useNativePrices, useVaultAssetsForProposalByType } from '@/services/api/queries';
+import { formatAdaPrice, formatUsdCurrency } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 
 export default function Distributing({ isDisabled, onDataChange, vaultId }) {
@@ -29,14 +29,39 @@ export default function Distributing({ isDisabled, onDataChange, vaultId }) {
   );
 }
 
+/** Short ETH display: 4 significant digits for small amounts, never 18 decimals. */
+const formatEthShort = wei => {
+  const value = Number(formatEther(wei));
+  if (value === 0) return '0';
+  return value >= 1
+    ? value.toLocaleString('en', { maximumFractionDigits: 4 })
+    : new Intl.NumberFormat('en', { maximumSignificantDigits: 4 }).format(value);
+};
+
+/** USD for an ETH wei amount, or null when the ETH price is unknown. */
+const weiToUsd = (wei, ethUsd) => (ethUsd > 0 ? Number(formatEther(wei)) * ethUsd : null);
+
 function EvmDistributing({ isDisabled, onDataChange, info }) {
+  const { data: nativePrices } = useNativePrices();
+  const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
+  const [unit, setUnit] = useState('ETH');
   const [amount, setAmount] = useState('');
+  // "Max" distributes the exact wei balance; re-deriving it from a rounded display value could
+  // leave dust or overshoot by a wei.
+  const [useMax, setUseMax] = useState(false);
   const available = BigInt(info.availableAmount || '0');
   const holderCount = info.vtHolderCount || 0;
 
   let amountWei = 0n;
   try {
-    amountWei = amount ? parseEther(amount) : 0n;
+    if (useMax) {
+      amountWei = available;
+    } else if (amount) {
+      // USD is converted at the current ETH price; the proposal itself always carries ETH (wei).
+      const eth = unit === 'USD' ? Number(amount) / ethUsd : amount;
+      if (unit === 'USD' && !(Number(amount) >= 0 && ethUsd > 0)) throw new Error('bad usd');
+      amountWei = parseEther(unit === 'USD' ? Number(eth).toFixed(18) : eth);
+    }
   } catch {
     amountWei = -1n;
   }
@@ -63,9 +88,70 @@ function EvmDistributing({ isDisabled, onDataChange, info }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-steel-800 rounded-lg p-4 space-y-4">
-        <LavaSteelInput type="number" label="Amount (ETH)" placeholder="0.00" value={amount} onChange={setAmount} />
-        {isInvalidNumber && <p className="text-red-400 text-sm">Enter a valid ETH amount (up to 18 decimals)</p>}
+      <div className="bg-steel-800 rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-medium">Amount</span>
+          <div className="flex rounded-md bg-steel-900 p-0.5 text-sm" role="group" aria-label="Amount currency">
+            {['ETH', 'USD'].map(option => (
+              <button
+                key={option}
+                type="button"
+                disabled={option === 'USD' && !ethUsd}
+                aria-pressed={unit === option}
+                onClick={() => {
+                  if (option === unit) return;
+                  // Keep the same value when switching, shown in the other currency.
+                  if (amountWei > 0n) {
+                    const eth = Number(formatEther(amountWei));
+                    setAmount(option === 'USD' ? (eth * ethUsd).toFixed(2) : String(Number(eth.toPrecision(6))));
+                  }
+                  setUnit(option);
+                }}
+                className={`rounded px-3 py-1 transition-colors disabled:opacity-40 ${
+                  unit === option ? 'bg-steel-700 text-white' : 'text-white/60 hover:text-white'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <LavaSteelInput
+              type="number"
+              placeholder="0.00"
+              value={
+                useMax
+                  ? unit === 'USD'
+                    ? (weiToUsd(available, ethUsd) ?? 0).toFixed(2)
+                    : formatEther(available)
+                  : amount
+              }
+              onChange={value => {
+                setUseMax(false);
+                setAmount(value);
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setUseMax(true)}
+            disabled={available === 0n}
+            className="mb-2 text-sm text-green-500 hover:text-green-400 disabled:opacity-40"
+          >
+            Max
+          </button>
+        </div>
+        {amountWei > 0n && (
+          <p className="text-sm text-white/60">
+            {unit === 'USD'
+              ? `≈ ${formatEthShort(amountWei)} ETH`
+              : weiToUsd(amountWei, ethUsd) !== null && `≈ ${formatUsdCurrency(weiToUsd(amountWei, ethUsd))}`}
+            {holderCount > 0 && ` · split between ${holderCount.toLocaleString()} holders by VT`}
+          </p>
+        )}
+        {isInvalidNumber && <p className="text-red-400 text-sm">Enter a valid {unit} amount</p>}
         {isOverBalance && <p className="text-red-400 text-sm">Amount exceeds the vault's distributable ETH</p>}
         {hasNoSnapshot && (
           <p className="text-red-400 text-sm">No governance snapshot yet — holder weights cannot be fixed</p>
@@ -78,7 +164,12 @@ function EvmDistributing({ isDisabled, onDataChange, info }) {
             <Wallet className="w-4 h-4" />
             <span className="text-sm">Distributable in vault</span>
           </div>
-          <p className="text-2xl font-semibold text-white">{formatEther(available)} ETH</p>
+          <p className="text-2xl font-semibold text-white" title={`${formatEther(available)} ETH`}>
+            {formatEthShort(available)} ETH
+          </p>
+          {weiToUsd(available, ethUsd) !== null && (
+            <p className="text-xs text-white/40 mt-1">≈ {formatUsdCurrency(weiToUsd(available, ethUsd))}</p>
+          )}
         </div>
         <div className="bg-steel-800 rounded-lg p-4">
           <div className="flex items-center gap-2 text-white/60 mb-2">

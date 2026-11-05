@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Info, XCircle } from 'lucide-react';
+import { formatEther } from 'viem';
 
 import { AssetsModalConfirm } from '@/components/modals/CreateProposalModal/AssetsModalConfirm.jsx';
 import { useVaultAssetsForProposalByType } from '@/services/api/queries';
@@ -11,6 +12,8 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: terminationData, isLoading } = useVaultAssetsForProposalByType(vaultId, 'terminate');
+  // Present only for Robinhood vaults: there is no NFT burn / CEX flow, holders redeem instead.
+  const evm = terminationData?.data?.evm ?? null;
 
   const getTerminatingAssets = () => {
     if (!terminationData?.data || isLoading) return [];
@@ -43,6 +46,21 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
 
     const result = [];
 
+    if (evm) {
+      // Robinhood: nothing is burned or sold — every asset in custody is paid out in kind.
+      const all = [...ftAssets, ...nftAssets];
+      return all.length > 0
+        ? [
+            {
+              title: 'Distributed to VT holders',
+              type: 'Assets',
+              note: '*Each holder receives a share of every asset, proportional to their VT.',
+              assets: all,
+            },
+          ]
+        : [];
+    }
+
     if (nftAssets.length > 0) {
       result.push({
         title: 'Burn Assets',
@@ -65,12 +83,16 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
   };
 
   useEffect(() => {
-    setIsModalOpen(true);
     onDataChange?.({
       terminateAssets: [],
       proposalStart: '',
     });
   }, [onDataChange]);
+
+  // The NFT burn / CEX acknowledgement is Cardano-only.
+  useEffect(() => {
+    if (!isLoading && terminationData?.data && !terminationData.data.evm) setIsModalOpen(true);
+  }, [isLoading, terminationData]);
 
   useEffect(() => {
     if (!isLoading && terminationData?.data) {
@@ -167,7 +189,12 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
               );
             })
           )}
+          {!isLoading && evm && TerminatingAssets.length === 0 && (
+            <p className="text-sm text-dark-100">The vault holds no assets to distribute.</p>
+          )}
         </div>
+
+        {!isLoading && evm && <EvmTerminationSteps evm={evm} />}
 
         {/* LP Pool Validation Info */}
         {!isLoading && terminationData?.data?.lpInfo?.hasLp && (
@@ -245,6 +272,51 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const formatEthShort = wei => {
+  const value = Number(formatEther(BigInt(wei || '0')));
+  if (value === 0) return '0';
+  return value >= 1
+    ? value.toLocaleString('en', { maximumFractionDigits: 4 })
+    : new Intl.NumberFormat('en', { maximumSignificantDigits: 4 }).format(value);
+};
+
+/** What a Robinhood termination does, step by step, for this vault. */
+function EvmTerminationSteps({ evm }) {
+  const lp = evm.lp;
+  return (
+    <div className="bg-steel-800 rounded-lg p-4 space-y-3 text-sm">
+      <h4 className="text-white font-medium">What happens if this passes</h4>
+      <ol className="list-decimal list-inside space-y-2 text-white/70">
+        <li>
+          {lp ? (
+            <>
+              <span className="text-white">Liquidity is withdrawn from Uniswap.</span> The vault&apos;s position
+              {lp.vaultSharePct != null && ` (${formatNum(lp.vaultSharePct, 1)}% of the pool`}
+              {lp.valueNative && `${lp.vaultSharePct != null ? ', ' : ' ('}≈ ${formatEthShort(lp.valueNative)} ETH`}
+              {(lp.vaultSharePct != null || lp.valueNative) && ')'} is removed before termination starts. The pool
+              itself stays on Uniswap with any liquidity other people added, but VT has no backing after termination.
+            </>
+          ) : (
+            <>The vault has no Uniswap liquidity position, so nothing needs to be withdrawn.</>
+          )}
+        </li>
+        <li>
+          <span className="text-white">Governance ends.</span> All other open proposals of this vault are closed as
+          rejected and their fees refunded.
+        </li>
+        <li>
+          <span className="text-white">Holders redeem.</span> Each holder burns all of their VT and receives their share
+          of every asset above in one transaction. Holders who don&apos;t act can be paid out by the operator.
+        </li>
+        <li>
+          <span className="text-white">Redemption window: {evm.claimWindowDays} days.</span> Whatever is not redeemed by
+          then goes to the treasury.
+        </li>
+      </ol>
     </div>
   );
 }
