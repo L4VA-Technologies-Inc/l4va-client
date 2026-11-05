@@ -184,7 +184,7 @@ export const enforceVaultCoherence = vault => {
     next.indexBasket = next.indexBasket?.targets ? next.indexBasket : emptyIndexBasket();
     next.assetsWhitelist = basketToAssetsWhitelist(next.indexBasket);
     // Launch shape for acquire-only index vaults: the whole raise is the reserve.
-    // Acquire expansion stays the creator's choice (off by default), as in the manual form.
+    // Acquire expansion stays the creator's choice (on by default), as in the manual form.
     // The acquire window opens on launch unless a date is picked (handled for every
     // acquire-only vault below).
     next.acquireReserve = 100;

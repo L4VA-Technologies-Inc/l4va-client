@@ -122,6 +122,37 @@ createAppKit({
     url: appOrigin,
     icons: [`${appOrigin}/favicon/apple-touch-icon-rh.png`],
   },
+  // AppKit hides every registry wallet whose WalletConnect listing doesn't declare
+  // eip155:4663/46630 — Rainbow and Robinhood Wallet don't (yet), even though they can
+  // sign for any EVM chain. customWallets bypass that chain filter.
+  // Coinbase Wallet is listed by the registry as "Base (formerly Coinbase Wallet)".
+  featuredWalletIds: [
+    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
+  ],
+  // Coinbase Wallet via the Coinbase SDK connector (same one RainbowKit uses): browser
+  // extension if installed, otherwise QR / mobile app. 'all' also offers the Smart Wallet.
+  enableCoinbase: true,
+  coinbasePreference: 'all',
+  customWallets: [
+    {
+      id: '8837dd9413b1d9b585ee937d27a816590248386d9dbf59f5cd3422dbbb65683e',
+      name: 'Robinhood Wallet',
+      homepage: 'https://robinhood.com/wallet/',
+      image_url: `${appOrigin}/wallets/robinhood.png`,
+      mobile_link: 'robinhood-wallet://',
+      app_store: 'https://robinhood.com/wallet/',
+      play_store: 'https://play.google.com/store/apps/details?id=com.robinhood.gateway',
+    },
+    {
+      id: '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
+      name: 'Rainbow',
+      homepage: 'https://rainbow.me/',
+      image_url: `${appOrigin}/wallets/rainbow.png`,
+      mobile_link: 'rainbow://',
+      app_store: 'https://apps.apple.com/app/id1457119021',
+      play_store: 'https://play.google.com/store/apps/details?id=me.rainbow',
+    },
+  ],
   // Terms acceptance lives in AppKit's legal checkbox — the login opens AppKit directly.
   termsConditionsUrl: `${appOrigin}/terms-of-service`,
   privacyPolicyUrl: `${appOrigin}/privacy-policy`,
