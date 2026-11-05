@@ -155,8 +155,15 @@ export const useAiVaultBuilder = () => {
   );
 
   const sendMessage = useCallback(
-    async text => {
+    async (text, { keepFields = [] } = {}) => {
       const trimmed = text.trim();
+      // Fields the caller asked to keep: drop them from whatever the assistant returns.
+      const lockDraft = next => {
+        if (!keepFields.length) return next;
+        const rest = { ...next };
+        keepFields.forEach(key => delete rest[key]);
+        return rest;
+      };
       if (!trimmed || isSending) return;
 
       const epoch = draftEpochRef.current;
@@ -184,7 +191,7 @@ export const useAiVaultBuilder = () => {
 
         // A reset request replaces the draft from scratch instead of merging onto the old one.
         let base = response.resetDraft ? initialVaultState : vault;
-        let draft = response.vaultDraft ?? {};
+        let draft = lockDraft(response.vaultDraft ?? {});
         let resolvedAssets = [...(response.resolvedAssets ?? [])];
         let candidate = withAiBasket(
           withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
@@ -196,7 +203,7 @@ export const useAiVaultBuilder = () => {
         for (let attempt = 0; attempt < MAX_CORRECTION_ATTEMPTS && errors.length; attempt += 1) {
           response = await requestTurn(history, vault, errors);
           base = response.resetDraft ? initialVaultState : vault;
-          draft = response.vaultDraft ?? {};
+          draft = lockDraft(response.vaultDraft ?? {});
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
           candidate = withAiBasket(
             withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
