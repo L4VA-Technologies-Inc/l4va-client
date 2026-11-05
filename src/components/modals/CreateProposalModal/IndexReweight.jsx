@@ -64,12 +64,22 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
   const problem = basket ? validateIndexBasket(basket) : 'Loading the current basket';
   const unchanged = sameBasket(current, basket);
 
+  // A re-weight that would trade nothing for a blocking reason (below the minimum trade, or no
+  // free ETH) only overwrites the stored weights — the API rejects it, so don't allow creating it.
+  // Wait for the estimate before enabling Create; if the estimate itself fails, don't block.
+  const estimating = previewState === 'loading';
+  const blockedByTrades =
+    !!preview &&
+    preview.sells.length === 0 &&
+    preview.buys.length === 0 &&
+    (preview.skipped || []).some(s => s.reason !== 'within_tolerance');
+
   useEffect(() => {
     onDataChange({
       indexReweight: basket ? toIndexBasketPayload(basket) : null,
-      isValid: !problem && !unchanged,
+      isValid: !problem && !unchanged && !estimating && !blockedByTrades,
     });
-  }, [basket, problem, unchanged, onDataChange]);
+  }, [basket, problem, unchanged, estimating, blockedByTrades, onDataChange]);
 
   const diff = useMemo(() => diffBaskets(current, basket), [current, basket]);
   const symbolOf = address =>
@@ -214,8 +224,8 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
                         ))}
                       </ul>
                       <p className="text-xs text-dark-100">
-                        If the proposal passes, the new weights are saved but these trades are not made, and there is no
-                        automatic rebalance later — another re-weight proposal is needed once the vault is larger.
+                        This proposal can&apos;t be created: it would only change the stored weights without making any
+                        trade. Propose the re-weight once the vault is larger.
                       </p>
                     </div>
                   );
