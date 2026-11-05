@@ -64,11 +64,14 @@ export const LoginModal = () => {
   // AppKit reports open=false until its modal has actually opened; only a close after
   // that means the user dismissed it.
   const appKitWasOpenRef = useRef(false);
+  // True while the backend challenge is fetched and the wallet signature is pending.
+  const [isEvmSigning, setIsEvmSigning] = useState(false);
 
   // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
   const loginWithRobinhoodAddress = async (address, attempt) => {
     const isCurrent = () => attempt === evmAttemptRef.current;
     sessionStorage.setItem('evm_login_in_progress', '1');
+    setIsEvmSigning(true);
     try {
       const { data: challenge } = await CoreApiProvider.evmChallenge(address);
       const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
@@ -96,6 +99,7 @@ export const LoginModal = () => {
       }
     } finally {
       if (isCurrent()) {
+        setIsEvmSigning(false);
         sessionStorage.removeItem('evm_login_in_progress');
         sessionStorage.removeItem('evm_intentional_disconnect');
       }
@@ -385,7 +389,27 @@ export const LoginModal = () => {
     </div>
   );
 
-  if (isRobinHood) return null;
+  // Superseding the attempt makes a late wallet response a no-op.
+  const cancelEvmSigning = () => {
+    evmAttemptRef.current += 1;
+    setIsEvmSigning(false);
+    sessionStorage.removeItem('evm_login_in_progress');
+    sessionStorage.removeItem('evm_intentional_disconnect');
+    closeModal();
+  };
+
+  if (isRobinHood) {
+    if (!isEvmSigning) return null;
+    return (
+      <ModalWrapper isOpen title="Connect Wallet" onClose={cancelEvmSigning} size="md">
+        <div className="flex flex-col items-center gap-4 py-6 text-center">
+          <Spinner />
+          <div className="font-bold">Waiting for signature</div>
+          <div className="text-sm text-dark-100">Confirm the sign-in request in your wallet to finish connecting.</div>
+        </div>
+      </ModalWrapper>
+    );
+  }
 
   return (
     <ModalWrapper isOpen title="Connect Wallet" onClose={closeModal} size="md">
