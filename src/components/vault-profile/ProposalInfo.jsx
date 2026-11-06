@@ -21,6 +21,8 @@ import { VaultSkeleton } from './VaultSkeleton';
 
 import { formatDateWithTime, formatDateTime } from '@/utils/core.utils';
 import { ChainType, ProposalTypeLabels } from '@/utils/types';
+import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
+import { buildEvmOutcome } from '@/components/modals/CreateProposalModal/acquireExpansionOutcome.js';
 import {
   useBuildVoteFeePayment,
   useBuildVoteFeeTransaction,
@@ -412,6 +414,11 @@ export const ProposalInfo = ({ proposalId }) => {
       case 'acquire_expansion': {
         const acquireExpansionItems = [executionOptions];
         const acquireExpansionConfig = proposalInfo?.metadata?.acquireExpansion;
+        // Amounts are in the vault's native coin (maxAda is stored × 1e6 for both chains),
+        // not the user's display currency.
+        const isEvm = proposalInfo?.vault?.chainType === ChainType.ROBINHOOD;
+        const nativeLabel = isEvm ? 'ETH' : 'ADA';
+        const nativeSymbol = isEvm ? 'ETH' : '₳';
 
         if (acquireExpansionConfig) {
           // Duration
@@ -432,28 +439,37 @@ export const ProposalInfo = ({ proposalId }) => {
           // Max ADA / Progress
           if (acquireExpansionConfig.noMax) {
             acquireExpansionItems.push({
-              label: `${currencyLabel} Limit`,
+              label: `${nativeLabel} Limit`,
               value: 'No limit',
             });
           } else if (acquireExpansionConfig.maxAda) {
-            const maxAdaAmount = acquireExpansionConfig.maxAda / 1000000; // Convert lovelace to ADA
-            const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
-            const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
-            acquireExpansionItems.push({
-              label: `${currencyLabel} Limit`,
-              value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
-            });
+            const maxAdaAmount = acquireExpansionConfig.maxAda / 1000000; // stored × 1e6 → ADA / ETH
+            // `currentAdaRaised` is only tracked for Cardano; on Robinhood show the cap alone
+            // rather than a progress that always reads 0.
+            if (isEvm) {
+              acquireExpansionItems.push({
+                label: `${nativeLabel} Limit`,
+                value: `${maxAdaAmount.toLocaleString(undefined, { maximumFractionDigits: 6 })} ${nativeSymbol}`,
+              });
+            } else {
+              const currentAdaRaised = (acquireExpansionConfig.currentAdaRaised || 0) / 1000000;
+              const progressPercent = (currentAdaRaised / maxAdaAmount) * 100;
+              acquireExpansionItems.push({
+                label: `${nativeLabel} Limit`,
+                value: `${currentAdaRaised.toLocaleString()} / ${maxAdaAmount.toLocaleString()} ₳ (${progressPercent.toFixed(1)}%)`,
+              });
+            }
           }
 
           // Pricing Method
           if (acquireExpansionConfig.priceType === 'limit' && acquireExpansionConfig.limitPrice) {
             acquireExpansionItems.push({
               label: 'Pricing Method',
-              value: `Fixed: ${acquireExpansionConfig.limitPrice} VT per 1 ₳`,
+              value: `Fixed: ${acquireExpansionConfig.limitPrice} VT per 1 ${nativeSymbol}`,
             });
           } else if (acquireExpansionConfig.priceType === 'market') {
             const marketPriceDisplay = acquireExpansionConfig.marketPriceSnapshot
-              ? ` (${acquireExpansionConfig.marketPriceSnapshot.toFixed(6)} VT/₳ at proposal creation)`
+              ? ` (${acquireExpansionConfig.marketPriceSnapshot.toFixed(6)} VT/${nativeSymbol} at proposal creation)`
               : '';
             acquireExpansionItems.push({
               label: 'Pricing Method',
@@ -630,6 +646,23 @@ export const ProposalInfo = ({ proposalId }) => {
   }
 
   const isActive = proposalInfo.status === 'active';
+
+  // Same "What happens if this passes" block as in the create modal, while the vote is still open.
+  const acquireExpansionCfg = proposalInfo?.metadata?.acquireExpansion;
+  const acquireExpansionOutcome =
+    proposalInfo.proposalType === 'acquire_expansion' &&
+    proposalInfo?.vault?.chainType === ChainType.ROBINHOOD &&
+    ['active', 'upcoming'].includes(proposalInfo.status) &&
+    acquireExpansionCfg
+      ? buildEvmOutcome({
+          duration: acquireExpansionCfg.noLimit ? null : acquireExpansionCfg.duration,
+          maxEth: (Number(acquireExpansionCfg.maxAda) || 0) / 1e6,
+          noMax: !!acquireExpansionCfg.noMax,
+          price: Number(acquireExpansionCfg.limitPrice) || 0,
+          supply: 0,
+          ticker: proposalInfo?.vault?.vault_token_ticker,
+        })
+      : null;
   const showVotePanel = !isActive || detailPage === 'vote';
   const showResultsPanel = !isActive || detailPage === 'results';
 
@@ -798,6 +831,15 @@ export const ProposalInfo = ({ proposalId }) => {
               </div>
             </div>
           </div>
+          {acquireExpansionOutcome && (
+            <div className={`order-4 ${showResultsPanel ? '' : 'hidden'}`}>
+              <ProposalOutcome
+                storageKey="acquire-expansion"
+                summary={acquireExpansionOutcome.summary}
+                steps={acquireExpansionOutcome.steps}
+              />
+            </div>
+          )}
           <div className={`order-2 space-y-4 ${showVotePanel ? '' : 'hidden'}`}>
             {proposalInfo?.executionError ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">

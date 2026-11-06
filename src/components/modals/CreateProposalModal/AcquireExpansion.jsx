@@ -6,13 +6,14 @@ import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
+import { buildEvmOutcome } from '@/components/modals/CreateProposalModal/acquireExpansionOutcome.js';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { ChainType } from '@/utils/types';
 import { useNativePrices } from '@/services/api/queries';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
-  // The maximum and limit price are stored in the vault's native coin, whatever display currency is selected.
+  // Amounts here are in the vault's native coin, not the user's display currency.
   const currencyLabel = isEvmVault ? 'ETH' : 'ADA';
   const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
@@ -50,6 +51,32 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     setIsUsdInput(!usdMode);
   };
   const inputLabel = usdMode ? 'USD' : currencyLabel;
+  const unitSwitch =
+    ethUsd > 0 ? (
+      <div
+        role="group"
+        aria-label="Input currency"
+        className="flex rounded-md border border-steel-750 bg-steel-800 p-0.5 text-xs"
+      >
+        {['ETH', 'USD'].map(unit => {
+          const active = (unit === 'USD') === usdMode;
+          return (
+            <button
+              key={unit}
+              type="button"
+              aria-pressed={active}
+              onClick={active ? undefined : toggleUsdInput}
+              className={`rounded px-1.5 py-0.5 transition-colors ${active ? 'bg-steel-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              {unit}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+  const usdRateNote = usdMode
+    ? ` Converted at today's rate (1 ETH = $${ethUsd.toLocaleString('en', { maximumFractionDigits: 2 })}). The proposal stores ETH, so the USD value will change with the price.`
+    : '';
 
   const evmOutcome = buildEvmOutcome({
     duration,
@@ -154,30 +181,13 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
           )}
         </div>
 
-        {ethUsd > 0 && (
-          <div className="flex items-center justify-between gap-3 p-3 bg-steel-800 rounded">
-            <p className="text-xs text-gray-400">
-              {usdMode
-                ? `Converted at today's rate (1 ETH = $${ethUsd.toLocaleString('en', { maximumFractionDigits: 2 })}). The proposal stores ETH, so the USD value will change with the price.`
-                : 'Limits are set in ETH. You can enter them in USD instead.'}
-            </p>
-            <button
-              type="button"
-              onClick={toggleUsdInput}
-              className="shrink-0 rounded-full border border-steel-750 bg-steel-850 px-3 py-1 text-xs text-white transition-colors hover:border-steel-600"
-            >
-              Enter in {usdMode ? 'ETH' : 'USD'}
-            </button>
-          </div>
-        )}
-
         {/* Max acquire amount */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
               Maximum {inputLabel}*
               <HoverHelp
-                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel})`}
+                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel}).${usdRateNote}`}
               />
             </label>
             <LavaCheckbox
@@ -207,6 +217,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 }}
                 placeholder={`Enter maximum ${inputLabel} (e.g., 10000)`}
                 error={error && !maxAda}
+                endAdornment={unitSwitch}
               />
               {usdMode && parseFloat(maxUsd) > 0 && (
                 <p className="text-xs text-gray-400 mt-1">
@@ -239,7 +250,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
                 Limit Price (VT per 1 {inputLabel})
                 <HoverHelp
-                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT)`}
+                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}`}
                 />
               </label>
               <LavaSteelInput
@@ -259,6 +270,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 }}
                 placeholder={`Enter VT per 1 ${inputLabel}`}
                 error={error && !limitPrice}
+                endAdornment={unitSwitch}
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
               {(() => {
@@ -389,57 +401,4 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
       </div>
     </div>
   );
-}
-
-const formatCount = n =>
-  n >= 1
-    ? n.toLocaleString('en', { maximumFractionDigits: 2 })
-    : new Intl.NumberFormat('en', { maximumSignificantDigits: 4 }).format(n);
-
-const formatDuration = ms => {
-  if (!ms) return null;
-  const d = Math.floor(ms / 86400000);
-  const h = Math.floor((ms % 86400000) / 3600000);
-  return [d ? `${d} day${d === 1 ? '' : 's'}` : null, h ? `${h} h` : null].filter(Boolean).join(' ') || 'under an hour';
-};
-
-/** Robinhood acquire expansion, step by step, from the values entered so far. */
-function buildEvmOutcome({ duration, maxEth, noMax, price, supply, ticker }) {
-  const durationText = formatDuration(duration);
-  const vt = ticker || 'VT';
-  const newVtAtMax = !noMax && maxEth > 0 && price > 0 ? maxEth * price : null;
-  const dilutionPct = newVtAtMax && supply > 0 ? (newVtAtMax / (supply + newVtAtMax)) * 100 : null;
-
-  const steps = [
-    {
-      title: durationText ? `The vault opens for ${durationText}.` : 'The vault opens for the set duration.',
-      detail: 'The window starts when the vote passes. It ends at that time, or earlier if the ETH maximum is reached.',
-    },
-    {
-      title: price > 0 ? `Buyers get ${formatCount(price)} ${vt} per 1 ETH.` : 'Buyers get VT at the limit price.',
-      detail: 'Anyone can send ETH while the window is open. The price is fixed by this proposal.',
-    },
-    {
-      title: !noMax && maxEth > 0 ? `At most ${formatCount(maxEth)} ETH is accepted.` : 'No ETH maximum.',
-      detail:
-        !noMax && maxEth > 0
-          ? 'Contributions that would go over it are refused. Once it is reached, the window closes ' +
-            'within minutes (at most ~15 minutes, while started contributions finish) and the new VT is minted to buyers.'
-          : 'The window takes any amount of ETH until it ends.',
-    },
-    {
-      title: 'Current holders are diluted.',
-      detail:
-        newVtAtMax != null
-          ? `If the maximum is reached, ${formatCount(newVtAtMax)} new ${vt} are minted` +
-            (dilutionPct != null ? `, about ${formatCount(dilutionPct)}% of the supply after the raise.` : '.') +
-            ' The ETH raised stays in the vault.'
-          : `New ${vt} is minted for every ETH raised. The ETH raised stays in the vault.`,
-    },
-  ];
-  const summary =
-    price > 0 && !noMax && maxEth > 0
-      ? `Sells up to ${formatCount(newVtAtMax)} new ${vt} at ${formatCount(price)} ${vt}/ETH for up to ${formatCount(maxEth)} ETH${durationText ? ` over ${durationText}` : ''}.`
-      : `Opens the vault to buyers at a fixed ${vt}/ETH price${durationText ? ` for ${durationText}` : ''}.`;
-  return { steps, summary };
 }
