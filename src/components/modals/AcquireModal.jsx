@@ -12,7 +12,7 @@ import { formatNum } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useEvmAcquireTransaction } from '@/hooks/useEvmAcquireTransaction';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useCreateAcquireTx, useBuildTransaction, useSubmitTransaction } from '@/services/api/queries';
+import { useCreateAcquireTx, useBuildTransaction, useNativePrices, useSubmitTransaction } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 
 export const AcquireModal = ({ vault, onClose }) => {
@@ -41,19 +41,17 @@ export const AcquireModal = ({ vault, onClose }) => {
   const maxInputDecimals = isEth ? 6 : 2;
 
   // ── Price calculation for USD input mode ───────────────────────────────
-  // Derive current prices from vault data (totalValueUsd / totalValueNative)
-  // TODO: Replace with real-time price API endpoint for better accuracy
-  const nativePrice = useMemo(() => {
+  const { data: nativePrices } = useNativePrices();
+  const livePrice = Number(isEth ? nativePrices?.data?.ethUsd : nativePrices?.data?.adaUsd) || 0;
+  // Vault values are a fallback only: an ETH-only vault has no assets, so they are zero there.
+  const vaultPrice = useMemo(() => {
     const totalUsd = vault.assetsPrices?.totalValueUsd || 0;
     const totalNative = isEth ? vault.assetsPrices?.totalValueEth || 0 : vault.assetsPrices?.totalValueAda || 0;
-
-    if (totalUsd > 0 && totalNative > 0) {
-      return totalUsd / totalNative;
-    }
-
-    // Fallback to approximate prices if vault data unavailable
-    return isEth ? 3000 : 0.35; // Approximate ETH ~$3000, ADA ~$0.35
+    return totalUsd > 0 && totalNative > 0 ? totalUsd / totalNative : 0;
   }, [vault.assetsPrices, isEth]);
+  const hasRealPrice = livePrice > 0 || vaultPrice > 0;
+  // The last value only keeps the display finite; a USD acquire is blocked without a real price.
+  const nativePrice = livePrice || vaultPrice || (isEth ? 3000 : 0.35);
 
   // ETH balance comes from the wagmi wallet; ADA from the weld wallet.
   const { address: evmAddress } = useAccount();
@@ -95,10 +93,11 @@ export const AcquireModal = ({ vault, onClose }) => {
   // - Before fair value is reached: project based on fair value (more intuitive estimate)
   // - After fair value exceeded: use actual total (reflects real dilution)
   let userShare = 0;
-  if (effectiveAmount > 0 && fairValue > 0) {
+  if (effectiveAmount > 0) {
     // Total that would be in the pool after this acquisition
     const totalAfterAcquisition = totalAcquired + effectiveAmount;
 
+    // A vault with no contributed assets has no fair value, so only the actual total applies.
     if (totalAfterAcquisition >= fairValue) {
       // Total would exceed fair value - use actual amounts
       userShare = effectiveAmount / totalAfterAcquisition;
@@ -373,6 +372,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                 className="uppercase"
                 disabled={
                   status !== 'idle' ||
+                  (inputCurrency === 'usd' && !hasRealPrice) ||
                   (!isEth && wallet.isUpdatingUtxos) ||
                   effectiveAmount < minAcquire ||
                   !vault.isAcquireWindowActive
