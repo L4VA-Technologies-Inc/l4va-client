@@ -7,12 +7,12 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
-import { useCurrency } from '@/hooks/useCurrency';
 import { ChainType } from '@/utils/types';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
-  const { currencyLabel } = useCurrency();
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
+  // The maximum and limit price are stored in the vault's native coin, whatever display currency is selected.
+  const currencyLabel = isEvmVault ? 'ETH' : 'ADA';
   const exampleContributionAmount = isEvmVault ? 1 : 100;
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false); // eslint-disable-line no-unused-vars -- "No Limit" toggle is commented out below
