@@ -5,8 +5,6 @@ import { VaultsApiProvider } from '@/services/api/vaults';
 import { VAULT_FACTORY_ABI } from '@/lib/evm/vaultFactory.abi';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 
-const FACTORY_ADDRESS = import.meta.env.VITE_EVM_VAULT_FACTORY_ADDRESS;
-
 /**
  * Two-step EVM vault creation:
  *  1. POST /vaults  (chainType=robinhood) → get admin EIP-712 signature + VaultConfig
@@ -59,10 +57,12 @@ export const useCreateEvmVault = () => {
         adminNonce,
         deadline,
         adminSignature,
+        evmFactoryAddress,
       } = prepareRes;
 
-      if (!cfg || !adminSignature) {
-        throw new Error('Backend did not return EVM vault config or signature');
+      // The signature is only valid on the factory it was issued for, so the address comes with it.
+      if (!cfg || !adminSignature || !evmFactoryAddress) {
+        throw new Error('Backend did not return EVM vault config, signature or factory address');
       }
 
       // bigint conversion — values come as strings from JSON
@@ -74,7 +74,7 @@ export const useCreateEvmVault = () => {
       }
 
       const hash = await writeContractAsync({
-        address: FACTORY_ADDRESS,
+        address: evmFactoryAddress,
         abi: VAULT_FACTORY_ABI,
         functionName: 'createVault',
         args: [cfgForContract, BigInt(adminNonce), BigInt(deadline), adminSignature],
