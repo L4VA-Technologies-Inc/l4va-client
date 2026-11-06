@@ -50,6 +50,32 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     setIsUsdInput(!usdMode);
   };
   const inputLabel = usdMode ? 'USD' : currencyLabel;
+  const unitSwitch =
+    ethUsd > 0 ? (
+      <div
+        role="group"
+        aria-label="Input currency"
+        className="flex rounded-md border border-steel-750 bg-steel-800 p-0.5 text-xs"
+      >
+        {['ETH', 'USD'].map(unit => {
+          const active = (unit === 'USD') === usdMode;
+          return (
+            <button
+              key={unit}
+              type="button"
+              aria-pressed={active}
+              onClick={active ? undefined : toggleUsdInput}
+              className={`rounded px-1.5 py-0.5 transition-colors ${active ? 'bg-steel-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              {unit}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+  const usdRateNote = usdMode
+    ? ` Converted at today's rate (1 ETH = $${ethUsd.toLocaleString('en', { maximumFractionDigits: 2 })}). The proposal stores ETH, so the USD value will change with the price.`
+    : '';
 
   const evmOutcome = buildEvmOutcome({
     duration,
@@ -154,30 +180,13 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
           )}
         </div>
 
-        {ethUsd > 0 && (
-          <div className="flex items-center justify-between gap-3 p-3 bg-steel-800 rounded">
-            <p className="text-xs text-gray-400">
-              {usdMode
-                ? `Converted at today's rate (1 ETH = $${ethUsd.toLocaleString('en', { maximumFractionDigits: 2 })}). The proposal stores ETH, so the USD value will change with the price.`
-                : 'Limits are set in ETH. You can enter them in USD instead.'}
-            </p>
-            <button
-              type="button"
-              onClick={toggleUsdInput}
-              className="shrink-0 rounded-full border border-steel-750 bg-steel-850 px-3 py-1 text-xs text-white transition-colors hover:border-steel-600"
-            >
-              Enter in {usdMode ? 'ETH' : 'USD'}
-            </button>
-          </div>
-        )}
-
         {/* Max acquire amount */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
               Maximum {inputLabel}*
               <HoverHelp
-                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel})`}
+                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel}).${usdRateNote}`}
               />
             </label>
             <LavaCheckbox
@@ -207,6 +216,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 }}
                 placeholder={`Enter maximum ${inputLabel} (e.g., 10000)`}
                 error={error && !maxAda}
+                endAdornment={unitSwitch}
               />
               {usdMode && parseFloat(maxUsd) > 0 && (
                 <p className="text-xs text-gray-400 mt-1">
@@ -239,7 +249,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
                 Limit Price (VT per 1 {inputLabel})
                 <HoverHelp
-                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT)`}
+                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}`}
                 />
               </label>
               <LavaSteelInput
@@ -259,6 +269,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 }}
                 placeholder={`Enter VT per 1 ${inputLabel}`}
                 error={error && !limitPrice}
+                endAdornment={unitSwitch}
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
               {(() => {

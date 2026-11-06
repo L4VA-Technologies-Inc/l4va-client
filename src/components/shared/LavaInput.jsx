@@ -152,6 +152,7 @@ export const LavaSteelInput = ({
   maxLength,
   onIncrement,
   onDecrement,
+  endAdornment,
   ...props
 }) => {
   const generatedId = useId();
@@ -221,7 +222,8 @@ export const LavaSteelInput = ({
             ${error ? 'border border-red-600' : 'border border-steel-750'}
             focus:outline-none focus:ring-2 focus:ring-steel-750
             ${disabled ? 'opacity-50' : ''}
-            ${isNumberType ? 'pr-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]' : ''}
+            ${endAdornment ? 'pr-28' : isNumberType ? 'pr-8' : ''}
+            ${isNumberType ? '[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]' : ''}
             ${className}
           `}
           placeholder={placeholder}
@@ -237,6 +239,11 @@ export const LavaSteelInput = ({
           maxLength={maxLength}
           {...props}
         />
+        {endAdornment && (
+          <div className={`absolute top-1/2 -translate-y-1/2 ${isNumberType && !disabled ? 'right-7' : 'right-2'}`}>
+            {endAdornment}
+          </div>
+        )}
         {isNumberType && !disabled && (
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
             <button
