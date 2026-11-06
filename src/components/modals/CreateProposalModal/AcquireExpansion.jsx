@@ -9,6 +9,7 @@ import { ProposalOutcome } from '@/components/modals/CreateProposalModal/Proposa
 import { buildEvmOutcome } from '@/components/modals/CreateProposalModal/acquireExpansionOutcome.js';
 import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { ChainType } from '@/utils/types';
+import { useNativePrices } from '@/services/api/queries';
 
 export default function AcquireExpansion({ onDataChange, error, vault }) {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
@@ -22,6 +23,60 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
   // Market price is not supported for Robinhood acquire expansion yet (the API rejects it).
   const [priceType, setPriceType] = useState(isEvmVault ? 'limit' : 'market');
   const [limitPrice, setLimitPrice] = useState('');
+  // USD is only an input aid on Robinhood: it converts on entry, and the proposal always stores ETH.
+  const { data: nativePrices } = useNativePrices();
+  const ethUsd = isEvmVault ? Number(nativePrices?.data?.ethUsd) || 0 : 0;
+  const [isUsdInput, setIsUsdInput] = useState(false);
+  const usdMode = isUsdInput && ethUsd > 0;
+  const [maxUsd, setMaxUsd] = useState('');
+  const [limitPriceUsd, setLimitPriceUsd] = useState('');
+
+  const onMaxUsdChange = value => {
+    setMaxUsd(value);
+    const usd = parseFloat(value);
+    setMaxAda(usd > 0 ? String(Math.floor((usd / ethUsd) * 1e6) / 1e6 || '') : '');
+  };
+  const onLimitPriceUsdChange = value => {
+    setLimitPriceUsd(value);
+    const vtPerUsd = parseFloat(value);
+    setLimitPrice(vtPerUsd > 0 ? String(+(vtPerUsd * ethUsd).toFixed(6)) : '');
+  };
+  const toggleUsdInput = () => {
+    if (!usdMode) {
+      const eth = parseFloat(maxAda);
+      const price = parseFloat(limitPrice);
+      setMaxUsd(eth > 0 ? (eth * ethUsd).toFixed(2) : '');
+      setLimitPriceUsd(price > 0 ? String(+(price / ethUsd).toFixed(6)) : '');
+    }
+    setIsUsdInput(!usdMode);
+  };
+  const inputLabel = usdMode ? 'USD' : currencyLabel;
+  const unitSwitch =
+    ethUsd > 0 ? (
+      <div
+        role="group"
+        aria-label="Input currency"
+        className="flex rounded-md border border-steel-750 bg-steel-800 p-0.5 text-xs"
+      >
+        {['ETH', 'USD'].map(unit => {
+          const active = (unit === 'USD') === usdMode;
+          return (
+            <button
+              key={unit}
+              type="button"
+              aria-pressed={active}
+              onClick={active ? undefined : toggleUsdInput}
+              className={`rounded px-1.5 py-0.5 transition-colors ${active ? 'bg-steel-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              {unit}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+  const usdRateNote = usdMode
+    ? ` Converted at today's rate (1 ETH = $${ethUsd.toLocaleString('en', { maximumFractionDigits: 2 })}). The proposal stores ETH, so the USD value will change with the price.`
+    : '';
 
   const evmOutcome = buildEvmOutcome({
     duration,
@@ -130,9 +185,9 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
-              Maximum {currencyLabel}*
+              Maximum {inputLabel}*
               <HoverHelp
-                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel})`}
+                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel}).${usdRateNote}`}
               />
             </label>
             <LavaCheckbox
@@ -149,9 +204,10 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 type="number"
                 min="1"
                 max="1000000000"
-                step="1"
-                value={maxAda}
+                step={isEvmVault ? 'any' : '1'}
+                value={usdMode ? maxUsd : maxAda}
                 onChange={value => {
+                  if (usdMode) return onMaxUsdChange(value);
                   const numValue = parseFloat(value);
                   if (numValue > 1000000000) {
                     setMaxAda('1000000000');
@@ -159,9 +215,15 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     setMaxAda(value);
                   }
                 }}
-                placeholder={`Enter maximum ${currencyLabel} (e.g., 10000)`}
+                placeholder={`Enter maximum ${inputLabel} (e.g., 10000)`}
                 error={error && !maxAda}
+                endAdornment={unitSwitch}
               />
+              {usdMode && parseFloat(maxUsd) > 0 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {maxAda ? `≈ ${maxAda} ETH` : 'Too small: this is less than 0.000001 ETH.'}
+                </p>
+              )}
               {maxAda && parseFloat(maxAda) > 1000000 && (
                 <p className="text-xs text-yellow-400 mt-1">
                   Large limit set ({parseFloat(maxAda).toLocaleString()} {currencyLabel}). Consider if this is
@@ -180,24 +242,25 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
 
         {/* Price Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">VT Price per {currencyLabel}*</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">VT Price per {inputLabel}*</label>
           <LavaSteelSelect options={priceTypeOptions} value={priceType} onChange={setPriceType} />
 
           {priceType === 'limit' && (
             <div className="mt-3">
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
-                Limit Price (VT per 1 {currencyLabel})
+                Limit Price (VT per 1 {inputLabel})
                 <HoverHelp
-                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT)`}
+                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}`}
                 />
               </label>
               <LavaSteelInput
                 type="number"
-                step={Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
-                min={Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
-                max="1000000"
-                value={limitPrice}
+                step={usdMode ? 'any' : Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
+                min={usdMode ? 0 : Math.pow(10, 6 - (vault?.ftTokenDecimals || 6))}
+                max={usdMode ? undefined : '1000000'}
+                value={usdMode ? limitPriceUsd : limitPrice}
                 onChange={value => {
+                  if (usdMode) return onLimitPriceUsdChange(value);
                   const numValue = parseFloat(value);
                   if (numValue > 1000000) {
                     setLimitPrice('1000000');
@@ -205,8 +268,9 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                     setLimitPrice(value);
                   }
                 }}
-                placeholder={`Enter VT per 1 ${currencyLabel} (up to 6 decimals, max 1M)`}
+                placeholder={`Enter VT per 1 ${inputLabel}`}
                 error={error && !limitPrice}
+                endAdornment={unitSwitch}
               />
               {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
               {(() => {
@@ -221,6 +285,18 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                       <p className="text-red-300/90 text-xs mt-1">
                         With {decimals} decimals, minimum limit price is {minLimitPrice} VT per 1 {currencyLabel}. Lower
                         values would result in 0 tokens minted.
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (limitPriceNum > 1000000) {
+                  return (
+                    <div className="mt-2 p-3 bg-red-900/20 border border-red-600/50 rounded">
+                      <p className="text-red-400 text-sm font-medium">Price Too High</p>
+                      <p className="text-red-300/90 text-xs mt-1">
+                        This equals {limitPriceNum.toLocaleString()} VT per 1 ETH. The maximum is 1,000,000 VT per 1
+                        ETH.
                       </p>
                     </div>
                   );
