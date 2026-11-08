@@ -754,7 +754,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
               : evmLp?.status === 'failed'
                 ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
-                : `${ticker} can't be swapped: there is no liquidity pool. This vault was created with 0% LP contribution.`;
+                : `${ticker} can't be swapped: there is no liquidity pool`;
 
       return (
         <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
