@@ -1,7 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 
 import { BasketAllocationBar } from '@/components/vaults/index/IndexBasketEditor';
-import { formatBps } from '@/components/vaults/index/indexVault.utils';
+import { formatBps, formatRebalanceSchedule } from '@/components/vaults/index/indexVault.utils';
 
 /** Old → new basket weights of an index re-weight proposal. */
 export const IndexReweightSummary = ({ reweight, label = 'New weights' }) => {
@@ -43,7 +43,28 @@ export const IndexReweightSummary = ({ reweight, label = 'New weights' }) => {
             </span>
           </li>
         )}
+        {typeof reweight.autoRebalance === 'boolean' &&
+          formatRebalanceSchedule(reweight) !==
+            formatRebalanceSchedule({
+              autoRebalance: reweight.previousAutoRebalance,
+              rebalanceCadenceDays: reweight.previousRebalanceCadenceDays,
+            }) && (
+            <li className="flex items-center justify-between gap-3">
+              <span>Auto-rebalance</span>
+              <span className="flex items-center gap-2 tabular-nums">
+                <span className="text-dark-100">
+                  {formatRebalanceSchedule({
+                    autoRebalance: reweight.previousAutoRebalance,
+                    rebalanceCadenceDays: reweight.previousRebalanceCadenceDays,
+                  })}
+                </span>
+                <ArrowRight className="h-3 w-3 text-dark-100" />
+                <span className="font-medium">{formatRebalanceSchedule(reweight)}</span>
+              </span>
+            </li>
+          )}
       </ul>
+      {reweight.scheduleOnly && <p className="text-xs text-dark-100">Weights unchanged. No trades run on execution.</p>}
     </div>
   );
 };

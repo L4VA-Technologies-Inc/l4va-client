@@ -12,6 +12,10 @@ export const INDEX_MAX_ASSETS = 10;
 export const INDEX_MIN_WEIGHT_BPS = 100;
 export const INDEX_DEFAULT_RESERVE_BPS = 1000;
 export const INDEX_MAX_RESERVE_BPS = 5000;
+/** Fallbacks until the API returns the admin limits (`supported.rebalance`). */
+export const INDEX_DEFAULT_REBALANCE_CADENCE_DAYS = 30;
+export const INDEX_MIN_REBALANCE_CADENCE_DAYS = 7;
+export const INDEX_MAX_REBALANCE_CADENCE_DAYS = 365;
 
 export const VAULT_ARCHETYPE_OPTIONS = [
   { name: VAULT_ARCHETYPES.STANDARD, label: 'Standard Vault' },
@@ -31,7 +35,18 @@ export const VAULT_ARCHETYPE_META = {
 
 export const isIndexVault = vault => vault?.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
 
-export const emptyIndexBasket = () => ({ targets: [], reserveBps: INDEX_DEFAULT_RESERVE_BPS });
+export const emptyIndexBasket = () => ({
+  targets: [],
+  reserveBps: INDEX_DEFAULT_RESERVE_BPS,
+  autoRebalance: true,
+  rebalanceCadenceDays: INDEX_DEFAULT_REBALANCE_CADENCE_DAYS,
+});
+
+/** "every 30 days" / "Off" for an index config or basket. */
+export const formatRebalanceSchedule = config =>
+  config?.autoRebalance && config?.rebalanceCadenceDays
+    ? `Every ${config.rebalanceCadenceDays} day${Number(config.rebalanceCadenceDays) === 1 ? '' : 's'}`
+    : 'Off';
 
 export const bpsToPercent = bps => Number(bps || 0) / 100;
 
@@ -53,7 +68,7 @@ export const evenWeights = count => {
 };
 
 /** Returns a user-facing problem with the basket, or null when it can launch. */
-export const validateIndexBasket = basket => {
+export const validateIndexBasket = (basket, minCadenceDays = INDEX_MIN_REBALANCE_CADENCE_DAYS) => {
   const targets = basket?.targets || [];
   if (targets.length === 0) return 'Add at least one asset to the basket';
   if (targets.length > INDEX_MAX_ASSETS) return `The basket can hold at most ${INDEX_MAX_ASSETS} assets`;
@@ -69,6 +84,12 @@ export const validateIndexBasket = basket => {
   if (total !== BPS) return `Weights must add up to 100% (currently ${formatBps(total, 2)})`;
   const reserve = Number(basket?.reserveBps ?? 0);
   if (reserve < 0 || reserve > INDEX_MAX_RESERVE_BPS) return 'The cash reserve must be between 0% and 50%';
+  if (basket?.autoRebalance !== false) {
+    const cadence = Number(basket?.rebalanceCadenceDays ?? INDEX_DEFAULT_REBALANCE_CADENCE_DAYS);
+    if (!Number.isInteger(cadence) || cadence < minCadenceDays || cadence > INDEX_MAX_REBALANCE_CADENCE_DAYS) {
+      return `Rebalance cadence must be a whole number of days between ${minCadenceDays} and ${INDEX_MAX_REBALANCE_CADENCE_DAYS}`;
+    }
+  }
   return null;
 };
 
@@ -101,6 +122,11 @@ export const basketToAssetsWhitelist = basket =>
 /** Payload shape expected by the API (`IndexBasketReq`). */
 export const toIndexBasketPayload = basket => ({
   reserveBps: Number(basket?.reserveBps ?? 0),
+  // Omitted fields keep the server default (on, admin default cadence) or the vault's current value.
+  ...(typeof basket?.autoRebalance === 'boolean' ? { autoRebalance: basket.autoRebalance } : {}),
+  ...(basket?.autoRebalance !== false && basket?.rebalanceCadenceDays
+    ? { rebalanceCadenceDays: Number(basket.rebalanceCadenceDays) }
+    : {}),
   targets: (basket?.targets || []).map(t => ({
     assetAddress: t.assetAddress,
     weightBps: Number(t.weightBps),
@@ -119,6 +145,7 @@ export const formatNativeWei = (wei, maxDigits = 4) => {
 export const REBALANCE_TRIGGER_LABELS = {
   initial_buy: 'Initial basket buy',
   governance_reweight: 'Governance re-weight',
+  scheduled: 'Auto-rebalance',
 };
 
 export const REBALANCE_STATUS_STYLES = {

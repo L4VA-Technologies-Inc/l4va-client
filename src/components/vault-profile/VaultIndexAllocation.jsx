@@ -10,6 +10,7 @@ import {
   REBALANCE_TRIGGER_LABELS,
   formatBps,
   formatNativeWei,
+  formatRebalanceSchedule,
   basketSegmentColor,
 } from '@/components/vaults/index/indexVault.utils';
 import { getTransactionUrl } from '@/utils/explorer.utils';
@@ -343,6 +344,25 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
             </div>
           )}
         </>
+      )}
+
+      {!terminated && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-steel-850 px-4 py-3 text-sm">
+          <span className="flex items-center gap-2 text-dark-100">
+            <RefreshCcw className="h-4 w-4" />
+            Auto-rebalance
+            <InfoTip>
+              Trades the basket back to its target weights by USD value once per period. The exact time is randomized
+              within a few hours. Token holders can change this through a re-weight proposal.
+            </InfoTip>
+          </span>
+          <span className="tabular-nums">
+            {formatRebalanceSchedule(config)}
+            {config.autoRebalance && config.nextRebalanceAt && (
+              <span className="text-dark-100"> · next ~{formatDateWithTime(config.nextRebalanceAt)}</span>
+            )}
+          </span>
+        </div>
       )}
 
       <RebalanceHistory rebalances={rebalances} />
