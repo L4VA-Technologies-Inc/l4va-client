@@ -85,7 +85,6 @@ import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
 import { useVaultAssets, useVaultLp } from '@/services/api/queries';
 import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -571,25 +570,12 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 </div>
               </div>
             )}
+            {/* Statistic */}
             {showTokenDetails && (
               <div className="group relative">
                 <button
                   type="button"
                   onClick={() => navigate({ to: '/tokens/$id', params: { id: vault.id } })}
-                  className="bg-steel-850 px-3 py-1 rounded-full text-sm flex items-center justify-center hover:bg-steel-750 transition-colors h-7 text-white whitespace-nowrap"
-                >
-                  Token details
-                </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  Open vault token page
-                </div>
-              </div>
-            )}
-            {/* Statistic */}
-            {vault?.hasActiveLp && IS_MAINNET && (
-              <div className="group relative">
-                <button
-                  onClick={() => openModal('ChartModal', { vault })}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <BarChart3 className="w-4 h-4 text-orange-500" />
