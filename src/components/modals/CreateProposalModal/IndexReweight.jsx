@@ -8,10 +8,11 @@ import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
 import {
   formatBps,
   formatNativeWei,
+  formatRebalanceSchedule,
   toIndexBasketPayload,
   validateIndexBasket,
 } from '@/components/vaults/index/indexVault.utils';
-import { useVaultIndex } from '@/services/api/queries';
+import { useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
 import { VaultsApiProvider } from '@/services/api/vaults';
 
 const sameBasket = (a, b) => {
@@ -20,6 +21,18 @@ const sameBasket = (a, b) => {
   if (a.targets.length !== b.targets.length) return false;
   const weights = new Map(a.targets.map(t => [t.assetAddress.toLowerCase(), Number(t.weightBps)]));
   return b.targets.every(t => weights.get(t.assetAddress.toLowerCase()) === Number(t.weightBps));
+};
+
+/** Configs created before auto-rebalance have no schedule fields and count as off. */
+const scheduleOf = config => ({
+  autoRebalance: config?.autoRebalance === true,
+  rebalanceCadenceDays: config?.autoRebalance ? Number(config?.rebalanceCadenceDays) || null : null,
+});
+
+const sameSchedule = (a, b) => {
+  const x = scheduleOf(a);
+  const y = scheduleOf(b);
+  return x.autoRebalance === y.autoRebalance && x.rebalanceCadenceDays === y.rebalanceCadenceDays;
 };
 
 /** Weight changes per asset, including assets added to or removed from the basket. */
@@ -58,12 +71,21 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
 
   useEffect(() => {
     if (current && !basket) {
-      setBasket({ targets: current.targets.map(t => ({ ...t })), reserveBps: current.reserveBps });
+      setBasket({
+        targets: current.targets.map(t => ({ ...t })),
+        reserveBps: current.reserveBps,
+        ...scheduleOf(current),
+      });
     }
   }, [current, basket]);
 
-  const problem = basket ? validateIndexBasket(basket) : 'Loading the current basket';
-  const unchanged = sameBasket(current, basket);
+  const { data: supported } = useIndexSupportedAssets();
+  const problem = basket
+    ? validateIndexBasket(basket, supported?.rebalance?.minCadenceDays)
+    : 'Loading the current basket';
+  const weightsUnchanged = sameBasket(current, basket);
+  const scheduleUnchanged = sameSchedule(current, basket);
+  const unchanged = weightsUnchanged && scheduleUnchanged;
 
   // A re-weight that would trade nothing for a blocking reason (below the minimum trade, or no
   // free ETH) only overwrites the stored weights — the API rejects it, so don't allow creating it.
@@ -90,7 +112,8 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
 
   // Estimate automatically once the edited basket is valid and settles for a moment; a newer
   // basket supersedes any request still in flight, so a slow old answer never overwrites it.
-  const canPreview = !!basket && !unchanged && !problem && !!vault?.contractAddress;
+  // A schedule-only change trades nothing, so there is nothing to estimate.
+  const canPreview = !!basket && !weightsUnchanged && !problem && !!vault?.contractAddress;
   const payloadKey = canPreview ? JSON.stringify(toIndexBasketPayload(basket)) : null;
   useEffect(() => {
     if (!payloadKey) {
@@ -140,14 +163,19 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-dark-100">Set the new target weights for the vault&apos;s basket and cash reserve.</p>
+      <p className="text-sm text-dark-100">
+        Set the new target weights for the vault&apos;s basket and cash reserve, or change its auto-rebalance schedule.
+      </p>
 
       <IndexBasketEditor
         steel
         value={basket}
         onChange={setBasket}
         error={
-          error ? problem || (unchanged ? 'Change at least one weight to create a re-weight proposal' : null) : null
+          error
+            ? problem ||
+              (unchanged ? 'Change a weight or the auto-rebalance schedule to create a re-weight proposal' : null)
+            : null
         }
       />
 
@@ -174,6 +202,16 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
                   <span className="text-dark-100">{formatBps(current.reserveBps)}</span>
                   <ArrowRight className="h-3 w-3 text-dark-100" />
                   <span>{formatBps(basket.reserveBps)}</span>
+                </span>
+              </li>
+            )}
+            {!scheduleUnchanged && (
+              <li className="flex items-center justify-between gap-3">
+                <span>Auto-rebalance</span>
+                <span className="flex items-center gap-2 tabular-nums">
+                  <span className="text-dark-100">{formatRebalanceSchedule(scheduleOf(current))}</span>
+                  <ArrowRight className="h-3 w-3 text-dark-100" />
+                  <span>{formatRebalanceSchedule(basket)}</span>
                 </span>
               </li>
             )}
@@ -263,7 +301,22 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
         </div>
       )}
 
-      {!unchanged && !problem && (
+      {!unchanged && !problem && weightsUnchanged && (
+        <ProposalOutcome
+          storageKey="index-reschedule"
+          summary="Changes only the auto-rebalance schedule. No trades run when it passes."
+          steps={[
+            {
+              title: 'The new schedule is saved.',
+              detail: basket.autoRebalance
+                ? `The vault rebalances to its current weights every ${basket.rebalanceCadenceDays} days, counted from when the proposal executes.`
+                : 'The vault stops rebalancing automatically. Weights can still be changed through governance.',
+            },
+          ]}
+        />
+      )}
+
+      {!unchanged && !problem && !weightsUnchanged && (
         <ProposalOutcome
           storageKey="index-reweight"
           summary="Saves the new weights, then sells over target and buys under target on Uniswap."

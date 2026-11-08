@@ -1,7 +1,7 @@
 import { Edit } from 'lucide-react';
 
 import { BasketAllocationBar } from '@/components/vaults/index/IndexBasketEditor';
-import { basketSegmentColor, formatBps } from '@/components/vaults/index/indexVault.utils';
+import { basketSegmentColor, formatBps, formatRebalanceSchedule } from '@/components/vaults/index/indexVault.utils';
 
 export const LaunchIndexBasket = ({ data, setCurrentStep }) => {
   const targets = data.indexBasket?.targets || [];
@@ -50,6 +50,12 @@ export const LaunchIndexBasket = ({ data, setCurrentStep }) => {
         <div>
           <p className="uppercase font-semibold text-dark-100">Cash Reserve</p>
           <p>{formatBps(reserveBps)} of vault value kept in ETH</p>
+        </div>
+        <div>
+          <p className="uppercase font-semibold text-dark-100">Auto-rebalance</p>
+          <p>
+            {formatRebalanceSchedule({ autoRebalance: data.indexBasket?.autoRebalance !== false, ...data.indexBasket })}
+          </p>
         </div>
       </div>
     </section>

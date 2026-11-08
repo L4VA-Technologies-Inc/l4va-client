@@ -8,8 +8,11 @@ import { useAssetSource } from '@/hooks/useAssetSource';
 import { useIndexSupportedAssets } from '@/services/api/queries';
 import {
   BPS,
+  INDEX_DEFAULT_REBALANCE_CADENCE_DAYS,
   INDEX_MAX_ASSETS,
+  INDEX_MAX_REBALANCE_CADENCE_DAYS,
   INDEX_MAX_RESERVE_BPS,
+  INDEX_MIN_REBALANCE_CADENCE_DAYS,
   bpsToPercent,
   evenWeights,
   formatBps,
@@ -183,7 +186,13 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
   const isFull = targets.length >= INDEX_MAX_ASSETS;
   const { data: supported } = useIndexSupportedAssets();
 
-  const emit = next => onChange({ targets, reserveBps, ...next });
+  const autoRebalance = value?.autoRebalance !== false;
+  const minCadence = supported?.rebalance?.minCadenceDays ?? INDEX_MIN_REBALANCE_CADENCE_DAYS;
+  const defaultCadence = supported?.rebalance?.defaultCadenceDays ?? INDEX_DEFAULT_REBALANCE_CADENCE_DAYS;
+  const cadence = value?.rebalanceCadenceDays ?? defaultCadence;
+
+  // Spread `value` so fields this editor does not own (the rebalance schedule) survive every edit.
+  const emit = next => onChange({ ...value, targets, reserveBps, ...next });
 
   // Adding an asset re-splits the basket evenly; the user can fine-tune weights afterwards.
   const addAsset = token => {
@@ -347,6 +356,71 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
           />
           <span className="text-dark-100">%</span>
         </label>
+      </div>
+
+      <div className={cn('space-y-3 rounded-lg px-3 py-3', rowBg)}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Auto-rebalance</span>
+            <HoverHelp hint="Prices move, so the basket drifts away from its target weights. With auto-rebalance on, the vault sells what has grown above its weight and buys what has fallen below, by USD value, once per cadence. Each rebalance trades on Uniswap and pays swap fees. Token holders can change this later through a governance proposal." />
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoRebalance}
+            aria-label="Auto-rebalance"
+            disabled={disabled}
+            onClick={() =>
+              emit({
+                autoRebalance: !autoRebalance,
+                rebalanceCadenceDays: value?.rebalanceCadenceDays ?? defaultCadence,
+              })
+            }
+            className={cn(
+              'relative h-6 w-11 flex-shrink-0 rounded-full transition-colors disabled:opacity-50',
+              autoRebalance ? 'bg-orange-500' : 'bg-steel-750'
+            )}
+          >
+            <span
+              className={cn(
+                'absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform',
+                autoRebalance && 'translate-x-5'
+              )}
+            />
+          </button>
+        </div>
+        {autoRebalance && (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm text-dark-100">Cadence</span>
+            <label className="flex items-center gap-2">
+              <span className="text-dark-100">Every</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={minCadence}
+                max={INDEX_MAX_REBALANCE_CADENCE_DAYS}
+                step={1}
+                disabled={disabled}
+                value={cadence}
+                aria-label="Rebalance cadence in days"
+                onWheel={e => e.currentTarget.blur()}
+                onChange={e =>
+                  emit({ rebalanceCadenceDays: e.target.value === '' ? '' : Math.floor(Number(e.target.value)) })
+                }
+                className={cn(
+                  'w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none',
+                  noSpinner
+                )}
+              />
+              <span className="text-dark-100">days</span>
+            </label>
+          </div>
+        )}
+        {autoRebalance && (
+          <p className="text-xs text-dark-100">
+            Minimum {minCadence} days. The exact time within each period is randomized so trades cannot be front-run.
+          </p>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
