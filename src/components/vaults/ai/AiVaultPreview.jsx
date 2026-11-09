@@ -566,6 +566,7 @@ export const AiVaultPreview = ({
   vault,
   aiFields = [],
   missingFields = [],
+  tickerConflict = null,
   onLaunch,
   isLaunching,
   onReset,
@@ -624,7 +625,8 @@ export const AiVaultPreview = ({
   const isChanged = field => changedFields.has(field);
   // Mirrors the manual form's own gate (same schema powers "Confirm & launch" there) instead of
   // trusting the assistant's self-reported status, which can lag behind an already-valid draft.
-  const canOpenInForm = vaultSchema.isValidSync(vault);
+  // A ticker another vault holds passes the schema but is rejected at creation, so it gates launch too.
+  const canOpenInForm = vaultSchema.isValidSync(vault) && !tickerConflict;
   const whitelistAssets = (vault.assetsWhitelist || []).filter(item => item?.policyId);
   const whitelistCount = whitelistAssets.length;
   // An index vault has no whitelist to curate: its "assets" are the basket it
@@ -635,6 +637,8 @@ export const AiVaultPreview = ({
 
   const requiredKeys = [
     ...BASE_REQUIRED_KEYS,
+    // The ticker is optional, but a taken one must be changed before launch.
+    ...(tickerConflict ? ['vaultTokenTicker'] : []),
     ...(isIndexVault ? ['indexBasket'] : []),
     ...(vault.isAcquireOnly ? [] : ['contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist']),
     ...(Number(vault.tokensForAcquires) === 0 ? [] : ['acquireWindowDuration', 'acquireOpenWindowType']),
@@ -645,6 +649,7 @@ export const AiVaultPreview = ({
   // assistant turn resolves), so before that lands fall back to raw emptiness — otherwise the
   // header would briefly claim "ready" while the button correctly still reads "Complete setup".
   const missingRequired = requiredKeys.filter(key => {
+    if (key === 'vaultTokenTicker' && tickerConflict) return true;
     const fieldMissing = missingFields.some(field => field === key || field.startsWith(`${key}[`));
     if (fieldMissing) return true;
     if (missingFields.length > 0 || canOpenInForm) return false;
@@ -858,6 +863,20 @@ export const AiVaultPreview = ({
             onAction={requestIdentityGeneration}
             onCommit={next => onUpdateVault('vaultTokenTicker', next)}
           />
+          {tickerConflict ? (
+            <div className="-mt-1 flex flex-wrap items-center justify-end gap-x-2 border-b border-steel-800/70 pb-2.5 text-xs text-red-400">
+              <span>Already used by another vault</span>
+              {tickerConflict.suggestion ? (
+                <button
+                  className="font-medium text-orange-300 underline decoration-orange-500/40 underline-offset-2 transition-colors duration-150 hover:text-orange-200"
+                  type="button"
+                  onClick={() => onUpdateVault('vaultTokenTicker', tickerConflict.suggestion)}
+                >
+                  Use {tickerConflict.suggestion}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <EditableRow
             multiline
             actionLabel="Generate"

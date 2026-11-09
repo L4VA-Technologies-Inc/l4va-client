@@ -98,6 +98,12 @@ const CreateAiComponent = () => {
 
   const handleLaunch = async () => {
     if (isLaunching) return;
+    if (builder.tickerConflict) {
+      userCollapsedPreview.current = false;
+      setShowPreview(true);
+      toast.error(`The ticker ${builder.tickerConflict.ticker} is already used by another vault — choose another one.`);
+      return;
+    }
 
     setIsLaunching(true);
     try {
@@ -131,7 +137,7 @@ const CreateAiComponent = () => {
   };
 
   // Same gate the preview's own launch button uses.
-  const canLaunch = vaultSchema.isValidSync(builder.vault);
+  const canLaunch = vaultSchema.isValidSync(builder.vault) && !builder.tickerConflict;
   // The assistant can call the draft ready while the schema still rejects it (e.g. a stale date), so
   // the chat CTA follows either signal and, when the schema disagrees, shows what is blocking.
   const showLaunchCta = canLaunch || builder.status === 'ready';
@@ -149,6 +155,7 @@ const CreateAiComponent = () => {
       isLaunching={isLaunching}
       missingFields={builder.missingFields}
       status={builder.status}
+      tickerConflict={builder.tickerConflict}
       vault={builder.vault}
       isUploadingImage={builder.isUploadingImage}
       onGenerateImageRequest={builder.startImageGeneration}

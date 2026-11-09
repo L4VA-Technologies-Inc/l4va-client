@@ -90,6 +90,29 @@ export const useAiVaultBuilder = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  // The model cannot see other vaults, so the draft's ticker is checked against the same rule
+  // vault creation enforces; a taken one blocks launch here instead of failing at submit.
+  const [takenTicker, setTakenTicker] = useState(null);
+  const draftTicker = vault.vaultTokenTicker?.trim() ?? '';
+  useEffect(() => {
+    if (!draftTicker) return undefined;
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      try {
+        const { data } = await AiApiProvider.checkTickerAvailability(draftTicker, { signal: controller.signal });
+        setTakenTicker(data?.available === false ? { ticker: draftTicker, suggestion: data.suggestion ?? null } : null);
+      } catch {
+        // A failed lookup must not block the draft; vault creation still enforces uniqueness.
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [draftTicker]);
+  const tickerConflict =
+    takenTicker && takenTicker.ticker.toUpperCase() === draftTicker.toUpperCase() ? takenTicker : null;
+
   const { data: presetsData } = usePresets();
   const presets = useMemo(() => presetsData?.data?.items || presetsData?.data || [], [presetsData]);
 
@@ -200,10 +223,22 @@ export const useAiVaultBuilder = () => {
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
         // Feed the live yup errors back so a stale prompt degrades to a retry, never to a bad draft.
+        // A correction only fixes the rejected fields, so it is merged onto the first answer's draft:
+        // replacing it lost every value the correction did not repeat (e.g. a freshly generated ticker).
+        // The user already read the streamed reply, so that stays the chat message.
+        const firstMessage = response.message || streamedContent;
+        const firstOptions = response.options ?? [];
+        const firstBasket = response.indexBasket;
         for (let attempt = 0; attempt < MAX_CORRECTION_ATTEMPTS && errors.length; attempt += 1) {
-          response = await requestTurn(history, vault, errors);
-          base = response.resetDraft ? initialVaultState : vault;
-          draft = lockDraft(response.vaultDraft ?? {});
+          const correction = await requestTurn(history, vault, errors);
+          response = {
+            ...correction,
+            message: firstMessage,
+            options: firstOptions,
+            indexBasket: correction.indexBasket?.targets?.length ? correction.indexBasket : firstBasket,
+          };
+          if (correction.resetDraft) base = initialVaultState;
+          draft = { ...draft, ...lockDraft(correction.vaultDraft ?? {}) };
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
           candidate = withAiBasket(
             withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
@@ -233,9 +268,14 @@ export const useAiVaultBuilder = () => {
           ...(resolvedAssets.length ? ['assetsWhitelist'] : []),
           ...(response.indexBasket?.targets?.length ? ['indexBasket'] : []),
         ];
+        // Only values the assistant actually changed count as its suggestions. Re-sending a value that
+        // was already there (a default, or one the user typed) leaves that field's ownership as it was.
+        const before = response.resetDraft ? initialVaultState : vault;
+        const sameValue = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+        const aiChangedKeys = Object.keys(draft).filter(key => !sameValue(candidate[key], before[key]));
         const nextAiFields = response.resetDraft
-          ? [...new Set([...Object.keys(draft), ...resolvedKeys])]
-          : [...new Set([...aiFields, ...Object.keys(draft), ...resolvedKeys])];
+          ? [...new Set([...aiChangedKeys, ...resolvedKeys])]
+          : [...new Set([...aiFields, ...aiChangedKeys, ...resolvedKeys])];
 
         // Derived from the vault we are about to show, never from the assistant's own report, so
         // the panel can never claim a field is missing while displaying its value.
@@ -356,10 +396,14 @@ export const useAiVaultBuilder = () => {
       const patch = field && typeof field === 'object' && value === undefined ? field : { [field]: value };
       const next = withChainArchetype(enforceVaultCoherence({ ...vault, ...patch }));
       const nextMissingFields = await collectIncompleteFields(next);
+      // A value the user set by hand is theirs, no longer the assistant's suggestion.
+      const editedKeys = Object.keys(patch);
+      const nextAiFields = aiFields.filter(key => !editedKeys.includes(key));
 
       setVault(next);
       setMissingFields(nextMissingFields);
-      persist(messages, next, status, nextMissingFields, aiFields);
+      setAiFields(nextAiFields);
+      persist(messages, next, status, nextMissingFields, nextAiFields);
     },
     [aiFields, messages, persist, status, vault, withChainArchetype]
   );
@@ -374,6 +418,7 @@ export const useAiVaultBuilder = () => {
     isGeneratingImage,
     isUploadingImage,
     pendingAction,
+    tickerConflict,
     clearAction,
     sendMessage,
     startImageGeneration,
