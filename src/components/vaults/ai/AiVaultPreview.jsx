@@ -2,7 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { addMilliseconds } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, ExternalLink, ListChecks, Lock, Plus, RotateCcw, Sparkles, Upload } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ExternalLink,
+  ListChecks,
+  Loader2,
+  Lock,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  Upload,
+} from 'lucide-react';
 
 import { Chip } from '@/components/shared/Chip';
 import { HoverHelp } from '@/components/shared/HoverHelp';
@@ -29,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useNativePrices } from '@/services/api/queries';
+import { useSyncedBasketRoutes } from '@/components/vaults/index/IndexBasketEditor';
 import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
   formatBps,
@@ -562,6 +575,28 @@ const Section = ({ id, label, isOpen, onToggle, children }) => (
   </div>
 );
 
+/** Route check result for one basket token, as the basket editor stored it. */
+const BasketRouteIcon = ({ target }) => {
+  const status = target.routeStatus;
+  if (!status) return null;
+  if (status === 'checking') {
+    return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-dark-100" aria-label="Checking Uniswap route" />;
+  }
+  if (status === 'ok') {
+    return <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" aria-label="Tradable on Uniswap" />;
+  }
+  const label =
+    status === 'unavailable'
+      ? "Couldn't check the Uniswap route"
+      : `${status === 'illiquid' ? 'Too illiquid' : "Can't be traded on Uniswap"}${target.routeReason ? `: ${target.routeReason}` : ''}`;
+  return (
+    <span title={label} className="flex shrink-0 items-center gap-1 text-xs text-red-400">
+      <AlertTriangle className="h-3.5 w-3.5" />
+      {status === 'unavailable' ? 'check failed' : status === 'illiquid' ? 'illiquid' : 'no route'}
+    </span>
+  );
+};
+
 export const AiVaultPreview = ({
   vault,
   aiFields = [],
@@ -633,6 +668,11 @@ export const AiVaultPreview = ({
   // buys, which the assistant cannot invent and the user picks here.
   const isIndexVault = vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
   const basketTargets = vault.indexBasket?.targets || [];
+  // Keep each basket token's Uniswap route check live here too: the basket modal writes the
+  // status onto the targets, and without this a status saved as "checking" would never clear.
+  useSyncedBasketRoutes(isIndexVault ? basketTargets : [], null, targets =>
+    onUpdateVault('indexBasket', { ...vault.indexBasket, targets })
+  );
   const basketProblem = isIndexVault ? validateIndexBasket(vault.indexBasket) : null;
 
   const requiredKeys = [
@@ -989,13 +1029,25 @@ export const AiVaultPreview = ({
                           <img alt="" className="h-6 w-6 rounded-full object-cover shrink-0" src={target.image} />
                         )}
                         <span className="text-white text-sm truncate">{target.symbol || target.assetAddress}</span>
+                        <BasketRouteIcon target={target} />
                         <span className="ml-auto text-sm tabular-nums text-dark-100">
                           {formatBps(target.weightBps)}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  {basketProblem && <p className="mt-2 text-sm text-red-400">{basketProblem}</p>}
+                  {basketProblem &&
+                    (basketTargets.some(t => t.routeStatus === 'checking') && !/can't|Couldn't/.test(basketProblem) ? (
+                      <p className="mt-2 flex items-center gap-2 text-sm text-dark-100">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {basketProblem}
+                      </p>
+                    ) : (
+                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>{basketProblem}</span>
+                      </div>
+                    ))}
                 </>
               ) : (
                 <p className="mt-1 text-sm text-dark-100">
