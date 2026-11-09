@@ -84,6 +84,18 @@ export const validateIndexBasket = (basket, minCadenceDays = INDEX_MIN_REBALANCE
   if (total !== BPS) return `Weights must add up to 100% (currently ${formatBps(total, 2)})`;
   const reserve = Number(basket?.reserveBps ?? 0);
   if (reserve < 0 || reserve > INDEX_MAX_RESERVE_BPS) return 'The cash reserve must be between 0% and 50%';
+  // Set by IndexBasketEditor from the API's Uniswap route check; absent when no editor ran it
+  // (the API checks again on submit either way).
+  const untradable = targets.find(t => ['no_route', 'illiquid'].includes(t.routeStatus));
+  if (untradable) {
+    const name = untradable.symbol || untradable.assetAddress;
+    return `${name} can't be held in an index vault${untradable.routeReason ? `: ${untradable.routeReason}` : ''}. Remove it to continue.`;
+  }
+  const unchecked = targets.find(t => t.routeStatus === 'unavailable');
+  if (unchecked) {
+    return `Couldn't check whether ${unchecked.symbol || unchecked.assetAddress} can be traded on Uniswap. Retry the check to continue.`;
+  }
+  if (targets.some(t => t.routeStatus === 'checking')) return 'Checking Uniswap routes for the basket tokens…';
   if (basket?.autoRebalance !== false) {
     const cadence = Number(basket?.rebalanceCadenceDays ?? INDEX_DEFAULT_REBALANCE_CADENCE_DAYS);
     if (!Number.isInteger(cadence) || cadence < minCadenceDays || cadence > INDEX_MAX_REBALANCE_CADENCE_DAYS) {

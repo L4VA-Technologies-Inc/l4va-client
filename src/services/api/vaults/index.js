@@ -134,6 +134,14 @@ export class VaultsApiProvider {
     return response.data;
   }
 
+  /** Can this token be bought with ETH and sold back through Uniswap (for `vaultId`, or a new vault)? */
+  static async getIndexAssetRoutes(address, vaultId) {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexAssetRoutes(address), {
+      params: vaultId ? { vaultId } : undefined,
+    });
+    return response.data;
+  }
+
   static async getIndexOverview(vaultId) {
     const response = await axiosInstance.get(VaultsConfigProvider.getIndexOverview(vaultId));
     return response.data;
