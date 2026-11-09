@@ -30,6 +30,7 @@ const run = (id, trigger, status, legs, extra = {}) => ({
   completedAt: status === 'completed' ? '2026-10-28T16:37:00Z' : null,
   navNative: '3100000000000000',
   legs: legs.map((l, i) => ({ operationId: `${id}-${i}`, status: 'confirmed', txHash: '0xabc', ...l })),
+  skipped: [],
   ...extra,
 });
 
@@ -97,6 +98,34 @@ const CASES = [
         { side: 'buy', symbol: 'L4VA' },
         { side: 'buy', symbol: 'PEPE' },
       ]),
+    ],
+  },
+  {
+    title: 'Completed with warnings — small allocation skipped',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 9000 },
+        { ...HOOD, weightBps: 1000 },
+      ],
+    },
+    portfolio: {
+      assets: [holding(L4VA, 8100, 8090, 8.09), holding(HOOD, 900, 0, 0)],
+      reserve: { targetBps: 1000, actualBps: 1910, ...usd(1.91) },
+    },
+    rebalances: [
+      run('r1', 'initial_buy', 'completed', [{ side: 'buy', symbol: 'L4VA' }], {
+        skipped: [
+          {
+            asset: HOOD.assetAddress.toLowerCase(),
+            symbol: HOOD.symbol,
+            side: 'buy',
+            reason: 'below_min_trade',
+            valueNative: '400000000000000',
+            minTradeNative: '1000000000000000',
+          },
+        ],
+      }),
     ],
   },
   {

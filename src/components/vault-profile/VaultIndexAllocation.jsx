@@ -160,6 +160,17 @@ const HoldingRow = ({ asset, actualBps, targetBps, driftBps, value, note }) => (
   </li>
 );
 
+const skippedTradeMessage = leg => {
+  const action = leg.side === 'sell' ? 'Sell' : 'Buy';
+  if (leg.reason === 'below_min_trade') {
+    return `${leg.symbol} ${action.toLowerCase()} skipped: ${formatNativeWei(leg.valueNative)} ETH is below the ${formatNativeWei(leg.minTradeNative)} ETH minimum trade.`;
+  }
+  if (leg.reason === 'no_free_native') {
+    return `${leg.symbol} ${action.toLowerCase()} skipped: ${formatNativeWei(leg.valueNative)} ETH was needed, but no ETH was available above the cash reserve.`;
+  }
+  return null;
+};
+
 const RebalanceHistory = ({ rebalances }) => {
   if (!rebalances?.length) return null;
   return (
@@ -171,11 +182,20 @@ const RebalanceHistory = ({ rebalances }) => {
       <ul className="space-y-2">
         {rebalances.map(run => {
           const traded = run.legs.filter(l => l.status === 'confirmed');
+          const blocked = (run.skipped || []).filter(l => l.reason !== 'within_tolerance');
+          const completedWithWarnings = run.status === 'completed' && blocked.length > 0;
           return (
             <li key={run.id} className="rounded-lg bg-steel-850 px-4 py-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">{REBALANCE_TRIGGER_LABELS[run.trigger] || run.trigger}</span>
-                <span className={cn('text-sm capitalize', REBALANCE_STATUS_STYLES[run.status])}>{run.status}</span>
+                <span
+                  className={cn(
+                    'text-sm capitalize',
+                    completedWithWarnings ? 'text-yellow-400' : REBALANCE_STATUS_STYLES[run.status]
+                  )}
+                >
+                  {completedWithWarnings ? 'completed with warnings' : run.status}
+                </span>
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-dark-100">
                 <span>{formatDateWithTime(run.completedAt || run.createdAt)}</span>
@@ -201,6 +221,13 @@ const RebalanceHistory = ({ rebalances }) => {
                 <p className="mt-2 text-xs text-red-400">
                   Trading paused before the basket was complete. It will be retried; funds stay in the vault.
                 </p>
+              )}
+              {blocked.length > 0 && (
+                <ul className="mt-2 space-y-1 text-xs text-yellow-400">
+                  {blocked.map((leg, index) => (
+                    <li key={`${leg.asset}-${leg.side}-${leg.reason}-${index}`}>{skippedTradeMessage(leg)}</li>
+                  ))}
+                </ul>
               )}
             </li>
           );
