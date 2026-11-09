@@ -55,6 +55,20 @@ const withoutTrailingGenerator = messages =>
     ? messages.slice(0, -1)
     : messages;
 
+/** "fooBarBaz" / "assets[0].id" -> "foo bar baz" (top-level field only). */
+const humanizeField = path =>
+  String(path)
+    .split(/[.[]/)[0]
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase();
+
+/** Tells the user what is still left after the image, so the conversation has a clear next step. */
+const describeRemainingSteps = missingFields => {
+  const remaining = [...new Set(missingFields.map(humanizeField))].filter(Boolean);
+  if (!remaining.length) return 'Everything else is filled in, so the vault is ready to review and launch.';
+  return `Still left: ${remaining.join(', ')}.`;
+};
+
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
   const { network, isRobinHood } = useNetwork();
@@ -308,11 +322,16 @@ export const useAiVaultBuilder = () => {
   const applyImage = useCallback(
     async (url, content) => {
       const next = { ...vault, vaultImage: url, ftTokenImg: url };
+      const nextMissingFields = await collectIncompleteFields(next);
       const nextMessages = [
         ...withoutTrailingGenerator(messages),
-        { role: 'assistant', content, attachment: { type: 'vault-image', url } },
+        {
+          role: 'assistant',
+          content: `${content} Does this image work for you? ${describeRemainingSteps(nextMissingFields)}`,
+          attachment: { type: 'vault-image', url },
+          options: [{ label: 'Looks good, continue', value: 'The image looks good. What is the next step?' }],
+        },
       ];
-      const nextMissingFields = await collectIncompleteFields(next);
 
       setVault(next);
       setMessages(nextMessages);
