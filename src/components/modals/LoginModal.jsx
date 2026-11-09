@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
-import { useAccount, useDisconnect, useSignMessage } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage, useSwitchChain } from 'wagmi';
+import { getAccount } from 'wagmi/actions';
 import { useAppKit, useAppKitState } from '@reown/appkit/react';
 import toast from 'react-hot-toast';
 
@@ -16,6 +17,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import WalletIcon from '@/icons/wallet.svg?react';
+import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
@@ -55,6 +57,7 @@ export const LoginModal = () => {
   const { isConnected: isRobinhoodConnected, address: robinhoodAddress } = useAccount();
   const { disconnectAsync: disconnectRobinhood } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
+  const { switchChainAsync } = useSwitchChain();
   const { open: openAppKit } = useAppKit();
   const { open: isAppKitOpen } = useAppKitState();
   // Bumped every time the login is opened. A wallet can leave a request hanging forever
@@ -73,6 +76,15 @@ export const LoginModal = () => {
     sessionStorage.setItem('evm_login_in_progress', '1');
     setIsEvmSigning(true);
     try {
+      // A wallet on a chain we don't support (e.g. MetaMask Mobile on Ethereum) makes AppKit
+      // report a string chain id, and wagmi then refuses to sign with
+      // ConnectorChainMismatchError. Move it to Robinhood Chain first (wagmi adds the chain
+      // if the wallet doesn't know it). Done before login completes, so the wallet-change
+      // watchdog is not involved.
+      if (Number(getAccount(wagmiConfig).chainId) !== robinhoodChain.id) {
+        await switchChainAsync({ chainId: robinhoodChain.id });
+        if (!isCurrent()) return;
+      }
       const { data: challenge } = await CoreApiProvider.evmChallenge(address);
       const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
       if (!isCurrent()) return;
