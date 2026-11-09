@@ -72,9 +72,33 @@ export const toRouteView = q => {
   return { status: 'checking', reason: null, refetch: q?.refetch };
 };
 
-const useBasketRoutes = (targets, vaultId) => {
+export const useBasketRoutes = (targets, vaultId) => {
   const results = useQueries({ queries: targets.map(t => indexAssetRoutesQuery(t.assetAddress, vaultId)) });
   return targets.map((_, i) => toRouteView(results[i]));
+};
+
+/**
+ * Runs the route checks for `targets` and writes each result onto its target
+ * (`routeStatus`, `routeReason`) through `onTargets` whenever a result changes.
+ * Any view that holds a basket and gates on `validateIndexBasket` must use it,
+ * or a stored status (e.g. `checking`) would never update.
+ */
+export const useSyncedBasketRoutes = (targets, vaultId, onTargets) => {
+  const routes = useBasketRoutes(targets, vaultId);
+  const routeKey = routes.map(r => `${r.status}:${r.reason ?? ''}`).join('|');
+  useEffect(() => {
+    const changed = targets.some(
+      (t, i) => t.routeStatus !== routes[i].status || (t.routeReason ?? null) !== (routes[i].reason ?? null)
+    );
+    if (changed) {
+      onTargets(
+        targets.map((t, i) => ({ ...t, routeStatus: routes[i].status, routeReason: routes[i].reason ?? null }))
+      );
+    }
+    // Re-run only when a check result changes; `onTargets` and `targets` are read from that render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
+  return routes;
 };
 
 export const RouteStatus = ({ route }) => {
@@ -296,24 +320,7 @@ export const IndexBasketEditor = ({
   // Each token's route check is stored on its target (`routeStatus`, `routeReason`) so the form's
   // validation can block submitting a basket with a token the vault could not trade. The payload
   // sent to the API leaves these fields out.
-  const routes = useBasketRoutes(targets, vaultId);
-  const routeKey = routes.map(r => `${r.status}:${r.reason ?? ''}`).join('|');
-  useEffect(() => {
-    const changed = targets.some(
-      (t, i) => t.routeStatus !== routes[i].status || (t.routeReason ?? null) !== (routes[i].reason ?? null)
-    );
-    if (changed) {
-      emit({
-        targets: targets.map((t, i) => ({
-          ...t,
-          routeStatus: routes[i].status,
-          routeReason: routes[i].reason ?? null,
-        })),
-      });
-    }
-    // Re-run only when a check result changes; `emit` and `targets` are read from that render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeKey]);
+  const routes = useSyncedBasketRoutes(targets, vaultId, next => emit({ targets: next }));
 
   // Adding an asset re-splits the basket evenly; the user can fine-tune weights afterwards.
   const addAsset = token => {
