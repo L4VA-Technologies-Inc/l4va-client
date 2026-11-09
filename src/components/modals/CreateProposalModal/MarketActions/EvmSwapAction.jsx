@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, X, ArrowDown } from 'lucide-react';
 import { erc20Abi, formatUnits, parseUnits } from 'viem';
+import { useQuery } from '@tanstack/react-query';
 import { useBalance, useReadContract } from 'wagmi';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
+import { RouteStatus, toRouteView } from '@/components/vaults/index/IndexBasketEditor';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
-import { useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
+import { indexAssetRoutesQuery, useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
 
 const NATIVE = '0x0000000000000000000000000000000000000000';
 const CUSTOM = 'custom';
@@ -96,7 +98,15 @@ const useCustomToken = address => {
   };
 };
 
-const TokenPicker = ({ label, options, selection, onChange, exclude }) => {
+/** Uniswap route check for a picked token (buy with ETH and sell back); native ETH needs none. */
+const TokenRouteHint = ({ token, vaultId }) => {
+  const address = token && token.address !== NATIVE ? token.address : null;
+  const q = useQuery(indexAssetRoutesQuery(address, vaultId));
+  if (!address) return null;
+  return <RouteStatus route={toRouteView(q)} />;
+};
+
+const TokenPicker = ({ label, options, selection, onChange, exclude, vaultId }) => {
   const custom = useCustomToken(selection.custom);
   const selectOptions = [
     ...options.map(t => ({
@@ -124,6 +134,7 @@ const TokenPicker = ({ label, options, selection, onChange, exclude }) => {
         placeholder="Select token"
         onChange={value => onChange({ value, custom: '', token: null })}
       />
+      <TokenRouteHint token={token} vaultId={vaultId} />
       {selection.value === CUSTOM && (
         <LavaSteelInput
           placeholder="0x… ERC-20 address"
@@ -144,7 +155,7 @@ const emptyAction = () => ({
   humanAmount: '',
 });
 
-const SwapRow = ({ action, index, options, vaultAddress, canRemove, showErrors, onUpdate, onRemove }) => {
+const SwapRow = ({ action, index, options, vaultAddress, vaultId, canRemove, showErrors, onUpdate, onRemove }) => {
   const { input, output, humanAmount } = action;
   const balance = useVaultTokenBalance(vaultAddress, input.token);
   const raw = input.token ? toRaw(humanAmount, input.token.decimals) : '0';
@@ -184,6 +195,7 @@ const SwapRow = ({ action, index, options, vaultAddress, canRemove, showErrors, 
       </div>
 
       <TokenPicker
+        vaultId={vaultId}
         label="Sell"
         options={options}
         selection={input}
@@ -222,6 +234,7 @@ const SwapRow = ({ action, index, options, vaultAddress, canRemove, showErrors, 
       </div>
 
       <TokenPicker
+        vaultId={vaultId}
         label="Buy"
         options={options}
         selection={output}
@@ -279,6 +292,7 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
           index={index}
           options={options}
           vaultAddress={vault?.contractAddress}
+          vaultId={vault?.id}
           canRemove={actions.length > 1}
           showErrors={!!error}
           onUpdate={updateAction}
