@@ -56,6 +56,9 @@ const skipMessage = (leg, minTradeNative) => {
   if (leg.reason === 'below_min_trade') {
     return `${action} ≈ ${formatNativeWei(leg.valueNative)} ETH is below the ${formatNativeWei(minTradeNative)} ETH minimum trade`;
   }
+  if (leg.reason === 'no_route') {
+    return `${action} can't be routed on Uniswap right now${leg.detail ? `: ${leg.detail}` : ''}`;
+  }
   if (leg.reason === 'no_free_native') {
     return `${action} ≈ ${formatNativeWei(leg.valueNative)} ETH has no ETH above the cash reserve to fund it`;
   }
@@ -96,13 +99,15 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
     preview.sells.length === 0 &&
     preview.buys.length === 0 &&
     (preview.skipped || []).some(s => s.reason !== 'within_tolerance');
+  // A trade Uniswap cannot route would pass the vote and then never execute; the API rejects it too.
+  const unroutable = (preview?.skipped || []).filter(s => s.reason === 'no_route');
 
   useEffect(() => {
     onDataChange({
       indexReweight: basket ? toIndexBasketPayload(basket) : null,
-      isValid: !problem && !unchanged && !estimating && !blockedByTrades,
+      isValid: !problem && !unchanged && !estimating && !blockedByTrades && unroutable.length === 0,
     });
-  }, [basket, problem, unchanged, estimating, blockedByTrades, onDataChange]);
+  }, [basket, problem, unchanged, estimating, blockedByTrades, unroutable.length, onDataChange]);
 
   const diff = useMemo(() => diffBaskets(current, basket), [current, basket]);
   const symbolOf = address =>
@@ -169,6 +174,7 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
 
       <IndexBasketEditor
         steel
+        vaultId={vault?.id}
         value={basket}
         onChange={setBasket}
         error={
@@ -292,6 +298,12 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
                       </p>
                     ))}
                 </>
+              )}
+              {unroutable.length > 0 && (
+                <p className="text-xs text-red-400">
+                  This proposal can&apos;t be created while a needed trade has no Uniswap route. Change the basket so it
+                  no longer needs that trade.
+                </p>
               )}
               <p className="pt-1 text-xs text-dark-100">
                 Estimate only. Trades are sized again from live prices when the proposal executes.

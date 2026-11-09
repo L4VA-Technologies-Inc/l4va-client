@@ -82,6 +82,18 @@ export const useIndexSupportedAssets = () => {
   });
 };
 
+/**
+ * Route check for one basket token: whether Uniswap can buy it with ETH and sell
+ * it back for this vault (or a new vault). Same check the API runs on submit.
+ */
+export const indexAssetRoutesQuery = (address: string, vaultId?: string | null) => ({
+  queryKey: ['index-asset-routes', address?.toLowerCase(), vaultId ?? null],
+  queryFn: () => VaultsApiProvider.getIndexAssetRoutes(address, vaultId),
+  enabled: !!address,
+  staleTime: 5 * 60_000,
+  retry: 1,
+});
+
 /** Liquidity pool an EVM vault seeds on close: status, then live reserves. */
 export const useVaultLp = (id: string, enabled = true) => {
   return useQuery({

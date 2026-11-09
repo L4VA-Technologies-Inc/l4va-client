@@ -168,6 +168,9 @@ const skippedTradeMessage = leg => {
   if (leg.reason === 'no_free_native') {
     return `${leg.symbol} ${action.toLowerCase()} skipped: ${formatNativeWei(leg.valueNative)} ETH was needed, but no ETH was available above the cash reserve.`;
   }
+  if (leg.reason === 'no_route') {
+    return `${leg.symbol} ${action.toLowerCase()} skipped: Uniswap had no route the vault can trade${leg.detail ? ` (${leg.detail})` : ''}.`;
+  }
   return null;
 };
 

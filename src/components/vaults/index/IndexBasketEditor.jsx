@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
-import { Shuffle, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import { AlertTriangle, CheckCircle2, Loader2, RotateCw, Shuffle, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { useAssetSource } from '@/hooks/useAssetSource';
-import { useIndexSupportedAssets } from '@/services/api/queries';
+import { indexAssetRoutesQuery, useIndexSupportedAssets } from '@/services/api/queries';
 import {
   BPS,
   INDEX_DEFAULT_REBALANCE_CADENCE_DAYS,
@@ -43,6 +44,84 @@ const TokenLogo = ({ image, symbol, className = 'h-8 w-8' }) =>
       {(symbol || '?').slice(0, 2).toUpperCase()}
     </span>
   );
+
+/**
+ * Uniswap route check per basket token (buy with ETH, sell back to ETH), run by
+ * the API with the same routing it uses to trade. A token that fails it is
+ * never accepted, so a basket the editor allows is a basket the vault can trade.
+ */
+/** A route-check query result as the props `RouteStatus` takes. */
+export const toRouteView = q => {
+  if (q?.data) {
+    return {
+      status: q.data.status,
+      reason: q.data.reason ?? null,
+      buyRoute: q.data.buy?.route ?? null,
+      sellRoute: q.data.sell?.route ?? null,
+      lossBps: q.data.roundTripLossBps ?? null,
+      refetch: q.refetch,
+    };
+  }
+  if (q?.isError) {
+    return {
+      status: 'unavailable',
+      reason: q.error?.response?.data?.message || 'The route check failed',
+      refetch: q.refetch,
+    };
+  }
+  return { status: 'checking', reason: null, refetch: q?.refetch };
+};
+
+const useBasketRoutes = (targets, vaultId) => {
+  const results = useQueries({ queries: targets.map(t => indexAssetRoutesQuery(t.assetAddress, vaultId)) });
+  return targets.map((_, i) => toRouteView(results[i]));
+};
+
+export const RouteStatus = ({ route }) => {
+  if (!route || route.status === 'checking') {
+    return (
+      <p className="flex items-center gap-1 text-xs text-dark-100">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Checking Uniswap route…
+      </p>
+    );
+  }
+  if (route.status === 'ok') {
+    const cost = route.lossBps != null ? ` · round trip ≈ ${(route.lossBps / 100).toFixed(2)}%` : '';
+    return (
+      <p
+        className="flex min-w-0 items-center gap-1 text-xs text-green-500"
+        title={`Buy: ${route.buyRoute || '—'}\nSell: ${route.sellRoute || '—'}${cost}`}
+      >
+        <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+        <span className="truncate">Tradable on Uniswap{route.buyRoute ? ` · ${route.buyRoute}` : ''}</span>
+      </p>
+    );
+  }
+  if (route.status === 'unavailable') {
+    return (
+      <p className="flex items-center gap-1 text-xs text-amber-400">
+        <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+        <span className="min-w-0">Couldn&apos;t check the route right now.</span>
+        {route.refetch && (
+          <button type="button" onClick={() => route.refetch()} className="flex items-center gap-1 underline">
+            <RotateCw className="h-3 w-3" />
+            Retry
+          </button>
+        )}
+      </p>
+    );
+  }
+  return (
+    <p className="flex items-start gap-1 text-xs text-red-400">
+      <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+      <span className="min-w-0">
+        {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
+        {route.reason ? `: ${route.reason}` : ''}
+      </span>
+    </p>
+  );
+};
 
 /** Stacked bar of target weights, with the cash reserve as the last segment. */
 export const BasketAllocationBar = ({ targets, reserveBps = 0, className = '' }) => {
@@ -150,19 +229,26 @@ const SupportedAssetPicker = ({ assets, existing, onAdd, disabled, steel }) => (
     <div className="flex flex-wrap gap-2">
       {assets.map(asset => {
         const added = existing.has(asset.assetAddress.toLowerCase());
+        // Unknown (`routing` absent) stays selectable: the row runs its own check.
+        const blocked = asset.routing && asset.routing.status !== 'ok';
         return (
           <button
             key={asset.assetAddress}
             type="button"
-            title={asset.name || asset.assetAddress}
-            disabled={disabled || added}
+            title={
+              blocked
+                ? `${asset.symbol} can't be added right now: ${asset.routing.reason || 'no Uniswap route'}`
+                : asset.name || asset.assetAddress
+            }
+            disabled={disabled || added || blocked}
             onClick={() =>
               onAdd({ address: asset.assetAddress, symbol: asset.symbol, name: asset.name, image: asset.image })
             }
             className={cn(
               'flex items-center gap-2 rounded-full border border-steel-750 py-1 pl-1 pr-3 text-sm transition-colors',
               steel ? 'bg-steel-800' : 'bg-steel-850',
-              added ? 'opacity-40' : 'hover:border-orange-500'
+              added || blocked ? 'opacity-40' : 'hover:border-orange-500',
+              blocked && 'line-through'
             )}
           >
             <TokenLogo image={asset.image} symbol={asset.symbol} className="h-6 w-6" />
@@ -171,6 +257,11 @@ const SupportedAssetPicker = ({ assets, existing, onAdd, disabled, steel }) => (
         );
       })}
     </div>
+    {assets.some(a => a.routing && a.routing.status !== 'ok') && (
+      <p className="text-xs text-dark-100">
+        Crossed-out tokens can&apos;t be bought and sold back through Uniswap right now. Hover one for the reason.
+      </p>
+    )}
   </div>
 );
 
@@ -178,7 +269,15 @@ const SupportedAssetPicker = ({ assets, existing, onAdd, disabled, steel }) => (
  * Edits an index basket: `{ targets: [{ assetAddress, symbol, name, image, weightBps }], reserveBps }`.
  * Weights are entered as percentages and stored as integer basis points.
  */
-export const IndexBasketEditor = ({ value, onChange, error, disabled = false, steel = false, className = '' }) => {
+export const IndexBasketEditor = ({
+  value,
+  onChange,
+  error,
+  disabled = false,
+  steel = false,
+  className = '',
+  vaultId = null,
+}) => {
   const targets = useMemo(() => value?.targets || [], [value?.targets]);
   const reserveBps = Number(value?.reserveBps ?? 0);
   const total = totalWeightBps(targets);
@@ -193,6 +292,28 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
 
   // Spread `value` so fields this editor does not own (the rebalance schedule) survive every edit.
   const emit = next => onChange({ ...value, targets, reserveBps, ...next });
+
+  // Each token's route check is stored on its target (`routeStatus`, `routeReason`) so the form's
+  // validation can block submitting a basket with a token the vault could not trade. The payload
+  // sent to the API leaves these fields out.
+  const routes = useBasketRoutes(targets, vaultId);
+  const routeKey = routes.map(r => `${r.status}:${r.reason ?? ''}`).join('|');
+  useEffect(() => {
+    const changed = targets.some(
+      (t, i) => t.routeStatus !== routes[i].status || (t.routeReason ?? null) !== (routes[i].reason ?? null)
+    );
+    if (changed) {
+      emit({
+        targets: targets.map((t, i) => ({
+          ...t,
+          routeStatus: routes[i].status,
+          routeReason: routes[i].reason ?? null,
+        })),
+      });
+    }
+    // Re-run only when a check result changes; `emit` and `targets` are read from that render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeKey]);
 
   // Adding an asset re-splits the basket evenly; the user can fine-tune weights afterwards.
   const addAsset = token => {
@@ -268,6 +389,7 @@ export const IndexBasketEditor = ({ value, onChange, error, disabled = false, st
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{t.symbol || shortAddress(t.assetAddress)}</p>
                 <p className="truncate text-xs text-dark-100">{t.name || shortAddress(t.assetAddress)}</p>
+                <RouteStatus route={routes[i]} />
               </div>
               <label className="flex items-center gap-1">
                 <span className="sr-only">Weight for {t.symbol || t.assetAddress}</span>
