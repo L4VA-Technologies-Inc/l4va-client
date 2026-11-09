@@ -15,6 +15,11 @@ export class AiApiProvider {
     return await axiosInstance.get(AiConfigProvider.vaultCreationSpec(), { params: { chain, network } });
   }
 
+  /** `{ available, suggestion }` — same uniqueness rule vault creation enforces. */
+  static async checkTickerAvailability(ticker, { signal } = {}) {
+    return await axiosInstance.get(AiConfigProvider.tickerAvailability(), { params: { ticker }, signal });
+  }
+
   static async sendVaultAssistantMessage(payload) {
     return await axiosInstance.post(AiConfigProvider.vaultAssistantMessage(), payload);
   }

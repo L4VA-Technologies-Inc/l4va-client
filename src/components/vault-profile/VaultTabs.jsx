@@ -42,6 +42,9 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
       onTabChange(selectedTab);
       router.navigate({
         search: prev => ({ ...prev, tab: selectedTab }),
+        // Switching tabs only syncs the URL; the page must stay where the user is.
+        resetScroll: false,
+        replace: true,
       });
     },
     [onTabChange, router]

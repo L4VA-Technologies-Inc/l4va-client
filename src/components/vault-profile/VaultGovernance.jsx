@@ -283,7 +283,7 @@ export const VaultGovernance = ({ vault }) => {
   );
 
   return (
-    <div className="text-white min-h-screen p-6 rounded-2xl overflow-hidden">
+    <div className="text-white p-6 rounded-2xl overflow-hidden">
       {isPaused && (
         <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg px-4 py-3 mb-6">
           <PauseCircle className="w-5 h-5 shrink-0" />

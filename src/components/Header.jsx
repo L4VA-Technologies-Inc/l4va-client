@@ -126,11 +126,23 @@ export const Header = () => {
     [isAuthenticated, openModal]
   );
 
-  const handleNotificationClick = vaultId => {
-    if (vaultId) {
-      router.navigate({ to: `/vaults/${vaultId}` });
-      setIsNotificationsOpen(false);
+  const handleNotificationClick = notification => {
+    const { vaultId, proposalId } = notification?.data || {};
+    // Governance notifications open the proposal; older ones carry only the vault, so they land on
+    // its Governance tab (navigating to the bare vault URL did nothing when already on that page).
+    const isGovernance = /proposal|vote|governance/i.test(`${notification?.subject} ${notification?.body}`);
+    if (proposalId) {
+      router.navigate({ to: '/proposals/$id', params: { id: proposalId } });
+    } else if (vaultId) {
+      router.navigate({
+        to: '/vaults/$id',
+        params: { id: vaultId },
+        search: isGovernance ? { tab: 'Governance' } : {},
+      });
+    } else {
+      return;
     }
+    setIsNotificationsOpen(false);
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -177,7 +189,7 @@ export const Header = () => {
                 <div
                   key={n.id}
                   className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
-                  onClick={() => handleNotificationClick(n.data?.vaultId)}
+                  onClick={() => handleNotificationClick(n)}
                 >
                   <div className="font-medium text-white">{n.subject || 'No subject'}</div>
                   <div className="text-base text-dark-100">{n.body || 'No message'}</div>

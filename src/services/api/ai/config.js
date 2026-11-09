@@ -3,6 +3,10 @@ export class AiConfigProvider {
     return '/api/v1/ai/vault-creation-spec';
   }
 
+  static tickerAvailability() {
+    return '/api/v1/ai/ticker-availability';
+  }
+
   static vaultAssistantMessage() {
     return '/api/v1/ai/vault-assistant/message';
   }
