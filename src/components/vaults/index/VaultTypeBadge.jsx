@@ -1,5 +1,6 @@
 import { PieChart } from 'lucide-react';
 
+import { HintTooltip } from '@/components/ui/HintTooltip';
 import { cn } from '@/lib/utils';
 import { VAULT_ARCHETYPE_META } from '@/components/vaults/index/indexVault.utils';
 
@@ -16,17 +17,19 @@ export const VaultTypeBadge = ({ vault, variant = 'chip', className = '' }) => {
 
   if (variant === 'icon') {
     return (
-      <div className={cn('group relative', className)}>
+      <HintTooltip
+        className={className}
+        content={
+          <>
+            <span className="font-medium">{meta.label}</span>
+            <span className="text-dark-100"> · {meta.description}</span>
+          </>
+        }
+      >
         <span className="bg-steel-850 px-2 py-1 rounded-full text-sm flex items-center justify-center gap-1 h-7 min-w-[28px]">
           <PieChart className="w-4 h-4 text-orange-500" aria-label={meta.label} />
-          {/* No hover on touch screens, so the label is shown inline there. */}
-          <span className="lg:hidden text-xs">{meta.label}</span>
         </span>
-        <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-          <span className="font-medium">{meta.label}</span>
-          <span className="text-dark-100"> · {meta.description}</span>
-        </div>
-      </div>
+      </HintTooltip>
     );
   }
 

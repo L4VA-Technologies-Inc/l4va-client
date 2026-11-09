@@ -7,6 +7,7 @@ import { useReadContract } from 'wagmi';
 import { SwapComponent } from '../swap/Swap';
 import { UniswapSwapPanel } from '../swap/UniswapSwapPanel';
 
+import { HintTooltip } from '@/components/ui/HintTooltip';
 import { useCurrency } from '@/hooks/useCurrency';
 import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -544,73 +545,53 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             {isAuthenticated && (
-              <div className="group relative">
+              <HintTooltip content="View owner profile">
                 <button
                   onClick={() => handleOwnerClick(vault.owner.id)}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <User className="w-4 h-4 text-orange-500" />
-                  <span className="lg:hidden text-xs normal-case">Owner</span>
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  View owner profile
-                </div>
-              </div>
+              </HintTooltip>
             )}
             {isAuthenticated && user?.id === vault.owner?.id && vault.vaultStatus === VAULT_STATUSES.PUBLISHED && (
-              <div className="group relative">
+              <HintTooltip content="Edit vault settings">
                 <button
                   onClick={() => openModal('EditUpcomingVaultModal', { vault })}
                   aria-label="Edit vault settings"
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <Pencil className="w-4 h-4 text-orange-500" />
-                  <span className="lg:hidden text-xs normal-case">Edit</span>
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  Edit vault settings
-                </div>
-              </div>
+              </HintTooltip>
             )}
             {/* Statistic */}
             {showTokenDetails && (
-              <div className="group relative">
+              <HintTooltip content="View vault statistics">
                 <button
                   type="button"
                   onClick={() => navigate({ to: '/tokens/$id', params: { id: vault.id } })}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <BarChart3 className="w-4 h-4 text-orange-500" />
-                  <span className="lg:hidden text-xs normal-case">Stats</span>
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  View vault statistics
-                </div>
-              </div>
+              </HintTooltip>
             )}
             <VaultTypeBadge vault={vault} variant="icon" />
-            <div className="group relative">
+            <HintTooltip content="Total views">
               <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
                 <EyeIcon className="w-4 h-4 text-orange-500" />
                 <span>{formatCompactNumber(vault.countView)}</span>
-                <span className="lg:hidden text-xs normal-case text-dark-100">views</span>
               </span>
-              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                Total views
-              </div>
-            </div>
-            <div className="group relative">
+            </HintTooltip>
+            <HintTooltip content="Share vault link">
               <button
                 onClick={handleCopyVaultAddress}
                 className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
               >
                 <Share className="w-4 h-4 text-orange-500" />
-                <span className="lg:hidden text-xs normal-case">Share</span>
               </button>
-              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                Share vault link
-              </div>
-            </div>
+            </HintTooltip>
           </div>
         </div>
 
