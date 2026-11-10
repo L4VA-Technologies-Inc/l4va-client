@@ -123,7 +123,7 @@ createAppKit({
     icons: [`${appOrigin}/favicon/apple-touch-icon-rh.png`],
   },
   // AppKit hides every registry wallet whose WalletConnect listing doesn't declare
-  // eip155:4663/46630 — Rainbow and Robinhood Wallet don't (yet), even though they can
+  // eip155:4663/46630 — Rainbow, Robinhood and Uniswap Wallet don't (yet), even though they can
   // sign for any EVM chain. customWallets bypass that chain filter.
   // Coinbase Wallet is listed by the registry as "Base (formerly Coinbase Wallet)".
   featuredWalletIds: [
@@ -151,6 +151,15 @@ createAppKit({
       mobile_link: 'rainbow://',
       app_store: 'https://apps.apple.com/app/id1457119021',
       play_store: 'https://play.google.com/store/apps/details?id=me.rainbow',
+    },
+    {
+      id: 'c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a',
+      name: 'Uniswap Wallet',
+      homepage: 'https://wallet.uniswap.org/',
+      image_url: `${appOrigin}/wallets/uniswap.png`,
+      mobile_link: 'uniswap://',
+      app_store: 'https://apps.apple.com/us/app/uniswap-wallet/id6443944476',
+      play_store: 'https://play.google.com/store/apps/details?id=com.uniswap.mobile',
     },
   ],
   // Terms acceptance lives in AppKit's legal checkbox — the login opens AppKit directly.

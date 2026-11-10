@@ -5,7 +5,6 @@ import { useCallback } from 'react';
 import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
 import { useAuth } from '@/lib/auth/auth';
-import { useNetwork } from '@/hooks/useNetwork';
 
 const readJson = key => {
   try {
@@ -18,7 +17,6 @@ const readJson = key => {
 
 const CreateComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { isRobinHood } = useNetwork();
 
   const storageVault = readJson('storageVault');
   const aiMeta = readJson(AI_VAULT_STORAGE_META_KEY);
@@ -53,16 +51,11 @@ const CreateComponent = () => {
           <span className="uppercase font-russo text-sm">{isAiPrefilled ? 'Back to chat' : 'Create with AI'}</span>
         </Link>
       </div>
-      <div
-        className="absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full max-w-[1920px] min-h-[300px] bg-cover bg-bottom bg-no-repeat"
-        style={{
-          backgroundImage: isRobinHood ? 'none' : 'url(/assets/vaults/create-vault-bg.webp)',
-        }}
-      />
       <CreateVaultForm
         aiPrefilled={isAiPrefilled}
         initialStep={isAiPrefilled ? aiMeta.startStep : 1}
         setVault={handleSaveVault}
+        showAiLink={false}
         vault={storageVault}
       />
     </>

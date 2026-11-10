@@ -76,7 +76,7 @@ const EmptyState = () => (
   <div className="py-8">
     <NoDataPlaceholder message="No vaults found" iconBgColor="bg-orange-500/15" iconInnerBgColor="bg-orange-500/30" />
     <div className="mt-4 text-center">
-      <Link className={clsx('transition-all')} to="/create">
+      <Link className={clsx('transition-all')} to="/create-ai">
         <span className="text-orange-500 hover:underline">Create</span> your first vault to get started
       </Link>
     </div>

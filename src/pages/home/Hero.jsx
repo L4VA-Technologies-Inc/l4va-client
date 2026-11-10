@@ -15,7 +15,7 @@ const Hero = () => {
       e.preventDefault();
       openModal('LoginModal');
     } else {
-      navigate({ to: '/create' });
+      navigate({ to: '/create-ai' });
     }
   };
 
