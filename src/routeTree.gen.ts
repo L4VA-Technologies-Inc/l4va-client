@@ -18,6 +18,7 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CreateAiRouteImport } from './routes/create-ai'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as CompeteRouteImport } from './routes/compete'
 import { Route as AboutUsRouteImport } from './routes/about-us'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VaultsIndexRouteImport } from './routes/vaults/index'
@@ -79,6 +80,11 @@ const CreateAiRoute = CreateAiRouteImport.update({
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompeteRoute = CompeteRouteImport.update({
+  id: '/compete',
+  path: '/compete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutUsRoute = AboutUsRouteImport.update({
@@ -170,6 +176,7 @@ const RewardsVaultsVaultIdRoute = RewardsVaultsVaultIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about-us': typeof AboutUsRoute
+  '/compete': typeof CompeteRoute
   '/create': typeof CreateRoute
   '/create-ai': typeof CreateAiRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about-us': typeof AboutUsRoute
+  '/compete': typeof CompeteRoute
   '/create': typeof CreateRoute
   '/create-ai': typeof CreateAiRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about-us': typeof AboutUsRoute
+  '/compete': typeof CompeteRoute
   '/create': typeof CreateRoute
   '/create-ai': typeof CreateAiRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about-us'
+    | '/compete'
     | '/create'
     | '/create-ai'
     | '/how-it-works'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about-us'
+    | '/compete'
     | '/create'
     | '/create-ai'
     | '/how-it-works'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about-us'
+    | '/compete'
     | '/create'
     | '/create-ai'
     | '/how-it-works'
@@ -336,6 +348,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutUsRoute: typeof AboutUsRoute
+  CompeteRoute: typeof CompeteRoute
   CreateRoute: typeof CreateRoute
   CreateAiRoute: typeof CreateAiRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compete': {
+      id: '/compete'
+      path: '/compete'
+      fullPath: '/compete'
+      preLoaderRoute: typeof CompeteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about-us': {
@@ -599,6 +619,7 @@ const TokensRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutUsRoute: AboutUsRoute,
+  CompeteRoute: CompeteRoute,
   CreateRoute: CreateRoute,
   CreateAiRoute: CreateAiRoute,
   HowItWorksRoute: HowItWorksRoute,
