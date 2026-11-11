@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
   ArrowRight,
@@ -23,14 +24,8 @@ import toast from 'react-hot-toast';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Pagination } from '@/components/shared/Pagination';
-import {
-  COMMUNITY_ROWS,
-  COMPETITION,
-  CREATIVE_ROWS,
-  PORTFOLIO_ROWS,
-  PRIZES,
-  TOKEN_ROWS,
-} from '@/components/compete/competeMock';
+import { PRIZES } from '@/components/compete/competeConfig';
+import { CompetitionApiProvider } from '@/services/api/competition';
 
 const PAGE_SIZE = 8;
 const DAY = 24 * 60 * 60 * 1000;
@@ -46,7 +41,7 @@ const TABS = [
 const PRIZE_ICONS = { token: Database, portfolio: BarChart3, community: Users, creative: Sparkles };
 
 const usd = n => `$${Math.round(n).toLocaleString('en-US')}`;
-const pct = n => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
+const pct = n => `${n >= 0 ? '+' : ''}${Number(n).toFixed(1)}%`;
 const utcDate = d =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) +
   ', ' +
@@ -54,7 +49,7 @@ const utcDate = d =>
   ' UTC';
 
 const remaining = enteredAt => {
-  const left = enteredAt.getTime() + QUALIFY_MS - Date.now();
+  const left = new Date(enteredAt).getTime() + QUALIFY_MS - Date.now();
   if (left <= 0) return null;
   const days = Math.floor(left / DAY);
   const hours = Math.floor((left % DAY) / (60 * 60 * 1000));
@@ -95,20 +90,28 @@ const RankCell = ({ rank }) => (
 );
 
 const TokenCell = ({ row }) => (
-  <div className="flex items-center gap-3 min-w-0">
-    <div className="h-8 w-8 shrink-0 rounded-lg bg-steel-750 flex items-center justify-center text-[10px] font-bold text-orange-500">
-      {row.symbol.slice(0, 2)}
+  <a
+    href={`/vaults/${row.vaultId}`}
+    title={row.name}
+    className="flex items-center gap-3 min-w-0 max-w-[220px] hover:text-orange-500"
+  >
+    {row.imageUrl ? (
+      <img src={row.imageUrl} alt={row.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+    ) : (
+      <div className="h-8 w-8 shrink-0 rounded-lg bg-steel-750 flex items-center justify-center text-[10px] font-bold text-orange-500">
+        {(row.symbol || row.name || '?').slice(0, 2)}
+      </div>
+    )}
+    <div className="min-w-0 leading-tight">
+      <div className="font-semibold truncate">{row.symbol || row.name}</div>
+      <div className="text-dark-100 text-xs truncate">{row.name}</div>
     </div>
-    <div className="min-w-0">
-      <span className="font-semibold">{row.symbol}</span>{' '}
-      <span className="text-dark-100 text-sm truncate">{row.name}</span>
-    </div>
-  </div>
+  </a>
 );
 
 const shareRow = (row, rank) => {
-  const text = `${row.name} ($${row.symbol}) is #${rank} in the L4VA Creator Challenge`;
-  const url = `${window.location.origin}/compete?vault=${row.id}`;
+  const text = `${row.name}${row.symbol ? ` ($${row.symbol})` : ''} is #${rank} in the L4VA Creator Challenge`;
+  const url = `${window.location.origin}/vaults/${row.vaultId}`;
   window.open(
     `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
     '_blank',
@@ -128,60 +131,56 @@ const ShareButton = ({ row, rank }) => (
 );
 
 /** Performance tabs: qualifying return is only final after 7 days, before that it is provisional. */
-const returnCell = row =>
+const returnCell = (row, value) =>
   row.status === 'qualified' ? (
-    <span className="font-semibold text-orange-500">{pct(row.qualifyingReturn)}</span>
+    <span className="font-semibold text-orange-500">{pct(value)}</span>
   ) : (
     <span className="text-dark-100" title="Provisional until the 7-day window completes">
-      {pct(row.qualifyingReturn)}*
+      {pct(value)}*
     </span>
   );
 
+const creatorCell = row => <span className="text-dark-100">{row.creator ? `@${row.creator}` : '—'}</span>;
+
+const performanceColumns = ({ qualifyingKey, totalKey, qualifyingHint }) => [
+  { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
+  { label: 'Token / Vault', cell: row => <TokenCell row={row} /> },
+  { label: 'Creator', cell: creatorCell },
+  { label: 'Return (qualifying)', hint: qualifyingHint, cell: row => returnCell(row, row[qualifyingKey]) },
+  { label: 'Return (total)', hint: 'Since entry, informational', cell: row => pct(row[totalKey]) },
+  { label: 'Vault value', cell: row => usd(row.value) },
+  { label: 'Holders', cell: row => row.holders ?? '—' },
+  { label: 'Status', cell: row => <StatusBadge row={row} /> },
+];
+
 const COLUMNS = {
-  performance: [
-    { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
-    { label: 'Token / Vault', cell: row => <TokenCell row={row} /> },
-    { label: 'Creator', cell: row => <span className="text-dark-100">@{row.creator}</span> },
-    { label: 'Return (qualifying)', hint: '7-day TWAP return from entry', cell: returnCell },
-    { label: 'Return (total)', hint: 'Since entry, informational', cell: row => pct(row.totalReturn) },
-    { label: 'Vault value', cell: row => usd(row.value) },
-    { label: 'Holders', cell: row => row.holders },
-    { label: 'Status', cell: row => <StatusBadge row={row} /> },
-  ],
-  community: [
-    { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
-    { label: 'Token / Vault', cell: row => <TokenCell row={row} /> },
-    { label: 'Creator', cell: row => <span className="text-dark-100">@{row.creator}</span> },
-    { label: 'Holder growth', cell: row => `+${row.growth}` },
-    { label: 'Score', hint: 'Provisional until judged', cell: row => `${row.score}*` },
-    { label: 'Holders', cell: row => row.holders },
-  ],
-  creative: [
-    { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
-    { label: 'Token / Vault', cell: row => <TokenCell row={row} /> },
-    { label: 'Creator', cell: row => <span className="text-dark-100">@{row.creator}</span> },
-    { label: 'Judges score', hint: 'Provisional until judged', cell: row => `${row.score.toFixed(1)}*` },
-    { label: 'Vault value', cell: row => usd(row.value) },
-  ],
+  tokens: performanceColumns({
+    qualifyingKey: 'qualifyingReturn',
+    totalKey: 'totalReturn',
+    qualifyingHint: '7-day average token price vs entry price',
+  }),
+  portfolios: performanceColumns({
+    qualifyingKey: 'qualifyingValueReturn',
+    totalKey: 'totalValueReturn',
+    qualifyingHint: '7-day average vault NAV vs NAV at entry',
+  }),
 };
 
-const Leaderboard = () => {
+const Leaderboard = ({ data, isLoading }) => {
   const [tab, setTab] = useState('tokens');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  const source = { tokens: TOKEN_ROWS, portfolios: PORTFOLIO_ROWS, community: COMMUNITY_ROWS, creative: CREATIVE_ROWS }[
-    tab
-  ];
-  const columns = COLUMNS[tab === 'tokens' || tab === 'portfolios' ? 'performance' : tab];
   const isJudged = tab === 'community' || tab === 'creative';
+  const source = useMemo(() => (isJudged ? [] : (data?.[tab] ?? [])), [data, tab, isJudged]);
+  const columns = COLUMNS[tab];
 
   // Rank comes from the full list, so searching never renumbers entries.
   const ranked = useMemo(() => source.map((row, i) => ({ row, rank: i + 1 })), [source]);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return ranked;
-    return ranked.filter(({ row }) => [row.name, row.symbol, row.creator].some(v => v.toLowerCase().includes(q)));
+    return ranked.filter(({ row }) => [row.name, row.symbol, row.creator].some(v => v?.toLowerCase().includes(q)));
   }, [ranked, query]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -221,99 +220,118 @@ const Leaderboard = () => {
         </label>
       </div>
 
-      {isJudged && (
-        <p className="mb-3 text-xs text-dark-100">
-          Provisional — {tab === 'community' ? 'community' : 'creative'} scores are final only after judging.
-        </p>
-      )}
-
-      {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase text-dark-100">
-              {columns.map(col => (
-                <th key={col.label} className="px-3 py-2 font-medium whitespace-nowrap">
-                  <span className="inline-flex items-center gap-1" title={col.hint}>
-                    {col.label}
-                    {col.hint && <Info className="h-3 w-3" />}
-                  </span>
-                </th>
-              ))}
-              <th className="px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map(({ row, rank }) => (
-              <tr key={row.id} className="border-t border-steel-850 hover:bg-steel-850/50">
-                {columns.map(col => (
-                  <td key={col.label} className="px-3 py-3 whitespace-nowrap">
-                    {col.cell(row, rank)}
-                  </td>
+      {isJudged ? (
+        <div className="py-12 text-center">
+          <Sparkles className="mx-auto mb-3 h-8 w-8 text-orange-500" />
+          <p className="font-semibold">
+            {tab === 'community' ? 'Best Community' : 'Most Creative'} is decided by the judges
+          </p>
+          <p className="mt-1 text-sm text-dark-100">Winners are announced after the competition ends.</p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase text-dark-100">
+                  {columns.map(col => (
+                    <th key={col.label} className="px-2 py-2 font-medium whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1" title={col.hint}>
+                        {col.label}
+                        {col.hint && <Info className="h-3 w-3" />}
+                      </span>
+                    </th>
+                  ))}
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map(({ row, rank }) => (
+                  <tr key={row.vaultId} className="border-t border-steel-850 hover:bg-steel-850/50">
+                    {columns.map(col => (
+                      <td key={col.label} className="px-2 py-3 whitespace-nowrap">
+                        {col.cell(row, rank)}
+                      </td>
+                    ))}
+                    <td className="px-1 py-3 text-right">
+                      <ShareButton row={row} rank={rank} />
+                    </td>
+                  </tr>
                 ))}
-                <td className="px-1 py-3 text-right">
-                  <ShareButton row={row} rank={rank} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile cards */}
-      <div className="md:hidden flex flex-col gap-2">
-        {visible.map(({ row, rank }) => (
-          <div key={row.id} className="rounded-xl bg-steel-850 p-3">
-            <div className="flex items-center gap-3">
-              <RankCell rank={rank} />
-              <TokenCell row={row} />
-              <div className="ml-auto">
-                <ShareButton row={row} rank={rank} />
-              </div>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-sm">
-              <span className="text-dark-100">@{row.creator}</span>
-              {isJudged ? <span>Score {row.score}*</span> : returnCell(row)}
-            </div>
-            {!isJudged && (
-              <div className="mt-2 flex items-center justify-between text-xs text-dark-100">
-                <span>
-                  {usd(row.value)} · {row.holders} holders
-                </span>
-                <StatusBadge row={row} />
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
 
-      {visible.length === 0 && <p className="py-10 text-center text-dark-100">No vaults match “{query}”.</p>}
+          {/* Mobile cards */}
+          <div className="md:hidden flex flex-col gap-2">
+            {visible.map(({ row, rank }) => (
+              <div key={row.vaultId} className="rounded-xl bg-steel-850 p-3">
+                <div className="flex items-center gap-3">
+                  <RankCell rank={rank} />
+                  <TokenCell row={row} />
+                  <div className="ml-auto">
+                    <ShareButton row={row} rank={rank} />
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  {creatorCell(row)}
+                  {returnCell(row, tab === 'portfolios' ? row.qualifyingValueReturn : row.qualifyingReturn)}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-dark-100">
+                  <span>
+                    {usd(row.value)}
+                    {row.holders != null && ` · ${row.holders} holders`}
+                  </span>
+                  <StatusBadge row={row} />
+                </div>
+              </div>
+            ))}
+          </div>
 
-      <Pagination className="mt-4" currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+          {visible.length === 0 && (
+            <p className="py-10 text-center text-dark-100">
+              {isLoading
+                ? 'Loading leaderboard…'
+                : query
+                  ? `No vaults match “${query}”.`
+                  : 'No entries yet — launch a vault to be the first.'}
+            </p>
+          )}
 
-      {!isJudged && (
-        <p className="mt-3 text-xs text-dark-100">
-          * Provisional until the entry completes its 7-day qualifying window.
-        </p>
+          <Pagination className="mt-4" currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+
+          <p className="mt-3 text-xs text-dark-100">
+            * Provisional until the entry completes its 7-day qualifying window.
+            {data?.updatedAt && ` Updated hourly · last ${utcDate(new Date(data.updatedAt))}.`}
+          </p>
+        </>
       )}
     </section>
   );
 };
 
-const Timeline = () => {
+const Timeline = ({ season }) => {
+  if (!season) return null;
   const now = Date.now();
+  const start = new Date(season.start);
+  const end = new Date(season.end);
+  const dayOf = d => Math.floor((d.getTime() - start.getTime()) / DAY) + 1;
   const steps = [
-    { at: COMPETITION.start, title: 'Competition Live', text: 'Create and enter vaults anytime' },
+    { at: start, title: 'Competition Live', text: 'Create and enter vaults anytime' },
     {
-      at: COMPETITION.entryCutoff,
+      at: new Date(season.entryCutoff),
       title: 'Performance Entry Closes',
       text: 'Last day to enter for performance awards (7-day minimum)',
-      day: 23,
     },
-    { at: COMPETITION.promoEnd, title: 'Launch Special Ends', text: 'Normal L4VA fees and 1X rewards resume', day: 28 },
-    { at: COMPETITION.end, title: 'Competition Ends', text: 'Winners announced after review', day: 30 },
-  ];
-  const daysLeft = Math.max(0, Math.ceil((COMPETITION.end.getTime() - now) / DAY));
+    season.promoEnd && {
+      at: new Date(season.promoEnd),
+      title: 'Launch Special Ends',
+      text: 'Normal L4VA fees and 1X rewards resume',
+    },
+    { at: end, title: 'Competition Ends', text: 'Winners announced after review' },
+  ].filter(Boolean);
+  const daysLeft = Math.max(0, Math.ceil((end.getTime() - now) / DAY));
 
   return (
     <section className="rounded-2xl bg-steel-950 border border-steel-850 p-5">
@@ -333,7 +351,7 @@ const Timeline = () => {
                 )}
               />
               <p className={clsx('text-sm font-semibold', done && 'text-orange-500')}>
-                {step.day ? `Day ${step.day}` : 'Day 1'} · {utcDate(step.at)}
+                Day {dayOf(step.at)} · {utcDate(step.at)}
               </p>
               <p className="text-sm">{step.title}</p>
               <p className="text-xs text-dark-100">{step.text}</p>
@@ -347,13 +365,16 @@ const Timeline = () => {
 
 const CompetePage = () => {
   const navigate = useNavigate();
+  const { data, isLoading } = useQuery({
+    queryKey: ['competition-leaderboard'],
+    queryFn: async () => (await CompetitionApiProvider.getLeaderboard()).data,
+    refetchInterval: 5 * 60 * 1000,
+    retry: false,
+  });
+  const season = data?.season;
 
   return (
     <div className="container mx-auto px-4 xl:px-0 py-8 text-primary-text space-y-5">
-      <div className="rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-4 py-2 text-xs text-yellow-300">
-        Design preview — all numbers on this page are mock data.
-      </div>
-
       {/* Hero */}
       <section className="relative overflow-hidden rounded-2xl bg-steel-950 border border-steel-850 px-5 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-orange-500/20 blur-3xl" />
@@ -369,7 +390,7 @@ const CompetePage = () => {
           <PrimaryButton size="lg" onClick={() => navigate({ to: '/create-ai' })}>
             Create Vault <ArrowRight className="h-4 w-4" />
           </PrimaryButton>
-          <SecondaryButton size="lg" onClick={() => toast('Join flow comes with the competition API')}>
+          <SecondaryButton size="lg" onClick={() => navigate({ to: '/create-ai' })}>
             Join Competition
           </SecondaryButton>
           <button
@@ -422,12 +443,14 @@ const CompetePage = () => {
         <p>
           <span className="font-russo text-2xl text-orange-500">2X</span> L4VA rewards for creators & acquirers
         </p>
-        <p className="md:ml-auto text-xs text-dark-100">Until {utcDate(COMPETITION.promoEnd)}</p>
+        {season?.promoEnd && (
+          <p className="md:ml-auto text-xs text-dark-100">Until {utcDate(new Date(season.promoEnd))}</p>
+        )}
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
         <div className="min-w-0">
-          <Leaderboard />
+          <Leaderboard data={data} isLoading={isLoading} />
           <p className="mt-3 flex items-start gap-2 text-xs text-dark-100">
             <Info className="h-4 w-4 shrink-0" />
             L4VA protocol fees are 0% during the launch special. The 0.25% Uniswap API fee still applies to applicable
@@ -435,7 +458,7 @@ const CompetePage = () => {
           </p>
         </div>
         <div className="space-y-4">
-          <Timeline />
+          <Timeline season={season} />
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-2xl border border-orange-500/40 bg-steel-950 px-5 py-4 text-left hover:bg-steel-850 transition-colors"
