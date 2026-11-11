@@ -142,6 +142,9 @@ export const ProposalInfo = ({ proposalId }) => {
   const totalVotes = response?.data?.votes?.length;
   const proposer = response?.data?.proposer;
   const [selectedVote, setSelectedVote] = useState(response?.data?.selectedVote);
+  // The vote actually recorded. `selectedVote` is also the option picked before confirming,
+  // so the "You voted" state must not read it or it shows as soon as an option is clicked.
+  const [castVote, setCastVote] = useState(response?.data?.selectedVote);
   const [detailPage, setDetailPage] = useState('vote');
 
   const getTerminationProgress = status => {
@@ -543,11 +546,11 @@ export const ProposalInfo = ({ proposalId }) => {
   // `canVote: false` collapses three very different situations. Separating them
   // is what lets the UI say why an option is unavailable instead of going dead.
   const voteState = useMemo(() => {
-    if (selectedVote) return 'voted';
+    if (castVote) return 'voted';
     if (canVote) return 'open';
     if (!user || !isWalletConnected) return 'signed-out';
     return 'no-power';
-  }, [selectedVote, canVote, user, isWalletConnected]);
+  }, [castVote, canVote, user, isWalletConnected]);
 
   const handleVote = async (proposalId, voteType) => {
     const activeVoterAddress = walletAddress || user?.address;
@@ -580,6 +583,7 @@ export const ProposalInfo = ({ proposalId }) => {
         });
         setCanVote(false);
         setSelectedVote(voteType);
+        setCastVote(voteType);
         toast.success('Your vote has been recorded successfully');
         await refetch();
       },
@@ -631,6 +635,7 @@ export const ProposalInfo = ({ proposalId }) => {
     }
     if (response?.data?.selectedVote !== undefined) {
       setSelectedVote(response.data.selectedVote);
+      setCastVote(response.data.selectedVote);
     }
   }, [response?.data?.canVote, response?.data?.selectedVote]);
 
@@ -869,7 +874,7 @@ export const ProposalInfo = ({ proposalId }) => {
 
                 <VoteStateBanner
                   state={voteState}
-                  selectedVote={selectedVote}
+                  selectedVote={castVote}
                   tokenTicker={proposalInfo?.vault?.vault_token_ticker}
                   snapshotDate={proposalInfo?.createdAt ? formatDateWithTime(proposalInfo.createdAt) : null}
                   onConnect={() => openModal('LoginModal')}

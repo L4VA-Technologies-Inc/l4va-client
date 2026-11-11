@@ -1147,7 +1147,7 @@ export const AiVaultPreview = ({
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
-                value={vault.allowAcquireExpansion ?? true}
+                value={vault.allowAcquireExpansion ?? false}
                 onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
               />
             </>
@@ -1177,7 +1177,7 @@ export const AiVaultPreview = ({
                 isChanged={isChanged('allowAcquireExpansion')}
                 label="Acquire expansion"
                 options={YES_NO_OPTIONS}
-                value={vault.allowAcquireExpansion ?? true}
+                value={vault.allowAcquireExpansion ?? false}
                 onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
               />
             </>

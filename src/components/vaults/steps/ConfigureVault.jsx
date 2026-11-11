@@ -166,7 +166,7 @@ export const ConfigureVault = ({
           <div>
             <LavaCheckbox
               name="allowAcquireExpansion"
-              checked={data.allowAcquireExpansion ?? true}
+              checked={data.allowAcquireExpansion ?? false}
               onChange={e => updateField('allowAcquireExpansion', e.target.checked)}
               label="Allow Acquire Expansion"
               labelClassName="!text-base font-bold uppercase"
