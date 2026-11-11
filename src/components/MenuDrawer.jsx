@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
@@ -52,19 +53,22 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
     }
   };
 
-  return (
+  // Portaled to <body>: the header uses backdrop-blur, which makes it the containing block for
+  // `position: fixed` children, so rendered inside it the drawer was sized to the header instead
+  // of the screen and left the bottom of the page uncovered on mobile (L4VA-1068).
+  return createPortal(
     <>
       <div
         className={clsx(
-          'fixed inset-0 bg-black/50 z-40 transition-opacity duration-300',
+          'fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300',
           isOpen ? 'opacity-100' : 'opacity-0'
         )}
-        style={{ pointerEvents: isOpen ? 'auto' : 'none', height: '100dvh' }}
+        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
         onClick={onClose}
       />
       <div
-        className="fixed right-0 w-80 bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-50"
-        style={{ top: 0, bottom: 0, height: '100dvh', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+        className="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-[70]"
+        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-steel-750">
@@ -118,6 +122,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
