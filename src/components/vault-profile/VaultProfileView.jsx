@@ -405,7 +405,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleCopyVaultAddress = async e => {
     e.preventDefault();
-    const link = `${import.meta.env.VITE_WEB_LINK}/vaults/${vault.id}?tab=${activeTab}`;
+    // VITE_WEB_LINK is not set on every environment (stage produced ".../vaults/undefined/vaults/<id>");
+    // the current origin is always the right host for a shareable link.
+    const origin = import.meta.env.VITE_WEB_LINK || window.location.origin;
+    const link = `${origin.replace(/\/$/, '')}/vaults/${vault.id}?tab=${encodeURIComponent(activeTab)}`;
 
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 

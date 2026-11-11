@@ -69,7 +69,8 @@ const LazySwapComponent = lazy(() =>
   }))
 );
 
-export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled = false }) => {
+// `showAiLink`: /create already has its own AI link in the page header, so it turns this one off.
+export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled = false, showAiLink = true }) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
@@ -1319,7 +1320,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
         <span className="hidden sm:inline text-sm font-semibold">Tutorial</span>
         <ChevronDown className="hidden sm:block w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
       </button>
-      {vault?.id && (
+      {showAiLink && vault?.id && (
         <div className="mb-6 flex justify-end">
           <button
             className="flex items-center gap-2 text-dark-100 transition-colors hover:text-white"
