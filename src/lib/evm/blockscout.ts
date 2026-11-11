@@ -156,6 +156,36 @@ const normalizeQuickSearchToken = (item: BlockscoutQuickSearchItem): BlockscoutW
 };
 
 /**
+ * Wallet-holdings (`/addresses/{a}/tokens`) and token (`/tokens/{a}`) rows omit
+ * Blockscout's admin/certified markers; only quick search carries them. Re-check
+ * tokens those endpoints call unverified against quick search by address so the
+ * badge matches what the search results show.
+ */
+const fetchQuickSearchVerified = async (base: string, address: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${base}/api/v2/search/quick?${new URLSearchParams({ q: address }).toString()}`);
+    if (!response.ok) return false;
+    const items: BlockscoutQuickSearchItem[] = await response.json();
+    const target = address.toLowerCase();
+    return items.some(item => {
+      const token = normalizeQuickSearchToken(item);
+      return token !== null && token.address.toLowerCase() === target && token.isVerified;
+    });
+  } catch {
+    return false;
+  }
+};
+
+const enrichVerification = async (base: string, tokens: BlockscoutWalletToken[]): Promise<BlockscoutWalletToken[]> =>
+  Promise.all(
+    tokens.map(async token =>
+      token.isVerified || !(await fetchQuickSearchVerified(base, token.address))
+        ? token
+        : { ...token, isVerified: true }
+    )
+  );
+
+/**
  * Fetch every ERC-20 / ERC-721 / ERC-1155 token the given address holds,
  * following Blockscout's cursor pagination up to {@link MAX_PAGES}.
  */
@@ -196,7 +226,7 @@ export const fetchWalletTokens = async (address: string): Promise<BlockscoutWall
     nextPageParams = data.next_page_params;
   }
 
-  return tokens;
+  return enrichVerification(base, tokens);
 };
 
 /**
@@ -217,7 +247,8 @@ export const fetchTokenMetadata = async (address: string): Promise<BlockscoutWal
     if (!response.ok) return null;
 
     const token: BlockscoutTokenRaw = await response.json();
-    return normalizeToken(token, address);
+    const [enriched] = await enrichVerification(base, [normalizeToken(token, address)]);
+    return enriched;
   } catch {
     return null;
   }
