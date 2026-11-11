@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
 import { AnimatePresence, motion, MotionConfig, useDragControls } from 'framer-motion';
 import { ArrowLeft, X } from 'lucide-react';
@@ -69,6 +69,25 @@ const CreateAiComponent = () => {
     localStorage.setItem(AI_VAULT_STORAGE_META_KEY, JSON.stringify({ source: 'ai', startStep }));
     navigate({ to: '/create' });
   };
+
+  // An index vault's asset picker IS the basket editor, so "choose_assets" and "choose_basket"
+  // open the same modal. Show one button for them instead of two that do the same thing.
+  const isIndexDraft = builder.vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  const chatMessages = useMemo(() => {
+    if (!isIndexDraft) return builder.messages;
+    return builder.messages.map(message => {
+      if (!message.options?.length) return message;
+      let hasBasketOption = false;
+      const options = message.options.filter(option => {
+        const value = typeof option === 'string' ? option : option?.value;
+        if (value !== 'choose_assets' && value !== 'choose_basket') return true;
+        if (hasBasketOption) return false;
+        hasBasketOption = true;
+        return true;
+      });
+      return options.length === message.options.length ? message : { ...message, options };
+    });
+  }, [builder.messages, isIndexDraft]);
 
   // The chat owns the image flow; the pickers are the reserved actions that need a modal.
   const handleOptionSelect = option => {
@@ -199,7 +218,7 @@ const CreateAiComponent = () => {
               isPreviewOpen={showPreview}
               isSending={builder.isSending}
               isUploadingImage={builder.isUploadingImage}
-              messages={builder.messages}
+              messages={chatMessages}
               onGenerateImage={builder.generateImage}
               onOptionSelect={handleOptionSelect}
               onSend={builder.sendMessage}
