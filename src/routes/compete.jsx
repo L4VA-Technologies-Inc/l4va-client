@@ -19,12 +19,14 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Pagination } from '@/components/shared/Pagination';
-import { PRIZES } from '@/components/compete/competeConfig';
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
+import { ModalWrapper } from '@/components/shared/ModalWrapper';
+import { PRIZES, RULES } from '@/components/compete/competeConfig';
 import { CompetitionApiProvider } from '@/services/api/competition';
 
 const PAGE_SIZE = 8;
@@ -365,6 +367,11 @@ const Timeline = ({ season }) => {
 
 const CompetePage = () => {
   const navigate = useNavigate();
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { openModal } = useModalControls();
+  // Creating a vault needs a connected wallet: open the login modal instead of a page that can't be used.
+  const handleCreateVault = () => (isAuthenticated ? navigate({ to: '/create-ai' }) : openModal('LoginModal'));
   const { data, isLoading } = useQuery({
     queryKey: ['competition-leaderboard'],
     queryFn: async () => (await CompetitionApiProvider.getLeaderboard()).data,
@@ -387,11 +394,11 @@ const CompetePage = () => {
         <p className="mt-3 text-lg sm:text-xl">Dream it. Launch it. Own the market.</p>
         <p className="mt-1 text-dark-100">Create and own AI-powered vault tokens — compete for the top spot.</p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <PrimaryButton size="lg" onClick={() => navigate({ to: '/create-ai' })}>
+          <PrimaryButton size="lg" onClick={handleCreateVault}>
             Create Vault <ArrowRight className="h-4 w-4" />
           </PrimaryButton>
-          <SecondaryButton size="lg" onClick={() => navigate({ to: '/create-ai' })}>
-            Join Competition
+          <SecondaryButton size="lg" onClick={() => setRulesOpen(true)}>
+            <ShieldCheck className="h-4 w-4" /> Rules
           </SecondaryButton>
           <button
             type="button"
@@ -404,27 +411,39 @@ const CompetePage = () => {
       </section>
 
       {/* Prize pool */}
-      <section className="grid gap-3 lg:grid-cols-[auto_1fr] rounded-2xl bg-steel-950 border border-steel-850 p-4">
-        <div className="lg:pr-6 lg:border-r border-steel-850">
-          <p className="text-sm text-dark-100">Prize Pool</p>
-          <p className="font-russo text-3xl">
-            <span className="text-orange-gradient">$3,000</span> + 300,000 L4VA
-          </p>
+      <section className="rounded-2xl bg-steel-950 border border-steel-850 p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-dark-100">
+              <Trophy className="h-4 w-4 text-orange-500" /> Prize Pool
+            </p>
+            <p className="mt-1 font-russo text-3xl sm:text-4xl">
+              <span className="text-orange-gradient">$3,000</span> <span className="text-dark-100">+</span> 300,000 L4VA
+            </p>
+          </div>
+          <p className="text-sm text-dark-100">4 awards · paid after final review</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {PRIZES.map(prize => {
             const Icon = PRIZE_ICONS[prize.icon];
             return (
-              <div key={prize.key} className="flex items-center gap-3 rounded-xl bg-steel-850 p-3">
-                <Icon className="h-6 w-6 shrink-0 text-orange-500" />
-                <div>
-                  <p className="text-sm font-semibold">
-                    {prize.title}
-                    {prize.note && <span className="block text-[11px] font-normal text-dark-100">({prize.note})</span>}
-                  </p>
-                  <p className="text-sm text-orange-500">
-                    {usd(prize.cash)} + {prize.l4va.toLocaleString('en-US')} L4VA
-                  </p>
+              <div
+                key={prize.key}
+                className="group relative flex flex-col rounded-xl border border-steel-750 bg-steel-850 p-4 transition-colors hover:border-orange-500/50"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/15">
+                    <Icon className="h-5 w-5 text-orange-500" />
+                  </span>
+                  <span className="rounded-full bg-steel-750 px-2 py-0.5 text-[11px] text-dark-100">
+                    {prize.key === 'community' || prize.key === 'creative' ? 'Judged' : '7D return'}
+                  </span>
+                </div>
+                <p className="mt-4 font-semibold leading-snug">{prize.title}</p>
+                <p className="text-xs text-dark-100 min-h-[16px]">{prize.note ?? ''}</p>
+                <div className="mt-auto pt-4">
+                  <p className="font-russo text-2xl text-orange-500">{usd(prize.cash)}</p>
+                  <p className="text-sm text-dark-100">+ {prize.l4va.toLocaleString('en-US')} L4VA</p>
                 </div>
               </div>
             );
@@ -462,7 +481,7 @@ const CompetePage = () => {
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-2xl border border-orange-500/40 bg-steel-950 px-5 py-4 text-left hover:bg-steel-850 transition-colors"
-            onClick={() => toast('Rules page is not written yet')}
+            onClick={() => setRulesOpen(true)}
           >
             <ShieldCheck className="h-5 w-5 text-orange-500" />
             <span className="font-semibold">Rules & Anti-Manipulation Requirements</span>
@@ -470,6 +489,26 @@ const CompetePage = () => {
           </button>
         </div>
       </div>
+
+      <ModalWrapper
+        isOpen={rulesOpen}
+        onClose={() => setRulesOpen(false)}
+        title="Rules & Anti-Manipulation Requirements"
+        size="2xl"
+      >
+        <div className="space-y-5 text-sm">
+          {RULES.map(section => (
+            <div key={section.title}>
+              <h4 className="mb-2 font-semibold text-orange-500">{section.title}</h4>
+              <ul className="list-disc space-y-1.5 pl-5 text-dark-100">
+                {section.items.map(item => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </ModalWrapper>
     </div>
   );
 };
