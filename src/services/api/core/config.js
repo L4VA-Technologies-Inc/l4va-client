@@ -7,6 +7,10 @@ export class CoreConfigProvider {
     return '/api/v1/auth/evm/challenge';
   }
 
+  static cardanoChallenge() {
+    return '/api/v1/auth/cardano/challenge';
+  }
+
   static supportTicket() {
     return '/api/v1/support/ticket';
   }
