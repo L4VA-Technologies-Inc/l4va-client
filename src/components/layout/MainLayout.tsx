@@ -15,6 +15,8 @@ const MainLayout = ({ children }: LayoutProps) => {
 
   return (
     <div>
+      {/* Shared page background (was home-only). */}
+      <div className="home-bg-texture pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 z-[-1] w-full min-h-[750px]" />
       <Header />
       <main
         className={`content-space-top ${isChatPage ? '!pb-0 lg:min-h-screen lg:!pb-[calc(var(--header-height)+var(--content-space-top))]' : 'min-h-screen'}`}

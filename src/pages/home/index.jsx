@@ -6,7 +6,6 @@ import { TokensPage } from '@/pages/tokens/TokensPage';
 export const Home = () => {
   return (
     <>
-      <div className="home-bg-texture absolute left-1/2 -translate-x-1/2 -top-16 z-[-1] w-full min-h-[750px]" />
       <div className="space-y-20">
         {/* <div className="pt-12 relative">
           <Hero />
