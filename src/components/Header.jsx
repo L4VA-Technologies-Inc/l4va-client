@@ -23,6 +23,7 @@ const navLinks = [
   { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false, hideOnRobinhood: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isAuth: false },
   { to: '/vaults?tab=govern', label: 'Govern', isAuth: false },
+  { to: '/compete', label: 'Compete', isAuth: false },
   { to: '/rewards', label: 'Rewards', isAuth: true },
 ];
 
