@@ -242,8 +242,8 @@ export const LoginModal = () => {
     setIsLoading(true);
 
     try {
-      const message = `account: ${wallet.stakeAddressBech32}`;
-      const signature = await wallet.handler.signData(messageHex(message));
+      const { data: challenge } = await CoreApiProvider.cardanoChallenge(wallet.stakeAddressBech32);
+      const signature = await wallet.handler.signData(messageHex(challenge.message));
       const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32, network);
 
       if (!res?.user?.address) {
