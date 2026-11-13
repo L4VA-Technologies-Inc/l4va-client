@@ -13,6 +13,11 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async cardanoChallenge(stakeAddress) {
+    const response = await axiosInstance.post(CoreConfigProvider.cardanoChallenge(), { stakeAddress });
+    return response;
+  }
+
   static async evmChallenge(walletAddress) {
     const response = await axiosInstance.post(CoreConfigProvider.evmChallenge(), { walletAddress });
     return response;
