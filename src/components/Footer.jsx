@@ -5,7 +5,6 @@ import { ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
-import L4vaIcon from '@/components/shared/L4vaIcon';
 import XIcon from '@/icons/x.svg?react';
 import MediumIcon from '@/icons/medium.svg?react';
 import DiscordIcon from '@/icons/discord.svg?react';
@@ -102,14 +101,7 @@ export const Footer = () => {
       </div>
       <div className="flex justify-center mb-8">
         <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-          {isRobinHood ? (
-            <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-12 w-auto object-contain" />
-          ) : (
-            <>
-              <L4vaIcon className="flex-shrink-0" style={{ width: '48px', height: '48px' }} />
-              <span className="text-4xl font-bold uppercase">L4VA</span>
-            </>
-          )}
+          <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-12 w-auto object-contain" />
         </Link>
       </div>
       <p className="text-center text-dark-100 pb-6">

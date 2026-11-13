@@ -10,7 +10,6 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import L4vaIcon from '@/components/shared/L4vaIcon';
 import CardanoIcon from '@/icons/cardano.svg?react';
 import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
@@ -225,14 +224,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-            {isRobinHood ? (
-              <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-8 w-auto object-contain" />
-            ) : (
-              <>
-                <L4vaIcon className="flex-shrink-0" height={24} width={24} />
-                <span className="hidden lg:block text-2xl font-bold uppercase">L4VA</span>
-              </>
-            )}
+            <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-8 w-auto object-contain" />
           </Link>
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">
