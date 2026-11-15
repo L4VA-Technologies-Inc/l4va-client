@@ -58,7 +58,7 @@ const remaining = enteredAt => {
   return days > 0 ? `${days}d ${hours}h left` : `${hours}h left`;
 };
 
-const StatusBadge = ({ row }) => {
+const StatusBadge = ({ row, stacked = false }) => {
   if (row.status === 'review') {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2.5 py-1 text-xs text-yellow-400">
@@ -67,9 +67,21 @@ const StatusBadge = ({ row }) => {
     );
   }
   if (row.status === 'qualifying') {
+    const left = remaining(row.enteredAt) ?? 'finalizing';
+    if (stacked) {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-xl bg-steel-750 px-2.5 py-1 text-xs text-dark-100">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          <span className="leading-tight">
+            Qualifying
+            <span className="block text-[11px] opacity-80">{left}</span>
+          </span>
+        </span>
+      );
+    }
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-steel-750 px-2.5 py-1 text-xs text-dark-100">
-        <Clock className="h-3.5 w-3.5" /> Qualifying · {remaining(row.enteredAt) ?? 'finalizing'}
+        <Clock className="h-3.5 w-3.5" /> Qualifying · {left}
       </span>
     );
   }
@@ -91,11 +103,11 @@ const RankCell = ({ rank }) => (
   </span>
 );
 
-const TokenCell = ({ row }) => (
+const TokenCell = ({ row, showCreator = false }) => (
   <a
     href={`/vaults/${row.vaultId}`}
     title={row.name}
-    className="flex items-center gap-3 min-w-0 max-w-[220px] hover:text-orange-500"
+    className="flex items-center gap-3 min-w-0 max-w-[200px] hover:text-orange-500"
   >
     {row.imageUrl ? (
       <img src={row.imageUrl} alt={row.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
@@ -107,6 +119,7 @@ const TokenCell = ({ row }) => (
     <div className="min-w-0 leading-tight">
       <div className="font-semibold truncate">{row.symbol || row.name}</div>
       <div className="text-dark-100 text-xs truncate">{row.name}</div>
+      {showCreator && row.creator && <div className="text-dark-100 text-xs truncate">by @{row.creator}</div>}
     </div>
   </a>
 );
@@ -146,13 +159,12 @@ const creatorCell = row => <span className="text-dark-100">{row.creator ? `@${ro
 
 const performanceColumns = ({ qualifyingKey, totalKey, qualifyingHint }) => [
   { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
-  { label: 'Token / Vault', cell: row => <TokenCell row={row} /> },
-  { label: 'Creator', cell: creatorCell },
+  { label: 'Token / Creator', cell: row => <TokenCell row={row} showCreator /> },
   { label: 'Return (qualifying)', hint: qualifyingHint, cell: row => returnCell(row, row[qualifyingKey]) },
   { label: 'Return (total)', hint: 'Since entry, informational', cell: row => pct(row[totalKey]) },
   { label: 'Vault value', cell: row => usd(row.value) },
   { label: 'Holders', cell: row => row.holders ?? '—' },
-  { label: 'Status', cell: row => <StatusBadge row={row} /> },
+  { label: 'Status', cell: row => <StatusBadge row={row} stacked /> },
 ];
 
 const COLUMNS = {
@@ -233,19 +245,19 @@ const Leaderboard = ({ data, isLoading }) => {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase text-dark-100">
                   {columns.map(col => (
-                    <th key={col.label} className="px-2 py-2 font-medium whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1" title={col.hint}>
+                    <th key={col.label} className="px-2 py-2 align-bottom font-medium leading-tight">
+                      <span title={col.hint}>
                         {col.label}
-                        {col.hint && <Info className="h-3 w-3" />}
+                        {col.hint && <Info className="ml-1 inline h-3 w-3 align-[-1px]" />}
                       </span>
                     </th>
                   ))}
-                  <th className="px-3 py-2" />
+                  <th className="px-1 py-2" />
                 </tr>
               </thead>
               <tbody>
@@ -266,7 +278,7 @@ const Leaderboard = ({ data, isLoading }) => {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden flex flex-col gap-2">
+          <div className="lg:hidden flex flex-col gap-2">
             {visible.map(({ row, rank }) => (
               <div key={row.vaultId} className="rounded-xl bg-steel-850 p-3">
                 <div className="flex items-center gap-3">
