@@ -219,8 +219,6 @@ export const AiVaultChat = ({
           {showThinking && <TypingIndicator />}
           <div ref={bottomRef} className="scroll-mb-32 lg:scroll-mb-0" />
         </div>
-        {/* Fades the last bit of content under the floating composer instead of a hard divider. */}
-        <div className="pointer-events-none sticky bottom-0 -mt-10 hidden h-10 lg:block bg-gradient-to-t from-primary-background to-transparent" />
       </div>
 
       <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
