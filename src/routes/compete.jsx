@@ -26,7 +26,7 @@ import { Pagination } from '@/components/shared/Pagination';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
-import { PRIZES, RULES } from '@/components/compete/competeConfig';
+import { PRIZES, PRIZE_TOTAL, RULES } from '@/components/compete/competeConfig';
 import { CompetitionApiProvider } from '@/services/api/competition';
 
 const PAGE_SIZE = 8;
@@ -41,6 +41,8 @@ const TABS = [
 ];
 
 const PRIZE_ICONS = { token: Database, portfolio: BarChart3, community: Users, creative: Sparkles };
+const PLACE_LABELS = ['1st', '2nd', '3rd'];
+const PLACE_COLORS = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
 
 const usd = n => `$${Math.round(n).toLocaleString('en-US')}`;
 const pct = n => `${n >= 0 ? '+' : ''}${Number(n).toFixed(1)}%`;
@@ -94,11 +96,7 @@ const StatusBadge = ({ row, stacked = false }) => {
 
 const RankCell = ({ rank }) => (
   <span className="inline-flex items-center gap-1.5 font-semibold">
-    {rank <= 3 && (
-      <Trophy
-        className={clsx('h-4 w-4', rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-300' : 'text-amber-600')}
-      />
-    )}
+    {rank <= 3 && <Trophy className={clsx('h-4 w-4', PLACE_COLORS[rank - 1])} />}
     {rank}
   </span>
 );
@@ -430,10 +428,11 @@ const CompetePage = () => {
               <Trophy className="h-4 w-4 text-orange-500" /> Prize Pool
             </p>
             <p className="mt-1 font-russo text-3xl sm:text-4xl">
-              <span className="text-orange-gradient">$3,000</span> <span className="text-dark-100">+</span> 300,000 L4VA
+              <span className="text-orange-gradient">{usd(PRIZE_TOTAL.cash)}</span>{' '}
+              <span className="text-dark-100">+</span> {PRIZE_TOTAL.l4va.toLocaleString('en-US')} L4VA
             </p>
           </div>
-          <p className="text-sm text-dark-100">4 awards · paid after final review</p>
+          <p className="text-sm text-dark-100">{PRIZES.length} awards · top 3 in each · paid after final review</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {PRIZES.map(prize => {
@@ -456,6 +455,18 @@ const CompetePage = () => {
                 <div className="mt-auto pt-4">
                   <p className="font-russo text-2xl text-orange-500">{usd(prize.cash)}</p>
                   <p className="text-sm text-dark-100">+ {prize.l4va.toLocaleString('en-US')} L4VA</p>
+                  <ul className="mt-3 space-y-1.5 border-t border-steel-750 pt-3 text-sm">
+                    {prize.places.map((place, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <Trophy className={clsx('h-3.5 w-3.5 shrink-0', PLACE_COLORS[i])} />
+                        <span className="text-dark-100">{PLACE_LABELS[i]}</span>
+                        <span className="ml-auto font-semibold">{usd(place.cash)}</span>
+                        <span className="w-[86px] text-right text-xs text-dark-100">
+                          + {place.l4va.toLocaleString('en-US')} L4VA
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             );

@@ -1,18 +1,31 @@
 // Static Creator Challenge content. Season dates and rankings come from /competition/leaderboard.
 
-export const PRIZES = [
-  { key: 'token', title: 'Best Performing Token', cash: 1000, l4va: 100000, icon: 'token' },
-  {
-    key: 'portfolio',
-    title: 'Best Performing Portfolio',
-    note: 'Different creator',
-    cash: 1000,
-    l4va: 100000,
-    icon: 'portfolio',
-  },
-  { key: 'community', title: 'Best Community', cash: 500, l4va: 50000, icon: 'community' },
-  { key: 'creative', title: 'Most Creative', cash: 500, l4va: 50000, icon: 'creative' },
+// Each award pays 1st / 2nd / 3rd. L4VA amounts follow the same ratio as cash (100 L4VA per $1).
+const PERFORMANCE_PLACES = [
+  { cash: 500, l4va: 50000 },
+  { cash: 350, l4va: 35000 },
+  { cash: 150, l4va: 15000 },
 ];
+const JUDGED_PLACES = [
+  { cash: 300, l4va: 30000 },
+  { cash: 150, l4va: 15000 },
+  { cash: 50, l4va: 5000 },
+];
+
+const sum = (places, key) => places.reduce((total, place) => total + place[key], 0);
+const award = (fields, places) => ({ ...fields, places, cash: sum(places, 'cash'), l4va: sum(places, 'l4va') });
+
+export const PRIZES = [
+  award({ key: 'token', title: 'Best Performing Token', icon: 'token' }, PERFORMANCE_PLACES),
+  award(
+    { key: 'portfolio', title: 'Best Performing Portfolio', note: 'Different creator', icon: 'portfolio' },
+    PERFORMANCE_PLACES
+  ),
+  award({ key: 'community', title: 'Best Community', icon: 'community' }, JUDGED_PLACES),
+  award({ key: 'creative', title: 'Most Creative', icon: 'creative' }, JUDGED_PLACES),
+];
+
+export const PRIZE_TOTAL = { cash: sum(PRIZES, 'cash'), l4va: sum(PRIZES, 'l4va') };
 
 export const RULES = [
   {
