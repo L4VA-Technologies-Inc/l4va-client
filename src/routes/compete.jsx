@@ -155,11 +155,11 @@ const returnCell = (row, value) =>
 
 const creatorCell = row => <span className="text-dark-100">{row.creator ? `@${row.creator}` : '—'}</span>;
 
-const performanceColumns = ({ qualifyingKey, totalKey, qualifyingHint }) => [
+const performanceColumns = ({ qualifyingKey, totalKey }) => [
   { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
   { label: 'Token / Creator', cell: row => <TokenCell row={row} showCreator /> },
-  { label: 'Return (qualifying)', hint: qualifyingHint, cell: row => returnCell(row, row[qualifyingKey]) },
-  { label: 'Return (total)', hint: 'Since entry, informational', cell: row => pct(row[totalKey]) },
+  { label: 'Return (qualifying)', cell: row => returnCell(row, row[qualifyingKey]) },
+  { label: 'Return (total)', cell: row => pct(row[totalKey]) },
   { label: 'Vault value', cell: row => usd(row.value) },
   { label: 'Holders', cell: row => row.holders ?? '—' },
   { label: 'Status', cell: row => <StatusBadge row={row} stacked /> },
@@ -169,12 +169,10 @@ const COLUMNS = {
   tokens: performanceColumns({
     qualifyingKey: 'qualifyingReturn',
     totalKey: 'totalReturn',
-    qualifyingHint: '7-day average token price vs entry price',
   }),
   portfolios: performanceColumns({
     qualifyingKey: 'qualifyingValueReturn',
     totalKey: 'totalValueReturn',
-    qualifyingHint: '7-day average vault NAV vs NAV at entry',
   }),
 };
 
