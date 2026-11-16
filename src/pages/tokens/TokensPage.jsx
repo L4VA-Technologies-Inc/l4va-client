@@ -127,7 +127,7 @@ const SummaryCard = ({ title, children }) => (
   </div>
 );
 
-const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVault }) => (
+const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage }) => (
   <button
     type="button"
     onClick={onClick}
@@ -136,11 +136,6 @@ const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVa
     <div className="flex items-center gap-2 min-w-0">
       <TokenImage src={image} alt={ticker} fallback={fallbackImage} />
       <span className="truncate font-medium text-white uppercase">{ticker}</span>
-      {isVault ? (
-        <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-          Vault
-        </span>
-      ) : null}
     </div>
     <span className="text-dark-100 text-xs tabular-nums">{fdv}</span>
     <div className="w-14 text-right">
@@ -344,7 +339,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -363,7 +357,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -382,7 +375,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -460,13 +452,9 @@ export const TokensPage = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
-                            {token.source === 'vault' ? (
-                              <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-                                Vault
-                              </span>
-                            ) : (
+                            {token.source !== 'vault' ? (
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            )}
+                            ) : null}
                           </div>
                           <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
                         </div>
