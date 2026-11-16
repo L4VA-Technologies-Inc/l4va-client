@@ -7,6 +7,7 @@ import { formatNumber, substringAddress, formatNum, formatLargeNumber } from '@/
 import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { clickableProps } from '@/utils/a11y';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 const ETH_IMAGE = '/assets/icons/eth.svg';
@@ -201,14 +202,17 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
               {assets.map((asset, index) => (
                 <React.Fragment key={asset.id}>
                   <tr
-                    className={`cursor-pointer transition-all duration-300 ${
+                    className={`cursor-pointer transition-all duration-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500 ${
                       expandedAsset === index ? 'bg-steel-750' : 'bg-steel-850 hover:bg-steel-750'
                     }`}
-                    onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
+                    {...clickableProps(() => setExpandedAsset(expandedAsset === index ? null : index))}
+                    aria-expanded={expandedAsset === index}
                   >
                     <td className="px-4 py-3">
                       <img
                         alt={asset.name || 'NFT'}
+                        loading="lazy"
+                        decoding="async"
                         className="w-12 h-12 rounded-lg object-cover"
                         src={asset.imageUrl || (isEth ? ETH_IMAGE : FALLBACK_IMAGE)}
                         onError={e => {
@@ -242,10 +246,13 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                               <div className="flex items-center gap-2">
                                 <p className="break-all">{substringAddress(asset.policyId)}</p>
                                 <button
+                                  aria-label="Copy policy ID"
                                   onClick={e => {
                                     e.stopPropagation();
-                                    navigator.clipboard.writeText(asset.policyId);
-                                    toast.success('Policy ID copied to clipboard');
+                                    navigator.clipboard.writeText(asset.policyId).then(
+                                      () => toast.success('Policy ID copied to clipboard'),
+                                      () => toast.error('Could not copy to clipboard')
+                                    );
                                   }}
                                   className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                 >
@@ -260,10 +267,13 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                               <div className="flex items-center gap-2">
                                 <p className="break-all">{substringAddress(asset.assetId)}</p>
                                 <button
+                                  aria-label="Copy asset ID"
                                   onClick={e => {
                                     e.stopPropagation();
-                                    navigator.clipboard.writeText(asset.assetId);
-                                    toast.success('Asset ID copied to clipboard');
+                                    navigator.clipboard.writeText(asset.assetId).then(
+                                      () => toast.success('Asset ID copied to clipboard'),
+                                      () => toast.error('Could not copy to clipboard')
+                                    );
                                   }}
                                   className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                 >

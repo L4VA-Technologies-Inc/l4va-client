@@ -10,6 +10,7 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
 import { formatLargeNumber } from '@/utils/core.utils';
+import { clickableProps } from '@/utils/a11y';
 
 const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
@@ -50,6 +51,8 @@ const TokenImage = ({ src, alt, size = 'sm', fallback = DEFAULT_TOKEN_IMAGE }) =
   <img
     src={src || fallback}
     alt={alt || ''}
+    loading="lazy"
+    decoding="async"
     className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
     onError={e => {
       e.currentTarget.onerror = null;
@@ -410,7 +413,7 @@ export const TokensPage = () => {
             <Clock className="w-4 h-4" />
             24H
           </SecondaryButton>
-          <SecondaryButton size="sm" className="px-3">
+          <SecondaryButton aria-label="Filters" size="sm" className="px-3">
             <Filter className="w-4 h-4" />
           </SecondaryButton>
           <SecondaryButton size="sm" className="gap-1.5">
@@ -443,8 +446,8 @@ export const TokensPage = () => {
                 return (
                   <tr
                     key={token.id}
-                    onClick={() => openToken(token.id)}
-                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer"
+                    {...clickableProps(() => openToken(token.id), { role: 'link' })}
+                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500"
                   >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">

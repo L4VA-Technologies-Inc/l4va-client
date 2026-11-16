@@ -63,6 +63,7 @@ export const SelectedAssetItemWithPrice = ({ asset, onRemove, onPriceChange, old
             )}
           </div>
           <button
+            aria-label="Remove asset"
             className="text-dark-100 hover:text-white p-1 rounded-full hover:bg-steel-700 transition-colors"
             type="button"
             onClick={e => {

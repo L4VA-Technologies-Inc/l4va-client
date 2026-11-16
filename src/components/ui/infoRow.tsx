@@ -61,7 +61,7 @@ export const InfoRow = ({
           </span>
         )}
         {copyable && (
-          <button className="text-gray-500 hover:text-gray-700" type="button" onClick={handleCopy}>
+          <button aria-label="Copy" className="text-gray-500 hover:text-gray-700" type="button" onClick={handleCopy}>
             <Copy className="h-5 w-5" />
           </button>
         )}

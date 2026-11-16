@@ -41,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useNativePrices } from '@/services/api/queries';
+import { isImeComposing } from '@/utils/keyboard';
 import { useSyncedBasketRoutes } from '@/components/vaults/index/IndexBasketEditor';
 import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
@@ -196,6 +197,7 @@ const EditableRow = ({
     }
     if (event.key === 'Enter' && (!multiline || event.metaKey || event.ctrlKey)) {
       event.preventDefault();
+      if (isImeComposing(event)) return;
       commit();
     }
   };

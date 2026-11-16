@@ -15,6 +15,7 @@ import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
+import { clickableProps } from '@/utils/a11y';
 
 const navLinks = [
   { to: '/tokens', label: 'Tokens', isAuth: false },
@@ -188,8 +189,8 @@ export const Header = () => {
               {notifications?.map(n => (
                 <div
                   key={n.id}
-                  className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
-                  onClick={() => handleNotificationClick(n)}
+                  className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition focus-visible:outline-2 focus-visible:outline-orange-500"
+                  {...clickableProps(() => handleNotificationClick(n))}
                 >
                   <div className="font-medium text-white">{n.subject || 'No subject'}</div>
                   <div className="text-base text-dark-100">{n.body || 'No message'}</div>

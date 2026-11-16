@@ -48,7 +48,7 @@ const Acquire = () => {
                     <div className="w-6 flex items-center">
                       {acquire.vault_image?.file_url ? (
                         <div className="w-14 bg-steel-0">
-                          <img src={acquire.vault_image?.file_url} />
+                          <img src={acquire.vault_image?.file_url} alt="" loading="lazy" decoding="async" />
                         </div>
                       ) : null}
                       <div>{acquire.name}</div>

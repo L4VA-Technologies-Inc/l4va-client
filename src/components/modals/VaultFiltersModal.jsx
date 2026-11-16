@@ -376,6 +376,7 @@ export const VaultFiltersModal = ({
               />
               <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
                 <button
+                  aria-label="Increase minimum"
                   type="button"
                   onClick={() => {
                     const currentValue = Number(filters.minInitialVaultOffered) || 0;
@@ -409,6 +410,7 @@ export const VaultFiltersModal = ({
               />
               <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
                 <button
+                  aria-label="Increase maximum"
                   type="button"
                   onClick={() => {
                     const currentValue = Number(filters.maxInitialVaultOffered) || 0;

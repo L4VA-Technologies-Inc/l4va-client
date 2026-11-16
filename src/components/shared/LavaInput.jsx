@@ -237,6 +237,7 @@ export const LavaSteelInput = ({
           max={max}
           step={step}
           maxLength={maxLength}
+          {...(isNumberType ? { inputMode: 'decimal', onWheel: e => e.currentTarget.blur() } : {})}
           {...props}
         />
         {endAdornment && (
@@ -247,6 +248,7 @@ export const LavaSteelInput = ({
         {isNumberType && !disabled && (
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
             <button
+              aria-label="Increase"
               type="button"
               onClick={handleIncrement}
               className="p-0.5 hover:bg-steel-600 rounded transition-colors"
@@ -255,6 +257,7 @@ export const LavaSteelInput = ({
               <ChevronUp className="w-3 h-3 text-gray-400" />
             </button>
             <button
+              aria-label="Decrease"
               type="button"
               onClick={handleDecrement}
               className="p-0.5 hover:bg-steel-600 rounded transition-colors"

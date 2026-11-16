@@ -4,6 +4,7 @@ import { TokenImage } from '@/components/shared/TokenImage';
 import { formatPolicyId } from '@/utils/core.utils';
 import { getPolicyUrl } from '@/utils/explorer.utils';
 import { useNetwork } from '@/hooks/useNetwork';
+import { clickableProps } from '@/utils/a11y';
 
 export const NFTItem = ({ nft, isSelected, isDisabled, onToggle, chainType }) => {
   const { isRobinHood } = useNetwork();
@@ -11,8 +12,9 @@ export const NFTItem = ({ nft, isSelected, isDisabled, onToggle, chainType }) =>
 
   return (
     <div
-      className={`flex items-center gap-3 ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-      onClick={() => !isDisabled && onToggle(nft)}
+      className={`flex items-center gap-3 rounded-md ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} focus-visible:outline-2 focus-visible:outline-orange-500`}
+      {...clickableProps(() => onToggle(nft), { disabled: isDisabled })}
+      aria-pressed={isSelected}
     >
       <div
         className={`

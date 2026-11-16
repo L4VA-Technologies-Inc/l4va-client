@@ -219,6 +219,8 @@ const Leaderboard = ({ data, isLoading }) => {
         <label className="relative lg:ml-auto lg:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-100" />
           <input
+            type="search"
+            aria-label="Search vaults"
             value={query}
             placeholder="Search vault, symbol or creator"
             className="w-full rounded-lg bg-steel-850 border border-steel-750 py-2 pl-9 pr-3 text-sm placeholder:text-dark-100 focus:outline-none focus:border-orange-500"

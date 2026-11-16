@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
@@ -18,6 +19,15 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
     }
     onClose();
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = e => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   const { isAuthenticated } = useAuth();
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
@@ -67,6 +77,11 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
         onClick={onClose}
       />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        // Closed drawer is only translated off-screen; inert keeps its links out of Tab order.
+        inert={!isOpen}
         className="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-[70]"
         style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >

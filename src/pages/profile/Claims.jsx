@@ -14,6 +14,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { ClaimsApiProvider } from '@/services/api/claims';
 import { LavaTable } from '@/components/shared/LavaTable';
 import { useCurrency } from '@/hooks/useCurrency';
+import { clickableProps } from '@/utils/a11y';
 
 const tabOptions = [
   { id: 'distribution', name: 'Distribution', type: 'distribution' },
@@ -250,6 +251,8 @@ export const Claims = () => {
       <div className="flex items-center gap-3">
         <img
           alt={`${claim.vault} preview`}
+          loading="lazy"
+          decoding="async"
           className="w-14 h-14 rounded-lg object-cover"
           src={claim.image || '/placeholder.svg'}
         />
@@ -300,7 +303,9 @@ export const Claims = () => {
             {claim.image ? (
               <img
                 src={claim.image || '/favicon/favicon.ico'}
-                alt={claim.image || '-'}
+                alt=""
+                loading="lazy"
+                decoding="async"
                 className="w-12 h-12 rounded-full"
                 onError={e => {
                   e.target.style.display = 'none';
@@ -311,10 +316,13 @@ export const Claims = () => {
             )}
             <div
               className="flex items-center gap-1 font-medium text-white uppercase hover:text-orange-500 transition-colors cursor-pointer"
-              onClick={() => {
-                if (!claim.link || claim.link === '#') return;
-                navigate({ to: claim.link });
-              }}
+              {...clickableProps(
+                () => {
+                  if (!claim.link || claim.link === '#') return;
+                  navigate({ to: claim.link });
+                },
+                { role: 'link' }
+              )}
             >
               {claim.vault || '-'} <ExternalLink size={16} />
             </div>

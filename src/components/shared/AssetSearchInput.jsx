@@ -336,7 +336,14 @@ export const AssetSearchInput = ({
             </div>
             <p className="text-xs text-dark-100 font-mono truncate mt-0.5">{value.policyId}</p>
           </div>
-          <Button className="h-8 w-8 rounded-full shrink-0" size="icon" variant="ghost" type="button" onClick={onClear}>
+          <Button
+            aria-label="Clear selection"
+            className="h-8 w-8 rounded-full shrink-0"
+            size="icon"
+            variant="ghost"
+            type="button"
+            onClick={onClear}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -356,6 +363,7 @@ export const AssetSearchInput = ({
           )}
           {onClear && (
             <Button
+              aria-label="Clear selection"
               className="h-8 w-8 rounded-full absolute right-4 top-1/2 transform -translate-y-1/2"
               size="icon"
               variant="ghost"

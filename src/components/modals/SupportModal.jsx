@@ -17,6 +17,7 @@ import {
   ChatComposer,
   ChatMarkdown,
 } from '@/components/shared/chat/ChatPrimitives';
+import { scrollBehavior } from '@/utils/a11y';
 
 const DISCORD_URL = 'https://discord.com/invite/mBbTUfAzuS';
 const MAX_MESSAGE_LENGTH = 2000;
@@ -112,7 +113,7 @@ export const SupportModal = () => {
   const messageCount = ticket?.messages?.length ?? 0;
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: scrollBehavior() });
   }, [messageCount, startingNew, pending]);
 
   const send = async message => {

@@ -393,14 +393,18 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleCopyPolicyId = e => {
     e.preventDefault();
-    navigator.clipboard.writeText(vault.policyId);
-    toast.success('Policy ID copied to clipboard');
+    navigator.clipboard.writeText(vault.policyId).then(
+      () => toast.success('Policy ID copied to clipboard'),
+      () => toast.error('Could not copy to clipboard')
+    );
   };
 
   const handleCopyWalletAddress = e => {
     e.preventDefault();
-    navigator.clipboard.writeText(vault.contractAddress);
-    toast.success('Wallet address copied to clipboard');
+    navigator.clipboard.writeText(vault.contractAddress).then(
+      () => toast.success('Wallet address copied to clipboard'),
+      () => toast.error('Could not copy to clipboard')
+    );
   };
 
   const handleCopyVaultAddress = async e => {
@@ -417,8 +421,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         await navigator.share({ url: link });
         toast.success('Link shared successfully');
       } else {
-        await navigator.clipboard.writeText(link);
-        toast.success('Link copied to clipboard');
+        await navigator.clipboard.writeText(link).then(
+          () => toast.success('Link copied to clipboard'),
+          () => toast.error('Could not copy to clipboard')
+        );
       }
     } catch (err) {
       console.error('Error coy link:', err);
@@ -550,6 +556,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             {isAuthenticated && (
               <HintTooltip content="View owner profile">
                 <button
+                  aria-label="View owner profile"
                   onClick={() => handleOwnerClick(vault.owner.id)}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
@@ -572,6 +579,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             {showTokenDetails && (
               <HintTooltip content="View vault statistics">
                 <button
+                  aria-label="View vault statistics"
                   type="button"
                   onClick={() => navigate({ to: '/tokens/$id', params: { id: vault.id } })}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
@@ -589,6 +597,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             </HintTooltip>
             <HintTooltip content="Share vault link">
               <button
+                aria-label="Share vault link"
                 onClick={handleCopyVaultAddress}
                 className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
               >

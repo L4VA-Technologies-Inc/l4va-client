@@ -9,6 +9,7 @@ import XIcon from '@/icons/x.svg?react';
 import MediumIcon from '@/icons/medium.svg?react';
 import DiscordIcon from '@/icons/discord.svg?react';
 import YouTubeIcon from '@/icons/youtube.svg?react';
+import { scrollBehavior } from '@/utils/a11y';
 
 const socialLinks = [
   { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com/l4vaprotocol' },
@@ -60,7 +61,7 @@ export const Footer = () => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: scrollBehavior(),
     });
   };
 

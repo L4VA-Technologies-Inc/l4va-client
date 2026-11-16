@@ -1,14 +1,11 @@
-import { ReactNode } from 'react';
+import { ButtonHTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-interface SecondaryButtonProps {
+interface SecondaryButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  className?: string;
-  disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   type?: 'button' | 'submit' | 'reset';
-  onClick?: () => void;
 }
 
 const sizeClasses = {
@@ -24,8 +21,10 @@ const SecondaryButton = ({
   className,
   size = 'md',
   onClick,
+  ...rest
 }: SecondaryButtonProps) => (
   <button
+    {...rest}
     disabled={disabled}
     type={type}
     className={cn(

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { SendHorizonal } from 'lucide-react';
 
 import PrimaryButton from '@/components/shared/PrimaryButton';
+import { isImeComposing } from '@/utils/keyboard';
 
 // Building blocks shared by the AI vault chat and the support chat, so both read as one product.
 
@@ -123,6 +124,8 @@ export const ChatComposer = ({
           }}
           onKeyDown={event => {
             if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              if (isImeComposing(event)) return;
               submit(event);
             }
           }}
