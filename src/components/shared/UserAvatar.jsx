@@ -7,8 +7,10 @@ import { getAvatarLetter, getDisplayName, substringAddress } from '@/utils/core.
 export const UserAvatar = ({ user, handleDisconnect }) => {
   const handleCopyAddress = () => {
     if (user?.address) {
-      navigator.clipboard.writeText(user.address);
-      toast.success('Address copied to clipboard');
+      navigator.clipboard.writeText(user.address).then(
+        () => toast.success('Address copied to clipboard'),
+        () => toast.error('Could not copy to clipboard')
+      );
     }
   };
 
@@ -27,6 +29,7 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
       </div>
       {handleDisconnect ? (
         <button
+          aria-label="Disconnect wallet"
           className="text-dark-100 hover:text-red-600 transition-colors duration-200"
           type="button"
           onClick={handleDisconnect}

@@ -188,7 +188,12 @@ const SwapRow = ({ action, index, options, vaultAddress, vaultId, canRemove, sho
           {showErrors && problem && <span className="text-red-500 ml-2">{problem}</span>}
         </span>
         {canRemove && (
-          <button type="button" onClick={() => onRemove(action.id)} className="text-red-400 hover:text-red-500 p-1">
+          <button
+            aria-label="Remove action"
+            type="button"
+            onClick={() => onRemove(action.id)}
+            className="text-red-400 hover:text-red-500 p-1"
+          >
             <X className="h-4 w-4" />
           </button>
         )}

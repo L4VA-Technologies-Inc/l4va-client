@@ -266,7 +266,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   {inputCurrency === 'native' ? 'USD' : assetSymbol}
                 </button>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 rounded-md focus-within:ring-1 focus-within:ring-orange-500/50">
                 <input
                   className="bg-transparent text-4xl w-full outline-none font-bold"
                   type="text"
@@ -275,6 +275,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                 />
                 <div className="flex flex-col gap-1">
                   <button
+                    aria-label="Increase amount"
                     type="button"
                     onClick={() => {
                       const newValue = Math.min(parseFloat(acquireAmount || 0) + stepAmount, maxValue);
@@ -285,6 +286,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                     <ChevronUp className="transition-transform duration-200" size={20} />
                   </button>
                   <button
+                    aria-label="Decrease amount"
                     type="button"
                     onClick={() => {
                       const newValue = Math.max(parseFloat(acquireAmount || 0) - stepAmount, 0);

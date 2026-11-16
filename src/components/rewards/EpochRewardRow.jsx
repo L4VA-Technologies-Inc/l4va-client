@@ -2,6 +2,7 @@ import { EpochStatusBadge } from './EpochStatusBadge';
 
 import { formatCompactNumber } from '@/utils/core.utils';
 import { formatDateRange } from '@/utils/rewards/normalizers';
+import { clickableProps } from '@/utils/a11y';
 
 export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = null }) => {
   const hasReward = reward && Number(reward.finalReward) > 0;
@@ -11,8 +12,8 @@ export const EpochRewardRow = ({ epoch, reward = null, score = null, onClick = n
 
   return (
     <div
-      className={`p-4 bg-steel-800/50 border border-gray-700/50 rounded-lg hover:bg-steel-800/70 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
+      className={`p-4 bg-steel-800/50 border border-gray-700/50 rounded-lg hover:bg-steel-800/70 transition-colors ${onClick ? 'cursor-pointer' : ''} focus-visible:outline-2 focus-visible:outline-orange-500`}
+      {...clickableProps(onClick)}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         {/* Epoch Info */}

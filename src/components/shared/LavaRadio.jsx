@@ -78,6 +78,7 @@ export const LavaRadio = ({
               {name === 'preset' && option.type !== 'custom' && <HoverHelp hint={presetHelpfulHint[option.type]} />}
               {deletable && (
                 <button
+                  aria-label="Delete preset"
                   type="button"
                   disabled={isDeleting}
                   onClick={e => {

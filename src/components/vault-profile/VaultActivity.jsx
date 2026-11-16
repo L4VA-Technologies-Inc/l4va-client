@@ -38,6 +38,7 @@ import {
   TERMINATION_TITLES,
   TerminationActivityCard,
 } from '@/components/vault-profile/TerminationActivityCard';
+import { scrollBehavior } from '@/utils/a11y';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -1209,7 +1210,7 @@ export const VaultActivity = ({ vault }) => {
 
   const handlePageChange = newPage => {
     setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const handleFilterChange = filter => {

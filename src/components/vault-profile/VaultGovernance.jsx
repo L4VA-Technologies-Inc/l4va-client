@@ -30,6 +30,7 @@ import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useRefetchWhenProposalStatusMayChange } from '@/hooks/useRefetchWhenProposalStatusMayChange';
 import { ChainType } from '@/utils/types';
+import { scrollBehavior } from '@/utils/a11y';
 
 const PROPOSAL_TABS = ['All', 'Upcoming', 'Active', 'Rejected', 'Finished'];
 const PROPOSALS_PER_PAGE = 2;
@@ -193,7 +194,7 @@ export const VaultGovernance = ({ vault }) => {
 
   const handlePageChange = newPage => {
     setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const filteredProposals = proposals.filter(proposal => {

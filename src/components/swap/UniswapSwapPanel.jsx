@@ -397,13 +397,14 @@ export function UniswapSwapPanel({
             Bal {balanceLabel} {side === 'buy' ? 'ETH' : tokenSymbol}
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-md focus-within:ring-1 focus-within:ring-orange-500/50">
           <input
             type="number"
             inputMode="decimal"
             min="0"
             step="any"
             placeholder="0.0"
+            onWheel={e => e.currentTarget.blur()}
             value={usdMode ? usdInput : amountIn}
             disabled={!!disabledReason}
             onChange={e => (usdMode ? onUsdChange(e.target.value) : setEthAmount(e.target.value))}

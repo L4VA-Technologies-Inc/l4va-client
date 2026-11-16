@@ -7,6 +7,7 @@ import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { useAssetSource } from '@/hooks/useAssetSource';
 import { cn } from '@/lib/utils';
+import { scrollBehavior } from '@/utils/a11y';
 
 const variants = {
   default: {
@@ -340,7 +341,7 @@ export const LavaWhitelistWithCaps = ({
     const row = rowRefs.current[uniqueId];
     if (!row) return;
 
-    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
     const input = row.querySelector('input');
     if (input) {
       // Wait a tick so scroll starts before focus steals attention on mobile.
@@ -380,6 +381,7 @@ export const LavaWhitelistWithCaps = ({
             {label}
           </div>
           <button
+            aria-label="Add asset"
             className={cn(styles.addButton, whitelist.length >= maxItems && 'opacity-50 cursor-not-allowed')}
             disabled={whitelist.length >= maxItems}
             type="button"

@@ -84,10 +84,13 @@ const VaultChart = ({ ohlcvData, isLoading, isNotFound, emptyMessage }) => {
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    // Track the container, not the window: the chart must also follow layout changes
+    // (sidebars, tabs, grid reflow) that don't resize the window.
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (chartContainerRef.current) resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       if (chart) chart.remove();
     };
   }, [ohlcvData]);

@@ -174,6 +174,7 @@ export const LavaWhitelist = ({
         <div className="flex gap-2">
           {allowDeleteAll && (
             <button
+              aria-label="Clear whitelist"
               className={`border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center transition-colors ${whitelist.length === 0 ? 'opacity-50 cursor-not-allowed hover:bg-transparent' : 'hover:bg-white/5'}`}
               disabled={whitelist.length === 0}
               type="button"
@@ -194,6 +195,7 @@ export const LavaWhitelist = ({
             </>
           )}
           <button
+            aria-label="Add asset"
             className={`border-2 border-white/20 rounded-lg w-[36px] h-[36px] flex items-center justify-center hover:bg-white/5 transition-colors ${whitelist.length >= maxItems ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={whitelist.length >= maxItems}
             type="button"

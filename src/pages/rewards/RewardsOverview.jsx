@@ -1,5 +1,5 @@
 import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -209,9 +209,9 @@ export const RewardsOverview = () => {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div
-            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
-            onClick={() => navigate({ to: '/rewards/claims' })}
+          <Link
+            to="/rewards/claims"
+            className="block bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-orange-500"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-lg bg-green-500/20 border border-green-500/20 flex items-center justify-center flex-shrink-0">
@@ -222,10 +222,10 @@ export const RewardsOverview = () => {
                 <p className="text-sm text-steel-400">View your past claim transactions</p>
               </div>
             </div>
-          </div>
-          <div
-            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
-            onClick={() => navigate({ to: '/rewards/epochs' })}
+          </Link>
+          <Link
+            to="/rewards/epochs"
+            className="block bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-orange-500"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-lg bg-orange-500/20 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
@@ -236,7 +236,7 @@ export const RewardsOverview = () => {
                 <p className="text-sm text-steel-400">View your rewards by epoch</p>
               </div>
             </div>
-          </div>
+          </Link>
           {/* <div
             className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/vaults' })}

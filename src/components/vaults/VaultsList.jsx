@@ -10,6 +10,7 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { Pagination } from '@/components/shared/Pagination';
 import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaTabs } from '@/components/shared/LavaTabs.jsx';
+import { scrollBehavior } from '@/utils/a11y';
 
 // Loading placeholders shaped like VaultCard / VaultListItem, so the page doesn't jump.
 const Bone = ({ className = '' }) => <div className={clsx('animate-pulse rounded bg-steel-850', className)} />;
@@ -128,7 +129,7 @@ export const VaultList = ({
   const scrollUp = () => {
     if (pagination?.currentPage && vaultsListRef.current) {
       vaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }

@@ -62,6 +62,7 @@ import {
   basketToAssetsWhitelist,
   emptyIndexBasket,
 } from '@/components/vaults/index/indexVault.utils';
+import { scrollBehavior } from '@/utils/a11y';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -397,7 +398,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   // --- Helpers ---
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const scrollToTutorial = () => {
@@ -407,7 +408,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       const offset = headerHeight + 24;
       const elementPosition = tutorialElement.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      window.scrollTo({ top: offsetPosition, behavior: scrollBehavior() });
     }
   };
 
@@ -1362,7 +1363,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
         {visibleSteps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
-              className="focus:outline-none flex flex-col items-center"
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-md flex flex-col items-center"
               type="button"
               onClick={() => handleStepClick(step.id)}
             >

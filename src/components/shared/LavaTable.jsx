@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import { Pagination } from '@/components/shared/Pagination';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
+import { clickableProps } from '@/utils/a11y';
 
 const TableLoadingState = () => (
   <div className="flex justify-center items-center py-20 gap-3">
@@ -160,10 +161,12 @@ export const LavaTable = ({
                   key={getKey(item, index)}
                   className={clsx(
                     'bg-steel-850 hover:bg-steel-750 transition-colors border-b border-steel-750 last:border-b-0',
-                    onRowClick ? 'cursor-pointer' : '',
+                    onRowClick
+                      ? 'cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500'
+                      : '',
                     getRowClassName ? getRowClassName(item, index) : ''
                   )}
-                  onClick={onRowClick ? () => onRowClick(item, index) : undefined}
+                  {...clickableProps(onRowClick ? () => onRowClick(item, index) : null, { role: 'link' })}
                 >
                   {visibleColumns.map(col => (
                     <td key={col.key} className={clsx('px-4 py-3', col.cellClassName || '')}>
