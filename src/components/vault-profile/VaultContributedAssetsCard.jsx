@@ -10,8 +10,10 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinh
 
   const handleCopy = (e, text, message) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
-    toast.success(message);
+    navigator.clipboard.writeText(text).then(
+      () => toast.success(message),
+      () => toast.error('Could not copy to clipboard')
+    );
   };
 
   const assetName = asset.name || (asset.assetId === 'lovelace' ? 'ADA' : substringAddress(asset.assetId));
@@ -88,6 +90,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinh
               <div className="flex items-center gap-2">
                 <p className="break-all">{substringAddress(asset.policyId)}</p>
                 <button
+                  aria-label="Copy policy ID"
                   onClick={e => handleCopy(e, asset.policyId, `${policyLabel} copied`)}
                   className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                 >
@@ -101,6 +104,7 @@ const AssetCard = ({ asset, isExpanded, onClick, currencySymbol, isAda, isRobinh
                 <div className="flex items-center gap-2">
                   <p className="break-all">{substringAddress(asset.assetId)}</p>
                   <button
+                    aria-label="Copy asset ID"
                     onClick={e => handleCopy(e, asset.assetId, 'Asset ID copied')}
                     className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                   >

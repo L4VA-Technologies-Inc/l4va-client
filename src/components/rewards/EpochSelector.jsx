@@ -18,7 +18,7 @@ export const EpochSelector = ({ selectedEpochIds = [], onChange, mode = 'single'
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const sortedEpochs = (epochsData?.epochs || []).sort((a, b) => b.epochNumber - a.epochNumber);
+  const sortedEpochs = [...(epochsData?.epochs || [])].sort((a, b) => b.epochNumber - a.epochNumber);
 
   const handleSelect = epochId => {
     if (mode === 'single') {

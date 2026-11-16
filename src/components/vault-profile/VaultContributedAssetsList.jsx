@@ -10,6 +10,7 @@ import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
 import { TokenImage } from '@/components/shared/TokenImage.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { clickableProps } from '@/utils/a11y';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -205,10 +206,11 @@ const VaultContributedAssetsList = ({ vault }) => {
                   return (
                     <React.Fragment key={asset.id}>
                       <tr
-                        className={`cursor-pointer transition-all duration-300 ${
+                        className={`cursor-pointer transition-all duration-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500 ${
                           expandedAsset === index ? 'bg-steel-750' : 'bg-steel-850 hover:bg-steel-750'
                         }`}
-                        onClick={() => setExpandedAsset(expandedAsset === index ? null : index)}
+                        {...clickableProps(() => setExpandedAsset(expandedAsset === index ? null : index))}
+                        aria-expanded={expandedAsset === index}
                       >
                         <td className="px-4 py-3">
                           <TokenImage
@@ -254,10 +256,13 @@ const VaultContributedAssetsList = ({ vault }) => {
                                 <div className="flex items-center gap-2">
                                   <p className="break-all">{substringAddress(asset.policyId)}</p>
                                   <button
+                                    aria-label="Copy policy ID"
                                     onClick={e => {
                                       e.stopPropagation();
-                                      navigator.clipboard.writeText(asset.policyId);
-                                      toast.success(`${policyLabel} copied to clipboard`);
+                                      navigator.clipboard.writeText(asset.policyId).then(
+                                        () => toast.success(`${policyLabel} copied to clipboard`),
+                                        () => toast.error('Could not copy to clipboard')
+                                      );
                                     }}
                                     className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                   >
@@ -271,10 +276,13 @@ const VaultContributedAssetsList = ({ vault }) => {
                                   <div className="flex items-center gap-2">
                                     <p className="break-all">{substringAddress(asset.assetId)}</p>
                                     <button
+                                      aria-label="Copy asset ID"
                                       onClick={e => {
                                         e.stopPropagation();
-                                        navigator.clipboard.writeText(asset.assetId);
-                                        toast.success('Asset ID copied to clipboard');
+                                        navigator.clipboard.writeText(asset.assetId).then(
+                                          () => toast.success('Asset ID copied to clipboard'),
+                                          () => toast.error('Could not copy to clipboard')
+                                        );
                                       }}
                                       className="p-1 hover:bg-steel-850 rounded-md transition-colors"
                                     >

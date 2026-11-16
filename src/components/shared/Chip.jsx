@@ -1,5 +1,7 @@
 import { X } from 'lucide-react';
 
+import { clickableProps } from '@/utils/a11y';
+
 export const Chip = ({
   label,
   value,
@@ -39,10 +41,14 @@ export const Chip = ({
   };
 
   return (
-    <div className={`${baseClasses} ${selectedClasses}`} onClick={handleClick}>
+    <div
+      className={`${baseClasses} ${selectedClasses} focus-visible:outline-2 focus-visible:outline-orange-500`}
+      {...(onSelect ? { ...clickableProps(handleClick, { disabled }), 'aria-pressed': selected } : {})}
+    >
       <span className="capitalize">{label}</span>
       {variant === 'removable' && onRemove && (
         <button
+          aria-label="Remove"
           type="button"
           onClick={handleRemove}
           className={`ml-2 rounded-full transition-colors ${

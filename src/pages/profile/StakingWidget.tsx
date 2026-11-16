@@ -25,6 +25,7 @@ import {
   includesUtxoRef,
   sumExactDecimals,
 } from '@/utils/core.utils';
+import { scrollBehavior } from '@/utils/a11y';
 
 export interface UtxoRefDto {
   txHash: string;
@@ -83,7 +84,7 @@ export const StakingWidget: React.FC<StakingWidgetProps> = ({ focusOnMount = fal
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
       });
     }, 100);
 

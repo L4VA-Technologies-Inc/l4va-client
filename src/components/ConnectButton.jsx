@@ -35,7 +35,12 @@ export const ConnectButton = ({ isFull = false }) => {
               CONNECT
             </PrimaryButton>
           ) : (
-            <button className="p-2 rounded-md bg-orange-gradient" type="button" onClick={() => openModal('LoginModal')}>
+            <button
+              aria-label="Connect wallet"
+              className="p-2 rounded-md bg-orange-gradient"
+              type="button"
+              onClick={() => openModal('LoginModal')}
+            >
               <WalletIcon className="text-slate-950" height={24} width={24} />
             </button>
           )

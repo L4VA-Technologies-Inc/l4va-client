@@ -84,7 +84,7 @@ export const ProposalConfirmationModal = ({ onClose, proposalData, onConfirm }) 
         </div>
         <div className="p-6 border-t border-white/10">
           <div className="flex justify-center gap-4">
-            <SecondaryButton onClick={onClose}>
+            <SecondaryButton aria-label="Back" onClick={onClose}>
               <ChevronLeft size={24} />
             </SecondaryButton>
             <PrimaryButton className="uppercase" onClick={onConfirm}>

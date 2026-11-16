@@ -4,6 +4,7 @@ import { useRouter } from '@tanstack/react-router';
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 import { capitalizeFirst } from '@/utils/core.utils.js';
+import { scrollBehavior } from '@/utils/a11y';
 
 const VAULT_TABS = {
   ALL: 'All',
@@ -75,7 +76,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
           window.scrollTo({
             top: offsetPosition,
-            behavior: 'smooth',
+            behavior: scrollBehavior(),
           });
         }
       }, 100);
@@ -139,7 +140,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
     if (myVaultsListRef.current) {
       myVaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }

@@ -248,6 +248,7 @@ const SwapAction = ({ vaultId, onDataChange, error }) => {
                       <div className="text-white/50 text-sm">Total available: {action.availableQuantity} tokens</div>
                     </div>
                     <button
+                      aria-label="Remove action"
                       type="button"
                       onClick={() => handleRemoveAction(action.id, action.assetId)}
                       className="p-1 hover:bg-steel-800 rounded transition-colors"

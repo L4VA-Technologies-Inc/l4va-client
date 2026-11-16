@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
+import { isImeComposing } from '@/utils/keyboard';
+import { clickableProps } from '@/utils/a11y';
 
 const PROFILE_IMAGE_MAX_SIZE_MB = 5;
 // Must match RESEND_COOLDOWN_MS in the API's EmailVerificationService
@@ -15,8 +17,9 @@ const PROFILE_IMAGE_MAX_SIZE_BYTES = PROFILE_IMAGE_MAX_SIZE_MB * 1024 * 1024;
 
 const BackgroundSection = ({ bgImage, onClick, isEditable = true, isUploading = false, isDisabled = false }) => (
   <div
-    className={`relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
-    onClick={isEditable && !isDisabled ? onClick : null}
+    className={`relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'} focus-visible:outline-2 focus-visible:outline-orange-500`}
+    {...(isEditable ? clickableProps(onClick, { disabled: isDisabled }) : {})}
+    aria-label={isEditable ? 'Change background image' : undefined}
   >
     {bgImage ? (
       <>
@@ -65,8 +68,9 @@ const ProfileAvatar = ({
 }) => (
   <>
     <div
-      className={`relative -mt-16 ml-4 group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
-      onClick={isEditable && !isDisabled ? onClick : null}
+      className={`relative -mt-16 ml-4 group w-fit rounded-full ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'} focus-visible:outline-2 focus-visible:outline-orange-500`}
+      {...(isEditable ? clickableProps(onClick, { disabled: isDisabled }) : {})}
+      aria-label={isEditable ? 'Change profile picture' : undefined}
     >
       <Avatar className="h-32 w-32 border-4 border-slate-950 bg-navy-800">
         {avatar ? (
@@ -152,6 +156,7 @@ const ProfileName = ({
             placeholder="Enter your name"
           />
           <Button
+            aria-label="Save name"
             size="sm"
             variant="ghost"
             className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
@@ -161,6 +166,7 @@ const ProfileName = ({
             <Check size={16} />
           </Button>
           <Button
+            aria-label="Cancel name edit"
             size="sm"
             variant="ghost"
             className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
@@ -175,6 +181,7 @@ const ProfileName = ({
           <h1 className="text-xl font-bold text-white">{name || 'Anonymous User'}</h1>
           {isEditable && (
             <Button
+              aria-label="Edit name"
               size="sm"
               variant="ghost"
               className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
@@ -229,6 +236,7 @@ const ProfileEmail = ({
             placeholder="Enter your email"
           />
           <Button
+            aria-label="Save email"
             size="sm"
             variant="ghost"
             className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
@@ -238,6 +246,7 @@ const ProfileEmail = ({
             <Check size={16} />
           </Button>
           <Button
+            aria-label="Cancel email edit"
             size="sm"
             variant="ghost"
             className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
@@ -282,6 +291,7 @@ const ProfileEmail = ({
             </Button>
           )}
           <Button
+            aria-label="Edit email"
             size="sm"
             variant="ghost"
             className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
@@ -299,6 +309,7 @@ const AddressDisplay = ({ address, onCopy }) => (
   <div className="flex items-center gap-2 mt-1">
     <span className="text-gray-400 text-sm font-mono">{substringAddress(address)}</span>
     <Button
+      aria-label="Copy address"
       size="sm"
       variant="ghost"
       className="text-gray-400 hover:text-white hover:bg-steel-800 h-7 w-7 p-0"
@@ -475,7 +486,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
   };
 
   const handleNameKeyDown = e => {
-    if (e.key === 'Enter' && !isUpdating) handleNameSave();
+    if (e.key === 'Enter' && !isImeComposing(e) && !isUpdating) handleNameSave();
     else if (e.key === 'Escape') handleNameCancel();
   };
 
@@ -538,14 +549,16 @@ const ProfileHero = ({ user, isEditable = true }) => {
   };
 
   const handleEmailKeyDown = e => {
-    if (e.key === 'Enter' && !isUpdating) handleEmailSave();
+    if (e.key === 'Enter' && !isImeComposing(e) && !isUpdating) handleEmailSave();
     else if (e.key === 'Escape') handleEmailCancel();
   };
 
   const handleCopyAddress = () => {
     if (user?.address) {
-      navigator.clipboard.writeText(user.address);
-      toast.success('Address copied to clipboard');
+      navigator.clipboard.writeText(user.address).then(
+        () => toast.success('Address copied to clipboard'),
+        () => toast.error('Could not copy to clipboard')
+      );
     }
   };
 

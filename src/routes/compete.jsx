@@ -155,11 +155,11 @@ const returnCell = (row, value) =>
 
 const creatorCell = row => <span className="text-dark-100">{row.creator ? `@${row.creator}` : '—'}</span>;
 
-const performanceColumns = ({ qualifyingKey, totalKey, qualifyingHint }) => [
+const performanceColumns = ({ qualifyingKey, totalKey }) => [
   { label: '#', cell: (_, rank) => <RankCell rank={rank} /> },
   { label: 'Token / Creator', cell: row => <TokenCell row={row} showCreator /> },
-  { label: 'Return (qualifying)', hint: qualifyingHint, cell: row => returnCell(row, row[qualifyingKey]) },
-  { label: 'Return (total)', hint: 'Since entry, informational', cell: row => pct(row[totalKey]) },
+  { label: 'Return (qualifying)', cell: row => returnCell(row, row[qualifyingKey]) },
+  { label: 'Return (total)', cell: row => pct(row[totalKey]) },
   { label: 'Vault value', cell: row => usd(row.value) },
   { label: 'Holders', cell: row => row.holders ?? '—' },
   { label: 'Status', cell: row => <StatusBadge row={row} stacked /> },
@@ -169,12 +169,10 @@ const COLUMNS = {
   tokens: performanceColumns({
     qualifyingKey: 'qualifyingReturn',
     totalKey: 'totalReturn',
-    qualifyingHint: '7-day average token price vs entry price',
   }),
   portfolios: performanceColumns({
     qualifyingKey: 'qualifyingValueReturn',
     totalKey: 'totalValueReturn',
-    qualifyingHint: '7-day average vault NAV vs NAV at entry',
   }),
 };
 
@@ -221,6 +219,8 @@ const Leaderboard = ({ data, isLoading }) => {
         <label className="relative lg:ml-auto lg:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-100" />
           <input
+            type="search"
+            aria-label="Search vaults"
             value={query}
             placeholder="Search vault, symbol or creator"
             className="w-full rounded-lg bg-steel-850 border border-steel-750 py-2 pl-9 pr-3 text-sm placeholder:text-dark-100 focus:outline-none focus:border-orange-500"

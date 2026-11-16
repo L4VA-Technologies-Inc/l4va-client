@@ -6,6 +6,7 @@ import { useVaults } from '@/services/api/queries';
 import { useNetwork } from '@/hooks/useNetwork';
 import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
+import { scrollBehavior } from '@/utils/a11y';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -130,7 +131,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
 
     if (communityVaultsListRef.current) {
       communityVaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }

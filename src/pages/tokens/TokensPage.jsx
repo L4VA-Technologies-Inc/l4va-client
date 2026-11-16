@@ -10,6 +10,7 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
 import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
 import { formatLargeNumber } from '@/utils/core.utils';
+import { clickableProps } from '@/utils/a11y';
 
 const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
 
@@ -50,6 +51,8 @@ const TokenImage = ({ src, alt, size = 'sm', fallback = DEFAULT_TOKEN_IMAGE }) =
   <img
     src={src || fallback}
     alt={alt || ''}
+    loading="lazy"
+    decoding="async"
     className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
     onError={e => {
       e.currentTarget.onerror = null;
@@ -124,7 +127,7 @@ const SummaryCard = ({ title, children }) => (
   </div>
 );
 
-const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVault }) => (
+const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage }) => (
   <button
     type="button"
     onClick={onClick}
@@ -133,11 +136,6 @@ const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage, isVa
     <div className="flex items-center gap-2 min-w-0">
       <TokenImage src={image} alt={ticker} fallback={fallbackImage} />
       <span className="truncate font-medium text-white uppercase">{ticker}</span>
-      {isVault ? (
-        <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-          Vault
-        </span>
-      ) : null}
     </div>
     <span className="text-dark-100 text-xs tabular-nums">{fdv}</span>
     <div className="w-14 text-right">
@@ -341,7 +339,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -360,7 +357,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -379,7 +375,6 @@ export const TokensPage = () => {
                 ticker={item.symbol}
                 fdv={formatTokenField(item, 'fdv')}
                 change={item.change_24h}
-                isVault={item.source === 'vault'}
                 onClick={() => openToken(item.id)}
               />
             ))}
@@ -410,7 +405,7 @@ export const TokensPage = () => {
             <Clock className="w-4 h-4" />
             24H
           </SecondaryButton>
-          <SecondaryButton size="sm" className="px-3">
+          <SecondaryButton aria-label="Filters" size="sm" className="px-3">
             <Filter className="w-4 h-4" />
           </SecondaryButton>
           <SecondaryButton size="sm" className="gap-1.5">
@@ -443,8 +438,8 @@ export const TokensPage = () => {
                 return (
                   <tr
                     key={token.id}
-                    onClick={() => openToken(token.id)}
-                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer"
+                    {...clickableProps(() => openToken(token.id), { role: 'link' })}
+                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500"
                   >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -457,13 +452,9 @@ export const TokensPage = () => {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
-                            {token.source === 'vault' ? (
-                              <span className="shrink-0 rounded-full border border-steel-750 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-dark-100">
-                                Vault
-                              </span>
-                            ) : (
+                            {token.source !== 'vault' ? (
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            )}
+                            ) : null}
                           </div>
                           <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
                         </div>

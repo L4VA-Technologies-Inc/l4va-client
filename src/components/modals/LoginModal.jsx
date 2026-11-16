@@ -393,9 +393,9 @@ export const LoginModal = () => {
       </div>
       <div className="text-sm mt-4">
         Having issues? Try{' '}
-        <span className="cursor-pointer text-orange-500 hover:underline" onClick={handleDisconnect}>
+        <button type="button" className="cursor-pointer text-orange-500 hover:underline" onClick={handleDisconnect}>
           disconnecting
-        </span>{' '}
+        </button>{' '}
         your wallet
       </div>
     </div>
