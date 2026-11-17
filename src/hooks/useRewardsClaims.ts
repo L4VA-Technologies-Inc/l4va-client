@@ -27,6 +27,27 @@ export const useClaimableAmount = (walletAddress: string) => {
 };
 
 /**
+ * Robinhood wallets: claim arguments and on-chain claimable amount from the
+ * L4VARewardsDistributor contract. `data` is null while the distributor is not
+ * configured on the backend (409) — callers then fall back to the old flow.
+ */
+export const useEvmDistributorClaim = (walletAddress: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: ['rewards', 'claims', walletAddress, 'evm-distributor'],
+    queryFn: async () => {
+      try {
+        return await RewardsApiProvider.getEvmDistributorClaim();
+      } catch (error: unknown) {
+        if ((error as { response?: { status?: number } })?.response?.status === 409) return null;
+        throw error;
+      }
+    },
+    enabled: !!walletAddress && enabled,
+    staleTime: 1000 * 30, // 30 seconds
+  });
+};
+
+/**
  * Fetch claim history for wallet
  */
 export const useClaimHistory = (walletAddress: string) => {
