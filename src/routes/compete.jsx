@@ -7,6 +7,7 @@ import {
   BarChart3,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Database,
   Info,
@@ -378,6 +379,7 @@ const Timeline = ({ season }) => {
 const CompetePage = () => {
   const navigate = useNavigate();
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [prizeDetails, setPrizeDetails] = useState(false);
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
   // Creating a vault needs a connected wallet: open the login modal instead of a page that can't be used.
@@ -393,46 +395,63 @@ const CompetePage = () => {
   return (
     <div className="container mx-auto px-4 xl:px-0 py-8 text-primary-text space-y-5">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-2xl bg-steel-950 border border-steel-850 px-5 py-8 sm:px-8 sm:py-10">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-orange-500/20 blur-3xl" />
-        <p className="text-xs font-semibold uppercase tracking-wider text-orange-500">
-          L4VA Protocol | Robinhood Chain
-        </p>
-        <h1 className="mt-2 font-russo text-4xl sm:text-5xl">
-          Creator <span className="text-orange-gradient">Challenge</span>
-        </h1>
-        <p className="mt-3 text-lg sm:text-xl">Dream it. Launch it. Own the market.</p>
-        <p className="mt-1 text-dark-100">Create and own AI-powered vault tokens — compete for the top spot.</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <PrimaryButton size="lg" onClick={handleCreateVault}>
-            Create Vault <ArrowRight className="h-4 w-4" />
-          </PrimaryButton>
-          <SecondaryButton size="lg" onClick={() => setRulesOpen(true)}>
-            <ShieldCheck className="h-4 w-4" /> Rules
-          </SecondaryButton>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-3 text-dark-100 hover:text-white"
-            onClick={() => navigate({ to: '/how-it-works' })}
-          >
-            <PlayCircle className="h-5 w-5" /> How it works
-          </button>
+      <section className="relative overflow-hidden rounded-2xl bg-steel-950 border border-steel-850 px-5 py-5 sm:px-8 sm:py-6">
+        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          <div>
+            <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-orange-500/20 blur-3xl" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-orange-500">
+              L4VA Protocol | Robinhood Chain
+            </p>
+            <h1 className="mt-1 font-russo text-3xl sm:text-4xl">
+              Creator <span className="text-orange-gradient">Challenge</span>
+            </h1>
+            <p className="mt-2">
+              Dream it. Launch it. Own the market.{' '}
+              <span className="text-dark-100">Create and own AI-powered vault tokens — compete for the top spot.</span>
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3 shrink-0">
+            <PrimaryButton size="lg" onClick={handleCreateVault}>
+              Create Vault <ArrowRight className="h-4 w-4" />
+            </PrimaryButton>
+            <SecondaryButton size="lg" onClick={() => setRulesOpen(true)}>
+              <ShieldCheck className="h-4 w-4" /> Rules
+            </SecondaryButton>
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-3 text-dark-100 hover:text-white"
+              onClick={() => navigate({ to: '/how-it-works' })}
+            >
+              <PlayCircle className="h-5 w-5" /> How it works
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Prize pool */}
-      <section className="rounded-2xl bg-steel-950 border border-steel-850 p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-5">
+      <section className="rounded-2xl bg-steel-950 border border-steel-850 p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-3">
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-dark-100">
               <Trophy className="h-4 w-4 text-orange-500" /> Prize Pool
             </p>
-            <p className="mt-1 font-russo text-3xl sm:text-4xl">
+            <p className="mt-1 font-russo text-2xl sm:text-3xl">
               <span className="text-orange-gradient">{usd(PRIZE_TOTAL.cash)}</span>{' '}
               <span className="text-dark-100">+</span> {PRIZE_TOTAL.l4va.toLocaleString('en-US')} L4VA
             </p>
           </div>
-          <p className="text-sm text-dark-100">{PRIZES.length} awards · top 3 in each · paid after final review</p>
+          <div className="flex items-center gap-3 text-sm text-dark-100">
+            <span>{PRIZES.length} awards · top 3 in each · paid after final review</span>
+            <button
+              type="button"
+              aria-expanded={prizeDetails}
+              className="inline-flex items-center gap-1 whitespace-nowrap text-white hover:text-orange-500"
+              onClick={() => setPrizeDetails(v => !v)}
+            >
+              {prizeDetails ? 'Hide' : 'Show'} breakdown
+              <ChevronDown className={clsx('h-4 w-4 transition-transform', prizeDetails && 'rotate-180')} />
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {PRIZES.map(prize => {
@@ -440,33 +459,41 @@ const CompetePage = () => {
             return (
               <div
                 key={prize.key}
-                className="group relative flex flex-col rounded-xl border border-steel-750 bg-steel-850 p-4 transition-colors hover:border-orange-500/50"
+                className="group relative flex flex-col rounded-xl border border-steel-750 bg-steel-850 p-3 transition-colors hover:border-orange-500/50"
               >
-                <div className="flex items-center justify-between">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/15">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/15">
                     <Icon className="h-5 w-5 text-orange-500" />
                   </span>
-                  <span className="rounded-full bg-steel-750 px-2 py-0.5 text-[11px] text-dark-100">
-                    {prize.key === 'community' || prize.key === 'creative' ? 'Judged' : '7D return'}
-                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-snug">{prize.title}</p>
+                    <p className="text-xs text-dark-100">
+                      {prize.key === 'community' || prize.key === 'creative' ? 'Judged' : '7D return'}
+                      {prize.note && ` · ${prize.note}`}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-4 font-semibold leading-snug">{prize.title}</p>
-                <p className="text-xs text-dark-100 min-h-[16px]">{prize.note ?? ''}</p>
-                <div className="mt-auto pt-4">
-                  <p className="font-russo text-2xl text-orange-500">{usd(prize.cash)}</p>
-                  <p className="text-sm text-dark-100">+ {prize.l4va.toLocaleString('en-US')} L4VA</p>
-                  <ul className="mt-3 space-y-1.5 border-t border-steel-750 pt-3 text-sm">
-                    {prize.places.map((place, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <Trophy className={clsx('h-3.5 w-3.5 shrink-0', PLACE_COLORS[i])} />
-                        <span className="text-dark-100">{PLACE_LABELS[i]}</span>
-                        <span className="ml-auto font-semibold">{usd(place.cash)}</span>
-                        <span className="w-[86px] text-right text-xs text-dark-100">
-                          + {place.l4va.toLocaleString('en-US')} L4VA
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="mt-auto pt-3">
+                  <p className="font-russo text-xl text-orange-500">
+                    {usd(prize.cash)}{' '}
+                    <span className="font-sans text-sm font-normal text-dark-100">
+                      + {prize.l4va.toLocaleString('en-US')} L4VA
+                    </span>
+                  </p>
+                  {prizeDetails && (
+                    <ul className="mt-3 space-y-1.5 border-t border-steel-750 pt-3 text-sm">
+                      {prize.places.map((place, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <Trophy className={clsx('h-3.5 w-3.5 shrink-0', PLACE_COLORS[i])} />
+                          <span className="text-dark-100">{PLACE_LABELS[i]}</span>
+                          <span className="ml-auto font-semibold">{usd(place.cash)}</span>
+                          <span className="w-[86px] text-right text-xs text-dark-100">
+                            + {place.l4va.toLocaleString('en-US')} L4VA
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             );
@@ -475,15 +502,15 @@ const CompetePage = () => {
       </section>
 
       {/* Promotion */}
-      <section className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8 rounded-2xl border border-orange-500/40 bg-orange-500/10 px-5 py-4">
+      <section className="flex flex-col md:flex-row md:items-center gap-3 md:gap-8 rounded-2xl border border-orange-500/40 bg-orange-500/10 px-5 py-2.5">
         <p className="flex items-center gap-2 font-russo text-lg">
           <Zap className="h-5 w-5 text-orange-500" /> 4-Week Launch Special
         </p>
         <p>
-          <span className="font-russo text-2xl text-orange-500">0%</span> L4VA protocol fees
+          <span className="font-russo text-xl text-orange-500">0%</span> L4VA protocol fees
         </p>
         <p>
-          <span className="font-russo text-2xl text-orange-500">2X</span> L4VA rewards for creators & acquirers
+          <span className="font-russo text-xl text-orange-500">2X</span> L4VA rewards for creators & acquirers
         </p>
         {season?.promoEnd && (
           <p className="md:ml-auto text-xs text-dark-100">Until {utcDate(new Date(season.promoEnd))}</p>
