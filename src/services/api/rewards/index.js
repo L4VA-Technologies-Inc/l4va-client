@@ -224,6 +224,20 @@ export class RewardsApiProvider {
     return response.data;
   }
 
+  /**
+   * Robinhood Chain claim via the L4VARewardsDistributor contract: the arguments
+   * for `claim(account, cumulativeAmount, proof)`. The wallet sends the tx.
+   * Amounts are strings in the token's smallest unit (`tokenDecimals`).
+   * Answers 409 while the distributor is not configured on the backend.
+   * @returns {Promise<{ distributor, chainId, account, tokenDecimals, paused, claimed, claimable,
+   *   active: { root, cumulativeAmount, proof } | null,
+   *   pending: { root, cumulativeAmount, activatesAt } | null }>}
+   */
+  static async getEvmDistributorClaim() {
+    const response = await axiosInstance.get(RewardsConfigProvider.evmDistributorClaim());
+    return response.data;
+  }
+
   // ============================================================================
   // Vesting Methods
   // ============================================================================

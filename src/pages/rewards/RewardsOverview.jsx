@@ -2,9 +2,10 @@ import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatUnits } from 'viem';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
-import { useClaimableAmount } from '@/hooks/useRewardsClaims';
+import { useClaimableAmount, useEvmDistributorClaim } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import {
   useWalletHistory,
@@ -37,6 +38,8 @@ export const RewardsOverview = () => {
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
   const { data: claimableData, isLoading: isLoadingClaimable } = useClaimableAmount(walletAddress);
+  // Robinhood: null until the L4VARewardsDistributor contract is configured on the backend.
+  const { data: evmClaim, isLoading: isLoadingEvmClaim } = useEvmDistributorClaim(walletAddress, isRobinHood);
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
   const { data: walletScoreData, isLoading: isLoadingScore } = useWalletScore(walletAddress);
@@ -94,8 +97,16 @@ export const RewardsOverview = () => {
     };
   }, [vestingData]);
 
-  // Calculate totals
-  const claimableAmount = claimableData?.totalClaimable || 0;
+  // Calculate totals.
+  // Robinhood with the distributor: the contract is the source of truth for what is
+  // claimable — claims go straight to the contract, so the rewards DB never sees them.
+  const toL4va = raw => Number(formatUnits(BigInt(raw), evmClaim.tokenDecimals));
+  const claimableAmount = evmClaim ? toL4va(evmClaim.claimable) : claimableData?.totalClaimable || 0;
+  // A newer root waiting for its on-chain delay (≈12h after the daily publish).
+  const evmPendingIncrease = evmClaim?.pending
+    ? toL4va(evmClaim.pending.cumulativeAmount) -
+      toL4va(evmClaim.active ? evmClaim.active.cumulativeAmount : evmClaim.claimed)
+    : 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned =
     historyData?.totalEarned ??
@@ -109,7 +120,8 @@ export const RewardsOverview = () => {
   const currentEpochEstimate = estimateData?.estimatedReward || 0;
 
   // Loading state for summary cards
-  const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;
+  const isSummaryLoading =
+    isLoadingClaimable || isLoadingVesting || isLoadingHistory || (isRobinHood && isLoadingEvmClaim);
 
   // Wallet not connected state
   if (!isWalletConnected) {
@@ -186,6 +198,16 @@ export const RewardsOverview = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {evmPendingIncrease > 0 && (
+            <div className="border-t border-steel-750 px-5 py-3 md:px-6 flex items-center gap-2 text-steel-400 text-sm">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>
+                +{formatCompactNumber(evmPendingIncrease)} $L4VA becomes claimable on{' '}
+                {new Date(evmClaim.pending.activatesAt).toLocaleString()}
+              </span>
             </div>
           )}
         </div>

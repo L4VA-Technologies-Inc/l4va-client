@@ -25,6 +25,8 @@ export const CONTRIBUTION_AUTHORIZATION_COMPONENTS = [
 ];
 
 export const VAULT_CONTRIBUTION_ABI = [
+  // V11+: the protocol guardian froze the vault. Listed so viem names the revert.
+  { type: 'error', name: 'VaultFrozen', inputs: [] },
   {
     type: 'function',
     name: 'contributeNative',

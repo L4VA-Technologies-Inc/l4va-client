@@ -99,6 +99,10 @@ export class RewardsConfigProvider {
     return '/api/v1/rewards/me/claims/evm';
   }
 
+  static evmDistributorClaim() {
+    return '/api/v1/rewards/me/claims/evm-distributor';
+  }
+
   // ============================================================================
   // Vesting Endpoints
   // ============================================================================
