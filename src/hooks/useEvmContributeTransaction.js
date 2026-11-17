@@ -203,7 +203,14 @@ export const useEvmContributeTransaction = () => {
         setStatus('idle');
         return primaryHash;
       } catch (err) {
-        const errorMessage = err?.response?.data?.message || err?.shortMessage || err?.message || 'Transaction failed';
+        const errorMessage =
+          (err?.cause?.data?.errorName === 'VaultFrozen'
+            ? 'This vault is temporarily frozen by the protocol guardian. Please try again later.'
+            : null) ||
+          err?.response?.data?.message ||
+          err?.shortMessage ||
+          err?.message ||
+          'Transaction failed';
         setError(errorMessage);
         toast.error(errorMessage, { className: '!max-w-[700px]', duration: 10000 });
         setStatus('idle');
