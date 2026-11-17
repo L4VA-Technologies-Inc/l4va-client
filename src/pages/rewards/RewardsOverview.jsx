@@ -1,4 +1,4 @@
-import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
+import { Wallet, Info, History, Receipt, Clock, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -101,7 +101,12 @@ export const RewardsOverview = () => {
   // Robinhood with the distributor: the contract is the source of truth for what is
   // claimable — claims go straight to the contract, so the rewards DB never sees them.
   const toL4va = raw => Number(formatUnits(BigInt(raw), evmClaim.tokenDecimals));
-  const claimableAmount = evmClaim ? toL4va(evmClaim.claimable) : claimableData?.totalClaimable || 0;
+  const dbClaimable = claimableData?.totalClaimable || 0;
+  const claimableAmount = evmClaim ? toL4va(evmClaim.claimable) : dbClaimable;
+  // Robinhood: while the on-chain check runs, don't flash the DB amount and then hide it.
+  const isCheckingOnChain = isRobinHood && isLoadingEvmClaim && dbClaimable > 0;
+  // Earned per the rewards DB but not (yet) claimable from the distributor contract.
+  const evmNotYetClaimable = !!evmClaim && claimableAmount <= 0 && dbClaimable > 0;
   // A newer root waiting for its on-chain delay (≈12h after the daily publish).
   const evmPendingIncrease = evmClaim?.pending
     ? toL4va(evmClaim.pending.cumulativeAmount) -
@@ -180,7 +185,7 @@ export const RewardsOverview = () => {
           />
 
           {/* Claim Section */}
-          {claimableAmount > 0 && (
+          {claimableAmount > 0 && !isCheckingOnChain && (
             <div className="border-t border-steel-750 p-5 md:p-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
@@ -197,6 +202,45 @@ export const RewardsOverview = () => {
                     <span className="text-sm font-medium">Claiming coming soon</span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {isCheckingOnChain && (
+            <div className="border-t border-steel-750 p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-1">Earned Rewards</p>
+                  <p className="text-3xl font-bold text-white">{formatCompactNumber(dbClaimable)} $L4VA</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
+                  <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                  <span className="text-sm font-medium">Checking claimable amount on Robinhood Chain…</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {evmNotYetClaimable && (
+            <div className="border-t border-steel-750 p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-1">Earned Rewards</p>
+                  <p className="text-3xl font-bold text-white">{formatCompactNumber(dbClaimable)} $L4VA</p>
+                  <p className="text-sm text-steel-400 mt-1 max-w-md">
+                    {evmClaim.paused
+                      ? 'Claiming on Robinhood Chain is paused at the moment. Your rewards are safe and will be claimable once it resumes.'
+                      : evmPendingIncrease > 0
+                        ? 'Your rewards are published on Robinhood Chain and unlock for claiming after a short security delay.'
+                        : 'Your rewards are being prepared for on-chain claiming on Robinhood Chain. They become claimable after the next daily distribution update.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">
+                    {evmClaim.paused ? 'Claiming paused' : 'Not claimable yet'}
+                  </span>
+                </div>
               </div>
             </div>
           )}
