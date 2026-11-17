@@ -126,6 +126,15 @@ export const VaultGovernance = ({ vault }) => {
     query: { enabled: isEvmVault && !!vault?.contractAddress },
   });
 
+  // V11+ vaults: the protocol guardian (Safe) can freeze a vault in an emergency.
+  // Older vaults have no `frozen()`; the read errors and `isFrozen` stays undefined.
+  const { data: isFrozen } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [{ type: 'function', stateMutability: 'view', name: 'frozen', inputs: [], outputs: [{ type: 'bool' }] }],
+    functionName: 'frozen',
+    query: { enabled: isEvmVault && !!vault?.contractAddress, retry: false },
+  });
+
   const tabOptions = PROPOSAL_TABS.map(tab => ({
     value: tab,
     label: tab,
@@ -285,7 +294,17 @@ export const VaultGovernance = ({ vault }) => {
 
   return (
     <div className="text-white p-6 rounded-2xl overflow-hidden">
-      {isPaused && (
+      {isFrozen && (
+        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-6">
+          <PauseCircle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">
+            This vault is temporarily frozen by the protocol guardian. Contributions, claims and proposal execution are
+            on hold. Refunds and redemptions still work.
+          </span>
+        </div>
+      )}
+
+      {isPaused && !isFrozen && (
         <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 rounded-lg px-4 py-3 mb-6">
           <PauseCircle className="w-5 h-5 shrink-0" />
           <span className="text-sm font-medium">
