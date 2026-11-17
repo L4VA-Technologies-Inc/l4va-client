@@ -1,20 +1,53 @@
 import React from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import toast from 'react-hot-toast';
+import { formatUnits } from 'viem';
 
 import PrimaryButton from '../shared/PrimaryButton';
 
+import { evmClaimErrorMessage, useEvmRewardsClaim } from '@/hooks/useEvmRewardsClaim';
+import { useEvmDistributorClaim } from '@/hooks/useRewardsClaims';
 import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { RewardsApiProvider } from '@/services/api/rewards';
 
 export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = false }) => {
   const [status, setStatus] = React.useState('idle');
   const wallet = useWallet('handler', 'isConnected');
-  const { isRobinHood, isEvmConnected } = useRewardsWalletConnection();
+  const { isRobinHood, isEvmConnected, walletAddress } = useRewardsWalletConnection();
+  // null while the distributor contract is not configured on the backend → old flow below
+  const { data: evmClaim } = useEvmDistributorClaim(walletAddress, isRobinHood);
+  const { claim: claimFromDistributor, status: distributorStatus } = useEvmRewardsClaim();
+
+  // Robinhood: the wallet claims from L4VARewardsDistributor itself; the backend moves no funds.
+  const handleDistributorClaim = async () => {
+    const claimable = BigInt(evmClaim?.claimable ?? '0');
+    if (!evmClaim?.active || claimable <= 0n) {
+      toast.error('No rewards available to claim');
+      return;
+    }
+    const amount = Number(formatUnits(claimable, evmClaim.tokenDecimals));
+
+    try {
+      toast.loading('Confirm the claim in your wallet...', { id: 'claim-tx' });
+      const txHash = await claimFromDistributor(evmClaim);
+
+      toast.success(`Successfully claimed ${amount.toLocaleString()} $L4VA!`, { id: 'claim-tx', duration: 7000 });
+      if (onSuccess) {
+        onSuccess({ success: true, txHash, claimedAmount: amount });
+      }
+    } catch (error) {
+      toast.error(evmClaimErrorMessage(error), { id: 'claim-tx' });
+    }
+  };
 
   const handleEvmClaim = async () => {
     if (!isEvmConnected) {
       toast.error('Please connect your wallet');
+      return;
+    }
+
+    if (evmClaim) {
+      await handleDistributorClaim();
       return;
     }
 
@@ -156,14 +189,15 @@ export const ClaimButton = ({ claimableAmount = 0, onSuccess = null, disabled = 
     await handleCardanoClaim();
   };
 
-  const isPending = status !== 'idle';
+  const activeStatus = distributorStatus !== 'idle' ? distributorStatus : status;
+  const isPending = activeStatus !== 'idle';
   const isDisabled = disabled || isPending || claimableAmount <= 0;
 
   const idleLabel = `Claim ${claimableAmount > 0 ? Number(claimableAmount).toLocaleString() : '0'} $L4VA`;
 
   return (
     <PrimaryButton onClick={handleClaim} disabled={isDisabled}>
-      {isPending ? status.charAt(0).toUpperCase() + status.slice(1) + '...' : idleLabel}
+      {isPending ? activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1) + '...' : idleLabel}
     </PrimaryButton>
   );
 };
