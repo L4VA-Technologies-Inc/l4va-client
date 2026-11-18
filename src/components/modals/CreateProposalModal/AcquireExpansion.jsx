@@ -7,7 +7,10 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { buildEvmOutcome } from '@/components/modals/CreateProposalModal/acquireExpansionOutcome.js';
-import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
+import {
+  MAX_ACQUIRE_WINDOW_DURATION_MS,
+  MIN_EXPANSION_DURATION_MS,
+} from '@/components/vaults/constants/vaults.constants';
 import { ChainType } from '@/utils/types';
 import { useNativePrices } from '@/services/api/queries';
 
@@ -16,6 +19,11 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
   // Amounts here are in the vault's native coin, not the user's display currency.
   const currencyLabel = isEvmVault ? 'ETH' : 'ADA';
   const exampleContributionAmount = isEvmVault ? 1 : 100;
+  // Robinhood: the expansion window matches the acquire window (max 7 days) and is capped at 100,000 ETH.
+  const maxAmount = isEvmVault ? 100000 : 1000000000;
+  const maxDurationMs = isEvmVault ? MAX_ACQUIRE_WINDOW_DURATION_MS : undefined;
+  // On Robinhood the "limit" price is a fixed OTC-style price, not a limit order.
+  const priceLabel = isEvmVault ? 'Fixed Price' : 'Limit Price';
   const [duration, setDuration] = useState(null);
   const [noLimit, setNoLimit] = useState(false); // eslint-disable-line no-unused-vars -- "No Limit" toggle is commented out below
   const [maxAda, setMaxAda] = useState('');
@@ -89,7 +97,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
 
   const priceTypeOptions = [
     { value: 'market', label: isEvmVault ? 'Market Price - Coming Soon' : 'Market Price', disabled: isEvmVault },
-    { value: 'limit', label: 'Limit Price' },
+    { value: 'limit', label: priceLabel },
   ];
 
   useEffect(() => {
@@ -98,7 +106,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
 
     const maxAdaNum = parseFloat(maxAda) || 0;
     const limitPriceNum = parseFloat(limitPrice) || 0;
-    const MAX_ADA_LIMIT = 1000000000; // 1 billion ADA
+    const MAX_ADA_LIMIT = maxAmount;
     const MAX_LIMIT_PRICE = 1000000; // 1 million VT per 1 ADA
 
     // Calculate minimum limit price based on vault decimals to prevent on-chain multiplier = 0
@@ -107,7 +115,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
     const minLimitPrice = Math.pow(10, 6 - decimals);
 
     const isValid =
-      (noLimit || duration > 0) &&
+      (noLimit || (duration > 0 && (!maxDurationMs || duration <= maxDurationMs))) &&
       (noMax || (maxAda && maxAdaNum > 0 && maxAdaNum <= MAX_ADA_LIMIT)) &&
       hasAtLeastOneLimit &&
       priceType &&
@@ -125,7 +133,18 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
       acquireExpansionLimitPrice: priceType === 'limit' ? Math.min(limitPriceNum, MAX_LIMIT_PRICE) : null,
       isValid,
     });
-  }, [duration, noLimit, maxAda, noMax, priceType, limitPrice, onDataChange, vault?.ftTokenDecimals]);
+  }, [
+    duration,
+    noLimit,
+    maxAda,
+    noMax,
+    priceType,
+    limitPrice,
+    onDataChange,
+    vault?.ftTokenDecimals,
+    maxAmount,
+    maxDurationMs,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -165,6 +184,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 placeholder="DD:HH:MM"
                 error={error && !duration}
                 minMs={MIN_EXPANSION_DURATION_MS}
+                maxMs={maxDurationMs}
               />
             </>
           ) : (
@@ -187,7 +207,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
               Maximum {inputLabel}*
               <HoverHelp
-                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: 1 billion ${currencyLabel}).${usdRateNote}`}
+                hint={`Total ${currencyLabel} that can be raised during this expansion window (max: ${maxAmount.toLocaleString()} ${currencyLabel}).${usdRateNote}`}
               />
             </label>
             <LavaCheckbox
@@ -203,14 +223,14 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               <LavaSteelInput
                 type="number"
                 min="1"
-                max="1000000000"
+                max={String(maxAmount)}
                 step={isEvmVault ? 'any' : '1'}
                 value={usdMode ? maxUsd : maxAda}
                 onChange={value => {
                   if (usdMode) return onMaxUsdChange(value);
                   const numValue = parseFloat(value);
-                  if (numValue > 1000000000) {
-                    setMaxAda('1000000000');
+                  if (numValue > maxAmount) {
+                    setMaxAda(String(maxAmount));
                   } else {
                     setMaxAda(value);
                   }
@@ -248,7 +268,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
           {priceType === 'limit' && (
             <div className="mt-3">
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
-                Limit Price (VT per 1 {inputLabel})
+                {priceLabel} (VT per 1 {inputLabel})
                 <HoverHelp
                   hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}`}
                 />
@@ -272,7 +292,7 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
                 error={error && !limitPrice}
                 endAdornment={unitSwitch}
               />
-              {error && !limitPrice && <p className="text-red-500 text-sm mt-1">Limit price is required</p>}
+              {error && !limitPrice && <p className="text-red-500 text-sm mt-1">{priceLabel} is required</p>}
               {(() => {
                 const decimals = vault?.ftTokenDecimals || 6;
                 const minLimitPrice = Math.pow(10, 6 - decimals);

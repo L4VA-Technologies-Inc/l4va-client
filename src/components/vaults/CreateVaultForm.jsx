@@ -39,7 +39,7 @@ import {
   CREATE_VAULT_STEPS,
   createEmptyWhitelistAsset,
   hasNoAcquirePhase,
-  initialVaultState,
+  getInitialVaultState,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
@@ -85,7 +85,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [canCreateVaults, setCanCreateVaults] = useState(true);
 
-  const [vaultData, setVaultData] = useState(initialVaultState);
+  const [vaultData, setVaultData] = useState(getInitialVaultState);
   const [selectedPresetId, setSelectedPresetId] = useState(null);
   const [deletingPresetId, setDeletingPresetId] = useState(null);
 
@@ -177,9 +177,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     setVaultData(prev => ({
       ...prev,
       acquireReserve: prev.acquireReserve ?? config.acquireReserve ?? 100,
-      liquidityPoolContribution: prev.liquidityPoolContribution ?? config.liquidityPoolContribution ?? 0,
+      liquidityPoolContribution:
+        prev.liquidityPoolContribution ?? config.liquidityPoolContribution ?? (isRobinHood ? 5 : 0),
     }));
-  }, [isAcquireOnly, vaultData.acquireReserve, vaultData.liquidityPoolContribution, presets]);
+  }, [isAcquireOnly, isRobinHood, vaultData.acquireReserve, vaultData.liquidityPoolContribution, presets]);
 
   useEffect(() => {
     if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
@@ -777,7 +778,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           ]);
           skipPersistRef.current = true;
           clearVaultCreationDrafts();
-          setVaultData(initialVaultState);
+          setVaultData(getInitialVaultState());
           if (setVault) setVault(null);
           navigate({ to: `/vaults/${dbVaultId}` });
           await changeStep(1, true);
@@ -867,7 +868,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
           if (res.data.id) {
             skipPersistRef.current = true;
             clearVaultCreationDrafts();
-            setVaultData(initialVaultState);
+            setVaultData(getInitialVaultState());
             if (setVault) setVault(null);
             navigate({ to: `/vaults/${data.vaultId}` });
           }
@@ -1044,7 +1045,7 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     const startsAsIndexVault = archetypes.defaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
     const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
     const firstPreset = (startsAsIndexVault && acquireOnlyPreset) || presets[0] || null;
-    const resetData = { ...initialVaultState };
+    const resetData = getInitialVaultState();
 
     if (startsAsIndexVault) {
       const indexBasket = emptyIndexBasket();

@@ -23,7 +23,7 @@ export function buildEvmOutcome({ duration, maxEth, noMax, price, supply, ticker
       detail: 'The window starts when the vote passes. It ends at that time, or earlier if the ETH maximum is reached.',
     },
     {
-      title: price > 0 ? `Buyers get ${formatCount(price)} ${vt} per 1 ETH.` : 'Buyers get VT at the limit price.',
+      title: price > 0 ? `Buyers get ${formatCount(price)} ${vt} per 1 ETH.` : 'Buyers get VT at the fixed price.',
       detail: 'Anyone can send ETH while the window is open. The price is fixed by this proposal.',
     },
     {
