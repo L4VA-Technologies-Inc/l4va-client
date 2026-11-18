@@ -161,7 +161,7 @@ const performanceColumns = ({ qualifyingKey, totalKey }) => [
   { label: 'Token / Creator', cell: row => <TokenCell row={row} showCreator /> },
   { label: 'Return (qualifying)', cell: row => returnCell(row, row[qualifyingKey]) },
   { label: 'Return (total)', cell: row => pct(row[totalKey]) },
-  { label: 'Vault value', cell: row => usd(row.value) },
+  { label: 'TVL', cell: row => usd(row.value) },
   { label: 'Holders', cell: row => row.holders ?? '—' },
   { label: 'Status', cell: row => <StatusBadge row={row} stacked /> },
 ];
