@@ -4,18 +4,7 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
 import { useNetwork } from '@/hooks/useNetwork';
-
-const VAULT_TABS = [
-  { id: 'all', label: 'All', filter: 'all' },
-  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
-  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
-  { id: 'expansion', label: 'Expansion', filter: 'expansion' },
-  { id: 'acquire', label: 'Acquire', filter: 'acquire' },
-  { id: 'past', label: 'Locked', filter: 'locked' },
-  { id: 'govern', label: 'Govern', filter: 'govern' },
-  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
-  { id: 'failed', label: 'Failed', filter: 'failed' },
-];
+import { BROWSE_VAULT_TABS as VAULT_TABS } from '@/components/vaults/constants/vaults.constants';
 
 const DEFAULT_TAB = 'all';
 

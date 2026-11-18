@@ -7,15 +7,7 @@ import { useNetwork } from '@/hooks/useNetwork';
 import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import { scrollBehavior } from '@/utils/a11y';
-
-// Upcoming + expansion fold into Acquire, locked into All; status filters still live in the Filters modal.
-const VAULT_TABS = [
-  { id: 'all', label: 'All', filter: 'all' },
-  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
-  { id: 'acquire', label: 'Acquire', filter: 'acquiring' },
-  { id: 'govern', label: 'Govern', filter: 'govern' },
-  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
-];
+import { BROWSE_VAULT_TABS as VAULT_TABS } from '@/components/vaults/constants/vaults.constants';
 
 const DEFAULT_TAB = 'all';
 

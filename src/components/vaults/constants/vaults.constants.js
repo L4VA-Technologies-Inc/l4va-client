@@ -889,3 +889,13 @@ export const ASSET_WHITE_LIST = {
     assetName: 'Real Estate Equity',
   },
 };
+
+// Browse tabs shared by the home page and /vaults. Upcoming + expansion fold into Acquire,
+// locked into All; finer status filters live in the Filters modal. Contribute is Cardano-only.
+export const BROWSE_VAULT_TABS = [
+  { id: 'all', label: 'All', filter: 'all' },
+  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
+  { id: 'acquire', label: 'Acquire', filter: 'acquiring' },
+  { id: 'govern', label: 'Govern', filter: 'govern' },
+  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
+];
