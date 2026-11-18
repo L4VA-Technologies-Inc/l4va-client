@@ -24,7 +24,7 @@ export const MIN_ACQUIRE_WINDOW_DURATION_MS =
   durationOverride(import.meta.env.VITE_MIN_ACQUIRE_WINDOW_DURATION_MS) ??
   (environment === environments.PREPROD ? 300000 : 86400000); // 5 min (preprod) / 24 hours (mainnet)
 export const MAX_ACQUIRE_WINDOW_DURATION_MS = 604800000; // 7 days
-export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 432000000; // 5 min (preprod) / 5 days (mainnet)
+export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 172800000; // 5 min (preprod) / 48 hours (mainnet)
 export const MAX_TIME_FOR_VOTING = 1209600000; // 14 days
 export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
 
@@ -436,12 +436,12 @@ export const vaultSchema = yup.object({
           })
           .test(
             'max-threshold-by-chain',
-            'Maximum ETH threshold is 10000',
+            'Maximum ETH threshold is 100,000',
             function validateMaxThresholdByChain(value) {
               if (value === null || value === undefined) return true;
               const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
               if (!isRobinHood) return true;
-              return value <= 10000;
+              return value <= 100000;
             }
           ),
       otherwise: schema => schema.nullable().notRequired(),
@@ -560,6 +560,12 @@ export const vaultSchema = yup.object({
     .typeError('Liquidity pool contribution is required')
     .required('Liquidity pool contribution is required')
     .max(100, 'Cannot exceed 100%')
+    // Robinhood launch range: 5% to 20%.
+    .test('rh-lp-range', 'Liquidity pool contribution must be between 5% and 20%', function validateRhLpRange(value) {
+      if (value === null || value === undefined) return true;
+      if (localStorage.getItem('selectedNetwork') !== 'robinhood') return true;
+      return value >= 5 && value <= 20;
+    })
     .test(
       'no-lp-when-no-acquirers',
       'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
@@ -649,6 +655,12 @@ export const editUpcomingVaultSchema = yup.object({
     .required('Liquidity pool contribution is required')
     .min(0)
     .max(100, 'Cannot exceed 100%')
+    // Robinhood launch range: 5% to 20%.
+    .test('rh-lp-range', 'Liquidity pool contribution must be between 5% and 20%', function validateRhLpRange(value) {
+      if (value === null || value === undefined) return true;
+      if (localStorage.getItem('selectedNetwork') !== 'robinhood') return true;
+      return value >= 5 && value <= 20;
+    })
     .test(
       'no-lp-when-no-acquirers',
       'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
@@ -738,7 +750,7 @@ export const initialVaultState = {
   valuationAmount: null,
 
   // Step 3: Acquire Window
-  acquireWindowDuration: MIN_ACQUIRE_WINDOW_DURATION_MS,
+  acquireWindowDuration: Math.max(MIN_ACQUIRE_WINDOW_DURATION_MS, 172800000), // 48 hours default
   acquireOpenWindowType: 'upon-asset-window-closing',
   acquireOpenWindowTime: null,
   acquirerWhitelist: [],
@@ -765,6 +777,12 @@ export const initialVaultState = {
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,
 };
+
+// Robinhood launch spec: acquire expansion is on by default (creator can turn it off).
+export const getInitialVaultState = () => ({
+  ...initialVaultState,
+  allowAcquireExpansion: localStorage.getItem('selectedNetwork') === 'robinhood',
+});
 
 export const stepFields = {
   1: [
