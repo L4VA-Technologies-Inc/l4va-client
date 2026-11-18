@@ -217,9 +217,12 @@ export const TokenDetailPage = ({ tokenId }) => {
           {copied && <span className="text-emerald-400">Copied</span>}
         </button>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-3 py-1.5 text-xs text-white">
-          {SOURCE_LABEL[token.source] || token.source}
-        </span>
+        {/* A vault token links to its vault from the button on the right instead. */}
+        {!token.vault_id && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-3 py-1.5 text-xs text-white">
+            {SOURCE_LABEL[token.source] || token.source}
+          </span>
+        )}
 
         {dexLink && (
           <a
@@ -238,9 +241,10 @@ export const TokenDetailPage = ({ tokenId }) => {
             <Link
               to="/vaults/$id"
               params={{ id: token.vault_id }}
-              className="w-8 h-8 rounded-lg border border-steel-750 bg-steel-850 text-dark-100 hover:text-white flex items-center justify-center"
+              className="h-8 px-3 gap-1.5 rounded-lg border border-steel-750 bg-steel-850 text-xs text-dark-100 hover:text-white flex items-center justify-center"
               aria-label="Open vault"
             >
+              Vault
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           ) : token.explorer_url ? (
