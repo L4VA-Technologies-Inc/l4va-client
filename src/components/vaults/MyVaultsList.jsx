@@ -11,8 +11,8 @@ const VAULT_TABS = {
   DRAFT: 'Draft',
   UPCOMING: 'Upcoming',
   OPEN: 'Open',
+  // Govern vaults are locked vaults with an active proposal, so the Locked tab already covers them.
   LOCKED: 'Locked',
-  GOVERN: 'Govern',
   FAILED: 'Failed',
   TERMINATED: 'Terminated',
 };
@@ -25,6 +25,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
     const normalized = initialTab ? capitalizeFirst(initialTab) : null;
 
     if (normalized === 'Published') return 'Upcoming';
+    if (normalized === 'Govern') return 'Locked';
 
     if (normalized && TABS.includes(normalized)) {
       return normalized;
@@ -34,7 +35,8 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   });
 
   const [appliedFilters, setAppliedFilters] = useState(() => {
-    const capitalizedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
+    const requestedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
+    const capitalizedTab = requestedTab === 'Govern' ? 'Locked' : requestedTab;
     const initialActiveTab = capitalizedTab && TABS.includes(capitalizedTab) ? capitalizedTab : TABS[0];
     const newTab =
       initialActiveTab === 'Upcoming'
