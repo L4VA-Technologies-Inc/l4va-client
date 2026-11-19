@@ -270,7 +270,11 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
               <label className="flex items-center gap-1.5 text-sm font-medium text-gray-300 mb-2">
                 {priceLabel} (VT per 1 {inputLabel})
                 <HoverHelp
-                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}`}
+                  hint={`Fixed amount of vault tokens contributors will receive per 1 ${currencyLabel} (max: 1,000,000 VT).${usdRateNote}${
+                    isEvmVault
+                      ? ' On Robinhood, contributors receive these tokens 24 hours after the expansion closes (safety review), and one expansion can issue only a limited share of the token supply, fixed when the vault was created.'
+                      : ''
+                  }`}
                 />
               </label>
               <LavaSteelInput
