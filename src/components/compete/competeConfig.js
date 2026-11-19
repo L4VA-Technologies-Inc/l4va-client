@@ -1,6 +1,6 @@
 // Static Creator Challenge content. Season dates and rankings come from /competition/leaderboard.
 
-// Each award pays 1st / 2nd / 3rd. L4VA amounts follow the same ratio as cash (100 L4VA per $1).
+// Each award pays 1st / 2nd / 3rd. Cash is paid in USDG; L4VA follows the same ratio (100 L4VA per 1 USDG).
 const PERFORMANCE_PLACES = [
   { cash: 500, l4va: 50000 },
   { cash: 350, l4va: 35000 },
