@@ -134,6 +134,8 @@ export const ProposalInfo = ({ proposalId }) => {
   const proposalBurnAssetsInfo = response?.data?.burnAssets;
   const proposalDistributionInfo = response?.data?.distributionInfo;
   const proposalDistributionStatus = response?.data?.distributionStatus;
+  // V13 Robinhood vaults: payouts open after a safety window and can be stopped before that.
+  const evmDistributionTiming = response?.data?.evmDistributionTiming;
   const proposalFungibleTokensInfo = response?.data?.fungibleTokens;
   const proposalNonFungibleTokensInfo = response?.data?.nonFungibleTokens;
   const marketplaceActionsInfo = response?.data?.marketplaceActions;
@@ -300,6 +302,21 @@ export const ProposalInfo = ({ proposalId }) => {
         }
 
         // Show execution status if available
+        if (evmDistributionTiming) {
+          const fmt = s => new Date(s * 1000).toLocaleString();
+          distributionItems.push({
+            label: 'Payouts',
+            value: evmDistributionTiming.cancelled
+              ? 'Stopped before opening — the pot returned to the vault'
+              : evmDistributionTiming.pending
+                ? `Open ${fmt(evmDistributionTiming.activatesAt)} (safety review window)`
+                : 'Open',
+          });
+          if (!evmDistributionTiming.cancelled) {
+            distributionItems.push({ label: 'Claims close', value: fmt(evmDistributionTiming.deadline) });
+          }
+        }
+
         if (proposalDistributionStatus) {
           distributionItems.push({
             label: 'Batches',

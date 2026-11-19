@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 
 import { VaultsApiProvider } from '@/services/api/vaults';
-import { VAULT_FACTORY_ABI } from '@/lib/evm/vaultFactory.abi';
+import { vaultFactoryAbiFor } from '@/lib/evm/vaultFactory.abi';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 
 /**
@@ -58,6 +58,8 @@ export const useCreateEvmVault = () => {
         deadline,
         adminSignature,
         evmFactoryAddress,
+        // 13 for a V13 factory: its VaultConfig carries the vault's economics.
+        evmConfigVersion,
       } = prepareRes;
 
       // The signature is only valid on the factory it was issued for, so the address comes with it.
@@ -75,7 +77,7 @@ export const useCreateEvmVault = () => {
 
       const hash = await writeContractAsync({
         address: evmFactoryAddress,
-        abi: VAULT_FACTORY_ABI,
+        abi: vaultFactoryAbiFor(evmConfigVersion),
         functionName: 'createVault',
         args: [cfgForContract, BigInt(adminNonce), BigInt(deadline), adminSignature],
         chainId: robinhoodChain.id,
