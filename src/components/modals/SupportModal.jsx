@@ -85,18 +85,23 @@ const MessageBubble = ({ message }) => {
  * In-app support chat. Each chat is a private ticket channel in the team Discord: messages typed here
  * appear there, and the team's replies there appear here (polled while the chat is open).
  */
-export const SupportModal = () => {
+export const SupportModal = ({ initialMessage = '' } = {}) => {
   const { closeModal, openModal } = useModalControls();
   const { isAuthenticated } = useAuth();
   const { network } = useNetwork();
   const queryClient = useQueryClient();
-  const [draft, setDraft] = useState('');
+  // Opened with a prepared message (e.g. "add a pool for these tokens"): the user reviews and sends it.
+  const [draft, setDraft] = useState(initialMessage);
   // The message in flight, shown optimistically; `failed` keeps it on screen with a retry.
   const [pending, setPending] = useState(null);
   const isSending = Boolean(pending && !pending.failed);
   const [isClosing, setIsClosing] = useState(false);
   // After a closed chat the user can start over; until then the closed history stays visible.
   const [startingNew, setStartingNew] = useState(false);
+  // A prepared message after a closed chat goes straight to a new chat (the API opens a new ticket).
+  useEffect(() => {
+    if (initialMessage && ticket?.status === 'closed') setStartingNew(true);
+  }, [initialMessage, ticket?.status]);
   const listRef = useRef(null);
 
   const { data: ticket, isLoading } = useQuery({

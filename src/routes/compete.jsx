@@ -45,7 +45,7 @@ const PRIZE_ICONS = { token: Database, portfolio: BarChart3, community: Users, c
 const PLACE_LABELS = ['1st', '2nd', '3rd'];
 const PLACE_COLORS = ['text-yellow-400', 'text-gray-300', 'text-amber-600'];
 
-const usd = n => `$${Math.round(n).toLocaleString('en-US')}`;
+const usd = n => `${Math.round(n).toLocaleString('en-US')} USDG`;
 const pct = n => `${n >= 0 ? '+' : ''}${Number(n).toFixed(1)}%`;
 const utcDate = d =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) +

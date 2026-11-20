@@ -18,6 +18,7 @@ import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
+import { EvmAllocationUnlockNotice } from '@/components/vault-profile/EvmAllocationUnlockNotice';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
     .then(module => ({
@@ -813,6 +814,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
             {isPhaseTransitioning() && <PhaseTransitionInfo />}
+            {isRobinhoodVault && <EvmAllocationUnlockNotice status={vault.evmV13} />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
           {isRobinhoodVault && vault.vaultStatus === VAULT_STATUSES.TERMINATING && (
