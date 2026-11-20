@@ -35,7 +35,7 @@ export const VAULT_CONTRIBUTION_ABI = [
       { name: 'auth', type: 'tuple', components: CONTRIBUTION_AUTHORIZATION_COMPONENTS },
       { name: 'signature', type: 'bytes' },
     ],
-    outputs: [],
+    outputs: [{ name: 'contributionId', type: 'uint256' }],
   },
   {
     type: 'function',
@@ -45,7 +45,7 @@ export const VAULT_CONTRIBUTION_ABI = [
       { name: 'auth', type: 'tuple', components: CONTRIBUTION_AUTHORIZATION_COMPONENTS },
       { name: 'signature', type: 'bytes' },
     ],
-    outputs: [],
+    outputs: [{ name: 'contributionId', type: 'uint256' }],
   },
   {
     type: 'function',
@@ -55,7 +55,7 @@ export const VAULT_CONTRIBUTION_ABI = [
       { name: 'auth', type: 'tuple', components: CONTRIBUTION_AUTHORIZATION_COMPONENTS },
       { name: 'signature', type: 'bytes' },
     ],
-    outputs: [],
+    outputs: [{ name: 'contributionId', type: 'uint256' }],
   },
   {
     type: 'function',
@@ -65,7 +65,7 @@ export const VAULT_CONTRIBUTION_ABI = [
       { name: 'auth', type: 'tuple', components: CONTRIBUTION_AUTHORIZATION_COMPONENTS },
       { name: 'signature', type: 'bytes' },
     ],
-    outputs: [],
+    outputs: [{ name: 'contributionId', type: 'uint256' }],
   },
 ] as const;
 

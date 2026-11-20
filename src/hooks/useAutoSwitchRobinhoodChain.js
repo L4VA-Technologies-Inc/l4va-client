@@ -4,6 +4,7 @@ import { useAccount, useSwitchChain } from 'wagmi';
 import { useAuth } from '@/lib/auth/auth';
 import { useNetwork } from '@/hooks/useNetwork';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
+import { isEvmLoginInProgress, onEvmLoginProgress } from '@/lib/evm/loginProgress';
 
 /**
  * Asks a logged-in Robinhood user's wallet to move to Robinhood Chain (adding it first
@@ -26,15 +27,20 @@ export const useAutoSwitchRobinhoodChain = () => {
     const key = `${address}:${chainId}`;
     if (attemptedKey.current === key) return;
 
-    // isAuthenticated flips before the login modal clears its in-progress flag, so wait
-    // for the flag rather than reading it once.
-    const timer = setInterval(() => {
-      if (sessionStorage.getItem('evm_login_in_progress')) return;
-      clearInterval(timer);
+    const trySwitch = () => {
       attemptedKey.current = key;
       // A rejection is fine: every transaction hook still switches on demand.
       switchChainAsync({ chainId: robinhoodChain.id }).catch(() => {});
-    }, 500);
-    return () => clearInterval(timer);
+    };
+
+    // isAuthenticated flips before the login modal clears its in-progress flag, so wait
+    // for the flag to clear rather than reading it once.
+    if (!isEvmLoginInProgress()) {
+      trySwitch();
+      return;
+    }
+    return onEvmLoginProgress(inProgress => {
+      if (!inProgress && attemptedKey.current !== key) trySwitch();
+    });
   }, [isRobinHood, isAuthenticated, status, address, chainId, switchChainAsync]);
 };

@@ -18,6 +18,7 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
 import WalletIcon from '@/icons/wallet.svg?react';
 import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
+import { setEvmLoginInProgress } from '@/lib/evm/loginProgress';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
@@ -73,7 +74,7 @@ export const LoginModal = () => {
   // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
   const loginWithRobinhoodAddress = async (address, attempt) => {
     const isCurrent = () => attempt === evmAttemptRef.current;
-    sessionStorage.setItem('evm_login_in_progress', '1');
+    setEvmLoginInProgress(true);
     setIsEvmSigning(true);
     try {
       // A wallet on a chain we don't support (e.g. MetaMask Mobile on Ethereum) makes AppKit
@@ -112,7 +113,7 @@ export const LoginModal = () => {
     } finally {
       if (isCurrent()) {
         setIsEvmSigning(false);
-        sessionStorage.removeItem('evm_login_in_progress');
+        setEvmLoginInProgress(false);
         sessionStorage.removeItem('evm_intentional_disconnect');
       }
     }
@@ -405,7 +406,7 @@ export const LoginModal = () => {
   const cancelEvmSigning = () => {
     evmAttemptRef.current += 1;
     setIsEvmSigning(false);
-    sessionStorage.removeItem('evm_login_in_progress');
+    setEvmLoginInProgress(false);
     sessionStorage.removeItem('evm_intentional_disconnect');
     closeModal();
   };

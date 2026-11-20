@@ -11,8 +11,8 @@ import { robinhoodChain } from '@/lib/evm/wagmi.config';
  * Two-step EVM vault creation:
  *  1. POST /vaults  (chainType=robinhood) → get admin EIP-712 signature + VaultConfig
  *  2. writeContract(VaultFactory.createVault) → creator pays gas, tx submitted on-chain
- *  3. Wait for receipt
- *  4. POST /vaults/publish (chainType=robinhood, txHash) → backend marks vault published
+ *  3. POST /vaults/publish (chainType=robinhood, txHash) right after sending
+ *  4. Wait for the receipt (the backend confirms it independently)
  */
 export const useCreateEvmVault = () => {
   const { ensureChain, simulateAndWrite } = useEvmTx();
@@ -85,12 +85,11 @@ export const useCreateEvmVault = () => {
 
       setTxHash(hash);
 
-      // ── Step 3: wait for the receipt ─────────────────────────────────────
-      // The backend must only hear about a vault that actually exists on-chain;
-      // a reverted or dropped tx throws here and launchVault is never called.
-      await waitForSuccess(hash, robinhoodChain.id);
-
-      // ── Step 4: tell the backend to mark the vault published ─────────────
+      // ── Step 3: hand the hash to the backend right away ──────────────────
+      // Sent before the receipt on purpose: the backend reads the receipt itself
+      // (inline poll, webhook, stuck-tx cron) and only takes the contract address
+      // from a successful VaultCreated, while a tab closed during the wait would
+      // otherwise leave a vault on-chain that the backend never hears about.
       setIsConfirming(true);
       try {
         await VaultsApiProvider.launchVault({
@@ -102,6 +101,9 @@ export const useCreateEvmVault = () => {
       } finally {
         setIsConfirming(false);
       }
+
+      // ── Step 4: wait for the receipt, so a revert is reported to the user ─
+      await waitForSuccess(hash, robinhoodChain.id);
 
       return { dbVaultId, onChainTxHash: hash };
     },

@@ -81,6 +81,14 @@ const runApproval = async (
   }
 };
 
+/** setApprovalForAll(vault, false): withdraws the operator approval an ERC1155 contribution needed. */
+const revokeErc1155Request = (token: Address, operator: Address) => ({
+  address: token,
+  abi: ERC1155_APPROVAL_ABI,
+  functionName: 'setApprovalForAll' as const,
+  args: [operator, false] as const,
+});
+
 /**
  * EVM (Robinhood) contribution flow — mirrors the Cardano `useTransaction` hook.
  *
@@ -94,6 +102,8 @@ const runApproval = async (
  *  3. For each asset: optional token `approve` (or `setApprovalForAll`), then
  *     `contributeNative/ERC20/ERC721/ERC1155` on the vault. All calls are sent
  *     sequentially so wallets like MetaMask can queue them cleanly.
+ *     An ERC1155 `setApprovalForAll` is revoked afterwards (in the batch, or
+ *     as a last, optional prompt).
  *  4. POST /blockchain/evm/contribution/confirm → backend stores tx hash and
  *     creates Asset rows via `TransactionsService.createAssets(txId)`. The
  *     final confirmation to `contributed` is later fired by the Alchemy webhook.
@@ -202,6 +212,17 @@ export const useEvmContributeTransaction = () => {
         let childTxHashes: Hash[] = [];
         let primaryHash: Hash | null = null;
 
+        // setApprovalForAll lets the vault move every token id of the collection, so it is
+        // revoked once the contributions landed. The backend only asks for it when the vault
+        // was not already an operator, so revoking restores what the user had before.
+        const erc1155Revokes = Array.from(
+          new Set(
+            calls
+              .filter(c => c.approval?.required && c.approval.standard === 'ERC1155')
+              .map(c => (c.approval as NonNullable<PreparedContributionCall['approval']>).token)
+          )
+        );
+
         if (calls.length > 1 || calls.some(c => c.approval?.required)) {
           useAtomic = await supportsAtomicBatch(contributor);
         }
@@ -217,9 +238,17 @@ export const useEvmContributeTransaction = () => {
             await runApproval(call.approval, vaultAddress, collect);
             await collect(contributeRequest(call));
           }
+          const lastContributeIndex = rawCalls.length - 1;
+          // Revoking in the same batch leaves no operator approval behind at all.
+          for (const token of erc1155Revokes) await collect(revokeErc1155Request(token, vaultAddress));
           childTxHashes = await sendAtomicBatch(contributor, rawCalls);
-          primaryHash = childTxHashes[childTxHashes.length - 1];
+          // One hash per call when the wallet sends them separately; otherwise the batch is one tx.
+          primaryHash =
+            childTxHashes.length === rawCalls.length
+              ? childTxHashes[lastContributeIndex]
+              : childTxHashes[childTxHashes.length - 1];
           landedContributions = calls.length;
+          erc1155Revokes.length = 0;
         } else {
           // Fallback: one wallet prompt per tx. Each contribute is re-simulated
           // (after its approval landed) right before it is sent.
@@ -243,6 +272,21 @@ export const useEvmContributeTransaction = () => {
 
         setTxHash(primaryHash);
         toast.success('Contribution submitted successfully');
+
+        // Sequential path: revoke after the contribution is recorded, so a declined or failed
+        // revoke never affects it. The user can still revoke later in their wallet.
+        for (const token of erc1155Revokes) {
+          try {
+            await writeAndWait(revokeErc1155Request(token, vaultAddress));
+          } catch (revokeErr) {
+            console.warn('ERC1155 approval revoke skipped', token, revokeErr);
+            toast(
+              `The vault is still approved to move your tokens from ${token.slice(0, 6)}…${token.slice(-4)}. ` +
+                'You can revoke it in your wallet.',
+              { duration: 10000 }
+            );
+          }
+        }
         setStatus('idle');
         return primaryHash;
       } catch (err) {

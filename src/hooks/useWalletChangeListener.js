@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 
 import { useAuth } from '@/lib/auth/auth';
 import { useNetwork } from '@/hooks/useNetwork';
+import { isEvmLoginInProgress } from '@/lib/evm/loginProgress';
 
 const checkWeldCookies = () => {
   const requiredCookies = ['weld_connected-wallet', 'weld_connected-stake', 'weld_connected-change'];
@@ -96,7 +97,7 @@ export const useWalletChangeListener = () => {
       // Skip address-mismatch logout while LoginModal is completing login for a
       // newly connected wallet (authenticated_* may still hold the previous address).
       if (
-        !sessionStorage.getItem('evm_login_in_progress') &&
+        !isEvmLoginInProgress() &&
         authenticatedEvmAddress &&
         authenticatedEvmAddress.toLowerCase() !== evmAddress.toLowerCase()
       ) {
@@ -111,10 +112,7 @@ export const useWalletChangeListener = () => {
         return;
       }
 
-      if (
-        !sessionStorage.getItem('evm_login_in_progress') &&
-        previousEvmAddressRef.current.toLowerCase() !== evmAddress.toLowerCase()
-      ) {
+      if (!isEvmLoginInProgress() && previousEvmAddressRef.current.toLowerCase() !== evmAddress.toLowerCase()) {
         logout('Wallet changed. Please login again.');
         previousEvmAddressRef.current = null;
       }
