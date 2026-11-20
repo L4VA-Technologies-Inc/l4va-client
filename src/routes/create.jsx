@@ -47,7 +47,9 @@ const CreateComponent = () => {
           to="/create-ai"
         >
           <Sparkles className="w-4 h-4" />
-          <span className="uppercase font-russo text-sm whitespace-nowrap">{isAiPrefilled ? 'Back to chat' : 'Create with AI'}</span>
+          <span className="uppercase font-russo text-sm whitespace-nowrap">
+            {isAiPrefilled ? 'Back to chat' : 'Create with AI'}
+          </span>
         </Link>
       </div>
       <CreateVaultForm
