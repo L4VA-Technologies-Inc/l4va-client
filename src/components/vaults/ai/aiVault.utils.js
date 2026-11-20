@@ -232,7 +232,8 @@ export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   return enforceVaultCoherence(applyPresetToDraft(merged, presets));
 };
 
-const MAX_WHITELIST_ASSETS = 30;
+// Mirrors l4va-api MAX_ASSETS_WHITELIST_BY_CHAIN (Robinhood: 16 termination slots, one kept for ETH).
+const maxWhitelistAssets = () => (getNetwork() === 'robinhood' ? 15 : 10);
 
 /** Catalog hits from lookup_assets — drop them into the whitelist table, never inventing ids. */
 export const mergeResolvedAssets = (vault, resolvedAssets) => {
@@ -246,7 +247,7 @@ export const mergeResolvedAssets = (vault, resolvedAssets) => {
 
   resolvedAssets.forEach((asset, index) => {
     const policyId = typeof asset?.policyId === 'string' ? asset.policyId.toLowerCase() : '';
-    if (!policyId || seen.has(policyId) || existing.length + added.length >= MAX_WHITELIST_ASSETS) return;
+    if (!policyId || seen.has(policyId) || existing.length + added.length >= maxWhitelistAssets()) return;
     seen.add(policyId);
 
     const name = asset.name || asset.symbol || policyId;
