@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, ShieldCheck, Zap } from 'lucide-react';
+import { Flame, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -245,8 +245,8 @@ export const TokensPage = () => {
     [isRobinhood, rhAllTokens, cardanoVaultTokens]
   );
   const tokens = useMemo(
-    () => (isRobinhood ? rhAllTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
-    [isRobinhood, rhAllTokens, rhTab, allTokens]
+    () => (isRobinhood ? allTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
+    [isRobinhood, rhTab, allTokens]
   );
   const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
   const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
@@ -416,7 +416,52 @@ export const TokensPage = () => {
         </div> */}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-steel-750">
+      {/* Mobile: one compact row per token instead of a sideways-scrolling table. */}
+      <div className="divide-y divide-steel-750 overflow-hidden rounded-2xl border border-steel-750 bg-steel-850 md:hidden">
+        {isLoading &&
+          Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3">
+              <Bone className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Bone className="h-4 w-32 rounded" />
+                <Bone className="h-3 w-20 rounded" />
+              </div>
+              <Bone className="h-4 w-14 rounded" />
+            </div>
+          ))}
+        {!isLoading &&
+          pageRows.map(token => (
+            <div
+              key={token.id}
+              {...clickableProps(() => openToken(token.id), { role: 'link' })}
+              className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-steel-800/80 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500"
+            >
+              <div className="relative shrink-0">
+                <TokenImage src={token.image} alt={token.name} size="md" />
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-steel-850">
+                  <Flame className="h-2.5 w-2.5 text-orange-500" />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-medium text-white">{token.name}</span>
+                  {token.source !== 'vault' ? <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" /> : null}
+                </div>
+                <div className="truncate text-xs text-dark-100">
+                  <span className="uppercase">{token.symbol}</span> · Mcap {formatTokenField(token, 'mcap')}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-sm text-white tabular-nums">
+                  {formatTokenField(token, 'price', { price: true })}
+                </div>
+                <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-steel-750 md:block">
         <table className="w-full min-w-[1100px] text-left">
           <thead>
             <tr className="bg-steel-850 border-b border-steel-750 text-xs text-dark-100 uppercase tracking-wide">
@@ -507,10 +552,10 @@ export const TokensPage = () => {
                           e.stopPropagation();
                           openToken(token.id);
                         }}
-                        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-500 hover:bg-orange-500/25 transition-colors"
-                        aria-label={`Open ${token.symbol}`}
+                        className="inline-flex items-center justify-center rounded-lg bg-orange-500/15 px-3 py-1.5 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-500/25"
+                        aria-label={`Buy ${token.symbol}`}
                       >
-                        <Zap className="w-4 h-4" />
+                        Buy
                       </button>
                     </td>
                   </tr>

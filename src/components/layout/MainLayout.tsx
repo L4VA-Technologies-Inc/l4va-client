@@ -19,7 +19,7 @@ const MainLayout = ({ children }: LayoutProps) => {
       <div className="home-bg-texture pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 z-[-1] w-full min-h-[750px]" />
       <Header />
       <main
-        className={`content-space-top ${isChatPage ? '!pb-0 lg:min-h-screen lg:!pb-[calc(var(--header-height)+var(--content-space-top))]' : 'min-h-screen'}`}
+        className={`content-space-top ${isChatPage ? '!pb-0 h-dvh overflow-hidden lg:h-auto lg:overflow-visible lg:min-h-screen lg:!pb-[calc(var(--header-height)+var(--content-space-top))]' : 'min-h-screen'}`}
       >
         {/* <AlertBanner
           message="TapTools API is currently unavailable. Some asset pricing, wallet discovery, and market data features may be limited. We are monitoring the situation."

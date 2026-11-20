@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import clsx from 'clsx';
 
-import VaultListItem from '@/components/vaults/VaultListItem';
+import { VaultTable } from '@/components/vaults/VaultTable';
 import VaultFilter from '@/components/shared/VaultFilter';
 import { VaultCard } from '@/components/vaults/VaultCard';
 import { NoDataPlaceholder } from '@/components/shared/NoDataPlaceholder';
@@ -146,13 +146,7 @@ export const VaultList = ({
       );
     }
     if (viewType === 'table') {
-      return (
-        <div className="flex flex-col gap-6 mt-6">
-          {vaults.map(vault => (
-            <VaultListItem key={vault.id} vault={vault} />
-          ))}
-        </div>
-      );
+      return <VaultTable vaults={vaults} />;
     }
   };
 

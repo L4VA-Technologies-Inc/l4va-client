@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PanelRightClose, PanelRightOpen, Rocket, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ArrowUp, PanelRightClose, PanelRightOpen, Pencil, Rocket, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultImageCard } from './AiVaultImageCard';
@@ -36,6 +36,97 @@ const OptionButtons = ({ options, onSelect, disabled, stacked }) => (
     ))}
   </div>
 );
+
+// First sentence of the assistant's message, used as the card title (the full text stays in the thread).
+const questionTitle = content => {
+  const text = (content || '').trim();
+  const match = text.match(/^[\s\S]*?[?](?=\s|$)/);
+  return (match ? match[0] : text.split(/(?<=[.!])\s/)[0]).replace(/[*_`]/g, '');
+};
+
+// Pending question rendered in place of the composer (ChatGPT-style): numbered options plus a
+// a free-text line. Closing it falls back to the normal composer.
+const QuestionCard = ({ title, options, disabled, onSelect, onSubmitText, onClose }) => {
+  const [text, setText] = useState('');
+  const items = options.map(normalizeOption);
+
+  useEffect(() => {
+    const onKey = event => {
+      if (disabled || event.metaKey || event.ctrlKey || event.altKey) return;
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const n = Number(event.key);
+      if (n >= 1 && n <= items.length) onSelect(items[n - 1]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [disabled, items, onSelect]);
+
+  const submit = event => {
+    event.preventDefault();
+    const value = text.trim();
+    if (!value || disabled) return;
+    onSubmitText(value);
+    setText('');
+  };
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-3xl border border-steel-750 bg-steel-850/90 p-4 shadow-xl shadow-black/20 backdrop-blur-md"
+      initial={{ opacity: 0, y: 8 }}
+      transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[15px] font-medium text-white">{title}</p>
+        <button
+          aria-label="Close"
+          className="-mr-1 -mt-1 rounded-full p-1.5 text-dark-100 transition-colors hover:bg-steel-750 hover:text-white"
+          type="button"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-2 flex flex-col">
+        {items.map((option, index) => (
+          <button
+            key={index}
+            className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 text-left text-[15px] text-white transition-colors hover:bg-steel-750/60 active:bg-steel-750 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+            type="button"
+            onClick={() => onSelect(option)}
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-steel-750 text-xs text-dark-100">
+              {index + 1}
+            </span>
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <form className="mt-1 flex items-center gap-3" onSubmit={submit}>
+        <Pencil className="h-4 w-4 shrink-0 text-dark-100" />
+        <input
+          className="min-w-0 flex-1 bg-transparent py-2 text-base text-white outline-none placeholder:text-dark-100 sm:text-[15px]"
+          disabled={disabled}
+          placeholder="Describe your own"
+          value={text}
+          onChange={event => setText(event.target.value)}
+        />
+        {text.trim() && (
+          <button
+            aria-label="Send"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-gradient text-slate-950 transition-transform active:scale-90"
+            disabled={disabled}
+            type="submit"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        )}
+      </form>
+    </motion.div>
+  );
+};
 
 const AssistantAvatar = () => <ChatAvatar icon={Sparkles} />;
 
@@ -93,6 +184,17 @@ export const AiVaultChat = ({
   const isStreamingAssistant = isSending && lastMessage?.role === 'assistant';
   const showThinking = isSending && (!isStreamingAssistant || !lastMessage.content);
 
+  // The newest assistant question with options is answered from a card that replaces the composer.
+  const [dismissedQuestion, setDismissedQuestion] = useState(-1);
+  const lastIndex = messages.length - 1;
+  const pendingQuestion =
+    !isSending &&
+    lastMessage?.role === 'assistant' &&
+    lastMessage.options?.length > 0 &&
+    dismissedQuestion !== lastIndex
+      ? lastMessage
+      : null;
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
       behavior: isStreamingAssistant ? 'auto' : 'smooth',
@@ -134,21 +236,8 @@ export const AiVaultChat = ({
   };
 
   return (
-    // Mobile: the page itself scrolls and the composer sticks to the bottom (like ChatGPT), so there is
-    // no scroll area nested inside a scrolling page. Desktop keeps the fixed-height panel.
-    <div className="relative flex flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
-      {/* Mobile: pinned under the header so the settings sheet is one tap away at any scroll depth. */}
-      <div className="sticky top-[var(--header-height)] z-20 -mx-4 flex shrink-0 justify-end bg-primary-background/90 px-4 py-2 backdrop-blur-md lg:hidden">
-        <button
-          className="flex items-center gap-2 rounded-full border border-steel-750 bg-steel-850 px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[0.97]"
-          type="button"
-          onClick={onTogglePreview}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Vault settings
-          {canLaunch && <span className="h-2 w-2 rounded-full bg-orange-500" />}
-        </button>
-      </div>
+    // Mobile: fixed-height screen; only the message list scrolls. Settings button sits left of the composer.
+    <div className="relative flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
       <div className="hidden shrink-0 items-center justify-end pb-2 lg:flex">
         <button
           className="rounded-lg p-2 text-dark-100 transition-[color,background-color,transform] duration-150 ease-out hover:bg-steel-850 hover:text-white active:scale-90"
@@ -160,8 +249,8 @@ export const AiVaultChat = ({
         </button>
       </div>
 
-      <div className="flex-1 lg:overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-4 sm:px-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 sm:px-2">
           {messages.map((message, index) => {
             const isLiveAssistant = isStreamingAssistant && index === messages.length - 1;
             if (isLiveAssistant && !message.content) {
@@ -204,14 +293,15 @@ export const AiVaultChat = ({
                       onUpload={openFilePicker}
                     />
                   )}
-                  {message.options?.length > 0 && !isLiveAssistant && (index !== 0 || messages.length === 1) && (
-                    <OptionButtons
-                      stacked={index === 0}
-                      options={message.options}
-                      onSelect={handleOptionSelect}
-                      disabled={isSending || isImageBusy}
-                    />
-                  )}
+                  {message.options?.length > 0 &&
+                    !isLiveAssistant &&
+                    (index === lastIndex ? !pendingQuestion : index !== 0) && (
+                      <OptionButtons
+                        options={message.options}
+                        onSelect={handleOptionSelect}
+                        disabled={isSending || isImageBusy}
+                      />
+                    )}
                 </div>
               </motion.div>
             );
@@ -222,8 +312,8 @@ export const AiVaultChat = ({
       </div>
 
       <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
-      <div className="sticky bottom-0 z-20 shrink-0 bg-gradient-to-t from-primary-background from-70% to-transparent pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:bg-none lg:pb-0 lg:pt-1">
-        <div className="mx-auto w-full max-w-[720px] px-2 sm:px-2">
+      <div className="z-20 shrink-0 pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:pb-0 lg:pt-1">
+        <div className="mx-auto w-full max-w-[720px] sm:px-2">
           {/* On mobile the draft lives in a closed sheet, so surface the launch right where the user is. */}
           {canLaunch && (
             <motion.div
@@ -238,14 +328,38 @@ export const AiVaultChat = ({
               </PrimaryButton>
             </motion.div>
           )}
-          <ChatComposer
-            autoFocus={isDesktop}
-            disabled={isSending}
-            placeholder="Ask L4VA AI"
-            value={input}
-            onChange={setInput}
-            onSubmit={submit}
-          />
+          {/* A pending question replaces the composer; closing it brings the composer (and settings) back. */}
+          {pendingQuestion ? (
+            <QuestionCard
+              key={lastIndex}
+              disabled={isImageBusy}
+              options={pendingQuestion.options}
+              title={questionTitle(pendingQuestion.content)}
+              onClose={() => setDismissedQuestion(lastIndex)}
+              onSelect={handleOptionSelect}
+              onSubmitText={onSend}
+            />
+          ) : (
+            <ChatComposer
+              autoFocus={isDesktop}
+              disabled={isSending}
+              leading={
+                <button
+                  aria-label="Vault settings"
+                  className="relative mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-dark-100 transition-[color,transform] duration-150 hover:text-white active:scale-90 lg:hidden"
+                  type="button"
+                  onClick={onTogglePreview}
+                >
+                  <SlidersHorizontal className="h-5 w-5" />
+                  {canLaunch && <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-orange-500" />}
+                </button>
+              }
+              placeholder="Ask L4VA AI"
+              value={input}
+              onChange={setInput}
+              onSubmit={submit}
+            />
+          )}
         </div>
       </div>
     </div>
