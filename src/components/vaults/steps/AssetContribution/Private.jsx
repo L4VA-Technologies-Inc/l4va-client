@@ -1,14 +1,11 @@
+import { fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaSelect } from '@/components/shared/LavaSelect';
 import { LavaInput } from '@/components/shared/LavaInput';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { handleNumberInput } from '@/utils/core.utils';
-import {
-  VAULT_PRIVACY_TYPES,
-  VALUE_METHOD_HINT,
-  MIN_CONTRIBUTION_DURATION_MS,
-} from '@/components/vaults/constants/vaults.constants';
+import { VAULT_PRIVACY_TYPES, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const Private = ({ data, errors = {}, updateField, isRobinHood = false }) => {
   const { valueMethod, privacy: vaultPrivacy } = data;
@@ -82,7 +79,7 @@ export const Private = ({ data, errors = {}, updateField, isRobinHood = false })
             <LavaIntervalPicker
               value={data.contributionDuration}
               onChange={value => updateField('contributionDuration', value)}
-              minMs={MIN_CONTRIBUTION_DURATION_MS}
+              minMs={fieldMin('contributionDuration')}
             />
             {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
           </div>

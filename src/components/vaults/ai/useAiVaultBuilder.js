@@ -21,6 +21,7 @@ import { getInitialVaultState } from '@/components/vaults/constants/vaults.const
 import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 import { environments } from '@/constants/core.constants';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import { AiApiProvider } from '@/services/api/ai';
 import { CoreApiProvider } from '@/services/api/core';
@@ -72,6 +73,7 @@ const describeRemainingSteps = missingFields => {
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
   const { network, isRobinHood } = useNetwork();
+  useVaultSpec(network);
 
   const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isRobinHood)]);
   // The draft is shared with the manual create form via localStorage, so a manual edit made
@@ -258,7 +260,16 @@ export const useAiVaultBuilder = () => {
             withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
             response
           );
+          const previousErrors = errors.join('\n');
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
+          // The model gave the same invalid answer again: another round trip would only add latency.
+          if (errors.join('\n') === previousErrors) {
+            console.warn(
+              '[ai-vault] correction did not fix the draft; check the API spec vs client validation',
+              errors
+            );
+            break;
+          }
         }
 
         if (errors.length) {

@@ -1,6 +1,7 @@
 import { addMilliseconds } from 'date-fns';
 import { Lock } from 'lucide-react';
 
+import { fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
@@ -14,7 +15,6 @@ import {
   ACQUIRE_OPENS_ON_LAUNCH,
   getReserveHint,
   getLiquidityPoolContributionHint,
-  MIN_ACQUIRE_WINDOW_DURATION_MS,
 } from '@/components/vaults/constants/vaults.constants';
 import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
 import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
@@ -88,7 +88,7 @@ export const AcquireWindow = ({
               id="acquireWindowDuration"
               value={data.acquireWindowDuration}
               onChange={date => updateField('acquireWindowDuration', date)}
-              minMs={MIN_ACQUIRE_WINDOW_DURATION_MS}
+              minMs={fieldMin('acquireWindowDuration')}
             />
             {errors.acquireWindowDuration && <p className="text-red-600 mt-1">{errors.acquireWindowDuration}</p>}
           </div>
