@@ -820,9 +820,14 @@ export const useVaultActivity = (
   });
 };
 
-export const useVaultAssetsWhitelist = ({ myVaults = false, limit = 10, search = '' } = {}) => {
+export const useVaultAssetsWhitelist = ({
+  myVaults = false,
+  limit = 10,
+  search = '',
+  chainType,
+}: { myVaults?: boolean; limit?: number; search?: string; chainType?: string } = {}) => {
   return useInfiniteQuery({
-    queryKey: ['vaults', 'assets-whitelist', myVaults, limit, search],
+    queryKey: ['vaults', 'assets-whitelist', myVaults, limit, search, chainType],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       const response = await VaultsApiProvider.getAssetsWhitelist({
@@ -830,6 +835,7 @@ export const useVaultAssetsWhitelist = ({ myVaults = false, limit = 10, search =
         page: pageParam,
         limit,
         search,
+        chainType,
       });
       const payload = response?.data;
       return {
