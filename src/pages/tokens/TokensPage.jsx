@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Flame, ShieldCheck, Zap } from 'lucide-react';
+import { Flame, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -245,8 +245,8 @@ export const TokensPage = () => {
     [isRobinhood, rhAllTokens, cardanoVaultTokens]
   );
   const tokens = useMemo(
-    () => (isRobinhood ? rhAllTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
-    [isRobinhood, rhAllTokens, rhTab, allTokens]
+    () => (isRobinhood ? allTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
+    [isRobinhood, rhTab, allTokens]
   );
   const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
   const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
@@ -457,17 +457,6 @@ export const TokensPage = () => {
                 </div>
                 <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
               </div>
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  openToken(token.id);
-                }}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500/15 text-orange-500 transition-colors active:bg-orange-500/25"
-                aria-label={`Open ${token.symbol}`}
-              >
-                <Zap className="h-4 w-4" />
-              </button>
             </div>
           ))}
       </div>
@@ -563,10 +552,10 @@ export const TokensPage = () => {
                           e.stopPropagation();
                           openToken(token.id);
                         }}
-                        className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-500 hover:bg-orange-500/25 transition-colors"
-                        aria-label={`Open ${token.symbol}`}
+                        className="inline-flex items-center justify-center rounded-lg bg-orange-500/15 px-3 py-1.5 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-500/25"
+                        aria-label={`Buy ${token.symbol}`}
                       >
-                        <Zap className="w-4 h-4" />
+                        Buy
                       </button>
                     </td>
                   </tr>
