@@ -127,6 +127,9 @@ export const RequestPoolButton = ({ tokens, className = '' }) => {
   );
 };
 
+/** Round-trip cost above which a tradable token is flagged as thin liquidity (warning only). */
+const THIN_LIQUIDITY_WARN_BPS = 300;
+
 export const RouteStatus = ({ route, token = null }) => {
   if (!route || route.status === 'checking') {
     return (
@@ -138,13 +141,20 @@ export const RouteStatus = ({ route, token = null }) => {
   }
   if (route.status === 'ok') {
     const cost = route.lossBps != null ? ` · round trip ≈ ${(route.lossBps / 100).toFixed(2)}%` : '';
+    const thin = route.lossBps != null && route.lossBps > THIN_LIQUIDITY_WARN_BPS;
+    const Icon = thin ? AlertTriangle : CheckCircle2;
     return (
       <p
-        className="flex min-w-0 items-center gap-1 text-xs text-green-500"
+        className={`flex min-w-0 items-center gap-1 text-xs ${thin ? 'text-amber-400' : 'text-green-500'}`}
         title={`Buy: ${route.buyRoute || '—'}\nSell: ${route.sellRoute || '—'}${cost}`}
       >
-        <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
-        <span className="truncate">Tradable on Uniswap{route.buyRoute ? ` · ${route.buyRoute}` : ''}</span>
+        <Icon className="h-3 w-3 flex-shrink-0" />
+        <span className="truncate">
+          {thin
+            ? `Thin liquidity: buying and selling back loses ≈ ${(route.lossBps / 100).toFixed(1)}%`
+            : `Tradable on Uniswap${cost}`}
+          {route.buyRoute ? ` · ${route.buyRoute}` : ''}
+        </span>
       </p>
     );
   }
