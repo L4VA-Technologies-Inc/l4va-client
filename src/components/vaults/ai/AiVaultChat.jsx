@@ -134,21 +134,8 @@ export const AiVaultChat = ({
   };
 
   return (
-    // Mobile: the page itself scrolls and the composer sticks to the bottom (like ChatGPT), so there is
-    // no scroll area nested inside a scrolling page. Desktop keeps the fixed-height panel.
-    <div className="relative flex flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
-      {/* Mobile: pinned under the header so the settings sheet is one tap away at any scroll depth. */}
-      <div className="sticky top-[var(--header-height)] z-20 -mx-4 flex shrink-0 justify-end bg-primary-background/90 px-4 py-2 backdrop-blur-md lg:hidden">
-        <button
-          className="flex items-center gap-2 rounded-full border border-steel-750 bg-steel-850 px-4 py-2 text-sm font-medium text-white transition-transform duration-150 active:scale-[0.97]"
-          type="button"
-          onClick={onTogglePreview}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Vault settings
-          {canLaunch && <span className="h-2 w-2 rounded-full bg-orange-500" />}
-        </button>
-      </div>
+    // Mobile: fixed-height screen; only the message list scrolls. Settings button sits left of the composer.
+    <div className="relative flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
       <div className="hidden shrink-0 items-center justify-end pb-2 lg:flex">
         <button
           className="rounded-lg p-2 text-dark-100 transition-[color,background-color,transform] duration-150 ease-out hover:bg-steel-850 hover:text-white active:scale-90"
@@ -160,8 +147,8 @@ export const AiVaultChat = ({
         </button>
       </div>
 
-      <div className="flex-1 lg:overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-4 sm:px-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 sm:px-2">
           {messages.map((message, index) => {
             const isLiveAssistant = isStreamingAssistant && index === messages.length - 1;
             if (isLiveAssistant && !message.content) {
@@ -222,8 +209,8 @@ export const AiVaultChat = ({
       </div>
 
       <input accept="image/*" className="hidden" ref={fileInputRef} type="file" onChange={handleFileChange} />
-      <div className="sticky bottom-0 z-20 shrink-0 bg-gradient-to-t from-primary-background from-70% to-transparent pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:bg-none lg:pb-0 lg:pt-1">
-        <div className="mx-auto w-full max-w-[720px] px-2 sm:px-2">
+      <div className="z-20 shrink-0 pb-[max(12px,env(safe-area-inset-bottom))] pt-4 lg:static lg:pb-0 lg:pt-1">
+        <div className="mx-auto w-full max-w-[720px] sm:px-2">
           {/* On mobile the draft lives in a closed sheet, so surface the launch right where the user is. */}
           {canLaunch && (
             <motion.div
@@ -238,14 +225,27 @@ export const AiVaultChat = ({
               </PrimaryButton>
             </motion.div>
           )}
-          <ChatComposer
-            autoFocus={isDesktop}
-            disabled={isSending}
-            placeholder="Ask L4VA AI"
-            value={input}
-            onChange={setInput}
-            onSubmit={submit}
-          />
+          <div className="flex items-end gap-2">
+            <button
+              aria-label="Vault settings"
+              className="relative mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-steel-750 bg-steel-850 text-white transition-transform duration-150 active:scale-90 lg:hidden"
+              type="button"
+              onClick={onTogglePreview}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+              {canLaunch && <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-orange-500" />}
+            </button>
+            <div className="min-w-0 flex-1">
+              <ChatComposer
+                autoFocus={isDesktop}
+                disabled={isSending}
+                placeholder="Ask L4VA AI"
+                value={input}
+                onChange={setInput}
+                onSubmit={submit}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

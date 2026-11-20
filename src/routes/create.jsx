@@ -40,15 +40,14 @@ const CreateComponent = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between py-4">
-        <span className="w-40" />
-        <span className="font-russo text-2xl uppercase tracking-tight md:text-3xl">Create Vault</span>
+      <div className="flex items-center justify-between gap-4 py-4">
+        <span className="font-russo text-2xl uppercase tracking-tight whitespace-nowrap md:text-3xl">Create Vault</span>
         <Link
-          className="flex items-center gap-2 w-40 justify-end text-dark-100 hover:text-white transition-colors"
+          className="flex items-center gap-2 shrink-0 justify-end text-dark-100 hover:text-white transition-colors"
           to="/create-ai"
         >
           <Sparkles className="w-4 h-4" />
-          <span className="uppercase font-russo text-sm">{isAiPrefilled ? 'Back to chat' : 'Create with AI'}</span>
+          <span className="uppercase font-russo text-sm whitespace-nowrap">{isAiPrefilled ? 'Back to chat' : 'Create with AI'}</span>
         </Link>
       </div>
       <CreateVaultForm

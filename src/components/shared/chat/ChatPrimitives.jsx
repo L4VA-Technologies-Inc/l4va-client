@@ -106,11 +106,11 @@ export const ChatComposer = ({
 
   return (
     <form onSubmit={submit}>
-      <div className="relative flex items-end gap-2 rounded-[26px] border border-steel-750 bg-steel-850/90 px-3 py-2 shadow-xl shadow-black/20 backdrop-blur-md transition-colors duration-150 focus-within:border-orange-500/60">
+      <div className="relative flex items-end gap-2 rounded-[26px] border border-steel-750 bg-steel-850/90 px-2.5 py-1.5 shadow-xl shadow-black/20 backdrop-blur-md transition-colors duration-150 focus-within:border-orange-500/60">
         <textarea
           ref={textareaRef}
           autoFocus={autoFocus}
-          className="max-h-40 flex-1 resize-none bg-transparent px-2 py-2.5 text-base text-white sm:text-[15px] outline-none placeholder:text-dark-100"
+          className="max-h-40 flex-1 resize-none bg-transparent px-2 py-1.5 text-base text-white sm:text-[15px] outline-none placeholder:text-dark-100"
           disabled={disabled}
           maxLength={maxLength}
           placeholder={placeholder}
@@ -132,7 +132,7 @@ export const ChatComposer = ({
         />
         <PrimaryButton
           aria-label="Send message"
-          className="mb-0.5 h-9 w-9 shrink-0 rounded-full p-0"
+          className="h-9 w-9 shrink-0 rounded-full p-0"
           disabled={disabled || !canSend || !value.trim()}
           onClick={submit}
           title="Send message"
