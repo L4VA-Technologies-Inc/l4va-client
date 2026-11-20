@@ -2,7 +2,7 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { createAppKit } from '@reown/appkit/react';
 import { defineChain as defineAppKitChain, type AppKitNetwork } from '@reown/appkit/networks';
 import { defineChain, type Chain } from 'viem';
-import { http } from 'wagmi';
+import { fallback, http, type Transport } from 'wagmi';
 
 import { IS_ROBINHOOD_TESTNET } from '@/lib/evm/network';
 
@@ -11,6 +11,10 @@ import { IS_ROBINHOOD_TESTNET } from '@/lib/evm/network';
 // Active network is selected via VITE_ROBINHOOD_NETWORK ('mainnet' | 'testnet'),
 // mirroring the Cardano VITE_CARDANO_NETWORK convention.
 const IS_TESTNET = IS_ROBINHOOD_TESTNET;
+
+/** Public RPCs: last-resort backups behind the configured (keyed) endpoints. */
+const PUBLIC_RPC_MAINNET = 'https://rpc.mainnet.chain.robinhood.com';
+const PUBLIC_RPC_TESTNET = 'https://rpc.testnet.chain.robinhood.com';
 
 /** Uniswap Trading API + token markets target Robinhood mainnet. */
 export const robinhoodUniswapChain = defineChain({
@@ -21,8 +25,8 @@ export const robinhoodUniswapChain = defineChain({
     default: {
       http: [
         import.meta.env.VITE_ROBINHOOD_MAINNET_RPC_URL ||
-          import.meta.env.VITE_ROBINHOOD_RPC_URL ||
-          'https://rpc.mainnet.chain.robinhood.com',
+          (IS_TESTNET ? undefined : import.meta.env.VITE_ROBINHOOD_RPC_URL) ||
+          PUBLIC_RPC_MAINNET,
       ],
     },
   },
@@ -43,7 +47,7 @@ const robinhoodTestnet = defineChain({
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: {
-      http: [import.meta.env.VITE_ROBINHOOD_RPC_URL || 'https://rpc.testnet.chain.robinhood.com'],
+      http: [import.meta.env.VITE_ROBINHOOD_RPC_URL || PUBLIC_RPC_TESTNET],
     },
   },
   blockExplorers: {
@@ -96,17 +100,37 @@ const networks: [AppKitNetwork, ...AppKitNetwork[]] =
     ? [toAppKitNetwork(robinhoodChain)]
     : [toAppKitNetwork(robinhoodChain), toAppKitNetwork(robinhoodUniswapChain)];
 
-const transports: Record<number, ReturnType<typeof http>> = {
-  [robinhoodChain.id]: http(robinhoodChain.rpcUrls.default.http[0]),
+/**
+ * Configured RPC first, public RPC as automatic backup when it errors or times out.
+ * Each http transport batches concurrent JSON-RPC requests into one round trip.
+ */
+const rpcTransport = (primaryUrl: string, publicUrl: string): Transport => {
+  const opts = { batch: true, retryCount: 1 } as const;
+  return primaryUrl === publicUrl
+    ? http(primaryUrl, opts)
+    : fallback([http(primaryUrl, opts), http(publicUrl, opts)], { rank: false });
+};
+
+const transports: Record<number, Transport> = {
+  [robinhoodChain.id]: rpcTransport(
+    robinhoodChain.rpcUrls.default.http[0],
+    IS_TESTNET ? PUBLIC_RPC_TESTNET : PUBLIC_RPC_MAINNET
+  ),
 };
 if (robinhoodUniswapChain.id !== robinhoodChain.id) {
-  transports[robinhoodUniswapChain.id] = http(robinhoodUniswapChain.rpcUrls.default.http[0]);
+  transports[robinhoodUniswapChain.id] = rpcTransport(
+    robinhoodUniswapChain.rpcUrls.default.http[0],
+    PUBLIC_RPC_MAINNET
+  );
 }
 
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId: walletConnectProjectId,
   transports,
+  // Coalesce concurrent contract reads into Multicall3 calls. viem silently skips
+  // this on a chain without a multicall3 entry, so it is safe either way.
+  batch: { multicall: true },
 });
 
 export const wagmiConfig = wagmiAdapter.wagmiConfig;

@@ -84,6 +84,7 @@ const VaultsFilters = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
+      search: prevFilters.search,
       filter: prevFilters.filter || 'contribution',
       chainType: network,
       ...filters,

@@ -50,6 +50,30 @@ function apiErrorMessage(err) {
   return err?.message || 'Swap failed';
 }
 
+// Defence in depth: the API only ever asks us to send an ERC-20 approve (to the
+// token itself) or a swap through the Universal Router. Anything else is refused.
+const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+const UNIVERSAL_ROUTER_ADDRESS =
+  import.meta.env.VITE_UNISWAP_UNIVERSAL_ROUTER || '0x8876789976dEcBfCbBbe364623C63652db8C0904';
+
+function assertTxTarget(tx, allowed) {
+  const to = String(tx?.to || '').toLowerCase();
+  if (!allowed.some(a => a && a.toLowerCase() === to)) {
+    throw new Error(`Refusing to send a transaction to an unexpected address (${tx?.to})`);
+  }
+}
+
+/** Lowest output the swap can settle at with the chosen slippage (percent). */
+function minAmountOut(amountOut, slippagePct) {
+  if (amountOut == null) return null;
+  try {
+    const bps = BigInt(Math.round(slippagePct * 100));
+    return (BigInt(amountOut) * (10000n - bps)) / 10000n;
+  } catch {
+    return null;
+  }
+}
+
 function toTxRequest(tx, chainId) {
   if (!tx?.to || !tx?.data) {
     throw new Error('Invalid transaction payload from Uniswap API');
@@ -258,8 +282,10 @@ export function UniswapSwapPanel({
         });
         if (approval?.approval) {
           toast('Approve token spending…');
+          // The approval is token.approve(Permit2): it must target the token being sold.
+          assertTxTarget(approval.approval, [tokenIn, PERMIT2_ADDRESS]);
           const hash = await sendTransactionAsync(toTxRequest(approval.approval, targetChainId));
-          await waitForTransactionReceipt(wagmiConfig, { hash, confirmations: 1 });
+          await waitForTransactionReceipt(wagmiConfig, { hash, confirmations: 1, chainId: targetChainId });
         }
       }
 
@@ -297,9 +323,15 @@ export function UniswapSwapPanel({
           swapBody.signature = signature;
         }
         const { swap } = await UniswapApiProvider.swap(swapBody);
+        assertTxTarget(swap, [UNIVERSAL_ROUTER_ADDRESS]);
         toast('Confirm swap in wallet…');
         const hash = await sendTransactionAsync(toTxRequest(swap, targetChainId));
-        await waitForTransactionReceipt(wagmiConfig, { hash, confirmations: 1 });
+        const receipt = await waitForTransactionReceipt(wagmiConfig, {
+          hash,
+          confirmations: 1,
+          chainId: targetChainId,
+        });
+        if (receipt.status !== 'success') throw new Error('Swap transaction reverted');
         toast.success(`Swap confirmed · ${truncateAddr(hash)}`);
         // The API verifies the swap on-chain and credits the logged-in wallet; failing to
         // record it must not surface as a failed swap.
@@ -452,6 +484,15 @@ export function UniswapSwapPanel({
             {side === 'buy' ? tokenSymbol : 'ETH'}
           </div>
         </div>
+        {quotePreview?.amountOut && !quoteLoading && (
+          <div className="flex justify-between text-[11px] text-dark-100">
+            <span>Minimum received ({slippage}% slippage)</span>
+            <span className="text-white tabular-nums">
+              {formatAmount(minAmountOut(quotePreview.amountOut, slippage), decimalsOut)}{' '}
+              {side === 'buy' ? tokenSymbol : 'ETH'}
+            </span>
+          </div>
+        )}
         {quotePreview?.routing && (
           <div className="text-[11px] text-dark-100">
             Route · {quotePreview.routing}

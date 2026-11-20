@@ -118,9 +118,9 @@ export class VaultsApiProvider {
     return response;
   }
 
-  static async getAssetsWhitelist({ myVaults = false, page = 1, limit = 10, search = '' } = {}) {
+  static async getAssetsWhitelist({ myVaults = false, page = 1, limit = 10, search = '', chainType = '' } = {}) {
     return await axiosInstance.get(VaultsConfigProvider.getAssetsWhitelist(), {
-      params: { myVaults, page, limit, search },
+      params: { myVaults, page, limit, search, ...(chainType ? { chainType } : {}) },
     });
   }
 

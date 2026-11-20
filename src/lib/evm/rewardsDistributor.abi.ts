@@ -21,4 +21,4 @@ export const REWARDS_DISTRIBUTOR_ABI = [
   { type: 'error', name: 'NothingToClaim', inputs: [] },
   { type: 'error', name: 'NoActiveRoot', inputs: [] },
   { type: 'error', name: 'EnforcedPause', inputs: [] },
-];
+] as const;

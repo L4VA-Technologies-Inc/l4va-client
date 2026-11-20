@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Loader2, RotateCw, Shuffle, X } from 'lucide-react';
+import { AlertTriangle, LifeBuoy, CheckCircle2, Loader2, RotateCw, Shuffle, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useModalControls } from '@/lib/modals/modal.context';
 import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { useAssetSource } from '@/hooks/useAssetSource';
@@ -101,7 +102,32 @@ export const useSyncedBasketRoutes = (targets, vaultId, onTargets) => {
   return routes;
 };
 
-export const RouteStatus = ({ route }) => {
+/** Prepared support message asking the team to add a Uniswap pool for these tokens. */
+const poolRequestMessage = tokens =>
+  [
+    'Hi! I would like to use these tokens in an index vault, but Uniswap has no usable pool for them:',
+    ...tokens.map(t => `- ${t.symbol || 'Token'} (${t.assetAddress})`),
+    '',
+    'Could you add a pool for them?',
+  ].join('\n');
+
+/** Opens the support chat with a prefilled pool request; it lands in the user's open ticket or a new one. */
+export const RequestPoolButton = ({ tokens, className = '' }) => {
+  const { openModal } = useModalControls();
+  if (!tokens?.length) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => openModal('SupportModal', { initialMessage: poolRequestMessage(tokens) })}
+      className={cn('flex items-center gap-1 text-xs text-orange-500 underline hover:text-orange-400', className)}
+    >
+      <LifeBuoy className="h-3 w-3 flex-shrink-0" />
+      Ask us to add a pool
+    </button>
+  );
+};
+
+export const RouteStatus = ({ route, token = null }) => {
   if (!route || route.status === 'checking') {
     return (
       <p className="flex items-center gap-1 text-xs text-dark-100">
@@ -143,6 +169,7 @@ export const RouteStatus = ({ route }) => {
         {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
         {route.reason ? `: ${route.reason}` : ''}
       </span>
+      {token && <RequestPoolButton tokens={[token]} className="ml-1" />}
     </p>
   );
 };
@@ -286,6 +313,13 @@ const SupportedAssetPicker = ({ assets, existing, onAdd, disabled, steel }) => (
         Crossed-out tokens can&apos;t be bought and sold back through Uniswap right now. Hover one for the reason.
       </p>
     )}
+    {assets.some(a => a.routing && a.routing.status !== 'ok') && (
+      <RequestPoolButton
+        tokens={assets
+          .filter(a => a.routing && a.routing.status !== 'ok')
+          .map(a => ({ symbol: a.symbol, assetAddress: a.assetAddress }))}
+      />
+    )}
   </div>
 );
 
@@ -396,7 +430,7 @@ export const IndexBasketEditor = ({
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{t.symbol || shortAddress(t.assetAddress)}</p>
                 <p className="truncate text-xs text-dark-100">{t.name || shortAddress(t.assetAddress)}</p>
-                <RouteStatus route={routes[i]} />
+                <RouteStatus route={routes[i]} token={t} />
               </div>
               <label className="flex items-center gap-1">
                 <span className="sr-only">Weight for {t.symbol || t.assetAddress}</span>

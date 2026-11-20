@@ -3,6 +3,7 @@ import { LaunchAssetContribution } from '@/components/vaults/steps/Launch/Launch
 import { LaunchAcquireWindow } from '@/components/vaults/steps/Launch/LaunchAcquireWindow';
 import { LaunchGovernance } from '@/components/vaults/steps/Launch/LaunchGovernance';
 import { LaunchIndexBasket } from '@/components/vaults/steps/Launch/LaunchIndexBasket';
+import { LaunchRobinhoodTerms } from '@/components/vaults/steps/Launch/LaunchRobinhoodTerms';
 import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 import { hasNoAcquirePhase } from '@/components/vaults/constants/vaults.constants';
 import { useVlrmFeeSettings } from '@/services/api/queries';
@@ -11,7 +12,7 @@ import { ChainType, ChainTypeLabels } from '@/utils/types';
 
 export const Launch = ({ data, setCurrentStep }) => {
   const { data: vlrmFeeData, isLoading: isVlrmFeeLoading } = useVlrmFeeSettings();
-  const { network, isCardano } = useNetwork();
+  const { network, isCardano, isRobinHood } = useNetwork();
   const isIndexVault = !isCardano && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
   const networkLabel = ChainTypeLabels[network] ?? ChainTypeLabels[ChainType.CARDANO];
 
@@ -31,6 +32,7 @@ export const Launch = ({ data, setCurrentStep }) => {
       {showAcquireWindow && <LaunchAcquireWindow data={data} setCurrentStep={setCurrentStep} />}
       {isIndexVault && <LaunchIndexBasket data={data} setCurrentStep={setCurrentStep} />}
       <LaunchGovernance data={data} setCurrentStep={setCurrentStep} />
+      {isRobinHood && <LaunchRobinhoodTerms data={data} isIndexVault={isIndexVault} />}
       <div className="bg-steel-900/50 border border-steel-800/50 rounded-lg p-4 md:p-6 flex items-center justify-between gap-4">
         <p className="text-base font-medium text-white">This vault will be created on:</p>
         <span className="flex items-center gap-2 text-base font-medium text-white">

@@ -1,10 +1,9 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
-import { waitForTransactionReceipt } from 'wagmi/actions';
+import type { Address, Hash } from 'viem';
 
+import { showEvmTxError, useEvmTx, waitForSuccess } from '@/hooks/useEvmTx';
 import { VAULT_TERMINATION_ABI } from '@/lib/evm/vault.abi';
-import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
 
 /**
  * EVM (Robinhood) termination redemption.
@@ -19,16 +18,14 @@ import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
  * handled by the operator's `redeemFor` path.
  */
 export const useEvmRedeemTransaction = () => {
-  const [status, setStatus] = useState('idle');
-  const [txHash, setTxHash] = useState(null);
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState<'idle' | 'signing' | 'submitting'>('idle');
+  const [txHash, setTxHash] = useState<Hash | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const { address: holder, chainId: currentChainId } = useAccount();
-  const { switchChainAsync } = useSwitchChain();
-  const { writeContractAsync } = useWriteContract();
+  const { account: holder, ensureChain, simulateAndWrite } = useEvmTx();
 
   const redeem = useCallback(
-    async ({ vaultAddress }) => {
+    async ({ vaultAddress }: { vaultAddress?: Address | null }): Promise<Hash | null> => {
       setError(null);
       setTxHash(null);
 
@@ -46,36 +43,31 @@ export const useEvmRedeemTransaction = () => {
       }
 
       try {
-        if (currentChainId !== robinhoodChain.id) {
-          await switchChainAsync({ chainId: robinhoodChain.id });
-        }
+        await ensureChain();
 
         setStatus('signing');
-        const hash = await writeContractAsync({
+        const hash = await simulateAndWrite({
           address: vaultAddress,
           abi: VAULT_TERMINATION_ABI,
           functionName: 'redeem',
           args: [holder],
-          account: holder,
-          chainId: robinhoodChain.id,
         });
 
         setStatus('submitting');
-        await waitForTransactionReceipt(wagmiConfig, { hash, chainId: robinhoodChain.id });
+        await waitForSuccess(hash);
 
         setTxHash(hash);
         toast.success('Redemption submitted — your VT was burned and your share paid out');
         setStatus('idle');
         return hash;
       } catch (err) {
-        const errorMessage = err?.response?.data?.message || err?.shortMessage || err?.message || 'Redemption failed';
+        const errorMessage = showEvmTxError(err, 'Redemption failed');
         setError(errorMessage);
-        toast.error(errorMessage, { className: '!max-w-[700px]', duration: 10000 });
         setStatus('idle');
         return null;
       }
     },
-    [holder, currentChainId, switchChainAsync, writeContractAsync]
+    [holder, ensureChain, simulateAndWrite]
   );
 
   const reset = useCallback(() => {

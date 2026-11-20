@@ -1,24 +1,18 @@
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
-import { waitForTransactionReceipt } from 'wagmi/actions';
+import type { Address, Hash } from 'viem';
 
 import { useEvmGovernanceFee } from '@/hooks/useEvmGovernanceFee';
+import {
+  normalizeAuthorization,
+  type PreparedContributionCall,
+  showEvmTxError,
+  useEvmTx,
+  waitForSuccess,
+} from '@/hooks/useEvmTx';
 import { CoreApiProvider } from '@/services/api/core';
 import { useCreateAcquireTx } from '@/services/api/queries';
 import { VAULT_CONTRIBUTION_ABI } from '@/lib/evm/vault.abi';
-import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
-
-const normalizeAuthorization = auth => ({
-  cycleId: BigInt(auth.cycleId),
-  contributor: auth.contributor,
-  kind: Number(auth.kind),
-  asset: auth.asset,
-  tokenId: BigInt(auth.tokenId),
-  amount: BigInt(auth.amount),
-  nonce: BigInt(auth.nonce),
-  deadline: BigInt(auth.deadline),
-});
 
 /**
  * EVM (Robinhood) acquire flow.
@@ -35,19 +29,19 @@ const normalizeAuthorization = auth => ({
  *  3. `contributeNative(auth, sig)` on the vault with `value = <wei>`.
  *  4. POST /blockchain/evm/contribution/confirm.
  */
-export const useEvmAcquireTransaction = () => {
-  const [status, setStatus] = useState('idle');
-  const [txHash, setTxHash] = useState(null);
-  const [error, setError] = useState(null);
+type EvmTxStatus = 'idle' | 'building' | 'signing' | 'submitting';
 
-  const { address: contributor, chainId: currentChainId } = useAccount();
-  const { switchChainAsync } = useSwitchChain();
-  const { writeContractAsync } = useWriteContract();
+export const useEvmAcquireTransaction = () => {
+  const [status, setStatus] = useState<EvmTxStatus>('idle');
+  const [txHash, setTxHash] = useState<Hash | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const { account: contributor, ensureChain, simulateAndWrite } = useEvmTx();
   const createAcquireTx = useCreateAcquireTx();
   const { payFee } = useEvmGovernanceFee();
 
   const sendTransaction = useCallback(
-    async ({ vaultId, amountWei }) => {
+    async ({ vaultId, amountWei }: { vaultId: string; amountWei: string }): Promise<Hash | null> => {
       setError(null);
       setTxHash(null);
 
@@ -86,7 +80,7 @@ export const useEvmAcquireTransaction = () => {
           setStatus('building');
           ({ data: prepared } = await CoreApiProvider.prepareEvmContribution({ txId: createdTxId, feeTxHash }));
         }
-        const { vaultAddress, calls } = prepared;
+        const { vaultAddress, calls } = prepared as { vaultAddress: Address; calls: PreparedContributionCall[] };
 
         if (!Array.isArray(calls) || calls.length !== 1) {
           throw new Error('Expected exactly one Native contribution call from the backend');
@@ -97,9 +91,7 @@ export const useEvmAcquireTransaction = () => {
         }
 
         // ── Step 3: ensure wallet is on the correct chain ───────────────────
-        if (currentChainId !== robinhoodChain.id) {
-          await switchChainAsync({ chainId: robinhoodChain.id });
-        }
+        await ensureChain();
 
         // ── Step 4: contributeNative with value = <wei> ─────────────────────
         setStatus('signing');
@@ -110,21 +102,16 @@ export const useEvmAcquireTransaction = () => {
         // Use call.value from backend or the wei amount we sent.
         const value = call.value ? BigInt(call.value) : BigInt(amountWei);
 
-        const hash = await writeContractAsync({
+        const hash = await simulateAndWrite({
           address: vaultAddress,
           abi: VAULT_CONTRIBUTION_ABI,
           functionName: 'contributeNative',
-          args: [authorization, call.signature],
-          account: contributor,
-          chainId: robinhoodChain.id,
+          args: [authorization, call.signature] as const,
           value,
         });
 
         setStatus('submitting');
-        await waitForTransactionReceipt(wagmiConfig, {
-          hash,
-          chainId: robinhoodChain.id,
-        });
+        await waitForSuccess(hash);
 
         // ── Step 5: confirm with backend ────────────────────────────────────
         await CoreApiProvider.confirmEvmContribution({
@@ -138,21 +125,13 @@ export const useEvmAcquireTransaction = () => {
         setStatus('idle');
         return hash;
       } catch (err) {
-        const errorMessage =
-          (err?.cause?.data?.errorName === 'VaultFrozen'
-            ? 'This vault is temporarily frozen by the protocol guardian. Please try again later.'
-            : null) ||
-          err?.response?.data?.message ||
-          err?.shortMessage ||
-          err?.message ||
-          'Acquisition failed';
+        const errorMessage = showEvmTxError(err, 'Acquisition failed');
         setError(errorMessage);
-        toast.error(errorMessage, { className: '!max-w-[700px]', duration: 10000 });
         setStatus('idle');
         return null;
       }
     },
-    [contributor, currentChainId, switchChainAsync, writeContractAsync, createAcquireTx, payFee]
+    [contributor, ensureChain, simulateAndWrite, createAcquireTx, payFee]
   );
 
   const reset = useCallback(() => {

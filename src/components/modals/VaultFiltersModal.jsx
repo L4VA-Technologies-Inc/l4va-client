@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-import { VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
+import { BROWSE_VAULT_TABS, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
@@ -13,6 +13,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { GoldenVerifiedBadge } from '@/components/shared/GoldenVerifiedBadge';
 import { useVaultAssetsWhitelist } from '@/services/api/queries';
 import { ChainType, ChainTypeLabels } from '@/utils/types';
+import { getNetwork } from '@/hooks/useNetwork';
 
 export const VaultFiltersModal = ({
   isOpen,
@@ -23,6 +24,19 @@ export const VaultFiltersModal = ({
   activeStage,
   myVaults = false,
 }) => {
+  const isRobinhood = getNetwork() === 'robinhood';
+  const defaultCurrency = isRobinhood ? 'USD' : 'ADA';
+  const TVL_CURRENCY_OPTIONS = isRobinhood
+    ? [
+        { label: 'USD', value: 'USD' },
+        { label: 'ETH', value: 'ETH' },
+      ]
+    : [
+        { label: 'ADA', value: 'ADA' },
+        { label: 'USD', value: 'USD' },
+      ];
+  const allowedCurrencies = TVL_CURRENCY_OPTIONS.map(o => o.value);
+  const pickCurrency = value => (allowedCurrencies.includes(value) ? value : defaultCurrency);
   const [assetWhitelistSearch, setAssetWhitelistSearch] = useState('');
   const [filters, setFilters] = useState({
     page: 1,
@@ -38,8 +52,8 @@ export const VaultFiltersModal = ({
     maxFdv: initialFilters.maxFdv || 0,
     maxFdvTvl: initialFilters.maxFdvTvl || 0,
     minFdvTvl: initialFilters.minFdvTvl || 0,
-    tvlCurrency: initialFilters.tvlCurrency || 'ADA',
-    fdvCurrency: initialFilters.fdvCurrency || 'ADA',
+    tvlCurrency: pickCurrency(initialFilters.tvlCurrency),
+    fdvCurrency: pickCurrency(initialFilters.fdvCurrency),
     vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
@@ -72,10 +86,16 @@ export const VaultFiltersModal = ({
     isLoading: isInitialLoading,
     isFetching,
     isFetchingNextPage,
-  } = useVaultAssetsWhitelist({ myVaults, limit: 10, search: assetWhitelistSearch });
+  } = useVaultAssetsWhitelist({
+    myVaults,
+    limit: 10,
+    search: assetWhitelistSearch,
+    chainType: getNetwork(),
+  });
 
   const OPTIONS = {
-    vaultStages: ['Upcoming', 'Contribute', 'Acquire', 'Locked', 'Terminated'],
+    // Must match the list tab labels: onApplyStage switches tabs by label.
+    vaultStages: BROWSE_VAULT_TABS.filter(tab => !(isRobinhood && tab.id === 'contribution')).map(tab => tab.label),
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
@@ -143,8 +163,8 @@ export const VaultFiltersModal = ({
       maxFdv: 0,
       minFdvTvl: 0,
       maxFdvTvl: 0,
-      tvlCurrency: 'ADA',
-      fdvCurrency: 'ADA',
+      tvlCurrency: defaultCurrency,
+      fdvCurrency: defaultCurrency,
       vaultStage: '',
       governance: '',
       verified: [],
@@ -200,8 +220,8 @@ export const VaultFiltersModal = ({
 
     const hasTvlFilters = Number(filters.minTvl) > 0 || Number(filters.maxTvl) > 0;
     const hasFdvFilters = Number(filters.minFdv) > 0 || Number(filters.maxFdv) > 0;
-    const tvlCurrencyChanged = filters.tvlCurrency !== 'ADA';
-    const fdvCurrencyChanged = filters.fdvCurrency !== 'ADA';
+    const tvlCurrencyChanged = filters.tvlCurrency !== defaultCurrency;
+    const fdvCurrencyChanged = filters.fdvCurrency !== defaultCurrency;
 
     if (hasTvlFilters || tvlCurrencyChanged) {
       activeFilters.tvlCurrency = filters.tvlCurrency;
@@ -229,11 +249,6 @@ export const VaultFiltersModal = ({
     onApplyFilters(activeFilters);
     onClose();
   };
-
-  const TVL_CURRENCY_OPTIONS = [
-    { label: 'ADA', value: 'ADA' },
-    { label: 'USD', value: 'USD' },
-  ];
 
   const setRangeFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

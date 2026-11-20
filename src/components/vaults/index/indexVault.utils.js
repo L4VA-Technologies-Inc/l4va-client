@@ -7,8 +7,8 @@ export const VAULT_ARCHETYPES = {
 };
 
 export const BPS = 10000;
-/** Backend cap — every bought asset permanently takes one of the vault's 16 termination slots. */
-export const INDEX_MAX_ASSETS = 10;
+/** Mirrors l4va-api `INDEX_MAX_ASSETS`: 16 termination slots on-chain, one kept for native ETH. */
+export const INDEX_MAX_ASSETS = 15;
 export const INDEX_MIN_WEIGHT_BPS = 100;
 export const INDEX_DEFAULT_RESERVE_BPS = 1000;
 export const INDEX_MAX_RESERVE_BPS = 5000;
