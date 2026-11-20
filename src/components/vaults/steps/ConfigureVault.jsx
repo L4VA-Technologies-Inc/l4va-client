@@ -287,6 +287,7 @@ export const ConfigureVault = ({
               whitelist={data.assetsWhitelist || []}
               errors={errors}
               vaultType={data.type}
+              maxItems={isCardano ? 10 : 15}
               isExpandable={data.isExpandableAssetWhitelist}
               onExpandableChange={checked => updateField('isExpandableAssetWhitelist', checked)}
             />
