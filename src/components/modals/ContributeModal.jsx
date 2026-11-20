@@ -9,7 +9,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton.tsx';
 import SecondaryButton from '@/components/shared/SecondaryButton.tsx';
 import MetricCard from '@/components/shared/MetricCard.jsx';
 import { useTransaction } from '@/hooks/useTransaction.js';
-import { useEvmContributeTransaction } from '@/hooks/useEvmContributeTransaction.js';
+import { useEvmContributeTransaction } from '@/hooks/useEvmContributeTransaction';
 import { HoverHelp } from '@/components/shared/HoverHelp.jsx';
 import { getContributionStatus } from '@/utils/vaultContributionLimits.js';
 import { useVaultAssets, useNftFlagsSettings } from '@/services/api/queries.js';

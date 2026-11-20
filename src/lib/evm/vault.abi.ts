@@ -22,7 +22,7 @@ export const CONTRIBUTION_AUTHORIZATION_COMPONENTS = [
   { name: 'amount', type: 'uint256' },
   { name: 'nonce', type: 'uint256' },
   { name: 'deadline', type: 'uint256' },
-];
+] as const;
 
 export const VAULT_CONTRIBUTION_ABI = [
   // V11+: the protocol guardian froze the vault. Listed so viem names the revert.
@@ -67,7 +67,7 @@ export const VAULT_CONTRIBUTION_ABI = [
     ],
     outputs: [],
   },
-];
+] as const;
 
 // Termination / redemption entry points (V6 vault).
 //
@@ -115,7 +115,7 @@ export const VAULT_TERMINATION_ABI = [
     ],
     outputs: [{ type: 'uint256' }],
   },
-];
+] as const;
 
 // ERC20 approve(spender, amount)
 export const ERC20_APPROVE_ABI = [
@@ -129,7 +129,7 @@ export const ERC20_APPROVE_ABI = [
     ],
     outputs: [{ type: 'bool' }],
   },
-];
+] as const;
 
 // ERC721 approve(to, tokenId)
 export const ERC721_APPROVE_ABI = [
@@ -143,7 +143,7 @@ export const ERC721_APPROVE_ABI = [
     ],
     outputs: [],
   },
-];
+] as const;
 
 // ERC1155 setApprovalForAll(operator, approved)
 export const ERC1155_APPROVAL_ABI = [
@@ -157,4 +157,4 @@ export const ERC1155_APPROVAL_ABI = [
     ],
     outputs: [],
   },
-];
+] as const;

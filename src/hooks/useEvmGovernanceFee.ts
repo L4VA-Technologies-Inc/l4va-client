@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useAccount, useSendTransaction, useSwitchChain } from 'wagmi';
-import { waitForTransactionReceipt } from 'wagmi/actions';
+import type { Address, Hash } from 'viem';
 
-import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
+import { waitForSuccess } from '@/hooks/useEvmTx';
+import { robinhoodChain } from '@/lib/evm/wagmi.config';
 
 /**
  * Pays an EVM (Robinhood) protocol fee — governance proposals/votes, and the
@@ -16,16 +17,25 @@ import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
  * Returns the confirmed transaction hash, so callers must await the receipt
  * before posting it back — the backend rejects a hash it cannot see yet.
  */
+/** Native transfer quoted by the backend as the fee for an action. */
+export interface EvmFeePayment {
+  to: Address;
+  value: string;
+  chainId?: number;
+}
+
+export type EvmFeeStatus = 'idle' | 'signing' | 'submitting';
+
 export const useEvmGovernanceFee = () => {
-  const [status, setStatus] = useState('idle');
-  const [error, setError] = useState(null);
+  const [status, setStatus] = useState<EvmFeeStatus>('idle');
+  const [error, setError] = useState<unknown>(null);
 
   const { address, chainId: currentChainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
 
   const payFee = useCallback(
-    async (payment, expectedFrom) => {
+    async (payment: EvmFeePayment | null | undefined, expectedFrom?: string | null): Promise<Hash> => {
       setError(null);
 
       if (!payment) {
@@ -62,7 +72,7 @@ export const useEvmGovernanceFee = () => {
         // The backend verifies against a mined receipt, so wait here rather
         // than letting it reject a hash that is merely too fresh.
         setStatus('submitting');
-        await waitForTransactionReceipt(wagmiConfig, { hash, chainId: targetChainId });
+        await waitForSuccess(hash, targetChainId);
 
         setStatus('idle');
         return hash;

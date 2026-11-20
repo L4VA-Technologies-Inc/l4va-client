@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
+import { useWaitForTransactionReceipt } from 'wagmi';
+import type { Hash } from 'viem';
 
+import { useEvmTx, waitForSuccess } from '@/hooks/useEvmTx';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { vaultFactoryAbiFor } from '@/lib/evm/vaultFactory.abi';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
@@ -13,14 +15,12 @@ import { robinhoodChain } from '@/lib/evm/wagmi.config';
  *  4. POST /vaults/publish (chainType=robinhood, txHash) → backend marks vault published
  */
 export const useCreateEvmVault = () => {
-  const { address: creatorAddress, chainId: currentChainId } = useAccount();
-  const { writeContractAsync } = useWriteContract();
-  const { switchChainAsync } = useSwitchChain();
+  const { ensureChain, simulateAndWrite } = useEvmTx();
 
   const [isPreparing, setIsPreparing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [txHash, setTxHash] = useState(null);
-  const [error, setError] = useState(null);
+  const [txHash, setTxHash] = useState<Hash | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
 
   const { isLoading: isWaitingReceipt, isSuccess: receiptSuccess } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -33,9 +33,11 @@ export const useCreateEvmVault = () => {
    * @returns {Promise<{ dbVaultId: string, onChainTxHash: string }>}
    */
   const createEvmVault = useCallback(
-    async vaultData => {
+    // The create-vault form payload; forwarded to the API as-is.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (vaultData: Record<string, any>): Promise<{ dbVaultId: string; onChainTxHash: Hash }> => {
       setError(null);
-      setTxHash(null);
+      setTxHash(undefined);
 
       // ── Step 1: backend signs the EIP-712 authorization ──────────────────
       setIsPreparing(true);
@@ -71,24 +73,22 @@ export const useCreateEvmVault = () => {
       const cfgForContract = normalizeBigInts(cfg);
 
       // ── Step 2: ensure wallet is on the correct chain, then submit ───────
-      if (currentChainId !== robinhoodChain.id) {
-        await switchChainAsync({ chainId: robinhoodChain.id });
-      }
+      await ensureChain();
 
-      const hash = await writeContractAsync({
+      // Simulated first: an expired deadline / bad signature fails here, before the wallet opens.
+      const hash = await simulateAndWrite({
         address: evmFactoryAddress,
         abi: vaultFactoryAbiFor(evmConfigVersion),
         functionName: 'createVault',
         args: [cfgForContract, BigInt(adminNonce), BigInt(deadline), adminSignature],
-        chainId: robinhoodChain.id,
-        account: creatorAddress,
       });
 
       setTxHash(hash);
 
       // ── Step 3: wait for the receipt ─────────────────────────────────────
-      // (handled by useWaitForTransactionReceipt above — caller can watch
-      //  receiptSuccess to know when to proceed)
+      // The backend must only hear about a vault that actually exists on-chain;
+      // a reverted or dropped tx throws here and launchVault is never called.
+      await waitForSuccess(hash, robinhoodChain.id);
 
       // ── Step 4: tell the backend to mark the vault published ─────────────
       setIsConfirming(true);
@@ -105,7 +105,7 @@ export const useCreateEvmVault = () => {
 
       return { dbVaultId, onChainTxHash: hash };
     },
-    [creatorAddress, writeContractAsync]
+    [ensureChain, simulateAndWrite]
   );
 
   return {
@@ -125,14 +125,16 @@ export const useCreateEvmVault = () => {
 // fields the contract ABI declares as uint256 / uint64 etc.
 // Only converts values that look like integers in bigint-typed positions.
 // ---------------------------------------------------------------------------
-function normalizeBigInts(obj) {
+type BigIntified = bigint | string | boolean | null | undefined | BigIntified[] | { [k: string]: BigIntified };
+
+function normalizeBigInts(obj: unknown): BigIntified {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) return obj.map(normalizeBigInts);
   if (typeof obj === 'object') {
-    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, normalizeBigInts(v)]));
+    return Object.fromEntries(Object.entries(obj as Record<string, unknown>).map(([k, v]) => [k, normalizeBigInts(v)]));
   }
   // Convert string or number representations of integers to bigint
   if (typeof obj === 'string' && /^\d+$/.test(obj)) return BigInt(obj);
   if (typeof obj === 'number' && Number.isInteger(obj)) return BigInt(obj);
-  return obj;
+  return obj as BigIntified;
 }
