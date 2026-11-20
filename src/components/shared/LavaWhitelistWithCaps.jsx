@@ -33,7 +33,7 @@ export const LavaWhitelistWithCaps = ({
   itemPlaceholder = 'Search collection or paste Policy ID',
   whitelist = [],
   setWhitelist,
-  maxItems = 10,
+  maxItems = 30,
   errors = {},
   maxCapValue = 1000000000000, // 1 Trillion
   variant = 'default',

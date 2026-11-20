@@ -168,17 +168,24 @@ export const REBALANCE_STATUS_STYLES = {
 };
 
 // Categorical palette for basket segments; the reserve is always neutral steel.
+// One distinct colour per slot up to INDEX_MAX_ASSETS (15), so segments never repeat.
+// Ordered so neighbours differ in hue and lightness; avoid greys (reserve) and near-duplicates.
 const SEGMENT_COLORS = [
-  '#A3E635',
-  '#38BDF8',
-  '#F97316',
-  '#E879F9',
-  '#FACC15',
-  '#2DD4BF',
-  '#FB7185',
-  '#818CF8',
-  '#F59E0B',
-  '#34D399',
+  '#A3E635', // lime
+  '#38BDF8', // sky
+  '#F97316', // orange
+  '#E879F9', // fuchsia
+  '#FACC15', // yellow
+  '#2DD4BF', // teal
+  '#FB7185', // rose
+  '#818CF8', // indigo
+  '#B45309', // brown
+  '#16A34A', // green
+  '#DC2626', // red
+  '#2563EB', // blue
+  '#FDE68A', // cream
+  '#7C3AED', // violet
+  '#BE185D', // raspberry
 ];
 
 export const basketSegmentColor = index => SEGMENT_COLORS[index % SEGMENT_COLORS.length];

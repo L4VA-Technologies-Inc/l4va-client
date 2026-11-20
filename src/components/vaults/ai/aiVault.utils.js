@@ -232,7 +232,7 @@ export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   return enforceVaultCoherence(applyPresetToDraft(merged, presets));
 };
 
-const MAX_WHITELIST_ASSETS = 10;
+const MAX_WHITELIST_ASSETS = 30;
 
 /** Catalog hits from lookup_assets — drop them into the whitelist table, never inventing ids. */
 export const mergeResolvedAssets = (vault, resolvedAssets) => {
