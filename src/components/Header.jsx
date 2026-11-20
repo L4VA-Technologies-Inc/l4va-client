@@ -171,7 +171,11 @@ export const Header = () => {
               {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[500px] overflow-y-auto">
+          <DropdownMenuContent
+            align="end"
+            collisionPadding={16}
+            className="z-[1000] w-[calc(100vw-32px)] sm:w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[min(500px,calc(100dvh-var(--header-height)-24px))] overflow-y-auto"
+          >
             <div className="flex w-full justify-between items-center mb-4">
               <h3 className="font-bold">Notifications</h3>
               <button
