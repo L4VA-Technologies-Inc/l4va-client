@@ -85,6 +85,7 @@ export const ChatComposer = ({
   placeholder,
   maxLength = 4000,
   autoFocus = false,
+  leading = null,
 }) => {
   const textareaRef = useRef(null);
 
@@ -107,6 +108,7 @@ export const ChatComposer = ({
   return (
     <form onSubmit={submit}>
       <div className="relative flex items-end gap-2 rounded-[26px] border border-steel-750 bg-steel-850/90 px-2.5 py-1.5 shadow-xl shadow-black/20 backdrop-blur-md transition-colors duration-150 focus-within:border-orange-500/60">
+        {leading}
         <textarea
           ref={textareaRef}
           autoFocus={autoFocus}

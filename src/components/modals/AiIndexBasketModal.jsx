@@ -50,8 +50,8 @@ export const AiIndexBasketModal = ({ isOpen = true, onClose, basket, setBasket }
 
         <IndexBasketEditor steel value={localBasket} onChange={handleChange} />
 
-        <div className="flex items-center justify-between gap-4 pt-1">
-          <p className="text-sm text-dark-100">{problem || 'The basket is ready.'}</p>
+        <div className="flex items-center justify-center gap-4 pt-1 md:justify-between">
+          <p className="hidden text-sm text-dark-100 md:block">{problem || 'The basket is ready.'}</p>
           <PrimaryButton className="w-full md:w-auto justify-center" onClick={handleClose}>
             Done
           </PrimaryButton>
