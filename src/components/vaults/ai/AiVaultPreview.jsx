@@ -16,6 +16,7 @@ import {
   Upload,
 } from 'lucide-react';
 
+import { fieldMax, fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
 import { Chip } from '@/components/shared/Chip';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
@@ -24,9 +25,6 @@ import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
-  MAX_ACQUIRE_WINDOW_DURATION_MS,
-  MIN_ACQUIRE_WINDOW_DURATION_MS,
-  MIN_CONTRIBUTION_DURATION_MS,
   MIN_SUPPLY,
   MAX_SUPPLY,
   TERMINATION_TYPE_OPTIONS,
@@ -1235,7 +1233,7 @@ export const AiVaultPreview = ({
                 isAiSet={isAiSet('contributionDuration')}
                 isChanged={isChanged('contributionDuration')}
                 label="Contribution"
-                minMs={MIN_CONTRIBUTION_DURATION_MS}
+                minMs={fieldMin('contributionDuration')}
                 value={vault.contributionDuration}
                 onCommit={next => onUpdateVault('contributionDuration', next)}
               />
@@ -1264,8 +1262,8 @@ export const AiVaultPreview = ({
                 isAiSet={isAiSet('acquireWindowDuration')}
                 isChanged={isChanged('acquireWindowDuration')}
                 label="Acquire duration"
-                maxMs={MAX_ACQUIRE_WINDOW_DURATION_MS}
-                minMs={MIN_ACQUIRE_WINDOW_DURATION_MS}
+                maxMs={fieldMax('acquireWindowDuration')}
+                minMs={fieldMin('acquireWindowDuration')}
                 value={vault.acquireWindowDuration}
                 onCommit={next => onUpdateVault('acquireWindowDuration', next)}
               />
