@@ -1,7 +1,8 @@
+import { fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
-import { MIN_CONTRIBUTION_DURATION_MS, VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
+import { VALUE_METHOD_HINT } from '@/components/vaults/constants/vaults.constants';
 
 export const SemiPrivate = ({ data, errors = {}, updateField }) => (
   <div className="my-16 grid grid-cols-1 md:grid-cols-2 gap-16">
@@ -29,7 +30,7 @@ export const SemiPrivate = ({ data, errors = {}, updateField }) => (
             value={data.contributionDuration}
             error={errors.contributionDuration}
             onChange={value => updateField('contributionDuration', value)}
-            minMs={MIN_CONTRIBUTION_DURATION_MS}
+            minMs={fieldMin('contributionDuration')}
           />
           {errors.contributionDuration && <p className="text-red-600 mt-1">{errors.contributionDuration}</p>}
         </div>

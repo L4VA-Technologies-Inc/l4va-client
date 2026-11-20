@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { getFieldBounds, useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import { LavaSteelInput } from '@/components/shared/LavaInput';
@@ -7,10 +8,7 @@ import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { buildEvmOutcome } from '@/components/modals/CreateProposalModal/acquireExpansionOutcome.js';
-import {
-  MAX_ACQUIRE_WINDOW_DURATION_MS,
-  MIN_EXPANSION_DURATION_MS,
-} from '@/components/vaults/constants/vaults.constants';
+import { MIN_EXPANSION_DURATION_MS } from '@/components/vaults/constants/vaults.constants';
 import { ChainType } from '@/utils/types';
 import { useNativePrices } from '@/services/api/queries';
 
@@ -21,7 +19,9 @@ export default function AcquireExpansion({ onDataChange, error, vault }) {
   const exampleContributionAmount = isEvmVault ? 1 : 100;
   // Robinhood: the expansion window matches the acquire window (max 7 days) and is capped at 100,000 ETH.
   const maxAmount = isEvmVault ? 100000 : 1000000000;
-  const maxDurationMs = isEvmVault ? MAX_ACQUIRE_WINDOW_DURATION_MS : undefined;
+  // Same max as the acquire window, from the API vault spec for the vault's own chain.
+  useVaultSpec(isEvmVault ? 'robinhood' : 'cardano');
+  const maxDurationMs = isEvmVault ? getFieldBounds('acquireWindowDuration', 'robinhood').max : undefined;
   // On Robinhood the "limit" price is a fixed OTC-style price, not a limit order.
   const priceLabel = isEvmVault ? 'Fixed Price' : 'Limit Price';
   const [duration, setDuration] = useState(null);

@@ -19,6 +19,8 @@ import {
 } from '@/components/vaults/constants/vaults.constants';
 import { transformYupErrors } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
 
 const formatWithDecimal = value => {
   if (value === '' || value === null || value === undefined) return '';
@@ -29,6 +31,8 @@ const formatWithDecimal = value => {
 
 export const EditUpcomingVaultModal = ({ isOpen = true, onClose, vault }) => {
   const { currencyLabel } = useCurrency();
+  const { network } = useNetwork();
+  useVaultSpec(network);
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
