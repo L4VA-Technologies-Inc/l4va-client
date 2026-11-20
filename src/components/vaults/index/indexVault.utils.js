@@ -14,7 +14,7 @@ export const INDEX_DEFAULT_RESERVE_BPS = 1000;
 export const INDEX_MAX_RESERVE_BPS = 5000;
 /** Fallbacks until the API returns the admin limits (`supported.rebalance`). */
 export const INDEX_DEFAULT_REBALANCE_CADENCE_DAYS = 30;
-export const INDEX_MIN_REBALANCE_CADENCE_DAYS = 7;
+export const INDEX_MIN_REBALANCE_CADENCE_DAYS = 1;
 export const INDEX_MAX_REBALANCE_CADENCE_DAYS = 365;
 
 export const VAULT_ARCHETYPE_OPTIONS = [

@@ -2,7 +2,7 @@ import { getNetwork } from '@/hooks/useNetwork';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
   createEmptyWhitelistAsset,
-  initialVaultState,
+  getInitialVaultState,
   vaultSchema,
 } from '@/components/vaults/constants/vaults.constants';
 import {
@@ -222,7 +222,7 @@ export const enforceVaultCoherence = vault => {
 };
 
 export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
-  const merged = { ...(previousVault ?? initialVaultState), ...aiDraft };
+  const merged = { ...(previousVault ?? getInitialVaultState()), ...aiDraft };
   // Index vaults only fit the acquire-only preset; another preset the assistant
   // picks would bring its own governance values instead of the launch defaults.
   if (merged.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED) {

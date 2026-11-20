@@ -98,10 +98,6 @@ export const SupportModal = ({ initialMessage = '' } = {}) => {
   const [isClosing, setIsClosing] = useState(false);
   // After a closed chat the user can start over; until then the closed history stays visible.
   const [startingNew, setStartingNew] = useState(false);
-  // A prepared message after a closed chat goes straight to a new chat (the API opens a new ticket).
-  useEffect(() => {
-    if (initialMessage && ticket?.status === 'closed') setStartingNew(true);
-  }, [initialMessage, ticket?.status]);
   const listRef = useRef(null);
 
   const { data: ticket, isLoading } = useQuery({
@@ -112,6 +108,12 @@ export const SupportModal = ({ initialMessage = '' } = {}) => {
     refetchIntervalInBackground: false,
     staleTime: 0,
   });
+
+  // A prepared message after a closed chat goes straight to a new chat (the API opens a new ticket).
+  // Must come after the query: `ticket` is read here.
+  useEffect(() => {
+    if (initialMessage && ticket?.status === 'closed') setStartingNew(true);
+  }, [initialMessage, ticket?.status]);
 
   const isOpenChat = ticket?.status === 'open' && !startingNew;
   const showHistory = ticket && !startingNew;

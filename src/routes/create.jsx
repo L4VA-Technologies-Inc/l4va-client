@@ -42,7 +42,7 @@ const CreateComponent = () => {
     <>
       <div className="flex items-center justify-between py-4">
         <span className="w-40" />
-        <span className="font-russo text-4xl uppercase">Create Vault</span>
+        <span className="font-russo text-2xl uppercase tracking-tight md:text-3xl">Create Vault</span>
         <Link
           className="flex items-center gap-2 w-40 justify-end text-dark-100 hover:text-white transition-colors"
           to="/create-ai"
