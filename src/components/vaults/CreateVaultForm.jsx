@@ -55,6 +55,7 @@ import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
 import { clearVaultCreationDrafts, writeStoredVaultDraft } from '@/components/vaults/ai/aiVault.utils';
 import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import { getLaunchErrorMessage } from '@/utils/launchError';
 import {
@@ -98,7 +99,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
 
-  const { isRobinHood } = useNetwork();
+  const { network, isRobinHood } = useNetwork();
+  useVaultSpec(network);
   const archetypes = useVaultArchetypes();
   const { createEvmVault } = useCreateEvmVault();
   const { isConnected: isEvmConnected } = useAccount();

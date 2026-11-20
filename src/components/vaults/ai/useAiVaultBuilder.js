@@ -17,10 +17,11 @@ import {
 } from './aiVault.utils';
 import { createSmoothTextRevealer } from './smoothTextRevealer';
 
-import { initialVaultState } from '@/components/vaults/constants/vaults.constants';
+import { getInitialVaultState } from '@/components/vaults/constants/vaults.constants';
 import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 import { environments } from '@/constants/core.constants';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
 import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
 import { AiApiProvider } from '@/services/api/ai';
 import { CoreApiProvider } from '@/services/api/core';
@@ -72,12 +73,13 @@ const describeRemainingSteps = missingFields => {
 export const useAiVaultBuilder = () => {
   const restored = useRef(readSession()).current;
   const { network, isRobinHood } = useNetwork();
+  useVaultSpec(network);
 
   const [messages, setMessages] = useState(() => restored?.messages ?? [buildAiGreeting(isRobinHood)]);
   // The draft is shared with the manual create form via localStorage, so a manual edit made
   // between visits wins over this hook's own (possibly stale) session snapshot.
   const archetypes = useVaultArchetypes();
-  const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? initialVaultState);
+  const [vault, setVault] = useState(() => readStoredVaultDraft() ?? restored?.vault ?? getInitialVaultState());
 
   // The assistant never picks a vault type — it builds the one this chain
   // offers. Stamping it on every draft (including a reset or a fresh AI draft,
@@ -227,7 +229,7 @@ export const useAiVaultBuilder = () => {
         const streamedContent = await revealer.finish();
 
         // A reset request replaces the draft from scratch instead of merging onto the old one.
-        let base = response.resetDraft ? initialVaultState : vault;
+        let base = response.resetDraft ? getInitialVaultState() : vault;
         let draft = lockDraft(response.vaultDraft ?? {});
         let resolvedAssets = [...(response.resolvedAssets ?? [])];
         let candidate = withAiBasket(
@@ -251,14 +253,23 @@ export const useAiVaultBuilder = () => {
             options: firstOptions,
             indexBasket: correction.indexBasket?.targets?.length ? correction.indexBasket : firstBasket,
           };
-          if (correction.resetDraft) base = initialVaultState;
+          if (correction.resetDraft) base = getInitialVaultState();
           draft = { ...draft, ...lockDraft(correction.vaultDraft ?? {}) };
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
           candidate = withAiBasket(
             withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
             response
           );
+          const previousErrors = errors.join('\n');
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
+          // The model gave the same invalid answer again: another round trip would only add latency.
+          if (errors.join('\n') === previousErrors) {
+            console.warn(
+              '[ai-vault] correction did not fix the draft; check the API spec vs client validation',
+              errors
+            );
+            break;
+          }
         }
 
         if (errors.length) {
@@ -284,7 +295,7 @@ export const useAiVaultBuilder = () => {
         ];
         // Only values the assistant actually changed count as its suggestions. Re-sending a value that
         // was already there (a default, or one the user typed) leaves that field's ownership as it was.
-        const before = response.resetDraft ? initialVaultState : vault;
+        const before = response.resetDraft ? getInitialVaultState() : vault;
         const sameValue = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
         const aiChangedKeys = Object.keys(draft).filter(key => !sameValue(candidate[key], before[key]));
         const nextAiFields = response.resetDraft
@@ -403,7 +414,7 @@ export const useAiVaultBuilder = () => {
     clearVaultCreationDrafts();
     setPendingAction(null);
     setMessages([buildAiGreeting(isRobinHood)]);
-    setVault(withChainArchetype(initialVaultState));
+    setVault(withChainArchetype(getInitialVaultState()));
     setStatus('gathering');
     setMissingFields([]);
     setAiFields([]);

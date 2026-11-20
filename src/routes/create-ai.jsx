@@ -196,8 +196,8 @@ const CreateAiComponent = () => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="flex min-h-[calc(100dvh-var(--header-height)-var(--content-space-top))] flex-col lg:block lg:min-h-0 lg:pb-8">
-        <div className="flex flex-col items-start gap-2 py-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex h-[calc(var(--app-height,100dvh)-var(--header-height)-var(--content-space-top))] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible lg:pb-8">
+        <div className="flex shrink-0 flex-col items-start gap-2 pb-3 md:flex-row md:py-4 md:items-center md:justify-between">
           <button
             className="group order-last flex items-center gap-2 text-dark-100 transition-colors duration-150 hover:text-white active:opacity-70 md:order-none"
             type="button"
@@ -211,8 +211,8 @@ const CreateAiComponent = () => {
           </span>
           <span className="hidden w-32 md:block" />
         </div>
-        <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:items-start">
-          <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <AiVaultChat
               isGeneratingImage={builder.isGeneratingImage}
               isPreviewOpen={showPreview}
