@@ -752,7 +752,10 @@ export const getInitialVaultState = () => ({
   ...initialVaultState,
   allowAcquireExpansion: localStorage.getItem('selectedNetwork') === 'robinhood',
   contributionDuration: fieldMin('contributionDuration'),
-  acquireWindowDuration: Math.max(fieldMin('acquireWindowDuration') ?? 0, 172800000), // 48 hours default
+  // 48 hours default; staging (VITE_MIN_ACQUIRE_WINDOW_DURATION_MS set) starts at its minimum instead.
+  acquireWindowDuration: import.meta.env.VITE_MIN_ACQUIRE_WINDOW_DURATION_MS
+    ? fieldMin('acquireWindowDuration')
+    : Math.max(fieldMin('acquireWindowDuration') ?? 0, 172800000),
   // API vault spec default (Robinhood 10%); keeps the AI and the form starting from a valid value.
   liquidityPoolContribution: getFieldDefault('liquidityPoolContribution', initialVaultState.liquidityPoolContribution),
 });
