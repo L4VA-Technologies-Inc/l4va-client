@@ -229,7 +229,13 @@ export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
     const acquireOnly = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
     if (acquireOnly) merged.preset_id = acquireOnly.id;
   }
-  return enforceVaultCoherence(applyPresetToDraft(merged, presets));
+  const withPreset = applyPresetToDraft(merged, presets);
+  // A locked preset overwrites its config fields, but the LP share is a creator choice the
+  // assistant sets explicitly (acquire_only's config says 0, which Robinhood's 5–20% range rejects).
+  // Keep the value the assistant sent this turn, or the one the draft already had.
+  const lp = aiDraft?.liquidityPoolContribution ?? previousVault?.liquidityPoolContribution;
+  if (lp !== null && lp !== undefined) withPreset.liquidityPoolContribution = lp;
+  return enforceVaultCoherence(withPreset);
 };
 
 // Mirrors l4va-api MAX_ASSETS_WHITELIST_BY_CHAIN (Robinhood: 16 termination slots, one kept for ETH).

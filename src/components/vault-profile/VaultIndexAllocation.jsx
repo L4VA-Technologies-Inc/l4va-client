@@ -32,7 +32,9 @@ const InfoTip = ({ children, align = 'left' }) => (
     <span
       role="tooltip"
       className={cn(
-        'pointer-events-none absolute top-full z-20 mt-2 w-64 rounded-lg bg-steel-850 px-3 py-2 text-xs font-normal leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100',
+        // `hidden` (not opacity-0) so the closed tooltip takes no layout space: an invisible
+        // 16rem box near the card edge widened the page on phones.
+        'pointer-events-none absolute top-full z-20 mt-2 hidden w-64 max-w-[calc(100vw-3rem)] rounded-lg bg-steel-850 px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-lg group-hover:block group-focus-within:block',
         align === 'right' ? 'right-0' : '-left-2'
       )}
     >
