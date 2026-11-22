@@ -5,6 +5,7 @@ import { Spinner } from '@/components/Spinner';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
 import { IndexBasketEditor } from '@/components/vaults/index/IndexBasketEditor';
+import { useVaultBasketCap } from '@/hooks/useBasketAssetCap';
 import {
   formatBps,
   formatNativeWei,
@@ -83,8 +84,10 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
   }, [current, basket]);
 
   const { data: supported } = useIndexSupportedAssets();
+  // The vault's own cap (its contract version), not the one new vaults get.
+  const maxAssets = useVaultBasketCap(vault);
   const problem = basket
-    ? validateIndexBasket(basket, supported?.rebalance?.minCadenceDays)
+    ? validateIndexBasket(basket, supported?.rebalance?.minCadenceDays, maxAssets)
     : 'Loading the current basket';
   const weightsUnchanged = sameBasket(current, basket);
   const scheduleUnchanged = sameSchedule(current, basket);
@@ -175,6 +178,7 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
       <IndexBasketEditor
         steel
         vaultId={vault?.id}
+        maxAssets={maxAssets}
         value={basket}
         onChange={setBasket}
         error={

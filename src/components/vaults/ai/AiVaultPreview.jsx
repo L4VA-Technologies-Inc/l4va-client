@@ -38,16 +38,12 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useNewVaultBasketCap } from '@/hooks/useBasketAssetCap';
 import { useNativePrices } from '@/services/api/queries';
 import { isImeComposing } from '@/utils/keyboard';
 import { useSyncedBasketRoutes } from '@/components/vaults/index/IndexBasketEditor';
 import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
-import {
-  formatBps,
-  INDEX_MAX_ASSETS,
-  validateIndexBasket,
-  VAULT_ARCHETYPES,
-} from '@/components/vaults/index/indexVault.utils';
+import { formatBps, validateIndexBasket, VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
 const isEmptyValue = value =>
@@ -664,6 +660,9 @@ export const AiVaultPreview = ({
   const canOpenInForm = vaultSchema.isValidSync(vault) && !tickerConflict;
   const whitelistAssets = (vault.assetsWhitelist || []).filter(item => item?.policyId);
   const whitelistCount = whitelistAssets.length;
+  // Robinhood: the whitelist shares the basket cap (termination slots minus native ETH).
+  const basketCap = useNewVaultBasketCap();
+  const maxWhitelist = isRobinHood ? basketCap : 10;
   // An index vault has no whitelist to curate: its "assets" are the basket it
   // buys, which the assistant cannot invent and the user picks here.
   const isIndexVault = vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
@@ -1017,7 +1016,7 @@ export const AiVaultPreview = ({
               <div className="flex items-center justify-between">
                 <span className="text-sm text-dark-100">Index basket</span>
                 <span className="text-dark-100 text-sm">
-                  {basketTargets.length}/{INDEX_MAX_ASSETS}
+                  {basketTargets.length}/{basketCap}
                 </span>
               </div>
               {basketTargets.length > 0 ? (
@@ -1064,7 +1063,9 @@ export const AiVaultPreview = ({
             <div className="pb-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-dark-100">Asset whitelist</span>
-                <span className="text-dark-100 text-sm">{whitelistCount}/10</span>
+                <span className="text-dark-100 text-sm">
+                  {whitelistCount}/{maxWhitelist}
+                </span>
               </div>
               {whitelistAssets.length > 0 ? (
                 <ul className="mt-3 space-y-2">
