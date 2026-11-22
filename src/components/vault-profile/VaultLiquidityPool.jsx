@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, Copy, Droplets, ExternalLink } from 'lucide-react';
+import { useAccount } from 'wagmi';
 
 import { useCurrency } from '@/hooks/useCurrency';
 import { useVaultLp } from '@/services/api/queries';
@@ -75,6 +76,98 @@ const CopyId = ({ value }) => {
   );
 };
 
+const COLLAPSED_ROWS = 5;
+
+/**
+ * Every live position in the v4 pool (vault and other LPs), share by value. Voting and payouts
+ * count only the VT inside a position, so an ETH-only (out-of-range) position has no vote.
+ */
+const PoolPositions = ({ positions, ticker, money, positionsUrl, account }) => {
+  const [expanded, setExpanded] = useState(false);
+  const me = account?.toLowerCase();
+  const rows = expanded ? positions : positions.slice(0, COLLAPSED_ROWS);
+  const others = positions.filter(p => !p.isVault).length;
+
+  return (
+    <div className="space-y-3 rounded-lg bg-steel-850 p-4 lg:col-span-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white">
+          Positions ({positions.length})
+          <span className="ml-2 font-normal normal-case tracking-normal text-dark-100">
+            {positions.length - others} vault · {others} other
+          </span>
+        </p>
+        <p className="text-[11px] text-dark-100" title="Voting and payouts count only the VT inside a position.">
+          Share by value · votes count VT in position only
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[520px] text-sm">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-wider text-dark-100">
+              <th className="pb-2 font-semibold">Owner</th>
+              <th className="pb-2 text-right font-semibold">{ticker}</th>
+              <th className="pb-2 text-right font-semibold">ETH</th>
+              <th className="pb-2 text-right font-semibold">Value</th>
+              <th className="pb-2 text-right font-semibold">Share</th>
+            </tr>
+          </thead>
+          <tbody className="tabular-nums">
+            {rows.map(p => (
+              <tr key={p.tokenId} className="border-t border-steel-800">
+                <td className="py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {positionsUrl ? (
+                      <a
+                        href={`${positionsUrl}/instance/${p.tokenId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono hover:underline"
+                        title={`Position #${p.tokenId} · ${p.owner}`}
+                      >
+                        {p.isVault ? 'Vault' : shortAddress(p.owner)}
+                      </a>
+                    ) : (
+                      <span className="font-mono">{p.isVault ? 'Vault' : shortAddress(p.owner)}</span>
+                    )}
+                    {p.isVault && (
+                      <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] text-orange-500">
+                        Vault
+                      </span>
+                    )}
+                    {me && p.owner === me && (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400">
+                        You
+                      </span>
+                    )}
+                    {!p.inRange && (
+                      <span
+                        className="rounded-full bg-yellow-400/10 px-2 py-0.5 text-[10px] text-yellow-400"
+                        title="The pool price is outside this position's range: it holds one token and earns no fees until the price returns."
+                      >
+                        Out of range
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-2 text-right">{formatAmount(p.vt, 2)}</td>
+                <td className="py-2 text-right">{formatAmount(p.native)}</td>
+                <td className="py-2 text-right">{money(p.valueNative)}</td>
+                <td className="py-2 text-right">{p.sharePct === null ? '—' : `${formatAmount(p.sharePct, 2)}%`}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {positions.length > COLLAPSED_ROWS && (
+        <button type="button" onClick={() => setExpanded(v => !v)} className="text-xs text-dark-100 hover:text-white">
+          {expanded ? 'Show less' : `Show all ${positions.length}`}
+        </button>
+      )}
+    </div>
+  );
+};
+
 /**
  * VT/ETH pool the backend seeds when an EVM vault's raise closes with an LP
  * contribution. Shows the pending state until the pool exists, then live reserves.
@@ -84,6 +177,7 @@ export const VaultLiquidityPool = ({ vault }) => {
     vault?.chainType === ChainType.ROBINHOOD && (Number(vault?.liquidityPoolContribution) > 0 || isIndexVault(vault));
   const { data: lp } = useVaultLp(vault?.id, enabled);
   const { currency, currencySymbol, pickByCurrency } = useCurrency();
+  const { address: account } = useAccount();
 
   if (!enabled || !lp) return null;
 
@@ -105,10 +199,15 @@ export const VaultLiquidityPool = ({ vault }) => {
   const poolRef = isV4 ? lp.poolId : lp.pair;
   const poolUrl = poolRef ? `https://dexscreener.com/robinhood/${poolRef.toLowerCase()}` : null;
 
-  // Vault's own slice of the pool (positions are full range, so share × totals is exact).
+  // Share of the pool by value. v4 sends exact per-position sums; V2 is one pro-rata LP token.
   const share = lp.vaultSharePct === null || lp.vaultSharePct === undefined ? null : Number(lp.vaultSharePct);
-  const vaultVt = share === null ? null : (Number(lp.reserveVt) * share) / 100;
-  const vaultNative = share === null ? null : (Number(lp.reserveNative) * share) / 100;
+  const hasPositions = isV4 && Array.isArray(lp.positions);
+  const vaultVt = hasPositions ? Number(lp.vaultVt) : share === null ? null : (Number(lp.reserveVt) * share) / 100;
+  const vaultNative = hasPositions
+    ? Number(lp.vaultNative)
+    : share === null
+      ? null
+      : (Number(lp.reserveNative) * share) / 100;
 
   // ETH amounts → selected currency (ETH stays as is; USD/ADA need the backend's rates).
   const ethUsd = Number(lp.prices?.ethUsd) || 0;
@@ -126,9 +225,16 @@ export const VaultLiquidityPool = ({ vault }) => {
   const priceNative = Number(lp.vtPriceNative) || null;
   const priceLabel =
     currency === 'eth' ? formatPrice(priceNative) : formatMoney(toCurrency(priceNative), currencySymbol);
-  // Full-range pool: the VT side is worth the ETH side, so value = 2 × ETH side.
-  const poolValue = lp.reserveNative != null ? Number(lp.reserveNative) * 2 : null;
-  const vaultValue = vaultNative === null ? null : vaultNative * 2;
+  // v4: summed per position (any tick range). V2 is always full range: value = 2 × ETH side.
+  const poolValue = hasPositions
+    ? Number(lp.totalValueNative)
+    : lp.reserveNative != null
+      ? Number(lp.reserveNative) * 2
+      : null;
+  const vaultValue = hasPositions ? Number(lp.vaultValueNative) / 1e18 : vaultNative === null ? null : vaultNative * 2;
+  const positionsUrl = lp.positionManager
+    ? getAddressUrl(lp.positionManager, ChainType.ROBINHOOD).replace('/address/', '/token/')
+    : null;
 
   return (
     <section className="mb-8 space-y-5 rounded-xl border border-steel-800 p-5 md:p-6">
@@ -187,6 +293,15 @@ export const VaultLiquidityPool = ({ vault }) => {
             <Stat label="Value" value={money(vaultValue)} />
             <Stat label="Share of pool" value={share === null ? '—' : `${formatAmount(share, 2)}%`} />
           </StatGroup>
+          {hasPositions && (
+            <PoolPositions
+              positions={lp.positions}
+              ticker={ticker}
+              money={money}
+              positionsUrl={positionsUrl}
+              account={account}
+            />
+          )}
         </div>
       ) : (
         <p className="text-sm text-dark-100">
