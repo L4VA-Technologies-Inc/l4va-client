@@ -7,11 +7,11 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { AssetSearchInput } from '@/components/shared/AssetSearchInput';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { useAssetSource } from '@/hooks/useAssetSource';
+import { useNewVaultBasketCap } from '@/hooks/useBasketAssetCap';
 import { indexAssetRoutesQuery, useIndexSupportedAssets } from '@/services/api/queries';
 import {
   BPS,
   INDEX_DEFAULT_REBALANCE_CADENCE_DAYS,
-  INDEX_MAX_ASSETS,
   INDEX_MAX_REBALANCE_CADENCE_DAYS,
   INDEX_MAX_RESERVE_BPS,
   INDEX_MIN_REBALANCE_CADENCE_DAYS,
@@ -345,12 +345,16 @@ export const IndexBasketEditor = ({
   steel = false,
   className = '',
   vaultId = null,
+  /** Basket cap of the vault being edited; defaults to the cap of a new vault. */
+  maxAssets = null,
 }) => {
+  const newVaultCap = useNewVaultBasketCap();
+  const cap = maxAssets ?? newVaultCap;
   const targets = useMemo(() => value?.targets || [], [value?.targets]);
   const reserveBps = Number(value?.reserveBps ?? 0);
   const total = totalWeightBps(targets);
   const existing = useMemo(() => new Set(targets.map(t => t.assetAddress.toLowerCase())), [targets]);
-  const isFull = targets.length >= INDEX_MAX_ASSETS;
+  const isFull = targets.length >= cap;
   const { data: supported } = useIndexSupportedAssets();
 
   const autoRebalance = value?.autoRebalance !== false;
@@ -402,7 +406,7 @@ export const IndexBasketEditor = ({
           <span className="font-bold uppercase">Index basket</span>
           <HoverHelp hint="The tokens this vault holds and the share of the vault each one should make up. After the acquire window locks, the vault buys these tokens with the ETH it raised. Weights apply to the vault value after the cash reserve." />
           <span className="text-sm text-dark-100">
-            {targets.length}/{INDEX_MAX_ASSETS}
+            {targets.length}/{cap}
           </span>
         </div>
         {targets.length > 1 && (
@@ -429,7 +433,7 @@ export const IndexBasketEditor = ({
       ) : (
         <AssetPicker existing={existing} onAdd={addAsset} disabled={disabled || isFull} steel={steel} />
       )}
-      {isFull && <p className="text-sm text-dark-100">The basket is full ({INDEX_MAX_ASSETS} assets).</p>}
+      {isFull && <p className="text-sm text-dark-100">The basket is full ({cap} assets).</p>}
 
       {targets.length > 0 && (
         <ul className="space-y-2">

@@ -3,7 +3,13 @@ import * as yup from 'yup';
 import { environments } from '@/constants/core.constants.js';
 import { fieldMin, getFieldDefault, specBoundsTest } from '@/components/vaults/constants/vaultSpecBounds';
 import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
-import { VAULT_ARCHETYPES, emptyIndexBasket, validateIndexBasket } from '@/components/vaults/index/indexVault.utils';
+import {
+  VAULT_ARCHETYPES,
+  emptyIndexBasket,
+  getNewVaultBasketCap,
+  validateIndexBasket,
+} from '@/components/vaults/index/indexVault.utils';
+import { getNetwork } from '@/hooks/useNetwork';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
@@ -383,7 +389,13 @@ export const vaultSchema = yup.object({
           .of(assetWhitelistItemSchema)
           .required('Assets whitelist is required')
           .min(1, 'Assets whitelist must have at least 1 item')
-          .max(10, 'Assets whitelist can have a maximum of 10 items'),
+          .test('whitelist-max', function whitelistMax(value) {
+            // Mirrors l4va-api maxAssetsWhitelistFor: Robinhood = the new-vault basket cap, Cardano = 10.
+            const max = getNetwork() === 'robinhood' ? getNewVaultBasketCap() : 10;
+            return (value?.length ?? 0) <= max
+              ? true
+              : this.createError({ message: `Assets whitelist can have a maximum of ${max} items` });
+          }),
     }),
   contributionDuration: yup
     .number()

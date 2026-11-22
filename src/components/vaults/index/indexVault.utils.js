@@ -7,8 +7,20 @@ export const VAULT_ARCHETYPES = {
 };
 
 export const BPS = 10000;
-/** Mirrors l4va-api `INDEX_MAX_ASSETS`: 16 termination slots on-chain, one kept for native ETH. */
-export const INDEX_MAX_ASSETS = 15;
+/**
+ * Fallback basket cap: V8–V13 contracts take 16 assets at termination, one slot kept for native ETH.
+ * The API sends the real cap — `evm_max_basket_assets` (vault-creation-flags) for new vaults and
+ * `vault.maxBasketAssets` for existing ones — since newer contracts raise it.
+ */
+export const DEFAULT_INDEX_MAX_ASSETS = 15;
+
+let newVaultBasketCap = DEFAULT_INDEX_MAX_ASSETS;
+/** Records the cap of vaults the current factory deploys (from vault-creation-flags). */
+export const setNewVaultBasketCap = cap => {
+  if (Number.isInteger(cap) && cap > 0) newVaultBasketCap = cap;
+};
+/** Basket cap of a NEW vault. Outside React (yup schemas); components use `useNewVaultBasketCap`. */
+export const getNewVaultBasketCap = () => newVaultBasketCap;
 export const INDEX_MIN_WEIGHT_BPS = 100;
 export const INDEX_DEFAULT_RESERVE_BPS = 1000;
 export const INDEX_MAX_RESERVE_BPS = 5000;
@@ -68,10 +80,14 @@ export const evenWeights = count => {
 };
 
 /** Returns a user-facing problem with the basket, or null when it can launch. */
-export const validateIndexBasket = (basket, minCadenceDays = INDEX_MIN_REBALANCE_CADENCE_DAYS) => {
+export const validateIndexBasket = (
+  basket,
+  minCadenceDays = INDEX_MIN_REBALANCE_CADENCE_DAYS,
+  maxAssets = getNewVaultBasketCap()
+) => {
   const targets = basket?.targets || [];
   if (targets.length === 0) return 'Add at least one asset to the basket';
-  if (targets.length > INDEX_MAX_ASSETS) return `The basket can hold at most ${INDEX_MAX_ASSETS} assets`;
+  if (targets.length > maxAssets) return `The basket can hold at most ${maxAssets} assets`;
   if (targets.some(t => !/^0x[0-9a-fA-F]{40}$/.test(t.assetAddress || ''))) {
     return 'Every basket asset needs a valid token address';
   }
@@ -168,7 +184,7 @@ export const REBALANCE_STATUS_STYLES = {
 };
 
 // Categorical palette for basket segments; the reserve is always neutral steel.
-// One distinct colour per slot up to INDEX_MAX_ASSETS (15), so segments never repeat.
+// 15 distinct colours; bigger baskets (newer contracts allow more) cycle through them.
 // Ordered so neighbours differ in hue and lightness; avoid greys (reserve) and near-duplicates.
 const SEGMENT_COLORS = [
   '#A3E635', // lime

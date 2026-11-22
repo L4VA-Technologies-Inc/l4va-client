@@ -34,7 +34,83 @@ const run = (id, trigger, status, legs, extra = {}) => ({
   ...extra,
 });
 
+// A large basket: 50 assets around 1.8% each, a few far off target, 10% cash.
+const NAMES = [
+  'L4VA',
+  'KIDDIES',
+  'SFI',
+  'ROBINCAT',
+  'CRASHCAT',
+  'WOOF',
+  'AGI',
+  'FLOW',
+  'RIPPLES',
+  'PROPS',
+  'WISHBONE',
+  'GAGE',
+  'SYNTHS',
+  'DARWIN',
+  'UNI',
+  'NOVA',
+  'KITE',
+  'ORBIT',
+  'PIXEL',
+  'MOSS',
+  'EMBER',
+  'QUILL',
+  'TIDE',
+  'BOLT',
+  'FERN',
+  'ONYX',
+  'LYNX',
+  'HALO',
+  'VOLT',
+  'JADE',
+  'RUNE',
+  'SAGE',
+  'ZEST',
+  'COVE',
+  'DUNE',
+  'FLUX',
+  'GRIT',
+  'HIVE',
+  'IRIS',
+  'JOLT',
+  'KOI',
+  'LUME',
+  'MINT',
+  'NEST',
+  'OPAL',
+  'PEAK',
+  'RIFT',
+  'SILK',
+  'TUSK',
+  'WAVE',
+];
+const bigBasket = n => {
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const assets = NAMES.slice(0, n).map((symbol, i) => ({
+    assetAddress: `0x${(i + 16).toString(16).padStart(40, '0')}`,
+    symbol,
+    name: symbol,
+  }));
+  const target = Math.floor(9000 / n);
+  const holdings = assets.map((a, i) => {
+    let actual = Math.round(target * (0.85 + rnd() * 0.3));
+    if ([3, 11, 27, 40].includes(i)) actual = target + 250 + Math.round(rnd() * 300);
+    if ([8, 33].includes(i)) actual = Math.max(0, target - 220);
+    return holding(a, target, actual, +(actual * 0.0032).toFixed(2));
+  });
+  return {
+    config: { reserveBps: 1000, targets: assets.map(a => ({ ...a, weightBps: Math.floor(10000 / n) })) },
+    portfolio: { assets: holdings, reserve: { targetBps: 1000, actualBps: 1000, ...usd(3.2) } },
+  };
+};
+
 const CASES = [
+  { title: 'Large basket — 50 assets (top 10 + others, List / Tiles / Drift)', ...bigBasket(50) },
+  { title: 'Medium basket — 6 assets (switcher, no list controls)', ...bigBasket(6) },
   {
     title: 'Before lock — target weights only',
     config: {

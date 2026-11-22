@@ -8,6 +8,7 @@ import {
 import {
   basketToAssetsWhitelist,
   emptyIndexBasket,
+  getNewVaultBasketCap,
   VAULT_ARCHETYPES,
 } from '@/components/vaults/index/indexVault.utils';
 
@@ -238,8 +239,8 @@ export const buildVaultFromAiDraft = (previousVault, aiDraft, presets) => {
   return enforceVaultCoherence(withPreset);
 };
 
-// Mirrors l4va-api MAX_ASSETS_WHITELIST_BY_CHAIN (Robinhood: 16 termination slots, one kept for ETH).
-const maxWhitelistAssets = () => (getNetwork() === 'robinhood' ? 15 : 10);
+// Mirrors l4va-api maxAssetsWhitelistFor: Robinhood = the new-vault basket cap, Cardano = 10.
+const maxWhitelistAssets = () => (getNetwork() === 'robinhood' ? getNewVaultBasketCap() : 10);
 
 /** Catalog hits from lookup_assets — drop them into the whitelist table, never inventing ids. */
 export const mergeResolvedAssets = (vault, resolvedAssets) => {

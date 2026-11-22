@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ExternalLink, Info, Layers, PieChart, RefreshCcw, Wallet } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -5,6 +6,20 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { Spinner } from '@/components/Spinner';
 import { useVaultIndex } from '@/services/api/queries';
 import { BasketAllocationBar } from '@/components/vaults/index/IndexBasketEditor';
+import {
+  BasketDriftChart,
+  BasketSummary,
+  BasketTiles,
+  DRIFT_ALERT_BPS,
+  DRIFT_NOTICE_BPS,
+  LARGE_BASKET_ASSETS,
+  OTHERS_COLOR,
+  SWITCHER_MIN_ASSETS,
+  TOP_N,
+  ViewSwitch,
+  useBasketView,
+  useListControls,
+} from '@/components/vault-profile/IndexBasketViews';
 import {
   REBALANCE_STATUS_STYLES,
   REBALANCE_TRIGGER_LABELS,
@@ -17,9 +32,6 @@ import { getTransactionUrl } from '@/utils/explorer.utils';
 import { ChainType } from '@/utils/types';
 import { formatDateWithTime, formatNum } from '@/utils/core.utils';
 
-// Drift below this is noise and shown muted; above the second bound it is flagged.
-const DRIFT_NOTICE_BPS = 200;
-const DRIFT_ALERT_BPS = 500;
 const OUTSIDE_BASKET_COLOR = '#64748B';
 const RESERVE_COLOR = 'var(--color-steel-600)';
 
@@ -247,24 +259,57 @@ const RebalanceHistory = ({ rebalances }) => {
  * the dev mock page. `formatValue` renders a `{ valueNative, valueUsd, valueAda }`.
  */
 export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error, formatValue, terminated = false }) => {
+  // Hooks first: the early return below must not change their order.
+  const [storedView, setView] = useBasketView();
+  const [filter, setFilter] = useState('all');
+  const holdings = portfolio && !portfolio.error ? portfolio.assets : [];
+  const list = useListControls(holdings, { filter, setFilter });
+
   if (!config?.targets?.length) {
     return error ? <p className="py-6 text-center text-dark-100">The index basket could not be loaded.</p> : null;
   }
 
-  const hasHoldings = portfolio && !portfolio.error && portfolio.assets.length > 0;
+  const hasHoldings = holdings.length > 0;
   const status = hasHoldings ? basketStatus(portfolio, rebalances) : null;
+  // A large basket colours only its top N by weight; the rest share one "Others" colour, since a
+  // 15-colour palette repeating across 50 assets would no longer tell tokens apart.
+  const large = holdings.length > LARGE_BASKET_ASSETS;
+  const showSwitcher = holdings.length >= SWITCHER_MIN_ASSETS;
+  const view = showSwitcher ? storedView : 'list';
+  const topRank = new Map(
+    [...holdings]
+      .sort((a, b) => b.actualBps - a.actualBps)
+      .slice(0, TOP_N)
+      .map((a, i) => [a.assetAddress, i])
+  );
   const colorFor = asset => {
+    if (large)
+      return topRank.has(asset.assetAddress) ? basketSegmentColor(topRank.get(asset.assetAddress)) : OTHERS_COLOR;
     const idx = config.targets.findIndex(c => c.assetAddress === asset.assetAddress);
     return idx >= 0 ? basketSegmentColor(idx) : OUTSIDE_BASKET_COLOR;
   };
+  const others = large ? holdings.filter(a => !topRank.has(a.assetAddress)) : [];
+  const assetSegments = large
+    ? [
+        ...holdings
+          .filter(a => topRank.has(a.assetAddress))
+          .sort((a, b) => topRank.get(a.assetAddress) - topRank.get(b.assetAddress)),
+        {
+          assetAddress: 'others',
+          symbol: `${others.length} others`,
+          actualBps: others.reduce((n, a) => n + a.actualBps, 0),
+          targetBps: others.reduce((n, a) => n + a.targetBps, 0),
+        },
+      ]
+    : holdings;
   const segments = hasHoldings
     ? [
-        ...portfolio.assets.map(a => ({
+        ...assetSegments.map(a => ({
           key: a.assetAddress,
           label: a.symbol,
           actualBps: a.actualBps,
           targetBps: a.targetBps,
-          color: colorFor(a),
+          color: a.assetAddress === 'others' ? OTHERS_COLOR : colorFor(a),
         })),
         {
           key: 'reserve',
@@ -285,7 +330,8 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
           {config.version > 1 && <span className="text-xs text-dark-100">v{config.version} · set by governance</span>}
         </div>
         {status && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {showSwitcher && <ViewSwitch view={view} onChange={setView} />}
             <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', status.className)}>{status.label}</span>
             <InfoTip align="right">
               Values are live swap quotes into ETH, refreshed every minute. Ticks on the bar mark target weights; drift
@@ -308,6 +354,16 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
         </>
       ) : (
         <>
+          {showSwitcher && (
+            <BasketSummary
+              portfolio={portfolio}
+              onShowDrifting={() => {
+                setView('list');
+                setFilter('drifting');
+              }}
+            />
+          )}
+
           <div className="space-y-3">
             <AllocationBar segments={segments} />
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-100">
@@ -325,45 +381,56 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
             </div>
           </div>
 
-          <div>
-            <div className={cn('hidden pb-2 text-xs text-dark-100', ROW_GRID)}>
-              <span>Asset</span>
-              <span className="text-right">Weight</span>
-              <span className="text-right">Drift</span>
-              <span className="text-right">Value</span>
+          {view === 'tiles' && <BasketTiles assets={holdings} formatValue={formatValue} />}
+          {view === 'drift' && <BasketDriftChart assets={holdings} />}
+
+          {view === 'list' && (
+            <div className="space-y-3">
+              {large && list.controls}
+              <div>
+                <div className={cn('hidden pb-2 text-xs text-dark-100', ROW_GRID)}>
+                  <span>Asset</span>
+                  <span className="text-right">Weight</span>
+                  <span className="text-right">Drift</span>
+                  <span className="text-right">Value</span>
+                </div>
+                <ul className="divide-y divide-steel-800 border-y border-steel-800">
+                  {(large ? list.rows : holdings).map(asset => (
+                    <HoldingRow
+                      key={asset.assetAddress}
+                      asset={<TokenCell asset={asset} color={colorFor(asset)} />}
+                      note={!asset.inBasket && 'Leaving the basket — sold at the next rebalance'}
+                      actualBps={asset.actualBps}
+                      targetBps={asset.targetBps}
+                      driftBps={asset.driftBps}
+                      value={formatValue(asset)}
+                    />
+                  ))}
+                  {(!large || filter === 'all') && (
+                    <HoldingRow
+                      asset={
+                        <div className="flex items-center gap-3">
+                          <span className="h-6 w-1 flex-shrink-0 rounded-full" style={{ background: RESERVE_COLOR }} />
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-steel-750">
+                            <Wallet className="h-4 w-4 text-dark-100" />
+                          </span>
+                          <div>
+                            <p className="font-medium">Cash reserve</p>
+                            <p className="text-xs text-dark-100">ETH</p>
+                          </div>
+                        </div>
+                      }
+                      actualBps={portfolio.reserve.actualBps}
+                      targetBps={portfolio.reserve.targetBps}
+                      driftBps={portfolio.reserve.actualBps - portfolio.reserve.targetBps}
+                      value={formatValue(portfolio.reserve)}
+                    />
+                  )}
+                </ul>
+              </div>
+              {large && list.footer}
             </div>
-            <ul className="divide-y divide-steel-800 border-y border-steel-800">
-              {portfolio.assets.map(asset => (
-                <HoldingRow
-                  key={asset.assetAddress}
-                  asset={<TokenCell asset={asset} color={colorFor(asset)} />}
-                  note={!asset.inBasket && 'Leaving the basket — sold at the next rebalance'}
-                  actualBps={asset.actualBps}
-                  targetBps={asset.targetBps}
-                  driftBps={asset.driftBps}
-                  value={formatValue(asset)}
-                />
-              ))}
-              <HoldingRow
-                asset={
-                  <div className="flex items-center gap-3">
-                    <span className="h-6 w-1 flex-shrink-0 rounded-full" style={{ background: RESERVE_COLOR }} />
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-steel-750">
-                      <Wallet className="h-4 w-4 text-dark-100" />
-                    </span>
-                    <div>
-                      <p className="font-medium">Cash reserve</p>
-                      <p className="text-xs text-dark-100">ETH</p>
-                    </div>
-                  </div>
-                }
-                actualBps={portfolio.reserve.actualBps}
-                targetBps={portfolio.reserve.targetBps}
-                driftBps={portfolio.reserve.actualBps - portfolio.reserve.targetBps}
-                value={formatValue(portfolio.reserve)}
-              />
-            </ul>
-          </div>
+          )}
 
           {portfolio.lp && (
             <div className="flex items-center justify-between gap-3 rounded-lg bg-steel-850 px-4 py-3 text-sm">
