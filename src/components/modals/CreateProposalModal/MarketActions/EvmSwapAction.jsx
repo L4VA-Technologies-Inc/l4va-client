@@ -39,10 +39,10 @@ const formatAmount = (raw, decimals) => {
  */
 const useTokenOptions = vault => {
   const isIndex = isIndexVault(vault);
-  const { data: index } = useVaultIndex(vault?.id, isIndex);
-  const { data: supported } = useIndexSupportedAssets();
+  const { data: index, isLoading: indexLoading } = useVaultIndex(vault?.id, isIndex);
+  const { data: supported, isLoading: supportedLoading } = useIndexSupportedAssets();
 
-  return useMemo(() => {
+  const tokens = useMemo(() => {
     const byAddress = new Map([[NATIVE, NATIVE_TOKEN]]);
     const add = t => {
       const address = t.assetAddress?.toLowerCase();
@@ -54,14 +54,19 @@ const useTokenOptions = vault => {
     (supported?.assets || []).forEach(add);
     return [...byAddress.values()];
   }, [index, supported]);
+  return { tokens, loading: (isIndex && indexLoading) || supportedLoading };
 };
 
 /** Vault balance of every option, keyed by address (undefined while loading). */
 const useVaultBalances = (vaultAddress, tokens) => {
   const enabled = isValidAddress(vaultAddress || '');
   const erc20s = tokens.filter(t => t.address !== NATIVE);
-  const { data: native } = useBalance({ address: vaultAddress, chainId: robinhoodChain.id, query: { enabled } });
-  const { data: results } = useReadContracts({
+  const { data: native, isLoading: nativeLoading } = useBalance({
+    address: vaultAddress,
+    chainId: robinhoodChain.id,
+    query: { enabled },
+  });
+  const { data: results, isLoading: erc20Loading } = useReadContracts({
     contracts: erc20s.map(t => ({
       address: t.address,
       abi: erc20Abi,
@@ -72,7 +77,7 @@ const useVaultBalances = (vaultAddress, tokens) => {
     query: { enabled: enabled && erc20s.length > 0 },
   });
 
-  return useMemo(() => {
+  const balances = useMemo(() => {
     const map = new Map();
     if (native) map.set(NATIVE, native.value);
     erc20s.forEach((t, i) => {
@@ -83,6 +88,7 @@ const useVaultBalances = (vaultAddress, tokens) => {
     // erc20s is derived from tokens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [native, results, tokens]);
+  return { balances, loading: nativeLoading || erc20Loading };
 };
 
 /** One plain-text line about the Uniswap route of the non-ETH side of the swap. */
@@ -202,8 +208,11 @@ const SwapRow = ({ action, tokens, balances, vaultId, canRemove, showErrors, onU
 };
 
 const EvmSwapAction = ({ vault, onDataChange, error }) => {
-  const tokens = useTokenOptions(vault);
-  const balances = useVaultBalances(vault?.contractAddress, tokens);
+  const { tokens, loading: tokensLoading } = useTokenOptions(vault);
+  const { balances, loading: balancesLoading } = useVaultBalances(vault?.contractAddress, tokens);
+  // Tokens and balances arrive in stages; render the rows only once all of them are in, so the
+  // list doesn't jump from an ETH-only picker to the full one.
+  const loading = tokensLoading || balancesLoading;
   const [actions, setActions] = useState([newAction()]);
 
   const updateAction = useCallback(
@@ -236,7 +245,7 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Swaps</h3>
         <div className="flex gap-4 text-sm">
-          {held.length > 0 && (
+          {!loading && held.length > 0 && (
             <button type="button" onClick={sellAll} className="text-white/60 hover:text-white">
               Sell all → ETH
             </button>
@@ -247,21 +256,28 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
         </div>
       </div>
 
-      <div>
-        {actions.map(action => (
-          <SwapRow
-            key={action.id}
-            action={action}
-            tokens={tokens}
-            balances={balances}
-            vaultId={vault?.id}
-            canRemove={actions.length > 1}
-            showErrors={!!error}
-            onUpdate={updateAction}
-            onRemove={remove}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="py-3 space-y-2">
+          <div className="h-10 rounded-lg bg-steel-850 animate-pulse" />
+          <div className="h-4 w-1/3 rounded bg-steel-850 animate-pulse" />
+        </div>
+      ) : (
+        <div>
+          {actions.map(action => (
+            <SwapRow
+              key={action.id}
+              action={action}
+              tokens={tokens}
+              balances={balances}
+              vaultId={vault?.id}
+              canRemove={actions.length > 1}
+              showErrors={!!error}
+              onUpdate={updateAction}
+              onRemove={remove}
+            />
+          ))}
+        </div>
+      )}
 
       <ProposalOutcome
         storageKey="swap"
