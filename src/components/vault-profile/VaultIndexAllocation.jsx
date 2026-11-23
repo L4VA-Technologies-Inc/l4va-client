@@ -87,19 +87,6 @@ const DriftChip = ({ driftBps }) => {
   );
 };
 
-const basketStatus = (portfolio, rebalances) => {
-  if (rebalances?.some(r => r.status === 'executing' || r.status === 'pending')) {
-    return { label: 'Rebalancing', className: 'bg-yellow-400/10 text-yellow-400' };
-  }
-  const drifts = [...portfolio.assets.map(a => a.driftBps), portfolio.reserve.actualBps - portfolio.reserve.targetBps];
-  const worst = Math.max(...drifts.map(Math.abs));
-  if (portfolio.assets.some(a => !a.inBasket) || worst >= DRIFT_ALERT_BPS) {
-    return { label: 'Off target', className: 'bg-red-400/10 text-red-400' };
-  }
-  if (worst >= DRIFT_NOTICE_BPS) return { label: 'Drifting', className: 'bg-yellow-400/10 text-yellow-400' };
-  return { label: 'On target', className: 'bg-green-500/10 text-green-500' };
-};
-
 /**
  * One bar of actual weights, with a tick at each cumulative target boundary:
  * a segment edge sitting off its tick is the drift.
@@ -270,7 +257,6 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
   }
 
   const hasHoldings = holdings.length > 0;
-  const status = hasHoldings ? basketStatus(portfolio, rebalances) : null;
   // A large basket colours only its top N by weight; the rest share one "Others" colour, since a
   // 15-colour palette repeating across 50 assets would no longer tell tokens apart.
   const large = holdings.length > LARGE_BASKET_ASSETS;
@@ -332,12 +318,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
           <h3 className="text-lg font-semibold">Index basket</h3>
           {config.version > 1 && <span className="text-xs text-dark-100">v{config.version} · set by governance</span>}
         </div>
-        {status && (
-          <div className="flex flex-wrap items-center gap-2">
-            {showSwitcher && <ViewSwitch view={view} onChange={setView} />}
-            <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', status.className)}>{status.label}</span>
-          </div>
-        )}
+        {hasHoldings && showSwitcher && <ViewSwitch view={view} onChange={setView} />}
       </div>
 
       {!hasHoldings ? (
