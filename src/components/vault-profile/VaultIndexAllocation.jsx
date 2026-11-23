@@ -126,15 +126,13 @@ const StackBar = ({ segments, field, active, setActive, className }) => (
   </div>
 );
 
-// Drift under half a percent reads as "on target" in the plain-language line.
-const ON_TARGET_BPS = 50;
-
 const SegmentDetail = ({ segment }) => {
   if (!segment) return <span className="text-dark-100">Hover or tap an asset to compare it with its target.</span>;
   const drift = segment.actualBps - segment.targetBps;
   const abs = Math.abs(drift);
   const verdict =
-    abs < ON_TARGET_BPS
+    // Same band as the tiles and the rebalance planner: smaller drift is not traded.
+    abs < DRIFT_NOTICE_BPS
       ? { text: 'on target', cls: 'text-dark-100' }
       : drift > 0
         ? { text: `${formatBps(abs)} too much · next rebalance sells`, cls: 'text-orange-400' }
