@@ -344,6 +344,45 @@ const TimelineNode = ({ icon: NodeIcon, tone, isLast, children }) => (
   </div>
 );
 
+const NATIVE_ASSET = '0x0000000000000000000000000000000000000000';
+
+const TxLinkRow = ({ label, detail, hash, vault }) => (
+  <button
+    onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+    className="flex w-full items-center justify-between gap-3 rounded-md bg-steel-950/60 border border-steel-750 hover:border-emerald-500/50 px-2 py-1.5 text-left text-xs text-dark-100 hover:text-emerald-400 transition-all cursor-pointer"
+  >
+    <span className="truncate">
+      <span className="text-white">{label}</span>
+      {detail && <span className="ml-2">{detail}</span>}
+    </span>
+    <span className="flex flex-shrink-0 items-center gap-1 font-mono">
+      {substringAddress(hash)}
+      <ExternalLink className="w-3.5 h-3.5" />
+    </span>
+  </button>
+);
+
+/** EVM distribution: the tx that opened the pot, then each payout sent to a holder. */
+const DistributionTxs = ({ distribution, vault }) => {
+  const { openTxHash, payouts = [], asset } = distribution;
+  if (!openTxHash && payouts.length === 0) return null;
+  const isNative = !asset || asset.toLowerCase() === NATIVE_ASSET;
+  return (
+    <div className="mt-3 space-y-1.5">
+      {openTxHash && <TxLinkRow label="Distribution opened" hash={openTxHash} vault={vault} />}
+      {payouts.map(payout => (
+        <TxLinkRow
+          key={payout.txHash}
+          label={`Paid ${substringAddress(payout.holder)}`}
+          detail={isNative ? `${formatTokenAmount(payout.amount, 18)} ETH` : null}
+          hash={payout.txHash}
+          vault={vault}
+        />
+      ))}
+    </div>
+  );
+};
+
 const ProposalTimeline = ({ activity, vault }) => {
   const entries = getProposalTimeline(activity);
   const outcome = activity.executionError
@@ -353,7 +392,11 @@ const ProposalTimeline = ({ activity, vault }) => {
           icon: CheckCircle,
           tone: 'emerald',
           title: 'Execution',
-          text: getSuccessMessage(activity.proposalType, activity.vault),
+          // An EVM distribution only reserves the pot on execution; holders are paid later.
+          text:
+            activity.distribution && activity.distribution.payouts?.length === 0
+              ? 'The pot is reserved in the vault. Holders are paid automatically once payouts open.'
+              : getSuccessMessage(activity.proposalType, activity.vault),
         }
       : null;
   // While voting is open, show when it closes (as the termination card does).
@@ -462,6 +505,9 @@ const ProposalTimeline = ({ activity, vault }) => {
               ) : (
                 <p className="mt-1 text-xs text-dark-100">{outcome.text}</p>
               ))}
+            {outcome.tone !== 'rose' && activity.distribution && (
+              <DistributionTxs distribution={activity.distribution} vault={vault} />
+            )}
           </div>
         </TimelineNode>
       )}
