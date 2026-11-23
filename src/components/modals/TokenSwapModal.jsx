@@ -35,13 +35,13 @@ export const TokenSwapModal = ({ token, onClose }) => {
       <DialogContent className="sm:max-w-md p-4 bg-steel-950 border-none">
         <DialogTitle className="sr-only">Buy {symbol}</DialogTitle>
         <DialogDescription className="sr-only">Swap ETH for {symbol}</DialogDescription>
-        {tokenAddress ? (
-          <UniswapSwapPanel tokenAddress={tokenAddress} tokenSymbol={symbol} tokenImage={token?.image} />
-        ) : (
-          <p className="py-8 text-center text-sm text-white/60">
-            {isLoading ? 'Loading…' : `${symbol} can't be swapped right now.`}
-          </p>
-        )}
+        <UniswapSwapPanel
+          tokenAddress={tokenAddress}
+          tokenSymbol={symbol}
+          tokenImage={token?.image}
+          loading={!tokenAddress && isLoading}
+          disabledReason={!tokenAddress && !isLoading ? `${symbol} can't be swapped right now.` : undefined}
+        />
       </DialogContent>
     </Dialog>
   );
