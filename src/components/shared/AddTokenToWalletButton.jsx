@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useReadContracts, useWalletClient } from 'wagmi';
 import { Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -30,8 +31,12 @@ export const AddTokenToWalletButton = ({ address, image, className = '' }) => {
   const symbol = data?.[0]?.result;
   const decimals = data?.[1]?.result;
   const label = `Add token to ${walletName()}`;
+  const inFlight = useRef(false);
+  const [pending, setPending] = useState(false);
 
   const handleClick = async () => {
+    // One wallet_watchAsset at a time: a second request queues a duplicate prompt and a second toast.
+    if (inFlight.current) return;
     if (symbol === undefined || decimals === undefined) {
       toast.error('Token metadata is still loading');
       return;
@@ -39,6 +44,8 @@ export const AddTokenToWalletButton = ({ address, image, className = '' }) => {
     const options = { address, symbol: symbol.slice(0, 11), decimals: Number(decimals) };
     if (image && /^https?:\/\//.test(image)) options.image = image;
 
+    inFlight.current = true;
+    setPending(true);
     try {
       let added;
       if (walletClient) {
@@ -56,6 +63,9 @@ export const AddTokenToWalletButton = ({ address, image, className = '' }) => {
       if (err?.code === 4001 || /reject|denied/i.test(err?.message ?? '')) return;
       console.error('wallet_watchAsset failed:', err);
       toast.error('Failed to add token to wallet');
+    } finally {
+      inFlight.current = false;
+      setPending(false);
     }
   };
 
@@ -65,7 +75,7 @@ export const AddTokenToWalletButton = ({ address, image, className = '' }) => {
       title={label}
       type="button"
       className={`text-gray-500 hover:text-gray-300 disabled:opacity-40 ${className}`}
-      disabled={!address || symbol === undefined}
+      disabled={!address || symbol === undefined || pending}
       onClick={handleClick}
     >
       <Wallet className="h-5 w-5" />

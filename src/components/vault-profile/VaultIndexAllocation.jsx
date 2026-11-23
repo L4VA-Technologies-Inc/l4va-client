@@ -298,7 +298,44 @@ const RebalanceHistory = ({ rebalances, assets = [] }) => {
  * Presentational basket view, fed by `VaultIndexAllocation` (live data) or by
  * the dev mock page. `formatValue` renders a `{ valueNative, valueUsd, valueAda }`.
  */
-export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error, formatValue, terminated = false }) => {
+/**
+ * ETH the vault must hold after its LP share for every basket asset to clear the minimum trade:
+ * the smallest-weight asset's slice of the investable (non-reserve) part must reach `minTradeNative`.
+ */
+const minBasketNativeWei = (config, minTradeNative) => {
+  if (!minTradeNative || !config?.targets?.length) return null;
+  const minWeight = Math.min(...config.targets.map(t => Number(t.weightBps) || 0));
+  const investableBps = 10000 - (Number(config.reserveBps) || 0);
+  if (minWeight <= 0 || investableBps <= 0) return null;
+  // minTrade × 10⁴/minWeight × 10⁴/investable, rounded up.
+  const denom = BigInt(minWeight) * BigInt(investableBps);
+  return (BigInt(minTradeNative) * 10n ** 8n + denom - 1n) / denom;
+};
+
+const MinBasketSizeNote = ({ config, minTradeNative }) => {
+  const minWei = minBasketNativeWei(config, minTradeNative);
+  if (!minWei) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
+      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>
+        To buy all {config.targets.length} assets, the vault needs at least ~{formatNativeWei(minWei)} ETH after the
+        liquidity pool share: each trade must be at least {formatNativeWei(minTradeNative)} ETH. With less, assets below
+        that size are skipped and their share stays in ETH.
+      </span>
+    </div>
+  );
+};
+
+export const VaultIndexAllocationView = ({
+  config,
+  portfolio,
+  rebalances,
+  error,
+  formatValue,
+  terminated = false,
+  minTradeNative,
+}) => {
   // Hooks first: the early return below must not change their order.
   const [storedView, setView] = useBasketView();
   const [filter, setFilter] = useState('all');
@@ -383,6 +420,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
                 ? `${portfolio.error}. Showing the target weights.`
                 : 'When the acquire window locks, the vault buys these assets with the ETH raised, at these weights.'}
           </p>
+          {!terminated && <MinBasketSizeNote config={config} minTradeNative={minTradeNative} />}
           <TargetBasket config={config} />
         </>
       ) : (
@@ -524,6 +562,7 @@ export const VaultIndexAllocation = ({ vault }) => {
       error={error}
       formatValue={formatValue}
       terminated={vault?.vaultStatus === 'burned'}
+      minTradeNative={data?.minTradeNative}
     />
   );
 };
