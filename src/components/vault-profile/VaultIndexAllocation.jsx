@@ -36,10 +36,10 @@ const OUTSIDE_BASKET_COLOR = '#64748B';
 const RESERVE_COLOR = 'var(--color-steel-600)';
 
 // Same hover tooltip as the profile icon row; also opens on keyboard focus / tap.
-const InfoTip = ({ children, align = 'left' }) => (
+const InfoTip = ({ children, align = 'left', icon: Icon = Info, iconClassName = 'h-4 w-4' }) => (
   <span className="group relative inline-flex">
     <button type="button" aria-label="More info" className="text-dark-100 hover:text-white focus:text-white">
-      <Info className="h-4 w-4" />
+      <Icon className={iconClassName} />
     </button>
     <span
       role="tooltip"
@@ -325,7 +325,10 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
     <section className="mb-8 space-y-6 rounded-xl border border-steel-800 p-5 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <PieChart className="h-5 w-5 text-dark-100" />
+          <InfoTip icon={PieChart} iconClassName="h-5 w-5">
+            Values are live swap quotes into ETH, refreshed every minute. Ticks on the bar mark target weights; drift is
+            actual minus target, as a share of basket plus cash.
+          </InfoTip>
           <h3 className="text-lg font-semibold">Index basket</h3>
           {config.version > 1 && <span className="text-xs text-dark-100">v{config.version} · set by governance</span>}
         </div>
@@ -333,10 +336,6 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
           <div className="flex flex-wrap items-center gap-2">
             {showSwitcher && <ViewSwitch view={view} onChange={setView} />}
             <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', status.className)}>{status.label}</span>
-            <InfoTip align="right">
-              Values are live swap quotes into ETH, refreshed every minute. Ticks on the bar mark target weights; drift
-              is actual minus target, as a share of basket plus cash.
-            </InfoTip>
           </div>
         )}
       </div>
@@ -354,15 +353,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
         </>
       ) : (
         <>
-          {showSwitcher && (
-            <BasketSummary
-              portfolio={portfolio}
-              onShowDrifting={() => {
-                setView('list');
-                setFilter('drifting');
-              }}
-            />
-          )}
+          {showSwitcher && <BasketSummary portfolio={portfolio} />}
 
           <div className="space-y-3">
             <AllocationBar segments={segments} />

@@ -92,20 +92,14 @@ const SummaryCard = ({ label, value, tone, onClick }) => {
   );
 };
 
-export const BasketSummary = ({ portfolio, onShowDrifting }) => {
+export const BasketSummary = ({ portfolio }) => {
   const assets = portfolio.assets;
   const drifting = assets.filter(isDrifting).length;
   const largest = assets.reduce((m, a) => (a.actualBps > (m?.actualBps ?? -1) ? a : m), null);
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <SummaryCard label="Assets" value={assets.length} />
       <SummaryCard label="On target" value={assets.length - drifting} />
-      <SummaryCard
-        label={drifting ? 'Drifting · show' : 'Drifting'}
-        value={drifting}
-        tone={drifting ? 'warn' : undefined}
-        onClick={drifting ? onShowDrifting : undefined}
-      />
       <SummaryCard label="Cash reserve" value={formatBps(portfolio.reserve.actualBps)} />
       <SummaryCard
         label="Largest position"

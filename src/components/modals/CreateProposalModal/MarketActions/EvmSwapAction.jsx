@@ -1,24 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, X, ArrowDown } from 'lucide-react';
 import { erc20Abi, formatUnits, parseUnits } from 'viem';
 import { useQuery } from '@tanstack/react-query';
-import { useBalance, useReadContract } from 'wagmi';
+import { useBalance, useReadContracts } from 'wagmi';
 
 import { LavaSteelInput } from '@/components/shared/LavaInput';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { ProposalOutcome } from '@/components/modals/CreateProposalModal/ProposalOutcome.jsx';
-import { RouteStatus, toRouteView } from '@/components/vaults/index/IndexBasketEditor';
+import { toRouteView } from '@/components/vaults/index/IndexBasketEditor';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import { indexAssetRoutesQuery, useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
 
 const NATIVE = '0x0000000000000000000000000000000000000000';
-const CUSTOM = 'custom';
-
 const NATIVE_TOKEN = { address: NATIVE, symbol: 'ETH', name: 'Ether', decimals: 18 };
+const CUSTOM_AMOUNT = 'custom';
+const PERCENTS = ['25', '50', '75', '100'];
 
 const isValidAddress = addr => /^0x[0-9a-fA-F]{40}$/.test(addr);
-const shortAddr = addr => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
 /** Human amount → raw base units; '0' when unparsable. */
 const toRaw = (human, decimals) => {
@@ -30,21 +28,21 @@ const toRaw = (human, decimals) => {
   }
 };
 
-const formatBalance = (raw, decimals) => {
+const formatAmount = (raw, decimals) => {
   const n = Number(formatUnits(raw, decimals));
-  return n.toLocaleString(undefined, { maximumFractionDigits: n >= 1000 ? 2 : 6 });
+  return n.toLocaleString(undefined, { maximumSignificantDigits: n >= 1 ? undefined : 4, maximumFractionDigits: 4 });
 };
 
 /**
- * Tokens the proposer can pick: native ETH, what the vault already holds (index
- * vaults) and the index allow-list. Anything else goes through "Custom address".
+ * Tokens a swap may touch: ETH, what the vault already holds / targets (index vaults) and the
+ * whitelist of supported assets. Nothing outside that list can be bought.
  */
 const useTokenOptions = vault => {
   const isIndex = isIndexVault(vault);
-  const { data: index } = useVaultIndex(vault?.id, isIndex);
-  const { data: supported } = useIndexSupportedAssets();
+  const { data: index, isLoading: indexLoading } = useVaultIndex(vault?.id, isIndex);
+  const { data: supported, isLoading: supportedLoading } = useIndexSupportedAssets();
 
-  return useMemo(() => {
+  const tokens = useMemo(() => {
     const byAddress = new Map([[NATIVE, NATIVE_TOKEN]]);
     const add = t => {
       const address = t.assetAddress?.toLowerCase();
@@ -56,203 +54,166 @@ const useTokenOptions = vault => {
     (supported?.assets || []).forEach(add);
     return [...byAddress.values()];
   }, [index, supported]);
+  return { tokens, loading: (isIndex && indexLoading) || supportedLoading };
 };
 
-/** Spendable balance of `token` held by the vault contract. */
-const useVaultTokenBalance = (vaultAddress, token) => {
-  const enabled = isValidAddress(vaultAddress || '') && !!token;
-  const isNative = token?.address === NATIVE;
-  const { data: native } = useBalance({
+/** Vault balance of every option, keyed by address (undefined while loading). */
+const useVaultBalances = (vaultAddress, tokens) => {
+  const enabled = isValidAddress(vaultAddress || '');
+  const erc20s = tokens.filter(t => t.address !== NATIVE);
+  const { data: native, isLoading: nativeLoading } = useBalance({
     address: vaultAddress,
     chainId: robinhoodChain.id,
-    query: { enabled: enabled && isNative },
+    query: { enabled },
   });
-  const { data: erc20 } = useReadContract({
-    address: token?.address,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: [vaultAddress],
-    chainId: robinhoodChain.id,
-    query: { enabled: enabled && !isNative },
-  });
-  return isNative ? native?.value : erc20;
-};
-
-/** Resolves symbol/decimals of a pasted ERC-20 address. */
-const useCustomToken = address => {
-  const valid = isValidAddress(address || '');
-  const read = functionName => ({
-    address,
-    abi: erc20Abi,
-    functionName,
-    chainId: robinhoodChain.id,
-    query: { enabled: valid },
-  });
-  const { data: decimals, isError } = useReadContract(read('decimals'));
-  const { data: symbol } = useReadContract(read('symbol'));
-  if (!valid) return { token: null, error: address ? 'Not a valid address' : null };
-  if (isError) return { token: null, error: 'Not an ERC-20 token on Robinhood Chain' };
-  if (decimals == null) return { token: null, error: null };
-  return {
-    token: { address: address.toLowerCase(), symbol: symbol || shortAddr(address), decimals: Number(decimals) },
-  };
-};
-
-/** Uniswap route check for a picked token (buy with ETH and sell back); native ETH needs none. */
-const TokenRouteHint = ({ token, vaultId }) => {
-  const address = token && token.address !== NATIVE ? token.address : null;
-  const q = useQuery(indexAssetRoutesQuery(address, vaultId));
-  if (!address) return null;
-  return <RouteStatus route={toRouteView(q)} />;
-};
-
-const TokenPicker = ({ label, options, selection, onChange, exclude, vaultId }) => {
-  const custom = useCustomToken(selection.custom);
-  const selectOptions = [
-    ...options.map(t => ({
-      value: t.address,
-      label: t.address === NATIVE ? 'ETH' : `${t.symbol} · ${shortAddr(t.address)}`,
-      disabled: t.address === exclude,
+  const { data: results, isLoading: erc20Loading } = useReadContracts({
+    contracts: erc20s.map(t => ({
+      address: t.address,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [vaultAddress],
+      chainId: robinhoodChain.id,
     })),
-    { value: CUSTOM, label: 'Custom address…' },
-  ];
+    query: { enabled: enabled && erc20s.length > 0 },
+  });
 
-  const token = selection.value === CUSTOM ? custom.token : options.find(t => t.address === selection.value) || null;
-
-  useEffect(() => {
-    if (token?.address !== selection.token?.address || token?.decimals !== selection.token?.decimals) {
-      onChange({ ...selection, token });
-    }
-  }, [token, selection, onChange]);
-
-  return (
-    <div className="space-y-2">
-      <span className="text-sm text-white/60">{label}</span>
-      <LavaSteelSelect
-        options={selectOptions}
-        value={selection.value}
-        placeholder="Select token"
-        onChange={value => onChange({ value, custom: '', token: null })}
-      />
-      <TokenRouteHint token={token} vaultId={vaultId} />
-      {selection.value === CUSTOM && (
-        <LavaSteelInput
-          placeholder="0x… ERC-20 address"
-          value={selection.custom}
-          onChange={v => onChange({ ...selection, custom: v.trim() })}
-          error={!!custom.error}
-          helperText={custom.error || (custom.token && `${custom.token.symbol} · ${custom.token.decimals} decimals`)}
-        />
-      )}
-    </div>
-  );
+  const balances = useMemo(() => {
+    const map = new Map();
+    if (native) map.set(NATIVE, native.value);
+    erc20s.forEach((t, i) => {
+      const r = results?.[i];
+      if (r?.status === 'success') map.set(t.address, r.result);
+    });
+    return map;
+    // erc20s is derived from tokens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [native, results, tokens]);
+  return { balances, loading: nativeLoading || erc20Loading };
 };
 
-const emptyAction = () => ({
+/** One plain-text line about the Uniswap route of the non-ETH side of the swap. */
+const RouteNote = ({ address, vaultId }) => {
+  const q = useQuery(indexAssetRoutesQuery(address, vaultId));
+  const route = toRouteView(q);
+  if (route.status === 'checking') return <span>Checking route…</span>;
+  if (route.status === 'ok') {
+    const loss = route.lossBps != null ? ` ${(route.lossBps / 100).toFixed(2)}%` : '';
+    return <span title={`Buy: ${route.buyRoute || '—'}\nSell: ${route.sellRoute || '—'}`}>Uniswap{loss}</span>;
+  }
+  return <span className="text-red-400">{route.reason || 'No Uniswap route'}</span>;
+};
+
+const newAction = (input = '', output = NATIVE, percent = '100') => ({
   id: Date.now() + Math.random(),
-  input: { value: NATIVE, custom: '', token: NATIVE_TOKEN },
-  output: { value: '', custom: '', token: null },
-  humanAmount: '',
+  input,
+  output,
+  percent,
+  customAmount: '',
 });
 
-const SwapRow = ({ action, index, options, vaultAddress, vaultId, canRemove, showErrors, onUpdate, onRemove }) => {
-  const { input, output, humanAmount } = action;
-  const balance = useVaultTokenBalance(vaultAddress, input.token);
-  const raw = input.token ? toRaw(humanAmount, input.token.decimals) : '0';
+const SwapRow = ({ action, tokens, balances, vaultId, canRemove, showErrors, onUpdate, onRemove }) => {
+  const input = tokens.find(t => t.address === action.input) || null;
+  const output = tokens.find(t => t.address === action.output) || null;
+  const balance = input ? balances.get(input.address) : undefined;
+
+  const raw =
+    !input || balance == null
+      ? '0'
+      : action.percent === CUSTOM_AMOUNT
+        ? toRaw(action.customAmount, input.decimals)
+        : ((balance * BigInt(action.percent)) / 100n).toString();
   const overBalance = balance != null && BigInt(raw) > balance;
 
-  const problem = !input.token
+  const problem = !input
     ? 'Select the token to sell'
-    : !output.token
+    : !output
       ? 'Select the token to buy'
-      : input.token.address === output.token.address
+      : input.address === output.address
         ? 'Pick two different tokens'
         : raw === '0'
           ? 'Enter an amount'
           : overBalance
-            ? 'Amount is more than the vault holds'
+            ? 'More than the vault holds'
             : null;
 
+  const humanAmount = input ? formatUnits(BigInt(raw), input.decimals) : '';
   useEffect(() => {
-    if (action.problem !== problem || action.amount !== raw) onUpdate(action.id, { problem, amount: raw });
-  }, [action.id, action.problem, action.amount, problem, raw, onUpdate]);
+    if (action.problem !== problem || action.amount !== raw || action.humanAmount !== humanAmount) {
+      onUpdate(action.id, { problem, amount: raw, humanAmount, decimals: input?.decimals ?? 18 });
+    }
+  }, [action, problem, raw, humanAmount, input, onUpdate]);
 
-  const setInput = useCallback(next => onUpdate(action.id, { input: next }), [action.id, onUpdate]);
-  const setOutput = useCallback(next => onUpdate(action.id, { output: next }), [action.id, onUpdate]);
+  const sellOptions = tokens
+    .filter(t => (balances.get(t.address) ?? 0n) > 0n || t.address === action.input)
+    .map(t => ({
+      value: t.address,
+      label: `${t.symbol} · ${formatAmount(balances.get(t.address) ?? 0n, t.decimals)}`,
+      disabled: t.address === action.output,
+    }));
+  const buyOptions = tokens.map(t => ({ value: t.address, label: t.symbol, disabled: t.address === action.input }));
+  const amountOptions = [
+    ...PERCENTS.map(p => ({ value: p, label: p === '100' ? 'All' : `${p}%` })),
+    { value: CUSTOM_AMOUNT, label: 'Custom…' },
+  ];
+
+  const routeToken = [output, input].find(t => t && t.address !== NATIVE);
 
   return (
-    <div className="bg-steel-800 rounded-lg p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <span className="font-medium text-sm">
-          Swap {index + 1}
-          {showErrors && problem && <span className="text-red-500 ml-2">{problem}</span>}
+    <div className="py-3 space-y-2 border-b border-steel-750 last:border-b-0">
+      <div className="grid grid-cols-[1fr_auto_1fr_7rem] items-center gap-2">
+        <LavaSteelSelect
+          options={sellOptions}
+          value={action.input}
+          placeholder="Sell"
+          onChange={value => onUpdate(action.id, { input: value })}
+        />
+        <span className="text-white/40">→</span>
+        <LavaSteelSelect
+          options={buyOptions}
+          value={action.output}
+          placeholder="Buy"
+          onChange={value => onUpdate(action.id, { output: value })}
+        />
+        <LavaSteelSelect
+          options={amountOptions}
+          value={action.percent}
+          onChange={value => onUpdate(action.id, { percent: value })}
+        />
+      </div>
+
+      {action.percent === CUSTOM_AMOUNT && (
+        <LavaSteelInput
+          placeholder={input ? `Amount of ${input.symbol}` : 'Amount'}
+          value={action.customAmount}
+          onChange={v => onUpdate(action.id, { customAmount: v })}
+          error={showErrors && (raw === '0' || overBalance)}
+        />
+      )}
+
+      <div className="flex items-center justify-between gap-3 text-xs text-white/40">
+        <span className="min-w-0 truncate">
+          {input && raw !== '0' && `${formatAmount(BigInt(raw), input.decimals)} ${input.symbol}`}
+          {input && raw !== '0' && routeToken && ' · '}
+          {routeToken && <RouteNote address={routeToken.address} vaultId={vaultId} />}
+          {showErrors && problem && <span className="text-red-400"> · {problem}</span>}
         </span>
         {canRemove && (
-          <button
-            aria-label="Remove action"
-            type="button"
-            onClick={() => onRemove(action.id)}
-            className="text-red-400 hover:text-red-500 p-1"
-          >
-            <X className="h-4 w-4" />
+          <button type="button" onClick={() => onRemove(action.id)} className="shrink-0 hover:text-white/70">
+            Remove
           </button>
         )}
       </div>
-
-      <TokenPicker
-        vaultId={vaultId}
-        label="Sell"
-        options={options}
-        selection={input}
-        onChange={setInput}
-        exclude={output.token?.address}
-      />
-
-      <div>
-        <LavaSteelInput
-          placeholder="0.0"
-          value={humanAmount}
-          onChange={v => onUpdate(action.id, { humanAmount: v })}
-          error={showErrors && (raw === '0' || overBalance)}
-        />
-        <div className="flex justify-between text-xs text-white/40 mt-1">
-          <span>
-            Vault balance:{' '}
-            {balance != null && input.token
-              ? `${formatBalance(balance, input.token.decimals)} ${input.token.symbol}`
-              : '—'}
-          </span>
-          {balance != null && balance > 0n && input.token && (
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={() => onUpdate(action.id, { humanAmount: formatUnits(balance, input.token.decimals) })}
-            >
-              Max
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <ArrowDown className="h-5 w-5 text-white/40" />
-      </div>
-
-      <TokenPicker
-        vaultId={vaultId}
-        label="Buy"
-        options={options}
-        selection={output}
-        onChange={setOutput}
-        exclude={input.token?.address}
-      />
     </div>
   );
 };
 
 const EvmSwapAction = ({ vault, onDataChange, error }) => {
-  const [actions, setActions] = useState([emptyAction()]);
-  const options = useTokenOptions(vault);
+  const { tokens, loading: tokensLoading } = useTokenOptions(vault);
+  const { balances, loading: balancesLoading } = useVaultBalances(vault?.contractAddress, tokens);
+  // Tokens and balances arrive in stages; render the rows only once all of them are in, so the
+  // list doesn't jump from an ETH-only picker to the full one.
+  const loading = tokensLoading || balancesLoading;
+  const [actions, setActions] = useState([newAction()]);
 
   const updateAction = useCallback(
     (id, patch) => setActions(prev => prev.map(a => (a.id === id ? { ...a, ...patch } : a))),
@@ -264,56 +225,69 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
       marketActionType: 'evm_swap',
       evmSwapActions: actions.map(a => ({
         id: a.id,
-        inputAsset: a.input.token?.address ?? '',
-        outputAsset: a.output.token?.address ?? '',
-        humanAmount: a.humanAmount,
-        decimals: a.input.token?.decimals ?? 18,
+        inputAsset: a.input,
+        outputAsset: a.output,
+        humanAmount: a.humanAmount ?? '',
+        decimals: a.decimals ?? 18,
         amount: a.amount ?? '0',
       })),
       isValid: actions.length > 0 && actions.every(a => a.problem === null),
     });
   }, [actions, onDataChange]);
 
-  const add = () => setActions(prev => [...prev, emptyAction()]);
+  const held = tokens.filter(t => t.address !== NATIVE && (balances.get(t.address) ?? 0n) > 0n);
+  const sellAll = () => setActions(held.map(t => newAction(t.address, NATIVE, '100')));
+  const add = () => setActions(prev => [...prev, newAction()]);
   const remove = id => setActions(prev => prev.filter(a => a.id !== id));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Swaps</h3>
-        <button
-          type="button"
-          onClick={add}
-          className="flex items-center gap-2 bg-steel-850 hover:bg-steel-850/70 text-white/60 px-4 py-2 rounded-lg transition-colors border border-steel-750"
-        >
-          Add Swap <Plus className="h-4 w-4" />
-        </button>
+        <div className="flex gap-4 text-sm">
+          {!loading && held.length > 0 && (
+            <button type="button" onClick={sellAll} className="text-white/60 hover:text-white">
+              Sell all → ETH
+            </button>
+          )}
+          <button type="button" onClick={add} className="text-white/60 hover:text-white">
+            + Add
+          </button>
+        </div>
       </div>
 
-      {actions.map((action, index) => (
-        <SwapRow
-          key={action.id}
-          action={action}
-          index={index}
-          options={options}
-          vaultAddress={vault?.contractAddress}
-          vaultId={vault?.id}
-          canRemove={actions.length > 1}
-          showErrors={!!error}
-          onUpdate={updateAction}
-          onRemove={remove}
-        />
-      ))}
+      {loading ? (
+        <div className="py-3 space-y-2">
+          <div className="h-10 rounded-lg bg-steel-850 animate-pulse" />
+          <div className="h-4 w-1/3 rounded bg-steel-850 animate-pulse" />
+        </div>
+      ) : (
+        <div>
+          {actions.map(action => (
+            <SwapRow
+              key={action.id}
+              action={action}
+              tokens={tokens}
+              balances={balances}
+              vaultId={vault?.id}
+              canRemove={actions.length > 1}
+              showErrors={!!error}
+              onUpdate={updateAction}
+              onRemove={remove}
+            />
+          ))}
+        </div>
+      )}
 
       <ProposalOutcome
         storageKey="swap"
-        summary={`${actions.length} swap${actions.length === 1 ? '' : 's'} on Uniswap, in order, with a 0.5% slippage limit. Bought tokens stay in the vault.`}
+        summary="Amounts fixed, prices not · 0.5% slippage · a failed swap stops the rest · bought tokens stay in the vault."
         steps={[
           {
             title: 'Amounts are fixed now, prices are not.',
             detail:
-              'The vault sells exactly the amounts above; how much it receives depends on the Uniswap price when ' +
-              'the vote passes.',
+              'A percentage is turned into a fixed amount from the vault balance at creation; how much the vault ' +
+              'receives depends on the Uniswap price when the vote passes.',
           },
           {
             title: 'Swaps run in order on Uniswap.',
@@ -328,8 +302,8 @@ const EvmSwapAction = ({ vault, onDataChange, error }) => {
               'than its amount by then (e.g. other proposals spent it).',
           },
           {
-            title: 'Bought tokens stay in the vault.',
-            detail: 'They become vault assets: they count toward its value and are paid out on termination.',
+            title: 'Only whitelisted tokens.',
+            detail: 'The vault can buy ETH or tokens from the supported list; bought tokens stay in the vault.',
           },
         ]}
       />
