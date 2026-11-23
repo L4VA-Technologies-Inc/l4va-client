@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import { useAuth } from '@/lib/auth/auth';
+import { useNetwork } from '@/hooks/useNetwork';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useSiteAccess } from '@/services/api/queries';
 
@@ -11,6 +12,8 @@ const SECRET_WINDOW_MS = 3000;
 const MaintenancePage = () => {
   const { openModal } = useModalControls();
   const { isAuthenticated, user, logout } = useAuth();
+  const { network, updateNetwork } = useNetwork();
+  const [unlocked, setUnlocked] = useState(false);
   const taps = useRef([]);
 
   // No visible sign-in: allowlisted team wallets tap the logo 5 times to connect.
@@ -19,6 +22,7 @@ const MaintenancePage = () => {
     taps.current = [...taps.current.filter(t => now - t < SECRET_WINDOW_MS), now];
     if (taps.current.length >= SECRET_TAPS) {
       taps.current = [];
+      setUnlocked(true);
       openModal('LoginModal');
     }
   };
@@ -36,6 +40,25 @@ const MaintenancePage = () => {
         <h1 className="text-3xl font-bold text-white">Under maintenance</h1>
         <p className="max-w-md text-dark-100">We&apos;re getting things ready. Please check back soon.</p>
       </div>
+      {/* Sign-in follows the selected chain and the header switcher is hidden here, so the
+          unlocked view offers it (Cardano vs Robinhood wallet). */}
+      {unlocked && !isAuthenticated && (
+        <div className="flex items-center gap-3 text-xs text-dark-100">
+          {['robinhood', 'cardano'].map(n => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => {
+                updateNetwork(n);
+                openModal('LoginModal');
+              }}
+              className={n === network ? 'text-white underline underline-offset-2' : 'hover:text-white'}
+            >
+              {n === 'robinhood' ? 'Robinhood wallet' : 'Cardano wallet'}
+            </button>
+          ))}
+        </div>
+      )}
       {/* Signed in with a wallet that is not allowlisted: let it switch to another one. */}
       {isAuthenticated && (
         <button
@@ -56,10 +79,13 @@ const MaintenancePage = () => {
  */
 export const MaintenanceGate = ({ children }) => {
   const { user, isLoading: authLoading } = useAuth();
-  const { data, isLoading } = useSiteAccess(user?.id);
 
-  // Fail open on API errors so an outage of this one endpoint can't take the site down.
+  const { data, isLoading, isError } = useSiteAccess(user?.id);
+
   if (isLoading || authLoading) return null;
+  // Fail closed: if access can't be confirmed (API unreachable), keep the site shut. Once a
+  // check has succeeded, a later failed refetch keeps the last known answer.
+  if (!data && isError) return <MaintenancePage />;
   if (data?.maintenance && !data.allowed) return <MaintenancePage />;
   return children;
 };

@@ -10,6 +10,7 @@ import { InfoRow } from '@/components/ui/infoRow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { TokenImage } from '@/components/shared/TokenImage';
+import { AddTokenToWalletButton } from '@/components/shared/AddTokenToWalletButton';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -210,7 +211,13 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
             {vault.policyId && <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />}
             {isRobinhoodVault && evmVaultTokenAddress && (
-              <InfoRow hideLongString copyable label="Token Contract" value={evmVaultTokenAddress} />
+              <InfoRow
+                hideLongString
+                copyable
+                label="Token Contract"
+                value={evmVaultTokenAddress}
+                actions={<AddTokenToWalletButton address={evmVaultTokenAddress} image={vault.vaultImage} />}
+              />
             )}
             <InfoRow
               customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"

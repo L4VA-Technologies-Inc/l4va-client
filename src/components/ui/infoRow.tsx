@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,8 @@ type InfoRowProps = {
   /** Applied to the value column (e.g. full width + alignment when stacked on small screens) */
   valueWrapperClassName?: string;
   hideLongString?: boolean;
+  /** Extra controls rendered after the copy button */
+  actions?: ReactNode;
 };
 
 export const InfoRow = ({
@@ -27,6 +30,7 @@ export const InfoRow = ({
   hideLongString = false,
   customClassName,
   valueWrapperClassName,
+  actions,
 }: InfoRowProps) => {
   const formattedValue = (text: any) => {
     if (typeof text === 'number') {
@@ -65,6 +69,7 @@ export const InfoRow = ({
             <Copy className="h-5 w-5" />
           </button>
         )}
+        {actions}
       </div>
     </div>
   );
