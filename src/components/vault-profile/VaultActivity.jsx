@@ -103,6 +103,7 @@ const REBALANCE_STATUS = {
   executing: { label: 'Executing', color: 'bg-orange-500/20 text-orange-500' },
   pending: { label: 'Pending', color: 'bg-orange-500/20 text-orange-500' },
   failed: { label: 'Failed', color: 'bg-rose-500/20 text-rose-500' },
+  skipped: { label: 'Skipped', color: 'bg-orange-500/20 text-orange-500' },
 };
 
 const formatTokenAmount = (raw, decimals) => {
@@ -125,7 +126,41 @@ const getSwapSummary = activity => {
   return `${amountIn} ${symIn} → ${amountOut} ${symOut}`;
 };
 
-const getRebalanceTitle = activity => (activity.trigger === 'initial_buy' ? 'Basket Purchased' : 'Basket Rebalanced');
+const ethFromWei = wei => formatTokenAmount(wei, 18);
+
+/** True when the run traded nothing because every needed leg was blocked. */
+const isRebalanceBlocked = activity => !(activity.legs || []).length && (activity.skipped || []).length > 0;
+
+const rebalanceStatusOf = activity =>
+  REBALANCE_STATUS[activity.status === 'completed' && isRebalanceBlocked(activity) ? 'skipped' : activity.status];
+
+const getRebalanceTitle = activity => {
+  const initial = activity.trigger === 'initial_buy';
+  if (isRebalanceBlocked(activity)) return initial ? 'Basket Not Purchased' : 'Rebalance Skipped';
+  return initial ? 'Basket Purchased' : 'Basket Rebalanced';
+};
+
+/** One line explaining why trades were skipped, grouped by reason. */
+const getSkippedSummary = activity => {
+  const skipped = activity.skipped || [];
+  if (!skipped.length) return null;
+  const byReason = reason => skipped.filter(leg => leg.reason === reason);
+  const lines = [];
+  const small = byReason('below_min_trade');
+  if (small.length) {
+    const min = ethFromWei(small[0].minTradeNative);
+    lines.push(
+      `${small.length} ${small.length === 1 ? 'trade' : 'trades'} skipped: each is below the ${min} ETH minimum trade` +
+        (activity.navNative ? ` (vault value ≈ ${ethFromWei(activity.navNative)} ETH).` : '.')
+    );
+  }
+  const noNative = byReason('no_free_native');
+  if (noNative.length)
+    lines.push(`${noNative.length} ${noNative.length === 1 ? 'buy' : 'buys'} skipped: no ETH above the cash reserve.`);
+  const noRoute = byReason('no_route');
+  if (noRoute.length) lines.push(`No Uniswap route for: ${noRoute.map(leg => leg.symbol).join(', ')}.`);
+  return lines;
+};
 
 const getRebalanceDescription = activity => {
   const legs = activity.legs || [];
@@ -427,7 +462,7 @@ const ProposalTimeline = ({ activity, vault }) => {
 
         const { action } = entry;
         const txHashes = getProposalActionTxHashes(action);
-        const rebalanceStatus = action.activityType === 'index_rebalance' && REBALANCE_STATUS[action.status];
+        const rebalanceStatus = action.activityType === 'index_rebalance' && rebalanceStatusOf(action);
         return (
           <TimelineNode key={`action-${action.id}`} icon={ArrowLeftRight} tone="orange" isLast={isLast}>
             <div className="rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-steel-850 to-steel-850 p-3">
@@ -971,14 +1006,14 @@ const ActivityCard = ({ activity, vault }) => {
                       {activity.actions.length} {activity.actions.length === 1 ? 'transaction' : 'transactions'}
                     </span>
                   )}
-                  {isRebalance && REBALANCE_STATUS[activity.status] && (
+                  {isRebalance && rebalanceStatusOf(activity) && (
                     <span
                       className={clsx(
                         'text-xs font-medium uppercase px-2 py-0.5 rounded',
-                        REBALANCE_STATUS[activity.status].color
+                        rebalanceStatusOf(activity).color
                       )}
                     >
-                      {REBALANCE_STATUS[activity.status].label}
+                      {rebalanceStatusOf(activity).label}
                     </span>
                   )}
                 </div>
@@ -1044,6 +1079,15 @@ const ActivityCard = ({ activity, vault }) => {
                 ) : isRebalance ? (
                   <>
                     <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
+                    {getSkippedSummary(activity) && (
+                      <div className="mb-3 p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                        {getSkippedSummary(activity).map(line => (
+                          <p key={line} className="text-xs text-orange-400">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex flex-col gap-2">
                       {(activity.legs || []).map(leg => (
                         <div
