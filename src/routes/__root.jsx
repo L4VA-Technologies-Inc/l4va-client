@@ -3,6 +3,7 @@ import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { Toaster } from 'react-hot-toast';
 
 import MainLayout from '@/components/layout/MainLayout';
+import { MaintenanceGate } from '@/components/MaintenanceGate';
 import { NotFound } from '@/components/NotFound';
 import { Modal } from '@/lib/modals/modal.registry';
 
@@ -17,9 +18,11 @@ const TanStackRouterDevtools = import.meta.env.PROD
 const RootComponent = () => {
   return (
     <>
-      <MainLayout>
-        <Outlet />
-      </MainLayout>
+      <MaintenanceGate>
+        <MainLayout>
+          <Outlet />
+        </MainLayout>
+      </MaintenanceGate>
       <Suspense fallback={null}>
         <TanStackRouterDevtools position="bottom-right" />
       </Suspense>

@@ -17,6 +17,11 @@ export class SettingsApiProvider {
     return response;
   }
 
+  static async getSiteAccess() {
+    const response = await axiosInstance.get(SettingsConfigProvider.getSiteAccess());
+    return response.data;
+  }
+
   static async getNativePrices() {
     const response = await axiosInstance.get(SettingsConfigProvider.getNativePrices());
     return response;

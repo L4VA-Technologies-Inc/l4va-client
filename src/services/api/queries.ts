@@ -882,6 +882,17 @@ export const useNativePrices = () => {
   });
 };
 
+// Closed-launch gate. Keyed by user so signing in with an allowlisted wallet re-checks access.
+export const useSiteAccess = (userId?: string) => {
+  return useQuery({
+    queryKey: ['site-access', userId ?? 'anon'],
+    queryFn: () => SettingsApiProvider.getSiteAccess(),
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 1,
+  });
+};
+
 export const useVaultCreationFlags = () => {
   return useQuery({
     queryKey: ['vault-creation-flags'],
