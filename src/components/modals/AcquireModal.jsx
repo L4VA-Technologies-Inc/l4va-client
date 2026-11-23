@@ -76,9 +76,11 @@ export const AcquireModal = ({ vault, onClose }) => {
   const expansionRaised = isEth ? vault.acquireExpansionCurrentEth || 0 : vault.acquireExpansionCurrentAda || 0;
   const hasExpansionMax = isAcquireExpansion && !vault.acquireExpansionNoMax && expansionMax > 0;
   // Rounded down to the input precision so the max button never asks for more than is left.
-  const expansionRemaining = hasExpansionMax
+  const expansionLeft = hasExpansionMax
     ? Math.max(0, Math.floor((expansionMax - expansionRaised) * 10 ** maxInputDecimals) / 10 ** maxInputDecimals)
     : Infinity;
+  // Less than one minimum acquire left means nothing more fits; the backend closes the window then.
+  const expansionRemaining = expansionLeft < minAcquire ? 0 : expansionLeft;
   const expansionVtPerNative = isAcquireExpansion
     ? Number(
         vault.acquireExpansionPriceType === 'limit'
@@ -458,9 +460,11 @@ export const AcquireModal = ({ vault, onClose }) => {
               >
                 {!isEth && wallet.isUpdatingUtxos
                   ? 'Updating UTXOs...'
-                  : status === 'idle'
-                    ? 'ACQUIRE'
-                    : status.toUpperCase()}
+                  : hasExpansionMax && expansionRemaining <= 0 && status === 'idle'
+                    ? 'MAXIMUM REACHED'
+                    : status === 'idle'
+                      ? 'ACQUIRE'
+                      : status.toUpperCase()}
               </PrimaryButton>
               {isEth && (
                 <div className="text-xs text-dark-100 text-center">
