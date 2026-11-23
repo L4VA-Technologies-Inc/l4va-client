@@ -11,6 +11,10 @@ export class SettingsConfigProvider {
     return '/api/v1/system-settings/vault-creation-flags';
   }
 
+  static getSiteAccess() {
+    return '/api/v1/system-settings/site-access';
+  }
+
   static getNativePrices() {
     return '/api/v1/price/native';
   }

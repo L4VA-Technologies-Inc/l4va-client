@@ -154,10 +154,7 @@ export const EvmDistributionStatus = ({ distribution, timing, chainType }) => {
             {cancelled ? (
               <p>The distribution was stopped during the review window. Nothing was paid out.</p>
             ) : (
-              <p>
-                Payouts can be stopped until {new Date(activatesAtMs).toLocaleString()}
-                {inWindow ? ` (${formatCountdown(activatesAtMs - now)}).` : '.'}
-              </p>
+              <p>Payouts can be stopped until {new Date(activatesAtMs).toLocaleString()}.</p>
             )}
           </Step>
         )}

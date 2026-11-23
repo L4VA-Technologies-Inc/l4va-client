@@ -183,17 +183,9 @@ export const VaultLiquidityPool = ({ vault }) => {
 
   const ticker = vault.vaultTokenTicker || 'VT';
   const isV4 = lp.protocol === 'uniswap-v4';
-  // v4 pools have no contract of their own: link the vault's position NFT instead.
-  const positionId = lp.positionIds?.[0];
-  const extraPositions = Math.max((lp.positionIds?.length || 0) - 1, 0);
-  const link = isV4
-    ? positionId && lp.positionManager
-      ? {
-          href: `${getAddressUrl(lp.positionManager, ChainType.ROBINHOOD).replace('/address/', '/token/')}/instance/${positionId}`,
-          label: `Vault position #${positionId}${extraPositions ? ` +${extraPositions}` : ''}`,
-        }
-      : null
-    : lp.pair
+  // v4: no extra link — the positions table lists the vault's position. V2: the pair contract.
+  const link =
+    !isV4 && lp.pair
       ? { href: getAddressUrl(lp.pair, ChainType.ROBINHOOD), label: `Pair ${shortAddress(lp.pair)}` }
       : null;
   const poolRef = isV4 ? lp.poolId : lp.pair;

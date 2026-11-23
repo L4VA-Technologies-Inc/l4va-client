@@ -1,4 +1,3 @@
-import { formatUnits } from 'viem';
 import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
@@ -122,32 +121,6 @@ const ProposalInfoSkeleton = () => (
   </div>
 );
 
-const NATIVE_ASSET = '0x0000000000000000000000000000000000000000';
-
-/** Native pots are wei → ETH; ERC-20 pots are shown in base units with the token address. */
-const formatEvmDistributionAmount = (amount, asset) => {
-  try {
-    if (!asset || asset.toLowerCase() === NATIVE_ASSET) {
-      return `${Number(formatUnits(BigInt(amount), 18)).toLocaleString('en-US', { maximumFractionDigits: 8 })} ETH`;
-    }
-    return `${BigInt(amount).toLocaleString('en-US')} units of ${asset.slice(0, 6)}…${asset.slice(-4)}`;
-  } catch {
-    return String(amount);
-  }
-};
-
-/** The real state of an EVM distribution: reserved (safety window), paying out, paid, or stopped. */
-const getEvmDistributionMessage = (dist, timing) => {
-  const amount = dist.netPot ? formatEvmDistributionAmount(dist.netPot, dist.asset) : 'The pot';
-  if (timing?.cancelled) return 'The distribution was stopped before payouts opened; the pot returned to the vault.';
-  if (timing?.pending) {
-    return `${amount} is reserved in the vault for VT holders. Payouts start after the safety review window (${new Date(
-      timing.activatesAt * 1000
-    ).toLocaleString()}).`;
-  }
-  if (dist.paidOutAt) return `${amount} has been distributed to eligible VT holders.`;
-  return `${amount} is open for payout; holders are being paid automatically.`;
-};
 export const ProposalInfo = ({ proposalId }) => {
   const { currencyLabel } = useCurrency();
   const { user } = useAuth();
@@ -331,37 +304,7 @@ export const ProposalInfo = ({ proposalId }) => {
           }
         }
 
-        if (evmDistribution) {
-          const amount = evmDistribution.netPot ?? evmDistribution.requestedAmount;
-          if (amount) {
-            distributionItems.push({
-              label: evmDistribution.netPot ? 'Amount (after fee)' : 'Amount',
-              value: formatEvmDistributionAmount(amount, evmDistribution.asset),
-            });
-          }
-          distributionItems.push({
-            label: 'Paid out',
-            value: evmDistribution.paidOutAt
-              ? `Done — ${evmDistribution.payouts.length} holder(s)`
-              : `${evmDistribution.payouts.length} holder(s) so far`,
-          });
-        }
-
-        // Show execution status if available
-        if (evmDistributionTiming) {
-          const fmt = s => new Date(s * 1000).toLocaleString();
-          distributionItems.push({
-            label: 'Payouts',
-            value: evmDistributionTiming.cancelled
-              ? 'Stopped before opening — the pot returned to the vault'
-              : evmDistributionTiming.pending
-                ? `Open ${fmt(evmDistributionTiming.activatesAt)} (safety review window)`
-                : 'Open',
-          });
-          if (!evmDistributionTiming.cancelled) {
-            distributionItems.push({ label: 'Claims close', value: fmt(evmDistributionTiming.deadline) });
-          }
-        }
+        // EVM distributions: amount, payouts and timing live in <EvmDistributionStatus /> only.
 
         if (proposalDistributionStatus) {
           distributionItems.push({
@@ -1039,20 +982,23 @@ export const ProposalInfo = ({ proposalId }) => {
                   </>
                 )}
               </div>
+            ) : proposalInfo.status === 'executed' && evmDistribution ? (
+              <EvmDistributionStatus
+                distribution={evmDistribution}
+                timing={evmDistributionTiming}
+                chainType={proposalInfo?.vault?.chainType}
+              />
             ) : proposalInfo.status === 'executed' ? (
               <div className="space-y-4">
                 <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center space-y-3">
                   <div className="flex items-center justify-center space-x-2">
                     <CheckCircle className="h-6 w-6 text-green-500" />
-                    <h3 className="text-lg font-semibold text-green-500">
-                      {evmDistribution && !evmDistribution.paidOutAt ? 'Proposal Executed' : 'Successfully Executed'}
-                    </h3>
+                    <h3 className="text-lg font-semibold text-green-500">Successfully Executed</h3>
                   </div>
                   <div className="text-gray-300">
                     {proposalInfo?.proposalType === 'marketplace_action' || proposalInfo?.proposalType === 'buy_sell'
                       ? getMarketplaceActionMessage()
-                      : (evmDistribution && getEvmDistributionMessage(evmDistribution, evmDistributionTiming)) ||
-                        getSuccessMessage(proposalInfo?.proposalType, proposalInfo?.vault)}
+                      : getSuccessMessage(proposalInfo?.proposalType, proposalInfo?.vault)}
                   </div>
                   {proposalInfo?.executionDate && (
                     <div className="text-sm text-gray-400">
@@ -1060,13 +1006,6 @@ export const ProposalInfo = ({ proposalId }) => {
                     </div>
                   )}
                 </div>
-                {evmDistribution && (
-                  <EvmDistributionStatus
-                    distribution={evmDistribution}
-                    timing={evmDistributionTiming}
-                    chainType={proposalInfo?.vault?.chainType}
-                  />
-                )}
               </div>
             ) : proposalInfo?.status === 'rejected' ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center space-y-3">
