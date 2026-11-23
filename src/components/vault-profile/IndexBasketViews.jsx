@@ -286,14 +286,70 @@ export const BasketTiles = ({ assets, formatValue }) => {
   );
 };
 
-/** One thin bar per asset, diverging from zero, sorted from most over to most under target. */
-export const BasketDriftChart = ({ assets }) => {
-  const rows = [...assets].sort((a, b) => b.driftBps - a.driftBps);
+const driftSign = bps => (bps > 0 ? '+' : bps < 0 ? '−' : '');
+
+/**
+ * One thin bar per asset, diverging from zero, sorted from most over to most under target.
+ * Hovering (or tapping) a row highlights it and fills the detail strip above the chart, so a
+ * 50-asset chart stays readable. A large basket folds to its TOP_N biggest drifts.
+ */
+export const BasketDriftChart = ({ assets, formatValue }) => {
+  const [activeId, setActiveId] = useState(null);
+  const [showAll, setShowAll] = useState(false);
+  const large = assets.length > LARGE_BASKET_ASSETS;
+  const shown = useMemo(() => {
+    const byDrift = [...assets].sort((a, b) => Math.abs(b.driftBps) - Math.abs(a.driftBps));
+    const picked = large && !showAll ? byDrift.slice(0, TOP_N) : byDrift;
+    return picked.sort((a, b) => b.driftBps - a.driftBps);
+  }, [assets, large, showAll]);
   // Scale to the largest drift, but never tighter than the alert bound, so small drifts stay small.
-  const range = Math.max(DRIFT_ALERT_BPS, ...rows.map(a => Math.abs(a.driftBps)));
+  const range = Math.max(DRIFT_ALERT_BPS, ...assets.map(a => Math.abs(a.driftBps)));
+  const active = assets.find(a => a.assetAddress === activeId);
+
   return (
-    <div className="space-y-1">
-      <div className="grid grid-cols-[5.5rem_minmax(0,1fr)_4rem] pb-2 text-xs text-dark-100">
+    <div className="space-y-2" onMouseLeave={() => setActiveId(null)}>
+      <div
+        className="flex min-h-[3.25rem] items-center gap-3 rounded-lg bg-steel-850 px-3 py-2 text-sm"
+        aria-live="polite"
+      >
+        {active ? (
+          <>
+            {active.image ? (
+              <img src={active.image} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-steel-750 text-[10px] font-bold">
+                {(active.symbol || '?').slice(0, 2).toUpperCase()}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{active.symbol}</p>
+              {active.name && active.name !== active.symbol && (
+                <p className="truncate text-xs text-dark-100">{active.name}</p>
+              )}
+            </div>
+            <div className="text-right tabular-nums">
+              <p>
+                {formatBps(active.actualBps)}
+                <span className="text-xs text-dark-100"> of {formatBps(active.targetBps)}</span>
+              </p>
+              <p
+                className={cn(
+                  'text-xs',
+                  active.driftBps > 0 ? 'text-orange-400' : active.driftBps < 0 ? 'text-blue-400' : 'text-dark-100'
+                )}
+              >
+                {driftSign(active.driftBps)}
+                {formatBps(Math.abs(active.driftBps))} {active.driftBps >= 0 ? 'over' : 'under'}
+              </p>
+            </div>
+            {formatValue && <p className="hidden w-20 text-right tabular-nums sm:block">{formatValue(active)}</p>}
+          </>
+        ) : (
+          <p className="text-dark-100">Hover or tap a bar to see the asset.</p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-[5.5rem_minmax(0,1fr)_4rem] pb-1 text-xs text-dark-100">
         <span />
         <div className="flex justify-between">
           <span>−{formatBps(range)} under</span>
@@ -302,37 +358,61 @@ export const BasketDriftChart = ({ assets }) => {
         </div>
         <span />
       </div>
-      <ul className="space-y-0.5">
-        {rows.map(a => {
+      <ul>
+        {shown.map(a => {
           const w = (Math.abs(a.driftBps) / range) * 50;
           const strong = isDrifting(a);
+          const isActive = a.assetAddress === activeId;
+          const dimmed = activeId && !isActive;
           const fill = strong ? (a.driftBps > 0 ? '#FB923C' : '#60A5FA') : a.driftBps > 0 ? '#7C4A2A' : '#2F4A6B';
           return (
-            <li
-              key={a.assetAddress}
-              className="grid h-4 grid-cols-[5.5rem_minmax(0,1fr)_4rem] items-center text-[11px]"
-              title={`${a.symbol}: ${formatBps(a.actualBps)} of ${formatBps(a.targetBps)}`}
-            >
-              <span className={cn('truncate', strong ? 'font-semibold text-white' : 'text-dark-100')}>{a.symbol}</span>
-              <span className="relative h-2.5">
-                <span className="absolute -bottom-1 -top-1 left-1/2 w-px bg-steel-700" />
-                <span
-                  className="absolute top-0 h-full rounded-sm"
-                  style={{
-                    left: `${a.driftBps >= 0 ? 50 : 50 - w}%`,
-                    width: `${Math.max(w, 0.4)}%`,
-                    background: fill,
-                  }}
-                />
-              </span>
-              <span className={cn('text-right tabular-nums', strong ? 'text-white' : 'text-dark-100')}>
-                {a.driftBps > 0 ? '+' : a.driftBps < 0 ? '−' : ''}
-                {formatBps(Math.abs(a.driftBps))}
-              </span>
+            <li key={a.assetAddress}>
+              <button
+                type="button"
+                onMouseEnter={() => setActiveId(a.assetAddress)}
+                onFocus={() => setActiveId(a.assetAddress)}
+                onClick={() => setActiveId(id => (id === a.assetAddress ? null : a.assetAddress))}
+                aria-pressed={isActive}
+                className={cn(
+                  'grid h-6 w-full grid-cols-[5.5rem_minmax(0,1fr)_4rem] items-center rounded px-1 text-left text-[11px] transition-opacity',
+                  isActive && 'bg-steel-800',
+                  dimmed && 'opacity-40'
+                )}
+              >
+                <span className={cn('truncate', strong || isActive ? 'font-semibold text-white' : 'text-dark-100')}>
+                  {a.symbol}
+                </span>
+                <span className="relative h-2.5">
+                  <span className="absolute -bottom-1.5 -top-1.5 left-1/2 w-px bg-steel-700" />
+                  <span
+                    className="absolute top-0 h-full rounded-sm"
+                    style={{
+                      left: `${a.driftBps >= 0 ? 50 : 50 - w}%`,
+                      width: `${Math.max(w, 0.4)}%`,
+                      background: fill,
+                    }}
+                  />
+                </span>
+                <span className={cn('text-right tabular-nums', strong || isActive ? 'text-white' : 'text-dark-100')}>
+                  {driftSign(a.driftBps)}
+                  {formatBps(Math.abs(a.driftBps))}
+                </span>
+              </button>
             </li>
           );
         })}
       </ul>
+      {large && (
+        <div className="flex justify-center pt-2">
+          <button
+            type="button"
+            onClick={() => setShowAll(v => !v)}
+            className="h-10 rounded-lg border border-steel-800 bg-steel-850 px-4 text-sm font-medium hover:border-steel-600"
+          >
+            {showAll ? `Show top ${TOP_N} drifts` : `Show all ${assets.length}`}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
