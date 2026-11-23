@@ -392,7 +392,11 @@ const ProposalTimeline = ({ activity, vault }) => {
           icon: CheckCircle,
           tone: 'emerald',
           title: 'Execution',
-          text: getSuccessMessage(activity.proposalType, activity.vault),
+          // An EVM distribution only reserves the pot on execution; holders are paid later.
+          text:
+            activity.distribution && activity.distribution.payouts?.length === 0
+              ? 'The pot is reserved in the vault. Holders are paid automatically once payouts open.'
+              : getSuccessMessage(activity.proposalType, activity.vault),
         }
       : null;
   // While voting is open, show when it closes (as the termination card does).
