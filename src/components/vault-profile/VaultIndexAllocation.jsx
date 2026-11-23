@@ -404,11 +404,6 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
                 target
               </span>
             </div>
-            <p className="text-xs leading-relaxed text-dark-100">
-              Each colored segment is an asset&apos;s current share of the basket. The white ticks mark where each
-              segment should end at its target weight. When prices move, segments grow or shrink and stop lining up with
-              their ticks — that gap is drift. Rebalancing trades the basket back to the ticks.
-            </p>
           </div>
 
           {view === 'tiles' && <BasketTiles assets={holdings} formatValue={formatValue} />}
