@@ -508,8 +508,8 @@ export const VaultIndexAllocationView = ({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <InfoTip icon={PieChart} iconClassName="h-5 w-5">
-            Values are live swap quotes into ETH, refreshed every minute. Ticks on the bar mark target weights; drift is
-            actual minus target, as a share of basket plus cash.
+            Values are live swap quotes into ETH, refreshed every minute. Drift is actual minus target, as a share of
+            basket plus cash.
           </InfoTip>
           <h3 className="text-lg font-semibold">Index basket</h3>
           {config.version > 1 && <span className="text-xs text-dark-100">v{config.version} · set by governance</span>}
@@ -535,7 +535,8 @@ export const VaultIndexAllocationView = ({
         <>
           {showSwitcher && <BasketSummary portfolio={portfolio} />}
 
-          <NowTargetBars segments={segments} />
+          {/* With the List / Tiles / Drift views the stacked bar only repeated them. */}
+          {!showSwitcher && <NowTargetBars segments={segments} />}
 
           {view === 'tiles' && <BasketTiles assets={holdings} formatValue={formatValue} />}
           {view === 'drift' && <BasketDriftChart assets={holdings} formatValue={formatValue} />}
