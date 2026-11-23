@@ -197,7 +197,7 @@ export const VaultLiquidityPool = ({ vault }) => {
       ? { href: getAddressUrl(lp.pair, ChainType.ROBINHOOD), label: `Pair ${shortAddress(lp.pair)}` }
       : null;
   const poolRef = isV4 ? lp.poolId : lp.pair;
-  const poolUrl = poolRef ? `https://dexscreener.com/robinhood/${poolRef.toLowerCase()}` : null;
+  const poolUrl = poolRef ? `https://app.uniswap.org/explore/pools/robinhood/${poolRef.toLowerCase()}` : null;
 
   // Share of the pool by value. v4 sends exact per-position sums; V2 is one pro-rata LP token.
   const share = lp.vaultSharePct === null || lp.vaultSharePct === undefined ? null : Number(lp.vaultSharePct);
@@ -245,6 +245,9 @@ export const VaultLiquidityPool = ({ vault }) => {
           <span className="text-xs text-dark-100">
             {ticker} / ETH · {vault.liquidityPoolContribution}% LP
             {lp.protocol && ` · Uniswap ${isV4 ? 'v4' : 'V2'}`}
+            {hasPositions && lp.status === 'provided' && priceLabel && (
+              <>{` · ${priceLabel}${currency === 'eth' ? ' ETH' : ''} / ${ticker} · TVL ${money(poolValue)}`}</>
+            )}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -281,18 +284,22 @@ export const VaultLiquidityPool = ({ vault }) => {
 
       {lp.status === 'provided' ? (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <StatGroup title="Pool total" hint="All liquidity providers">
-            <Stat label={ticker} value={formatAmount(lp.reserveVt, 2)} />
-            <Stat label="ETH" value={formatAmount(lp.reserveNative)} />
-            <Stat label="Liquidity" value={money(poolValue)} />
-            <Stat label={`Price / ${ticker}`} value={priceLabel} unit={currency === 'eth' ? 'ETH' : undefined} />
-          </StatGroup>
-          <StatGroup title="Vault position" hint="Owned by this vault">
-            <Stat label={ticker} value={vaultVt === null ? '—' : formatAmount(vaultVt, 2)} />
-            <Stat label="ETH" value={vaultNative === null ? '—' : formatAmount(vaultNative)} />
-            <Stat label="Value" value={money(vaultValue)} />
-            <Stat label="Share of pool" value={share === null ? '—' : `${formatAmount(share, 2)}%`} />
-          </StatGroup>
+          {!hasPositions && (
+            <>
+              <StatGroup title="Pool total" hint="All liquidity providers">
+                <Stat label={ticker} value={formatAmount(lp.reserveVt, 2)} />
+                <Stat label="ETH" value={formatAmount(lp.reserveNative)} />
+                <Stat label="Liquidity" value={money(poolValue)} />
+                <Stat label={`Price / ${ticker}`} value={priceLabel} unit={currency === 'eth' ? 'ETH' : undefined} />
+              </StatGroup>
+              <StatGroup title="Vault position" hint="Owned by this vault">
+                <Stat label={ticker} value={vaultVt === null ? '—' : formatAmount(vaultVt, 2)} />
+                <Stat label="ETH" value={vaultNative === null ? '—' : formatAmount(vaultNative)} />
+                <Stat label="Value" value={money(vaultValue)} />
+                <Stat label="Share of pool" value={share === null ? '—' : `${formatAmount(share, 2)}%`} />
+              </StatGroup>
+            </>
+          )}
           {hasPositions && (
             <PoolPositions
               positions={lp.positions}

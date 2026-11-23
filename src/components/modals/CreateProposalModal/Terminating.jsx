@@ -190,9 +190,18 @@ export default function Terminating({ onClose, vaultId, onDataChange }) {
               );
             })
           )}
-          {!isLoading && evm && TerminatingAssets.length === 0 && (
+          {!isLoading && evm && TerminatingAssets.length === 0 && !validation.blockingReason && (
             <p className="text-sm text-dark-100">The vault holds no assets to distribute.</p>
           )}
+          {/* Empty vault (or other non-LP block): say why termination is unavailable. */}
+          {!isLoading &&
+            !validation.canCreateProposal &&
+            validation.blockingReason &&
+            !terminationData?.data?.lpInfo?.hasLp && (
+              <div className="bg-red-900/20 border border-red-500/30 rounded p-3">
+                <p className="text-red-400 text-sm">{validation.blockingReason}</p>
+              </div>
+            )}
         </div>
 
         {!isLoading && evm && <EvmTerminationSteps evm={evm} />}
