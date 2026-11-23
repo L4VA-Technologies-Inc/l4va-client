@@ -420,8 +420,17 @@ const DistributionTxs = ({ distribution, vault }) => {
 
 const ProposalTimeline = ({ activity, vault }) => {
   const entries = getProposalTimeline(activity);
+  // The API sends the error message; a proposal waiting for the vault (not failed) starts with "Waiting:".
+  const waiting = typeof activity.executionError === 'string' && activity.executionError.startsWith('Waiting:');
   const outcome = activity.executionError
-    ? { icon: XCircle, tone: 'rose', title: 'Execution', text: activity.executionError }
+    ? waiting
+      ? {
+          icon: Clock,
+          tone: 'orange',
+          title: 'Waiting to run',
+          text: activity.executionError.replace(/^Waiting:\s*/, ''),
+        }
+      : { icon: XCircle, tone: 'rose', title: 'Execution', text: activity.executionError }
     : activity.stage === 'ended' && activity.status === 'executed'
       ? {
           icon: CheckCircle,
@@ -512,7 +521,7 @@ const ProposalTimeline = ({ activity, vault }) => {
             <span
               className={clsx(
                 'absolute inset-y-0 left-0 w-1',
-                outcome.tone === 'rose' ? 'bg-rose-500' : 'bg-emerald-500'
+                outcome.tone === 'rose' ? 'bg-rose-500' : outcome.tone === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
               )}
             />
             <div className="flex flex-wrap items-center gap-2">

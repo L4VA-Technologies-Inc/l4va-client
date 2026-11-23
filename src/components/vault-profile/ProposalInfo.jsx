@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy } from 'lucide-react';
+import { CheckCircle, XCircle, Ellipsis, AlertCircle, Download, Copy, Clock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@ada-anvil/weld/react';
 import { useRouter } from '@tanstack/react-router';
@@ -852,7 +852,18 @@ export const ProposalInfo = ({ proposalId }) => {
             </div>
           )}
           <div className={`order-2 space-y-4 ${showVotePanel ? '' : 'hidden'}`}>
-            {proposalInfo?.executionError ? (
+            {proposalInfo?.executionError?.errorCode === 'WAITING_FOR_VAULT_STATE' ? (
+              // Passed, and runs on its own once the vault is ready (e.g. an expansion still running).
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-6 space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-orange-500" />
+                  <h3 className="text-lg font-semibold text-orange-500">Waiting to run</h3>
+                </div>
+                <div className="text-orange-200">
+                  {proposalInfo.executionError.userFriendlyMessage || proposalInfo.executionError.message}
+                </div>
+              </div>
+            ) : proposalInfo?.executionError ? (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 space-y-3">
                 <div className="flex items-center space-x-2">
                   <AlertCircle className="h-5 w-5 text-red-500" />
