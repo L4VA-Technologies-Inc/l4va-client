@@ -15,6 +15,56 @@ const ActionField = ({ label, value, children, className }) => (
 /** Truncate a 0x address for display. */
 const shortAddr = addr => (addr ? `${addr.slice(0, 8)}\u2026${addr.slice(-6)}` : 'N/A');
 
+const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
+const tokenLabel = addr => (!addr || addr.toLowerCase() === ZERO_ADDR ? 'ETH' : shortAddr(addr));
+const formatAmount = v => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return v ?? 'N/A';
+  return n.toLocaleString(undefined, { maximumFractionDigits: n >= 1 ? 4 : 8 });
+};
+
+/** Compact table for EVM Uniswap swaps: one row per swap instead of a 5-line block each. */
+const EvmSwapTable = ({ actions }) => (
+  <div className="flex flex-col gap-3">
+    <div className="flex justify-between items-center">
+      <div className="text-gray-400">Actions</div>
+      <div className="text-white text-sm">{actions.length} token swap(s) · Uniswap (Robinhood Chain)</div>
+    </div>
+    <div className="max-h-96 overflow-auto rounded-lg border border-steel-750">
+      <table className="w-full text-sm">
+        <thead className="sticky top-0 bg-steel-950 text-gray-400">
+          <tr>
+            <th className="px-3 py-2 text-left font-normal">#</th>
+            <th className="px-3 py-2 text-left font-normal">Sell</th>
+            <th className="px-3 py-2 text-left font-normal">For</th>
+            <th className="px-3 py-2 text-right font-normal">Amount</th>
+            {actions.some(a => a.assetStatus) && <th className="px-3 py-2 text-right font-normal">Status</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {actions.map((action, index) => (
+            <tr key={index} className="border-t border-steel-750 text-white">
+              <td className="px-3 py-2 text-gray-500">{index + 1}</td>
+              <td className="px-3 py-2 font-mono" title={action.inputAsset}>
+                {tokenLabel(action.inputAsset)}
+              </td>
+              <td className="px-3 py-2 font-mono" title={action.expectedOutputAsset}>
+                {tokenLabel(action.expectedOutputAsset)}
+              </td>
+              <td className="px-3 py-2 text-right" title={String(action.humanAmount || action.amount || '')}>
+                {formatAmount(action.humanAmount || action.amount)}
+              </td>
+              {actions.some(a => a.assetStatus) && (
+                <td className="px-3 py-2 text-right uppercase">{action.assetStatus || '—'}</td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
 export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainType }) => {
   const { currencyLabel } = useCurrency();
 
@@ -23,6 +73,8 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
   const isDexHunterSwap = actions[0]?.market === 'DexHunter' || actions[0]?.slippage !== undefined;
   const isEvmUniswapSwap = actions[0]?.market === 'Uniswap' && actions[0]?.inputAsset;
   const isEvmClosePosition = actions[0]?.exec === 'CLOSE_POSITION';
+
+  if (isEvmUniswapSwap) return <EvmSwapTable actions={actions} />;
 
   return (
     <div className="flex flex-col gap-4">
