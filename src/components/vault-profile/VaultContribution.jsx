@@ -56,7 +56,10 @@ const ProgressBubble = ({ value, progress }) => {
 };
 
 const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, currencyLabel }) => {
-  const hasMax = !vault.acquireExpansionNoMax && vault.acquireExpansionMaxAda > 0;
+  const isEvm = vault?.chainType?.toLowerCase() === 'robinhood';
+  // EVM limits are set in ETH; the ADA figure is only derived from it.
+  const hasMax =
+    !vault.acquireExpansionNoMax && (isEvm ? vault.acquireExpansionMaxEth > 0 : vault.acquireExpansionMaxAda > 0);
   const currentAda = vault.acquireExpansionCurrentAda || 0;
   const currentUsd = vault.acquireExpansionCurrentUsd || 0;
   const currentEth = vault.acquireExpansionCurrentEth || 0;
@@ -64,10 +67,12 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
   const maxUsd = vault.acquireExpansionMaxUsd || 0;
   const maxEth = vault.acquireExpansionMaxEth || 0;
 
-  const isEvm = vault?.chainType?.toLowerCase() === 'robinhood';
   const progress = hasMax ? (isEvm ? calculateProgress(currentEth, maxEth) : calculateProgress(currentAda, maxAda)) : 0;
   // A real but tiny raise must not read as 0.
   const fmtRaised = value => (value > 0 && value < 0.01 ? '<0.01' : formatNum(value));
+  // ETH amounts here are small (e.g. 0.045581), so they keep 6 decimals.
+  const isEthDisplay = isEvm && pickByCurrency({ ada: false, usd: false, eth: true });
+  const fmtAmount = value => (isEthDisplay ? formatNum(value, 6) : fmtRaised(value));
 
   return (
     <div>
@@ -77,7 +82,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
           <div className="flex justify-between text-sm mb-1">
             <span className="text-dark-100">
               Raised:{' '}
-              {`${currencySymbol}${fmtRaised(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
+              {`${currencySymbol}${fmtAmount(pickByCurrency({ ada: currentAda, usd: currentUsd, eth: currentEth }))}`}
             </span>
             <span className="text-dark-100">{Math.floor(progress)}%</span>
           </div>
@@ -95,7 +100,7 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
           <div className="flex justify-between w-full text-xs text-dark-100">
             <span>min 0 {currencyLabel}</span>
             <span>
-              max {`${currencySymbol}${formatNum(pickByCurrency({ ada: maxAda, usd: maxUsd, eth: maxEth }))}`}
+              max {`${currencySymbol}${fmtAmount(pickByCurrency({ ada: maxAda, usd: maxUsd, eth: maxEth }))}`}
             </span>
           </div>
         </>
