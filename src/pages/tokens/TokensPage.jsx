@@ -3,6 +3,7 @@ import { Flame, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
+import { TokenSwapModal } from '@/components/modals/TokenSwapModal';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { Pagination } from '@/components/shared/Pagination';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -251,6 +252,8 @@ export const TokensPage = () => {
   const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
   const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
 
+  const [swapToken, setSwapToken] = useState(null);
+
   const openToken = id => {
     navigate({ to: '/tokens/$id', params: { id } });
   };
@@ -468,7 +471,7 @@ export const TokensPage = () => {
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Price / %Δ</th>
               <th className="px-4 py-3 font-medium">FDV</th>
-              <th className="px-4 py-3 font-medium">Vol</th>
+              {!isRobinhood && <th className="px-4 py-3 font-medium">Vol</th>}
               <th className="px-4 py-3 font-medium">{isRobinhood ? 'Liquidity' : 'Last 24h'}</th>
               <th className="px-4 py-3 font-medium">{isRobinhood ? 'Holders' : '24h Range'}</th>
               <th className="px-4 py-3 font-medium">Mcap</th>
@@ -512,7 +515,9 @@ export const TokensPage = () => {
                       <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
                     </td>
                     <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
-                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
+                    {!isRobinhood && (
+                      <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
+                    )}
                     <td className="px-4 py-4 text-sm text-white tabular-nums">
                       {isRobinhood ? (
                         formatTokenField(token, 'liquidity')
@@ -550,7 +555,8 @@ export const TokensPage = () => {
                         type="button"
                         onClick={e => {
                           e.stopPropagation();
-                          openToken(token.id);
+                          if (isRobinhood) setSwapToken(token);
+                          else openToken(token.id);
                         }}
                         className="inline-flex items-center justify-center rounded-lg bg-orange-500/15 px-3 py-1.5 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-500/25"
                         aria-label={`Buy ${token.symbol}`}
@@ -564,6 +570,8 @@ export const TokensPage = () => {
           </tbody>
         </table>
       </div>
+
+      {isRobinhood && <TokenSwapModal token={swapToken} onClose={() => setSwapToken(null)} />}
 
       {isLoading ? (
         <div className="flex justify-center gap-2">

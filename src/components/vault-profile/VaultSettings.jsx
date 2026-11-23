@@ -2,6 +2,7 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { useReadContract } from 'wagmi';
 import { Copy } from 'lucide-react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 
@@ -106,6 +107,14 @@ export const VaultSettings = ({ vault }) => {
 
   const isOwner = user?.id === vault.owner.id;
   const isRobinhoodVault = vault?.chainType === 'robinhood';
+  const { data: evmVaultTokenAddress } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [
+      { type: 'function', stateMutability: 'view', name: 'vaultToken', inputs: [], outputs: [{ type: 'address' }] },
+    ],
+    functionName: 'vaultToken',
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+  });
   const canCancelVaultByOwner = isOwner && vault?.canCancelVault;
   // Burn Vault is not supported on Robinhood (EVM) vaults.
   const canBurnVault = isOwner && vault?.vaultStatus === 'failed' && !isRobinhoodVault;
@@ -200,6 +209,9 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Token Name" value={vault.name} />
             <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
             {vault.policyId && <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />}
+            {isRobinhoodVault && evmVaultTokenAddress && (
+              <InfoRow hideLongString copyable label="Token Contract" value={evmVaultTokenAddress} />
+            )}
             <InfoRow
               customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
               valueWrapperClassName="w-full justify-start sm:w-auto sm:min-w-0 sm:justify-end"
