@@ -67,7 +67,16 @@ const AcquireExpansionProgress = ({ vault, currencySymbol, pickByCurrency, curre
   const maxUsd = vault.acquireExpansionMaxUsd || 0;
   const maxEth = vault.acquireExpansionMaxEth || 0;
 
-  const progress = hasMax ? (isEvm ? calculateProgress(currentEth, maxEth) : calculateProgress(currentAda, maxAda)) : 0;
+  const rawProgress = hasMax
+    ? isEvm
+      ? calculateProgress(currentEth, maxEth)
+      : calculateProgress(currentAda, maxAda)
+    : 0;
+  // Full once less than one minimum acquire is left (0.001 ETH / 5 ADA): nothing more fits, and the
+  // backend closes the window. Also covers float rounding of a raise rebuilt from wei.
+  const minAcquire = isEvm ? 0.001 : 5;
+  const left = isEvm ? maxEth - currentEth : maxAda - currentAda;
+  const progress = hasMax && left < minAcquire ? 100 : rawProgress;
   // A real but tiny raise must not read as 0.
   const fmtRaised = value => (value > 0 && value < 0.01 ? '<0.01' : formatNum(value));
   // ETH amounts here are small (e.g. 0.045581), so they keep 6 decimals.
