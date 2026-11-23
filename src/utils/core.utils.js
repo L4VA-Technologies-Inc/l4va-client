@@ -712,6 +712,19 @@ export const formatProposalEndDate = endDate => {
   };
 };
 
+/**
+ * End of an expansion phase. A V13 vault's expansion cannot close on-chain before 24 h after it
+ * opened (`evmV13.expansionEarliestCloseAt`), even when its maximum fills early, so the countdown
+ * runs to the later of that and the configured end instead of showing 00:00 while it waits.
+ */
+const expansionEndTime = vault => {
+  const configured = vault.expansionPhaseStart
+    ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration
+    : Date.now();
+  const onchainMin = (vault.evmV13?.expansionEarliestCloseAt || 0) * 1000;
+  return Math.max(configured, onchainMin);
+};
+
 const VAULT_STATUS_CONFIG = {
   published: {
     countdownName: 'Contribution starts in:',
@@ -757,15 +770,13 @@ const VAULT_STATUS_CONFIG = {
   },
   expansion: {
     countdownName: 'Expansion ends in:',
-    getCountdownTime: vault =>
-      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    getCountdownTime: expansionEndTime,
     buttonText: 'Contribute',
     isCountdownActive: true,
   },
   acquire_expansion: {
     countdownName: 'Acquire Expansion ends in:',
-    getCountdownTime: vault =>
-      vault.expansionPhaseStart ? new Date(vault.expansionPhaseStart).getTime() + vault.expansionDuration : Date.now(),
+    getCountdownTime: expansionEndTime,
     buttonText: 'Acquire',
     isCountdownActive: true,
   },
