@@ -7,20 +7,27 @@ const VAULT_TOKEN_ABI = [
   { type: 'function', stateMutability: 'view', name: 'vaultToken', inputs: [], outputs: [{ type: 'address' }] },
 ];
 
-// Quick-buy modal for the Robinhood tokens list. Vault rows carry the vault contract,
-// so the VT address is read from `vaultToken()`; market rows carry the token address directly.
+// Quick-buy modal for the Robinhood tokens list. Prefer an explicit token address from the row.
+// A vault row's `contract_address` may be the vault (resolve via `vaultToken()`) or already the
+// VT itself — then `vaultToken()` reverts and the address is used as is.
 export const TokenSwapModal = ({ token, onClose }) => {
   const isVault = token?.source === 'vault';
-  const vaultContract = isVault ? token?.contract_address : undefined;
+  const directAddress = token?.swap?.token || token?.token_address || (isVault ? undefined : token?.address);
+  const vaultContract = isVault && !directAddress ? token?.contract_address : undefined;
 
-  const { data: vaultTokenAddress, isLoading } = useReadContract({
+  const {
+    data: vaultTokenAddress,
+    isLoading,
+    isError,
+  } = useReadContract({
     address: vaultContract,
     abi: VAULT_TOKEN_ABI,
     functionName: 'vaultToken',
-    query: { enabled: Boolean(vaultContract) },
+    // A revert means "this is already the token" — retrying only delays the fallback.
+    query: { enabled: Boolean(vaultContract), retry: false },
   });
 
-  const tokenAddress = isVault ? vaultTokenAddress : token?.swap?.token || token?.address;
+  const tokenAddress = directAddress || vaultTokenAddress || (isError ? vaultContract : undefined);
   const symbol = token?.symbol || 'TOKEN';
 
   return (

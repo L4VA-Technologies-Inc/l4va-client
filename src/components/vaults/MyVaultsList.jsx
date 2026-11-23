@@ -9,10 +9,10 @@ import { scrollBehavior } from '@/utils/a11y';
 const VAULT_TABS = {
   ALL: 'All',
   DRAFT: 'Draft',
-  UPCOMING: 'Upcoming',
+  // Upcoming (published) vaults are part of Open.
   OPEN: 'Open',
-  // Govern vaults are locked vaults with an active proposal, so the Locked tab already covers them.
-  LOCKED: 'Locked',
+  // Same as the browse Govern tab: every locked vault.
+  GOVERN: 'Govern',
   FAILED: 'Failed',
   TERMINATED: 'Terminated',
 };
@@ -24,8 +24,8 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   const [activeTab, setActiveTab] = useState(() => {
     const normalized = initialTab ? capitalizeFirst(initialTab) : null;
 
-    if (normalized === 'Published') return 'Upcoming';
-    if (normalized === 'Govern') return 'Locked';
+    if (normalized === 'Published' || normalized === 'Upcoming') return 'Open';
+    if (normalized === 'Locked') return 'Govern';
 
     if (normalized && TABS.includes(normalized)) {
       return normalized;
@@ -36,7 +36,12 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
   const [appliedFilters, setAppliedFilters] = useState(() => {
     const requestedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
-    const capitalizedTab = requestedTab === 'Govern' ? 'Locked' : requestedTab;
+    const capitalizedTab =
+      requestedTab === 'Locked'
+        ? 'Govern'
+        : requestedTab === 'Published' || requestedTab === 'Upcoming'
+          ? 'Open'
+          : requestedTab;
     const initialActiveTab = capitalizedTab && TABS.includes(capitalizedTab) ? capitalizedTab : TABS[0];
     const newTab =
       initialActiveTab === 'Upcoming'

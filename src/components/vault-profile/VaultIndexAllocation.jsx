@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalLink, Info, Layers, PieChart, RefreshCcw, Wallet } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -35,25 +35,47 @@ import { formatDateWithTime, formatNum } from '@/utils/core.utils';
 const OUTSIDE_BASKET_COLOR = '#64748B';
 const RESERVE_COLOR = 'var(--color-steel-600)';
 
-// Same hover tooltip as the profile icon row; also opens on keyboard focus / tap.
-const InfoTip = ({ children, align = 'left', icon: Icon = Info, iconClassName = 'h-4 w-4' }) => (
-  <span className="group relative inline-flex">
-    <button type="button" aria-label="More info" className="text-dark-100 hover:text-white focus:text-white">
-      <Icon className={iconClassName} />
-    </button>
-    <span
-      role="tooltip"
-      className={cn(
-        // `hidden` (not opacity-0) so the closed tooltip takes no layout space: an invisible
-        // 16rem box near the card edge widened the page on phones.
-        'pointer-events-none absolute top-full z-20 mt-2 hidden w-64 max-w-[calc(100vw-3rem)] rounded-lg bg-steel-850 px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-lg group-hover:block group-focus-within:block',
-        align === 'right' ? 'right-0' : '-left-2'
-      )}
-    >
-      {children}
+// Hover tooltip on desktop; on touch it toggles on tap (iOS Safari never focuses a tapped
+// button, so `focus-within` alone left it unopenable on phones) and closes on any outside tap.
+const InfoTip = ({ children, align = 'left', icon: Icon = Info, iconClassName = 'h-4 w-4' }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = e => {
+      if (!ref.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open]);
+
+  return (
+    <span ref={ref} className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label="More info"
+        aria-expanded={open}
+        onClick={() => setOpen(v => !v)}
+        className="text-dark-100 hover:text-white focus:text-white"
+      >
+        <Icon className={iconClassName} />
+      </button>
+      <span
+        role="tooltip"
+        className={cn(
+          // `hidden` (not opacity-0) so the closed tooltip takes no layout space: an invisible
+          // 16rem box near the card edge widened the page on phones.
+          'pointer-events-none absolute top-full z-20 mt-2 w-64 max-w-[calc(100vw-3rem)] rounded-lg bg-steel-850 px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-lg group-hover:block group-focus-within:block',
+          open ? 'block' : 'hidden',
+          align === 'right' ? 'right-0' : '-left-2'
+        )}
+      >
+        {children}
+      </span>
     </span>
-  </span>
-);
+  );
+};
 
 const TokenIcon = ({ asset }) =>
   asset.image ? (
@@ -175,8 +197,51 @@ const skippedTradeMessage = leg => {
   return null;
 };
 
-const RebalanceHistory = ({ rebalances }) => {
+const legSymbol = (leg, symbols) => {
+  const asset = (leg.side === 'sell' ? leg.assetIn : leg.assetOut)?.toLowerCase();
+  return leg.symbol || symbols.get(asset) || (asset ? `${asset.slice(0, 6)}…${asset.slice(-4)}` : '');
+};
+
+// Trades are collapsed behind a toggle: an initial buy has one leg per asset, and a row of
+// identical "Buy" links was unreadable.
+const RebalanceTrades = ({ legs, symbols }) => {
+  const [open, setOpen] = useState(false);
+  if (!legs.length) return null;
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="text-xs text-dark-100 underline-offset-2 hover:text-white hover:underline"
+      >
+        {open ? 'Hide transactions' : `Show ${legs.length} transaction${legs.length === 1 ? '' : 's'}`}
+      </button>
+      {open && (
+        <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-3 lg:grid-cols-4">
+          {legs.map(l => (
+            <a
+              key={l.operationId}
+              href={getTransactionUrl(l.txHash, ChainType.ROBINHOOD)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-dark-100 underline-offset-2 hover:text-white hover:underline"
+            >
+              <span className="capitalize">{l.side}</span>
+              <span className="truncate text-white">{legSymbol(l, symbols)}</span>
+              <ExternalLink className="h-3 w-3 flex-shrink-0" />
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const RebalanceHistory = ({ rebalances, assets = [] }) => {
   if (!rebalances?.length) return null;
+  const symbols = new Map(
+    assets.filter(a => a?.assetAddress && a.symbol).map(a => [a.assetAddress.toLowerCase(), a.symbol])
+  );
   return (
     <div className="space-y-3">
       <h4 className="flex items-center gap-2 text-sm font-semibold">
@@ -207,20 +272,8 @@ const RebalanceHistory = ({ rebalances }) => {
                   {traded.length} trade{traded.length === 1 ? '' : 's'}
                 </span>
                 {run.navNative && <span>NAV at start: {formatNativeWei(run.navNative)} ETH</span>}
-                {traded
-                  .filter(l => l.txHash)
-                  .map(l => (
-                    <a
-                      key={l.operationId}
-                      href={getTransactionUrl(l.txHash, ChainType.ROBINHOOD)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 capitalize text-dark-100 underline-offset-2 hover:text-white hover:underline"
-                    >
-                      {l.side} {l.symbol} <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ))}
               </div>
+              <RebalanceTrades legs={traded.filter(l => l.txHash)} symbols={symbols} />
               {run.status === 'failed' && (
                 <p className="mt-2 text-xs text-red-400">
                   Trading paused before the basket was complete. It will be retried; funds stay in the vault.
@@ -351,6 +404,11 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
                 target
               </span>
             </div>
+            <p className="text-xs leading-relaxed text-dark-100">
+              Each colored segment is an asset&apos;s current share of the basket. The white ticks mark where each
+              segment should end at its target weight. When prices move, segments grow or shrink and stop lining up with
+              their ticks — that gap is drift. Rebalancing trades the basket back to the ticks.
+            </p>
           </div>
 
           {view === 'tiles' && <BasketTiles assets={holdings} formatValue={formatValue} />}
@@ -436,7 +494,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
         </div>
       )}
 
-      <RebalanceHistory rebalances={rebalances} />
+      <RebalanceHistory rebalances={rebalances} assets={[...config.targets, ...holdings]} />
     </section>
   );
 };
