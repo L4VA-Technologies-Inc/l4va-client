@@ -105,7 +105,10 @@ export function UniswapSwapPanel({
   tokenDecimals: tokenDecimalsProp,
   tokenImage,
   disabledReason,
+  // Token address still resolving: render the full panel (no layout jump) but keep it inert.
+  loading = false,
 }) {
+  const locked = !!disabledReason || loading || !tokenAddress;
   const { openModal } = useModalControls();
   const { address, isConnected, chainId } = useAccount();
   const { isAuthenticated, user } = useAuth();
@@ -196,7 +199,7 @@ export function UniswapSwapPanel({
   useEffect(() => {
     setQuotePreview(null);
     const trimmed = amountIn.trim();
-    if (disabledReason || !trimmed || !address || !isConnected || Number(trimmed) <= 0) return undefined;
+    if (locked || !trimmed || !address || !isConnected || Number(trimmed) <= 0) return undefined;
 
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -235,7 +238,7 @@ export function UniswapSwapPanel({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [amountIn, address, isConnected, tokenIn, tokenOut, decimalsIn, slippage, disabledReason]);
+  }, [amountIn, address, isConnected, tokenIn, tokenOut, decimalsIn, slippage, locked]);
 
   const ensureChain = useCallback(async () => {
     if (chainId === targetChainId) return;
@@ -388,7 +391,7 @@ export function UniswapSwapPanel({
     <div
       className={clsx(
         'bg-steel-850 border border-steel-750 rounded-2xl p-4 flex flex-col gap-3',
-        disabledReason && '[&_input]:cursor-not-allowed [&_input]:opacity-50'
+        locked && '[&_input]:cursor-not-allowed [&_input]:opacity-50'
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -401,7 +404,7 @@ export function UniswapSwapPanel({
           <button
             key={s}
             type="button"
-            disabled={!!disabledReason}
+            disabled={locked}
             onClick={() => {
               setSide(s);
               setEthAmount('');
@@ -423,7 +426,7 @@ export function UniswapSwapPanel({
           <button
             type="button"
             onClick={onMax}
-            disabled={!!disabledReason}
+            disabled={locked}
             className="hover:text-white transition-colors disabled:hover:text-dark-100 disabled:cursor-not-allowed"
           >
             Bal {balanceLabel} {side === 'buy' ? 'ETH' : tokenSymbol}
@@ -438,14 +441,14 @@ export function UniswapSwapPanel({
             placeholder="0.0"
             onWheel={e => e.currentTarget.blur()}
             value={usdMode ? usdInput : amountIn}
-            disabled={!!disabledReason}
+            disabled={locked}
             onChange={e => (usdMode ? onUsdChange(e.target.value) : setEthAmount(e.target.value))}
             className="flex-1 bg-transparent text-xl text-white font-medium outline-none tabular-nums min-w-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
           />
           {side === 'buy' && ethUsd > 0 ? (
             <button
               type="button"
-              disabled={!!disabledReason}
+              disabled={locked}
               title={usdMode ? 'Enter the amount in ETH' : 'Enter the amount in USD'}
               onClick={() => setIsUsdInput(prev => !prev)}
               className="shrink-0 flex items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 px-2.5 py-1 text-xs text-white transition-colors hover:border-steel-600 disabled:cursor-not-allowed"
@@ -507,7 +510,7 @@ export function UniswapSwapPanel({
           <button
             key={opt.value}
             type="button"
-            disabled={!!disabledReason}
+            disabled={locked}
             onClick={() => setSlippage(opt.value)}
             className={clsx(
               'px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors',
@@ -537,19 +540,19 @@ export function UniswapSwapPanel({
 
       <button
         type="button"
-        disabled={!!disabledReason || busy || (isSignedIn && (!amountIn || Number(amountIn) <= 0))}
+        disabled={locked || busy || (isSignedIn && (!amountIn || Number(amountIn) <= 0))}
         onClick={executeSwap}
         className={clsx(
           'w-full rounded-xl py-2.5 text-sm font-medium transition-colors',
           'bg-orange-500 text-steel-950 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed'
         )}
       >
-        {busy ? (
+        {busy || (loading && !disabledReason) ? (
           <span className="inline-flex items-center gap-2 justify-center">
             <span className="scale-75">
               <Spinner />
             </span>
-            Swapping…
+            {busy ? 'Swapping…' : 'Loading…'}
           </span>
         ) : disabledReason ? (
           'Swap unavailable'
