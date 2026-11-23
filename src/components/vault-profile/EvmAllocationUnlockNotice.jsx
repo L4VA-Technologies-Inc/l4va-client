@@ -46,12 +46,17 @@ export const EvmAllocationUnlockNotice = ({ status }) => {
       <Clock className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
       <div className="text-xs text-steel-300 space-y-1">
         <p className="font-medium text-steel-200">
-          Contributor allocations unlock {formatLeft(status.rootActivatesAt - now)}
+          {status.isExpansion ? 'Expansion vault tokens unlock' : 'Contributor allocations unlock'}{' '}
+          {formatLeft(status.rootActivatesAt - now)}
         </p>
-        <p>
-          Asset contributors receive their VT and ETH after a safety review window ({unlocksAt.toLocaleString()}).
-          Acquirers&apos; VT is sent without waiting.
-        </p>
+        {status.isExpansion ? (
+          <p>Vault tokens from this expansion are sent after a safety review window ({unlocksAt.toLocaleString()}).</p>
+        ) : (
+          <p>
+            Asset contributors receive their VT and ETH after a safety review window ({unlocksAt.toLocaleString()}).
+            Acquirers&apos; VT is sent without waiting.
+          </p>
+        )}
       </div>
     </div>
   );
