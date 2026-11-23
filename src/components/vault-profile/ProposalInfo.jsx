@@ -676,6 +676,11 @@ export const ProposalInfo = ({ proposalId }) => {
       : null;
   const showVotePanel = !isActive || detailPage === 'vote';
   const showResultsPanel = !isActive || detailPage === 'results';
+  // A list of Uniswap swaps needs the full card width, so title/description stack above it.
+  const hasEvmSwapTable =
+    proposalInfo?.vault?.chainType === ChainType.ROBINHOOD &&
+    Array.isArray(marketplaceActionsInfo) &&
+    marketplaceActionsInfo.some(a => a?.market === 'Uniswap' && a?.inputAsset);
 
   return (
     <div>
@@ -714,9 +719,9 @@ export const ProposalInfo = ({ proposalId }) => {
           </div>
 
           <div
-            className={`order-3 flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 sm:flex-row flex-col ${
-              showResultsPanel ? '' : 'hidden'
-            }`}
+            className={`order-3 flex w-full justify-between gap-8 bg-steel-850 rounded-lg p-6 flex-col ${
+              hasEvmSwapTable ? '' : 'sm:flex-row'
+            } ${showResultsPanel ? '' : 'hidden'}`}
           >
             <div className="w-full space-y-2">
               <div className="flex justify-between">
@@ -751,6 +756,7 @@ export const ProposalInfo = ({ proposalId }) => {
                             actions={item.value}
                             type="marketplace"
                             chainType={proposalInfo?.vault?.chainType}
+                            vaultId={proposalInfo?.vaultId}
                           />
                         );
                       }
@@ -762,6 +768,7 @@ export const ProposalInfo = ({ proposalId }) => {
                             actions={item.value}
                             type="buy_sell"
                             chainType={proposalInfo?.vault?.chainType}
+                            vaultId={proposalInfo?.vaultId}
                           />
                         );
                       }

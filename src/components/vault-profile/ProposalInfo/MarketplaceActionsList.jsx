@@ -1,9 +1,11 @@
 import { ExternalLink } from 'lucide-react';
+import { useMemo } from 'react';
 
 import { getTransactionUrl } from '@/utils/explorer.utils';
 import { LazyImage } from '@/components/shared/LazyImage';
 import { formatAdaPrice } from '@/utils/core.utils';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
 
 const ActionField = ({ label, value, children, className }) => (
   <div className="flex justify-between items-center">
@@ -16,56 +18,116 @@ const ActionField = ({ label, value, children, className }) => (
 const shortAddr = addr => (addr ? `${addr.slice(0, 8)}\u2026${addr.slice(-6)}` : 'N/A');
 
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
-const tokenLabel = addr => (!addr || addr.toLowerCase() === ZERO_ADDR ? 'ETH' : shortAddr(addr));
 const formatAmount = v => {
   const n = Number(v);
   if (!Number.isFinite(n)) return v ?? 'N/A';
   return n.toLocaleString(undefined, { maximumFractionDigits: n >= 1 ? 4 : 8 });
 };
 
-/** Compact table for EVM Uniswap swaps: one row per swap instead of a 5-line block each. */
-const EvmSwapTable = ({ actions }) => (
-  <div className="flex flex-col gap-3">
-    <div className="flex justify-between items-center">
-      <div className="text-gray-400">Actions</div>
-      <div className="text-white text-sm">{actions.length} token swap(s) · Uniswap (Robinhood Chain)</div>
-    </div>
-    <div className="max-h-96 overflow-auto rounded-lg border border-steel-750">
-      <table className="w-full text-sm">
-        <thead className="sticky top-0 bg-steel-950 text-gray-400">
-          <tr>
-            <th className="px-3 py-2 text-left font-normal">#</th>
-            <th className="px-3 py-2 text-left font-normal">Sell</th>
-            <th className="px-3 py-2 text-left font-normal">For</th>
-            <th className="px-3 py-2 text-right font-normal">Amount</th>
-            {actions.some(a => a.assetStatus) && <th className="px-3 py-2 text-right font-normal">Status</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {actions.map((action, index) => (
-            <tr key={index} className="border-t border-steel-750 text-white">
-              <td className="px-3 py-2 text-gray-500">{index + 1}</td>
-              <td className="px-3 py-2 font-mono" title={action.inputAsset}>
-                {tokenLabel(action.inputAsset)}
-              </td>
-              <td className="px-3 py-2 font-mono" title={action.expectedOutputAsset}>
-                {tokenLabel(action.expectedOutputAsset)}
-              </td>
-              <td className="px-3 py-2 text-right" title={String(action.humanAmount || action.amount || '')}>
-                {formatAmount(action.humanAmount || action.amount)}
-              </td>
-              {actions.some(a => a.assetStatus) && (
-                <td className="px-3 py-2 text-right uppercase">{action.assetStatus || '—'}</td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
+/**
+ * Symbol / name / logo for every token the vault holds or may trade, keyed by lowercase address.
+ * Same sources as the swap proposal form: the vault's index holdings + the supported-asset list.
+ */
+const useTokenMeta = vaultId => {
+  const { data: index } = useVaultIndex(vaultId, !!vaultId);
+  const { data: supported } = useIndexSupportedAssets();
+  return useMemo(() => {
+    const map = new Map([[ZERO_ADDR, { symbol: 'ETH', name: 'Ether' }]]);
+    const add = t => {
+      const addr = t?.assetAddress?.toLowerCase();
+      if (!addr) return;
+      const prev = map.get(addr) || {};
+      map.set(addr, {
+        symbol: prev.symbol || t.symbol,
+        name: prev.name || t.name,
+        image: prev.image || t.image || t.logoUrl || t.logo,
+      });
+    };
+    (index?.portfolio?.assets || []).forEach(add);
+    (index?.config?.targets || []).forEach(add);
+    (supported?.assets || []).forEach(add);
+    return map;
+  }, [index, supported]);
+};
 
-export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainType }) => {
+const TokenCell = ({ address, meta }) => {
+  const t = meta.get((address || ZERO_ADDR).toLowerCase());
+  if (!t?.symbol) {
+    return (
+      <span className="font-mono text-xs text-dark-100" title={address}>
+        {shortAddr(address)}
+      </span>
+    );
+  }
+  return (
+    <span className="flex min-w-0 items-center gap-2" title={address}>
+      {t.image ? (
+        <img src={t.image} alt="" className="h-6 w-6 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+      ) : (
+        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-steel-750 text-[10px] font-bold">
+          {t.symbol.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+      <span className="min-w-0">
+        <span className="block truncate font-medium">{t.symbol}</span>
+        {t.name && t.name !== t.symbol && <span className="block truncate text-xs text-dark-100">{t.name}</span>}
+      </span>
+    </span>
+  );
+};
+
+/** Compact table for EVM Uniswap swaps: one row per swap instead of a 5-line block each. */
+const EvmSwapTable = ({ actions, vaultId }) => {
+  const meta = useTokenMeta(vaultId);
+  const hasStatus = actions.some(a => a.assetStatus);
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-gray-400">Actions</div>
+        <div className="text-sm text-white">{actions.length} token swap(s) · Uniswap (Robinhood Chain)</div>
+      </div>
+      <div className="max-h-[28rem] overflow-auto rounded-lg border border-steel-750">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10 bg-steel-900 text-gray-400">
+            <tr>
+              <th className="w-10 px-3 py-2 text-left font-normal">#</th>
+              <th className="px-3 py-2 text-left font-normal">Sell</th>
+              <th className="px-3 py-2 text-right font-normal">Amount</th>
+              <th className="px-3 py-2 text-left font-normal">For</th>
+              {hasStatus && <th className="px-3 py-2 text-right font-normal">Status</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {actions.map((action, index) => {
+              const sellSym = meta.get(String(action.inputAsset || '').toLowerCase())?.symbol;
+              return (
+                <tr key={index} className="border-t border-steel-750 text-white">
+                  <td className="px-3 py-2 text-gray-500">{index + 1}</td>
+                  <td className="px-3 py-2">
+                    <TokenCell address={action.inputAsset} meta={meta} />
+                  </td>
+                  <td
+                    className="whitespace-nowrap px-3 py-2 text-right tabular-nums"
+                    title={String(action.humanAmount || action.amount || '')}
+                  >
+                    {formatAmount(action.humanAmount || action.amount)}
+                    {sellSym && <span className="ml-1 text-dark-100">{sellSym}</span>}
+                  </td>
+                  <td className="px-3 py-2">
+                    <TokenCell address={action.expectedOutputAsset} meta={meta} />
+                  </td>
+                  {hasStatus && <td className="px-3 py-2 text-right uppercase">{action.assetStatus || '—'}</td>}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainType, vaultId }) => {
   const { currencyLabel } = useCurrency();
 
   if (!Array.isArray(actions) || actions.length === 0) return null;
@@ -74,7 +136,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
   const isEvmUniswapSwap = actions[0]?.market === 'Uniswap' && actions[0]?.inputAsset;
   const isEvmClosePosition = actions[0]?.exec === 'CLOSE_POSITION';
 
-  if (isEvmUniswapSwap) return <EvmSwapTable actions={actions} />;
+  if (isEvmUniswapSwap) return <EvmSwapTable actions={actions} vaultId={vaultId} />;
 
   return (
     <div className="flex flex-col gap-4">
