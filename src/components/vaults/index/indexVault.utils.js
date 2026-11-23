@@ -16,8 +16,10 @@ export const DEFAULT_INDEX_MAX_ASSETS = 15;
 
 let newVaultBasketCap = DEFAULT_INDEX_MAX_ASSETS;
 /** Records the cap of vaults the current factory deploys (from vault-creation-flags). */
+/** Product limit of the UI (the 56-asset contract allows 55; l4va-api caps at 50 too). */
+export const UI_MAX_BASKET_ASSETS = 50;
 export const setNewVaultBasketCap = cap => {
-  if (Number.isInteger(cap) && cap > 0) newVaultBasketCap = cap;
+  if (Number.isInteger(cap) && cap > 0) newVaultBasketCap = Math.min(cap, UI_MAX_BASKET_ASSETS);
 };
 /** Basket cap of a NEW vault. Outside React (yup schemas); components use `useNewVaultBasketCap`. */
 export const getNewVaultBasketCap = () => newVaultBasketCap;
