@@ -1,20 +1,25 @@
 import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
+import { fieldMin, getFieldDefault, specBoundsTest } from '@/components/vaults/constants/vaultSpecBounds';
 import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
+import {
+  VAULT_ARCHETYPES,
+  emptyIndexBasket,
+  getNewVaultBasketCap,
+  validateIndexBasket,
+} from '@/components/vaults/index/indexVault.utils';
+import { getNetwork } from '@/hooks/useNetwork';
 
 export const MIN_SUPPLY = 1000000; // 10^6 VT
 export const MAX_SUPPLY = 1000000000000; // 10^12 VT
 
 const environment = import.meta.env.VITE_CARDANO_NETWORK;
 
-// Duration constants based on environment
-export const MIN_CONTRIBUTION_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
-export const MAX_CONTRIBUTION_DURATION_MS = 2592000000; // 30 days
-export const MIN_ACQUIRE_WINDOW_DURATION_MS = environment === environments.PREPROD ? 600000 : 432000000; // 10 min (preprod) / 5 days (mainnet)
-export const MAX_ACQUIRE_WINDOW_DURATION_MS = 2592000000; // 30 days
-export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 86400000; // 5 min (preprod) / 1 Day (mainnet)
-export const MAX_TIME_FOR_VOTING = 259200000; // 3 days
+// Contribution / acquire window bounds come from the API vault spec (system settings + env
+// overrides applied there): see fieldMin/fieldMax in vaultSpecBounds.js.
+export const MIN_TIME_FOR_VOTING = environment === environments.PREPROD ? 300000 : 172800000; // 5 min (preprod) / 48 hours (mainnet)
+export const MAX_TIME_FOR_VOTING = 1209600000; // 14 days
 export const MIN_EXPANSION_DURATION_MS = 86400000; // 1 day
 
 // Cardano address regex based on environment
@@ -46,8 +51,16 @@ export const VAULT_STATUSES = {
   EXPANSION: 'expansion',
   ACQUIRE_EXPANSION: 'acquire_expansion',
   TERMINATING: 'terminating',
+  BURNED: 'burned',
   FAILED: 'failed',
 };
+
+/** True when acquirers get 0% of vault tokens — the acquire window is skipped. */
+export const hasNoAcquirePhase = tokensForAcquires =>
+  tokensForAcquires !== null &&
+  tokensForAcquires !== undefined &&
+  tokensForAcquires !== '' &&
+  Number(tokensForAcquires) === 0;
 
 export const CREATE_VAULT_STEPS = [
   {
@@ -110,6 +123,7 @@ export const VAULT_TAGS_OPTIONS = [
   { value: 'Staking', label: 'Staking' },
   { value: 'DePin', label: 'DePin' },
   { value: 'Stablecoin', label: 'Stablecoin' },
+  { value: 'Memecoins', label: 'Memecoins' },
   { value: 'Governance', label: 'Governance' },
   { value: 'DEX', label: 'DEX' },
   { value: 'Gaming', label: 'Gaming' },
@@ -122,6 +136,22 @@ export const VAULT_TAGS_OPTIONS = [
   { value: 'LP Token', label: 'LP Token' },
   { value: 'Wrapped', label: 'Wrapped' },
 ];
+
+// Tags for NFT / real-world-asset vaults, hidden on index vaults (fungible tokens only).
+const NON_INDEX_TAGS = new Set([
+  'NFT',
+  'RWA',
+  'Real Estate',
+  'Insurance',
+  'Commodity',
+  'Precious Metal',
+  'Gem',
+  'PFP',
+  'Music',
+  'Art',
+  'Collectible',
+]);
+export const INDEX_VAULT_TAGS_OPTIONS = VAULT_TAGS_OPTIONS.filter(tag => !NON_INDEX_TAGS.has(tag.value));
 
 export const VAULT_VALUE_METHOD_OPTIONS = [
   { name: 'lbe', label: 'Market / Floor Price' },
@@ -157,11 +187,31 @@ export const assetWhitelistItemSchema = yup.object({
   policyId: yup
     .string()
     .required('Policy ID is required')
-    .matches(/^[0-9a-fA-F]{56}$/, 'Policy ID must be a 56-character hex string'),
+    .test('valid-policy-id', 'Invalid Policy ID', function validatePolicyId(value) {
+      if (!value) return true; // let .required() handle empty
+
+      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+
+      if (isRobinHood) {
+        // EVM: contract address — 0x followed by 40 hex chars
+        if (/^0x[0-9a-fA-F]{40}$/.test(value)) return true;
+        return this.createError({ message: 'Contract address must be a 0x-prefixed 40-character hex string' });
+      }
+
+      // Cardano: policy ID — 56 hex chars (no prefix)
+      if (/^[0-9a-fA-F]{56}$/.test(value)) return true;
+      return this.createError({ message: 'Policy ID must be a 56-character hex string' });
+    }),
   isVerified: yup
     .boolean()
-    .required('Only verified collections can be added to a vault')
-    .oneOf([true], 'Only verified collections can be added to a vault'),
+    .nullable()
+    .test('verified-or-evm', 'Only verified collections can be added to a vault', function validateVerified(value) {
+      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      // EVM contracts don't go through the Cardano verification system
+      if (isRobinHood) return true;
+      if (value !== true) return this.createError({ message: 'Only verified collections can be added to a vault' });
+      return true;
+    }),
   countCapMin: yup.mixed().default(1),
   countCapMax: yup.mixed().default(1000),
   valuationMethod: yup.string().oneOf(['market', 'custom', 'lp_token_dynamic']).default('market'),
@@ -312,23 +362,40 @@ export const vaultSchema = yup.object({
   contributionOpenWindowTime: yup
     .number()
     .typeError('Time is required')
-    .when('contributionOpenWindowType', {
-      is: 'custom',
+    .when(['contributionOpenWindowType', 'isAcquireOnly'], {
+      // Acquire-only vaults have no contribution window, whatever a stale draft carries.
+      is: (type, isAcquireOnly) => type === 'custom' && !isAcquireOnly,
       then: schema => schema.required('Time is required for custom window type'),
       otherwise: schema => schema.nullable(),
     }),
   assetsWhitelist: yup
     .array()
-    .of(assetWhitelistItemSchema)
     .default([])
+    // Index vaults derive the whitelist from indexBasket, which has its own
+    // validation; their form never shows these rows, so an error here would be
+    // an unexplained step-1 failure.
+    .when('vaultArchetype', {
+      is: VAULT_ARCHETYPES.INDEX_WEIGHTED,
+      then: () => yup.array().default([]),
+    })
     .when('isAcquireOnly', {
+      // Acquire-only vaults have no contributors: the whitelist is unused, or (index
+      // vaults) derived from the basket, which `indexBasket` validates on the Acquire
+      // step. Validating its items here flagged step 1 for a basket not yet filled in.
       is: true,
       then: schema => schema.notRequired(),
       otherwise: schema =>
         schema
+          .of(assetWhitelistItemSchema)
           .required('Assets whitelist is required')
           .min(1, 'Assets whitelist must have at least 1 item')
-          .max(10, 'Assets whitelist can have a maximum of 10 items'),
+          .test('whitelist-max', function whitelistMax(value) {
+            // Mirrors l4va-api maxAssetsWhitelistFor: Robinhood = the new-vault basket cap, Cardano = 10.
+            const max = getNetwork() === 'robinhood' ? getNewVaultBasketCap() : 10;
+            return (value?.length ?? 0) <= max
+              ? true
+              : this.createError({ message: `Assets whitelist can have a maximum of ${max} items` });
+          }),
     }),
   contributionDuration: yup
     .number()
@@ -339,16 +406,34 @@ export const vaultSchema = yup.object({
       otherwise: schema =>
         schema
           .required('Duration is required')
-          .min(MIN_CONTRIBUTION_DURATION_MS, 'Duration is below the minimum allowed')
-          .max(MAX_CONTRIBUTION_DURATION_MS, 'Duration cannot exceed 30 days'),
+          .test(specBoundsTest('contributionDuration', 'Contribution window', { unit: 'ms' })),
+    }),
+  vaultArchetype: yup.string().oneOf(Object.values(VAULT_ARCHETYPES)).default(VAULT_ARCHETYPES.STANDARD),
+  indexBasket: yup
+    .mixed()
+    .nullable()
+    .test('valid-index-basket', 'Invalid index basket', function validateBasket(value) {
+      if (this.parent.vaultArchetype !== VAULT_ARCHETYPES.INDEX_WEIGHTED) return true;
+      const problem = validateIndexBasket(value);
+      return problem ? this.createError({ message: problem }) : true;
     }),
   isAcquireOnly: yup.boolean().default(false),
   minAcquireThreshold: yup
     .number()
-    .typeError('Minimum ADA threshold must be a number')
+    .typeError('Minimum threshold must be a number')
     .when('isAcquireOnly', {
       is: true,
-      then: schema => schema.nullable().positive('Must be a positive number').integer('Must be a whole number of ADA'),
+      then: schema =>
+        schema
+          .nullable()
+          .positive('Must be a positive number')
+          // Robinhood ETH range from the API spec; Cardano thresholds are whole ADA, checked on submit.
+          .test(
+            specBoundsTest('minAcquireThreshold', 'Minimum acquire threshold', {
+              unit: 'ETH',
+              skipIf: () => localStorage.getItem('selectedNetwork') !== 'robinhood',
+            })
+          ),
       otherwise: schema => schema.nullable().notRequired(),
     }),
 
@@ -357,20 +442,32 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Acquire window duration is required')
     .when('tokensForAcquires', {
-      is: 0,
+      is: value => hasNoAcquirePhase(value),
       then: schema => schema.nullable().notRequired(),
       otherwise: schema =>
         schema
           .required('Acquire window duration is required')
-          .min(MIN_ACQUIRE_WINDOW_DURATION_MS, 'Duration is below the minimum allowed')
-          .max(MAX_ACQUIRE_WINDOW_DURATION_MS, 'Cannot exceed 30 days'),
+          .test(specBoundsTest('acquireWindowDuration', 'Acquire window', { unit: 'ms' })),
     }),
   acquireOpenWindowType: yup.string().when('tokensForAcquires', {
-    is: 0,
+    is: value => hasNoAcquirePhase(value),
     then: schema => schema.nullable().notRequired(),
     otherwise: schema => schema.required('Acquire window type is required'),
   }),
-  acquireOpenWindowTime: yup.mixed().nullable(),
+  acquireOpenWindowTime: yup
+    .mixed()
+    .nullable()
+    .when(['acquireOpenWindowType', 'tokensForAcquires'], {
+      // The API rejects a custom open type without a time; catch it here instead of at launch.
+      is: (type, tokensForAcquires) => type === 'custom' && !hasNoAcquirePhase(tokensForAcquires),
+      then: schema =>
+        schema
+          .required('Acquire open time is required for a custom start')
+          .test('acquire-open-future', 'Acquire launch date must be in the future', value => {
+            const ms = typeof value === 'number' ? value : new Date(value).getTime();
+            return Number.isFinite(ms) && ms > Date.now();
+          }),
+    }),
   acquirerWhitelist: yup
     .array()
     .of(acquirerWhitelistItemSchema)
@@ -452,12 +549,18 @@ export const vaultSchema = yup.object({
     .typeError('Liquidity pool contribution is required')
     .required('Liquidity pool contribution is required')
     .max(100, 'Cannot exceed 100%')
+    // Range comes from the API vault spec (Robinhood: 5–20%). With no acquire phase LP must be 0 instead.
+    .test(
+      specBoundsTest('liquidityPoolContribution', 'Liquidity pool contribution', {
+        skipIf: parent => hasNoAcquirePhase(parent?.tokensForAcquires),
+      })
+    )
     .test(
       'no-lp-when-no-acquirers',
       'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
       function (value) {
         const { tokensForAcquires } = this.parent;
-        if (tokensForAcquires === 0) {
+        if (hasNoAcquirePhase(tokensForAcquires)) {
           return value === 0;
         }
         return true;
@@ -477,18 +580,19 @@ export const vaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.5, 'Creation threshold must be at least 0.5%'),
+    // Floor comes from the API vault spec (Robinhood 0.1%, Cardano 0.5%).
+    .test(specBoundsTest('creationThreshold', 'Proposal threshold')),
   // startThreshold: yup.number().typeError('Start threshold is required').required('Start threshold is required'),
   cosigningThreshold: yup
     .number()
     .typeError('Vote Quorum Threshold is required')
     .required('Vote Quorum Threshold is required')
-    .min(33, 'Vote Quorum Threshold must be at least 33%'),
+    .test(specBoundsTest('cosigningThreshold', 'Vote Quorum Threshold')),
   executionThreshold: yup
     .number()
     .typeError('Execution threshold is required')
     .required('Approval threshold is required')
-    .min(50.1, 'Approval threshold must be at least 50.1%'),
+    .test(specBoundsTest('executionThreshold', 'Approval threshold')),
 
   // Programmed specific fields
   timeElapsedIsEqualToTime: yup
@@ -536,6 +640,12 @@ export const editUpcomingVaultSchema = yup.object({
     .required('Liquidity pool contribution is required')
     .min(0)
     .max(100, 'Cannot exceed 100%')
+    // Range comes from the API vault spec (Robinhood: 5–20%). With no acquire phase LP must be 0 instead.
+    .test(
+      specBoundsTest('liquidityPoolContribution', 'Liquidity pool contribution', {
+        skipIf: parent => hasNoAcquirePhase(parent?.tokensForAcquires),
+      })
+    )
     .test(
       'no-lp-when-no-acquirers',
       'Liquidity pool contribution must be 0 when tokens for acquirers is 0',
@@ -549,23 +659,51 @@ export const editUpcomingVaultSchema = yup.object({
     .number()
     .typeError('Creation threshold is required')
     .required('Creation threshold is required')
-    .min(0.5, 'Creation threshold must be at least 0.5%')
+    // Floor comes from the API vault spec (Robinhood 0.1%, Cardano 0.5%).
+    .test(specBoundsTest('creationThreshold', 'Proposal threshold'))
     .max(100, 'Cannot exceed 100%'),
   cosigningThreshold: yup
     .number()
     .typeError('Vote Quorum Threshold is required')
     .required('Vote Quorum Threshold is required')
-    .min(33, 'Vote Quorum Threshold must be at least 33%')
+    .test(specBoundsTest('cosigningThreshold', 'Vote Quorum Threshold'))
     .max(100, 'Cannot exceed 100%'),
   executionThreshold: yup
     .number()
     .typeError('Execution threshold is required')
     .required('Approval threshold is required')
-    .min(50.1, 'Approval threshold must be at least 50.1%')
+    .test(specBoundsTest('executionThreshold', 'Approval threshold'))
     .max(100, 'Cannot exceed 100%'),
   socialLinks: yup.array().of(socialLinkSchema).default([]),
   tags: yup.array().of(yup.string()).default([]),
 });
+
+// Matches the shape LavaWhitelistWithCaps.addNewAsset() creates, so the asset
+// table (header + row) is visible as soon as the create flow loads instead of
+// showing only the "+" button until the user adds a row themselves.
+export const createEmptyWhitelistAsset = () => ({
+  policyId: '',
+  assetName: '',
+  name: '',
+  count: 1,
+  policyName: 'N/A',
+  collectionName: null,
+  isVerified: null,
+  verificationPlatform: null,
+  imageUrl: null,
+  image: null,
+  valuationMethod: 'market',
+  customPriceAda: null,
+  countCapMin: 1,
+  countCapMax: 1000,
+  uniqueId: Date.now() + Math.floor(Math.random() * 1000),
+});
+
+/**
+ * Acquire window opens with no wait. For an acquire-only vault there is no
+ * contribution window, so the API starts acquire when the vault launches.
+ */
+export const ACQUIRE_OPENS_ON_LAUNCH = 'upon-asset-window-closing';
 
 export const initialVaultState = {
   // Step 1: Configure Vault
@@ -587,13 +725,13 @@ export const initialVaultState = {
   valueMethod: 'lbe',
   contributionOpenWindowType: 'upon-vault-launch',
   contributionOpenWindowTime: null,
-  contributionDuration: MIN_CONTRIBUTION_DURATION_MS,
-  assetsWhitelist: [],
+  contributionDuration: null, // set from the API spec minimum in getInitialVaultState
+  assetsWhitelist: [createEmptyWhitelistAsset()],
   valuationCurrency: 'ADA',
   valuationAmount: null,
 
   // Step 3: Acquire Window
-  acquireWindowDuration: MIN_ACQUIRE_WINDOW_DURATION_MS,
+  acquireWindowDuration: null, // 48 hours, or the spec minimum if higher: see getInitialVaultState
   acquireOpenWindowType: 'upon-asset-window-closing',
   acquireOpenWindowTime: null,
   acquirerWhitelist: [],
@@ -601,7 +739,9 @@ export const initialVaultState = {
   acquireReserve: null,
   liquidityPoolContribution: null,
   isAcquireOnly: false,
-  minAcquireThreshold: null, // in ADA (converted to lovelace before API call)
+  vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+  indexBasket: emptyIndexBasket(),
+  minAcquireThreshold: null, // in ADA (converted to lovelace before API call) on Cardano, in ETH as-is on Robinhood
   allowAcquireExpansion: false,
 
   // Step 4: Governance
@@ -609,15 +749,28 @@ export const initialVaultState = {
   ftTokenImg: '',
   terminationType: 'dao',
   // DAO specific fields
-  creationThreshold: null,
+  creationThreshold: 0.1,
   // startThreshold: null,
   voteThreshold: 0,
-  executionThreshold: null,
-  cosigningThreshold: null,
+  executionThreshold: 51,
+  cosigningThreshold: 33,
   // Programmed specific fields
   timeElapsedIsEqualToTime: null,
   vaultAppreciation: null,
 };
+
+// Robinhood launch spec: acquire expansion is on by default (creator can turn it off).
+export const getInitialVaultState = () => ({
+  ...initialVaultState,
+  allowAcquireExpansion: localStorage.getItem('selectedNetwork') === 'robinhood',
+  contributionDuration: fieldMin('contributionDuration'),
+  // 48 hours default; staging (VITE_MIN_ACQUIRE_WINDOW_DURATION_MS set) starts at its minimum instead.
+  acquireWindowDuration: import.meta.env.VITE_MIN_ACQUIRE_WINDOW_DURATION_MS
+    ? fieldMin('acquireWindowDuration')
+    : Math.max(fieldMin('acquireWindowDuration') ?? 0, 172800000),
+  // API vault spec default (Robinhood 10%); keeps the AI and the form starting from a valid value.
+  liquidityPoolContribution: getFieldDefault('liquidityPoolContribution', initialVaultState.liquidityPoolContribution),
+});
 
 export const stepFields = {
   1: [
@@ -636,6 +789,7 @@ export const stepFields = {
     'contributorWhitelist',
     'acquirerWhitelist',
     'allowAcquireExpansion',
+    'vaultArchetype',
   ],
   2: [
     'valueMethod',
@@ -652,6 +806,7 @@ export const stepFields = {
     'tokensForAcquires',
     'acquireReserve',
     'liquidityPoolContribution',
+    'indexBasket',
   ],
   4: ['ftTokenSupply', 'terminationType', 'creationThreshold', 'cosigningThreshold', 'executionThreshold'],
   5: [],
@@ -662,58 +817,73 @@ Private Vault HH: Private vaults allow contribution only by the creator and/or w
 Semi-private Vault HH: Semi-private vaults can be configured to allow public or private whitelisted access for users to contribute assets and/or acquire Vault Tokens.
 `;
 
+// EVM chains only support public vaults for now, so the hint must not describe options the user can't pick.
+export const PUBLIC_ONLY_PRIVACY_HINT = `Public Vault HH: Public vaults allow anyone to contribute assets and acquire Vault Tokens.`;
+
 export const VALUE_METHOD_HINT = `Market / Floor Price: Vault value for reserve % purposes set equal to aggregated price of all assets in the vault at end of the Contribution Window.\n
 Fixed: Vault value for reserve % purposes set as fixed amount.
 `;
 
-export const RESERVE_HINT = `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ADA sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ADA, and ADA sent by Acquirers is = 7,999 ADA at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
+export const getReserveHint = currencyLabel =>
+  `The percentage (%) threshold that must be surpassed for the vault to lock, equal to the total amount of ${currencyLabel} sent by Acquirers divided by the Vault Value. (Example: if the Reserve (%) is set at 80%, the Vault Market Value is = 10,000 ${currencyLabel}, and ${currencyLabel} sent by Acquirers is = 7,999 ${currencyLabel} at the end of the Acquire Window, then the vault will NOT lock and all users will be refunded.)`;
 
-export const LIQUIDITY_POOL_CONTRIBUTION_HINT = `Input determines the amount of ADA and Vault Tokens sent to the initial Liquidity Pool.  
-Note: The net tokens and ADA received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ADA are sent.`;
+export const getLiquidityPoolContributionHint =
+  currencyLabel => `Input determines the amount of ${currencyLabel} and Vault Tokens sent to the initial Liquidity Pool.
+Note: The net tokens and ${currencyLabel} received by Contributors and tokens received by Acquirers is calculated as the net of tokens available after the Liquidity Pool (LP) Contribution tokens and ${currencyLabel} are sent.`;
 
 export const ASSET_WHITE_LIST = {
   f61a534fd4484b4b58d5ff18cb77cfc9e74ad084a18c0409321c811a: {
-    imgUrl: '/assets/white-list/Snake.png',
+    imgUrl: '/assets/white-list/snake.webp',
     assetName: 'Snake',
   },
   ed8145e0a4b8b54967e8f7700a5ee660196533ded8a55db620cc6a37: {
-    imgUrl: '/assets/white-list/Chaddy.png',
+    imgUrl: '/assets/white-list/chaddy.webp',
     assetName: 'Chaddy',
   },
   fd948c7248ecef7654f77a0264a188dccc76bae5b73415fc51824cf3: {
-    imgUrl: '/assets/white-list/Berry.png',
+    imgUrl: '/assets/white-list/berry.webp',
     assetName: 'Berry',
   },
   add6529cc60380af5d51566e32925287b5b04328332652ccac8de0a9: {
-    imgUrl: '/assets/white-list/O.png',
+    imgUrl: '/assets/white-list/o.webp',
     assetName: 'O',
   },
   '755457ffd6fffe7b20b384d002be85b54a0b3820181f19c5f9032c2e': {
-    imgUrl: '/assets/white-list/Pxlz.png',
+    imgUrl: '/assets/white-list/pxlz.webp',
     assetName: 'Pxlz',
   },
   '4e529151fe66164ebcf52f81033eb0ec55cc012cb6c436104b30fa36': {
-    imgUrl: '/assets/white-list/Goats.png',
+    imgUrl: '/assets/white-list/goats.webp',
     assetName: 'Goats',
   },
   '0b89a746fd2d859e0b898544487c17d9ac94b187ea4c74fd0bfbab16': {
-    imgUrl: '/assets/white-list/Diamond.png',
+    imgUrl: '/assets/white-list/diamond.webp',
     assetName: 'Diamond',
   },
   '436ca2e51fa2887fa306e8f6aa0c8bda313dd5882202e21ae2972ac8': {
-    imgUrl: '/assets/white-list/GOLD.png',
+    imgUrl: '/assets/white-list/gold.webp',
     assetName: 'GOLD',
   },
   '0d27d4483fc9e684193466d11bc6d90a0ff1ab10a12725462197188a': {
-    imgUrl: '/assets/white-list/SLVR.png',
+    imgUrl: '/assets/white-list/slvr.webp',
     assetName: 'SLVR',
   },
   '53173a3d7ae0a0015163cc55f9f1c300c7eab74da26ed9af8c052646': {
-    imgUrl: '/assets/white-list/Insurance.png',
+    imgUrl: '/assets/white-list/insurance.webp',
     assetName: 'Insurance Asset',
   },
   '91918871f0baf335d32be00af3f0604a324b2e0728d8623c0d6e2601': {
-    imgUrl: '/assets/white-list/Real Estate.png',
+    imgUrl: '/assets/white-list/real-estate.webp',
     assetName: 'Real Estate Equity',
   },
 };
+
+// Browse tabs shared by the home page and /vaults. Upcoming + expansion fold into Acquire,
+// locked into All; finer status filters live in the Filters modal. Contribute is Cardano-only.
+export const BROWSE_VAULT_TABS = [
+  { id: 'all', label: 'All', filter: 'all' },
+  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
+  { id: 'acquire', label: 'Acquire', filter: 'acquiring' },
+  { id: 'govern', label: 'Govern', filter: 'govern' },
+  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
+];

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-import { VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
+import { BROWSE_VAULT_TABS, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants.js';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { Chip } from '@/components/shared/Chip';
@@ -12,6 +12,8 @@ import { LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { GoldenVerifiedBadge } from '@/components/shared/GoldenVerifiedBadge';
 import { useVaultAssetsWhitelist } from '@/services/api/queries';
+import { ChainType, ChainTypeLabels } from '@/utils/types';
+import { getNetwork } from '@/hooks/useNetwork';
 
 export const VaultFiltersModal = ({
   isOpen,
@@ -22,6 +24,19 @@ export const VaultFiltersModal = ({
   activeStage,
   myVaults = false,
 }) => {
+  const isRobinhood = getNetwork() === 'robinhood';
+  const defaultCurrency = isRobinhood ? 'USD' : 'ADA';
+  const TVL_CURRENCY_OPTIONS = isRobinhood
+    ? [
+        { label: 'USD', value: 'USD' },
+        { label: 'ETH', value: 'ETH' },
+      ]
+    : [
+        { label: 'ADA', value: 'ADA' },
+        { label: 'USD', value: 'USD' },
+      ];
+  const allowedCurrencies = TVL_CURRENCY_OPTIONS.map(o => o.value);
+  const pickCurrency = value => (allowedCurrencies.includes(value) ? value : defaultCurrency);
   const [assetWhitelistSearch, setAssetWhitelistSearch] = useState('');
   const [filters, setFilters] = useState({
     page: 1,
@@ -37,11 +52,16 @@ export const VaultFiltersModal = ({
     maxFdv: initialFilters.maxFdv || 0,
     maxFdvTvl: initialFilters.maxFdvTvl || 0,
     minFdvTvl: initialFilters.minFdvTvl || 0,
-    tvlCurrency: initialFilters.tvlCurrency || 'ADA',
-    fdvCurrency: initialFilters.fdvCurrency || 'ADA',
+    tvlCurrency: pickCurrency(initialFilters.tvlCurrency),
+    fdvCurrency: pickCurrency(initialFilters.fdvCurrency),
     vaultStage: activeStage || '',
     governance: initialFilters.governance || '',
     verified: initialFilters.verified || [],
+    chainType: initialFilters.chainType
+      ? Array.isArray(initialFilters.chainType)
+        ? initialFilters.chainType
+        : [initialFilters.chainType]
+      : [ChainType.CARDANO, ChainType.ROBINHOOD],
     assetWhitelist: Array.isArray(initialFilters.assetWhitelist)
       ? initialFilters.assetWhitelist
       : initialFilters.assetWhitelist
@@ -66,13 +86,23 @@ export const VaultFiltersModal = ({
     isLoading: isInitialLoading,
     isFetching,
     isFetchingNextPage,
-  } = useVaultAssetsWhitelist({ myVaults, limit: 10, search: assetWhitelistSearch });
+  } = useVaultAssetsWhitelist({
+    myVaults,
+    limit: 10,
+    search: assetWhitelistSearch,
+    chainType: getNetwork(),
+  });
 
   const OPTIONS = {
-    vaultStages: ['Upcoming', 'Contribute', 'Acquire', 'Locked', 'Terminated'],
+    // Must match the list tab labels: onApplyStage switches tabs by label.
+    vaultStages: BROWSE_VAULT_TABS.filter(tab => !(isRobinhood && tab.id === 'contribution')).map(tab => tab.label),
     reserve: ['Yes', 'No'],
     governance: ['Active Proposals', 'No Active Proposals'],
     verified: ['All Assets Verified', 'Some Assets Verified', 'No Assets Verified'],
+    chainTypes: [
+      { label: ChainTypeLabels[ChainType.CARDANO], value: ChainType.CARDANO },
+      { label: ChainTypeLabels[ChainType.ROBINHOOD], value: ChainType.ROBINHOOD },
+    ],
     assetWhitelist: assetsWhitelistData?.pages?.flatMap(page => (Array.isArray(page?.items) ? page.items : [])) || [],
   };
 
@@ -133,11 +163,12 @@ export const VaultFiltersModal = ({
       maxFdv: 0,
       minFdvTvl: 0,
       maxFdvTvl: 0,
-      tvlCurrency: 'ADA',
-      fdvCurrency: 'ADA',
+      tvlCurrency: defaultCurrency,
+      fdvCurrency: defaultCurrency,
       vaultStage: '',
       governance: '',
       verified: [],
+      chainType: [ChainType.CARDANO, ChainType.ROBINHOOD],
       assetWhitelist: [],
       contributionWindow: {
         from: '',
@@ -167,6 +198,7 @@ export const VaultFiltersModal = ({
       minFdvTvl: value => Number(value) > 0,
       maxFdvTvl: value => Number(value) > 0,
       assetWhitelist: value => Array.isArray(value) && value.length > 0,
+      chainType: value => Array.isArray(value) && value.length > 0 && value.length < 2,
     };
 
     const activeFilters = {};
@@ -176,6 +208,11 @@ export const VaultFiltersModal = ({
         if (isValid(filters[key])) {
           activeFilters[key] = filters[key];
         }
+      } else if (key === 'chainType') {
+        // Only add chainType if exactly one chain is selected (not all chains)
+        if (isValid(filters[key])) {
+          activeFilters[key] = filters[key][0];
+        }
       } else if (filters[key] && isValid(filters[key])) {
         activeFilters[key] = filters[key];
       }
@@ -183,8 +220,8 @@ export const VaultFiltersModal = ({
 
     const hasTvlFilters = Number(filters.minTvl) > 0 || Number(filters.maxTvl) > 0;
     const hasFdvFilters = Number(filters.minFdv) > 0 || Number(filters.maxFdv) > 0;
-    const tvlCurrencyChanged = filters.tvlCurrency !== 'ADA';
-    const fdvCurrencyChanged = filters.fdvCurrency !== 'ADA';
+    const tvlCurrencyChanged = filters.tvlCurrency !== defaultCurrency;
+    const fdvCurrencyChanged = filters.fdvCurrency !== defaultCurrency;
 
     if (hasTvlFilters || tvlCurrencyChanged) {
       activeFilters.tvlCurrency = filters.tvlCurrency;
@@ -212,11 +249,6 @@ export const VaultFiltersModal = ({
     onApplyFilters(activeFilters);
     onClose();
   };
-
-  const TVL_CURRENCY_OPTIONS = [
-    { label: 'ADA', value: 'ADA' },
-    { label: 'USD', value: 'USD' },
-  ];
 
   const setRangeFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -359,6 +391,7 @@ export const VaultFiltersModal = ({
               />
               <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
                 <button
+                  aria-label="Increase minimum"
                   type="button"
                   onClick={() => {
                     const currentValue = Number(filters.minInitialVaultOffered) || 0;
@@ -392,6 +425,7 @@ export const VaultFiltersModal = ({
               />
               <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
                 <button
+                  aria-label="Increase maximum"
                   type="button"
                   onClick={() => {
                     const currentValue = Number(filters.maxInitialVaultOffered) || 0;

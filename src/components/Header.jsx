@@ -8,17 +8,22 @@ import { ConnectButton } from '@/components/ConnectButton';
 import { MenuDrawer } from '@/components/MenuDrawer';
 import { useAuth } from '@/lib/auth/auth';
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
+import { ChainType } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import CardanoIcon from '@/icons/cardano.svg?react';
+import RobinhoodIcon from '@/icons/robinhood.svg?react';
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
+import { clickableProps } from '@/utils/a11y';
 
 const navLinks = [
-  { to: '/create', label: 'Create', isAuth: true },
-  { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false },
+  { to: '/tokens', label: 'Tokens', isAuth: false },
+  { to: '/create-ai', label: 'Create', isAuth: true },
+  { to: '/vaults?tab=contribution', label: 'Contribute', isAuth: false, hideOnRobinhood: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isAuth: false },
   { to: '/vaults?tab=govern', label: 'Govern', isAuth: false },
-  { to: '/tokens', label: 'Tokens', isAuth: false },
+  { to: '/compete', label: 'Compete', isAuth: false },
   { to: '/rewards', label: 'Rewards', isAuth: true },
 ];
 
@@ -41,10 +46,28 @@ export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
+  const { network: selectedNetwork, updateNetwork, isRobinHood, isCardano } = useNetwork();
+
+  // Robinhood launches are acquire-only, so there is nothing to contribute to.
+  const visibleNavLinks = isRobinHood ? navLinks.filter(link => !link.hideOnRobinhood) : navLinks;
 
   const currencyOptions = [
-    { label: 'ADA', value: 'ada' },
+    ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
     { label: 'USD', value: 'usdt' },
+    ...(isCardano ? [] : [{ label: 'ETH', value: 'eth' }]),
+  ];
+
+  const networkOptions = [
+    {
+      label: 'Cardano',
+      value: ChainType.CARDANO,
+      icon: <CardanoIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
+    {
+      label: 'Robinhood',
+      value: ChainType.ROBINHOOD,
+      icon: <RobinhoodIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
   ];
 
   const { notifications, fetching, readAll, hasMore, isLoading, fetchMore, refetch } = useNotifications();
@@ -104,11 +127,23 @@ export const Header = () => {
     [isAuthenticated, openModal]
   );
 
-  const handleNotificationClick = vaultId => {
-    if (vaultId) {
-      router.navigate({ to: `/vaults/${vaultId}` });
-      setIsNotificationsOpen(false);
+  const handleNotificationClick = notification => {
+    const { vaultId, proposalId } = notification?.data || {};
+    // Governance notifications open the proposal; older ones carry only the vault, so they land on
+    // its Governance tab (navigating to the bare vault URL did nothing when already on that page).
+    const isGovernance = /proposal|vote|governance/i.test(`${notification?.subject} ${notification?.body}`);
+    if (proposalId) {
+      router.navigate({ to: '/proposals/$id', params: { id: proposalId } });
+    } else if (vaultId) {
+      router.navigate({
+        to: '/vaults/$id',
+        params: { id: vaultId },
+        search: isGovernance ? { tab: 'Governance' } : {},
+      });
+    } else {
+      return;
     }
+    setIsNotificationsOpen(false);
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -136,7 +171,11 @@ export const Header = () => {
               {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[500px] overflow-y-auto">
+          <DropdownMenuContent
+            align="end"
+            collisionPadding={16}
+            className="z-[1000] w-[calc(100vw-32px)] sm:w-[380px] p-4 bg-steel-950 border-0 shadow-xl mt-2 max-h-[min(500px,calc(100dvh-var(--header-height)-24px))] overflow-y-auto"
+          >
             <div className="flex w-full justify-between items-center mb-4">
               <h3 className="font-bold">Notifications</h3>
               <button
@@ -154,8 +193,8 @@ export const Header = () => {
               {notifications?.map(n => (
                 <div
                   key={n.id}
-                  className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition"
-                  onClick={() => handleNotificationClick(n.data?.vaultId)}
+                  className="cursor-pointer rounded-xl p-4 bg-steel-900 hover:bg-steel-800 transition focus-visible:outline-2 focus-visible:outline-orange-500"
+                  {...clickableProps(() => handleNotificationClick(n))}
                 >
                   <div className="font-medium text-white">{n.subject || 'No subject'}</div>
                   <div className="text-base text-dark-100">{n.body || 'No message'}</div>
@@ -190,12 +229,11 @@ export const Header = () => {
       <div className="container mx-auto px-4 xl:px-0">
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-            <L4vaIcon className="flex-shrink-0" height={24} width={24} />
-            <span className="hidden lg:block text-2xl font-bold uppercase">L4VA</span>
+            <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-8 w-auto object-contain" />
           </Link>
           <div className="flex w-full items-center">
             <div className="hidden lg:flex items-center gap-8 ml-[56px]">
-              {navLinks.map(link => (
+              {visibleNavLinks.map(link => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -206,6 +244,24 @@ export const Header = () => {
             </div>
             <div className="flex-1" />
             <div className="flex gap-2">
+              <div className="hidden lg:block">
+                <LavaSteelSelect
+                  options={networkOptions}
+                  value={selectedNetwork}
+                  disabled={isAuthenticated}
+                  onChange={val => {
+                    updateNetwork(val);
+                    // ADA isn't available on Robinhood and ETH isn't on Cardano —
+                    // swap to the network's native currency in the same tick to avoid
+                    // the select briefly falling back to "Select an option".
+                    if (val === ChainType.ROBINHOOD && selectedCurrency === 'ada') {
+                      updateCurrency('eth');
+                    } else if (val === ChainType.CARDANO && selectedCurrency === 'eth') {
+                      updateCurrency('ada');
+                    }
+                  }}
+                />
+              </div>
               <div className="hidden lg:block">
                 <LavaSteelSelect
                   options={currencyOptions}
@@ -227,7 +283,7 @@ export const Header = () => {
             </div>
           </div>
           <MenuDrawer
-            navLinks={navLinks}
+            navLinks={visibleNavLinks}
             isOpen={isMobileMenuOpen}
             onClose={closeMobileMenu}
             onNavClick={handleNavClick}

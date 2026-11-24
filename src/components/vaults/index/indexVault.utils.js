@@ -1,0 +1,209 @@
+import { formatUnits } from 'viem';
+
+/** Mirrors `VaultArchetype` in l4va-api `src/types/index-vault.types.ts`. */
+export const VAULT_ARCHETYPES = {
+  STANDARD: 'standard',
+  INDEX_WEIGHTED: 'index_weighted',
+};
+
+export const BPS = 10000;
+/**
+ * Fallback basket cap: V8–V13 contracts take 16 assets at termination, one slot kept for native ETH.
+ * The API sends the real cap — `evm_max_basket_assets` (vault-creation-flags) for new vaults and
+ * `vault.maxBasketAssets` for existing ones — since newer contracts raise it.
+ */
+export const DEFAULT_INDEX_MAX_ASSETS = 15;
+
+let newVaultBasketCap = DEFAULT_INDEX_MAX_ASSETS;
+/** Records the cap of vaults the current factory deploys (from vault-creation-flags). */
+/** Product limit of the UI (the 56-asset contract allows 55; l4va-api caps at 50 too). */
+export const UI_MAX_BASKET_ASSETS = 50;
+export const setNewVaultBasketCap = cap => {
+  if (Number.isInteger(cap) && cap > 0) newVaultBasketCap = Math.min(cap, UI_MAX_BASKET_ASSETS);
+};
+/** Basket cap of a NEW vault. Outside React (yup schemas); components use `useNewVaultBasketCap`. */
+export const getNewVaultBasketCap = () => newVaultBasketCap;
+export const INDEX_MIN_WEIGHT_BPS = 100;
+export const INDEX_DEFAULT_RESERVE_BPS = 1000;
+export const INDEX_MAX_RESERVE_BPS = 5000;
+/** Fallbacks until the API returns the admin limits (`supported.rebalance`). */
+export const INDEX_DEFAULT_REBALANCE_CADENCE_DAYS = 30;
+export const INDEX_MIN_REBALANCE_CADENCE_DAYS = 1;
+export const INDEX_MAX_REBALANCE_CADENCE_DAYS = 365;
+
+export const VAULT_ARCHETYPE_OPTIONS = [
+  { name: VAULT_ARCHETYPES.STANDARD, label: 'Standard Vault' },
+  { name: VAULT_ARCHETYPES.INDEX_WEIGHTED, label: 'Index Weighted Vault' },
+];
+
+export const VAULT_ARCHETYPE_HINT = `Standard Vault: Contributors and acquirers fund the vault under the selected preset.\n
+Index Weighted Vault: Acquirers send ETH. When the acquire window locks, the vault buys a basket of tokens at the target weights you set. Vault token holders can change the weights later through a governance proposal, and the vault trades to the new weights automatically.`;
+
+export const VAULT_ARCHETYPE_META = {
+  [VAULT_ARCHETYPES.INDEX_WEIGHTED]: {
+    label: 'Index Weighted Vault',
+    shortLabel: 'Index',
+    description: 'Percentage weights, actively managed by governance',
+  },
+};
+
+export const isIndexVault = vault => vault?.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+
+export const emptyIndexBasket = () => ({
+  targets: [],
+  reserveBps: INDEX_DEFAULT_RESERVE_BPS,
+  autoRebalance: true,
+  rebalanceCadenceDays: INDEX_DEFAULT_REBALANCE_CADENCE_DAYS,
+});
+
+/** "every 30 days" / "Off" for an index config or basket. */
+export const formatRebalanceSchedule = config =>
+  config?.autoRebalance && config?.rebalanceCadenceDays
+    ? `Every ${config.rebalanceCadenceDays} day${Number(config.rebalanceCadenceDays) === 1 ? '' : 's'}`
+    : 'Off';
+
+export const bpsToPercent = bps => Number(bps || 0) / 100;
+
+export const percentToBps = percent => Math.round(Number(percent || 0) * 100);
+
+export const formatBps = (bps, digits = 1) => `${bpsToPercent(bps).toFixed(digits).replace(/\.0+$/, '')}%`;
+
+export const totalWeightBps = targets => (targets || []).reduce((sum, t) => sum + Number(t.weightBps || 0), 0);
+
+/**
+ * Splits 100% across `count` assets in whole bps, handing the rounding
+ * remainder to the first assets so the total is always exactly 10000.
+ */
+export const evenWeights = count => {
+  if (count <= 0) return [];
+  const base = Math.floor(BPS / count);
+  const remainder = BPS - base * count;
+  return Array.from({ length: count }, (_, i) => base + (i < remainder ? 1 : 0));
+};
+
+/** Returns a user-facing problem with the basket, or null when it can launch. */
+export const validateIndexBasket = (
+  basket,
+  minCadenceDays = INDEX_MIN_REBALANCE_CADENCE_DAYS,
+  maxAssets = getNewVaultBasketCap()
+) => {
+  const targets = basket?.targets || [];
+  if (targets.length === 0) return 'Add at least one asset to the basket';
+  if (targets.length > maxAssets) return `The basket can hold at most ${maxAssets} assets`;
+  if (targets.some(t => !/^0x[0-9a-fA-F]{40}$/.test(t.assetAddress || ''))) {
+    return 'Every basket asset needs a valid token address';
+  }
+  const addresses = targets.map(t => t.assetAddress.toLowerCase());
+  if (new Set(addresses).size !== addresses.length) return 'The same asset appears twice in the basket';
+  if (targets.some(t => Number(t.weightBps) < INDEX_MIN_WEIGHT_BPS)) {
+    return `Every asset needs a weight of at least ${formatBps(INDEX_MIN_WEIGHT_BPS)}`;
+  }
+  const total = totalWeightBps(targets);
+  if (total !== BPS) return `Weights must add up to 100% (currently ${formatBps(total, 2)})`;
+  const reserve = Number(basket?.reserveBps ?? 0);
+  if (reserve < 0 || reserve > INDEX_MAX_RESERVE_BPS) return 'The cash reserve must be between 0% and 50%';
+  // Set by IndexBasketEditor from the API's Uniswap route check; absent when no editor ran it
+  // (the API checks again on submit either way).
+  const untradable = targets.find(t => ['no_route', 'illiquid'].includes(t.routeStatus));
+  if (untradable) {
+    const name = untradable.symbol || untradable.assetAddress;
+    return `${name} can't be held in an index vault${untradable.routeReason ? `: ${untradable.routeReason}` : ''}. Remove it to continue.`;
+  }
+  const unchecked = targets.find(t => t.routeStatus === 'unavailable');
+  if (unchecked) {
+    return `Couldn't check whether ${unchecked.symbol || unchecked.assetAddress} can be traded on Uniswap. Retry the check to continue.`;
+  }
+  if (targets.some(t => t.routeStatus === 'checking')) return 'Checking Uniswap routes for the basket tokens…';
+  if (basket?.autoRebalance !== false) {
+    const cadence = Number(basket?.rebalanceCadenceDays ?? INDEX_DEFAULT_REBALANCE_CADENCE_DAYS);
+    if (!Number.isInteger(cadence) || cadence < minCadenceDays || cadence > INDEX_MAX_REBALANCE_CADENCE_DAYS) {
+      return `Rebalance cadence must be a whole number of days between ${minCadenceDays} and ${INDEX_MAX_REBALANCE_CADENCE_DAYS}`;
+    }
+  }
+  return null;
+};
+
+/**
+ * Index vaults are acquire-only, so the whitelist never gates contributions.
+ * It is still sent (derived from the basket) so the vault record lists the
+ * tokens it will hold. Item shape matches `createEmptyWhitelistAsset`, which is
+ * not imported because vaults.constants imports this module.
+ */
+export const basketToAssetsWhitelist = basket =>
+  (basket?.targets || []).map(t => ({
+    assetName: '',
+    count: 1,
+    policyName: t.symbol || t.name || 'N/A',
+    isVerified: null,
+    verificationPlatform: null,
+    valuationMethod: 'market',
+    customPriceAda: null,
+    // No contribution minimum: the vault buys these after lock, nobody contributes them.
+    countCapMin: 0,
+    countCapMax: 1000,
+    policyId: t.assetAddress,
+    name: t.symbol || '',
+    collectionName: t.name || t.symbol || null,
+    imageUrl: t.image || null,
+    image: t.image || null,
+    uniqueId: t.assetAddress,
+  }));
+
+/** Payload shape expected by the API (`IndexBasketReq`). */
+export const toIndexBasketPayload = basket => ({
+  reserveBps: Number(basket?.reserveBps ?? 0),
+  // Omitted fields keep the server default (on, admin default cadence) or the vault's current value.
+  ...(typeof basket?.autoRebalance === 'boolean' ? { autoRebalance: basket.autoRebalance } : {}),
+  ...(basket?.autoRebalance !== false && basket?.rebalanceCadenceDays
+    ? { rebalanceCadenceDays: Number(basket.rebalanceCadenceDays) }
+    : {}),
+  targets: (basket?.targets || []).map(t => ({
+    assetAddress: t.assetAddress,
+    weightBps: Number(t.weightBps),
+    ...(t.symbol ? { symbol: t.symbol } : {}),
+    ...(t.name ? { name: t.name } : {}),
+    ...(t.image ? { image: t.image } : {}),
+  })),
+});
+
+export const formatNativeWei = (wei, maxDigits = 4) => {
+  if (wei === null || wei === undefined) return '—';
+  const value = Number(formatUnits(BigInt(wei), 18));
+  return value.toLocaleString(undefined, { maximumFractionDigits: maxDigits });
+};
+
+export const REBALANCE_TRIGGER_LABELS = {
+  initial_buy: 'Initial basket buy',
+  governance_reweight: 'Governance re-weight',
+  scheduled: 'Auto-rebalance',
+};
+
+export const REBALANCE_STATUS_STYLES = {
+  pending: 'text-dark-100',
+  executing: 'text-yellow-400',
+  completed: 'text-green-500',
+  failed: 'text-red-500',
+};
+
+// Categorical palette for basket segments; the reserve is always neutral steel.
+// 15 distinct colours; bigger baskets (newer contracts allow more) cycle through them.
+// Ordered so neighbours differ in hue and lightness; avoid greys (reserve) and near-duplicates.
+const SEGMENT_COLORS = [
+  '#A3E635', // lime
+  '#38BDF8', // sky
+  '#F97316', // orange
+  '#E879F9', // fuchsia
+  '#FACC15', // yellow
+  '#2DD4BF', // teal
+  '#FB7185', // rose
+  '#818CF8', // indigo
+  '#B45309', // brown
+  '#16A34A', // green
+  '#DC2626', // red
+  '#2563EB', // blue
+  '#FDE68A', // cream
+  '#7C3AED', // violet
+  '#BE185D', // raspberry
+];
+
+export const basketSegmentColor = index => SEGMENT_COLORS[index % SEGMENT_COLORS.length];

@@ -25,7 +25,9 @@ const getOracleTier = balance => {
   return null;
 };
 
-export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
+const roundPercent = value => Number((Number(value) || 0).toFixed(2));
+
+export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false, isRobinHood = false }) => {
   const navigate = useNavigate();
 
   const handleItemClick = item => {
@@ -45,8 +47,12 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
   const oracleBonus = bonuses.oracle || {};
   const alignmentFullBonus = bonuses.alignment || {};
 
-  const totalBonusPercent = alignmentData?.multiplierPercent || 0;
-  const maxBonusPercent = alignmentData?.maxMultiplierPercent || 20;
+  // VLRM staking and ORACLE exist on Cardano only: a Robinhood wallet gets them via a linked Cardano wallet
+  const hasCardanoWallet =
+    !isRobinHood || (alignmentData?.linkedWallets || []).some(wallet => wallet.chainType === 'cardano');
+
+  const totalBonusPercent = roundPercent(alignmentData?.multiplierPercent);
+  const maxBonusPercent = roundPercent(alignmentData?.maxMultiplierPercent || 20);
 
   const oracleTier = getOracleTier(oracleBonus.balance || 0);
 
@@ -55,18 +61,20 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
       label: 'L4VA Staking',
       clickable: true,
       requirement: `Stake at least ${l4vaBonus.requiredAmount?.toLocaleString() || '100,000'} L4VA`,
-      bonus: l4vaBonus.bonusPercent || 5,
+      bonus: roundPercent(l4vaBonus.bonusPercent || 5),
       achieved: l4vaBonus.achieved,
       progress: l4vaBonus.requiredAmount ? Math.min(100, (l4vaBonus.stakedAmount / l4vaBonus.requiredAmount) * 100) : 0,
       stakedAmount: l4vaBonus.stakedAmount || 0,
       requiredAmount: l4vaBonus.requiredAmount || 100000,
-      iconUrl: '/favicon/favicon.png',
+      iconUrl: '/favicon/favicon-rh.png',
     },
     {
       label: 'VLRM Staking',
+      lockedHint:
+        'VLRM staking is available on Cardano. Link a Cardano wallet with the same verified email to count it.',
       clickable: true,
       requirement: `Stake at least ${vlrmBonus.requiredAmount?.toLocaleString() || '20,000'} VLRM`,
-      bonus: vlrmBonus.bonusPercent || 5,
+      bonus: roundPercent(vlrmBonus.bonusPercent || 5),
       achieved: vlrmBonus.achieved,
       progress: vlrmBonus.requiredAmount ? Math.min(100, (vlrmBonus.stakedAmount / vlrmBonus.requiredAmount) * 100) : 0,
       stakedAmount: vlrmBonus.stakedAmount || 0,
@@ -75,10 +83,11 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
     },
     {
       label: 'ORACLE Holding',
+      lockedHint: 'ORACLE is held on Cardano. Link a Cardano wallet with the same verified email to count it.',
       clickable: true,
       vaultId: ORACLE_VAULT_ID,
       requirement: oracleTier ? oracleTier.label : 'Hold at least 100 ORACLE',
-      bonus: oracleBonus.bonusPercent || 0,
+      bonus: roundPercent(oracleBonus.bonusPercent),
       achieved: oracleBonus.achieved,
       progress: oracleBonus.achieved ? 100 : 0,
       balance: oracleBonus.balance || 0,
@@ -87,8 +96,9 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
     },
     {
       label: 'Full Alignment',
+      lockedHint: 'Needs VLRM and ORACLE from a linked Cardano wallet.',
       requirement: 'All three conditions met (L4VA + VLRM + ORACLE)',
-      bonus: alignmentFullBonus.bonusPercent || 5,
+      bonus: roundPercent(alignmentFullBonus.bonusPercent || 5),
       achieved: alignmentFullBonus.achieved,
       progress: alignmentFullBonus.achieved ? 100 : 0,
       isFullAlignment: true,
@@ -126,84 +136,89 @@ export const AlignmentBonusDisplay = ({ alignmentData, isLoading = false }) => {
             ))}
           </div>
         ) : (
-          bonusItems.map((item, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="relative w-8 h-8 flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-steel-800 overflow-hidden flex items-center justify-center">
-                  {item.iconUrl ? (
-                    <img src={item.iconUrl} alt={`${item.label} token`} className="w-full h-full object-cover" />
-                  ) : (
-                    <item.iconLucide className="w-4 h-4 text-orange-400" />
-                  )}
-                </div>
-                <div
-                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-steel-900 flex items-center justify-center ${
-                    item.achieved ? 'bg-green-500' : 'bg-steel-600'
-                  }`}
-                >
-                  {item.achieved ? (
-                    <Check className="w-2.5 h-2.5 text-white" />
-                  ) : (
-                    <X className="w-2.5 h-2.5 text-white" />
-                  )}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  {item.clickable ? (
-                    <button
-                      type="button"
-                      onClick={() => handleItemClick(item)}
-                      className={`group flex items-center gap-1 font-medium transition-colors text-left ${
-                        item.achieved ? 'text-white hover:text-orange-400' : 'text-steel-400 hover:text-orange-500'
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      <ChevronRight className="w-4 h-4 shrink-0 text-steel-500 transition-colors group-hover:text-orange-500" />
-                    </button>
-                  ) : (
-                    <span className={`font-medium ${item.achieved ? 'text-white' : 'text-steel-400'}`}>
-                      {item.label}
-                    </span>
-                  )}
-                  <span
-                    className={`text-sm font-semibold shrink-0 ${item.achieved ? 'text-orange-500' : 'text-steel-500'}`}
+          bonusItems.map((item, index) => {
+            const isLocked = !hasCardanoWallet && !!item.lockedHint;
+            return (
+              <div key={index} className="flex items-start gap-3">
+                <div className="relative w-8 h-8 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-steel-800 overflow-hidden flex items-center justify-center">
+                    {item.iconUrl ? (
+                      <img src={item.iconUrl} alt={`${item.label} token`} className="w-full h-full object-cover" />
+                    ) : (
+                      <item.iconLucide className="w-4 h-4 text-orange-400" />
+                    )}
+                  </div>
+                  <div
+                    className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-steel-900 flex items-center justify-center ${
+                      item.achieved ? 'bg-green-500' : 'bg-steel-600'
+                    }`}
                   >
-                    {item.bonus > 0 ? `+${item.bonus}%` : item.isTiered ? '+0.5% to +5%' : `+${item.bonus}%`}
-                  </span>
+                    {item.achieved ? (
+                      <Check className="w-2.5 h-2.5 text-white" />
+                    ) : (
+                      <X className="w-2.5 h-2.5 text-white" />
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-steel-400 mb-2">{item.requirement}</p>
-
-                {!item.isFullAlignment && !item.isTiered && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-steel-500">
-                        {item.stakedAmount.toLocaleString()} / {item.requiredAmount.toLocaleString()}
-                      </span>
-                      <span className="text-steel-500">{Math.round(item.progress)}%</span>
-                    </div>
-                    <div className="h-1.5 bg-steel-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-500 ${
-                          item.achieved
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                            : 'bg-gradient-to-r from-steel-600 to-steel-700'
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    {item.clickable ? (
+                      <button
+                        type="button"
+                        onClick={() => handleItemClick(item)}
+                        className={`group flex items-center gap-1 font-medium transition-colors text-left ${
+                          item.achieved ? 'text-white hover:text-orange-400' : 'text-steel-400 hover:text-orange-500'
                         }`}
-                        style={{ width: `${Math.min(100, item.progress)}%` }}
-                      />
-                    </div>
+                      >
+                        <span>{item.label}</span>
+                        <ChevronRight className="w-4 h-4 shrink-0 text-steel-500 transition-colors group-hover:text-orange-500" />
+                      </button>
+                    ) : (
+                      <span className={`font-medium ${item.achieved ? 'text-white' : 'text-steel-400'}`}>
+                        {item.label}
+                      </span>
+                    )}
+                    <span
+                      className={`text-sm font-semibold shrink-0 ${item.achieved ? 'text-orange-500' : 'text-steel-500'}`}
+                    >
+                      {item.bonus > 0 ? `+${item.bonus}%` : item.isTiered ? '+0.5% to +5%' : `+${item.bonus}%`}
+                    </span>
                   </div>
-                )}
+                  <p className="text-xs text-steel-400 mb-2">{item.requirement}</p>
 
-                {item.isTiered && (
-                  <div className="text-xs text-steel-400">
-                    Balance: {item.balance.toLocaleString()} ORACLE
-                    {oracleTier && <span className="text-orange-500 ml-1">({oracleTier.label})</span>}
-                  </div>
-                )}
+                  {isLocked && <p className="text-xs text-orange-400/80">{item.lockedHint}</p>}
+
+                  {!isLocked && !item.isFullAlignment && !item.isTiered && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-steel-500">
+                          {item.stakedAmount.toLocaleString()} / {item.requiredAmount.toLocaleString()}
+                        </span>
+                        <span className="text-steel-500">{Math.round(item.progress)}%</span>
+                      </div>
+                      <div className="h-1.5 bg-steel-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-500 ${
+                            item.achieved
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                              : 'bg-gradient-to-r from-steel-600 to-steel-700'
+                          }`}
+                          style={{ width: `${Math.min(100, item.progress)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!isLocked && item.isTiered && (
+                    <div className="text-xs text-steel-400">
+                      Balance: {item.balance.toLocaleString()} ORACLE
+                      {oracleTier && <span className="text-orange-500 ml-1">({oracleTier.label})</span>}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         {/* Mobile total bonus display */}

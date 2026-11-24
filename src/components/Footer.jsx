@@ -4,11 +4,12 @@ import { ChevronDown } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import { useNetwork } from '@/hooks/useNetwork';
 import XIcon from '@/icons/x.svg?react';
 import MediumIcon from '@/icons/medium.svg?react';
 import DiscordIcon from '@/icons/discord.svg?react';
 import YouTubeIcon from '@/icons/youtube.svg?react';
+import { scrollBehavior } from '@/utils/a11y';
 
 const socialLinks = [
   { name: 'X (Twitter)', icon: XIcon, url: 'https://x.com/l4vaprotocol' },
@@ -18,8 +19,8 @@ const socialLinks = [
 ];
 
 const navLinks = [
-  { to: '/create', label: 'Create', isRequireAuth: true },
-  { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true },
+  { to: '/create-ai', label: 'Create', isRequireAuth: true },
+  { to: '/vaults?tab=contribution', label: 'Contribute', isRequireAuth: true, hideOnRobinhood: true },
   { to: '/vaults?tab=acquire', label: 'Acquire', isRequireAuth: true },
   { to: '/how-it-works', label: 'How it works', isRequireAuth: false },
   { to: 'https://l4va.com/', label: 'About us', isRequireAuth: false, isExternal: true },
@@ -45,6 +46,7 @@ NavLink.displayName = 'NavLink';
 export const Footer = () => {
   const { isAuthenticated } = useAuth();
   const { openModal } = useModalControls();
+  const { isRobinHood } = useNetwork();
 
   const handleNavClick = useCallback(
     (link, e) => {
@@ -59,7 +61,7 @@ export const Footer = () => {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: scrollBehavior(),
     });
   };
 
@@ -86,20 +88,21 @@ export const Footer = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-4 md:gap-8 mb-8 md:mb-16 text-center">
-        {navLinks.map(link => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            label={link.label}
-            isExternal={link.isExternal}
-            onClick={e => handleNavClick(link, e)}
-          />
-        ))}
+        {navLinks
+          .filter(link => !(isRobinHood && link.hideOnRobinhood))
+          .map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              label={link.label}
+              isExternal={link.isExternal}
+              onClick={e => handleNavClick(link, e)}
+            />
+          ))}
       </div>
       <div className="flex justify-center mb-8">
         <Link to="/" className="flex items-center gap-2 active" data-status="active" aria-current="page">
-          <L4vaIcon className="flex-shrink-0" style={{ width: '48px', height: '48px' }} />
-          <span className="text-4xl font-bold uppercase">L4VA</span>
+          <img src="/assets/l4va-brand-logo.png" alt="L4VA" className="h-12 w-auto object-contain" />
         </Link>
       </div>
       <p className="text-center text-dark-100 pb-6">

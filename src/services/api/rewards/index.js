@@ -15,11 +15,13 @@ export class RewardsApiProvider {
   // ============================================================================
 
   /**
-   * Get all epochs
-   * @returns {Promise<Array>} List of all epochs
+   * Get paginated epochs
+   * @param {number} limit
+   * @param {number} offset
+   * @returns {Promise<{epochs: Array, total: number}>}
    */
-  static async getEpochs() {
-    const response = await axiosInstance.get(RewardsConfigProvider.epochs());
+  static async getEpochs(limit = 20, offset = 0) {
+    const response = await axiosInstance.get(RewardsConfigProvider.epochs(), { params: { limit, offset } });
     return response.data;
   }
 
@@ -208,6 +210,31 @@ export class RewardsApiProvider {
    */
   static async cancelClaimTransaction(body) {
     const response = await axiosInstance.post(RewardsConfigProvider.cancelClaim(), body);
+    return response.data;
+  }
+
+  /**
+   * Claim rewards on Robinhood Chain. Server broadcasts the ERC-20 transfer;
+   * the user does not sign a transaction.
+   * @param {Object} options - { epochIds?, claimImmediate?, claimVested? }
+   * @returns {Promise<{ success, txHash, claimedAmount, ... }>}
+   */
+  static async claimEvmRewards(options = {}) {
+    const response = await axiosInstance.post(RewardsConfigProvider.claimEvm(), options);
+    return response.data;
+  }
+
+  /**
+   * Robinhood Chain claim via the L4VARewardsDistributor contract: the arguments
+   * for `claim(account, cumulativeAmount, proof)`. The wallet sends the tx.
+   * Amounts are strings in the token's smallest unit (`tokenDecimals`).
+   * Answers 409 while the distributor is not configured on the backend.
+   * @returns {Promise<{ distributor, chainId, account, tokenDecimals, paused, claimed, claimable,
+   *   active: { root, cumulativeAmount, proof } | null,
+   *   pending: { root, cumulativeAmount, activatesAt } | null }>}
+   */
+  static async getEvmDistributorClaim() {
+    const response = await axiosInstance.get(RewardsConfigProvider.evmDistributorClaim());
     return response.data;
   }
 

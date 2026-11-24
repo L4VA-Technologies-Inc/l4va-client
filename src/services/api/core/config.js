@@ -3,6 +3,26 @@ export class CoreConfigProvider {
     return '/api/v1/auth/login';
   }
 
+  static evmChallenge() {
+    return '/api/v1/auth/evm/challenge';
+  }
+
+  static cardanoChallenge() {
+    return '/api/v1/auth/cardano/challenge';
+  }
+
+  static supportTicket() {
+    return '/api/v1/support/ticket';
+  }
+
+  static supportTicketMessages(ticketId) {
+    return `/api/v1/support/ticket/${ticketId}/messages`;
+  }
+
+  static closeSupportTicket(ticketId) {
+    return `/api/v1/support/ticket/${ticketId}/close`;
+  }
+
   static sendNotification() {
     return '/api/v1/send-notification';
   }
@@ -17,6 +37,14 @@ export class CoreConfigProvider {
 
   static updateProfile() {
     return '/api/v1/users/profile';
+  }
+
+  static verifyEmail() {
+    return '/api/v1/users/email/verify';
+  }
+
+  static resendEmailVerification() {
+    return '/api/v1/users/email/resend-verification';
   }
 
   static uploadImage() {
@@ -41,5 +69,13 @@ export class CoreConfigProvider {
 
   static updateTransactionHash(txId) {
     return `/api/v1/contribute/transaction/${txId}/hash`;
+  }
+
+  static prepareEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/prepare';
+  }
+
+  static confirmEvmContribution() {
+    return '/api/v1/blockchain/evm/contribution/confirm';
   }
 }

@@ -1,4 +1,4 @@
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 
 export const FullPageLoader = () => {
   const currentYear = new Date().getFullYear();

@@ -8,9 +8,11 @@ import {
   AlertTriangle,
   AlertCircle,
   RefreshCcw,
+  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useWallet } from '@ada-anvil/weld/react';
+import { useAccount } from 'wagmi';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -33,8 +35,11 @@ import {
 } from '@/components/vaults/utils/stepCompletion';
 import { isStepFullyComplete } from '@/utils/stepValidation';
 import {
+  ACQUIRE_OPENS_ON_LAUNCH,
   CREATE_VAULT_STEPS,
-  initialVaultState,
+  createEmptyWhitelistAsset,
+  hasNoAcquirePhase,
+  getInitialVaultState,
   stepFields,
   VAULT_PRIVACY_TYPES,
   vaultSchema,
@@ -47,6 +52,18 @@ import { useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
 import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
 import { canCreateVault, IS_MAINNET } from '@/utils/networkValidation';
+import { clearVaultCreationDrafts, writeStoredVaultDraft } from '@/components/vaults/ai/aiVault.utils';
+import { useCreateEvmVault } from '@/hooks/useCreateEvmVault';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultSpec } from '@/components/vaults/constants/vaultSpecBounds';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
+import { getLaunchErrorMessage } from '@/utils/launchError';
+import {
+  VAULT_ARCHETYPES,
+  basketToAssetsWhitelist,
+  emptyIndexBasket,
+} from '@/components/vaults/index/indexVault.utils';
+import { scrollBehavior } from '@/utils/a11y';
 
 const LazySwapComponent = lazy(() =>
   import('@/components/swap/Swap').then(module => ({
@@ -54,19 +71,22 @@ const LazySwapComponent = lazy(() =>
   }))
 );
 
-export const CreateVaultForm = ({ vault, setVault }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+// `showAiLink`: /create already has its own AI link in the page header, so it turns this one off.
+export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled = false, showAiLink = true }) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [errors, setErrors] = useState({});
   const [steps, setSteps] = useState(CREATE_VAULT_STEPS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isVisibleSwipe, setIsVisibleSwipe] = useState(false);
-  const [visitedSteps, setVisitedSteps] = useState(new Set([1]));
+  const [visitedSteps, setVisitedSteps] = useState(
+    () => new Set(Array.from({ length: initialStep }, (_, index) => index + 1))
+  );
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [canCreateVaults, setCanCreateVaults] = useState(true);
 
-  const [vaultData, setVaultData] = useState(initialVaultState);
+  const [vaultData, setVaultData] = useState(getInitialVaultState);
   const [selectedPresetId, setSelectedPresetId] = useState(null);
   const [deletingPresetId, setDeletingPresetId] = useState(null);
 
@@ -74,8 +94,16 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const isPresetManuallyChanged = useRef(false);
   // Tracks which vault key we have already resolved presets for, to avoid re-running on query refetches
   const resolvedForVaultRef = useRef(null);
+  // After a successful launch, skip writing the old draft back to localStorage.
+  const skipPersistRef = useRef(false);
 
   const { vlrmBalance, lastUpdated, fetchVlrmBalance } = useVlrmBalance();
+
+  const { network, isRobinHood } = useNetwork();
+  useVaultSpec(network);
+  const archetypes = useVaultArchetypes();
+  const { createEvmVault } = useCreateEvmVault();
+  const { isConnected: isEvmConnected } = useAccount();
 
   const navigate = useNavigate();
   const wallet = useWallet('handler', 'isConnected');
@@ -102,11 +130,95 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     [presets]
   );
 
-  // Config-controlled inputs are locked unless an advanced preset exists AND is currently active
-  const isPresetConfigLocked = !isAdvancedPresetAvailable || vaultData.preset !== 'advanced';
+  // Config-controlled inputs are locked unless an advanced preset exists AND is currently active.
+  // An AI-prefilled draft already carries explicit values, so it stays editable regardless of preset.
+  const isPresetConfigLocked = !aiPrefilled && (!isAdvancedPresetAvailable || vaultData.preset !== 'advanced');
 
-  const isAcquireOnly = vaultData.preset === 'acquire_only';
-  const isContributionOnly = vaultData.tokensForAcquires === 0;
+  const isIndexVault = isRobinHood && vaultData.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  // An AI draft marks index vaults acquire-only without switching the preset, so
+  // the flag and the archetype count too — index vaults never have contributors.
+  const isAcquireOnly = vaultData.preset === 'acquire_only' || !!vaultData.isAcquireOnly || isIndexVault;
+  const isContributionOnly = hasNoAcquirePhase(vaultData.tokensForAcquires);
+
+  // Preset resolution can reset isAcquireOnly from a draft's preset (an AI draft
+  // keeps whatever preset it chose), so pin the index-vault shape back in the form.
+  useEffect(() => {
+    if (!isIndexVault) return;
+    if (vaultData.isAcquireOnly && Number(vaultData.tokensForAcquires) === 100) return;
+    setVaultData(prev => ({ ...prev, isAcquireOnly: true, tokensForAcquires: 100 }));
+  }, [isIndexVault, vaultData.isAcquireOnly, vaultData.tokensForAcquires]);
+
+  // Acquire-only vaults have no contribution window: leftover contribution timing
+  // from another preset or an old draft must not fail validation on hidden fields.
+  useEffect(() => {
+    if (!isAcquireOnly) return;
+    const needsContributionReset =
+      vaultData.contributionOpenWindowType !== 'upon-vault-launch' || vaultData.contributionOpenWindowTime != null;
+    const needsAcquireDefault = !vaultData.acquireOpenWindowType;
+    if (!needsContributionReset && !needsAcquireDefault) return;
+    setVaultData(prev => ({
+      ...prev,
+      contributionOpenWindowType: 'upon-vault-launch',
+      contributionOpenWindowTime: null,
+      ...(needsAcquireDefault ? { acquireOpenWindowType: ACQUIRE_OPENS_ON_LAUNCH, acquireOpenWindowTime: null } : {}),
+    }));
+  }, [
+    isAcquireOnly,
+    vaultData.contributionOpenWindowType,
+    vaultData.contributionOpenWindowTime,
+    vaultData.acquireOpenWindowType,
+  ]);
+
+  // Acquire-only locks Reserve and LP in the form, but an AI draft keeps its own
+  // values instead of the preset's, so one that left them unset would be stuck
+  // on "required" with no way to type a value. Fill only the gaps from the preset.
+  useEffect(() => {
+    if (!isAcquireOnly) return;
+    if (vaultData.acquireReserve != null && vaultData.liquidityPoolContribution != null) return;
+    const config = presets?.find(p => p?.type?.toLowerCase() === 'acquire_only')?.config || {};
+    setVaultData(prev => ({
+      ...prev,
+      acquireReserve: prev.acquireReserve ?? config.acquireReserve ?? 100,
+      liquidityPoolContribution:
+        prev.liquidityPoolContribution ?? config.liquidityPoolContribution ?? (isRobinHood ? 5 : 0),
+    }));
+  }, [isAcquireOnly, isRobinHood, vaultData.acquireReserve, vaultData.liquidityPoolContribution, presets]);
+
+  useEffect(() => {
+    if (isRobinHood && vaultData.privacy && vaultData.privacy !== VAULT_PRIVACY_TYPES.PUBLIC) {
+      setVaultData(prev => ({ ...prev, privacy: VAULT_PRIVACY_TYPES.PUBLIC }));
+    }
+  }, [isRobinHood, vaultData.privacy]);
+
+  // A vault type the chain no longer offers (a draft moved between chains, or a
+  // type switched off in settings) falls back to whatever that chain does offer.
+  useEffect(() => {
+    if (archetypes.isLoading) return;
+    const current = vaultData.vaultArchetype || VAULT_ARCHETYPES.STANDARD;
+    if (archetypes.isArchetypeAvailable(current)) return;
+
+    const next = archetypes.defaultArchetype;
+    setVaultData(prev => ({
+      ...prev,
+      vaultArchetype: next,
+      ...(next === VAULT_ARCHETYPES.INDEX_WEIGHTED
+        ? (() => {
+            // The whitelist is derived from the basket; leaving the standard
+            // placeholder row here fails step 1 on a field the index form hides.
+            const indexBasket = prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket();
+            return { indexBasket, assetsWhitelist: basketToAssetsWhitelist(indexBasket) };
+          })()
+        : { assetsWhitelist: [createEmptyWhitelistAsset()] }),
+    }));
+
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    if (next === VAULT_ARCHETYPES.INDEX_WEIGHTED && acquireOnlyPreset) {
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
+    }
+    // applySelectedPreset is stable enough for this one-shot correction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [archetypes, vaultData.vaultArchetype, presets]);
 
   // Hide the Contribute step (id=2) for acquire-only vaults — no contributors allowed
   // Hide the Acquire step (id=3) for contribution-only vaults — no acquirers allowed
@@ -121,6 +233,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       Array.isArray(presets)
         ? presets
             .filter(preset => preset?.id !== undefined && preset?.id !== null)
+            // Index vaults raise native only, so the acquire-only preset is the single valid choice.
+            .filter(preset => !isIndexVault || preset?.type?.toLowerCase() === 'acquire_only')
             .map(preset => ({
               name: preset.id.toString(),
               label: preset?.name || preset?.type || 'Preset',
@@ -128,7 +242,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
               isCustom: preset?.type === 'custom',
             }))
         : [],
-    [presets]
+    [presets, isIndexVault]
   );
 
   // Whether the form should be fully blocked (loading or fetch error)
@@ -153,7 +267,18 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   useEffect(() => {
     if (vault) {
-      setVaultData(vault);
+      setVaultData({
+        ...vault,
+        // A draft saved before any assets were added would otherwise leave the
+        // asset table hidden behind an empty array, same as a brand new vault.
+        // Index vaults derive the whitelist from their basket instead.
+        assetsWhitelist:
+          vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED
+            ? basketToAssetsWhitelist(vault.indexBasket)
+            : vault.assetsWhitelist?.length
+              ? vault.assetsWhitelist
+              : [createEmptyWhitelistAsset()],
+      });
       isPresetManuallyChanged.current = false;
       // Allow the preset resolution effect to re-run for the new vault
       resolvedForVaultRef.current = null;
@@ -166,46 +291,61 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   useEffect(() => {
     if (isPresetsLoading || isPresetsError || !Array.isArray(presets) || presets.length === 0) return;
+    // Wait for the flags: on an index-only chain the default preset is not the
+    // first one, and resolving twice would overwrite the right answer.
+    if (archetypes.isLoading) return;
 
     const vaultKey = vault?.id?.toString() ?? '__new__';
     if (resolvedForVaultRef.current === vaultKey) return;
     resolvedForVaultRef.current = vaultKey;
 
-    const firstPreset = presets[0];
+    // Index vaults raise native only, so acquire-only is the only preset that fits.
+    const wantsIndexVault =
+      (vaultData.vaultArchetype || archetypes.defaultArchetype) === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    const firstPreset = (wantsIndexVault && acquireOnlyPreset) || presets[0];
 
     const applyPresetData = preset => {
       if (!preset) return;
       const config = preset.config || {};
-      const isAcquireOnly = preset.type?.toLowerCase() === 'acquire_only';
+      const isAcquireOnlyPreset = preset.type?.toLowerCase() === 'acquire_only';
       setVaultData(prev => ({
         ...prev,
         preset: preset.type || 'advanced',
         preset_id: preset.id ?? null,
-        tokensForAcquires: isAcquireOnly ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
+        tokensForAcquires: isAcquireOnlyPreset ? 100 : (config.tokensForAcquires ?? prev.tokensForAcquires),
         acquireReserve: config.acquireReserve ?? prev.acquireReserve,
         liquidityPoolContribution: config.liquidityPoolContribution ?? prev.liquidityPoolContribution,
         creationThreshold: config.creationThreshold ?? prev.creationThreshold,
         voteThreshold: 0,
         cosigningThreshold: config.cosigningThreshold ?? prev.cosigningThreshold,
         executionThreshold: config.executionThreshold ?? prev.executionThreshold,
-        isAcquireOnly,
+        isAcquireOnly: isAcquireOnlyPreset,
       }));
       setSelectedPresetId(preset.id.toString());
     };
+
+    const isAdvancedPreset = preset =>
+      preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced';
 
     if (vault) {
       const savedPresetId = vault?.preset_id?.toString();
       if (savedPresetId) {
         const foundPreset = presets.find(p => p?.id?.toString() === savedPresetId);
         if (foundPreset) {
-          // Preset still exists — just sync the type label, keep existing config values
           setSelectedPresetId(savedPresetId);
-          setVaultData(prev => ({
-            ...prev,
-            preset: foundPreset.type || 'advanced',
-            preset_id: foundPreset.id ?? null,
-            isAcquireOnly: foundPreset.type?.toLowerCase() === 'acquire_only',
-          }));
+          // Locked presets must copy config (including tokensForAcquires: 0). Syncing only the
+          // type left leftover acquire values on Asset Contributors Only until the user toggled.
+          if (aiPrefilled || isAdvancedPreset(foundPreset)) {
+            setVaultData(prev => ({
+              ...prev,
+              preset: foundPreset.type || 'advanced',
+              preset_id: foundPreset.id ?? null,
+              isAcquireOnly: foundPreset.type?.toLowerCase() === 'acquire_only',
+            }));
+          } else {
+            applyPresetData(foundPreset);
+          }
         } else {
           // The preset was deleted — fall back to the first available preset
           toast.error(
@@ -214,8 +354,8 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           );
           applyPresetData(firstPreset);
         }
-      } else {
-        // Draft has no preset_id — apply first preset
+      } else if (!aiPrefilled) {
+        // Draft has no preset_id — apply first preset. An AI draft keeps its own values.
         applyPresetData(firstPreset);
       }
     } else {
@@ -224,7 +364,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }
 
     isPresetManuallyChanged.current = false;
-  }, [isPresetsLoading, isPresetsError, presets, vault]);
+    // vaultData.vaultArchetype is read once here, on the run that resolves this
+    // vault; a later archetype change goes through handleArchetypeChange.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPresetsLoading, isPresetsError, presets, vault, aiPrefilled, archetypes]);
 
   // --- Step state sync ---
 
@@ -237,6 +380,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   }, [vaultData, currentStep]);
 
   useEffect(() => {
+    if (skipPersistRef.current) return;
     if (setVault) {
       setVault(vaultData);
     }
@@ -257,7 +401,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   // --- Helpers ---
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const scrollToTutorial = () => {
@@ -267,7 +411,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       const offset = headerHeight + 24;
       const elementPosition = tutorialElement.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      window.scrollTo({ top: offsetPosition, behavior: scrollBehavior() });
     }
   };
 
@@ -275,9 +419,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const handleNextStep = async () => {
     if (currentStep < steps.length) {
-      const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = vaultData.tokensForAcquires === 0;
-      const isAdvancedMode = isAdvancedPresetAvailable && vaultData.preset === 'advanced';
+      const isAdvancedMode = (isAdvancedPresetAvailable && vaultData.preset === 'advanced') || aiPrefilled;
       let nextStep;
       if (isAdvancedMode || isAcquireOnly || isContributionOnly) {
         nextStep = currentStep + 1;
@@ -298,8 +440,6 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
   const handlePreviousStep = async () => {
     if (currentStep > 1) {
-      const isAcquireOnly = vaultData.preset === 'acquire_only';
-      const isContributionOnly = vaultData.tokensForAcquires === 0;
       let prevStep = currentStep - 1;
       // Skip contribution step for acquire-only vaults
       if (isAcquireOnly && prevStep === 2) {
@@ -493,13 +633,18 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   };
 
   const updateField = async (fieldName, value) => {
-    setVaultData(prev => ({ ...prev, [fieldName]: value }));
+    setVaultData(prev => ({
+      ...prev,
+      [fieldName]: value,
+      // The whitelist of an index vault is derived from its basket, never edited directly.
+      ...(fieldName === 'indexBasket' && isIndexVault ? { assetsWhitelist: basketToAssetsWhitelist(value) } : {}),
+    }));
 
     // When editing a field on a non-config step, auto-switch to the advanced preset if available.
     // Also sync vaultData.preset / preset_id so isPresetConfigLocked and handleNextStep
     // immediately reflect the advanced mode (unlocks inputs, restores step-by-step navigation).
     // Do NOT auto-switch if the current preset is acquire_only — LP% is intentionally editable there.
-    if (currentStep !== 1 && isAdvancedPresetAvailable && vaultData.preset !== 'acquire_only') {
+    if (currentStep !== 1 && !aiPrefilled && isAdvancedPresetAvailable && vaultData.preset !== 'acquire_only') {
       const advancedPreset = presets.find(
         preset => preset?.type?.toLowerCase() === 'advanced' || preset?.name?.toLowerCase() === 'advanced'
       );
@@ -558,6 +703,39 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     }));
   };
 
+  const handleArchetypeChange = value => {
+    if (value === vaultData.vaultArchetype) return;
+
+    if (value === VAULT_ARCHETYPES.INDEX_WEIGHTED) {
+      const acquireOnlyPreset = presets.find(p => p?.type?.toLowerCase() === 'acquire_only');
+      if (!acquireOnlyPreset) {
+        toast.error('Index vaults need the Acquire-Only preset, which is not available right now.');
+        return;
+      }
+      applySelectedPreset(acquireOnlyPreset.id.toString());
+      setSelectedPresetId(acquireOnlyPreset.id.toString());
+      setVaultData(prev => {
+        const indexBasket = prev.indexBasket?.targets ? prev.indexBasket : emptyIndexBasket();
+        return {
+          ...prev,
+          vaultArchetype: VAULT_ARCHETYPES.INDEX_WEIGHTED,
+          indexBasket,
+          assetsWhitelist: basketToAssetsWhitelist(indexBasket),
+        };
+      });
+    } else {
+      setVaultData(prev => ({
+        ...prev,
+        vaultArchetype: VAULT_ARCHETYPES.STANDARD,
+        assetsWhitelist: [createEmptyWhitelistAsset()],
+      }));
+    }
+
+    if (vault) isPresetManuallyChanged.current = true;
+    clearFieldError('indexBasket');
+    clearFieldError('assetsWhitelist');
+  };
+
   const handlePresetChange = value => {
     if (!value) return;
 
@@ -585,6 +763,64 @@ export const CreateVaultForm = ({ vault, setVault }) => {
     if (currentStep < steps.length) {
       await handleNextStep();
     } else {
+      // ---- EVM (Robinhood) path ---------------------------------------------
+      if (isRobinHood) {
+        setIsSubmitting(true);
+        try {
+          await vaultSchema.validate(vaultData, { abortEarly: false });
+          const formattedData = formatVaultData(vaultData, isRobinHood);
+          setErrors({});
+
+          const { dbVaultId } = await createEvmVault(formattedData);
+          toast.success('Vault launched on Robinhood Chain!');
+
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['vault', dbVaultId] }),
+            queryClient.invalidateQueries({ queryKey: ['vaults'] }),
+          ]);
+          skipPersistRef.current = true;
+          clearVaultCreationDrafts();
+          setVaultData(getInitialVaultState());
+          if (setVault) setVault(null);
+          navigate({ to: `/vaults/${dbVaultId}` });
+          await changeStep(1, true);
+          setSteps(CREATE_VAULT_STEPS);
+          setErrors({});
+        } catch (err) {
+          if (err?.name === 'ValidationError') {
+            const formattedErrors = transformYupErrors(err);
+            setErrors(formattedErrors);
+            updateStepErrorIndicators(formattedErrors);
+            toast.error(
+              `Please fix before launching: ${[...new Set(Object.values(formattedErrors))].slice(0, 3).join('; ')}`,
+              {
+                duration: 8000,
+              }
+            );
+            return;
+          }
+          // Walk the viem error cause chain to detect wallet rejection
+          const isUserRejected =
+            err?.name === 'UserRejectedRequestError' ||
+            err?.cause?.name === 'UserRejectedRequestError' ||
+            err?.cause?.cause?.name === 'UserRejectedRequestError' ||
+            err?.message?.includes('User rejected the request') ||
+            err?.details?.includes('User denied');
+          if (isUserRejected) {
+            toast.error('Vault launch cancelled by user');
+            return;
+          }
+          if (!handleServerFieldErrors(err)) {
+            console.error(err);
+            toast.error(getLaunchErrorMessage(err, 'Failed to launch vault on Robinhood Chain.'));
+          }
+        } finally {
+          setIsSubmitting(false);
+        }
+        return;
+      }
+
+      // ---- Cardano path (original) ------------------------------------------
       const BALANCE_STALENESS_MS = 5 * 60 * 1000;
       const isBalanceOutdated = !lastUpdated || Date.now() - lastUpdated.getTime() > BALANCE_STALENESS_MS;
 
@@ -618,7 +854,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       try {
         await vaultSchema.validate(vaultData, { abortEarly: false });
 
-        const formattedData = formatVaultData(vaultData);
+        const formattedData = formatVaultData(vaultData, isRobinHood);
         setErrors({});
 
         const { data } = await VaultsApiProvider.createVault(formattedData);
@@ -632,7 +868,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           signatures: [signature],
         }).then(res => {
           if (res.data.id) {
-            localStorage.removeItem('storageVault');
+            skipPersistRef.current = true;
+            clearVaultCreationDrafts();
+            setVaultData(getInitialVaultState());
+            if (setVault) setVault(null);
             navigate({ to: `/vaults/${data.vaultId}` });
           }
         });
@@ -646,6 +885,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         setSteps(CREATE_VAULT_STEPS);
         setErrors({});
       } catch (err) {
+        console.log(err);
         if (err?.name === 'ValidationError') {
           const formattedErrors = transformYupErrors(err);
           setErrors(formattedErrors);
@@ -661,7 +901,9 @@ export const CreateVaultForm = ({ vault, setVault }) => {
 
         if (!handleServerFieldErrors(err)) {
           console.error(err);
-          toast.error('Failed to launch vault. Your progress has been saved as a draft.');
+          toast.error(
+            `${getLaunchErrorMessage(err, 'Failed to launch vault.')} Your progress has been saved as a draft.`
+          );
           await navigate({ to: '/profile', search: { tab: 'draft' } });
         }
       } finally {
@@ -673,16 +915,26 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   const handleStepClick = async stepId => {
     if (stepId === currentStep) return;
     // Prevent navigating to the contribution step for acquire-only vaults
-    if (stepId === 2 && vaultData.preset === 'acquire_only') return;
+    if (stepId === 2 && isAcquireOnly) return;
+    if (stepId === 3 && isContributionOnly) return;
     const skipValidation = stepId < currentStep;
     await changeStep(stepId, skipValidation);
     scrollToTop();
   };
 
+  // A saved draft opens here (/vaults/$id), not on /create, so it needs its own way into the AI flow.
+  // The draft id rides along, so saving or launching from the chat updates this draft instead of
+  // creating a second one; the previous chat session belongs to another draft and is dropped.
+  const continueInAi = () => {
+    clearVaultCreationDrafts();
+    writeStoredVaultDraft({ ...vaultData, id: vaultData?.id ?? vault?.id });
+    navigate({ to: '/create-ai' });
+  };
+
   const saveDraft = async () => {
     try {
       setIsSavingDraft(true);
-      const formattedData = formatVaultData(vaultData);
+      const formattedData = formatVaultData(vaultData, isRobinHood);
       const existingDraftId = vaultData?.id ?? vault?.id;
       if (existingDraftId) {
         formattedData.id = existingDraftId;
@@ -787,10 +1039,22 @@ export const CreateVaultForm = ({ vault, setVault }) => {
   };
 
   const resetVault = async () => {
-    localStorage.removeItem('storageVault');
+    skipPersistRef.current = true;
+    clearVaultCreationDrafts();
 
-    const firstPreset = presets[0] ?? null;
-    const resetData = { ...initialVaultState };
+    // On an index-only chain the starting point is the acquire-only index vault,
+    // not whatever preset happens to be first.
+    const startsAsIndexVault = archetypes.defaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    const acquireOnlyPreset = presets.find(preset => preset?.type?.toLowerCase() === 'acquire_only');
+    const firstPreset = (startsAsIndexVault && acquireOnlyPreset) || presets[0] || null;
+    const resetData = getInitialVaultState();
+
+    if (startsAsIndexVault) {
+      const indexBasket = emptyIndexBasket();
+      resetData.vaultArchetype = VAULT_ARCHETYPES.INDEX_WEIGHTED;
+      resetData.indexBasket = indexBasket;
+      resetData.assetsWhitelist = basketToAssetsWhitelist(indexBasket);
+    }
 
     if (firstPreset?.config) {
       const config = firstPreset.config;
@@ -804,7 +1068,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       resetData.cosigningThreshold = config.cosigningThreshold ?? null;
       resetData.executionThreshold = config.executionThreshold ?? null;
     }
+    if (firstPreset?.type?.toLowerCase() === 'acquire_only') {
+      resetData.isAcquireOnly = true;
+      resetData.tokensForAcquires = 100;
+    }
 
+    skipPersistRef.current = false;
+    resolvedForVaultRef.current = null;
     setVaultData(resetData);
     await changeStep(1, true);
     setSteps(CREATE_VAULT_STEPS);
@@ -837,10 +1107,13 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             deletingPresetId={deletingPresetId}
             onImageUploadingChange={setIsImageUploading}
             onRemoveWhitelistItem={handleRemoveWhitelistItem}
+            onArchetypeChange={handleArchetypeChange}
           />
         );
       case 2:
-        return <AssetContribution data={vaultData} errors={errors} updateField={updateField} />;
+        return (
+          <AssetContribution data={vaultData} errors={errors} updateField={updateField} isRobinHood={isRobinHood} />
+        );
       case 3:
         return (
           <AcquireWindow
@@ -942,11 +1215,20 @@ export const CreateVaultForm = ({ vault, setVault }) => {
           )}
           <PrimaryButton
             className="uppercase"
-            disabled={isSubmitting || isFormBlocked || !wallet.isConnected || (IS_MAINNET && !canCreateVaults)}
+            disabled={
+              isSubmitting ||
+              isFormBlocked ||
+              !(isRobinHood ? isEvmConnected : wallet.isConnected) ||
+              (IS_MAINNET && !canCreateVaults)
+            }
             onClick={onSubmit}
             title={IS_MAINNET && !canCreateVaults ? 'Your wallet is not authorized to create vaults' : ''}
           >
-            {isSubmitting ? 'Launching...' : !wallet.isConnected ? 'Connect wallet to launch' : 'Confirm & launch'}
+            {isSubmitting
+              ? 'Launching...'
+              : !(isRobinHood ? isEvmConnected : wallet.isConnected)
+                ? 'Connect wallet to launch'
+                : 'Confirm & launch'}
           </PrimaryButton>
         </div>
       );
@@ -960,6 +1242,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             onClick={handlePreviousStep}
           >
             <ChevronLeft size={24} />
+            <span className="uppercase">Back</span>
           </SecondaryButton>
         )}
         {vault && vault.vaultStatus === 'draft' && (
@@ -987,7 +1270,10 @@ export const CreateVaultForm = ({ vault, setVault }) => {
               <Spinner size="sm" />
             </div>
           ) : (
-            <ChevronRight size={24} />
+            <>
+              <span className="uppercase">Next</span>
+              <ChevronRight size={24} />
+            </>
           )}
         </PrimaryButton>
       </div>
@@ -1021,21 +1307,35 @@ export const CreateVaultForm = ({ vault, setVault }) => {
       <button
         onClick={handleResetVault}
         disabled={isSubmitting || isSavingDraft}
-        className="fixed top-25 right-8 z-50 w-12 h-12 bg-steel-800 hover:bg-steel-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center border border-steel-700 hover:border-steel-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        className="fixed bottom-[124px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-[136px] md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Reset vault creation"
         title="Reset vault creation"
       >
-        <RotateCcw className="w-5 h-5" />
+        <RotateCcw className="w-5 h-5 group-hover:-rotate-45 transition-transform duration-300" />
+        <span className="hidden sm:inline text-sm font-semibold">Reset</span>
       </button>
-      <PrimaryButton
+      <button
         onClick={scrollToTutorial}
-        className="fixed bottom-8 right-8 z-50 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+        className="fixed bottom-[68px] right-4 z-50 flex h-11 items-center justify-center gap-2 px-3.5 sm:w-40 sm:px-0 md:bottom-20 md:right-6 bg-steel-850 hover:bg-steel-800 text-white rounded-full shadow-lg transition-colors group border border-steel-750"
         aria-label="Scroll to tutorial"
+        type="button"
       >
         <BookOpen className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-        <span className="hidden sm:inline font-russo uppercase text-sm">Tutorial</span>
-        <ChevronDown className="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
-      </PrimaryButton>
+        <span className="hidden sm:inline text-sm font-semibold">Tutorial</span>
+        <ChevronDown className="hidden sm:block w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" />
+      </button>
+      {showAiLink && vault?.id && (
+        <div className="mb-6 flex justify-end">
+          <button
+            className="flex items-center gap-2 text-dark-100 transition-colors hover:text-white"
+            type="button"
+            onClick={continueInAi}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="font-russo text-sm uppercase">Continue with AI</span>
+          </button>
+        </div>
+      )}
       <div className="md:hidden mb-8">
         <LavaSelect
           label="Current Step"
@@ -1066,7 +1366,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         {visibleSteps.map((step, index) => (
           <div key={`step-${step.id}`} className="flex-1 flex flex-col items-center relative">
             <button
-              className="focus:outline-none flex flex-col items-center"
+              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-md flex flex-col items-center"
               type="button"
               onClick={() => handleStepClick(step.id)}
             >
@@ -1084,7 +1384,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
             {index < visibleSteps.length - 1 && (
               <div
                 className={`absolute top-[25%] -right-[15%] lg:-right-[25%] w-[30%] lg:w-[45%] h-[3px] 
-                  ${step.id < currentStep ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-white/10'}
+                  ${step.id < currentStep ? 'bg-orange-gradient' : 'bg-white/10'}
                 `}
                 style={{ transform: 'translateX(0)' }}
               />
@@ -1119,7 +1419,7 @@ export const CreateVaultForm = ({ vault, setVault }) => {
         onClose={() => setIsResetModalOpen(false)}
         onConfirm={resetVault}
       />
-      <VaultCreationTutorial />
+      <VaultCreationTutorial isAcquireOnly={!!vaultData.isAcquireOnly} />
     </div>
   );
 };

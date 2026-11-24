@@ -2,15 +2,23 @@ import { Copy, EyeIcon, User, Share, BarChart3, Info, Pencil } from 'lucide-reac
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
+import { useReadContract } from 'wagmi';
 
 import { SwapComponent } from '../swap/Swap';
+import { UniswapSwapPanel } from '../swap/UniswapSwapPanel';
 
+import { HintTooltip } from '@/components/ui/HintTooltip';
 import { useCurrency } from '@/hooks/useCurrency';
 import { VAULT_STATUSES, VAULT_TAGS_OPTIONS } from '@/components/vaults/constants/vaults.constants';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { Chip } from '@/components/shared/Chip';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
+import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
+import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
+import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
+import { EvmAllocationUnlockNotice } from '@/components/vault-profile/EvmAllocationUnlockNotice';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
     .then(module => ({
@@ -74,11 +82,11 @@ import {
   getCountdownTime,
   substringAddress,
 } from '@/utils/core.utils';
+import { getAddressUrl, getPolicyUrl } from '@/utils/explorer.utils';
 import { areAllAssetsAtMaxCapacity } from '@/utils/vaultContributionLimits';
-import { useVaultAssets } from '@/services/api/queries';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import { useVaultAssets, useVaultLp } from '@/services/api/queries';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 import { useViewVault } from '@/services/api/queries.js';
-import { IS_MAINNET, IS_PREPROD } from '@/utils/networkValidation.ts';
 
 const ContributionSkeleton = () => (
   <div className="p-4 space-y-8">
@@ -178,15 +186,59 @@ const TabsSkeleton = () => (
   </div>
 );
 
+// Same rule as l4va-api VaultsService (isAcquireWindowActive / isContributionWindowActive):
+// 2 minutes, none for short (< 1 h, staging) windows.
+const PHASE_CLOSE_BUFFER_MS = 2 * 60 * 1000;
+const PHASE_CLOSE_BUFFER_MIN_WINDOW_MS = 60 * 60 * 1000;
+const phaseCloseBufferMs = durationMs => (durationMs >= PHASE_CLOSE_BUFFER_MIN_WINDOW_MS ? PHASE_CLOSE_BUFFER_MS : 0);
+
+// True once `timestamp` is in the past; re-renders exactly at that moment.
+const useHasPassed = timestamp => {
+  const [passed, setPassed] = useState(() => timestamp !== null && Date.now() >= timestamp);
+  useEffect(() => {
+    if (timestamp === null) {
+      setPassed(false);
+      return undefined;
+    }
+    const msLeft = timestamp - Date.now();
+    setPassed(msLeft <= 0);
+    if (msLeft <= 0) return undefined;
+    // setTimeout overflows past ~24.8 days; re-arm on the next render in that case.
+    const timer = setTimeout(() => setPassed(true), Math.min(msLeft, 2 ** 31 - 1));
+    return () => clearTimeout(timer);
+  }, [timestamp]);
+  return passed;
+};
+
 export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const router = useRouter();
   const navigate = useNavigate();
 
   const { isAuthenticated, user } = useAuth();
   const { openModal } = useModalControls();
-  const { isAda, currencySymbol } = useCurrency();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   const [activeTab, setActiveTab] = useState(initialTab || 'Assets');
+  // The open contribution/acquire window. The backend flips the status a little later,
+  // so between the timer hitting zero and that flip the actions must already be closed.
+  const phaseWindow = (() => {
+    if (!vault) return null;
+    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
+      const duration = Number(vault.contributionDuration || 0);
+      return { end: new Date(vault.contributionPhaseStart).getTime() + duration, duration };
+    }
+    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
+      const duration = Number(vault.acquireWindowDuration || 0);
+      return { end: new Date(vault.acquirePhaseStart).getTime() + duration, duration };
+    }
+    return null;
+  })();
+  const phaseWindowEnd = phaseWindow ? phaseWindow.end : null;
+  // Actions close a little before the window does, so a tx sent at the last moment still lands in time.
+  const phaseActionsCloseAt = phaseWindow ? phaseWindow.end - phaseCloseBufferMs(phaseWindow.duration) : null;
+  const isPhaseWindowEnded = useHasPassed(phaseWindowEnd);
+  const arePhaseActionsClosed = useHasPassed(phaseActionsCloseAt);
+
   const [deferredReady, setDeferredReady] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => {
     if (typeof window === 'undefined') {
@@ -263,24 +315,27 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const { data: vaultAssetsData } = useVaultAssets(vault?.id);
   const contributedAssets = vaultAssetsData?.data?.items || [];
 
+  const isRobinhoodVault = vault?.chainType === ChainType.ROBINHOOD;
+  // 404 = the vault seeded no pool (0% LP), so there is nothing to swap against.
+  const { data: evmLp, isError: evmLpMissing, isLoading: evmLpLoading } = useVaultLp(vault?.id, isRobinhoodVault);
+  const { data: evmVaultTokenAddress } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [
+      {
+        type: 'function',
+        stateMutability: 'view',
+        name: 'vaultToken',
+        inputs: [],
+        outputs: [{ type: 'address' }],
+      },
+    ],
+    functionName: 'vaultToken',
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+  });
+
   const handleTabChange = tab => setActiveTab(tab);
 
-  const isPhaseTransitioning = () => {
-    if (!vault) return false;
-    const now = Date.now();
-
-    if (vault.vaultStatus === VAULT_STATUSES.CONTRIBUTION && vault.contributionPhaseStart) {
-      const contributionEnd = new Date(vault.contributionPhaseStart).getTime() + (vault.contributionDuration || 0);
-      return now >= contributionEnd;
-    }
-
-    if (vault.vaultStatus === VAULT_STATUSES.ACQUIRE && vault.acquirePhaseStart) {
-      const acquireEnd = new Date(vault.acquirePhaseStart).getTime() + (vault.acquireWindowDuration || 0);
-      return now >= acquireEnd;
-    }
-
-    return false;
-  };
+  const isPhaseTransitioning = () => isPhaseWindowEnded;
 
   const renderActionButton = () => {
     const allAssetsAtMaxCapacity = areAllAssetsAtMaxCapacity(vault.assetsWhitelist, contributedAssets, vault);
@@ -306,18 +361,24 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       buttonText = 'Contribution Limit Reached';
     }
 
+    const acquireAction = {
+      text: 'Acquire',
+      handleClick: () => openModal('AcquireModal', { vault }),
+      available: vault.isAcquireWindowActive,
+      disabled: arePhaseActionsClosed,
+    };
+
     const buttonConfig = {
-      Assets: {
-        text: buttonText,
-        handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
-        available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
-        disabled: isInvalidStatus || isContributionFull || isExpansionFull,
-      },
-      Token: {
-        text: 'Acquire',
-        handleClick: () => openModal('AcquireModal', { vault }),
-        available: vault.isAcquireWindowActive,
-      },
+      // Acquire-only vaults never take contributions; Assets is the landing tab, so it must offer Acquire.
+      Assets: vault.isAcquireOnly
+        ? acquireAction
+        : {
+            text: buttonText,
+            handleClick: () => openModal('ContributeModal', { vault, isExpansion }),
+            available: vault.isContributionWindowActive && !allAssetsAtMaxCapacity,
+            disabled: isInvalidStatus || isContributionFull || isExpansionFull || arePhaseActionsClosed,
+          },
+      Token: acquireAction,
       Governance: {
         text: 'Create Proposal',
         available:
@@ -347,19 +408,26 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
 
   const handleCopyPolicyId = e => {
     e.preventDefault();
-    navigator.clipboard.writeText(vault.policyId);
-    toast.success('Policy ID copied to clipboard');
+    navigator.clipboard.writeText(vault.policyId).then(
+      () => toast.success('Policy ID copied to clipboard'),
+      () => toast.error('Could not copy to clipboard')
+    );
   };
 
   const handleCopyWalletAddress = e => {
     e.preventDefault();
-    navigator.clipboard.writeText(vault.contractAddress);
-    toast.success('Wallet address copied to clipboard');
+    navigator.clipboard.writeText(vault.contractAddress).then(
+      () => toast.success('Wallet address copied to clipboard'),
+      () => toast.error('Could not copy to clipboard')
+    );
   };
 
   const handleCopyVaultAddress = async e => {
     e.preventDefault();
-    const link = `${import.meta.env.VITE_WEB_LINK}/vaults/${vault.id}?tab=${activeTab}`;
+    // VITE_WEB_LINK is not set on every environment (stage produced ".../vaults/undefined/vaults/<id>");
+    // the current origin is always the right host for a shareable link.
+    const origin = import.meta.env.VITE_WEB_LINK || window.location.origin;
+    const link = `${origin.replace(/\/$/, '')}/vaults/${vault.id}?tab=${encodeURIComponent(activeTab)}`;
 
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
@@ -368,8 +436,10 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
         await navigator.share({ url: link });
         toast.success('Link shared successfully');
       } else {
-        await navigator.clipboard.writeText(link);
-        toast.success('Link copied to clipboard');
+        await navigator.clipboard.writeText(link).then(
+          () => toast.success('Link copied to clipboard'),
+          () => toast.error('Could not copy to clipboard')
+        );
       }
     } catch (err) {
       console.error('Error coy link:', err);
@@ -385,18 +455,54 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
     }
   };
 
+  const formatVaultStatCurrency = (value, maximumFractionDigits = 2) => {
+    if (value == null) return 'N/A';
+
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return 'N/A';
+
+    const sign = numericValue < 0 ? '-' : '';
+    const absValue = Math.abs(numericValue);
+
+    // ETH values can be much smaller than ADA/USD-denominated values.
+    // Keep extra precision so non-zero values don't collapse to 0.
+    if (currency === 'eth') {
+      if (absValue > 0 && absValue < 0.000001) {
+        return `${sign}${currencySymbol}< 0.000001`;
+      }
+      return `${sign}${currencySymbol}${formatNum(absValue, 6)}`;
+    }
+
+    // Below the shown precision (e.g. a $0.0000102 VT price), say so instead of rounding to 0.
+    const smallest = 10 ** -maximumFractionDigits;
+    if (absValue > 0 && absValue < smallest) {
+      return `${sign}< ${currencySymbol}${smallest.toFixed(maximumFractionDigits)}`;
+    }
+
+    return `${sign}${currencySymbol}${formatNum(absValue, maximumFractionDigits)}`;
+  };
+
+  // A burned vault's VT is gone and its assets are distributed: price-based stats are meaningless.
+  const isBurned = vault?.vaultStatus === VAULT_STATUSES.BURNED;
+
   // Calculate vault statistics - values computed on the backend in vault.vaultStats
-  const vaultStats = {
+  const computedVaultStats = {
     assetValue: vault.vaultStatus,
     ftGains: (() => {
-      const val = isAda ? vault.vaultStats?.ftGainsAda : vault.vaultStats?.ftGainsUsd;
-      if (val == null) return 'N/A';
-      return `${val < 0 ? '-' : ''}${currencySymbol}${formatNum(Math.abs(val))}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.ftGainsAda,
+        usd: vault.vaultStats?.ftGainsUsd,
+        eth: vault.vaultStats?.ftGainsEth,
+      });
+      return formatVaultStatCurrency(val);
     })(),
     fdv: (() => {
-      const val = isAda ? vault.vaultStats?.fdvAda : vault.vaultStats?.fdvUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.fdvAda,
+        usd: vault.vaultStats?.fdvUsd,
+        eth: vault.vaultStats?.fdvEth,
+      });
+      return formatVaultStatCurrency(val);
     })(),
     fdvTvl: (() => {
       const val = vault.vaultStats?.fdvTvl;
@@ -405,43 +511,76 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
       return val.toFixed(2);
     })(),
     vtPrice: (() => {
-      const val = isAda ? vault.vaultStats?.vtPriceAda : vault.vaultStats?.vtPriceUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val, 4)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.vtPriceAda,
+        usd: vault.vaultStats?.vtPriceUsd,
+        eth: vault.vaultStats?.vtPriceEth,
+      });
+      return formatVaultStatCurrency(val, 4);
     })(),
     tvl: (() => {
-      const val = isAda ? vault.vaultStats?.tvlAda : vault.vaultStats?.tvlUsd;
-      if (val == null) return 'N/A';
-      return `${currencySymbol}${formatNum(val)}`;
+      const val = pickByCurrency({
+        ada: vault.vaultStats?.tvlAda ?? vault.assetsPrices?.totalValueAda ?? vault.totalValueAda,
+        usd: vault.vaultStats?.tvlUsd ?? vault.assetsPrices?.totalValueUsd ?? vault.totalValueUsd,
+        eth: vault.vaultStats?.tvlEth ?? vault.assetsPrices?.totalValueEth ?? vault.totalValueEth,
+      });
+      // Like FDV / TVL, always show two decimals: 0 → 0.00.
+      const numericValue = Number(val);
+      if (val == null || Number.isNaN(numericValue)) return 'N/A';
+      if (numericValue === 0) return `${currencySymbol}0.00`;
+      if (currency === 'eth') return formatVaultStatCurrency(val);
+      const sign = numericValue < 0 ? '-' : '';
+      return `${sign}${currencySymbol}${Math.abs(numericValue).toLocaleString('en', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
     })(),
   };
+
+  const vaultStats = isBurned
+    ? { ...computedVaultStats, vtPrice: 'N/A', ftGains: 'N/A', fdv: 'N/A', fdvTvl: 'N/A', tvl: 'N/A' }
+    : computedVaultStats;
+
+  const showTokenDetails =
+    [VAULT_STATUSES.LOCKED, VAULT_STATUSES.EXPANSION, VAULT_STATUSES.ACQUIRE_EXPANSION].includes(vault?.vaultStatus) &&
+    Boolean(vault?.vaultTokenTicker || vault?.policyId);
 
   const renderVaultInfo = () => (
     <div className="flex justify-between items-start w-full mb-6">
       <div className="flex flex-col w-full">
-        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-center">
-          <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
-            {vault.isOfficialPartner && (
-              <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+        <div className="flex w-full flex-col items-start gap-3 mb-3 sm:flex-row sm:justify-between sm:items-start">
+          <div className="flex flex-col min-w-0 gap-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-2xl font-bold break-words">{vault.name}</h1>
+              {vault.isOfficialPartner && (
+                <GoldenVerifiedBadge hint={OFFICIAL_PARTNER_BADGE_HINT} label="Official L4VA partner" />
+              )}
+            </div>
+            {(vault.vaultTokenTicker || vault.ftTokenSupply) && (
+              <div className="flex items-center gap-2 text-sm text-dark-100">
+                {vault.vaultTokenTicker && <span className="font-medium text-white">${vault.vaultTokenTicker}</span>}
+                {vault.ftTokenSupply ? (
+                  <span>
+                    Total Supply: <span className="text-white">{formatNum(vault.ftTokenSupply)}</span>
+                  </span>
+                ) : null}
+              </div>
             )}
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
             {isAuthenticated && (
-              <div className="group relative">
+              <HintTooltip content="View owner profile">
                 <button
+                  aria-label="View owner profile"
                   onClick={() => handleOwnerClick(vault.owner.id)}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <User className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  View owner profile
-                </div>
-              </div>
+              </HintTooltip>
             )}
             {isAuthenticated && user?.id === vault.owner?.id && vault.vaultStatus === VAULT_STATUSES.PUBLISHED && (
-              <div className="group relative">
+              <HintTooltip content="Edit vault settings">
                 <button
                   onClick={() => openModal('EditUpcomingVaultModal', { vault })}
                   aria-label="Edit vault settings"
@@ -449,45 +588,37 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 >
                   <Pencil className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  Edit vault settings
-                </div>
-              </div>
+              </HintTooltip>
             )}
             {/* Statistic */}
-            {vault?.hasActiveLp && IS_MAINNET && (
-              <div className="group relative">
+            {showTokenDetails && (
+              <HintTooltip content="View vault statistics">
                 <button
-                  onClick={() => openModal('ChartModal', { vault })}
+                  aria-label="View vault statistics"
+                  type="button"
+                  onClick={() => navigate({ to: '/tokens/$id', params: { id: vault.id } })}
                   className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
                 >
                   <BarChart3 className="w-4 h-4 text-orange-500" />
                 </button>
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                  View vault statistics
-                </div>
-              </div>
+              </HintTooltip>
             )}
-            <div className="group relative">
+            <VaultTypeBadge vault={vault} variant="icon" />
+            <HintTooltip content="Total views">
               <span className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 h-7">
                 <EyeIcon className="w-4 h-4 text-orange-500" />
                 <span>{formatCompactNumber(vault.countView)}</span>
               </span>
-              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                Total views
-              </div>
-            </div>
-            <div className="group relative">
+            </HintTooltip>
+            <HintTooltip content="Share vault link">
               <button
+                aria-label="Share vault link"
                 onClick={handleCopyVaultAddress}
                 className="bg-steel-850 px-2 py-1 rounded-full text-sm capitalize flex items-center justify-center gap-1 hover:bg-steel-750 transition-colors h-7 min-w-[28px]"
               >
                 <Share className="w-4 h-4 text-orange-500" />
               </button>
-              <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-steel-850 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 pointer-events-none">
-                Share vault link
-              </div>
-            </div>
+            </HintTooltip>
           </div>
         </div>
 
@@ -500,11 +631,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
           <div className="flex items-center gap-2 text-sm text-dark-100">
             <span className="font-medium">Wallet:</span>
             <a
-              href={
-                IS_PREPROD
-                  ? `https://preprod.cardanoscan.io/address/${vault.contractAddress}`
-                  : `https://pool.pm/${vault.contractAddress}`
-              }
+              href={getAddressUrl(vault.contractAddress, vault.chainType)}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:underline hover:text-orange-500 transition-colors"
@@ -524,11 +651,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
             <div className="flex items-center gap-2 text-sm text-dark-100">
               <span className="font-medium">Policy ID:</span>
               <a
-                href={
-                  IS_PREPROD
-                    ? `https://preprod.cardanoscan.io/tokenPolicy/${vault.policyId}`
-                    : `https://pool.pm/policy/${vault.policyId}`
-                }
+                href={getPolicyUrl(vault.policyId)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline hover:text-orange-500 transition-colors"
@@ -628,24 +751,59 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
   const vaultSwapToken = activeLpTokenOut || import.meta.env.VITE_SWAP_VLRM_TOKEN_ID;
   const swapInstanceKey = `${vault?.id || 'vault'}-${vaultSwapToken}`;
 
-  const renderSwapBlock = () => (
-    <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
-      <SwapComponent
-        key={swapInstanceKey}
-        config={{
-          defaultTokenOut: vaultSwapToken,
-          style: { width: '100%' },
-        }}
-      />
-    </div>
-  );
+  const renderSwapBlock = () => {
+    if (isRobinhoodVault) {
+      if (!evmVaultTokenAddress || evmLpLoading) return null;
+
+      const ticker = vault.vaultTokenTicker || 'VT';
+      const lpReady = !evmLpMissing && evmLp?.status === 'provided';
+      const swapDisabledReason = isBurned
+        ? `This vault was terminated and ${ticker} was burned, so it can't be swapped.`
+        : lpReady
+          ? null
+          : Number(vault.liquidityPoolContribution) > 0 && !evmLp
+            ? `The ${ticker} liquidity pool is created after the acquire window closes. Swaps open once it is seeded.`
+            : evmLp?.status === 'pending'
+              ? `The ${ticker} liquidity pool is being created. Swaps open once it is seeded.`
+              : evmLp?.status === 'failed'
+                ? `The ${ticker} liquidity pool could not be created, so swaps are unavailable for now.`
+                : `${ticker} can't be swapped: there is no liquidity pool`;
+
+      return (
+        <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+          <UniswapSwapPanel
+            tokenAddress={evmVaultTokenAddress}
+            tokenSymbol={vault.vaultTokenTicker || 'VT'}
+            tokenImage={vault.vaultImage}
+            disabledReason={swapDisabledReason}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-steel-950 rounded-xl p-4 lg:p-0 mx-auto w-full mt-4">
+        <SwapComponent
+          key={swapInstanceKey}
+          config={{
+            defaultTokenOut: vaultSwapToken,
+            style: { width: '100%' },
+          }}
+        />
+      </div>
+    );
+  };
 
   return (
     <>
       {renderPublishedOverlay()}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-1 min-w-0 space-y-4 bg-steel-950 rounded-xl p-4">
-          <div className="overflow-hidden rounded-lg">
+          <div className="relative overflow-hidden rounded-lg">
+            <ChainBadge
+              chainType={vault.chainType}
+              className="absolute top-3 right-3 z-10 bg-black/60 p-1.5 backdrop-blur-sm"
+            />
             <div className="w-full" style={{ aspectRatio: '4 / 3' }}>
               {vault.vaultImage ? (
                 <img
@@ -670,8 +828,14 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
               color={vault.vaultStatus === 'locked' ? 'yellow' : 'red'}
             />
             {isPhaseTransitioning() && <PhaseTransitionInfo />}
+            {isRobinhoodVault && <EvmAllocationUnlockNotice status={vault.evmV13} />}
           </div>
           <div className="mb-6">{renderFailureBanner()}</div>
+          {isRobinhoodVault && vault.vaultStatus === VAULT_STATUSES.TERMINATING && (
+            <div className="mb-6">
+              <VaultTerminationRedeem vault={vault} vaultTokenAddress={evmVaultTokenAddress} />
+            </div>
+          )}
           {vault.vaultStatus !== 'locked' ? (
             deferredReady ? (
               <Suspense fallback={<ContributionSkeleton />}>
@@ -698,7 +862,7 @@ export const VaultProfileView = ({ vault, activeTab: initialTab }) => {
                 <StatsSkeleton />
               )}
             </div>
-            <div className="flex justify-center mb-6">{renderActionButton()}</div>
+            {!isBurned && <div className="flex justify-center mb-6">{renderActionButton()}</div>}
             {deferredReady ? (
               <Suspense fallback={<TabsSkeleton />}>
                 <VaultTabs activeTab={activeTab} vault={vault} onTabChange={handleTabChange} />

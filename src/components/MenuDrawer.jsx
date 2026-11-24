@@ -1,9 +1,16 @@
 import clsx from 'clsx';
+import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 
 import { LavaSteelSelect } from '@/components/shared/LavaSelect.jsx';
 import { useCurrency } from '@/hooks/useCurrency.js';
+import { useNetwork } from '@/hooks/useNetwork.js';
+import { useAuth } from '@/lib/auth/auth';
+import { ChainType } from '@/utils/types';
+import CardanoIcon from '@/icons/cardano.svg?react';
+import RobinhoodIcon from '@/icons/robinhood.svg?react';
 
 export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
   const handleNavClick = (link, e) => {
@@ -13,26 +20,70 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
     onClose();
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = e => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
+  const { isAuthenticated } = useAuth();
   const { currency: selectedCurrency, updateCurrency } = useCurrency();
+  const { network: selectedNetwork, updateNetwork, isRobinHood, isCardano } = useNetwork();
 
   const currencyOptions = [
-    { label: 'ADA', value: 'ada' },
+    ...(isRobinHood ? [] : [{ label: 'ADA', value: 'ada' }]),
     { label: 'USD', value: 'usdt' },
+    ...(isCardano ? [] : [{ label: 'ETH', value: 'eth' }]),
   ];
 
-  return (
+  const networkOptions = [
+    {
+      label: 'Cardano',
+      value: ChainType.CARDANO,
+      icon: <CardanoIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
+    {
+      label: 'Robinhood',
+      value: ChainType.ROBINHOOD,
+      icon: <RobinhoodIcon className="w-4 h-4 flex-shrink-0 text-white" />,
+    },
+  ];
+
+  const handleNetworkChange = val => {
+    updateNetwork(val);
+    // ADA isn't available on Robinhood and ETH isn't on Cardano —
+    // swap to the network's native currency in the same tick.
+    if (val === ChainType.ROBINHOOD && selectedCurrency === 'ada') {
+      updateCurrency('eth');
+    } else if (val === ChainType.CARDANO && selectedCurrency === 'eth') {
+      updateCurrency('ada');
+    }
+  };
+
+  // Portaled to <body>: the header uses backdrop-blur, which makes it the containing block for
+  // `position: fixed` children, so rendered inside it the drawer was sized to the header instead
+  // of the screen and left the bottom of the page uncovered on mobile (L4VA-1068).
+  return createPortal(
     <>
       <div
         className={clsx(
-          'fixed inset-0 bg-black/50 z-40 transition-opacity duration-300',
+          'fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300',
           isOpen ? 'opacity-100' : 'opacity-0'
         )}
-        style={{ pointerEvents: isOpen ? 'auto' : 'none', height: '100dvh' }}
+        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
         onClick={onClose}
       />
       <div
-        className="fixed right-0 w-80 bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-50"
-        style={{ top: 0, bottom: 0, height: '100dvh', transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        // Closed drawer is only translated off-screen; inert keeps its links out of Tab order.
+        inert={!isOpen}
+        className="fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-steel-900 shadow-xl transition-transform duration-300 ease-out z-[70]"
+        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-steel-750">
@@ -65,6 +116,17 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
             </div>
 
             <div className="flex flex-col gap-2 pt-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Network</h3>
+
+              <LavaSteelSelect
+                options={networkOptions}
+                value={selectedNetwork}
+                disabled={isAuthenticated}
+                onChange={handleNetworkChange}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 pt-6">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Currency</h3>
 
               <LavaSteelSelect options={currencyOptions} value={selectedCurrency} onChange={updateCurrency} />
@@ -75,6 +137,7 @@ export const MenuDrawer = ({ navLinks, isOpen, onClose, onNavClick }) => {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
+import { useNetwork } from '@/hooks/useNetwork';
 import { LavaTabs } from '@/components/shared/LavaTabs.jsx';
 import { Spinner } from '@/components/Spinner.jsx';
 import { InfiniteScrollList } from '@/components/shared/InfiniteScrollList.jsx';
@@ -10,25 +11,6 @@ import { LavaSearchInput } from '@/components/shared/LavaInput.jsx';
 
 const MAX_NFT_PER_TRANSACTION = 10;
 const MAX_FT_PER_TRANSACTION = 10;
-
-// Enhanced NFT/FT items with IPFS support
-const EnhancedNFTItem = ({ nft, isSelected, isDisabled, onToggle }) => {
-  const enhancedNft = {
-    ...nft,
-    src: nft.metadata?.image,
-  };
-
-  return <NFTItem isSelected={isSelected} isDisabled={isDisabled} nft={enhancedNft} onToggle={onToggle} />;
-};
-
-const EnhancedFTItem = ({ ft, amount, isDisabled, onAmountChange }) => {
-  const enhancedFt = {
-    ...ft,
-    src: ft.metadata?.image,
-  };
-
-  return <FTItem amount={amount} isDisabled={isDisabled} ft={enhancedFt} onAmountChange={onAmountChange} />;
-};
 
 export const AssetsList = ({
   walletAssets,
@@ -50,7 +32,12 @@ export const AssetsList = ({
   onSearchChange,
   showTabs = true,
   title = 'Available Assets',
+  chainType = 'cardano',
+  nftEnabled = true,
 }) => {
+  const { isRobinHood } = useNetwork();
+  const tabs = nftEnabled ? ['NFT', 'FT'] : ['FT'];
+
   const filteredAssets = useMemo(() => {
     if (!walletAssets || walletAssets.length === 0) return [];
     return walletAssets;
@@ -63,11 +50,15 @@ export const AssetsList = ({
         const isDisabled = !isSelected && selectedNFTsCount >= MAX_NFT_PER_TRANSACTION;
 
         return (
-          <EnhancedNFTItem
+          <NFTItem
             key={item.tokenId}
-            nft={item}
+            nft={{
+              ...item,
+              src: item.metadata?.image,
+            }}
             isSelected={isSelected}
             isDisabled={isDisabled}
+            chainType={item.chainType || chainType}
             onToggle={onToggleNFT}
           />
         );
@@ -76,17 +67,30 @@ export const AssetsList = ({
         const isDisabled = !hasAmount && selectedFTsCount >= MAX_FT_PER_TRANSACTION;
 
         return (
-          <EnhancedFTItem
+          <FTItem
             key={item.tokenId}
-            ft={item}
+            ft={{
+              ...item,
+              src: item.metadata?.image,
+            }}
             amount={selectedAmount[item.tokenId] || ''}
             isDisabled={isDisabled}
+            chainType={item.chainType || chainType}
             onAmountChange={onFTAmountChange}
           />
         );
       }
     },
-    [activeTab, selectedNFTs, selectedAmount, selectedNFTsCount, selectedFTsCount, onToggleNFT, onFTAmountChange]
+    [
+      activeTab,
+      selectedNFTs,
+      selectedAmount,
+      selectedNFTsCount,
+      selectedFTsCount,
+      onToggleNFT,
+      onFTAmountChange,
+      chainType,
+    ]
   );
 
   return (
@@ -95,7 +99,7 @@ export const AssetsList = ({
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-medium">{title}</h2>
           {showTabs && (
-            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={['NFT', 'FT']} onTabChange={onTabChange} />
+            <LavaTabs activeTab={activeTab} className="bg-steel-850" tabs={tabs} onTabChange={onTabChange} />
           )}
         </div>
         <LavaSearchInput
@@ -107,7 +111,7 @@ export const AssetsList = ({
         <div className="space-y-1 h-full flex flex-col">
           <div className="flex justify-between text-dark-100 text-sm px-2">
             <span>Asset</span>
-            <span>{activeTab === 'FT' ? 'Amount' : 'Policy'}</span>
+            <span>{activeTab === 'FT' ? 'Amount' : isRobinHood ? 'Contract' : 'Policy'}</span>
           </div>
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
@@ -135,7 +139,7 @@ export const AssetsList = ({
               renderSelectedItem ? (
                 renderSelectedItem(asset)
               ) : (
-                <SelectedAssetItem key={asset.tokenId} asset={asset} onRemove={onRemoveNFT} />
+                <SelectedAssetItem key={asset.tokenId} asset={asset} chainType={chainType} onRemove={onRemoveNFT} />
               )
             )
           ) : (

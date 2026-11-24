@@ -3,11 +3,13 @@ import { useMemo } from 'react';
 
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
+import { ChainBadge } from '@/components/shared/ChainBadge';
+import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { formatCompactNumber, formatString, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import L4vaIcon from '@/components/shared/L4vaIcon';
 
 type VaultCardProps = {
   vault: VaultShortResponse;
@@ -17,7 +19,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, vaultImage, ftTokenImg, socialLinks = [] } = vault;
-  const { currency } = useCurrency();
+  const { currencySymbol, pickByCurrency } = useCurrency();
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -50,6 +52,11 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <L4vaIcon className="h-8 w-8 text-white" />
             </div>
           )}
+          {/* Vault type sits with the chain icon so both read as one "what is this" group. */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            <VaultTypeBadge vault={vault} className="h-7" />
+            <ChainBadge chainType={vault.chainType} className="bg-black/60 p-1.5 backdrop-blur-sm" />
+          </div>
           {shouldShowCountdown && (
             <div className="absolute bottom-0 left-0 w-3/4">
               <VaultCountdown
@@ -85,9 +92,13 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
                 {vault.totalValueAda && vault.totalValueUsd
-                  ? currency === 'ada'
-                    ? `₳${formatCompactNumber(vault.totalValueAda)}`
-                    : `$${formatCompactNumber(vault.totalValueUsd)}`
+                  ? `${currencySymbol}${formatCompactNumber(
+                      pickByCurrency({
+                        ada: vault.totalValueAda,
+                        usd: vault.totalValueUsd,
+                        eth: vault.totalValueEth ?? 0,
+                      })
+                    )}`
                   : 'N/A'}
               </p>
             </div>
@@ -104,15 +115,12 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
       </Link>
 
       <div className="flex items-center justify-center gap-3 h-10 px-6 pb-6">
-        {socialLinks.length > 0 ? (
+        {socialLinks.length > 0 &&
           socialLinks.map((social, index) => (
             <a key={index} href={social.url} rel="noopener noreferrer" target="_blank">
               <SocialPlatformIcon className="text-white" platformId={social.name} />
             </a>
-          ))
-        ) : (
-          <span className="text-dark-100 text-sm">No social links</span>
-        )}
+          ))}
       </div>
     </div>
   );

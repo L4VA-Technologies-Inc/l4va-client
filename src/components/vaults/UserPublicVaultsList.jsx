@@ -3,6 +3,7 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
+import { scrollBehavior } from '@/utils/a11y';
 
 const VAULT_TABS = [
   { id: 'all', label: 'All', filter: 'all' },
@@ -70,7 +71,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -99,7 +100,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
 
     if (communityVaultsListRef.current) {
       communityVaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }
@@ -111,6 +112,7 @@ export const UserPublicVaultsList = ({ className = '', ownerId = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
+        isRefreshing={isPlaceholderData}
         tabs={VAULT_TABS.map(tab => tab.label)}
         title="User Public Vaults"
         vaults={vaults}

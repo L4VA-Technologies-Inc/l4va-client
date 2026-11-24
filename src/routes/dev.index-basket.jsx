@@ -1,0 +1,257 @@
+import { createFileRoute, notFound } from '@tanstack/react-router';
+
+import { VaultIndexAllocationView } from '@/components/vault-profile/VaultIndexAllocation';
+
+// Dev-only mock gallery for the index basket view. 404s outside `vite dev`.
+
+const L4VA = { assetAddress: '0x0C020Bef00000000000000000000000000003683', symbol: 'L4VA', name: 'L4VA' };
+const WETH = { assetAddress: '0x0000000000000000000000000000000000000001', symbol: 'WETH', name: 'Wrapped Ether' };
+const USDC = { assetAddress: '0x0000000000000000000000000000000000000002', symbol: 'USDC', name: 'USD Coin' };
+const HOOD = { assetAddress: '0x0000000000000000000000000000000000000003', symbol: 'HOOD', name: 'Robinhood Markets' };
+const OLD = { assetAddress: '0x0000000000000000000000000000000000000004', symbol: 'PEPE', name: 'Pepe' };
+
+const usd = valueUsd => ({ valueUsd, valueNative: '0' });
+const formatValue = v => `$${Number(v.valueUsd ?? 0).toFixed(2)}`;
+
+const holding = (asset, targetBps, actualBps, valueUsd, inBasket = true) => ({
+  ...asset,
+  targetBps,
+  actualBps,
+  driftBps: actualBps - targetBps,
+  inBasket,
+  ...usd(valueUsd),
+});
+
+const run = (id, trigger, status, legs, extra = {}) => ({
+  id,
+  trigger,
+  status,
+  createdAt: '2026-10-28T16:37:00Z',
+  completedAt: status === 'completed' ? '2026-10-28T16:37:00Z' : null,
+  navNative: '3100000000000000',
+  legs: legs.map((l, i) => ({ operationId: `${id}-${i}`, status: 'confirmed', txHash: '0xabc', ...l })),
+  skipped: [],
+  ...extra,
+});
+
+// A large basket: 50 assets around 1.8% each, a few far off target, 10% cash.
+const NAMES = [
+  'L4VA',
+  'KIDDIES',
+  'SFI',
+  'ROBINCAT',
+  'CRASHCAT',
+  'WOOF',
+  'AGI',
+  'FLOW',
+  'RIPPLES',
+  'PROPS',
+  'WISHBONE',
+  'GAGE',
+  'SYNTHS',
+  'DARWIN',
+  'UNI',
+  'NOVA',
+  'KITE',
+  'ORBIT',
+  'PIXEL',
+  'MOSS',
+  'EMBER',
+  'QUILL',
+  'TIDE',
+  'BOLT',
+  'FERN',
+  'ONYX',
+  'LYNX',
+  'HALO',
+  'VOLT',
+  'JADE',
+  'RUNE',
+  'SAGE',
+  'ZEST',
+  'COVE',
+  'DUNE',
+  'FLUX',
+  'GRIT',
+  'HIVE',
+  'IRIS',
+  'JOLT',
+  'KOI',
+  'LUME',
+  'MINT',
+  'NEST',
+  'OPAL',
+  'PEAK',
+  'RIFT',
+  'SILK',
+  'TUSK',
+  'WAVE',
+];
+const bigBasket = n => {
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const assets = NAMES.slice(0, n).map((symbol, i) => ({
+    assetAddress: `0x${(i + 16).toString(16).padStart(40, '0')}`,
+    symbol,
+    name: symbol,
+  }));
+  const target = Math.floor(9000 / n);
+  const holdings = assets.map((a, i) => {
+    let actual = Math.round(target * (0.85 + rnd() * 0.3));
+    if ([3, 11, 27, 40].includes(i)) actual = target + 250 + Math.round(rnd() * 300);
+    if ([8, 33].includes(i)) actual = Math.max(0, target - 220);
+    return holding(a, target, actual, +(actual * 0.0032).toFixed(2));
+  });
+  return {
+    config: { reserveBps: 1000, targets: assets.map(a => ({ ...a, weightBps: Math.floor(10000 / n) })) },
+    portfolio: { assets: holdings, reserve: { targetBps: 1000, actualBps: 1000, ...usd(3.2) } },
+  };
+};
+
+const CASES = [
+  { title: 'Large basket — 50 assets (top 10 + others, List / Tiles / Drift)', ...bigBasket(50) },
+  { title: 'Medium basket — 6 assets (switcher, no list controls)', ...bigBasket(6) },
+  {
+    title: 'Before lock — target weights only',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 5000 },
+        { ...WETH, weightBps: 3000 },
+        { ...USDC, weightBps: 2000 },
+      ],
+    },
+  },
+  {
+    title: 'Live, on target — single asset + LP (current SWAPP vault)',
+    config: { reserveBps: 1000, targets: [{ ...L4VA, weightBps: 10000 }] },
+    portfolio: {
+      assets: [holding(L4VA, 9000, 8890, 5.58)],
+      reserve: { targetBps: 1000, actualBps: 1110, ...usd(0.7) },
+      lp: usd(3.36),
+    },
+    rebalances: [run('r1', 'initial_buy', 'completed', [{ side: 'buy', symbol: 'L4VA' }])],
+  },
+  {
+    title: 'Live, drifting — multi-asset, one leg moved',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 5000 },
+        { ...WETH, weightBps: 3000 },
+        { ...HOOD, weightBps: 2000 },
+      ],
+    },
+    portfolio: {
+      assets: [holding(L4VA, 4500, 5320, 532), holding(WETH, 2700, 2410, 241), holding(HOOD, 1800, 1430, 143)],
+      reserve: { targetBps: 1000, actualBps: 840, ...usd(84) },
+    },
+    rebalances: [
+      run('r1', 'initial_buy', 'completed', [
+        { side: 'buy', symbol: 'L4VA' },
+        { side: 'buy', symbol: 'WETH' },
+        { side: 'buy', symbol: 'HOOD' },
+      ]),
+    ],
+  },
+  {
+    title: 'Governance re-weight in progress — asset leaving the basket',
+    config: {
+      version: 2,
+      reserveBps: 500,
+      targets: [
+        { ...L4VA, weightBps: 6000 },
+        { ...USDC, weightBps: 4000 },
+      ],
+    },
+    portfolio: {
+      assets: [holding(L4VA, 5700, 4100, 410), holding(USDC, 3800, 1900, 190), holding(OLD, 0, 3400, 340, false)],
+      reserve: { targetBps: 500, actualBps: 600, ...usd(60) },
+    },
+    rebalances: [
+      run('r2', 'governance_reweight', 'executing', [{ side: 'sell', symbol: 'PEPE' }]),
+      run('r1', 'initial_buy', 'completed', [
+        { side: 'buy', symbol: 'L4VA' },
+        { side: 'buy', symbol: 'PEPE' },
+      ]),
+    ],
+  },
+  {
+    title: 'Completed with warnings — small allocation skipped',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 9000 },
+        { ...HOOD, weightBps: 1000 },
+      ],
+    },
+    portfolio: {
+      assets: [holding(L4VA, 8100, 8090, 8.09), holding(HOOD, 900, 0, 0)],
+      reserve: { targetBps: 1000, actualBps: 1910, ...usd(1.91) },
+    },
+    rebalances: [
+      run('r1', 'initial_buy', 'completed', [{ side: 'buy', symbol: 'L4VA' }], {
+        skipped: [
+          {
+            asset: HOOD.assetAddress.toLowerCase(),
+            symbol: HOOD.symbol,
+            side: 'buy',
+            reason: 'below_min_trade',
+            valueNative: '400000000000000',
+            minTradeNative: '1000000000000000',
+          },
+        ],
+      }),
+    ],
+  },
+  {
+    title: 'Failed rebalance — off target',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 7000 },
+        { ...WETH, weightBps: 3000 },
+      ],
+    },
+    portfolio: {
+      assets: [holding(L4VA, 6300, 6100, 61), holding(WETH, 2700, 0, 0)],
+      reserve: { targetBps: 1000, actualBps: 3900, ...usd(39) },
+    },
+    rebalances: [run('r1', 'initial_buy', 'failed', [{ side: 'buy', symbol: 'L4VA' }], { completedAt: null })],
+  },
+  {
+    title: 'Quotes unavailable — falls back to targets',
+    config: {
+      reserveBps: 1000,
+      targets: [
+        { ...L4VA, weightBps: 8000 },
+        { ...WETH, weightBps: 2000 },
+      ],
+    },
+    portfolio: { error: 'Live prices are unavailable right now', assets: [] },
+  },
+];
+
+const IndexBasketMocks = () => (
+  <div className="container mx-auto max-w-4xl space-y-10 px-4 py-12">
+    <h1 className="text-2xl font-semibold">Index basket — mock states</h1>
+    {CASES.map(c => (
+      <div key={c.title} className="space-y-3">
+        <p className="text-sm text-dark-100">{c.title}</p>
+        <VaultIndexAllocationView
+          config={c.config}
+          portfolio={c.portfolio}
+          rebalances={c.rebalances}
+          formatValue={formatValue}
+        />
+      </div>
+    ))}
+  </div>
+);
+
+export const Route = createFileRoute('/dev/index-basket')({
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) throw notFound();
+  },
+  component: IndexBasketMocks,
+});

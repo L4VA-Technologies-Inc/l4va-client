@@ -1,11 +1,11 @@
-import { Wallet, Info, History, Receipt, Clock } from 'lucide-react';
-import { useWallet } from '@ada-anvil/weld/react';
-import { useNavigate } from '@tanstack/react-router';
+import { Wallet, Info, History, Receipt, Clock, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { formatUnits } from 'viem';
 
 import { useCurrentEpoch } from '@/hooks/useRewardsEpochs';
-import { useClaimableAmount } from '@/hooks/useRewardsClaims';
+import { useClaimableAmount, useEvmDistributorClaim } from '@/hooks/useRewardsClaims';
 import { useVestingSummary } from '@/hooks/useRewardsVesting';
 import {
   useWalletHistory,
@@ -28,15 +28,18 @@ import { AlignmentBonusDisplay } from '@/components/rewards/AlignmentBonusDispla
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal';
 import { Card } from '@/components/ui/card';
 import { formatCompactNumber } from '@/utils/core.utils';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 
 export const RewardsOverview = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   // Fetch all rewards data
   const { data: currentEpochData, isLoading: isLoadingEpoch } = useCurrentEpoch();
   const { data: claimableData, isLoading: isLoadingClaimable } = useClaimableAmount(walletAddress);
+  // Robinhood: null until the L4VARewardsDistributor contract is configured on the backend.
+  const { data: evmClaim, isLoading: isLoadingEvmClaim } = useEvmDistributorClaim(walletAddress, isRobinHood);
   const { data: vestingData, isLoading: isLoadingVesting } = useVestingSummary(walletAddress);
   const { data: historyData, isLoading: isLoadingHistory } = useWalletHistory(walletAddress);
   const { data: walletScoreData, isLoading: isLoadingScore } = useWalletScore(walletAddress);
@@ -94,8 +97,21 @@ export const RewardsOverview = () => {
     };
   }, [vestingData]);
 
-  // Calculate totals
-  const claimableAmount = claimableData?.totalClaimable || 0;
+  // Calculate totals.
+  // Robinhood with the distributor: the contract is the source of truth for what is
+  // claimable — claims go straight to the contract, so the rewards DB never sees them.
+  const toL4va = raw => Number(formatUnits(BigInt(raw), evmClaim.tokenDecimals));
+  const dbClaimable = claimableData?.totalClaimable || 0;
+  const claimableAmount = evmClaim ? toL4va(evmClaim.claimable) : dbClaimable;
+  // Robinhood: while the on-chain check runs, don't flash the DB amount and then hide it.
+  const isCheckingOnChain = isRobinHood && isLoadingEvmClaim && dbClaimable > 0;
+  // Earned per the rewards DB but not (yet) claimable from the distributor contract.
+  const evmNotYetClaimable = !!evmClaim && claimableAmount <= 0 && dbClaimable > 0;
+  // A newer root waiting for its on-chain delay (≈12h after the daily publish).
+  const evmPendingIncrease = evmClaim?.pending
+    ? toL4va(evmClaim.pending.cumulativeAmount) -
+      toL4va(evmClaim.active ? evmClaim.active.cumulativeAmount : evmClaim.claimed)
+    : 0;
   const totalLocked = vestingSummary?.totalLocked || 0;
   const totalEarned =
     historyData?.totalEarned ??
@@ -103,15 +119,17 @@ export const RewardsOverview = () => {
 
   // Claiming enabled flag — defaults to true so the button shows while epoch data is loading
   const claimsEnabled = currentEpochData?.claimsEnabled ?? true;
+  const canClaim = claimsEnabled;
 
   // Get current epoch estimate
   const currentEpochEstimate = estimateData?.estimatedReward || 0;
 
   // Loading state for summary cards
-  const isSummaryLoading = isLoadingClaimable || isLoadingVesting || isLoadingHistory;
+  const isSummaryLoading =
+    isLoadingClaimable || isLoadingVesting || isLoadingHistory || (isRobinHood && isLoadingEvmClaim);
 
   // Wallet not connected state
-  if (!isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
@@ -119,8 +137,14 @@ export const RewardsOverview = () => {
           <Card className="p-12">
             <div className="text-center">
               <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Connect Your Wallet</h2>
-              <p className="text-gray-400">Please connect your wallet to view your rewards</p>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                {isRobinHood ? 'Connect Your Robinhood Wallet' : 'Connect Your Wallet'}
+              </h2>
+              <p className="text-gray-400">
+                {isRobinHood
+                  ? 'Please connect your Robinhood wallet to view your rewards.'
+                  : 'Please connect your wallet to view your rewards'}
+              </p>
             </div>
           </Card>
         </div>
@@ -137,7 +161,7 @@ export const RewardsOverview = () => {
             <h1 className="text-3xl font-bold text-white">Rewards Dashboard</h1>
             <button
               onClick={() => setIsInfoModalOpen(true)}
-              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-colors"
+              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 transition-colors"
               aria-label="How rewards work"
             >
               <Info className="w-5 h-5" />
@@ -161,7 +185,7 @@ export const RewardsOverview = () => {
           />
 
           {/* Claim Section */}
-          {claimableAmount > 0 && (
+          {claimableAmount > 0 && !isCheckingOnChain && (
             <div className="border-t border-steel-750 p-5 md:p-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
@@ -170,7 +194,7 @@ export const RewardsOverview = () => {
                     {formatCompactNumber(claimableAmount)} $L4VA
                   </p>
                 </div>
-                {claimsEnabled ? (
+                {canClaim ? (
                   <ClaimButton claimableAmount={claimableAmount} onSuccess={handleClaimSuccess} />
                 ) : (
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
@@ -181,10 +205,59 @@ export const RewardsOverview = () => {
               </div>
             </div>
           )}
+
+          {isCheckingOnChain && (
+            <div className="border-t border-steel-750 p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-1">Earned Rewards</p>
+                  <p className="text-3xl font-bold text-white">{formatCompactNumber(dbClaimable)} $L4VA</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
+                  <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                  <span className="text-sm font-medium">Checking claimable amount on Robinhood Chain…</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {evmNotYetClaimable && (
+            <div className="border-t border-steel-750 p-5 md:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-steel-400 text-xs font-medium uppercase tracking-wide mb-1">Earned Rewards</p>
+                  <p className="text-3xl font-bold text-white">{formatCompactNumber(dbClaimable)} $L4VA</p>
+                  <p className="text-sm text-steel-400 mt-1 max-w-md">
+                    {evmClaim.paused
+                      ? 'Claiming on Robinhood Chain is paused at the moment. Your rewards are safe and will be claimable once it resumes.'
+                      : evmPendingIncrease > 0
+                        ? 'Your rewards are published on Robinhood Chain and unlock for claiming after a short security delay.'
+                        : 'Your rewards are being prepared for on-chain claiming on Robinhood Chain. They become claimable after the next daily distribution update.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-steel-800 border border-steel-700 text-steel-400">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">
+                    {evmClaim.paused ? 'Claiming paused' : 'Not claimable yet'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {evmPendingIncrease > 0 && (
+            <div className="border-t border-steel-750 px-5 py-3 md:px-6 flex items-center gap-2 text-steel-400 text-sm">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>
+                +{formatCompactNumber(evmPendingIncrease)} $L4VA becomes claimable on{' '}
+                {new Date(evmClaim.pending.activatesAt).toLocaleString()}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Alignment Bonuses */}
-        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} />
+        <AlignmentBonusDisplay alignmentData={alignmentData} isLoading={isLoadingAlignment} isRobinHood={isRobinHood} />
 
         {/* Activity Analytics */}
         {activityBreakdown.length > 0 && !isLoadingScore && <RewardsAnalytics activityBreakdown={activityBreakdown} />}
@@ -202,9 +275,9 @@ export const RewardsOverview = () => {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div
-            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
-            onClick={() => navigate({ to: '/rewards/claims' })}
+          <Link
+            to="/rewards/claims"
+            className="block bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-orange-500"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-lg bg-green-500/20 border border-green-500/20 flex items-center justify-center flex-shrink-0">
@@ -215,10 +288,10 @@ export const RewardsOverview = () => {
                 <p className="text-sm text-steel-400">View your past claim transactions</p>
               </div>
             </div>
-          </div>
-          <div
-            className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
-            onClick={() => navigate({ to: '/rewards/epochs' })}
+          </Link>
+          <Link
+            to="/rewards/epochs"
+            className="block bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-orange-500"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-lg bg-orange-500/20 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
@@ -229,7 +302,7 @@ export const RewardsOverview = () => {
                 <p className="text-sm text-steel-400">View your rewards by epoch</p>
               </div>
             </div>
-          </div>
+          </Link>
           {/* <div
             className="bg-steel-850 border border-steel-750 rounded-2xl p-5 hover:bg-steel-800 transition-colors cursor-pointer"
             onClick={() => navigate({ to: '/rewards/vaults' })}

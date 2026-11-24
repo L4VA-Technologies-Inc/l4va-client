@@ -3,17 +3,11 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
-
-const VAULT_TABS = [
-  { id: 'all', label: 'All', filter: 'all' },
-  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
-  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
-  { id: 'expansion', label: 'Expansion', filter: 'expansion' },
-  { id: 'acquire', label: 'Acquire', filter: 'acquire' },
-  { id: 'past', label: 'Locked', filter: 'locked' },
-  { id: 'govern', label: 'Govern', filter: 'govern' },
-  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
-];
+import { useNetwork } from '@/hooks/useNetwork';
+import { VaultTypeFilter } from '@/components/vaults/index/VaultTypeFilter';
+import { useVaultArchetypes } from '@/hooks/useVaultArchetypes';
+import { scrollBehavior } from '@/utils/a11y';
+import { BROWSE_VAULT_TABS as VAULT_TABS } from '@/components/vaults/constants/vaults.constants';
 
 const DEFAULT_TAB = 'all';
 
@@ -21,9 +15,12 @@ export const CommunityVaultsList = ({ className = '' }) => {
   const search = useSearch({ from: '/vaults/' });
   const router = useRouter();
   const communityVaultsListRef = useRef(null);
+  const archetypes = useVaultArchetypes();
 
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
+
+  const { network } = useNetwork();
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [appliedFilters, setAppliedFilters] = useState({
@@ -31,6 +28,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
     limit: 12,
     filter: initialTab.filter,
     search: '',
+    chainType: network,
   });
 
   useEffect(() => {
@@ -42,6 +40,15 @@ export const CommunityVaultsList = ({ className = '' }) => {
       filter: newTab.filter,
     }));
   }, [tabParam]);
+
+  // Keep the vault search in sync with the network selected in the header.
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      chainType: network,
+      page: 1,
+    }));
+  }, [network]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
@@ -69,7 +76,21 @@ export const CommunityVaultsList = ({ className = '' }) => {
     }
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  // Vault types only exist on Robinhood; drop the filter when switching to Cardano.
+  const isRobinhood = network === 'robinhood';
+  useEffect(() => {
+    if (!isRobinhood) {
+      setAppliedFilters(prevFilters =>
+        prevFilters.vaultArchetype ? { ...prevFilters, vaultArchetype: undefined, page: 1 } : prevFilters
+      );
+    }
+  }, [isRobinhood]);
+
+  const handleArchetypeChange = vaultArchetype => {
+    setAppliedFilters(prevFilters => ({ ...prevFilters, vaultArchetype, page: 1 }));
+  };
+
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -85,7 +106,10 @@ export const CommunityVaultsList = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
+      search: prevFilters.search,
       filter: prevFilters.filter || 'contribution',
+      chainType: network,
+      vaultArchetype: prevFilters.vaultArchetype,
       ...filters,
     }));
   };
@@ -98,7 +122,7 @@ export const CommunityVaultsList = ({ className = '' }) => {
 
     if (communityVaultsListRef.current) {
       communityVaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }
@@ -110,7 +134,8 @@ export const CommunityVaultsList = ({ className = '' }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
-        tabs={VAULT_TABS.map(tab => tab.label)}
+        isRefreshing={isPlaceholderData}
+        tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
         title="All Vaults"
         vaults={vaults}
         onTabChange={handleTabChange}
@@ -120,6 +145,12 @@ export const CommunityVaultsList = ({ className = '' }) => {
         pagination={pagination}
         onPageChange={handlePageChange}
         onSearch={handleSearch}
+        toolbar={
+          // Nothing to filter by when the chain only offers one vault type.
+          isRobinhood && archetypes.hasChoice ? (
+            <VaultTypeFilter value={appliedFilters.vaultArchetype} onChange={handleArchetypeChange} />
+          ) : null
+        }
       />
     </div>
   );

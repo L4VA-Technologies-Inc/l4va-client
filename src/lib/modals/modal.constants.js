@@ -8,6 +8,7 @@ import { VaultFiltersModal } from '@/components/modals/VaultFiltersModal';
 import { ChartModal } from '@/components/modals/ChartModal';
 import { BannerModal } from '@/components/modals/BannerModal.jsx';
 import { EmailModal } from '@/components/modals/EmailModal.jsx';
+import { SupportModal } from '@/components/modals/SupportModal.jsx';
 import { MainNetModal } from '@/components/modals/MainNetModal.jsx';
 import { NftModal } from '@/components/modals/NftModal.jsx';
 import { TransactionFilterModal } from '@/components/modals/TransactionsFilterModal.jsx';
@@ -22,6 +23,10 @@ import { VoteConfirmModal } from '@/components/modals/VoteConfirmModal.jsx';
 import { RewardsInfoModal } from '@/components/modals/RewardsInfoModal.jsx';
 import { StakingConfirmModal } from '@/components/modals/StakingConfirmModal';
 import { EditUpcomingVaultModal } from '@/components/modals/EditUpcomingVaultModal';
+import { AiAssetWhitelistModal } from '@/components/modals/AiAssetWhitelistModal';
+import { AiIndexBasketModal } from '@/components/modals/AiIndexBasketModal';
+import { AiSocialLinksModal } from '@/components/modals/AiSocialLinksModal';
+import { AiWalletWhitelistModal } from '@/components/modals/AiWalletWhitelistModal';
 
 export const MODAL_ENTRIES = [
   {
@@ -63,6 +68,10 @@ export const MODAL_ENTRIES = [
   {
     name: 'EmailModal',
     Component: EmailModal,
+  },
+  {
+    name: 'SupportModal',
+    Component: SupportModal,
   },
   {
     name: 'MainNetModal',
@@ -119,5 +128,21 @@ export const MODAL_ENTRIES = [
   {
     name: 'EditUpcomingVaultModal',
     Component: EditUpcomingVaultModal,
+  },
+  {
+    name: 'AiAssetWhitelistModal',
+    Component: AiAssetWhitelistModal,
+  },
+  {
+    name: 'AiIndexBasketModal',
+    Component: AiIndexBasketModal,
+  },
+  {
+    name: 'AiWalletWhitelistModal',
+    Component: AiWalletWhitelistModal,
+  },
+  {
+    name: 'AiSocialLinksModal',
+    Component: AiSocialLinksModal,
   },
 ];

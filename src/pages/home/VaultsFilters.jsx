@@ -3,24 +3,15 @@ import { useRouter, useSearch } from '@tanstack/react-router';
 
 import { useVaults } from '@/services/api/queries.js';
 import { VaultList } from '@/components/vaults/VaultsList.jsx';
-
-const VAULT_TABS = [
-  { id: 'all', label: 'All', filter: 'all' },
-  { id: 'upcoming', label: 'Upcoming', filter: 'published' },
-  { id: 'contribution', label: 'Contribute', filter: 'contribution' },
-  { id: 'expansion', label: 'Expansion', filter: 'expansion' },
-  { id: 'acquire', label: 'Acquire', filter: 'acquire' },
-  { id: 'past', label: 'Locked', filter: 'locked' },
-  { id: 'govern', label: 'Govern', filter: 'govern' },
-  { id: 'terminated', label: 'Terminated', filter: 'terminated' },
-  { id: 'failed', label: 'Failed', filter: 'failed' },
-];
+import { useNetwork } from '@/hooks/useNetwork';
+import { BROWSE_VAULT_TABS as VAULT_TABS } from '@/components/vaults/constants/vaults.constants';
 
 const DEFAULT_TAB = 'all';
 
 const VaultsFilters = ({ className = '' }) => {
   const search = useSearch({ from: '/' });
   const router = useRouter();
+  const { network } = useNetwork();
   const tabParam = search?.tab || DEFAULT_TAB;
   const initialTab = VAULT_TABS.find(tab => tab.id === tabParam) || VAULT_TABS.find(tab => tab.id === DEFAULT_TAB);
 
@@ -40,7 +31,17 @@ const VaultsFilters = ({ className = '' }) => {
     limit: 12,
     filter: initialTab.filter,
     search: '',
+    chainType: network,
   });
+
+  // Keep the vault search in sync with the network selected in the header.
+  useEffect(() => {
+    setAppliedFilters(prevFilters => ({
+      ...prevFilters,
+      chainType: network,
+      page: 1,
+    }));
+  }, [network]);
 
   const handleSearch = useCallback(searchText => {
     setAppliedFilters(prevFilters => ({
@@ -67,7 +68,7 @@ const VaultsFilters = ({ className = '' }) => {
       });
     }
   };
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -83,7 +84,9 @@ const VaultsFilters = ({ className = '' }) => {
     setAppliedFilters(prevFilters => ({
       page: 1,
       limit: prevFilters.limit || 12,
+      search: prevFilters.search,
       filter: prevFilters.filter || 'contribution',
+      chainType: network,
       ...filters,
     }));
   };
@@ -100,7 +103,8 @@ const VaultsFilters = ({ className = '' }) => {
       className={className}
       error={error?.message}
       isLoading={isLoading}
-      tabs={VAULT_TABS.map(tab => tab.label)}
+      isRefreshing={isPlaceholderData}
+      tabs={VAULT_TABS.filter(tab => !(network === 'robinhood' && tab.id === 'contribution')).map(tab => tab.label)}
       vaults={vaults}
       onTabChange={handleTabChange}
       activeTab={activeTab.label}

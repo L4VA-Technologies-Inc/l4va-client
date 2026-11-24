@@ -152,6 +152,7 @@ export const LavaSteelInput = ({
   maxLength,
   onIncrement,
   onDecrement,
+  endAdornment,
   ...props
 }) => {
   const generatedId = useId();
@@ -221,7 +222,8 @@ export const LavaSteelInput = ({
             ${error ? 'border border-red-600' : 'border border-steel-750'}
             focus:outline-none focus:ring-2 focus:ring-steel-750
             ${disabled ? 'opacity-50' : ''}
-            ${isNumberType ? 'pr-8 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]' : ''}
+            ${endAdornment ? 'pr-28' : isNumberType ? 'pr-8' : ''}
+            ${isNumberType ? '[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]' : ''}
             ${className}
           `}
           placeholder={placeholder}
@@ -235,11 +237,18 @@ export const LavaSteelInput = ({
           max={max}
           step={step}
           maxLength={maxLength}
+          {...(isNumberType ? { inputMode: 'decimal', onWheel: e => e.currentTarget.blur() } : {})}
           {...props}
         />
+        {endAdornment && (
+          <div className={`absolute top-1/2 -translate-y-1/2 ${isNumberType && !disabled ? 'right-7' : 'right-2'}`}>
+            {endAdornment}
+          </div>
+        )}
         {isNumberType && !disabled && (
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
             <button
+              aria-label="Increase"
               type="button"
               onClick={handleIncrement}
               className="p-0.5 hover:bg-steel-600 rounded transition-colors"
@@ -248,6 +257,7 @@ export const LavaSteelInput = ({
               <ChevronUp className="w-3 h-3 text-gray-400" />
             </button>
             <button
+              aria-label="Decrease"
               type="button"
               onClick={handleDecrement}
               className="p-0.5 hover:bg-steel-600 rounded transition-colors"

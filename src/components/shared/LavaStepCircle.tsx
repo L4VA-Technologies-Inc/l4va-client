@@ -10,9 +10,9 @@ export const LavaStepCircle = ({ status, number, isActive = true }: LavaStepCirc
     <div className="relative flex items-center justify-center" style={{ width: '80px', height: '80px' }}>
       {isActive ? (
         <>
-          <div className="absolute inset-0 rounded-full border-2 border-yellow-500" />
+          <div className="absolute inset-0 rounded-full border-2 border-orange-500" />
           <div
-            className="absolute rounded-full bg-gradient-to-br from-yellow-400 to-orange-500"
+            className="absolute rounded-full bg-orange-gradient"
             style={{
               width: '48px',
               height: '48px',
@@ -28,9 +28,7 @@ export const LavaStepCircle = ({ status, number, isActive = true }: LavaStepCirc
       ) : (
         <div
           className={`absolute rounded-full ${
-            status === 'completed'
-              ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-              : 'bg-transparent border border-white'
+            status === 'completed' ? 'bg-orange-gradient' : 'bg-transparent border border-white'
           }`}
           style={{
             width: '48px',

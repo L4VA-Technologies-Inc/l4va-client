@@ -9,12 +9,15 @@ interface WalletAsset {
   displayName?: string;
   ticker?: string;
   quantity: number;
+  rawQuantity?: string | number;
   isNft: boolean;
   isFungibleToken: boolean;
   priceAda: number;
   priceUsd: number;
+  priceEth: number;
   valueAda: number;
   valueUsd: number;
+  valueEth: number;
   metadata?: {
     policyId: string;
     fingerprint?: string;
@@ -40,6 +43,7 @@ interface WalletOverview {
   wallet: string;
   totalValueAda: number;
   totalValueUsd: number;
+  totalValueEth: number;
   lastUpdated: string;
   summary: {
     totalAssets: number;
@@ -57,6 +61,7 @@ export const useInfiniteWalletAssets = ({
   whitelistedPolicies,
   search,
   vaultId,
+  chain,
 }: {
   walletAddress: string;
   activeTab: 'NFT' | 'FT' | 'ALL';
@@ -65,6 +70,7 @@ export const useInfiniteWalletAssets = ({
   whitelistedPolicies?: string[];
   search?: string;
   vaultId?: string;
+  chain?: string;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [allAssets, setAllAssets] = useState<WalletAsset[]>([]);
@@ -88,6 +94,7 @@ export const useInfiniteWalletAssets = ({
     whitelistedPolicies,
     search,
     vaultId,
+    chain,
   });
 
   // Reset when dependencies change
@@ -97,7 +104,7 @@ export const useInfiniteWalletAssets = ({
     setOverview(null);
     setHasNextPage(false);
     loadedPages.current.clear();
-  }, [walletAddress, apiFilter, pageSize, search, vaultId]);
+  }, [walletAddress, apiFilter, pageSize, search, vaultId, chain]);
 
   // Handle new data from the hook
   useEffect(() => {

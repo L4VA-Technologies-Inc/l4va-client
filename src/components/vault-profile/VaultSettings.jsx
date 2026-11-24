@@ -2,13 +2,15 @@ import { useWallet } from '@ada-anvil/weld/react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { useReadContract } from 'wagmi';
 import { Copy } from 'lucide-react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 
 import { InfoRow } from '@/components/ui/infoRow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import L4vaIcon from '@/icons/l4va.svg?react';
+import { TokenImage } from '@/components/shared/TokenImage';
+import { AddTokenToWalletButton } from '@/components/shared/AddTokenToWalletButton';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
@@ -26,11 +28,15 @@ const pricingMethodLabel = valuationMethod => {
   return 'Market / Floor';
 };
 
+// Acquirers paid this much for their share of the supply, so the whole vault is worth acquired / share.
+const impliedValuation = (acquired, tokensForAcquires) =>
+  acquired && tokensForAcquires ? parseFloat((acquired / (tokensForAcquires * 0.01)).toFixed(2)) : 0;
+
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [isCancelVaultPending, setIsCancelVaultPending] = useState(false);
-  const { currency } = useCurrency();
+  const { pickByCurrency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
   const navigate = useNavigate();
@@ -68,7 +74,7 @@ export const VaultSettings = ({ vault }) => {
     navigator.clipboard
       .writeText(value.toString())
       .then(() => {
-        toast.success(`Asset Policy ID copied to clipboard`);
+        toast.success(`Asset ${isRobinhoodVault ? 'contract' : 'policy ID'} copied to clipboard`);
       })
       .catch(err => {
         console.error('Failed to copy:', err);
@@ -101,7 +107,18 @@ export const VaultSettings = ({ vault }) => {
   };
 
   const isOwner = user?.id === vault.owner.id;
+  const isRobinhoodVault = vault?.chainType === 'robinhood';
+  const { data: evmVaultTokenAddress } = useReadContract({
+    address: vault?.contractAddress,
+    abi: [
+      { type: 'function', stateMutability: 'view', name: 'vaultToken', inputs: [], outputs: [{ type: 'address' }] },
+    ],
+    functionName: 'vaultToken',
+    query: { enabled: isRobinhoodVault && !!vault?.contractAddress },
+  });
   const canCancelVaultByOwner = isOwner && vault?.canCancelVault;
+  // Burn Vault is not supported on Robinhood (EVM) vaults.
+  const canBurnVault = isOwner && vault?.vaultStatus === 'failed' && !isRobinhoodVault;
 
   const renderAssets = assetsWhitelist => {
     const whitelistedAssets = (assetsWhitelist ?? []).filter(asset => asset.policyId);
@@ -136,7 +153,17 @@ export const VaultSettings = ({ vault }) => {
                   isFirst ? 'pt-0 pb-3' : 'py-3'
                 )}
               >
-                <span className="min-w-0 flex-1 break-words pr-2">{name || 'Unnamed collection'}</span>
+                <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
+                  <TokenImage
+                    asset={asset}
+                    alt={name || asset.policyId}
+                    chainType={vault.chainType}
+                    className="h-7 w-7 rounded-full shrink-0"
+                    width={28}
+                    height={28}
+                  />
+                  <span className="min-w-0 break-words">{name || 'Unnamed collection'}</span>
+                </span>
               </AccordionTrigger>
               <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
                 <div className="text-sm">
@@ -177,26 +204,21 @@ export const VaultSettings = ({ vault }) => {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center mb-6">
-          {vault.vaultImage ? (
-            <img
-              alt={vault.name}
-              className="w-[100px] h-[100px] rounded-full mb-4 object-cover"
-              src={vault.vaultImage}
-            />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center">
-              <L4vaIcon className="h-8 w-8 text-white" />
-            </div>
-          )}
-          <h1 className="text-3xl font-bold">{vault.name}</h1>
-        </div>
         <div className="bg-steel-750 rounded-lg p-4">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
             <InfoRow label="Token Name" value={vault.name} />
             <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
-            <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />
+            {vault.policyId && <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />}
+            {isRobinhoodVault && evmVaultTokenAddress && (
+              <InfoRow
+                hideLongString
+                copyable
+                label="Token Contract"
+                value={evmVaultTokenAddress}
+                actions={<AddTokenToWalletButton address={evmVaultTokenAddress} image={vault.vaultImage} />}
+              />
+            )}
             <InfoRow
               customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
               valueWrapperClassName="w-full justify-start sm:w-auto sm:min-w-0 sm:justify-end"
@@ -209,18 +231,33 @@ export const VaultSettings = ({ vault }) => {
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
             <InfoRow
               label="Asset Value @ Lock"
-              symbol={currency === 'ada' ? 'ADA' : 'USD'}
-              value={currency === 'ada' ? vault.assetsPrices.totalValueAda : vault.assetsPrices.totalValueUsd}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={pickByCurrency({
+                ada: vault.assetsPrices.totalValueAda,
+                usd: vault.assetsPrices.totalValueUsd,
+                eth: vault.assetsPrices.totalValueEth,
+              })}
             />
             <InfoRow
               label="Acquire Amount @ Lock"
-              symbol={currency === 'ada' ? 'ADA' : 'USD'}
-              value={currency === 'ada' ? vault.assetsPrices.totalAcquiredAda : vault.assetsPrices.totalAcquiredUsd}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={pickByCurrency({
+                ada: vault.assetsPrices.totalAcquiredAda,
+                usd: vault.assetsPrices.totalAcquiredUsd,
+                eth: vault.assetsPrices.totalAcquiredEth,
+              })}
             />
             <InfoRow
               label="Implied Vault Valuation @ Lock"
-              symbol="ADA"
-              value={vault.valuationAmount ? vault.valuationAmount : 0}
+              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
+              value={impliedValuation(
+                pickByCurrency({
+                  ada: vault.assetsPrices.totalAcquiredAda,
+                  usd: vault.assetsPrices.totalAcquiredUsd,
+                  eth: vault.assetsPrices.totalAcquiredEth,
+                }),
+                vault.tokensForAcquires
+              )}
             />
             <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
             <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />
@@ -243,7 +280,7 @@ export const VaultSettings = ({ vault }) => {
                 Cancel Vault
               </Button>
             )}
-            {vault.vaultStatus === 'failed' && (
+            {canBurnVault && (
               <Button
                 disabled={vault.vaultStatus !== 'failed'}
                 className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"

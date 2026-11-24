@@ -13,21 +13,32 @@ import {
   CheckCircle,
   XCircle,
   Download,
+  ArrowLeftRight,
+  RotateCcw,
+  AlertTriangle,
+  Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { formatUnits } from 'viem';
 import { useRouter } from '@tanstack/react-router';
 import toast from 'react-hot-toast';
 
-import L4vaIcon from '@/icons/l4va.svg?react';
 import { useVaultActivity } from '@/services/api/queries';
 import { Spinner } from '@/components/Spinner';
 import { Pagination } from '@/components/shared/Pagination';
-import { formatDateTime } from '@/utils/core.utils';
-import { IS_PREPROD } from '@/utils/networkValidation';
+import { formatDateTime, substringAddress } from '@/utils/core.utils';
+import { getAddressUrl, getTransactionUrl } from '@/utils/explorer.utils';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { getSuccessMessage } from '@/constants/proposalMessages';
+import { useCurrency } from '@/hooks/useCurrency';
+import {
+  TERMINATION_STEPS,
+  TERMINATION_TITLES,
+  TerminationActivityCard,
+} from '@/components/vault-profile/TerminationActivityCard';
+import { scrollBehavior } from '@/utils/a11y';
 
 const ACTIVITY_TYPES = {
   'create-vault': {
@@ -45,27 +56,128 @@ const ACTIVITY_TYPES = {
     icon: Coins,
     iconColor: 'text-orange-500',
   },
+  'evm-swap': {
+    label: 'Swap',
+    icon: ArrowLeftRight,
+    iconColor: 'text-orange-500',
+  },
+  cancel: {
+    label: 'Refund',
+    icon: RotateCcw,
+    iconColor: 'text-rose-500',
+  },
+  'evm-cancel-cycle': {
+    label: 'Cycle Cancelled',
+    icon: XCircle,
+    iconColor: 'text-rose-500',
+  },
+  'evm-refund': {
+    label: 'Refund',
+    icon: RotateCcw,
+    iconColor: 'text-rose-500',
+  },
+  phase_failed: {
+    label: 'Vault Failed',
+    icon: AlertTriangle,
+    iconColor: 'text-rose-500',
+  },
   phase_transition: {
     label: 'Phase Transition',
     icon: Settings,
     iconColor: 'text-orange-500',
   },
-  proposal_created: {
-    label: 'Proposal Created',
+  proposal: {
+    label: 'Proposal',
     icon: Vote,
     iconColor: 'text-orange-500',
   },
-  proposal_started: {
-    label: 'Voting Started',
-    icon: Play,
-    iconColor: 'text-orange-500',
-  },
-  proposal_ended: {
-    label: 'Voting Ended',
-    icon: CheckCircle,
+  index_rebalance: {
+    label: 'Rebalance',
+    icon: ArrowLeftRight,
     iconColor: 'text-orange-500',
   },
 };
+
+const REBALANCE_STATUS = {
+  completed: { label: 'Completed', color: 'bg-emerald-500/20 text-emerald-500' },
+  executing: { label: 'Executing', color: 'bg-orange-500/20 text-orange-500' },
+  pending: { label: 'Pending', color: 'bg-orange-500/20 text-orange-500' },
+  failed: { label: 'Failed', color: 'bg-rose-500/20 text-rose-500' },
+  skipped: { label: 'Skipped', color: 'bg-orange-500/20 text-orange-500' },
+};
+
+const formatTokenAmount = (raw, decimals) => {
+  if (raw === null || raw === undefined || raw === '') return '-';
+  try {
+    return formatAmount(formatUnits(BigInt(raw), decimals ?? 18), 6);
+  } catch {
+    return '-';
+  }
+};
+
+/** "0.00099 ETH → 2,089.73 L4VA" for a vault swap; falls back to symbols only. */
+const getSwapSummary = activity => {
+  const m = activity.metadata || {};
+  const symIn = m.assetInSymbol || 'token';
+  const symOut = m.assetOutSymbol || 'token';
+  const amountIn = formatTokenAmount(m.amountIn, m.assetInDecimals);
+  const amountOut = formatTokenAmount(m.grossOut, m.assetOutDecimals);
+  if (amountOut === '-') return `${amountIn} ${symIn} → ${symOut}`;
+  return `${amountIn} ${symIn} → ${amountOut} ${symOut}`;
+};
+
+const ethFromWei = wei => formatTokenAmount(wei, 18);
+
+/** True when the run traded nothing because every needed leg was blocked. */
+const isRebalanceBlocked = activity => !(activity.legs || []).length && (activity.skipped || []).length > 0;
+
+const rebalanceStatusOf = activity =>
+  REBALANCE_STATUS[activity.status === 'completed' && isRebalanceBlocked(activity) ? 'skipped' : activity.status];
+
+const getRebalanceTitle = activity => {
+  const initial = activity.trigger === 'initial_buy';
+  if (isRebalanceBlocked(activity)) return initial ? 'Basket Not Purchased' : 'Rebalance Skipped';
+  return initial ? 'Basket Purchased' : 'Basket Rebalanced';
+};
+
+/** One line explaining why trades were skipped, grouped by reason. */
+const getSkippedSummary = activity => {
+  const skipped = activity.skipped || [];
+  if (!skipped.length) return null;
+  const byReason = reason => skipped.filter(leg => leg.reason === reason);
+  const lines = [];
+  const small = byReason('below_min_trade');
+  if (small.length) {
+    const min = ethFromWei(small[0].minTradeNative);
+    lines.push(
+      `${small.length} ${small.length === 1 ? 'trade' : 'trades'} skipped: each is below the ${min} ETH minimum trade` +
+        (activity.navNative ? ` (vault value ≈ ${ethFromWei(activity.navNative)} ETH).` : '.')
+    );
+  }
+  const noNative = byReason('no_free_native');
+  if (noNative.length)
+    lines.push(`${noNative.length} ${noNative.length === 1 ? 'buy' : 'buys'} skipped: no ETH above the cash reserve.`);
+  const noRoute = byReason('no_route');
+  if (noRoute.length) lines.push(`No Uniswap route for: ${noRoute.map(leg => leg.symbol).join(', ')}.`);
+  return lines;
+};
+
+const getRebalanceDescription = activity => {
+  const legs = activity.legs || [];
+  const buys = legs.filter(leg => leg.side === 'buy').length;
+  const sells = legs.length - buys;
+  const parts = [];
+  if (sells) parts.push(`${sells} ${sells === 1 ? 'sell' : 'sells'}`);
+  if (buys) parts.push(`${buys} ${buys === 1 ? 'buy' : 'buys'}`);
+  const source = activity.trigger === 'initial_buy' ? 'Initial basket buy' : 'Governance re-weight';
+  return parts.length ? `${source}: ${parts.join(', ')}` : source;
+};
+
+const formatLeg = leg =>
+  `${leg.side} ${formatTokenAmount(leg.amountIn, leg.assetIn?.decimals)} ${leg.assetIn?.symbol} → ${formatTokenAmount(
+    leg.amountOut,
+    leg.assetOut?.decimals
+  )} ${leg.assetOut?.symbol}`;
 
 const formatDate = dateString => {
   if (!dateString) return '-';
@@ -79,18 +191,71 @@ const formatDate = dateString => {
   }).format(date);
 };
 
-const formatAmount = amount => {
+const formatAmount = (amount, maximumFractionDigits = 2) => {
   if (!amount) return '0';
   const numValue = typeof amount === 'number' ? amount : parseFloat(amount);
   if (isNaN(numValue)) return '0';
 
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   }).format(numValue);
 };
 
-const getActivityTitle = activity => {
+const FAILURE_REASONS = {
+  asset_threshold_violation: 'Contributed assets did not meet the vault asset limits',
+  acquire_threshold_not_met: 'Acquire threshold was not reached',
+  no_contributions: 'No assets were contributed',
+  no_confirmed_transactions: 'No confirmed transactions',
+  manual_cancellation: 'Vault was cancelled',
+  insufficient_lp_liquidity: 'Not enough liquidity to create the LP',
+};
+
+const getFailureReason = activity =>
+  FAILURE_REASONS[activity.failure?.reason] || activity.failure?.message || 'Vault did not reach its goals';
+
+/** Holders covered by a refund tx: Cardano claim count, or expected ContributionCancelled events on EVM. */
+const getRefundCount = activity =>
+  activity.metadata?.claimCount ??
+  activity.expected_events?.find(e => e.name === 'ContributionCancelled')?.count ??
+  null;
+
+const getRefundTitle = activity => {
+  const count = getRefundCount(activity);
+  return count ? `Refunded ${count} ${count === 1 ? 'Position' : 'Positions'}` : 'Refund Sent';
+};
+
+const EXPANSION_CLOSE_REASONS = {
+  duration_expired: 'Window duration ended',
+  asset_max_reached: 'Asset cap reached',
+  max_ada_reached: 'Raise cap reached',
+};
+
+const getExpansionTitle = activity => {
+  const { number, stage, outcome } = activity.expansion;
+  const name = `${activity.phase === 'acquire_expansion' ? 'Acquire Expansion' : 'Contribution Expansion'} #${number}`;
+  if (stage === 'started') return `${name} Started`;
+  return outcome === 'cancelled' ? `${name} Cancelled` : `${name} Closed`;
+};
+
+const getExpansionDescription = activity => {
+  const { stage, outcome, reason } = activity.expansion;
+  if (stage === 'started') {
+    return activity.phase === 'acquire_expansion'
+      ? 'Expansion window opened: new acquires mint vault tokens'
+      : 'Expansion window opened: new assets can be contributed';
+  }
+  if (outcome === 'cancelled') {
+    return activity.expansion.reasonMessage
+      ? `Expansion cycle cancelled: ${activity.expansion.reasonMessage}`
+      : 'Expansion cycle cancelled, deposits are refunded';
+  }
+  const closed = EXPANSION_CLOSE_REASONS[reason] || 'Expansion window closed';
+  const distribution = activity.expansion.distribution;
+  return distribution?.recipientsCount ? `${closed}. ${getDistributionSummary(distribution)}` : closed;
+};
+
+const getActivityTitle = (activity, currencyLabel) => {
   if (activity.activityType === 'transaction') {
     switch (activity.type) {
       case 'create-vault': {
@@ -98,14 +263,33 @@ const getActivityTitle = activity => {
       }
 
       case 'acquire': {
+        // The amount is in the asset paid with, not the display currency the viewer picked.
         const adaAsset = activity.assets?.find(asset => asset.type === 'ada' || asset.policy_id === 'lovelace');
         if (adaAsset?.quantity) {
           return `${formatAmount(adaAsset.quantity)} ADA Acquired`;
         }
+        // EVM: the asset row is already in ETH; `activity.amount` is raw wei.
+        const ethAsset = activity.assets?.find(asset => asset.type === 'eth');
+        if (ethAsset?.quantity) {
+          return `${formatAmount(ethAsset.quantity, 6)} ETH Acquired`;
+        }
         if (activity.amount) {
-          return `${formatAmount(activity.amount)} ADA Acquired`;
+          return `${formatAmount(activity.amount)} ${currencyLabel} Acquired`;
         }
         return 'Acquire';
+      }
+
+      case 'evm-swap': {
+        return `Swapped ${getSwapSummary(activity)}`;
+      }
+
+      case 'cancel':
+      case 'evm-refund': {
+        return getRefundTitle(activity);
+      }
+
+      case 'evm-cancel-cycle': {
+        return 'Cycle Cancelled';
       }
 
       case 'contribute': {
@@ -121,48 +305,611 @@ const getActivityTitle = activity => {
       }
     }
   } else if (activity.activityType === 'phase_transition') {
+    if (activity.expansion) return getExpansionTitle(activity);
     const phaseLabels = {
       contribution: 'Contribution Phase Started',
       acquire: 'Acquire Phase Started',
       locked: 'Vault Locked',
+      failed: 'Vault Failed',
     };
     return phaseLabels[activity.phase] || 'Phase Transition';
+  } else if (activity.activityType === 'index_rebalance') {
+    return getRebalanceTitle(activity);
+  } else if (activity.activityType === 'termination') {
+    return TERMINATION_TITLES[activity.status] || 'Vault Termination';
   } else {
     return `Proposal "${activity.title || 'Untitled'}"`;
   }
 };
 
-const getProposalStatus = activityType => {
-  switch (activityType) {
-    case 'proposal_created': {
-      return { label: 'Created', color: 'bg-orange-500/20 text-orange-500' };
-    }
-    case 'proposal_started': {
-      return { label: 'Started', color: 'bg-emerald-500/20 text-emerald-500' };
-    }
-    case 'proposal_ended': {
-      return { label: 'Finished', color: 'bg-blue-500/20 text-blue-500' };
-    }
-    default: {
-      return null;
-    }
+const PROPOSAL_STAGES = {
+  created: {
+    label: 'Created',
+    timelineLabel: 'Proposal created',
+    icon: Vote,
+    color: 'bg-orange-500/20 text-orange-500',
+  },
+  started: {
+    // A started proposal is still collecting votes until it ends.
+    label: 'Voting',
+    timelineLabel: 'Voting started',
+    icon: Play,
+    color: 'bg-emerald-500/20 text-emerald-500',
+  },
+  ended: { label: 'Finished', timelineLabel: 'Voting ended', icon: CheckCircle, color: 'bg-blue-500/20 text-blue-500' },
+};
+
+/** Lifecycle stages and executed actions of a proposal, oldest first. */
+const getProposalTimeline = activity =>
+  [
+    ...(activity.lifecycle || []).map(event => ({ kind: 'stage', at: event.at, stage: event.stage })),
+    ...(activity.actions || []).map(action => ({ kind: 'action', at: action.created_at, action })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+
+const getProposalActionTitle = action =>
+  action.activityType === 'index_rebalance' ? getRebalanceTitle(action) : `Swapped ${getSwapSummary(action)}`;
+
+const getProposalActionTxHashes = action =>
+  action.activityType === 'index_rebalance'
+    ? (action.legs || []).map(leg => leg.txHash).filter(Boolean)
+    : [action.tx_hash].filter(Boolean);
+
+const TIMELINE_TONES = {
+  orange: 'bg-orange-500/15 text-orange-500 ring-orange-500/30',
+  emerald: 'bg-emerald-500/15 text-emerald-500 ring-emerald-500/30',
+  blue: 'bg-blue-500/15 text-blue-500 ring-blue-500/30',
+  rose: 'bg-rose-500/15 text-rose-500 ring-rose-500/30',
+};
+
+const STAGE_TONES = { created: 'orange', started: 'emerald', ended: 'blue' };
+
+/** One node on the proposal timeline: a ringed icon on the rail, content to its right. */
+const TimelineNode = ({ icon: NodeIcon, tone, isLast, children }) => (
+  <div className="relative flex gap-3">
+    {!isLast && <span className="absolute left-4 top-9 bottom-0 w-px -translate-x-1/2 bg-steel-750" />}
+    <div
+      className={clsx(
+        'relative z-10 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ring-1',
+        TIMELINE_TONES[tone]
+      )}
+    >
+      <NodeIcon className="w-4 h-4" />
+    </div>
+    <div className={clsx('flex-1 min-w-0', isLast ? 'pb-0' : 'pb-5')}>{children}</div>
+  </div>
+);
+
+const NATIVE_ASSET = '0x0000000000000000000000000000000000000000';
+
+const TxLinkRow = ({ label, detail, hash, vault }) => (
+  <button
+    onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+    className="flex w-full items-center justify-between gap-3 rounded-md bg-steel-950/60 border border-steel-750 hover:border-emerald-500/50 px-2 py-1.5 text-left text-xs text-dark-100 hover:text-emerald-400 transition-all cursor-pointer"
+  >
+    <span className="truncate">
+      <span className="text-white">{label}</span>
+      {detail && <span className="ml-2">{detail}</span>}
+    </span>
+    <span className="flex flex-shrink-0 items-center gap-1 font-mono">
+      {substringAddress(hash)}
+      <ExternalLink className="w-3.5 h-3.5" />
+    </span>
+  </button>
+);
+
+/** EVM distribution: the tx that opened the pot, then each payout sent to a holder. */
+const DistributionTxs = ({ distribution, vault }) => {
+  const { openTxHash, payouts = [], asset } = distribution;
+  if (!openTxHash && payouts.length === 0) return null;
+  const isNative = !asset || asset.toLowerCase() === NATIVE_ASSET;
+  return (
+    <div className="mt-3 space-y-1.5">
+      {openTxHash && <TxLinkRow label="Distribution opened" hash={openTxHash} vault={vault} />}
+      {payouts.map(payout => (
+        <TxLinkRow
+          key={payout.txHash}
+          label={`Paid ${substringAddress(payout.holder)}`}
+          detail={isNative ? `${formatTokenAmount(payout.amount, 18)} ETH` : null}
+          hash={payout.txHash}
+          vault={vault}
+        />
+      ))}
+    </div>
+  );
+};
+
+const ProposalTimeline = ({ activity, vault }) => {
+  const entries = getProposalTimeline(activity);
+  // The API sends the error message; a proposal waiting for the vault (not failed) starts with "Waiting:".
+  const waiting = typeof activity.executionError === 'string' && activity.executionError.startsWith('Waiting:');
+  const outcome = activity.executionError
+    ? waiting
+      ? {
+          icon: Clock,
+          tone: 'orange',
+          title: 'Waiting to run',
+          text: activity.executionError.replace(/^Waiting:\s*/, ''),
+        }
+      : { icon: XCircle, tone: 'rose', title: 'Execution', text: activity.executionError }
+    : activity.stage === 'ended' && activity.status === 'executed'
+      ? {
+          icon: CheckCircle,
+          tone: 'emerald',
+          title: 'Execution',
+          // An EVM distribution only reserves the pot on execution; holders are paid later.
+          text:
+            activity.distribution && activity.distribution.payouts?.length === 0
+              ? 'The pot is reserved in the vault. Holders are paid automatically once payouts open.'
+              : getSuccessMessage(activity.proposalType, activity.vault),
+        }
+      : null;
+  // While voting is open, show when it closes (as the termination card does).
+  const votingEndsAt = activity.stage === 'started' && activity.endDate ? activity.endDate : null;
+
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      {entries.map((entry, index) => {
+        const isLast = index === entries.length - 1 && !outcome && !votingEndsAt;
+
+        if (entry.kind === 'stage') {
+          const stage = PROPOSAL_STAGES[entry.stage];
+          return (
+            <TimelineNode
+              key={`stage-${entry.stage}`}
+              icon={stage?.icon || Vote}
+              tone={STAGE_TONES[entry.stage] || 'orange'}
+              isLast={isLast}
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+                <span className="text-sm font-medium text-white">{stage?.timelineLabel || entry.stage}</span>
+                <span className="text-xs text-dark-100">{formatDate(entry.at)}</span>
+              </div>
+            </TimelineNode>
+          );
+        }
+
+        const { action } = entry;
+        const txHashes = getProposalActionTxHashes(action);
+        const rebalanceStatus = action.activityType === 'index_rebalance' && rebalanceStatusOf(action);
+        return (
+          <TimelineNode key={`action-${action.id}`} icon={ArrowLeftRight} tone="orange" isLast={isLast}>
+            <div className="rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-steel-850 to-steel-850 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-medium uppercase tracking-wider text-orange-500">Action executed</span>
+                <span className="text-xs text-dark-100">{formatDate(entry.at)}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="text-base font-semibold text-white">{getProposalActionTitle(action)}</span>
+                {rebalanceStatus && (
+                  <span className={clsx('text-xs font-medium uppercase px-2 py-0.5 rounded', rebalanceStatus.color)}>
+                    {rebalanceStatus.label}
+                  </span>
+                )}
+                {txHashes.length > 0 && (
+                  <div className="ml-auto flex items-center gap-1">
+                    {txHashes.map((hash, i) => (
+                      <button
+                        key={hash}
+                        onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+                        title={txHashes.length > 1 ? `View transaction ${i + 1}` : 'View transaction'}
+                        aria-label={txHashes.length > 1 ? `View transaction ${i + 1}` : 'View transaction'}
+                        className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TimelineNode>
+        );
+      })}
+
+      {votingEndsAt && (
+        <TimelineNode icon={Clock} tone="emerald" isLast={!outcome}>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+            <span className="text-sm font-medium text-white">Voting ends</span>
+            <span className="text-xs text-dark-100">{formatDate(votingEndsAt)}</span>
+          </div>
+        </TimelineNode>
+      )}
+      {outcome && (
+        <TimelineNode icon={outcome.icon} tone={outcome.tone} isLast>
+          <div className="relative overflow-hidden rounded-xl border border-steel-750 bg-steel-850 py-3 pl-4 pr-3">
+            <span
+              className={clsx(
+                'absolute inset-y-0 left-0 w-1',
+                outcome.tone === 'rose' ? 'bg-rose-500' : outcome.tone === 'orange' ? 'bg-orange-500' : 'bg-emerald-500'
+              )}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-white">{outcome.title}</span>
+              <span
+                className={clsx(
+                  'inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full',
+                  outcome.tone === 'rose' ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'
+                )}
+              >
+                <span
+                  className={clsx(
+                    'w-1.5 h-1.5 rounded-full',
+                    outcome.tone === 'rose' ? 'bg-rose-400' : 'bg-emerald-400 animate-pulse'
+                  )}
+                />
+                {outcome.tone === 'rose' ? 'Failed' : 'Executed'}
+              </span>
+            </div>
+            {outcome.text &&
+              (outcome.tone === 'rose' ? (
+                <p className="mt-2 rounded-md bg-steel-950/60 border border-steel-750 px-2 py-1.5 font-mono text-xs text-rose-300 break-words">
+                  {outcome.text}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-dark-100">{outcome.text}</p>
+              ))}
+            {outcome.tone !== 'rose' && activity.distribution && (
+              <DistributionTxs distribution={activity.distribution} vault={vault} />
+            )}
+          </div>
+        </TimelineNode>
+      )}
+    </div>
+  );
+};
+
+const pctOf = (part, whole) => {
+  try {
+    const w = BigInt(whole || 0);
+    return w > 0n ? Number((BigInt(part || 0) * 10000n) / w) / 100 : 0;
+  } catch {
+    return 0;
   }
 };
 
-const ActivityCard = ({ activity }) => {
+const LockStat = ({ label, value, hint }) => (
+  <div className="rounded-xl border border-steel-750 bg-steel-850 p-3">
+    <p className="text-[10px] font-medium uppercase tracking-wider text-dark-100">{label}</p>
+    <p className="mt-1 text-base font-semibold text-white truncate">{value}</p>
+    {hint && <p className="mt-0.5 text-xs text-dark-100">{hint}</p>}
+  </div>
+);
+
+/** What the lock settled: valuation, the VT split and where the raised native went. */
+const LockSummary = ({ summary, vault }) => {
+  const vt = summary.vtTicker || 'VT';
+  const native = summary.nativeSymbol;
+  const fmtVt = raw => formatTokenAmount(raw, summary.vtDecimals);
+  const fmtNative = raw => formatTokenAmount(raw, summary.nativeDecimals);
+
+  const split = [
+    {
+      key: 'contributors',
+      label: 'Contributors',
+      amount: summary.contributorsVt,
+      bar: 'bg-orange-500',
+      dot: 'bg-orange-500',
+    },
+    { key: 'acquirers', label: 'Acquirers', amount: summary.acquirersVt, bar: 'bg-emerald-500', dot: 'bg-emerald-500' },
+    { key: 'lp', label: 'Liquidity pool', amount: summary.lpVt, bar: 'bg-blue-500', dot: 'bg-blue-500' },
+  ].map(part => ({ ...part, pct: pctOf(part.amount, summary.vtSupply) }));
+
+  const hasLp = BigInt(summary.lpVt || 0) > 0n || BigInt(summary.lpNative || 0) > 0n;
+  const hasNativeFlow = BigInt(summary.contributorsNative || 0) > 0n || BigInt(summary.lpNative || 0) > 0n;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-dark-100 leading-relaxed">
+        The vault closed its acquire window and locked in its valuation. {fmtVt(summary.vtSupply)} {vt} were split
+        between {summary.contributorsCount} {summary.contributorsCount === 1 ? 'contributor' : 'contributors'} and{' '}
+        {summary.acquirersCount} {summary.acquirersCount === 1 ? 'acquirer' : 'acquirers'}
+        {hasLp ? ', and part was set aside to seed a liquidity pool' : ''}.
+        {hasNativeFlow && ` Raised ${native} went to contributors${hasLp ? ' and the pool' : ''}.`}
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <LockStat label="Assets value" value={`${fmtNative(summary.assetsValue)} ${native}`} />
+        <LockStat label="Raised" value={`${fmtNative(summary.totalRaised)} ${native}`} />
+        <LockStat label="FDV" value={summary.fdv ? `${fmtNative(summary.fdv)} ${native}` : '-'} />
+        <LockStat
+          label="Participants"
+          value={summary.contributorsCount + summary.acquirersCount}
+          hint={`${summary.contributorsCount} contrib · ${summary.acquirersCount} acq`}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-baseline justify-between mb-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-dark-100">{vt} distribution</p>
+          <p className="text-xs text-dark-100">
+            {fmtVt(summary.vtSupply)} {vt} total
+          </p>
+        </div>
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-steel-850 ring-1 ring-steel-750">
+          {split
+            .filter(part => part.pct > 0)
+            .map(part => (
+              <div key={part.key} className={clsx('h-full', part.bar)} style={{ width: `${part.pct}%` }} />
+            ))}
+        </div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {split.map(part => (
+            <div
+              key={part.key}
+              className="flex items-center gap-2 rounded-lg bg-steel-850 border border-steel-750 px-3 py-2"
+            >
+              <span className={clsx('w-2 h-2 rounded-full flex-shrink-0', part.dot)} />
+              <div className="min-w-0">
+                <p className="text-xs text-dark-100">
+                  {part.label} · <span className="text-white font-medium">{part.pct}%</span>
+                </p>
+                <p className="text-sm text-white truncate">
+                  {fmtVt(part.amount)} {vt}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {hasNativeFlow && (
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-2">Where the {native} went</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <LockStat label="To contributors" value={`${fmtNative(summary.contributorsNative)} ${native}`} />
+            <LockStat label="Paired into LP" value={hasLp ? `${fmtNative(summary.lpNative)} ${native}` : 'No LP'} />
+          </div>
+        </div>
+      )}
+
+      {summary.txHash && (
+        <button
+          onClick={() => window.open(getTransactionUrl(summary.txHash, vault?.chainType), '_blank')}
+          className="self-start inline-flex items-center gap-1 px-2 py-1 rounded-md bg-steel-850 border border-steel-750 hover:border-orange-500/50 text-xs text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          View lock transaction
+        </button>
+      )}
+    </div>
+  );
+};
+
+const FailureSummary = ({ failure }) => {
+  const details = failure?.details || {};
+  let required = null;
+  let actual = null;
+  if (details.required != null && details.actual != null) {
+    // EVM stores raw wei strings.
+    required = `${formatTokenAmount(details.required, 18)} ETH`;
+    actual = `${formatTokenAmount(details.actual, 18)} ETH`;
+  } else if (details.requiredAda != null && details.actualAda != null) {
+    required = `${formatAmount(details.requiredAda)} ADA`;
+    actual = `${formatAmount(details.actualAda)} ADA`;
+  }
+
+  return (
+    <div className="mt-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30">
+      <p className="text-sm text-rose-400 font-medium">{FAILURE_REASONS[failure?.reason] || 'Vault failed'}</p>
+      {failure?.message && failure.message !== FAILURE_REASONS[failure?.reason] && (
+        <p className="text-xs text-rose-300/80 mt-1">{failure.message}</p>
+      )}
+      {required && (
+        <p className="text-xs text-dark-100 mt-2">
+          Required <span className="text-white">{required}</span> · Collected{' '}
+          <span className="text-white">{actual}</span>
+        </p>
+      )}
+    </div>
+  );
+};
+
+const getFailureActionTitle = action =>
+  action.type === 'evm-cancel-cycle' ? 'Cycle cancelled on-chain' : getRefundTitle(action);
+
+/** Failure → on-chain cancel → refund batches, oldest first. */
+const FailureTimeline = ({ activity, vault }) => {
+  const actions = activity.actions || [];
+  const isEvm = vault?.chainType && vault.chainType !== 'cardano';
+  const nothingToRefund = activity.failure?.reason === 'no_contributions' || activity.failure?.hasDeposits === false;
+  const outcome = nothingToRefund
+    ? {
+        tone: 'emerald',
+        icon: CheckCircle,
+        text: 'Nothing was contributed or acquired, so there is nothing to refund.',
+      }
+    : actions.some(a => a.type !== 'evm-cancel-cycle')
+      ? {
+          tone: 'emerald',
+          icon: CheckCircle,
+          text: isEvm
+            ? 'Contributed assets and acquire payments were refunded to their owners.'
+            : 'Contributed assets and ADA were returned to their owners.',
+        }
+      : { tone: 'orange', icon: RotateCcw, text: 'Refunds to contributors and acquirers are pending.' };
+
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      <TimelineNode icon={AlertTriangle} tone="rose" isLast={false}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 pt-1.5">
+          <span className="text-sm font-medium text-white">Vault failed</span>
+          <span className="text-xs text-dark-100">{formatDate(activity.created_at)}</span>
+        </div>
+      </TimelineNode>
+      {actions.map(action => {
+        const isCancel = action.type === 'evm-cancel-cycle';
+        return (
+          <TimelineNode key={action.id} icon={isCancel ? XCircle : RotateCcw} tone={isCancel ? 'rose' : 'blue'}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+              <span className="text-sm font-medium text-white">{getFailureActionTitle(action)}</span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-dark-100">{formatDate(action.created_at)}</span>
+                {action.tx_hash && (
+                  <button
+                    onClick={() => window.open(getTransactionUrl(action.tx_hash, vault?.chainType), '_blank')}
+                    title="View transaction"
+                    aria-label="View transaction"
+                    className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </TimelineNode>
+        );
+      })}
+      <TimelineNode icon={outcome.icon} tone={outcome.tone} isLast>
+        <p className="text-sm text-dark-100 pt-1.5">{outcome.text}</p>
+      </TimelineNode>
+    </div>
+  );
+};
+
+const TxLinkButton = ({ hash, vault }) => (
+  <button
+    onClick={() => window.open(getTransactionUrl(hash, vault?.chainType), '_blank')}
+    title="View transaction"
+    aria-label="View transaction"
+    className="p-1.5 rounded-md bg-steel-950/60 border border-steel-750 hover:border-orange-500/50 text-dark-100 hover:text-orange-500 transition-all cursor-pointer"
+  >
+    <ExternalLink className="w-3.5 h-3.5" />
+  </button>
+);
+
+/** Cancelled expansion window: why, then the on-chain cancel and refund batches. */
+const ExpansionCancelTimeline = ({ activity, vault }) => {
+  const actions = activity.actions || [];
+  const refunded = actions.some(action => action.type !== 'evm-cancel-cycle');
+
+  return (
+    <div>
+      <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 mb-4">
+        <p className="text-sm text-rose-400 font-medium">Expansion cancelled</p>
+        <p className="text-xs text-rose-300/80 mt-1">
+          {activity.expansion.reasonMessage ||
+            'The expansion cycle was cancelled on-chain before vault tokens were issued.'}
+        </p>
+      </div>
+      <p className="text-xs font-medium uppercase tracking-wider text-dark-100 mb-3">Timeline</p>
+      {actions.map(action => {
+        const isCancel = action.type === 'evm-cancel-cycle';
+        return (
+          <TimelineNode key={action.id} icon={isCancel ? XCircle : RotateCcw} tone={isCancel ? 'rose' : 'blue'}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+              <span className="text-sm font-medium text-white">{getFailureActionTitle(action)}</span>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-dark-100">{formatDate(action.created_at)}</span>
+                {action.tx_hash && <TxLinkButton hash={action.tx_hash} vault={vault} />}
+              </div>
+            </div>
+          </TimelineNode>
+        );
+      })}
+      <TimelineNode icon={refunded ? CheckCircle : RotateCcw} tone={refunded ? 'emerald' : 'orange'} isLast>
+        <p className="text-sm text-dark-100 pt-1.5">
+          {refunded
+            ? 'Deposits made during the window were refunded to their owners.'
+            : 'Refunds of deposits made during the window are pending.'}
+        </p>
+      </TimelineNode>
+    </div>
+  );
+};
+
+const getDistributionSummary = distribution => {
+  const amount = formatTokenAmount(distribution.totalVt, distribution.vtDecimals);
+  const holders = `${distribution.recipientsCount} ${distribution.recipientsCount === 1 ? 'holder' : 'holders'}`;
+  return `${amount} ${distribution.vtTicker || 'VT'} issued to ${holders}`;
+};
+
+/** Closed expansion window: who received vault tokens for it. */
+const ExpansionDistributionList = ({ distribution, vault }) => {
+  const isEvm = vault?.chainType && vault.chainType !== 'cardano';
+  const ticker = distribution.vtTicker || 'VT';
+  const hidden = distribution.recipientsCount - distribution.recipients.length;
+
+  return (
+    <div>
+      <p className="text-sm text-dark-100 mb-3">
+        {getDistributionSummary(distribution)} · {distribution.receivedCount}/{distribution.recipientsCount}{' '}
+        {isEvm ? 'claimed' : 'sent'}
+      </p>
+      <div className="flex flex-col gap-2">
+        {distribution.recipients.map((recipient, index) => (
+          <div
+            key={`${recipient.address}-${index}`}
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750"
+          >
+            {recipient.address ? (
+              <button
+                onClick={() => window.open(getAddressUrl(recipient.address, vault?.chainType), '_blank')}
+                className="text-sm text-white hover:text-orange-500 transition-colors cursor-pointer"
+              >
+                {substringAddress(recipient.address)}
+              </button>
+            ) : (
+              <span className="text-sm text-dark-100">Unknown wallet</span>
+            )}
+            <span className="text-sm text-white">
+              {formatTokenAmount(recipient.vtAmount, distribution.vtDecimals)} {ticker}
+            </span>
+            <span
+              className={clsx(
+                'ml-auto text-xs font-medium uppercase px-2 py-0.5 rounded',
+                recipient.received ? 'bg-emerald-500/20 text-emerald-500' : 'bg-orange-500/20 text-orange-500'
+              )}
+            >
+              {recipient.received ? (isEvm ? 'Claimed' : 'Sent') : isEvm ? 'Unclaimed' : 'Pending'}
+            </span>
+            {recipient.txHash && <TxLinkButton hash={recipient.txHash} vault={vault} />}
+          </div>
+        ))}
+      </div>
+      {hidden > 0 && <p className="text-xs text-dark-100 mt-2">and {hidden} more</p>}
+    </div>
+  );
+};
+
+const ActivityCard = ({ activity, vault }) => {
   const router = useRouter();
+  const { currencyLabel } = useCurrency();
   const [expanded, setExpanded] = useState(false);
   const [showAllAssets, setShowAllAssets] = useState(false);
 
-  const activityType = activity.activityType === 'transaction' ? activity.type : activity.activityType;
+  const isFailedPhase = activity.activityType === 'phase_transition' && activity.phase === 'failed';
+  const isCancelledExpansion = activity.expansion?.outcome === 'cancelled';
+  const expansionDistribution = activity.expansion?.distribution?.recipientsCount
+    ? activity.expansion.distribution
+    : null;
+  const activityType = isFailedPhase
+    ? 'phase_failed'
+    : isCancelledExpansion
+      ? 'evm-cancel-cycle'
+      : activity.activityType === 'transaction'
+        ? activity.type
+        : activity.activityType;
   const config = ACTIVITY_TYPES[activityType] || ACTIVITY_TYPES.contribute;
-  const Icon = config.icon;
-  const title = getActivityTitle(activity);
+  const Icon =
+    activity.activityType === 'proposal' ? PROPOSAL_STAGES[activity.stage]?.icon || config.icon : config.icon;
+  const title = getActivityTitle(activity, currencyLabel);
 
   const isTransaction = activity.activityType === 'transaction';
-  const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+  const isProposal = activity.activityType === 'proposal';
+  const isRebalance = activity.activityType === 'index_rebalance';
+  const lockSummary =
+    activity.activityType === 'phase_transition' && activity.phase === 'locked' ? activity.summary : null;
   const hasDetails =
-    activity.user || (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) || isProposal;
+    lockSummary ||
+    isFailedPhase ||
+    isCancelledExpansion ||
+    expansionDistribution ||
+    activity.user ||
+    (isTransaction && activity.type === 'contribute' && activity.assets?.length > 0) ||
+    isProposal ||
+    isRebalance;
 
   const handleOwnerClick = ownerId => {
     if (ownerId) {
@@ -183,16 +930,28 @@ const ActivityCard = ({ activity }) => {
           return 'Assets contributed to vault';
         }
         case 'acquire': {
-          return 'ADA spent on acquire';
+          return `${currencyLabel} spent on acquire`;
+        }
+        case 'evm-swap': {
+          return 'Vault swap executed by a governance proposal';
+        }
+        case 'cancel':
+        case 'evm-refund': {
+          return 'Assets returned to their owners after the vault failed';
+        }
+        case 'evm-cancel-cycle': {
+          return 'Vault cycle cancelled on-chain, opening refunds';
         }
         default:
           return config.label;
       }
     } else if (activity.activityType === 'phase_transition') {
+      if (activity.expansion) return getExpansionDescription(activity);
       const phaseDescriptions = {
         contribution: 'Vault entered contribution phase where users can contribute assets',
         acquire: 'Vault entered acquire phase where assets can be acquired',
         locked: 'Vault has been locked and is now in the final phase',
+        failed: getFailureReason(activity),
       };
       return phaseDescriptions[activity.phase] || 'Vault moved to next phase';
     } else if (isProposal) {
@@ -203,8 +962,7 @@ const ActivityCard = ({ activity }) => {
 
   const openCardanoScan = () => {
     if (activity.tx_hash) {
-      const baseUrl = IS_PREPROD ? 'https://preprod.cardanoscan.io' : 'https://cardanoscan.io';
-      window.open(`${baseUrl}/transaction/${activity.tx_hash}`, '_blank');
+      window.open(getTransactionUrl(activity.tx_hash, vault?.chainType), '_blank');
     }
   };
 
@@ -237,20 +995,45 @@ const ActivityCard = ({ activity }) => {
               <div className="flex-1">
                 <div className="flex sm:flex-row flex-col sm:items-center items-start gap-2 mb-1">
                   <h3 className="text-lg font-bold text-white">{title}</h3>
-                  {isProposal &&
-                    (() => {
-                      const status = getProposalStatus(activity.activityType);
-                      return status ? (
-                        <span className={clsx('text-xs font-medium uppercase px-2 py-0.5 rounded', status.color)}>
-                          {status.label}
-                        </span>
-                      ) : null;
-                    })()}
+                  {isProposal && PROPOSAL_STAGES[activity.stage] && (
+                    <span
+                      className={clsx(
+                        'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                        PROPOSAL_STAGES[activity.stage].color
+                      )}
+                    >
+                      {PROPOSAL_STAGES[activity.stage].label}
+                    </span>
+                  )}
+                  {isProposal && activity.actions?.length > 0 && (
+                    <span className="text-xs text-dark-100">
+                      {activity.actions.length} {activity.actions.length === 1 ? 'action' : 'actions'} executed
+                    </span>
+                  )}
+                  {(isFailedPhase || isCancelledExpansion) && activity.actions?.length > 0 && (
+                    <span className="text-xs text-dark-100">
+                      {activity.actions.length} {activity.actions.length === 1 ? 'transaction' : 'transactions'}
+                    </span>
+                  )}
+                  {isRebalance && rebalanceStatusOf(activity) && (
+                    <span
+                      className={clsx(
+                        'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                        rebalanceStatusOf(activity).color
+                      )}
+                    >
+                      {rebalanceStatusOf(activity).label}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-sm text-dark-100">
                   <Calendar className="w-3.5 h-3.5" />
                   {formatDate(activity.created_at)}
                 </div>
+                {isFailedPhase && <FailureSummary failure={activity.failure} />}
+                {expansionDistribution && (
+                  <p className="text-sm text-dark-100 mt-1">{getDistributionSummary(expansionDistribution)}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {isTransaction && activity.tx_hash && (
@@ -264,7 +1047,7 @@ const ActivityCard = ({ activity }) => {
                     </span>
                   </button>
                 )}
-                {isProposal && activity.proposalId && (
+                {(isProposal || isRebalance) && activity.proposalId && (
                   <button
                     onClick={handleProposalClick}
                     className="flex-shrink-0 inline-flex items-center gap-1 p-1.5 rounded-lg bg-steel-850 hover:bg-steel-750 border border-steel-750 hover:border-orange-500/50 transition-all cursor-pointer group"
@@ -294,38 +1077,76 @@ const ActivityCard = ({ activity }) => {
 
             {expanded && (
               <div className="mt-3 pt-3 border-t border-steel-750">
-                {isProposal ? (
+                {lockSummary ? (
+                  <LockSummary summary={lockSummary} vault={vault} />
+                ) : isFailedPhase ? (
+                  <FailureTimeline activity={activity} vault={vault} />
+                ) : isCancelledExpansion ? (
+                  <ExpansionCancelTimeline activity={activity} vault={vault} />
+                ) : expansionDistribution ? (
+                  <ExpansionDistributionList distribution={expansionDistribution} vault={vault} />
+                ) : isRebalance ? (
                   <>
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-white mb-2">Proposal Description</p>
-                      <p className="text-sm text-dark-100">{activity.description || 'No description provided'}</p>
+                    <p className="text-sm text-dark-100 mb-3">{getRebalanceDescription(activity)}</p>
+                    {getSkippedSummary(activity) && (
+                      <div className="mb-3 p-2 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                        {getSkippedSummary(activity).map(line => (
+                          <p key={line} className="text-xs text-orange-400">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      {(activity.legs || []).map(leg => (
+                        <div
+                          key={leg.index}
+                          className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750"
+                        >
+                          <span
+                            className={clsx(
+                              'text-xs font-medium uppercase px-2 py-0.5 rounded',
+                              leg.side === 'buy' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'
+                            )}
+                          >
+                            {leg.side}
+                          </span>
+                          <span className="text-sm text-white">
+                            {formatTokenAmount(leg.amountIn, leg.assetIn?.decimals)} {leg.assetIn?.symbol}
+                          </span>
+                          <ArrowLeftRight className="w-3.5 h-3.5 text-dark-100" />
+                          <span className="text-sm text-white">
+                            {leg.status === 'confirmed' ? '' : '~'}
+                            {formatTokenAmount(leg.amountOut, leg.assetOut?.decimals)} {leg.assetOut?.symbol}
+                          </span>
+                          {leg.status !== 'confirmed' && (
+                            <span className="text-xs uppercase text-dark-100">{leg.status}</span>
+                          )}
+                          {leg.txHash && (
+                            <button
+                              onClick={() => window.open(getTransactionUrl(leg.txHash, vault?.chainType), '_blank')}
+                              className="ml-auto inline-flex items-center gap-1 text-xs text-dark-100 hover:text-orange-500 transition-colors cursor-pointer"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Tx
+                            </button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-
-                    {activity.executionError && (
-                      <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 mb-3">
-                        <div className="flex items-start gap-2">
-                          <XCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-rose-500 mb-1">Execution Error</p>
-                            <p className="text-xs text-rose-400">{activity.executionError}</p>
-                          </div>
-                        </div>
+                    {activity.status === 'failed' && activity.lastError && (
+                      <div className="mt-3 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30">
+                        <p className="text-xs text-rose-400">{activity.lastError}</p>
                       </div>
                     )}
-
-                    {activity.activityType === 'proposal_ended' && activity.status === 'executed' && (
-                      <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                        <div className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-emerald-500 mb-1">Successfully Executed</p>
-                            <p className="text-xs text-emerald-400">
-                              {getSuccessMessage(activity.proposalType, activity.vault)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                  </>
+                ) : isProposal ? (
+                  <>
+                    {activity.description && activity.description !== activity.title && (
+                      <p className="text-sm text-dark-100 leading-relaxed">{activity.description}</p>
                     )}
+
+                    <ProposalTimeline activity={activity} vault={vault} />
                   </>
                 ) : (
                   <>
@@ -341,7 +1162,15 @@ const ActivityCard = ({ activity }) => {
                                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-steel-850 border border-steel-750 pointer-events-none"
                                   title={`${asset.quantity} ${asset.name}`}
                                 >
-                                  <img src="/assets/icons/ada.svg" alt={asset.name || 'FT'} className="w-5 h-5" />
+                                  <img
+                                    src={
+                                      vault?.chainType === 'robinhood'
+                                        ? '/assets/icons/eth.svg'
+                                        : '/assets/icons/ada.svg'
+                                    }
+                                    alt={asset.name || 'FT'}
+                                    className="w-5 h-5"
+                                  />
                                   <span className="text-sm font-medium text-white">
                                     {parseFloat(asset.quantity).toLocaleString()} {asset.name}
                                   </span>
@@ -446,18 +1275,22 @@ const EmptyState = () => (
 );
 
 const ACTIVITY_FILTERS = ['All', 'Contribute', 'Acquire', 'Governance'];
+const INDEX_ACTIVITY_FILTERS = [...ACTIVITY_FILTERS, 'Rebalance'];
 
 const FILTER_MAP = {
   All: 'all',
   Contribute: 'contribute',
   Acquire: 'acquire',
   Governance: 'governance',
+  Rebalance: 'rebalance',
 };
 
 export const VaultActivity = ({ vault }) => {
+  const { currencyLabel } = useCurrency();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [activeFilter, setActiveFilter] = useState('All');
+  const filters = vault?.vaultArchetype === 'index_weighted' ? INDEX_ACTIVITY_FILTERS : ACTIVITY_FILTERS;
 
   const { data, isLoading, error } = useVaultActivity(vault?.id, {
     page,
@@ -476,7 +1309,7 @@ export const VaultActivity = ({ vault }) => {
 
   const handlePageChange = newPage => {
     setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   };
 
   const handleFilterChange = filter => {
@@ -516,15 +1349,21 @@ export const VaultActivity = ({ vault }) => {
       const rows = allActivities.map(activity => {
         const isTransaction = activity.activityType === 'transaction';
         const isPhaseTransition = activity.activityType === 'phase_transition';
-        const isProposal = activity.activityType && activity.activityType.startsWith('proposal_');
+        const isProposal = activity.activityType === 'proposal';
+        const isRebalance = activity.activityType === 'index_rebalance';
+        const isTermination = activity.activityType === 'termination';
 
         let activityType = '';
         if (isTransaction) {
           activityType = activity.type;
         } else if (isPhaseTransition) {
           activityType = 'phase_transition';
+        } else if (isRebalance) {
+          activityType = 'index_rebalance';
+        } else if (isTermination) {
+          activityType = `termination ${activity.status}`;
         } else if (isProposal) {
-          activityType = activity.activityType.replace('proposal_', 'proposal ');
+          activityType = `proposal ${activity.stage}`;
         }
 
         let description = '';
@@ -537,16 +1376,33 @@ export const VaultActivity = ({ vault }) => {
               description = 'Assets contributed to vault';
               break;
             case 'acquire':
-              description = 'ADA spent on acquire';
+              description = `${currencyLabel} spent on acquire`;
+              break;
+            case 'evm-swap':
+              description = `Vault swap: ${getSwapSummary(activity)}`;
+              break;
+            case 'cancel':
+            case 'evm-refund':
+              description = 'Assets returned to their owners after the vault failed';
+              break;
+            case 'evm-cancel-cycle':
+              description = 'Vault cycle cancelled on-chain, opening refunds';
               break;
           }
+        } else if (isPhaseTransition && activity.expansion) {
+          description = getExpansionDescription(activity);
         } else if (isPhaseTransition) {
           const phaseDescriptions = {
             contribution: 'Vault entered contribution phase where users can contribute assets',
             acquire: 'Vault entered acquire phase where assets can be acquired',
             locked: 'Vault has been locked and is now in the final phase',
+            failed: getFailureReason(activity),
           };
           description = phaseDescriptions[activity.phase] || 'Vault moved to next phase';
+        } else if (isRebalance) {
+          description = `${getRebalanceDescription(activity)} (${activity.status})`;
+        } else if (isTermination) {
+          description = `Proposal "${activity.proposal?.title || ''}" (${activity.proposal?.status || ''})`;
         } else {
           description = activity.description || '';
         }
@@ -567,16 +1423,49 @@ export const VaultActivity = ({ vault }) => {
             .join('; ');
           policyIds = contributedAssets.map(asset => asset.policy_id || 'Unknown').join('; ');
         }
+        if (isRebalance) {
+          assetNames = (activity.legs || []).map(formatLeg).join('; ');
+        }
+        if (isProposal) {
+          assetNames = (activity.actions || []).map(getProposalActionTitle).join('; ');
+        }
+        if (isTermination) {
+          assetNames = activity.steps
+            .filter(step => step.status !== 'upcoming')
+            .map(step => TERMINATION_STEPS[step.key]?.label || step.key)
+            .join('; ');
+        }
+        const isFailedPhase = isPhaseTransition && activity.phase === 'failed';
+        if (isFailedPhase) {
+          assetNames = (activity.actions || []).map(getFailureActionTitle).join('; ');
+        }
 
         return [
           formatDateTime(activity.created_at),
           activityType,
-          getActivityTitle(activity),
+          getActivityTitle(activity, currencyLabel),
           description,
           userAddress,
           assetNames,
           policyIds,
-          activity.tx_hash || '',
+          isRebalance
+            ? (activity.legs || [])
+                .map(leg => leg.txHash)
+                .filter(Boolean)
+                .join('; ')
+            : isProposal
+              ? (activity.actions || []).flatMap(getProposalActionTxHashes).join('; ')
+              : isTermination
+                ? activity.steps
+                    .map(step => step.txHash)
+                    .filter(Boolean)
+                    .join('; ')
+                : isFailedPhase
+                  ? (activity.actions || [])
+                      .map(action => action.tx_hash)
+                      .filter(Boolean)
+                      .join('; ')
+                  : activity.tx_hash || '',
         ];
       });
 
@@ -606,21 +1495,6 @@ export const VaultActivity = ({ vault }) => {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col items-center mb-6">
-          {vault.vaultImage ? (
-            <img
-              alt={vault.name}
-              className="w-[100px] h-[100px] rounded-full mb-4 object-cover border-4 border-steel-750"
-              src={vault.vaultImage}
-            />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full mb-4 bg-steel-850 flex items-center justify-center border-4 border-steel-750">
-              <L4vaIcon className="h-8 w-8 text-white" />
-            </div>
-          )}
-          <h1 className="text-3xl font-bold text-white">{vault.name}</h1>
-        </div>
-
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -632,14 +1506,15 @@ export const VaultActivity = ({ vault }) => {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full min-w-0">
               <LavaTabs
-                tabs={ACTIVITY_FILTERS}
+                tabs={filters}
                 activeTab={activeFilter}
                 onTabChange={handleFilterChange}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                tabClassName="shrink-0 whitespace-nowrap"
               />
-              <SecondaryButton className="w-full sm:w-auto" onClick={handleDownloadCSV}>
+              <SecondaryButton className="w-full sm:w-auto shrink-0" onClick={handleDownloadCSV}>
                 <Download className="w-4 h-4" />
                 Export CSV
               </SecondaryButton>
@@ -655,9 +1530,13 @@ export const VaultActivity = ({ vault }) => {
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4">
-                {items.map((activity, index) => (
-                  <ActivityCard key={activity.id || index} activity={activity} />
-                ))}
+                {items.map((activity, index) =>
+                  activity.activityType === 'termination' ? (
+                    <TerminationActivityCard key={activity.id || index} activity={activity} vault={vault} />
+                  ) : (
+                    <ActivityCard key={activity.id || index} activity={activity} vault={vault} />
+                  )
+                )}
               </div>
 
               {pagination.totalPages > 1 && (

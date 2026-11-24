@@ -1,6 +1,10 @@
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
+import { useNetwork } from '@/hooks/useNetwork';
 
 export const RewardsInfoModal = ({ isOpen, onClose }) => {
+  const { isRobinHood } = useNetwork();
+  const poolPair = isRobinHood ? 'VT/ETH or VT/USDC pools' : 'VT/ADA or VT/USDCx pools';
+
   return (
     <ModalWrapper isOpen={isOpen} onClose={onClose} title="L4VA Rewards — How it works" size="lg" allowBodyScroll>
       <div className="space-y-6">
@@ -34,7 +38,7 @@ export const RewardsInfoModal = ({ isOpen, onClose }) => {
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Contributing assets into vaults</li>
               <li>Acquiring</li>
-              <li>Providing liquidity for vault tokens (VT/ADA or VT/USDCx pools)</li>
+              <li>Providing liquidity for vault tokens ({poolPair})</li>
               <li>Swapping vault tokens using the widget</li>
               <li>Participating in governance</li>
             </ul>

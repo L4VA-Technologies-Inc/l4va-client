@@ -209,7 +209,7 @@ export const UploadZone = ({
           <div className="text-center">
             <div className="mb-4 flex justify-center">
               <div className="p-4 rounded-full bg-transparent">
-                <img alt="upload-icon" src="/assets/icons/upload.svg" />
+                <img alt="upload-icon" src="/assets/icons/upload-rh.svg" />
               </div>
             </div>
             <p className="text-dark-100 mb-2">Upload image into the selected area</p>

@@ -4,13 +4,14 @@ import { useRouter } from '@tanstack/react-router';
 import { VaultList } from '@/components/vaults/VaultsList';
 import { useVaults } from '@/services/api/queries';
 import { capitalizeFirst } from '@/utils/core.utils.js';
+import { scrollBehavior } from '@/utils/a11y';
 
 const VAULT_TABS = {
   ALL: 'All',
   DRAFT: 'Draft',
-  UPCOMING: 'Upcoming',
+  // Upcoming (published) vaults are part of Open.
   OPEN: 'Open',
-  LOCKED: 'Locked',
+  // Same as the browse Govern tab: every locked vault.
   GOVERN: 'Govern',
   FAILED: 'Failed',
   TERMINATED: 'Terminated',
@@ -23,7 +24,8 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   const [activeTab, setActiveTab] = useState(() => {
     const normalized = initialTab ? capitalizeFirst(initialTab) : null;
 
-    if (normalized === 'Published') return 'Upcoming';
+    if (normalized === 'Published' || normalized === 'Upcoming') return 'Open';
+    if (normalized === 'Locked') return 'Govern';
 
     if (normalized && TABS.includes(normalized)) {
       return normalized;
@@ -33,7 +35,13 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
   });
 
   const [appliedFilters, setAppliedFilters] = useState(() => {
-    const capitalizedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
+    const requestedTab = initialTab ? capitalizeFirst(initialTab) : TABS[0];
+    const capitalizedTab =
+      requestedTab === 'Locked'
+        ? 'Govern'
+        : requestedTab === 'Published' || requestedTab === 'Upcoming'
+          ? 'Open'
+          : requestedTab;
     const initialActiveTab = capitalizedTab && TABS.includes(capitalizedTab) ? capitalizedTab : TABS[0];
     const newTab =
       initialActiveTab === 'Upcoming'
@@ -75,7 +83,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
           window.scrollTo({
             top: offsetPosition,
-            behavior: 'smooth',
+            behavior: scrollBehavior(),
           });
         }
       }, 100);
@@ -109,7 +117,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
     });
   };
 
-  const { data, isLoading, error } = useVaults(appliedFilters);
+  const { data, isLoading, isPlaceholderData, error } = useVaults(appliedFilters);
   const vaults = data?.data?.items || [];
 
   const pagination = data?.data
@@ -139,7 +147,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
 
     if (myVaultsListRef.current) {
       myVaultsListRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: scrollBehavior(),
         block: 'start',
       });
     }
@@ -151,6 +159,7 @@ export const MyVaultsList = ({ className = '', initialTab }) => {
         className={className}
         error={error?.message}
         isLoading={isLoading}
+        isRefreshing={isPlaceholderData}
         tabs={TABS}
         title="My Vaults"
         vaults={vaults}

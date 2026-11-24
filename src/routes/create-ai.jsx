@@ -1,0 +1,328 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
+import { AnimatePresence, motion, MotionConfig, useDragControls } from 'framer-motion';
+import { ArrowLeft, X } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+import { getLaunchErrorMessage } from '@/utils/launchError';
+import { AiVaultChat } from '@/components/vaults/ai/AiVaultChat';
+import { AiVaultPreview } from '@/components/vaults/ai/AiVaultPreview';
+import { AI_VAULT_STORAGE_META_KEY } from '@/components/vaults/ai/aiVault.utils';
+import { useAiVaultBuilder } from '@/components/vaults/ai/useAiVaultBuilder';
+import { VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
+import { CREATE_VAULT_STEPS, vaultSchema } from '@/components/vaults/constants/vaults.constants';
+import PrimaryButton from '@/components/shared/PrimaryButton';
+import { LaunchVaultConfirmModal } from '@/components/modals/LaunchVaultConfirmModal';
+import { ResetVaultConfirmModal } from '@/components/modals/ResetVaultConfirmModal';
+import { useLaunchVault } from '@/hooks/useLaunchVault';
+import { useAuth } from '@/lib/auth/auth';
+import { useModalControls } from '@/lib/modals/modal.context';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+
+const CreateAiComponent = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const builder = useAiVaultBuilder();
+  const { launchVault } = useLaunchVault();
+  const { openModal } = useModalControls();
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const sheetDrag = useDragControls();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  // On mobile the draft is a sheet over the chat, so it stays closed until the user asks for it.
+  const [showPreview, setShowPreview] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  const userCollapsedPreview = useRef(false);
+
+  // Slide the draft open as soon as the conversation starts populating it, so fields appear live.
+  useEffect(() => {
+    if (!isDesktop || userCollapsedPreview.current) return;
+    if (builder.isSending || builder.aiFields.length > 0) {
+      setShowPreview(true);
+    }
+  }, [isDesktop, builder.isSending, builder.aiFields.length]);
+
+  // Close the sheet when shrinking to mobile, and lock the page behind it while it is open.
+  useEffect(() => {
+    if (!isDesktop) setShowPreview(false);
+  }, [isDesktop]);
+
+  const isSheetOpen = !isDesktop && showPreview;
+  useEffect(() => {
+    if (!isSheetOpen) return;
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [isSheetOpen]);
+
+  const togglePreview = () => {
+    setShowPreview(prev => {
+      const next = !prev;
+      userCollapsedPreview.current = !next;
+      return next;
+    });
+  };
+
+  const openInForm = (startStep = CREATE_VAULT_STEPS.length) => {
+    localStorage.setItem('storageVault', JSON.stringify(builder.vault));
+    localStorage.setItem(AI_VAULT_STORAGE_META_KEY, JSON.stringify({ source: 'ai', startStep }));
+    navigate({ to: '/create' });
+  };
+
+  // An index vault's asset picker IS the basket editor, so "choose_assets" and "choose_basket"
+  // open the same modal. Show one button for them instead of two that do the same thing.
+  const isIndexDraft = builder.vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+  const chatMessages = useMemo(() => {
+    if (!isIndexDraft) return builder.messages;
+    return builder.messages.map(message => {
+      if (!message.options?.length) return message;
+      let hasBasketOption = false;
+      const options = message.options.filter(option => {
+        const value = typeof option === 'string' ? option : option?.value;
+        if (value !== 'choose_assets' && value !== 'choose_basket') return true;
+        if (hasBasketOption) return false;
+        hasBasketOption = true;
+        return true;
+      });
+      return options.length === message.options.length ? message : { ...message, options };
+    });
+  }, [builder.messages, isIndexDraft]);
+
+  // The chat owns the image flow; the pickers are the reserved actions that need a modal.
+  const handleOptionSelect = option => {
+    // An index vault's tokens are its basket, so an asset picker request opens the basket too.
+    const isIndexVault = builder.vault.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
+    if (option.value === 'choose_basket' || (option.value === 'choose_assets' && isIndexVault)) {
+      openModal('AiIndexBasketModal', {
+        basket: builder.vault.indexBasket,
+        setBasket: basket => builder.updateVaultField('indexBasket', basket),
+      });
+      return;
+    }
+    if (option.value === 'choose_assets') {
+      openModal('AiAssetWhitelistModal', {
+        whitelist: builder.vault.assetsWhitelist || [],
+        setWhitelist: assets => builder.updateVaultField('assetsWhitelist', assets),
+        isExpandable: builder.vault.isExpandableAssetWhitelist,
+        onExpandableChange: checked => builder.updateVaultField('isExpandableAssetWhitelist', checked),
+      });
+      return;
+    }
+    builder.sendMessage(option.value);
+  };
+
+  // The assistant requests a launch through a backend-validated action; the user still confirms it.
+  const launchRequest = builder.pendingAction?.name === 'launch_vault' ? builder.pendingAction : null;
+
+  const handleLaunch = async () => {
+    if (isLaunching) return;
+    if (builder.tickerConflict) {
+      userCollapsedPreview.current = false;
+      setShowPreview(true);
+      toast.error(`The ticker ${builder.tickerConflict.ticker} is already used by another vault — choose another one.`);
+      return;
+    }
+
+    setIsLaunching(true);
+    try {
+      await launchVault(builder.vault, {
+        onSuccess: () => {
+          builder.clearAction();
+          builder.reset();
+        },
+      });
+      toast.success('Vault launched successfully');
+    } catch (error) {
+      if (error?.name === 'ValidationError') {
+        // Name the fields, otherwise the user has no way to tell what blocked the launch.
+        const reasons = [...new Set((error.inner?.length ? error.inner : [error]).map(issue => issue.message))];
+        toast.error(`Can't launch yet: ${reasons.slice(0, 3).join('; ')}`, { duration: 8000 });
+      } else if (error?.code === 'INSUFFICIENT_VLRM') {
+        toast.error(error.message);
+      } else if (
+        error?.name === 'UserRejectedRequestError' ||
+        error?.message === 'user declined sign tx' ||
+        error?.message?.includes('User rejected the request')
+      ) {
+        toast.error('Vault launch cancelled by user');
+      } else {
+        console.error(error);
+        toast.error(getLaunchErrorMessage(error));
+      }
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
+  // Same gate the preview's own launch button uses.
+  const canLaunch = vaultSchema.isValidSync(builder.vault) && !builder.tickerConflict;
+  // The assistant can call the draft ready while the schema still rejects it (e.g. a stale date), so
+  // the chat CTA follows either signal and, when the schema disagrees, shows what is blocking.
+  const showLaunchCta = canLaunch || builder.status === 'ready';
+  const handleChatLaunch = () => {
+    if (!canLaunch) {
+      userCollapsedPreview.current = false;
+      setShowPreview(true);
+    }
+    handleLaunch();
+  };
+
+  const previewPanel = (
+    <AiVaultPreview
+      aiFields={builder.aiFields}
+      isLaunching={isLaunching}
+      missingFields={builder.missingFields}
+      status={builder.status}
+      tickerConflict={builder.tickerConflict}
+      vault={builder.vault}
+      isUploadingImage={builder.isUploadingImage}
+      onGenerateImageRequest={builder.startImageGeneration}
+      onUploadImage={builder.uploadImage}
+      onLaunch={handleLaunch}
+      onReset={() => setIsResetModalOpen(true)}
+      onSendMessage={builder.sendMessage}
+      onUpdateVault={builder.updateVaultField}
+    />
+  );
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <div className="flex h-[calc(var(--app-height,100dvh)-var(--header-height)-var(--content-space-top))] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible lg:pb-8">
+        <div className="flex shrink-0 flex-col items-start gap-2 pb-3 md:flex-row md:py-4 md:items-center md:justify-between">
+          <button
+            className="group order-last flex items-center gap-2 text-dark-100 transition-colors duration-150 hover:text-white active:opacity-70 md:order-none"
+            type="button"
+            onClick={() => openInForm(1)}
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform duration-150 ease-out group-hover:-translate-x-0.5" />
+            <span className="uppercase font-russo text-sm">Manual setup</span>
+          </button>
+          <span className="order-first font-russo text-2xl uppercase tracking-tight md:order-none md:text-3xl">
+            Create token with AI
+          </span>
+          <span className="hidden w-32 md:block" />
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <AiVaultChat
+              isGeneratingImage={builder.isGeneratingImage}
+              isPreviewOpen={showPreview}
+              isSending={builder.isSending}
+              isUploadingImage={builder.isUploadingImage}
+              messages={chatMessages}
+              onGenerateImage={builder.generateImage}
+              onOptionSelect={handleOptionSelect}
+              onSend={builder.sendMessage}
+              onStartImageGeneration={builder.startImageGeneration}
+              onTogglePreview={togglePreview}
+              onUploadImage={builder.uploadImage}
+              canLaunch={showLaunchCta}
+              isLaunching={isLaunching}
+              onLaunch={handleChatLaunch}
+            />
+          </div>
+          <AnimatePresence initial={false}>
+            {isDesktop && showPreview && (
+              <motion.div
+                key="preview"
+                animate={{ opacity: 1, x: 0 }}
+                className="w-full shrink-0 lg:w-[380px]"
+                exit={{ opacity: 0, x: 16 }}
+                initial={{ opacity: 0, x: 16 }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+              >
+                {previewPanel}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <AnimatePresence>
+          {isSheetOpen && (
+            <motion.div key="preview-sheet" className="fixed inset-0 z-50">
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-black/60"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                onClick={togglePreview}
+              />
+              <motion.div
+                animate={{ y: 0 }}
+                className="absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col rounded-t-3xl border-t border-steel-750 bg-primary-background"
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={{ top: 0, bottom: 0.6 }}
+                dragListener={false}
+                dragControls={sheetDrag}
+                exit={{ y: '100%' }}
+                initial={{ y: '100%' }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+                onDragEnd={(_, info) => {
+                  if (info.offset.y > 100 || info.velocity.y > 500) togglePreview();
+                }}
+              >
+                <div
+                  className="flex shrink-0 touch-none items-center justify-between px-4 pb-2 pt-3"
+                  onPointerDown={event => sheetDrag.start(event)}
+                >
+                  <span className="w-8" />
+                  <span className="h-1.5 w-10 rounded-full bg-steel-750" />
+                  <button
+                    aria-label="Close settings"
+                    className="rounded-lg p-1.5 text-dark-100"
+                    type="button"
+                    onClick={togglePreview}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+                  {previewPanel}
+                </div>
+                {canLaunch && (
+                  <div className="shrink-0 border-t border-steel-850 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
+                    <PrimaryButton className="w-full uppercase" disabled={isLaunching} onClick={handleLaunch}>
+                      {isLaunching ? 'Launching...' : 'Confirm & launch'}
+                    </PrimaryButton>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {launchRequest && (
+          <LaunchVaultConfirmModal
+            description={launchRequest.description}
+            isLaunching={isLaunching}
+            isOpen
+            vaultName={builder.vault?.name}
+            onClose={builder.clearAction}
+            onConfirm={handleLaunch}
+          />
+        )}
+        <ResetVaultConfirmModal
+          isOpen={isResetModalOpen}
+          onClose={() => setIsResetModalOpen(false)}
+          onConfirm={() => {
+            userCollapsedPreview.current = false;
+            setShowPreview(false);
+            builder.reset();
+          }}
+        />
+      </div>
+    </MotionConfig>
+  );
+};
+
+export const Route = createFileRoute('/create-ai')({
+  component: CreateAiComponent,
+});

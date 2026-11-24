@@ -1,17 +1,17 @@
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
-import { useWallet } from '@ada-anvil/weld/react';
 
 import { useClaimTransactions } from '@/hooks/useRewardsClaims';
+import { useRewardsWalletConnection } from '@/hooks/useRewardsWalletConnection';
 import { ClaimHistoryDetails } from '@/components/rewards';
 
 export const ClaimsPage = () => {
   const navigate = useNavigate();
-  const { changeAddressBech32: walletAddress, isConnected } = useWallet();
+  const { walletAddress, isWalletConnected, isRobinHood } = useRewardsWalletConnection();
 
   const { data: transactionsData, isLoading } = useClaimTransactions(walletAddress);
 
-  if (!isConnected) {
+  if (!isWalletConnected) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -23,7 +23,11 @@ export const ClaimsPage = () => {
             Back to Rewards
           </button>
           <div className="bg-steel-850 border border-steel-750 rounded-2xl p-8 text-center">
-            <p className="text-steel-400">Connect your wallet to view claim history</p>
+            <p className="text-steel-400">
+              {isRobinHood
+                ? 'Please connect your Robinhood wallet to view your claim history.'
+                : 'Connect your wallet to view claim history'}
+            </p>
           </div>
         </div>
       </div>

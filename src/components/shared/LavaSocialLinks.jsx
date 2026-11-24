@@ -95,7 +95,12 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="uppercase font-bold">Social Links</div>
-        <button className="border-2 border-white/20 rounded-[10px] p-2" type="button" onClick={addNewLink}>
+        <button
+          aria-label="Add social link"
+          className="border-2 border-white/20 rounded-[10px] p-2"
+          type="button"
+          onClick={addNewLink}
+        >
           <Plus className="h-4 w-4" />
         </button>
       </div>
@@ -135,7 +140,13 @@ export const LavaSocialLinks = ({ socialLinks = [], setSocialLinks, errors = {} 
                 onBlur={e => handleUrlBlur(link.id, e.target.value, link.name)}
                 maxLength={200}
               />
-              <Button className="h-8 w-8 rounded-full" size="icon" variant="ghost" onClick={() => removeLink(link.id)}>
+              <Button
+                aria-label="Remove link"
+                className="h-8 w-8 rounded-full"
+                size="icon"
+                variant="ghost"
+                onClick={() => removeLink(link.id)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -155,7 +166,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
 
   return (
     <div className="space-y-2">
-      {validLinks.length > 0 ? (
+      {validLinks.length > 0 &&
         validLinks.map((link, index) => (
           <a
             key={`social-link-${index}`}
@@ -167,10 +178,7 @@ export const LavaSocialLinksPreview = ({ socialLinks = [] }) => {
             <SocialPlatformIcon className="text-white" platformId={link.name} size={20} />
             <span>{link.url}</span>
           </a>
-        ))
-      ) : (
-        <p>No social links added.</p>
-      )}
+        ))}
     </div>
   );
 };

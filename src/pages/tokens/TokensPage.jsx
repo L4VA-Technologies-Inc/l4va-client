@@ -1,0 +1,587 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Flame, ShieldCheck } from 'lucide-react';
+import clsx from 'clsx';
+import { useNavigate } from '@tanstack/react-router';
+
+import { TokenSwapModal } from '@/components/modals/TokenSwapModal';
+import { LavaTabs } from '@/components/shared/LavaTabs';
+import { Pagination } from '@/components/shared/Pagination';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useNetwork } from '@/hooks/useNetwork';
+import { useCardanoMemecoins, useRobinhoodMemecoins, useRobinhoodRwas } from '@/services/api/queries';
+import { formatTokenMoney, pickTokenAmount } from '@/utils/tokenMoney';
+import { formatLargeNumber } from '@/utils/core.utils';
+import { clickableProps } from '@/utils/a11y';
+
+const DEFAULT_TOKEN_IMAGE = '/favicon/favicon.ico';
+
+const LIST_TABS = ['Trending', 'Top', 'Gainers', 'New'];
+const RH_TABS = ['All', 'RWAs', 'DeFi', 'Memecoins', 'Other'];
+// Tag each Robinhood tab filters on; "Other" is everything that matches none of them
+const RH_TAB_TAGS = { RWAs: 'RWA', DeFi: 'DeFi', Memecoins: 'Memecoins' };
+
+// Tags are typed by vault creators, so "defi" and "DeFi" must land in the same tab.
+const matchesRhTab = (token, tab) => {
+  const tags = (token.tags || []).map(tag => String(tag).toLowerCase());
+  const has = tag => tags.includes(tag.toLowerCase());
+  if (tab === 'All') return true;
+  if (tab === 'Other') return !Object.values(RH_TAB_TAGS).some(has);
+  return has(RH_TAB_TAGS[tab]);
+};
+const PAGE_SIZE = 10;
+
+const formatChange = value => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+  const n = Number(value);
+  const sign = n > 0 ? '+' : n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  // Compact very large percentage changes so they always fit (e.g. +1.11B%, +12.5M%, +125K%)
+  const body = abs >= 1000 ? formatLargeNumber(abs) : abs.toFixed(2);
+  return `${sign}${body}%`;
+};
+
+const ChangeText = ({ value, className }) => {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return <span className={clsx('text-dark-100', className)}>—</span>;
+  }
+  const n = Number(value);
+  return <span className={clsx(n >= 0 ? 'text-emerald-400' : 'text-rose-400', className)}>{formatChange(n)}</span>;
+};
+
+const TokenImage = ({ src, alt, size = 'sm', fallback = DEFAULT_TOKEN_IMAGE }) => (
+  <img
+    src={src || fallback}
+    alt={alt || ''}
+    loading="lazy"
+    decoding="async"
+    className={clsx('rounded-full object-cover bg-steel-750 shrink-0', size === 'sm' ? 'w-6 h-6' : 'w-10 h-10')}
+    onError={e => {
+      e.currentTarget.onerror = null;
+      e.currentTarget.src = fallback;
+    }}
+  />
+);
+
+const Sparkline = ({ points, positive }) => {
+  if (!points?.length) {
+    return <span className="text-dark-100 text-xs">—</span>;
+  }
+
+  const sampled = points.length > 48 ? points.filter((_, i) => i % Math.ceil(points.length / 48) === 0) : points;
+
+  const width = 88;
+  const height = 28;
+  const min = Math.min(...sampled);
+  const max = Math.max(...sampled);
+  const range = max - min || 1;
+  const coords = sampled
+    .map((p, i) => {
+      const x = (i / (sampled.length - 1 || 1)) * width;
+      const y = height - ((p - min) / range) * (height - 4) - 2;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <polyline
+        fill="none"
+        stroke={positive ? '#34D399' : '#F87171'}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        points={coords}
+      />
+    </svg>
+  );
+};
+
+const RangeBar = ({ low, high, price, formatMoney }) => {
+  if (low == null || high == null || price == null || high === low) {
+    return <span className="text-dark-100 text-xs">—</span>;
+  }
+  const pos = Math.min(100, Math.max(0, ((price - low) / (high - low)) * 100));
+
+  return (
+    <div className="min-w-[120px]">
+      <div className="relative h-1.5 rounded-full bg-steel-750">
+        <div className="absolute inset-y-0 left-0 rounded-full bg-steel-600" style={{ width: `${pos}%` }} />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-b-[7px] border-l-transparent border-r-transparent border-b-white"
+          style={{ left: `calc(${pos}% - 5px)` }}
+        />
+      </div>
+      <div className="mt-1.5 flex justify-between text-[10px] text-dark-100">
+        <span>{formatMoney(low)}</span>
+        <span>{formatMoney(high)}</span>
+      </div>
+    </div>
+  );
+};
+
+const SummaryCard = ({ title, children }) => (
+  <div className="bg-steel-850 border border-steel-750 rounded-2xl p-4 flex flex-col min-h-[260px]">
+    <div className="flex items-center gap-2 mb-3">
+      <h3 className="text-sm font-medium text-white">{title}</h3>
+    </div>
+    <div className="flex-1 space-y-2.5">{children}</div>
+  </div>
+);
+
+const TokenMiniRow = ({ image, ticker, fdv, change, onClick, fallbackImage }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-sm w-full text-left rounded-lg px-0.5 -mx-0.5 py-0.5 hover:bg-steel-800/80 transition-colors cursor-pointer"
+  >
+    <div className="flex items-center gap-2 min-w-0">
+      <TokenImage src={image} alt={ticker} fallback={fallbackImage} />
+      <span className="truncate font-medium text-white uppercase">{ticker}</span>
+    </div>
+    <span className="text-dark-100 text-xs tabular-nums">{fdv}</span>
+    <div className="w-14 text-right">
+      <ChangeText value={change} className="text-xs tabular-nums" />
+    </div>
+  </button>
+);
+
+// Loading placeholders sized like the real rows, so the page doesn't jump when data lands.
+const Bone = ({ className = '' }) => <div className={clsx('animate-pulse rounded bg-steel-750', className)} />;
+
+const SummaryCardSkeleton = ({ title }) => (
+  <SummaryCard title={title}>
+    <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+      <span>Name</span>
+      <span>FDV</span>
+      <span className="w-14 text-right">24H Δ</span>
+    </div>
+    {Array.from({ length: 6 }, (_, i) => (
+      <div key={i} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 py-0.5">
+        <div className="flex items-center gap-2">
+          <Bone className="w-6 h-6 rounded-full" />
+          <Bone className="h-3.5 w-16" />
+        </div>
+        <Bone className="h-3 w-12" />
+        <div className="w-14 flex justify-end">
+          <Bone className="h-3 w-10" />
+        </div>
+      </div>
+    ))}
+  </SummaryCard>
+);
+
+const TokenTableRowSkeleton = () => (
+  <tr className="bg-steel-850 border-b border-steel-750 last:border-b-0">
+    <td className="px-4 py-4">
+      <div className="flex items-center gap-3">
+        <Bone className="w-10 h-10 rounded-full" />
+        <div className="space-y-2">
+          <Bone className="h-4 w-28" />
+          <Bone className="h-3 w-14" />
+        </div>
+      </div>
+    </td>
+    <td className="px-4 py-4">
+      <div className="space-y-2">
+        <Bone className="h-4 w-24" />
+        <Bone className="h-3 w-10" />
+      </div>
+    </td>
+    {Array.from({ length: 5 }, (_, i) => (
+      <td key={i} className="px-4 py-4">
+        <Bone className="h-4 w-16" />
+      </td>
+    ))}
+    <td className="px-4 py-4">
+      <Bone className="w-9 h-9 rounded-full mx-auto" />
+    </td>
+  </tr>
+);
+
+export const TokensPage = () => {
+  const navigate = useNavigate();
+  const { isRobinHood: isRobinhood } = useNetwork();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
+  const [activeTab, setActiveTab] = useState('Trending');
+  const [rhTab, setRhTab] = useState('All');
+  const [page, setPage] = useState(1);
+
+  const formatTokenField = (token, field, opts) => {
+    const map = {
+      price: { usd: 'price_usd', eth: 'price_eth', ada: 'price_ada' },
+      fdv: { usd: 'fdv', eth: 'fdv_eth', ada: 'fdv_ada' },
+      mcap: { usd: 'market_cap', eth: 'market_cap_eth', ada: 'market_cap_ada' },
+      volume: { usd: 'volume_24h', eth: 'volume_24h_eth', ada: 'volume_24h_ada' },
+      liquidity: { usd: 'liquidity_usd', eth: 'liquidity_eth', ada: 'liquidity_ada' },
+      high: { usd: 'high_24h', eth: 'high_24h_eth', ada: 'high_24h_ada' },
+      low: { usd: 'low_24h', eth: 'low_24h_eth', ada: 'low_24h_ada' },
+    };
+    if (field === 'fdv') {
+      const fdv = pickTokenAmount(token, pickByCurrency, map.fdv);
+      const mcap = pickTokenAmount(token, pickByCurrency, map.mcap);
+      return formatTokenMoney(fdv ?? mcap, currency, currencySymbol, opts);
+    }
+    return formatTokenMoney(pickTokenAmount(token, pickByCurrency, map[field]), currency, currencySymbol, opts);
+  };
+
+  const globalQuery = useCardanoMemecoins(!isRobinhood);
+  const rhMemesQuery = useRobinhoodMemecoins(isRobinhood);
+  const rhRwasQuery = useRobinhoodRwas(isRobinhood);
+
+  const rhAllTokens = useMemo(() => {
+    const byId = new Map();
+    [...(rhMemesQuery.data || []), ...(rhRwasQuery.data || [])].forEach(token => byId.set(token.id, token));
+    return [...byId.values()];
+  }, [rhMemesQuery.data, rhRwasQuery.data]);
+
+  // Cardano lists vault tokens only, like Robinhood (the API also returns market tokens).
+  const cardanoVaultTokens = useMemo(
+    () => (globalQuery.data || []).filter(token => token.source === 'vault'),
+    [globalQuery.data]
+  );
+
+  // Summary cards always cover every token; only the list below follows the category tab.
+  const allTokens = useMemo(
+    () => (isRobinhood ? rhAllTokens : cardanoVaultTokens),
+    [isRobinhood, rhAllTokens, cardanoVaultTokens]
+  );
+  const tokens = useMemo(
+    () => (isRobinhood ? allTokens.filter(token => matchesRhTab(token, rhTab)) : allTokens),
+    [isRobinhood, rhTab, allTokens]
+  );
+  const isLoading = isRobinhood ? rhMemesQuery.isLoading || rhRwasQuery.isLoading : globalQuery.isLoading;
+  const error = isRobinhood ? rhMemesQuery.error || rhRwasQuery.error : globalQuery.error;
+
+  const [swapToken, setSwapToken] = useState(null);
+
+  const openToken = id => {
+    navigate({ to: '/tokens/$id', params: { id } });
+  };
+
+  // Reset pagination when header chain switches
+  useEffect(() => {
+    setPage(1);
+    setActiveTab('Trending');
+  }, [isRobinhood]);
+
+  const sorted = useMemo(() => {
+    const items = [...tokens];
+    if (activeTab === 'Gainers') {
+      return items.sort((a, b) => (b.change_24h ?? -Infinity) - (a.change_24h ?? -Infinity));
+    }
+    if (activeTab === 'New') {
+      return items.reverse();
+    }
+    if (activeTab === 'Top') {
+      return items.sort((a, b) => (b.market_cap ?? 0) - (a.market_cap ?? 0));
+    }
+    return items.sort((a, b) => (b.volume_24h ?? b.liquidity_usd ?? 0) - (a.volume_24h ?? a.liquidity_usd ?? 0));
+  }, [tokens, activeTab]);
+
+  const trending = useMemo(
+    () =>
+      [...allTokens]
+        .sort((a, b) => (b.volume_24h ?? b.holders_count ?? 0) - (a.volume_24h ?? a.holders_count ?? 0))
+        .slice(0, 6),
+    [allTokens]
+  );
+  // Newest mints first; tokens without a mint time sink to the bottom.
+  const justMinted = useMemo(
+    () => [...allTokens].sort((a, b) => (Date.parse(b.minted_at) || 0) - (Date.parse(a.minted_at) || 0)).slice(0, 6),
+    [allTokens]
+  );
+  const gainers = useMemo(
+    () => [...allTokens].sort((a, b) => (b.change_24h ?? -Infinity) - (a.change_24h ?? -Infinity)).slice(0, 6),
+    [allTokens]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleTabChange = tab => {
+    setActiveTab(tab);
+    setPage(1);
+  };
+
+  const handleRhTabChange = tab => {
+    setRhTab(tab);
+    setPage(1);
+  };
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-6 pb-10">
+        <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
+        <div className="text-center text-rose-400 py-8">Failed to load market data</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 pb-10">
+      <h2 className="font-russo text-2xl md:text-3xl lg:text-4xl uppercase">Tokens</h2>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <SummaryCardSkeleton title="Trending" />
+          <SummaryCardSkeleton title="Just Minted" />
+          <SummaryCardSkeleton title="Gainers" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <SummaryCard title="Trending">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {trending.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
+
+          <SummaryCard title="Just Minted">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {justMinted.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
+
+          <SummaryCard title="Gainers">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-dark-100 mb-1 px-0.5">
+              <span>Name</span>
+              <span>FDV</span>
+              <span className="w-14 text-right">24H Δ</span>
+            </div>
+            {gainers.map(item => (
+              <TokenMiniRow
+                key={item.id}
+                image={item.image}
+                ticker={item.symbol}
+                fdv={formatTokenField(item, 'fdv')}
+                change={item.change_24h}
+                onClick={() => openToken(item.id)}
+              />
+            ))}
+          </SummaryCard>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {isRobinhood ? (
+          <LavaTabs
+            tabs={RH_TABS}
+            activeTab={rhTab}
+            onTabChange={handleRhTabChange}
+            className="overflow-x-auto text-sm md:text-base bg-steel-850/50 p-1"
+            activeTabClassName="text-primary"
+          />
+        ) : (
+          <LavaTabs
+            tabs={LIST_TABS}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            className="overflow-x-auto text-sm md:text-base bg-steel-850/50 p-1"
+            activeTabClassName="text-primary"
+          />
+        )}
+        {/* <div className="flex items-center gap-2 w-full sm:w-auto">
+          <SecondaryButton size="sm" className="gap-2">
+            <Clock className="w-4 h-4" />
+            24H
+          </SecondaryButton>
+          <SecondaryButton aria-label="Filters" size="sm" className="px-3">
+            <Filter className="w-4 h-4" />
+          </SecondaryButton>
+          <SecondaryButton size="sm" className="gap-1.5">
+            <Zap className="w-4 h-4 text-orange-400" />
+            <span>10</span>
+            <span className="text-dark-100">+</span>
+          </SecondaryButton>
+        </div> */}
+      </div>
+
+      {/* Mobile: one compact row per token instead of a sideways-scrolling table. */}
+      <div className="divide-y divide-steel-750 overflow-hidden rounded-2xl border border-steel-750 bg-steel-850 md:hidden">
+        {isLoading &&
+          Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3">
+              <Bone className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Bone className="h-4 w-32 rounded" />
+                <Bone className="h-3 w-20 rounded" />
+              </div>
+              <Bone className="h-4 w-14 rounded" />
+            </div>
+          ))}
+        {!isLoading &&
+          pageRows.map(token => (
+            <div
+              key={token.id}
+              {...clickableProps(() => openToken(token.id), { role: 'link' })}
+              className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors active:bg-steel-800/80 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500"
+            >
+              <div className="relative shrink-0">
+                <TokenImage src={token.image} alt={token.name} size="md" />
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-steel-850">
+                  <Flame className="h-2.5 w-2.5 text-orange-500" />
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-medium text-white">{token.name}</span>
+                  {token.source !== 'vault' ? <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" /> : null}
+                </div>
+                <div className="truncate text-xs text-dark-100">
+                  <span className="uppercase">{token.symbol}</span> · Mcap {formatTokenField(token, 'mcap')}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-sm text-white tabular-nums">
+                  {formatTokenField(token, 'price', { price: true })}
+                </div>
+                <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-steel-750 md:block">
+        <table className="w-full min-w-[1100px] text-left">
+          <thead>
+            <tr className="bg-steel-850 border-b border-steel-750 text-xs text-dark-100 uppercase tracking-wide">
+              <th className="px-4 py-3 font-medium">Name</th>
+              <th className="px-4 py-3 font-medium">Price / %Δ</th>
+              <th className="px-4 py-3 font-medium">FDV</th>
+              {!isRobinhood && <th className="px-4 py-3 font-medium">Vol</th>}
+              <th className="px-4 py-3 font-medium">{isRobinhood ? 'Liquidity' : 'Last 24h'}</th>
+              <th className="px-4 py-3 font-medium">{isRobinhood ? 'Holders' : '24h Range'}</th>
+              <th className="px-4 py-3 font-medium">Mcap</th>
+              <th className="px-4 py-3 font-medium text-center">Buy</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && Array.from({ length: PAGE_SIZE }, (_, i) => <TokenTableRowSkeleton key={i} />)}
+            {!isLoading &&
+              pageRows.map(token => {
+                const positive = (token.change_24h ?? 0) >= 0;
+                return (
+                  <tr
+                    key={token.id}
+                    {...clickableProps(() => openToken(token.id), { role: 'link' })}
+                    className="bg-steel-850 hover:bg-steel-800/80 border-b border-steel-750 last:border-b-0 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-orange-500"
+                  >
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <TokenImage src={token.image} alt={token.name} size="md" />
+                          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-steel-850 flex items-center justify-center">
+                            <Flame className="w-2.5 h-2.5 text-orange-500" />
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-white truncate max-w-[140px]">{token.name}</span>
+                            {token.source !== 'vault' ? (
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            ) : null}
+                          </div>
+                          <span className="text-xs text-dark-100 uppercase">{token.symbol}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-white text-sm tabular-nums">
+                        {formatTokenField(token, 'price', { price: true })}
+                      </div>
+                      <ChangeText value={token.change_24h} className="text-xs tabular-nums" />
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'fdv')}</td>
+                    {!isRobinhood && (
+                      <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'volume')}</td>
+                    )}
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">
+                      {isRobinhood ? (
+                        formatTokenField(token, 'liquidity')
+                      ) : (
+                        <Sparkline points={token.sparkline} positive={positive} />
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">
+                      {isRobinhood ? (
+                        (token.holders_count ?? '—')
+                      ) : (
+                        <RangeBar
+                          low={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'low_24h',
+                            eth: 'low_24h_eth',
+                            ada: 'low_24h_ada',
+                          })}
+                          high={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'high_24h',
+                            eth: 'high_24h_eth',
+                            ada: 'high_24h_ada',
+                          })}
+                          price={pickTokenAmount(token, pickByCurrency, {
+                            usd: 'price_usd',
+                            eth: 'price_eth',
+                            ada: 'price_ada',
+                          })}
+                          formatMoney={v => formatTokenMoney(v, currency, currencySymbol, { price: true })}
+                        />
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-white tabular-nums">{formatTokenField(token, 'mcap')}</td>
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (isRobinhood) setSwapToken(token);
+                          else openToken(token.id);
+                        }}
+                        className="inline-flex items-center justify-center rounded-lg bg-orange-500/15 px-3 py-1.5 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-500/25"
+                        aria-label={`Buy ${token.symbol}`}
+                      >
+                        Buy
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+      </div>
+
+      {isRobinhood && <TokenSwapModal token={swapToken} onClose={() => setSwapToken(null)} />}
+
+      {isLoading ? (
+        <div className="flex justify-center gap-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Bone key={i} className="w-10 h-10 rounded-lg" />
+          ))}
+        </div>
+      ) : (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+      )}
+    </div>
+  );
+};

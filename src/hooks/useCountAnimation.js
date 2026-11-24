@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { formatNum } from '@/utils/core.utils.js';
 
-export const useCountAnimation = (endValue, duration = 2000) => {
+export const useCountAnimation = (endValue, duration = 2000, decimals = 0) => {
   const [count, setCount] = useState(0);
   const countRef = useRef(null);
   const startTime = useRef(null);
@@ -45,7 +45,9 @@ export const useCountAnimation = (endValue, duration = 2000) => {
         return `$${count.toFixed(2)} M`;
       }
     }
-    return formatNum(Math.round(count).toString());
+    // decimals defaults to 0 (whole-number rounding, previous behaviour); callers opt in to
+    // fractional precision where needed (e.g. ETH prices).
+    return formatNum(count, decimals);
   };
 
   return formatCount();

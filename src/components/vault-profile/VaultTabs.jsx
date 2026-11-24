@@ -9,16 +9,22 @@ import { VaultGovernance } from '@/components/vault-profile/VaultGovernance';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { VaultChatWrapper } from '@/components/vault-profile/VaultChat';
 import { VaultActivity } from '@/components/vault-profile/VaultActivity.jsx';
-import { useModalControls } from '@/lib/modals/modal.context';
+import { VaultIndexAllocation } from '@/components/vault-profile/VaultIndexAllocation';
+import { VaultLiquidityPool } from '@/components/vault-profile/VaultLiquidityPool';
+import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 
 export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
-  const { isAuthenticated, user } = useAuth();
-  const { openModal } = useModalControls();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const baseTabContent = {
-    Assets: <VaultContributedAssetsList vault={vault} />,
-    Token: <VaultAcquiredAssetsList vault={vault} />,
+    Assets: isIndexVault(vault) ? <VaultIndexAllocation vault={vault} /> : <VaultContributedAssetsList vault={vault} />,
+    Token: (
+      <>
+        <VaultLiquidityPool vault={vault} />
+        <VaultAcquiredAssetsList vault={vault} />
+      </>
+    ),
     Governance: <VaultGovernance vault={vault} />,
     Activity: <VaultActivity vault={vault} />,
   };
@@ -33,17 +39,15 @@ export const VaultTabs = ({ vault, activeTab: propActiveTab, onTabChange }) => {
 
   const handleTabSelect = useCallback(
     selectedTab => {
-      if (selectedTab === 'Activity' && !user) {
-        openModal('LoginModal');
-        return;
-      }
-
       onTabChange(selectedTab);
       router.navigate({
         search: prev => ({ ...prev, tab: selectedTab }),
+        // Switching tabs only syncs the URL; the page must stay where the user is.
+        resetScroll: false,
+        replace: true,
       });
     },
-    [user, onTabChange, router, openModal]
+    [onTabChange, router]
   );
 
   useEffect(() => {

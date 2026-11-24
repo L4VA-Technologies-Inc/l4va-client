@@ -6,10 +6,11 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { useModalControls } from '@/lib/modals/modal.context';
 import SecondaryButton from '@/components/shared/SecondaryButton.js';
 import { LavaSteelInput } from '@/components/shared/LavaInput.jsx';
-import { CoreApiProvider } from '@/services/api/core';
+import { useUpdateProfile } from '@/services/api/queries';
 
 export const EmailModal = () => {
   const [email, setEmail] = useState('');
+  const updateProfileMutation = useUpdateProfile();
 
   const { closeModal } = useModalControls();
 
@@ -26,8 +27,8 @@ export const EmailModal = () => {
     }
 
     try {
-      await CoreApiProvider.updateProfile({ email });
-      toast.success('Email saved successfully!');
+      await updateProfileMutation.mutateAsync({ email: email.trim() });
+      toast.success(`We sent a verification link to ${email.trim()}. Please check your inbox.`, { duration: 6000 });
       closeModal();
     } catch {
       toast.error('Failed to save email. Please try again.');
@@ -45,11 +46,15 @@ export const EmailModal = () => {
         />
 
         <p className="text-sm text-gray-400 text-center">
-          You can add or change your email anytime later in your{' '}
+          We will send you a link to confirm this address. You can add or change your email anytime later in your{' '}
           <span className="text-gray-200 font-medium">profile settings</span>.
         </p>
 
-        <SecondaryButton className="w-full justify-center gap-3 text-left" onClick={handleSaveEmail}>
+        <SecondaryButton
+          className="w-full justify-center gap-3 text-left"
+          onClick={handleSaveEmail}
+          disabled={updateProfileMutation.isPending}
+        >
           <Send size={20} />
           Save
         </SecondaryButton>

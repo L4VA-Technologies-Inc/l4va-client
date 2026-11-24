@@ -1,16 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, Download } from 'lucide-react';
 import { SUPPORTED_WALLETS } from '@ada-anvil/weld';
 import { useExtensions, useWallet } from '@ada-anvil/weld/react';
+import { useAccount, useDisconnect, useSignMessage, useSwitchChain } from 'wagmi';
+import { getAccount } from 'wagmi/actions';
+import { useAppKit, useAppKitState } from '@reown/appkit/react';
 import toast from 'react-hot-toast';
 
 import { useModal, useModalControls } from '@/lib/modals/modal.context';
 import { useAuth } from '@/lib/auth/auth';
+import { CoreApiProvider } from '@/services/api/core';
+import { useNetwork } from '@/hooks/useNetwork';
 import { Spinner } from '@/components/Spinner';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 import { LavaCheckbox } from '@/components/shared/LavaCheckbox';
 import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import { validateWalletNetwork } from '@/utils/networkValidation';
+import WalletIcon from '@/icons/wallet.svg?react';
+import { robinhoodChain, wagmiConfig } from '@/lib/evm/wagmi.config';
+import { setEvmLoginInProgress } from '@/lib/evm/loginProgress';
 
 const TERMS_ACCEPTANCE_KEY = 'dexhunter_terms_accepted';
 const TERMS_ACCEPTANCE_SERVICE_KEY = 'service_terms_accepted';
@@ -39,11 +47,115 @@ const TermsAgreementText = () => {
 export const LoginModal = () => {
   const { activeModalData } = useModal();
   const { openModal, closeModal } = useModalControls();
+  const { isRobinHood, network } = useNetwork();
+  const { isAuthenticated, login, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState('wallets');
   const installed = useExtensions('supportedMap');
 
-  const { isAuthenticated, login, logout } = useAuth();
+  // Robinhood Chain (EVM) — no modal of ours: Reown AppKit's modal connects the wallet
+  // (terms are its legal checkbox), then we log in by signing a backend challenge with it.
+  const { isConnected: isRobinhoodConnected, address: robinhoodAddress } = useAccount();
+  const { disconnectAsync: disconnectRobinhood } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
+  const { switchChainAsync } = useSwitchChain();
+  const { open: openAppKit } = useAppKit();
+  const { open: isAppKitOpen } = useAppKitState();
+  // Bumped every time the login is opened. A wallet can leave a request hanging forever
+  // (e.g. OKX when its popup is closed instead of rejected); a newer attempt supersedes it
+  // and the stale one's result is ignored.
+  const evmAttemptRef = useRef(0);
+  // AppKit reports open=false until its modal has actually opened; only a close after
+  // that means the user dismissed it.
+  const appKitWasOpenRef = useRef(false);
+  // True while the backend challenge is fetched and the wallet signature is pending.
+  const [isEvmSigning, setIsEvmSigning] = useState(false);
+
+  // Backend issues a single-use message; the wallet personal_signs it to prove ownership.
+  const loginWithRobinhoodAddress = async (address, attempt) => {
+    const isCurrent = () => attempt === evmAttemptRef.current;
+    setEvmLoginInProgress(true);
+    setIsEvmSigning(true);
+    try {
+      // A wallet on a chain we don't support (e.g. MetaMask Mobile on Ethereum) makes AppKit
+      // report a string chain id, and wagmi then refuses to sign with
+      // ConnectorChainMismatchError. Move it to Robinhood Chain first (wagmi adds the chain
+      // if the wallet doesn't know it). Done before login completes, so the wallet-change
+      // watchdog is not involved.
+      if (Number(getAccount(wagmiConfig).chainId) !== robinhoodChain.id) {
+        await switchChainAsync({ chainId: robinhoodChain.id });
+        if (!isCurrent()) return;
+      }
+      const { data: challenge } = await CoreApiProvider.evmChallenge(address);
+      const evmSignature = await signMessageAsync({ account: address, message: challenge.message });
+      if (!isCurrent()) return;
+      const res = await login(null, null, address, network, evmSignature);
+      closeModal();
+      if (!res?.user) {
+        toast.error(res?.message || 'Failed to sign in');
+        return;
+      }
+      if (!res.user.email) {
+        openModal('EmailModal');
+      }
+      if (activeModalData?.props?.onSuccess) {
+        activeModalData.props.onSuccess();
+      }
+    } catch (error) {
+      if (!isCurrent()) return;
+      closeModal();
+      const msg = String(error?.shortMessage || error?.response?.data?.message || error?.message || '');
+      if (error?.code === 4001 || msg.toLowerCase().includes('rejected')) {
+        toast.error('Signature rejected in wallet');
+      } else {
+        toast.error(msg || 'Failed to sign in');
+      }
+    } finally {
+      if (isCurrent()) {
+        setIsEvmSigning(false);
+        setEvmLoginInProgress(false);
+        sessionStorage.removeItem('evm_intentional_disconnect');
+      }
+    }
+  };
+
+  // Every open of the login on Robinhood (openModal sets a new activeModalData each time,
+  // even when the login is already active) goes straight to AppKit's wallet list. A wallet
+  // left connected from an unfinished login is disconnected first, so the user can always
+  // pick a different wallet.
+  useEffect(() => {
+    if (!isRobinHood) return;
+    const attempt = ++evmAttemptRef.current;
+    appKitWasOpenRef.current = false;
+    (async () => {
+      if (isRobinhoodConnected) {
+        // The wallet-change watchdog must not log out between disconnect and the new connect.
+        sessionStorage.setItem('evm_intentional_disconnect', '1');
+        await disconnectRobinhood().catch(() => {});
+      }
+      if (attempt === evmAttemptRef.current) openAppKit({ view: 'Connect' });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRobinHood, activeModalData]);
+
+  useEffect(() => {
+    if (!isRobinHood) return;
+    if (isAppKitOpen) {
+      appKitWasOpenRef.current = true;
+      return;
+    }
+    if (!appKitWasOpenRef.current) return;
+    appKitWasOpenRef.current = false;
+    if (isRobinhoodConnected && robinhoodAddress) {
+      loginWithRobinhoodAddress(robinhoodAddress, evmAttemptRef.current);
+    } else {
+      // Dismissed without connecting.
+      sessionStorage.removeItem('evm_intentional_disconnect');
+      closeModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRobinHood, isAppKitOpen, isRobinhoodConnected, robinhoodAddress]);
+
   const wallet = useWallet(
     'isConnectingTo',
     'isConnected',
@@ -97,7 +209,6 @@ export const LoginModal = () => {
     }
 
     setIsLoading(true);
-
     connect(walletKey, {
       onSuccess: ({ changeAddressBech32 }) => {
         const { isValid, networkType } = validateWalletNetwork(changeAddressBech32);
@@ -132,9 +243,9 @@ export const LoginModal = () => {
     setIsLoading(true);
 
     try {
-      const message = `account: ${wallet.stakeAddressBech32}`;
-      const signature = await wallet.handler.signData(messageHex(message));
-      const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32);
+      const { data: challenge } = await CoreApiProvider.cardanoChallenge(wallet.stakeAddressBech32);
+      const signature = await wallet.handler.signData(messageHex(challenge.message));
+      const res = await login(signature, wallet.stakeAddressBech32, wallet.changeAddressBech32, network);
 
       if (!res?.user?.address) {
         toast.error('Failed to authenticate: Invalid response from server');
@@ -172,64 +283,86 @@ export const LoginModal = () => {
     }
   };
 
+  // The "sign" step signs with the Cardano (Weld) wallet. On Robinhood a still-connected
+  // Cardano wallet (e.g. Eternl) must not hijack it — EVM login goes through wagmi.
   useEffect(() => {
-    if (wallet.isConnected) {
+    if (!isRobinHood && wallet.isConnected) {
       setView('sign');
     } else {
       setView('wallets');
     }
-  }, [wallet.isConnected]);
+  }, [wallet.isConnected, isRobinHood]);
+
+  const termsCheckboxes = (
+    <div className="mt-4 md:mt-6">
+      <LavaCheckbox
+        checked={isChecked}
+        description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
+        name="terms"
+        onChange={handleTermsAcceptance}
+      />
+      <LavaCheckbox
+        checked={isCheckedService}
+        description={<TermsAgreementText />}
+        name="service-terms"
+        onChange={handleTermsAcceptanceService}
+      />
+    </div>
+  );
 
   const renderWalletsList = () => {
     const excludedWallets = ['nufiSnap', 'tokeo', 'flint'];
-    const filteredWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.key));
+    const cardanoWallets = SUPPORTED_WALLETS.filter(wallet => !excludedWallets.includes(wallet.key));
+    // Installed wallets always sort to the top; relative order within each group is preserved.
+    const sortedCardanoWallets = [...cardanoWallets].sort(
+      (a, b) => (installed.has(a.key) ? 0 : 1) - (installed.has(b.key) ? 0 : 1)
+    );
+
+    const renderWalletRow = walletItem => {
+      const isConnecting = walletItem.isConnectingTo === walletItem.key;
+      return (
+        <div
+          key={walletItem.key}
+          className="
+              flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
+              transition-colors hover:bg-steel-750
+            "
+        >
+          <button
+            className="flex items-center gap-2 flex-1 text-left disabled:opacity-50"
+            disabled={isConnecting || !isChecked || !isCheckedService}
+            type="button"
+            onClick={() => handleConnect(walletItem.key)}
+          >
+            {walletItem.icon ? (
+              <img alt="" aria-hidden="true" className="w-6 h-6" src={walletItem.icon} />
+            ) : (
+              <WalletIcon className="w-6 h-6" />
+            )}
+            <span className="font-bold text-sm">{walletItem.displayName}</span>
+          </button>
+          <div className="flex items-center">
+            {isConnecting && <Spinner />}
+            {!installed.has(walletItem.key) && (
+              <a
+                className="text-sm text-dark-100 p-1"
+                href={walletItem.website}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label={`Download ${walletItem.displayName}`}
+              >
+                <Download className="w-4 h-4" size={14} />
+              </a>
+            )}
+          </div>
+        </div>
+      );
+    };
+
     return (
       <>
-        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">
-          {filteredWallets.map(wallet => (
-            <button
-              key={wallet.key}
-              className="
-              flex items-center justify-between w-full p-2 bg-steel-950 rounded-lg
-              transition-colors disabled:opacity-50 hover:bg-steel-750
-            "
-              disabled={wallet.isConnectingTo === wallet.key || !isChecked || !isCheckedService}
-              type="button"
-              onClick={() => handleConnect(wallet.key)}
-            >
-              <div className="flex items-center gap-2">
-                <img alt="wallet" className="w-6 h-6" src={wallet.icon} />
-                <span className="font-bold text-sm">{wallet.displayName}</span>
-              </div>
-              {wallet.isConnectingTo === wallet.key && <Spinner />}
-              {!installed.has(wallet.key) && (
-                <a
-                  className="text-sm text-dark-100 p-1"
-                  href={wallet.website}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <Download className="w-4 h-4" size={14} />
-                </a>
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 md:mt-6">
-          <LavaCheckbox
-            checked={isChecked}
-            description="I have read and accepted the terms of the DexHunter Privacy Policy and Terms of Use"
-            name="terms"
-            onChange={handleTermsAcceptance}
-          />
-          <LavaCheckbox
-            checked={isCheckedService}
-            description={<TermsAgreementText />}
-            name="service-terms"
-            onChange={handleTermsAcceptanceService}
-          />
-        </div>
+        <div className="space-y-2 max-h-[30vh] overflow-y-auto px-1">{sortedCardanoWallets.map(renderWalletRow)}</div>
+        {termsCheckboxes}
       </>
     );
   };
@@ -261,17 +394,39 @@ export const LoginModal = () => {
       </div>
       <div className="text-sm mt-4">
         Having issues? Try{' '}
-        <span className="cursor-pointer text-orange-500 hover:underline" onClick={handleDisconnect}>
+        <button type="button" className="cursor-pointer text-orange-500 hover:underline" onClick={handleDisconnect}>
           disconnecting
-        </span>{' '}
+        </button>{' '}
         your wallet
       </div>
     </div>
   );
 
+  // Superseding the attempt makes a late wallet response a no-op.
+  const cancelEvmSigning = () => {
+    evmAttemptRef.current += 1;
+    setIsEvmSigning(false);
+    setEvmLoginInProgress(false);
+    sessionStorage.removeItem('evm_intentional_disconnect');
+    closeModal();
+  };
+
+  if (isRobinHood) {
+    if (!isEvmSigning) return null;
+    return (
+      <ModalWrapper isOpen title="Connect Wallet" onClose={cancelEvmSigning} size="md">
+        <div className="flex flex-col items-center gap-4 py-6 text-center">
+          <Spinner />
+          <div className="font-bold">Waiting for signature</div>
+          <div className="text-sm text-dark-100">Confirm the sign-in request in your wallet to finish connecting.</div>
+        </div>
+      </ModalWrapper>
+    );
+  }
+
   return (
     <ModalWrapper isOpen title="Connect Wallet" onClose={closeModal} size="md">
-      {view === 'wallets' ? renderWalletsList() : renderSignMessage()}
+      {view !== 'wallets' ? renderSignMessage() : renderWalletsList()}
     </ModalWrapper>
   );
 };

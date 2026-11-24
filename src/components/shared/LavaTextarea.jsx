@@ -31,6 +31,7 @@ export const LavaTextarea = ({
   className = '',
   id,
   autoComplete,
+  maxLength,
 }) => {
   const generatedId = useId();
   const textareaId = id || (name ? `lava-textarea-${name}` : generatedId);
@@ -62,7 +63,13 @@ export const LavaTextarea = ({
           value={value || ''}
           onChange={onChange}
           autoComplete={autocompleteValue}
+          maxLength={maxLength}
         />
+        {maxLength && (
+          <p className="mt-1 text-right text-xs text-dark-100 tabular-nums">
+            {(value || '').length} / {maxLength}
+          </p>
+        )}
         {error && <p className="text-red-600 mt-1">{error}</p>}
       </div>
     </>

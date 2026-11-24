@@ -4,7 +4,7 @@ FROM node:22.23.4-alpine as build
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
 

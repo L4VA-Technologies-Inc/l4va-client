@@ -1,20 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Camera, Check, Copy, Edit, Loader2, Plus, X } from 'lucide-react';
+import { BadgeCheck, Camera, Check, Copy, Edit, Loader2, MailWarning, Plus, X } from 'lucide-react';
 
-import { useUpdateProfile, useUploadProfileImage } from '@/services/api/queries';
+import { useResendEmailVerification, useUpdateProfile, useUploadProfileImage } from '@/services/api/queries';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { getAvatarLetter, substringAddress } from '@/utils/core.utils';
+import { isImeComposing } from '@/utils/keyboard';
+import { clickableProps } from '@/utils/a11y';
 
 const PROFILE_IMAGE_MAX_SIZE_MB = 5;
+// Must match RESEND_COOLDOWN_MS in the API's EmailVerificationService
+const RESEND_COOLDOWN_SECONDS = 60;
 const PROFILE_IMAGE_MAX_SIZE_BYTES = PROFILE_IMAGE_MAX_SIZE_MB * 1024 * 1024;
 
 const BackgroundSection = ({ bgImage, onClick, isEditable = true, isUploading = false, isDisabled = false }) => (
   <div
-    className={`relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
-    onClick={isEditable && !isDisabled ? onClick : null}
+    className={`relative w-full h-[200px] bg-steel-900 rounded-t-xl overflow-hidden group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'} focus-visible:outline-2 focus-visible:outline-orange-500`}
+    {...(isEditable ? clickableProps(onClick, { disabled: isDisabled }) : {})}
+    aria-label={isEditable ? 'Change background image' : undefined}
   >
     {bgImage ? (
       <>
@@ -63,8 +68,9 @@ const ProfileAvatar = ({
 }) => (
   <>
     <div
-      className={`relative -mt-16 ml-4 group ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'}`}
-      onClick={isEditable && !isDisabled ? onClick : null}
+      className={`relative -mt-16 ml-4 group w-fit rounded-full ${isEditable && !isDisabled ? 'cursor-pointer' : 'cursor-default'} focus-visible:outline-2 focus-visible:outline-orange-500`}
+      {...(isEditable ? clickableProps(onClick, { disabled: isDisabled }) : {})}
+      aria-label={isEditable ? 'Change profile picture' : undefined}
     >
       <Avatar className="h-32 w-32 border-4 border-slate-950 bg-navy-800">
         {avatar ? (
@@ -150,6 +156,7 @@ const ProfileName = ({
             placeholder="Enter your name"
           />
           <Button
+            aria-label="Save name"
             size="sm"
             variant="ghost"
             className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
@@ -159,6 +166,7 @@ const ProfileName = ({
             <Check size={16} />
           </Button>
           <Button
+            aria-label="Cancel name edit"
             size="sm"
             variant="ghost"
             className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
@@ -173,6 +181,7 @@ const ProfileName = ({
           <h1 className="text-xl font-bold text-white">{name || 'Anonymous User'}</h1>
           {isEditable && (
             <Button
+              aria-label="Edit name"
               size="sm"
               variant="ghost"
               className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
@@ -191,6 +200,10 @@ const ProfileEmail = ({
   isEditable = true,
   isEditing,
   email,
+  isVerified,
+  onResend,
+  isResending,
+  resendCooldown = 0,
   onEdit,
   onSave,
   onCancel,
@@ -223,6 +236,7 @@ const ProfileEmail = ({
             placeholder="Enter your email"
           />
           <Button
+            aria-label="Save email"
             size="sm"
             variant="ghost"
             className="text-green-400 hover:text-green-300 hover:bg-green-800/20 h-8 w-8 p-0"
@@ -232,6 +246,7 @@ const ProfileEmail = ({
             <Check size={16} />
           </Button>
           <Button
+            aria-label="Cancel email edit"
             size="sm"
             variant="ghost"
             className="text-red-400 hover:text-red-300 hover:bg-red-800/20 h-8 w-8 p-0"
@@ -245,8 +260,38 @@ const ProfileEmail = ({
         <>
           <div className="flex items-center gap-2 text-gray-300 text-sm">
             <span className={email ? '' : 'italic text-gray-500'}>{email || 'Add your email'}</span>
+            {email && isVerified && (
+              <span className="inline-flex items-center gap-1 text-xs text-green-400" title="Email verified">
+                <BadgeCheck size={14} />
+                Verified
+              </span>
+            )}
+            {email && !isVerified && (
+              <span className="inline-flex items-center gap-1 text-xs text-yellow-400" title="Email not verified">
+                <MailWarning size={14} />
+                Not verified
+              </span>
+            )}
           </div>
+          {email && !isVerified && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-orange-400 hover:text-orange-300 hover:bg-steel-800 h-8 px-2 text-xs"
+              onClick={onResend}
+              disabled={isResending || resendCooldown > 0}
+            >
+              {isResending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : resendCooldown > 0 ? (
+                `Verify (${resendCooldown}s)`
+              ) : (
+                'Verify'
+              )}
+            </Button>
+          )}
           <Button
+            aria-label="Edit email"
             size="sm"
             variant="ghost"
             className="text-gray-400 hover:text-white hover:bg-steel-800 h-8 w-8 p-0"
@@ -264,6 +309,7 @@ const AddressDisplay = ({ address, onCopy }) => (
   <div className="flex items-center gap-2 mt-1">
     <span className="text-gray-400 text-sm font-mono">{substringAddress(address)}</span>
     <Button
+      aria-label="Copy address"
       size="sm"
       variant="ghost"
       className="text-gray-400 hover:text-white hover:bg-steel-800 h-7 w-7 p-0"
@@ -282,6 +328,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [email, setEmail] = useState(user?.email || '');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [uploadingByType, setUploadingByType] = useState({ avatar: false, banner: false });
 
   const bgInputRef = useRef(null);
@@ -293,6 +340,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
   const uploadProfileImageMutation = useUploadProfileImage();
   const updateProfileMutation = useUpdateProfile();
+  const resendEmailVerificationMutation = useResendEmailVerification();
   const isAnyUploadInProgress = uploadingByType.avatar || uploadingByType.banner;
 
   useEffect(() => {
@@ -438,7 +486,7 @@ const ProfileHero = ({ user, isEditable = true }) => {
   };
 
   const handleNameKeyDown = e => {
-    if (e.key === 'Enter' && !isUpdating) handleNameSave();
+    if (e.key === 'Enter' && !isImeComposing(e) && !isUpdating) handleNameSave();
     else if (e.key === 'Escape') handleNameCancel();
   };
 
@@ -454,17 +502,44 @@ const ProfileHero = ({ user, isEditable = true }) => {
       return;
     }
 
+    const emailChanged = trimmedEmail.toLowerCase() !== (user?.email || '').toLowerCase();
+
     setIsUpdating(true);
     try {
       await updateProfileMutation.mutateAsync({ email: trimmedEmail || null });
-      setEmail(trimmedEmail);
+      setEmail(trimmedEmail.toLowerCase());
       setIsEditingEmail(false);
-      toast.success('Email updated successfully');
+      if (emailChanged && trimmedEmail) {
+        toast.success(`We sent a verification link to ${trimmedEmail}. Please check your inbox.`, { duration: 6000 });
+      } else {
+        toast.success('Email updated successfully');
+      }
     } catch (error) {
       console.error('Update error:', error);
       toast.error('Failed to update email');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(seconds => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendVerification = async () => {
+    try {
+      await resendEmailVerificationMutation.mutateAsync();
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      toast.success(`Verification link sent to ${user?.email}`);
+    } catch (error) {
+      const retryAfterSeconds = error?.response?.data?.retryAfterSeconds;
+      if (error?.response?.status === 429 && retryAfterSeconds) {
+        setResendCooldown(retryAfterSeconds);
+        return;
+      }
+      toast.error(error?.response?.data?.message || 'Failed to send verification email');
     }
   };
 
@@ -474,14 +549,16 @@ const ProfileHero = ({ user, isEditable = true }) => {
   };
 
   const handleEmailKeyDown = e => {
-    if (e.key === 'Enter' && !isUpdating) handleEmailSave();
+    if (e.key === 'Enter' && !isImeComposing(e) && !isUpdating) handleEmailSave();
     else if (e.key === 'Escape') handleEmailCancel();
   };
 
   const handleCopyAddress = () => {
     if (user?.address) {
-      navigator.clipboard.writeText(user.address);
-      toast.success('Address copied to clipboard');
+      navigator.clipboard.writeText(user.address).then(
+        () => toast.success('Address copied to clipboard'),
+        () => toast.error('Could not copy to clipboard')
+      );
     }
   };
 
@@ -534,6 +611,10 @@ const ProfileHero = ({ user, isEditable = true }) => {
 
             <ProfileEmail
               email={email}
+              isVerified={!!user?.emailVerified && email.toLowerCase() === (user?.email || '').toLowerCase()}
+              onResend={handleResendVerification}
+              isResending={resendEmailVerificationMutation.isPending}
+              resendCooldown={resendCooldown}
               inputRef={emailInputRef}
               isEditing={isEditingEmail}
               isEditable={isEditable}

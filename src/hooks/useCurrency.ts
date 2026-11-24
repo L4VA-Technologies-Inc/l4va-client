@@ -1,27 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Normalize currency value to ensure it's always valid
-const normalizeCurrency = (value: string | null): 'ada' | 'usdt' => {
-  return value === 'usdt' ? 'usdt' : 'ada';
+import { getNetwork } from '@/hooks/useNetwork';
+
+type CurrencyType = 'ada' | 'usdt' | 'eth';
+type CurrencySymbol = '₳' | '$' | 'ETH ';
+type CurrencyLabel = 'ADA' | 'USD' | 'ETH';
+
+// Normalize currency value to ensure it's always valid for the active network:
+// ADA isn't offered on Robinhood, so fall back to USD there.
+const normalizeCurrency = (value: string | null): CurrencyType => {
+  if (value === 'usdt') return 'usdt';
+  if (value === 'eth') return 'eth';
+  return getNetwork() === 'robinhood' ? 'usdt' : 'ada';
 };
 
 let globalCurrency = normalizeCurrency(localStorage.getItem('selectedCurrency'));
-const subscribers = new Set<(newCurrency: 'ada' | 'usdt') => void>();
+const subscribers = new Set<(newCurrency: CurrencyType) => void>();
 
-const notifySubscribers = (newCurrency: 'ada' | 'usdt') => {
+const notifySubscribers = (newCurrency: CurrencyType) => {
   globalCurrency = newCurrency;
   subscribers.forEach(callback => callback(newCurrency));
 };
 
 export const useCurrency = (): {
-  currency: 'ada' | 'usdt';
-  currencySymbol: '₳' | '$';
+  currency: CurrencyType;
+  currencySymbol: CurrencySymbol;
+  currencyLabel: CurrencyLabel;
   isAda: boolean;
-  updateCurrency: (newCurrency: 'ada' | 'usdt') => void;
+  pickByCurrency: <T>(values: { ada: T; usd: T; eth: T }) => T;
+  updateCurrency: (newCurrency: CurrencyType) => void;
 } => {
-  const [currency, setCurrency] = useState<'ada' | 'usdt'>(globalCurrency);
+  const [currency, setCurrency] = useState<CurrencyType>(globalCurrency);
 
-  const updateLocalCurrency = useCallback((newCurrency: 'ada' | 'usdt') => {
+  const updateLocalCurrency = useCallback((newCurrency: CurrencyType) => {
     setCurrency(newCurrency);
   }, []);
 
@@ -35,13 +46,23 @@ export const useCurrency = (): {
     };
   }, [updateLocalCurrency]);
 
-  const updateCurrency = useCallback((newCurrency: 'ada' | 'usdt') => {
+  const updateCurrency = useCallback((newCurrency: CurrencyType) => {
     localStorage.setItem('selectedCurrency', newCurrency);
     notifySubscribers(newCurrency);
   }, []);
 
-  const currencySymbol: '₳' | '$' = currency === 'ada' ? '₳' : '$';
+  const currencySymbol: CurrencySymbol = currency === 'ada' ? '₳' : currency === 'eth' ? 'ETH ' : '$';
+  const currencyLabel: CurrencyLabel = currency === 'ada' ? 'ADA' : currency === 'eth' ? 'ETH' : 'USD';
   const isAda = currency === 'ada';
 
-  return { currency, currencySymbol, isAda, updateCurrency };
+  // Select the value matching the active currency. Backend returns ada/usd/eth-denominated
+  // fields side by side, so callers pass all three variants.
+  const pickByCurrency = useCallback(
+    <T>(values: { ada: T; usd: T; eth: T }): T => {
+      return currency === 'ada' ? values.ada : currency === 'eth' ? values.eth : values.usd;
+    },
+    [currency]
+  );
+
+  return { currency, currencySymbol, currencyLabel, isAda, pickByCurrency, updateCurrency };
 };

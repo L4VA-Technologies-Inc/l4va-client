@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { SOCIAL_PLATFORMS, socialPlatforms } from '@/constants/core.constants';
 import { useUpdateProfile } from '@/services/api/queries';
+import { isImeComposing } from '@/utils/keyboard';
 import {
   autoFormatUrl,
   debounce,
@@ -172,6 +173,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
         <h2 className="font-russo text-4xl uppercase">Socials</h2>
         {isEditable && socialLinks.length < MAX_LINKS && !isAdding && (
           <button
+            aria-label="Add social link"
             className="border-2 border-white/20 rounded-[10px] p-2 hover:bg-white/5 transition-colors"
             disabled={isLoading}
             type="button"
@@ -219,7 +221,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
                     }
                   }}
                   onKeyDown={e => {
-                    if (e.key === 'Enter' && editingLink.url.trim()) {
+                    if (e.key === 'Enter' && !isImeComposing(e) && editingLink.url.trim()) {
                       e.preventDefault();
                       handleSave(true);
                     }
@@ -227,6 +229,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
                   <button
+                    aria-label="Cancel"
                     className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                     disabled={isLoading}
                     onClick={resetEditState}
@@ -256,6 +259,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
             {isEditable && (
               <div className="flex gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
+                  aria-label="Edit link"
                   className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                   disabled={isLoading || isAdding}
                   onClick={() => handleEdit(link)}
@@ -263,6 +267,7 @@ export const ProfileSocialLinks = ({ user, isEditable = true }) => {
                   <Edit className="h-4 w-4" />
                 </button>
                 <button
+                  aria-label="Delete link"
                   className="p-2 rounded-full text-dark-100 hover:bg-white/10 transition-colors"
                   disabled={isLoading}
                   onClick={() => handleDelete(link.id)}
