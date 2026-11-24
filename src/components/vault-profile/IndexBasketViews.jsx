@@ -280,6 +280,25 @@ const squarify = (items, w, h) => {
   return out;
 };
 
+/** Token logo for a treemap cell; initials when the token has no image. */
+const TileLogo = ({ asset, size }) =>
+  asset.image ? (
+    <img
+      src={asset.image}
+      alt=""
+      className="flex-shrink-0 rounded-full object-cover"
+      style={{ width: size, height: size }}
+      loading="lazy"
+    />
+  ) : (
+    <span
+      className="flex flex-shrink-0 items-center justify-center rounded-full bg-black/30 font-bold"
+      style={{ width: size, height: size, fontSize: size * 0.38 }}
+    >
+      {(asset.symbol || '?').slice(0, 2).toUpperCase()}
+    </span>
+  );
+
 const useElementWidth = () => {
   const ref = useRef(null);
   const [width, setWidth] = useState(0);
@@ -321,8 +340,10 @@ export const BasketTiles = ({ assets, formatValue }) => {
       <div ref={mapRef} className="relative h-72 w-full overflow-hidden rounded-lg sm:h-80">
         {cells.map(c => {
           const selected = c.asset.assetAddress === sel?.assetAddress;
-          const showText = c.w > 56 && c.h > 36;
-          const big = c.w > 120 && c.h > 80;
+          // Three tiers so a cell only shows what fits: large (logo + big text + drift),
+          // medium (small logo + text), small (text only). Tiny cells rely on the tooltip.
+          const tier =
+            c.w >= 110 && c.h >= 112 ? 'lg' : c.w >= 64 && c.h >= 84 ? 'md' : c.w > 52 && c.h > 34 ? 'sm' : null;
           return (
             <button
               key={c.asset.assetAddress}
@@ -331,22 +352,30 @@ export const BasketTiles = ({ assets, formatValue }) => {
               aria-pressed={selected}
               onClick={() => setPicked(c.asset.assetAddress)}
               className={cn(
-                'absolute flex flex-col items-center justify-center overflow-hidden border-2 p-1 text-center',
+                'absolute flex flex-col items-center justify-center gap-1 overflow-hidden border-2 p-1 text-center',
                 selected ? 'z-10 border-white' : 'border-steel-950 hover:border-white/40'
               )}
               style={{ left: c.x, top: c.y, width: c.w, height: c.h, background: driftFill(c.asset.driftBps) }}
             >
-              {big && c.asset.image && (
-                <img src={c.asset.image} alt="" className="mb-1 h-8 w-8 rounded-full object-cover" />
-              )}
-              {showText && (
+              {(tier === 'lg' || tier === 'md') && <TileLogo asset={c.asset} size={tier === 'lg' ? 32 : 22} />}
+              {tier && (
                 <>
-                  <span className={cn('w-full truncate font-semibold', big ? 'text-lg' : 'text-xs')}>
+                  <span
+                    className={cn(
+                      'w-full truncate font-semibold leading-tight',
+                      tier === 'lg' ? 'text-lg' : tier === 'md' ? 'text-sm' : 'text-xs'
+                    )}
+                  >
                     {c.asset.symbol}
                   </span>
-                  <span className={cn('tabular-nums text-white/80', big ? 'text-sm' : 'text-[10px]')}>
+                  <span
+                    className={cn(
+                      'tabular-nums leading-tight text-white/80',
+                      tier === 'lg' ? 'text-sm' : 'text-[11px]'
+                    )}
+                  >
                     {formatBps(c.asset.actualBps)}
-                    {big && isDrifting(c.asset) && ` · ${driftLabel(c.asset.driftBps)}`}
+                    {tier === 'lg' && isDrifting(c.asset) && ` · ${driftLabel(c.asset.driftBps)}`}
                   </span>
                 </>
               )}
