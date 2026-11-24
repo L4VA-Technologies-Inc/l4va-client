@@ -197,10 +197,10 @@ const ChangesTable = ({
                 <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4">
                   <span className="truncate">{row.symbol || symbolOf(row.assetAddress)}</span>
                   <span className="flex items-center justify-end gap-1.5 tabular-nums">
-                    <span className="text-dark-100">{formatBps(row.from)}</span>
+                    <span className="text-dark-100">{formatBps(row.from, 2)}</span>
                     <ArrowRight className="h-3 w-3 text-dark-100" />
                     <span className={row.to > row.from ? 'text-green-500' : row.to < row.from ? 'text-red-400' : ''}>
-                      {formatBps(row.to)}
+                      {formatBps(row.to, 2)}
                     </span>
                   </span>
                   <span className="w-32 text-right tabular-nums">{tradeCell(row)}</span>
