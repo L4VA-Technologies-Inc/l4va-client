@@ -437,6 +437,7 @@ export const VaultIndexAllocationView = ({
   error,
   formatValue,
   terminated = false,
+  terminating = false,
   minTradeNative,
   loadingHoldings = false,
 }) => {
@@ -533,6 +534,11 @@ export const VaultIndexAllocationView = ({
         </>
       ) : (
         <>
+          {terminating && (
+            <p className="text-sm text-dark-100">
+              This vault is terminating. These assets are held for VT holders to redeem and are no longer rebalanced.
+            </p>
+          )}
           {showSwitcher && <BasketSummary portfolio={portfolio} />}
 
           {/* With the List / Tiles / Drift views the stacked bar only repeated them. */}
@@ -602,7 +608,7 @@ export const VaultIndexAllocationView = ({
         </>
       )}
 
-      {!terminated && (
+      {!terminated && !terminating && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-steel-850 px-4 py-3 text-sm">
           <span className="flex items-center gap-2 text-dark-100">
             <RefreshCcw className="h-4 w-4" />
@@ -656,6 +662,7 @@ export const VaultIndexAllocation = ({ vault }) => {
       error={error}
       formatValue={formatValue}
       terminated={vault?.vaultStatus === 'burned'}
+      terminating={vault?.vaultStatus === 'terminating'}
       minTradeNative={data?.minTradeNative}
       loadingHoldings={isLoading && HOLDING_STATUSES.includes(vault?.vaultStatus)}
     />

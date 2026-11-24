@@ -138,6 +138,12 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
           {!deadlinePassed && '. Unclaimed funds are swept to the treasury afterwards.'}
         </p>
       )}
+      {!deadlinePassed && (
+        <p className="mt-1 text-sm text-steel-300">
+          VT held in a Uniswap liquidity position can&apos;t be redeemed directly. Remove your liquidity on Uniswap
+          first — the VT returns to your wallet and you can redeem it here.
+        </p>
+      )}
 
       <div className="mt-3 rounded-lg bg-steel-950 p-3 text-sm">
         <div className="flex justify-between">
