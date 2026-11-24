@@ -427,6 +427,9 @@ export const vaultSchema = yup.object({
         schema
           .nullable()
           .positive('Must be a positive number')
+          .test('required-on-robinhood', 'Minimum raise is required', value =>
+            localStorage.getItem('selectedNetwork') !== 'robinhood' ? true : value !== null && value !== undefined
+          )
           // Robinhood ETH range from the API spec; Cardano thresholds are whole ADA, checked on submit.
           .test(
             specBoundsTest('minAcquireThreshold', 'Minimum acquire threshold', {

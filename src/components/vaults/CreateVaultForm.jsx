@@ -27,7 +27,7 @@ import { AcquireWindow } from '@/components/vaults/steps/AcquireWindow';
 import { Governance } from '@/components/vaults/steps/Governance';
 import { Launch } from '@/components/vaults/steps/Launch';
 import { LavaStepCircle } from '@/components/shared/LavaStepCircle';
-import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
+import { MIN_EVM_THRESHOLD_ETH, formatVaultData } from '@/components/vaults/utils/vaults.utils';
 import { transformYupErrors } from '@/utils/core.utils';
 import {
   updateStepsCompletionStatus,
@@ -699,7 +699,10 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
       executionThreshold: config.executionThreshold ?? null,
       isAcquireOnly,
       // Reset minAcquireThreshold when switching away from acquire-only
-      minAcquireThreshold: isAcquireOnly ? (prev.minAcquireThreshold ?? null) : null,
+      // Robinhood acquire-only vaults must have one; start at the 0.1 ETH floor.
+      minAcquireThreshold: isAcquireOnly
+        ? (prev.minAcquireThreshold ?? (isRobinHood ? MIN_EVM_THRESHOLD_ETH : null))
+        : null,
     }));
   };
 

@@ -10,25 +10,25 @@
 :root {
   --layout-top-padding: 84px;
   --theme-transition-duration: 320ms;
-  --color-background-primary: #000322;
+  --color-background-primary: #0D0D0C;
   --color-text-primary: #FFFFFF;
   --color-dark-100: #979BB0;
-  --color-input-bg: #080B29;
+  --color-input-bg: #151614;
 
   /* For the datepicker */
-  --color-accent: #202233;
+  --color-accent: #1B1D19;
   --color-primary: #FF842C;
 
   /* Color System */
   --color-orange-500: #FF842C;
-  --color-slate-950: #000322;
-  --color-steel-950: #181A2A;
-  --color-steel-900: #1D1F2F;
-  --color-steel-850: #202233;
-  --color-steel-800: #282B3F;
-  --color-steel-750: #2D3049;
-  --color-steel-600: #314158;
-  --color-steel-400: #90A1B9;
+  --color-slate-950: #0D0D0C;
+  --color-steel-950: #151614;
+  --color-steel-900: #1B1D19;
+  --color-steel-850: #242620;
+  --color-steel-800: #2D3028;
+  --color-steel-750: #383C31;
+  --color-steel-600: #4A503F;
+  --color-steel-400: #9CA3AF;
   --color-gray-500: #6B7280;
   --color-gray-400: #979BB0;
   --color-green-800: #166534;
@@ -150,7 +150,7 @@ body {
 .home-bg-texture {
   background-image:
     radial-gradient(circle at 18% 42%, rgba(255, 132, 44, 0.16), transparent 30%),
-    linear-gradient(180deg, rgba(0, 3, 34, 0.18) 0%, var(--color-background-primary) 100%),
+    linear-gradient(180deg, rgba(13, 13, 12, 0.12) 0%, var(--color-background-primary) 100%),
     url('/assets/ai-bg-texture.webp');
   background-position: center top;
   background-repeat: no-repeat;
@@ -201,7 +201,7 @@ button {
 }
 
 .hover-overlay-gradient {
-  background: rgba(0, 3, 34, 0.6);
+  background: rgba(13, 13, 12, 0.6);
 }
 
 .hover-overlay {
