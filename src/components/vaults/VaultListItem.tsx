@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { ChainBadge } from '@/components/shared/ChainBadge';
@@ -73,7 +74,9 @@ const VaultListItem = ({ vault }: VaultListItemProps) => {
         <div className="grid grid-cols-4 md:grid-cols-5 gap-4 py-4 text-center border-[var(--color-steel-750)] border rounded-2xl bg-[var(--color-steel-950)] md:pl-[110px]">
           <div>
             <p className="text-sm text-dark-100">TVL</p>
-            <p className="font-bold">{vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}</p>
+            <p className="font-bold">
+              {vault.vaultStatus !== VAULT_STATUSES.BURNED && vault.tvl ? formatCompactNumber(vault.tvl) : 'N/A'}
+            </p>
           </div>
 
           <div className="border-x border-slate-800">

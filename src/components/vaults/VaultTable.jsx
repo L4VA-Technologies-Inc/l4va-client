@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import clsx from 'clsx';
 
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { ChainBadge } from '@/components/shared/ChainBadge';
 import L4vaIcon from '@/components/shared/L4vaIcon';
@@ -68,7 +69,7 @@ export const VaultTable = ({ vaults }) => {
   const { currencySymbol, pickByCurrency } = useCurrency();
 
   const tvl = vault =>
-    vault.totalValueAda && vault.totalValueUsd
+    vault.vaultStatus !== VAULT_STATUSES.BURNED && vault.totalValueAda && vault.totalValueUsd
       ? `${currencySymbol}${formatCompactNumber(
           pickByCurrency({ ada: vault.totalValueAda, usd: vault.totalValueUsd, eth: vault.totalValueEth ?? 0 })
         )}`

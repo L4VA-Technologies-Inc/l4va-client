@@ -21,7 +21,6 @@ import { VoteButton } from './ProposalInfo/VoteButton';
 import { ProposalCardAction } from './ProposalInfo/ProposalCardAction';
 
 import { LavaTabs } from '@/components/shared/LavaTabs';
-import { LavaSelect } from '@/components/shared/LavaSelect';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { Pagination } from '@/components/shared/Pagination';
 import { useDeleteProposal, useGovernanceProposals } from '@/services/api/queries';
@@ -134,11 +133,6 @@ export const VaultGovernance = ({ vault }) => {
     functionName: 'frozen',
     query: { enabled: isEvmVault && !!vault?.contractAddress, retry: false },
   });
-
-  const tabOptions = PROPOSAL_TABS.map(tab => ({
-    value: tab,
-    label: tab,
-  }));
 
   const { data, refetch } = useGovernanceProposals(vault.id, { page, limit: PROPOSALS_PER_PAGE });
   const responseData = data?.data || data;
@@ -293,7 +287,7 @@ export const VaultGovernance = ({ vault }) => {
   );
 
   return (
-    <div className="text-white p-6 rounded-2xl overflow-hidden">
+    <div className="text-white md:p-6 rounded-2xl overflow-hidden">
       {isFrozen && (
         <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-6">
           <PauseCircle className="w-5 h-5 shrink-0" />
@@ -327,27 +321,15 @@ export const VaultGovernance = ({ vault }) => {
         ) : (
           <>
             <div className="mb-6">
-              <div className="md:hidden mb-4">
-                <LavaSelect
-                  label="Select Tab"
-                  options={tabOptions}
-                  value={activeTab}
-                  onChange={handleTabSelect}
-                  placeholder="Select a tab"
-                />
-              </div>
-
-              <div className="hidden md:block">
-                <LavaTabs
-                  activeTab={activeTab}
-                  activeTabClassName="text-primary"
-                  className="w-full bg-steel-850 overflow-x-auto text-sm md:text-base"
-                  inactiveTabClassName="text-dark-100"
-                  tabClassName="flex-1 text-center"
-                  tabs={PROPOSAL_TABS}
-                  onTabChange={handleTabSelect}
-                />
-              </div>
+              <LavaTabs
+                activeTab={activeTab}
+                activeTabClassName="text-primary"
+                className="w-full min-w-0 max-w-full bg-steel-850 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm md:text-base"
+                inactiveTabClassName="text-dark-100"
+                tabClassName="shrink-0 whitespace-nowrap md:flex-1 text-center"
+                tabs={PROPOSAL_TABS}
+                onTabChange={handleTabSelect}
+              />
             </div>
             {filteredProposals.length ? (
               <div className="space-y-6">

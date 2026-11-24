@@ -1,12 +1,13 @@
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
 import { VaultTypeBadge } from '@/components/vaults/index/VaultTypeBadge';
 import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
-import { formatCompactNumber, formatString, formatVaultStatus } from '@/utils/core.utils';
+import { formatCompactValue, formatString, formatVaultStatus } from '@/utils/core.utils';
 import { VaultShortResponse } from '@/utils/types';
 import { useCurrency } from '@/hooks/useCurrency';
 import L4vaIcon from '@/components/shared/L4vaIcon';
@@ -16,6 +17,12 @@ type VaultCardProps = {
 };
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+// Big values stay compact (1.2K); small ones keep up to 4 decimals (0.0123 ETH).
+const formatTvl = (value: number | string) => {
+  const num = Number(value);
+  return Math.abs(num) >= 1000 ? formatCompactValue(num, 2) : formatCompactValue(num, 4);
+};
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, vaultImage, ftTokenImg, socialLinks = [] } = vault;
@@ -91,8 +98,8 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             <div>
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
-                {vault.totalValueAda && vault.totalValueUsd
-                  ? `${currencySymbol}${formatCompactNumber(
+                {vault.vaultStatus !== VAULT_STATUSES.BURNED && vault.totalValueAda && vault.totalValueUsd
+                  ? `${currencySymbol}${formatTvl(
                       pickByCurrency({
                         ada: vault.totalValueAda,
                         usd: vault.totalValueUsd,
