@@ -94,6 +94,15 @@ export const indexAssetRoutesQuery = (address: string, vaultId?: string | null) 
   retry: 1,
 });
 
+/** How much of `asset` the vault's guarded swap adapter lets it sell right now (daily sell cap). */
+export const vaultSwapCapQuery = (vaultId?: string | null, asset?: string | null) => ({
+  queryKey: ['vault-swap-cap', vaultId ?? null, asset?.toLowerCase() ?? null],
+  queryFn: () => VaultsApiProvider.getVaultSwapCap(vaultId, asset),
+  enabled: !!vaultId && !!asset,
+  staleTime: 60_000,
+  retry: 1,
+});
+
 /** Liquidity pool an EVM vault seeds on close: status, then live reserves. */
 export const useVaultLp = (id: string, enabled = true) => {
   return useQuery({
