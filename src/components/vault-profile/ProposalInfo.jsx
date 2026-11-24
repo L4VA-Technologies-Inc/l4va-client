@@ -9,7 +9,7 @@ import SecondaryButton from '../shared/SecondaryButton';
 
 import { ProposalField } from './ProposalInfo/ProposalField';
 import { ProposalListField } from './ProposalInfo/ProposalListField';
-import { MarketplaceActionsList } from './ProposalInfo/MarketplaceActionsList';
+import { MarketplaceActionsList, useTokenMeta } from './ProposalInfo/MarketplaceActionsList';
 import { AssetWhitelistUpdateList } from './ProposalInfo/AssetWhitelistUpdateList';
 import { IndexReweightSummary } from './ProposalInfo/IndexReweightSummary';
 import { EvmDistributionStatus } from './ProposalInfo/EvmDistributionStatus';
@@ -121,6 +121,8 @@ const ProposalInfoSkeleton = () => (
   </div>
 );
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 export const ProposalInfo = ({ proposalId }) => {
   const { currencyLabel } = useCurrency();
   const { user } = useAuth();
@@ -142,6 +144,11 @@ export const ProposalInfo = ({ proposalId }) => {
   const proposalFungibleTokensInfo = response?.data?.fungibleTokens;
   const proposalNonFungibleTokensInfo = response?.data?.nonFungibleTokens;
   const marketplaceActionsInfo = response?.data?.marketplaceActions;
+  // Robinhood market actions are Uniswap swaps: symbols come from the vault's tokens, not `assetName`.
+  const isEvmSwapProposal = (proposalInfo?.metadata?.marketplaceActions ?? []).some(
+    a => a?.market === 'Uniswap' && a?.inputAsset
+  );
+  const tokenMeta = useTokenMeta(isEvmSwapProposal ? proposalInfo?.vaultId : null);
   const [canVote, setCanVote] = useState(response?.data?.canVote);
   const votes = response?.data?.votes || [];
   const totalVotes = response?.data?.votes?.length;
@@ -182,6 +189,18 @@ export const ProposalInfo = ({ proposalId }) => {
   const getMarketplaceActionMessage = () => {
     const actions = proposalInfo?.metadata?.marketplaceActions;
     if (!actions || actions.length === 0) return 'All marketplace actions have been successfully executed.';
+
+    if (isEvmSwapProposal) {
+      const symbolOf = addr =>
+        tokenMeta.get(String(addr || '').toLowerCase())?.symbol ??
+        `${String(addr).slice(0, 6)}…${String(addr).slice(-4)}`;
+      const swaps = actions.filter(a => a?.inputAsset);
+      const outputs = [...new Set(swaps.map(a => symbolOf(a.expectedOutputAsset ?? ZERO_ADDRESS)))];
+      const sold = swaps.map(a => symbolOf(a.inputAsset)).join(', ');
+      return swaps.length === 1
+        ? `Swapped ${sold} for ${outputs[0]}.`
+        : `Swapped ${swaps.length} tokens for ${outputs.join(' / ')}: ${sold}.`;
+    }
 
     const actionGroups = {
       SELL: [],

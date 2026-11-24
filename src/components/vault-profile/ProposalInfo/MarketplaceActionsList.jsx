@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { useMemo } from 'react';
+import { formatUnits } from 'viem';
 
 import { getTransactionUrl } from '@/utils/explorer.utils';
 import { LazyImage } from '@/components/shared/LazyImage';
@@ -28,7 +29,7 @@ const formatAmount = v => {
  * Symbol / name / logo for every token the vault holds or may trade, keyed by lowercase address.
  * Same sources as the swap proposal form: the vault's index holdings + the supported-asset list.
  */
-const useTokenMeta = vaultId => {
+export const useTokenMeta = vaultId => {
   const { data: index } = useVaultIndex(vaultId, !!vaultId);
   const { data: supported } = useIndexSupportedAssets();
   return useMemo(() => {
@@ -77,15 +78,60 @@ const TokenCell = ({ address, meta }) => {
 };
 
 /** Compact table for EVM Uniswap swaps: one row per swap instead of a 5-line block each. */
-const EvmSwapTable = ({ actions, vaultId }) => {
+/** Base units → readable amount ("0.000257"), or null when it cannot be read. */
+const fromUnits = (raw, decimals) => {
+  if (raw == null || raw === '') return null;
+  try {
+    return formatUnits(BigInt(raw), decimals ?? 18);
+  } catch {
+    return null;
+  }
+};
+
+const EXECUTION_BADGE = {
+  confirmed: { label: 'Done', cls: 'bg-green-500/15 text-green-400' },
+  failed: { label: 'Failed', cls: 'bg-red-500/15 text-red-400' },
+};
+const executionBadge = status =>
+  EXECUTION_BADGE[status] ?? { label: 'Pending', cls: 'bg-yellow-500/15 text-yellow-400' };
+
+const EvmSwapTable = ({ actions, vaultId, chainType }) => {
   const meta = useTokenMeta(vaultId);
-  const hasStatus = actions.some(a => a.assetStatus);
+  const ran = actions.filter(a => a.execution);
+  const hasExecution = ran.length > 0;
+
+  // Total received per output token over the swaps that went through.
+  const received = new Map();
+  for (const a of ran) {
+    if (a.execution.status !== 'confirmed') continue;
+    const value = fromUnits(a.execution.amountOut, a.execution.assetOutDecimals);
+    if (value === null) continue;
+    const sym = a.execution.assetOutSymbol || 'ETH';
+    received.set(sym, (received.get(sym) ?? 0) + Number(value));
+  }
+  const done = ran.filter(a => a.execution.status === 'confirmed').length;
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-gray-400">Actions</div>
         <div className="text-sm text-white">{actions.length} token swap(s) · Uniswap (Robinhood Chain)</div>
       </div>
+      {hasExecution && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-steel-900 px-3 py-2 text-sm">
+          <span className="text-gray-400">
+            {done} of {actions.length} executed
+          </span>
+          {received.size > 0 && (
+            <span className="text-white">
+              Received{' '}
+              <span className="font-semibold tabular-nums">
+                {[...received].map(([sym, v]) => `${formatAmount(v)} ${sym}`).join(' + ')}
+              </span>
+            </span>
+          )}
+        </div>
+      )}
       <div className="max-h-[28rem] overflow-auto rounded-lg border border-steel-750">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-steel-900 text-gray-400">
@@ -94,12 +140,16 @@ const EvmSwapTable = ({ actions, vaultId }) => {
               <th className="px-3 py-2 text-left font-normal">Sell</th>
               <th className="px-3 py-2 text-right font-normal">Amount</th>
               <th className="px-3 py-2 text-left font-normal">For</th>
-              {hasStatus && <th className="px-3 py-2 text-right font-normal">Status</th>}
+              {hasExecution && <th className="px-3 py-2 text-right font-normal">Received</th>}
+              {hasExecution && <th className="px-3 py-2 text-right font-normal">Status</th>}
             </tr>
           </thead>
           <tbody>
             {actions.map((action, index) => {
               const sellSym = meta.get(String(action.inputAsset || '').toLowerCase())?.symbol;
+              const ex = action.execution;
+              const out = ex?.status === 'confirmed' ? fromUnits(ex.amountOut, ex.assetOutDecimals) : null;
+              const badge = ex ? executionBadge(ex.status) : null;
               return (
                 <tr key={index} className="border-t border-steel-750 text-white">
                   <td className="px-3 py-2 text-gray-500">{index + 1}</td>
@@ -116,7 +166,43 @@ const EvmSwapTable = ({ actions, vaultId }) => {
                   <td className="px-3 py-2">
                     <TokenCell address={action.expectedOutputAsset} meta={meta} />
                   </td>
-                  {hasStatus && <td className="px-3 py-2 text-right uppercase">{action.assetStatus || '—'}</td>}
+                  {hasExecution && (
+                    <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">
+                      {out !== null ? (
+                        <>
+                          {formatAmount(out)}
+                          <span className="ml-1 text-dark-100">{ex.assetOutSymbol || 'ETH'}</span>
+                        </>
+                      ) : (
+                        <span className="text-dark-100">—</span>
+                      )}
+                    </td>
+                  )}
+                  {hasExecution && (
+                    <td className="px-3 py-2 text-right">
+                      {badge ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>
+                            {badge.label}
+                          </span>
+                          {ex.txHash && (
+                            <a
+                              href={getTransactionUrl(ex.txHash, chainType)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-dark-100 hover:text-white"
+                              title="View transaction"
+                              aria-label="View transaction"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-dark-100">Not run</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -136,7 +222,7 @@ export const MarketplaceActionsList = ({ actions, type = 'marketplace', chainTyp
   const isEvmUniswapSwap = actions[0]?.market === 'Uniswap' && actions[0]?.inputAsset;
   const isEvmClosePosition = actions[0]?.exec === 'CLOSE_POSITION';
 
-  if (isEvmUniswapSwap) return <EvmSwapTable actions={actions} vaultId={vaultId} />;
+  if (isEvmUniswapSwap) return <EvmSwapTable actions={actions} vaultId={vaultId} chainType={chainType} />;
 
   return (
     <div className="flex flex-col gap-4">
