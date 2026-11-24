@@ -124,7 +124,7 @@ jobs:
         run: |
           APPS_ROOT=~/apps
           APP_DIR="$APPS_ROOT/l4va-client"
-          COMPOSE_PROJECT_NAME=l4va-client-prod
+          COMPOSE_PROJECT_NAME=l4va-client
           export CONTAINER_PREFIX=l4va
           export L4VA_NETWORK_NAME=l4va-network
           export CLIENT_HOST_PORT=5173
