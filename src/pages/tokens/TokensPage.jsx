@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useNavigate } from '@tanstack/react-router';
 
 import { TokenSwapModal } from '@/components/modals/TokenSwapModal';
+import { CardanoTokenSwapModal } from '@/components/modals/CardanoTokenSwapModal';
 import { LavaTabs } from '@/components/shared/LavaTabs';
 import { Pagination } from '@/components/shared/Pagination';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -555,7 +556,7 @@ export const TokensPage = () => {
                         type="button"
                         onClick={e => {
                           e.stopPropagation();
-                          if (isRobinhood) setSwapToken(token);
+                          if (isRobinhood || token.swap?.kind === 'dexhunter') setSwapToken(token);
                           else openToken(token.id);
                         }}
                         className="inline-flex items-center justify-center rounded-lg bg-orange-500/15 px-3 py-1.5 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-500/25"
@@ -571,7 +572,11 @@ export const TokensPage = () => {
         </table>
       </div>
 
-      {isRobinhood && <TokenSwapModal token={swapToken} onClose={() => setSwapToken(null)} />}
+      {isRobinhood ? (
+        <TokenSwapModal token={swapToken} onClose={() => setSwapToken(null)} />
+      ) : (
+        <CardanoTokenSwapModal token={swapToken} onClose={() => setSwapToken(null)} />
+      )}
 
       {isLoading ? (
         <div className="flex justify-center gap-2">
