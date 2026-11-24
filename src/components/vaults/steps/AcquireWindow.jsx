@@ -10,7 +10,11 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useNativePrices } from '@/services/api/queries';
-import { MAX_EVM_THRESHOLD_ETH, MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
+import {
+  MAX_EVM_THRESHOLD_ETH,
+  MIN_EVM_THRESHOLD_ETH,
+  usdToEthThreshold,
+} from '@/components/vaults/utils/vaults.utils';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
   getReserveHint,
