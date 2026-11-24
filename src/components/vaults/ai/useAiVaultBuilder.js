@@ -37,6 +37,20 @@ const withAiBasket = (vault, response) => {
   return enforceVaultCoherence({ ...vault, indexBasket: { ...vault.indexBasket, targets } });
 };
 
+/**
+ * Puts every field the user set by hand back to their value. Runs after the whole AI merge
+ * (draft, preset, coherence, basket, reset), so nothing the assistant returns can change it.
+ */
+const pinLockedFields = (candidate, userVault, lockedFields) => {
+  if (!lockedFields.length) return candidate;
+  const next = { ...candidate };
+  lockedFields.forEach(key => {
+    if (key in userVault) next[key] = userVault[key];
+    else delete next[key];
+  });
+  return next;
+};
+
 const readSession = () => {
   try {
     const stored = sessionStorage.getItem(AI_VAULT_CHAT_SESSION_KEY);
@@ -99,6 +113,8 @@ export const useAiVaultBuilder = () => {
   const [status, setStatus] = useState(restored?.status ?? 'gathering');
   const [missingFields, setMissingFields] = useState(restored?.missingFields ?? []);
   const [aiFields, setAiFields] = useState(restored?.aiFields ?? []);
+  // Fields the user set by hand. The assistant can never change them; only the user can.
+  const [lockedFields, setLockedFields] = useState(restored?.lockedFields ?? []);
   const [isSending, setIsSending] = useState(false);
   // Action the backend returned for this turn (e.g. a validated launch confirmation). Transient:
   // it belongs to the turn that produced it, so it is never persisted or restored.
@@ -137,7 +153,7 @@ export const useAiVaultBuilder = () => {
 
   const draftEpochRef = useRef(0);
 
-  const persist = useCallback((next, nextVault, nextStatus, nextMissing, nextAiFields, epoch) => {
+  const persist = useCallback((next, nextVault, nextStatus, nextMissing, nextAiFields, nextLocked, epoch) => {
     if (epoch !== undefined && epoch !== draftEpochRef.current) return;
     // Keep the shared draft in sync so the manual form sees every AI/preview edit on its next mount.
     writeStoredVaultDraft(nextVault);
@@ -150,6 +166,7 @@ export const useAiVaultBuilder = () => {
           status: nextStatus,
           missingFields: nextMissing,
           aiFields: nextAiFields,
+          lockedFields: nextLocked,
         })
       );
     } catch {
@@ -171,11 +188,12 @@ export const useAiVaultBuilder = () => {
         chain: network,
         network: environment,
         currentDraft,
+        lockedFields,
         ...(validationErrors?.length ? { validationErrors } : {}),
       });
       return data;
     },
-    [network, environment]
+    [network, environment, lockedFields]
   );
 
   const streamTurn = useCallback(
@@ -186,23 +204,26 @@ export const useAiVaultBuilder = () => {
           chain: network,
           network: environment,
           currentDraft,
+          lockedFields,
         },
         { onDelta }
       );
     },
-    [network, environment]
+    [network, environment, lockedFields]
   );
 
   const sendMessage = useCallback(
     async (text, { keepFields = [] } = {}) => {
       const trimmed = text.trim();
-      // Fields the caller asked to keep: drop them from whatever the assistant returns.
+      // Fields the user set by hand, plus any the caller asked to keep: the assistant cannot change them.
+      const pinned = [...new Set([...lockedFields, ...keepFields])];
       const lockDraft = next => {
-        if (!keepFields.length) return next;
+        if (!pinned.length) return next;
         const rest = { ...next };
-        keepFields.forEach(key => delete rest[key]);
+        pinned.forEach(key => delete rest[key]);
         return rest;
       };
+      const pin = next => pinLockedFields(next, vault, pinned);
       if (!trimmed || isSending) return;
 
       const epoch = draftEpochRef.current;
@@ -240,9 +261,11 @@ export const useAiVaultBuilder = () => {
         let base = response.resetDraft ? getInitialVaultState() : vault;
         let draft = lockDraft(response.vaultDraft ?? {});
         let resolvedAssets = [...(response.resolvedAssets ?? [])];
-        let candidate = withAiBasket(
-          withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
-          response
+        let candidate = pin(
+          withAiBasket(
+            withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+            response
+          )
         );
         let errors = await validateAiDraftFields(candidate, Object.keys(draft));
 
@@ -264,9 +287,11 @@ export const useAiVaultBuilder = () => {
           if (correction.resetDraft) base = getInitialVaultState();
           draft = { ...draft, ...lockDraft(correction.vaultDraft ?? {}) };
           resolvedAssets = [...resolvedAssets, ...(response.resolvedAssets ?? [])];
-          candidate = withAiBasket(
-            withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
-            response
+          candidate = pin(
+            withAiBasket(
+              withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+              response
+            )
           );
           const previousErrors = errors.join('\n');
           errors = await validateAiDraftFields(candidate, Object.keys(draft));
@@ -282,9 +307,11 @@ export const useAiVaultBuilder = () => {
 
         if (errors.length) {
           draft = dropInvalidFields(draft, errors);
-          candidate = withAiBasket(
-            withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
-            response
+          candidate = pin(
+            withAiBasket(
+              withChainArchetype(mergeResolvedAssets(buildVaultFromAiDraft(base, draft, presets), resolvedAssets)),
+              response
+            )
           );
         }
 
@@ -303,7 +330,8 @@ export const useAiVaultBuilder = () => {
         ];
         // Only values the assistant actually changed count as its suggestions. Re-sending a value that
         // was already there (a default, or one the user typed) leaves that field's ownership as it was.
-        const before = response.resetDraft ? getInitialVaultState() : vault;
+        // Locked fields were pinned to the user's value, so a reset never shows them as AI-changed.
+        const before = response.resetDraft ? pin(getInitialVaultState()) : vault;
         const sameValue = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
         const aiChangedKeys = Object.keys(draft).filter(key => !sameValue(candidate[key], before[key]));
         const nextAiFields = response.resetDraft
@@ -322,7 +350,7 @@ export const useAiVaultBuilder = () => {
         setStatus(nextStatus);
         setMissingFields(nextMissingFields);
         setAiFields(nextAiFields);
-        persist(nextMessages, candidate, nextStatus, nextMissingFields, nextAiFields, epoch);
+        persist(nextMessages, candidate, nextStatus, nextMissingFields, nextAiFields, lockedFields, epoch);
       } catch (err) {
         // Drop the empty/partial assistant bubble on failure so the user can retry cleanly.
         setMessages(history);
@@ -331,7 +359,7 @@ export const useAiVaultBuilder = () => {
         setIsSending(false);
       }
     },
-    [aiFields, isSending, messages, persist, presets, requestTurn, streamTurn, vault, withChainArchetype]
+    [aiFields, isSending, lockedFields, messages, persist, presets, requestTurn, streamTurn, vault, withChainArchetype]
   );
 
   /**
@@ -355,9 +383,9 @@ export const useAiVaultBuilder = () => {
       setVault(next);
       setMessages(nextMessages);
       setMissingFields(nextMissingFields);
-      persist(nextMessages, next, status, nextMissingFields, aiFields);
+      persist(nextMessages, next, status, nextMissingFields, aiFields, lockedFields);
     },
-    [aiFields, messages, persist, status, vault]
+    [aiFields, lockedFields, messages, persist, status, vault]
   );
 
   /** Opens the inline image-prompt card, prefilled from the vault built so far. */
@@ -377,8 +405,8 @@ export const useAiVaultBuilder = () => {
     ];
 
     setMessages(nextMessages);
-    persist(nextMessages, vault, status, missingFields, aiFields);
-  }, [aiFields, isGeneratingImage, isUploadingImage, messages, missingFields, persist, status, vault]);
+    persist(nextMessages, vault, status, missingFields, aiFields, lockedFields);
+  }, [aiFields, lockedFields, isGeneratingImage, isUploadingImage, messages, missingFields, persist, status, vault]);
 
   const generateImage = useCallback(
     async prompt => {
@@ -426,24 +454,29 @@ export const useAiVaultBuilder = () => {
     setStatus('gathering');
     setMissingFields([]);
     setAiFields([]);
+    setLockedFields([]);
   }, [isRobinHood, withChainArchetype]);
 
   // Lets the preview panel edit fields (e.g. assetsWhitelist) the assistant never sets itself.
+  // A user edit locks the field against the assistant. Pass `{ lock: false }` for updates the
+  // page makes on its own (e.g. refreshing basket route status), which are not the user's choice.
   const updateVaultField = useCallback(
-    async (field, value) => {
+    async (field, value, { lock = true } = {}) => {
       const patch = field && typeof field === 'object' && value === undefined ? field : { [field]: value };
       const next = withChainArchetype(enforceVaultCoherence({ ...vault, ...patch }));
       const nextMissingFields = await collectIncompleteFields(next);
       // A value the user set by hand is theirs, no longer the assistant's suggestion.
       const editedKeys = Object.keys(patch);
-      const nextAiFields = aiFields.filter(key => !editedKeys.includes(key));
+      const nextAiFields = lock ? aiFields.filter(key => !editedKeys.includes(key)) : aiFields;
+      const nextLocked = lock ? [...new Set([...lockedFields, ...editedKeys])] : lockedFields;
 
       setVault(next);
       setMissingFields(nextMissingFields);
       setAiFields(nextAiFields);
-      persist(messages, next, status, nextMissingFields, nextAiFields);
+      setLockedFields(nextLocked);
+      persist(messages, next, status, nextMissingFields, nextAiFields, nextLocked);
     },
-    [aiFields, messages, persist, status, vault, withChainArchetype]
+    [aiFields, lockedFields, messages, persist, status, vault, withChainArchetype]
   );
 
   return {
@@ -452,6 +485,7 @@ export const useAiVaultBuilder = () => {
     status,
     missingFields,
     aiFields,
+    lockedFields,
     isSending,
     isGeneratingImage,
     isUploadingImage,

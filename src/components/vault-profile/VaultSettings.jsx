@@ -36,6 +36,7 @@ export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [isCancelVaultPending, setIsCancelVaultPending] = useState(false);
+  const [showAllWhitelist, setShowAllWhitelist] = useState(false);
   const { pickByCurrency } = useCurrency();
   const { user } = useAuth();
   const wallet = useWallet('handler', 'isConnected', 'isUpdatingUtxos');
@@ -126,78 +127,94 @@ export const VaultSettings = ({ vault }) => {
       return <span className="text-dark-100">No assets in whitelist</span>;
     }
 
-    return (
-      <Accordion type="multiple" className="w-full min-w-[200px] text-left">
-        {whitelistedAssets.map((asset, index) => {
-          const isFirst = index === 0;
-          const name = collectionDisplayName(asset);
-          const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
-          const shortPolicy = formatPolicyId(asset.policyId);
-          const method = pricingMethodLabel(asset.valuationMethod);
-          const isCustom = asset.valuationMethod === 'custom';
-          const hasCustomPrice =
-            asset.customPriceAda != null &&
-            asset.customPriceAda !== '' &&
-            !Number.isNaN(Number(asset.customPriceAda)) &&
-            Number(asset.customPriceAda) > 0;
+    const WHITELIST_PREVIEW_COUNT = 5;
+    const hiddenCount = whitelistedAssets.length - WHITELIST_PREVIEW_COUNT;
+    const visibleAssets =
+      showAllWhitelist || hiddenCount <= 0 ? whitelistedAssets : whitelistedAssets.slice(0, WHITELIST_PREVIEW_COUNT);
 
-          return (
-            <AccordionItem
-              key={itemValue}
-              value={itemValue}
-              className="w-full min-w-0 border-b border-white/10 last:border-0"
-            >
-              <AccordionTrigger
-                className={cn(
-                  'w-full min-w-0 text-left text-sm font-medium hover:no-underline pr-1 data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300',
-                  isFirst ? 'pt-0 pb-3' : 'py-3'
-                )}
+    return (
+      <div className="w-full min-w-[200px]">
+        <Accordion type="multiple" className="w-full text-left">
+          {visibleAssets.map((asset, index) => {
+            const isFirst = index === 0;
+            const name = collectionDisplayName(asset);
+            const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
+            const shortPolicy = formatPolicyId(asset.policyId);
+            const method = pricingMethodLabel(asset.valuationMethod);
+            const isCustom = asset.valuationMethod === 'custom';
+            const hasCustomPrice =
+              asset.customPriceAda != null &&
+              asset.customPriceAda !== '' &&
+              !Number.isNaN(Number(asset.customPriceAda)) &&
+              Number(asset.customPriceAda) > 0;
+
+            return (
+              <AccordionItem
+                key={itemValue}
+                value={itemValue}
+                className="w-full min-w-0 border-b border-white/10 last:border-0"
               >
-                <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
-                  <TokenImage
-                    asset={asset}
-                    alt={name || asset.policyId}
-                    chainType={vault.chainType}
-                    className="h-7 w-7 rounded-full shrink-0"
-                    width={28}
-                    height={28}
-                  />
-                  <span className="min-w-0 break-words">{name || 'Unnamed collection'}</span>
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
-                <div className="text-sm">
-                  <span className="text-dark-100">Pricing method</span>
-                  <span className="mx-2 text-dark-100">·</span>
-                  <span>{method}</span>
-                </div>
-                {isCustom && hasCustomPrice && (
+                <AccordionTrigger
+                  className={cn(
+                    'w-full min-w-0 text-left text-sm font-medium hover:no-underline pr-1 data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300',
+                    isFirst ? 'pt-0 pb-3' : 'py-3'
+                  )}
+                >
+                  <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
+                    <TokenImage
+                      asset={asset}
+                      alt={name || asset.policyId}
+                      chainType={vault.chainType}
+                      className="h-7 w-7 rounded-full shrink-0"
+                      width={28}
+                      height={28}
+                    />
+                    <span className="min-w-0 break-words">{name || 'Unnamed collection'}</span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
                   <div className="text-sm">
-                    <span className="text-dark-100">Custom price</span>
+                    <span className="text-dark-100">Pricing method</span>
                     <span className="mx-2 text-dark-100">·</span>
-                    <span>₳{formatAdaPrice(asset.customPriceAda)}</span>
+                    <span>{method}</span>
                   </div>
-                )}
-                {isCustom && !hasCustomPrice && <div className="text-sm text-dark-100">Custom price not set</div>}
-                <div className="flex items-center gap-2 text-sm text-dark-100">
-                  <span className="font-mono">{shortPolicy}</span>
-                  <button
-                    className="text-gray-500 hover:text-gray-700"
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleCopy(asset.policyId);
-                    }}
-                    aria-label="Copy policy ID"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                  {isCustom && hasCustomPrice && (
+                    <div className="text-sm">
+                      <span className="text-dark-100">Custom price</span>
+                      <span className="mx-2 text-dark-100">·</span>
+                      <span>₳{formatAdaPrice(asset.customPriceAda)}</span>
+                    </div>
+                  )}
+                  {isCustom && !hasCustomPrice && <div className="text-sm text-dark-100">Custom price not set</div>}
+                  <div className="flex items-center gap-2 text-sm text-dark-100">
+                    <span className="font-mono">{shortPolicy}</span>
+                    <button
+                      className="text-gray-500 hover:text-gray-700"
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleCopy(asset.policyId);
+                      }}
+                      aria-label="Copy policy ID"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            className="mt-2 text-sm text-orange-500 hover:text-orange-400"
+            onClick={() => setShowAllWhitelist(v => !v)}
+          >
+            {showAllWhitelist ? 'Show less' : `Show all (${whitelistedAssets.length})`}
+          </button>
+        )}
+      </div>
     );
   };
 

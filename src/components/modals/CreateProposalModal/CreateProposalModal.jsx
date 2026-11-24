@@ -25,6 +25,7 @@ import {
   useGovernanceFees,
   useSubmitProposalFeePayment,
   useDeleteProposal,
+  useVaultIndex,
 } from '@/services/api/queries';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker.js';
 import {
@@ -68,13 +69,20 @@ const initialProposalData = {
 export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   const isEvmVault = vault?.chainType === ChainType.ROBINHOOD;
   const isIndex = isIndexVault(vault);
+  // While an index vault's basket buy is trading the API refuses proposals; say why instead of
+  // letting Create fail.
+  const { data: indexOverview } = useVaultIndex(vault?.id, isEvmVault && isIndex && isOpen);
+  const setupPending = isIndex ? (indexOverview?.setupPending ?? null) : null;
   const activeExecutionOptions = useMemo(() => {
     if (!isEvmVault) return cardanoExecutionOptions;
     return isIndex
       ? [
           { value: 'index_reweight', label: 'Index Re-weight' },
           // Vault Expansion is disabled for index vaults for now; they grow via Acquire Expansion only.
-          ...evmExecutionOptions.filter(option => option.value !== 'expansion'),
+          // Swaps too: an index vault trades only through re-weights (the API refuses swap proposals).
+          ...evmExecutionOptions.filter(
+            option => option.value !== 'expansion' && option.value !== 'marketplace_action'
+          ),
         ]
       : evmExecutionOptions;
   }, [isEvmVault, isIndex]);
@@ -528,7 +536,7 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
   };
 
   const renderFooter = () => {
-    const isInvalid = isValidProposal();
+    const isInvalid = isValidProposal() || !!setupPending;
     // ADA has 6 decimals, ETH 18 — formatUnits handles both without the
     // precision loss a Number division would introduce for wei.
     const formattedFee = formatUnits(currentProposalFee, isEvmVault ? 18 : 6);
@@ -626,6 +634,11 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
               value={selectedOption}
               onChange={handleChangeExecutionOption}
             />
+            {setupPending && (
+              <p className="text-sm text-amber-400">
+                Proposals open once {setupPending} finishes, usually within a few minutes.
+              </p>
+            )}
             {!availableExecutionOptions.some(option => !option.disabled) && (
               <p className="text-sm text-red-400">
                 No proposal type is available for this vault right now. Wait for the current expansion to finish.
