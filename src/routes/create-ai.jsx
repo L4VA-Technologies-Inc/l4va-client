@@ -168,8 +168,9 @@ const CreateAiComponent = () => {
     handleLaunch();
   };
 
-  const previewPanel = (
+  const renderPreview = (isSheet = false) => (
     <AiVaultPreview
+      isSheet={isSheet}
       aiFields={builder.aiFields}
       isLaunching={isLaunching}
       missingFields={builder.missingFields}
@@ -240,7 +241,7 @@ const CreateAiComponent = () => {
                 initial={{ opacity: 0, x: 16 }}
                 transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
               >
-                {previewPanel}
+                {renderPreview()}
               </motion.div>
             )}
           </AnimatePresence>
@@ -286,7 +287,7 @@ const CreateAiComponent = () => {
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
-                  {previewPanel}
+                  {renderPreview(true)}
                 </div>
                 {canLaunch && (
                   <div className="shrink-0 border-t border-steel-850 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">

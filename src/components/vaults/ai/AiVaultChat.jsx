@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUp, PanelRightClose, PanelRightOpen, Pencil, Rocket, SlidersHorizontal, Sparkles, X } from 'lucide-react';
+import {
+  ArrowUp,
+  ImagePlus,
+  PanelRightClose,
+  PanelRightOpen,
+  Pencil,
+  Rocket,
+  SlidersHorizontal,
+  Sparkles,
+  Upload,
+  X,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { AiVaultImageCard } from './AiVaultImageCard';
@@ -46,7 +57,7 @@ const questionTitle = content => {
 
 // Pending question rendered in place of the composer (ChatGPT-style): numbered options plus a
 // a free-text line. Closing it falls back to the normal composer.
-const QuestionCard = ({ title, options, disabled, onSelect, onSubmitText, onClose }) => {
+const QuestionCard = ({ title, options, actions = [], disabled, onSelect, onSubmitText, onClose }) => {
   const [text, setText] = useState('');
   const items = options.map(normalizeOption);
 
@@ -101,6 +112,21 @@ const QuestionCard = ({ title, options, disabled, onSelect, onSubmitText, onClos
               {index + 1}
             </span>
             {option.label}
+          </button>
+        ))}
+        {/* Extra actions tied to the question (e.g. replace the image), styled like the options. */}
+        {actions.map(({ label, icon: Icon, onClick }) => (
+          <button
+            key={label}
+            className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 text-left text-[15px] text-white transition-colors hover:bg-steel-750/60 active:bg-steel-750 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={disabled}
+            type="button"
+            onClick={onClick}
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-steel-750 text-dark-100">
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+            {label}
           </button>
         ))}
       </div>
@@ -286,7 +312,7 @@ export const AiVaultChat = ({
                   {message.attachment?.type === 'vault-image' && !isLiveAssistant && (
                     <AiVaultImageCard
                       isBusy={isImageBusy}
-                      isCurrent={index === lastImageIndex}
+                      isCurrent={index === lastImageIndex && !(pendingQuestion && index === lastIndex)}
                       url={message.attachment.url}
                       onRegenerate={onStartImageGeneration}
                       onUpload={openFilePicker}
@@ -332,6 +358,14 @@ export const AiVaultChat = ({
             <QuestionCard
               key={lastIndex}
               disabled={isImageBusy || isSending}
+              actions={
+                pendingQuestion.attachment?.type === 'vault-image' && lastIndex === lastImageIndex
+                  ? [
+                      { label: 'Regenerate', icon: ImagePlus, onClick: onStartImageGeneration },
+                      { label: 'Upload another', icon: Upload, onClick: openFilePicker },
+                    ]
+                  : []
+              }
               options={pendingQuestion.options}
               title={questionTitle(pendingQuestion.content)}
               onClose={() => setDismissedQuestion(lastIndex)}
