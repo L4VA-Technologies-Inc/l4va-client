@@ -10,7 +10,7 @@ import { LavaInput } from '@/components/shared/LavaInput';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useNetwork } from '@/hooks/useNetwork';
 import { useNativePrices } from '@/services/api/queries';
-import { MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
+import { MAX_EVM_THRESHOLD_ETH, MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
 import {
   ACQUIRE_OPENS_ON_LAUNCH,
   getReserveHint,
@@ -34,9 +34,9 @@ export const AcquireWindow = ({
   // The threshold is entered and stored in the chain's native unit, whatever display currency is picked.
   const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
   const isIndexVault = isRobinHood && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
-  const maxAcquireThreshold = 100000;
+  const maxAcquireThreshold = isRobinHood ? MAX_EVM_THRESHOLD_ETH : 100000;
   const minAcquireThresholdRangeHint = isRobinHood
-    ? `Allowed range when set: 0.01 to 100,000 ${assetSymbol}.`
+    ? `Allowed range when set: ${MIN_EVM_THRESHOLD_ETH} to ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ${assetSymbol}.`
     : `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
   const handleChange = e => {

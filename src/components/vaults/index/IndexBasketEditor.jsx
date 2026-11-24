@@ -184,6 +184,34 @@ export const RouteStatus = ({ route, token = null }) => {
   );
 };
 
+/** Compact route result for a tradable token: round-trip cost, full routes on hover. */
+const RouteBadge = ({ route }) => {
+  const thin = route.lossBps != null && route.lossBps > THIN_LIQUIDITY_WARN_BPS;
+  const Icon = thin ? AlertTriangle : CheckCircle2;
+  const cost = route.lossBps != null ? `${(route.lossBps / 100).toFixed(2)}%` : '';
+  const hint = [
+    thin ? `Thin liquidity: buying and selling back loses ≈ ${cost}` : 'Tradable on Uniswap',
+    cost && !thin ? `Round trip ≈ ${cost}` : null,
+    `Buy: ${route.buyRoute || '—'}`,
+    `Sell: ${route.sellRoute || '—'}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return (
+    <span
+      title={hint}
+      aria-label={hint}
+      className={cn(
+        'flex flex-shrink-0 cursor-help items-center gap-1 text-xs tabular-nums',
+        thin ? 'text-amber-400' : 'text-green-500'
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {cost}
+    </span>
+  );
+};
+
 /** Stacked bar of target weights, with the cash reserve as the last segment. */
 export const BasketAllocationBar = ({ targets, reserveBps = 0, className = '' }) => {
   const investableShare = (BPS - reserveBps) / BPS;
@@ -436,46 +464,59 @@ export const IndexBasketEditor = ({
       {isFull && <p className="text-sm text-dark-100">The basket is full ({cap} assets).</p>}
 
       {targets.length > 0 && (
-        <ul className="space-y-2">
-          {targets.map((t, i) => (
-            <li key={t.assetAddress} className={cn('flex items-center gap-3 rounded-lg px-3 py-2', rowBg)}>
-              <span className="h-8 w-1 flex-shrink-0 rounded-full" style={{ background: basketSegmentColor(i) }} />
-              <TokenLogo image={t.image} symbol={t.symbol} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{t.symbol || shortAddress(t.assetAddress)}</p>
-                <p className="truncate text-xs text-dark-100">{t.name || shortAddress(t.assetAddress)}</p>
-                <RouteStatus route={routes[i]} token={t} />
-              </div>
-              <label className="flex items-center gap-1">
-                <span className="sr-only">Weight for {t.symbol || t.assetAddress}</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  disabled={disabled}
-                  value={bpsToPercent(t.weightBps)}
-                  onChange={e => updateWeight(t.assetAddress, e.target.value)}
-                  onWheel={e => e.currentTarget.blur()}
-                  className={cn(
-                    'w-20 rounded-md border border-steel-750 bg-steel-950 px-2 py-1 text-right tabular-nums focus:border-orange-500 focus:outline-none',
-                    noSpinner
-                  )}
-                />
-                <span className="text-dark-100">%</span>
-              </label>
-              <button
-                type="button"
-                aria-label={`Remove ${t.symbol || t.assetAddress}`}
-                onClick={() => removeAsset(t.assetAddress)}
-                disabled={disabled}
-                className="p-1 text-dark-100 hover:text-red-500 disabled:opacity-50"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
+        // One line per asset so a 50-asset basket stays scannable; the list scrolls past ~8 rows.
+        <ul className="max-h-[26rem] space-y-1 overflow-y-auto pr-1">
+          {targets.map((t, i) => {
+            const route = routes[i];
+            const routeOk = route?.status === 'ok';
+            return (
+              <li key={t.assetAddress} className={cn('rounded-lg px-2 py-1.5', rowBg)}>
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-1 flex-shrink-0 rounded-full" style={{ background: basketSegmentColor(i) }} />
+                  <TokenLogo image={t.image} symbol={t.symbol} className="h-6 w-6" />
+                  <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                    <span className="flex-shrink-0 font-medium">{t.symbol || shortAddress(t.assetAddress)}</span>
+                    <span className="truncate text-xs text-dark-100">{t.name || shortAddress(t.assetAddress)}</span>
+                  </div>
+                  {routeOk && <RouteBadge route={route} />}
+                  <label className="flex items-center gap-1">
+                    <span className="sr-only">Weight for {t.symbol || t.assetAddress}</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      max={100}
+                      step={0.01}
+                      disabled={disabled}
+                      value={bpsToPercent(t.weightBps)}
+                      onChange={e => updateWeight(t.assetAddress, e.target.value)}
+                      onWheel={e => e.currentTarget.blur()}
+                      className={cn(
+                        'w-16 rounded-md border border-steel-750 bg-steel-950 px-2 py-0.5 text-right text-sm tabular-nums focus:border-orange-500 focus:outline-none',
+                        noSpinner
+                      )}
+                    />
+                    <span className="text-sm text-dark-100">%</span>
+                  </label>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${t.symbol || t.assetAddress}`}
+                    onClick={() => removeAsset(t.assetAddress)}
+                    disabled={disabled}
+                    className="p-1 text-dark-100 hover:text-red-500 disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {/* Checking, failed or untradable routes need attention, so they keep the full line. */}
+                {!routeOk && (
+                  <div className="pl-9 pt-0.5">
+                    <RouteStatus route={route} token={t} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
