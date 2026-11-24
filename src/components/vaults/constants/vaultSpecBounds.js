@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { environments } from '@/constants/core.constants.js';
 import { AiApiProvider } from '@/services/api/ai';
+import { getNetwork } from '@/hooks/useNetwork';
 
 /**
  * Numeric field bounds come from the API's vault creation spec
@@ -54,7 +55,9 @@ const FALLBACK_BOUNDS = {
 const loadedSpecs = {};
 const pending = {};
 
-const currentChain = () => (localStorage.getItem('selectedNetwork') === 'cardano' ? 'cardano' : 'robinhood');
+// This tab's chain. localStorage is shared across tabs, so a Cardano tab elsewhere must not
+// switch a Robinhood draft here onto Cardano bounds.
+const currentChain = () => (getNetwork() === 'cardano' ? 'cardano' : 'robinhood');
 
 const specNetwork = () =>
   import.meta.env.VITE_CARDANO_NETWORK === environments.MAINNET ? environments.MAINNET : environments.PREPROD;
