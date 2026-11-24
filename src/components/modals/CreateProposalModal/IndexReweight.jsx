@@ -104,13 +104,16 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
     (preview.skipped || []).some(s => s.reason !== 'within_tolerance');
   // A trade Uniswap cannot route would pass the vote and then never execute; the API rejects it too.
   const unroutable = (preview?.skipped || []).filter(s => s.reason === 'no_route');
+  // A sell over the swap adapter's daily cap cannot run in one go; the API rejects it too.
+  const overCap = preview?.overCap || [];
 
   useEffect(() => {
     onDataChange({
       indexReweight: basket ? toIndexBasketPayload(basket) : null,
-      isValid: !problem && !unchanged && !estimating && !blockedByTrades && unroutable.length === 0,
+      isValid:
+        !problem && !unchanged && !estimating && !blockedByTrades && unroutable.length === 0 && overCap.length === 0,
     });
-  }, [basket, problem, unchanged, estimating, blockedByTrades, unroutable.length, onDataChange]);
+  }, [basket, problem, unchanged, estimating, blockedByTrades, unroutable.length, overCap.length, onDataChange]);
 
   const diff = useMemo(() => diffBaskets(current, basket), [current, basket]);
   const symbolOf = address =>
@@ -302,6 +305,22 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
                       </p>
                     ))}
                 </>
+              )}
+              {overCap.length > 0 && (
+                <div className="space-y-1 text-xs text-red-400">
+                  {overCap.map(c => (
+                    <p key={`cap-${c.asset}`} className="flex justify-between gap-3">
+                      <span>
+                        {symbolOf(c.asset)}: sells ≈ {(c.sellBps / 100).toFixed(1)}% of holdings
+                      </span>
+                      <span className="text-right">max {c.capBps / 100}% per re-weight</span>
+                    </p>
+                  ))}
+                  <p>
+                    A re-weight can sell at most the vault&apos;s daily trading limit of each asset. Make a smaller
+                    change now and propose the rest later.
+                  </p>
+                </div>
               )}
               {unroutable.length > 0 && (
                 <p className="text-xs text-red-400">

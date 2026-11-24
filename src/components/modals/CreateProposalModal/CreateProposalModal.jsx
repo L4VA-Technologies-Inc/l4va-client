@@ -74,7 +74,10 @@ export const CreateProposalModal = ({ onClose, isOpen, vault }) => {
       ? [
           { value: 'index_reweight', label: 'Index Re-weight' },
           // Vault Expansion is disabled for index vaults for now; they grow via Acquire Expansion only.
-          ...evmExecutionOptions.filter(option => option.value !== 'expansion'),
+          // Swaps too: an index vault trades only through re-weights (the API refuses swap proposals).
+          ...evmExecutionOptions.filter(
+            option => option.value !== 'expansion' && option.value !== 'marketplace_action'
+          ),
         ]
       : evmExecutionOptions;
   }, [isEvmVault, isIndex]);
