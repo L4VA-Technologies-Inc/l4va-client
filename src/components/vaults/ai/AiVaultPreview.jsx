@@ -42,7 +42,11 @@ import { useNewVaultBasketCap } from '@/hooks/useBasketAssetCap';
 import { useNativePrices } from '@/services/api/queries';
 import { isImeComposing } from '@/utils/keyboard';
 import { useSyncedBasketRoutes } from '@/components/vaults/index/IndexBasketEditor';
-import { MAX_EVM_THRESHOLD_ETH, MIN_EVM_THRESHOLD_ETH, usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
+import {
+  MAX_EVM_THRESHOLD_ETH,
+  MIN_EVM_THRESHOLD_ETH,
+  usdToEthThreshold,
+} from '@/components/vaults/utils/vaults.utils';
 import { formatBps, validateIndexBasket, VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
