@@ -594,6 +594,7 @@ const BasketRouteIcon = ({ target }) => {
 };
 
 export const AiVaultPreview = ({
+  isSheet = false,
   vault,
   aiFields = [],
   missingFields = [],
@@ -829,7 +830,12 @@ export const AiVaultPreview = ({
   };
 
   return (
-    <div className="rounded-2xl border border-steel-750 bg-steel-900 p-6 space-y-5">
+    <div
+      className={
+        // In the mobile sheet the sheet itself is the card — drop the inner frame so rows use the full width.
+        isSheet ? 'space-y-5 pt-1' : 'rounded-2xl border border-steel-750 bg-steel-900 p-6 space-y-5'
+      }
+    >
       <div className="flex items-center justify-between">
         <h2 className="font-russo uppercase text-lg text-white">Vault draft</h2>
         <button
@@ -862,16 +868,19 @@ export const AiVaultPreview = ({
         </div>
       </div>
 
-      <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm || isLaunching} onClick={onLaunch}>
-        <Sparkles className="w-4 h-4" />
-        {isLaunching
-          ? 'Launching...'
-          : canOpenInForm
-            ? 'Confirm & launch'
-            : missingRequired.length > 0
-              ? `Complete setup · ${missingRequired.length} remaining`
-              : 'Complete setup'}
-      </PrimaryButton>
+      {/* The mobile sheet has its own sticky launch button in the footer. */}
+      {!isSheet && (
+        <PrimaryButton className="w-full uppercase" disabled={!canOpenInForm || isLaunching} onClick={onLaunch}>
+          <Sparkles className="w-4 h-4" />
+          {isLaunching
+            ? 'Launching...'
+            : canOpenInForm
+              ? 'Confirm & launch'
+              : missingRequired.length > 0
+                ? `Complete setup · ${missingRequired.length} remaining`
+                : 'Complete setup'}
+        </PrimaryButton>
+      )}
 
       <div>
         <Section id="identity" isOpen={openSections.has('identity')} label="Identity" onToggle={toggleSection}>
