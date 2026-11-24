@@ -9,7 +9,12 @@ import { ProposalOutcome } from '@/components/modals/CreateProposalModal/Proposa
 import { toRouteView } from '@/components/vaults/index/IndexBasketEditor';
 import { isIndexVault } from '@/components/vaults/index/indexVault.utils';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
-import { indexAssetRoutesQuery, useIndexSupportedAssets, useVaultIndex } from '@/services/api/queries';
+import {
+  indexAssetRoutesQuery,
+  useIndexSupportedAssets,
+  useVaultIndex,
+  vaultSwapCapQuery,
+} from '@/services/api/queries';
 
 const NATIVE = '0x0000000000000000000000000000000000000000';
 const NATIVE_TOKEN = { address: NATIVE, symbol: 'ETH', name: 'Ether', decimals: 18 };
@@ -123,6 +128,11 @@ const SwapRow = ({ action, tokens, balances, vaultId, canRemove, showErrors, onU
         ? toRaw(action.customAmount, input.decimals)
         : ((balance * BigInt(action.percent)) / 100n).toString();
   const overBalance = balance != null && BigInt(raw) > balance;
+  // The guarded swap adapter lets a vault sell only `capBps` of an asset per 24 h; a larger
+  // swap would pass the vote and then be refused at execution.
+  const { data: cap } = useQuery(vaultSwapCapQuery(vaultId, input?.address));
+  const capRemaining = cap?.guarded && cap.remaining != null ? BigInt(cap.remaining) : null;
+  const overCap = capRemaining != null && BigInt(raw) > capRemaining;
 
   const problem = !input
     ? 'Select the token to sell'
@@ -134,7 +144,9 @@ const SwapRow = ({ action, tokens, balances, vaultId, canRemove, showErrors, onU
           ? 'Enter an amount'
           : overBalance
             ? 'More than the vault holds'
-            : null;
+            : overCap
+              ? `Above the daily sell limit: at most ${formatAmount(capRemaining, input.decimals)} ${input.symbol} now`
+              : null;
 
   const humanAmount = input ? formatUnits(BigInt(raw), input.decimals) : '';
   useEffect(() => {
@@ -188,6 +200,14 @@ const SwapRow = ({ action, tokens, balances, vaultId, canRemove, showErrors, onU
           onChange={v => onUpdate(action.id, { customAmount: v })}
           error={showErrors && (raw === '0' || overBalance)}
         />
+      )}
+
+      {cap?.guarded && input && (
+        <p className={`text-xs ${overCap ? 'text-red-400' : 'text-white/40'}`}>
+          Sell limit: {cap.capBps / 100}% of the vault&apos;s {input.symbol} per 24 h, refilling gradually · up to{' '}
+          {formatAmount(capRemaining, input.decimals)} {input.symbol} now. To sell more, split it across proposals on
+          different days.
+        </p>
       )}
 
       <div className="flex items-center justify-between gap-3 text-xs text-white/40">

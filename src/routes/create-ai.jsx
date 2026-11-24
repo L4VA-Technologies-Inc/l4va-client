@@ -196,7 +196,7 @@ const CreateAiComponent = () => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="flex h-[calc(var(--app-height,100dvh)-var(--header-height)-var(--content-space-top))] flex-col overflow-hidden lg:block lg:h-auto lg:overflow-visible lg:pb-8">
+      <div className="flex h-[calc(var(--app-height,100dvh)-var(--header-height)-var(--content-space-top))] flex-col overflow-hidden lg:pb-6">
         <div className="flex shrink-0 flex-col items-start gap-2 pb-3 md:flex-row md:py-4 md:items-center md:justify-between">
           <button
             className="group order-last flex items-center gap-2 text-dark-100 transition-colors duration-150 hover:text-white active:opacity-70 md:order-none"
@@ -211,7 +211,7 @@ const CreateAiComponent = () => {
           </span>
           <span className="hidden w-32 md:block" />
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 lg:flex-row lg:items-stretch">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <AiVaultChat
               isGeneratingImage={builder.isGeneratingImage}
@@ -235,7 +235,7 @@ const CreateAiComponent = () => {
               <motion.div
                 key="preview"
                 animate={{ opacity: 1, x: 0 }}
-                className="w-full shrink-0 lg:w-[380px]"
+                className="w-full shrink-0 lg:min-h-0 lg:w-[380px] lg:overflow-y-auto lg:overscroll-contain"
                 exit={{ opacity: 0, x: 16 }}
                 initial={{ opacity: 0, x: 16 }}
                 transition={{ type: 'spring', bounce: 0, duration: 0.35 }}

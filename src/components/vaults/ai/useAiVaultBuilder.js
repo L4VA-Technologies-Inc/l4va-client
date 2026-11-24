@@ -227,6 +227,14 @@ export const useAiVaultBuilder = () => {
         }
 
         const streamedContent = await revealer.finish();
+        // Show the reply's options as soon as the text is done: draft validation (and a possible
+        // correction round trip) still runs, but the composer should not sit disabled meanwhile.
+        if (response.options?.length) {
+          setMessages([
+            ...history,
+            { role: 'assistant', content: response.message || streamedContent, options: response.options },
+          ]);
+        }
 
         // A reset request replaces the draft from scratch instead of merging onto the old one.
         let base = response.resetDraft ? getInitialVaultState() : vault;
