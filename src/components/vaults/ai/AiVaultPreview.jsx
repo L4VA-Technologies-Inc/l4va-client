@@ -671,7 +671,8 @@ export const AiVaultPreview = ({
   // Keep each basket token's Uniswap route check live here too: the basket modal writes the
   // status onto the targets, and without this a status saved as "checking" would never clear.
   useSyncedBasketRoutes(isIndexVault ? basketTargets : [], null, targets =>
-    onUpdateVault('indexBasket', { ...vault.indexBasket, targets })
+    // Route status refresh, not a user edit: must not lock the basket against the assistant.
+    onUpdateVault('indexBasket', { ...vault.indexBasket, targets }, { lock: false })
   );
   const basketProblem = isIndexVault ? validateIndexBasket(vault.indexBasket) : null;
 
