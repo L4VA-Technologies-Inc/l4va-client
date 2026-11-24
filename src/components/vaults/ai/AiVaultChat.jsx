@@ -187,11 +187,10 @@ export const AiVaultChat = ({
   // The newest assistant question with options is answered from a card that replaces the composer.
   const [dismissedQuestion, setDismissedQuestion] = useState(-1);
   const lastIndex = messages.length - 1;
+  // Options are attached once the streamed text is complete, so the card can appear while the draft
+  // is still being validated; it stays disabled until that finishes.
   const pendingQuestion =
-    !isSending &&
-    lastMessage?.role === 'assistant' &&
-    lastMessage.options?.length > 0 &&
-    dismissedQuestion !== lastIndex
+    lastMessage?.role === 'assistant' && lastMessage.options?.length > 0 && dismissedQuestion !== lastIndex
       ? lastMessage
       : null;
 
@@ -237,7 +236,7 @@ export const AiVaultChat = ({
 
   return (
     // Mobile: fixed-height screen; only the message list scrolls. Settings button sits left of the composer.
-    <div className="relative flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-220px)] lg:max-h-[860px] lg:min-h-[560px]">
+    <div className="relative flex min-h-0 flex-1 flex-col lg:max-h-[860px]">
       <div className="hidden shrink-0 items-center justify-end pb-2 lg:flex">
         <button
           className="rounded-lg p-2 text-dark-100 transition-[color,background-color,transform] duration-150 ease-out hover:bg-steel-850 hover:text-white active:scale-90"
@@ -332,7 +331,7 @@ export const AiVaultChat = ({
           {pendingQuestion ? (
             <QuestionCard
               key={lastIndex}
-              disabled={isImageBusy}
+              disabled={isImageBusy || isSending}
               options={pendingQuestion.options}
               title={questionTitle(pendingQuestion.content)}
               onClose={() => setDismissedQuestion(lastIndex)}
