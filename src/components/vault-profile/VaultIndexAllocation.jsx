@@ -109,31 +109,90 @@ const DriftChip = ({ driftBps }) => {
   );
 };
 
-/**
- * One bar of actual weights, with a tick at each cumulative target boundary:
- * a segment edge sitting off its tick is the drift.
- */
-const AllocationBar = ({ segments }) => {
-  let targetEdge = 0;
-  const ticks = segments.slice(0, -1).map(s => (targetEdge += s.targetBps) / 100);
+const StackBar = ({ segments, field, active, setActive, className }) => (
+  <div className={cn('flex w-full gap-px overflow-hidden rounded-full bg-steel-800', className)}>
+    {segments.map(s => (
+      <button
+        key={s.key}
+        type="button"
+        aria-label={`${s.label}: ${formatBps(s[field])}`}
+        onMouseEnter={() => setActive(s.key)}
+        onFocus={() => setActive(s.key)}
+        onClick={() => setActive(k => (k === s.key ? null : s.key))}
+        className={cn('h-full transition-opacity', active && active !== s.key && 'opacity-30')}
+        style={{ width: `${s[field] / 100}%`, background: s.color }}
+      />
+    ))}
+  </div>
+);
+
+const SegmentDetail = ({ segment }) => {
+  if (!segment) return <span className="text-dark-100">Hover or tap an asset to compare it with its target.</span>;
+  const drift = segment.actualBps - segment.targetBps;
+  const abs = Math.abs(drift);
+  const verdict =
+    // Same band as the tiles and the rebalance planner: smaller drift is not traded.
+    abs < DRIFT_NOTICE_BPS
+      ? { text: 'on target', cls: 'text-dark-100' }
+      : drift > 0
+        ? { text: `${formatBps(abs)} too much · next rebalance sells`, cls: 'text-orange-400' }
+        : { text: `${formatBps(abs)} too little · next rebalance buys`, cls: 'text-sky-400' };
   return (
-    <div className="relative py-1">
-      <div className="flex h-2.5 w-full gap-px overflow-hidden rounded-full bg-steel-800">
+    <>
+      <span className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: segment.color }} />
+      <span className="font-medium">{segment.label}</span>
+      <span className="tabular-nums">
+        {formatBps(segment.actualBps)} now{' '}
+        <span className="text-dark-100">· target {formatBps(segment.targetBps)}</span>
+      </span>
+      <span className={cn('text-xs sm:ml-auto', verdict.cls)}>{verdict.text}</span>
+      {segment.value && <span className="tabular-nums text-dark-100">{segment.value}</span>}
+    </>
+  );
+};
+
+/**
+ * What the vault holds ("Now") stacked over what it should hold ("Target"), in the same colours,
+ * so drift is a segment that is wider or narrower than the one below it. Hovering a segment or a
+ * legend entry highlights that asset in both bars and spells it out underneath.
+ */
+const NowTargetBars = ({ segments }) => {
+  const [active, setActive] = useState(null);
+  const current = segments.find(s => s.key === active);
+  return (
+    <div className="space-y-3" onMouseLeave={() => setActive(null)}>
+      <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-xs text-dark-100">
+        <span>Now</span>
+        <StackBar segments={segments} field="actualBps" active={active} setActive={setActive} className="h-4" />
+        <span>Target</span>
+        <StackBar segments={segments} field="targetBps" active={active} setActive={setActive} className="h-2" />
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
         {segments.map(s => (
-          <div
+          <button
             key={s.key}
-            title={`${s.label}: ${formatBps(s.actualBps)} (target ${formatBps(s.targetBps)})`}
-            style={{ width: `${s.actualBps / 100}%`, background: s.color }}
-          />
+            type="button"
+            onMouseEnter={() => setActive(s.key)}
+            onFocus={() => setActive(s.key)}
+            onClick={() => setActive(k => (k === s.key ? null : s.key))}
+            className={cn(
+              'flex items-center gap-1.5 rounded px-1 transition-opacity',
+              active && active !== s.key && 'opacity-40',
+              active === s.key && 'bg-steel-800'
+            )}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+            <span className="text-dark-100">{s.label}</span>
+            <span className="tabular-nums text-white">{formatBps(s.actualBps)}</span>
+          </button>
         ))}
       </div>
-      {ticks.map((left, i) => (
-        <span
-          key={i}
-          className="absolute top-0 h-[18px] w-0.5 -translate-x-1/2 rounded-full bg-white/80"
-          style={{ left: `${left}%` }}
-        />
-      ))}
+      <div
+        className="flex min-h-[2.75rem] flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-steel-850 px-4 py-2 text-sm"
+        aria-live="polite"
+      >
+        <SegmentDetail segment={current} />
+      </div>
     </div>
   );
 };
@@ -163,6 +222,11 @@ const TargetBasket = ({ config }) => (
 
 const ROW_GRID = 'sm:grid sm:grid-cols-[minmax(0,1fr)_7rem_5.5rem_7rem] sm:gap-x-4';
 
+// Statuses in which the vault already holds its basket (mirrors the API's HOLDING_STATUSES).
+const HOLDING_STATUSES = ['locked', 'expansion', 'acquire_expansion', 'terminating'];
+
+const Bone = ({ className }) => <span className={cn('block animate-pulse rounded bg-steel-800', className)} />;
+
 // Stacks weight, drift and value on the right on phones; four columns from sm up.
 const HoldingRow = ({ asset, actualBps, targetBps, driftBps, value, note }) => (
   <li className={cn('flex items-center gap-4 py-3', ROW_GRID)}>
@@ -170,17 +234,56 @@ const HoldingRow = ({ asset, actualBps, targetBps, driftBps, value, note }) => (
       {asset}
       {note && <p className="mt-1 text-xs text-yellow-400">{note}</p>}
     </div>
-    <div className="flex flex-col items-end gap-1 text-right sm:contents">
-      <p className="tabular-nums sm:text-right">
-        <span className="font-medium">{formatBps(actualBps)}</span>
-        <span className="text-xs text-dark-100"> of {formatBps(targetBps)}</span>
-      </p>
-      <div className="sm:text-right">
-        <DriftChip driftBps={driftBps} />
+    {actualBps == null ? (
+      <div className="flex flex-col items-end gap-2 sm:contents">
+        <Bone className="h-4 w-16 sm:justify-self-end" />
+        <Bone className="h-4 w-12 sm:justify-self-end" />
+        <Bone className="h-4 w-14 sm:justify-self-end" />
       </div>
-      <p className="text-sm tabular-nums text-dark-100 sm:text-base sm:text-right sm:text-white">{value}</p>
-    </div>
+    ) : (
+      <div className="flex flex-col items-end gap-1 text-right sm:contents">
+        <p className="tabular-nums sm:text-right">
+          <span className="font-medium">{formatBps(actualBps)}</span>
+          <span className="text-xs text-dark-100"> of {formatBps(targetBps)}</span>
+        </p>
+        <div className="sm:text-right">
+          <DriftChip driftBps={driftBps} />
+        </div>
+        <p className="text-sm tabular-nums text-dark-100 sm:text-base sm:text-right sm:text-white">{value}</p>
+      </div>
+    )}
   </li>
+);
+
+/**
+ * Placeholder for a vault that holds assets while its live portfolio loads: the loaded view's
+ * layout (summary, bar, top rows), so nothing jumps and the pre-lock "buys these assets" copy never
+ * shows for a locked vault. Rows are capped at TOP_N like the loaded list, so a 50-asset basket
+ * does not render 50 rows that then collapse.
+ */
+const HoldingsSkeleton = ({ config, showSummary }) => (
+  <div className="space-y-6" aria-busy="true" aria-label="Loading basket">
+    {showSummary && (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="space-y-3 rounded-lg bg-steel-850 px-4 py-3">
+            <Bone className="h-3 w-16" />
+            <Bone className="h-6 w-20" />
+          </div>
+        ))}
+      </div>
+    )}
+    <Bone className="h-2.5 w-full rounded-full" />
+    <ul className="divide-y divide-steel-800 border-y border-steel-800">
+      {config.targets.slice(0, TOP_N).map((t, i) => (
+        <HoldingRow
+          key={t.assetAddress}
+          asset={<TokenCell asset={t} color={basketSegmentColor(i)} />}
+          actualBps={null}
+        />
+      ))}
+    </ul>
+  </div>
 );
 
 const skippedTradeMessage = leg => {
@@ -298,7 +401,46 @@ const RebalanceHistory = ({ rebalances, assets = [] }) => {
  * Presentational basket view, fed by `VaultIndexAllocation` (live data) or by
  * the dev mock page. `formatValue` renders a `{ valueNative, valueUsd, valueAda }`.
  */
-export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error, formatValue, terminated = false }) => {
+/**
+ * ETH the vault must hold after its LP share for every basket asset to clear the minimum trade:
+ * the smallest-weight asset's slice of the investable (non-reserve) part must reach `minTradeNative`.
+ */
+const minBasketNativeWei = (config, minTradeNative) => {
+  if (!minTradeNative || !config?.targets?.length) return null;
+  const minWeight = Math.min(...config.targets.map(t => Number(t.weightBps) || 0));
+  const investableBps = 10000 - (Number(config.reserveBps) || 0);
+  if (minWeight <= 0 || investableBps <= 0) return null;
+  // minTrade × 10⁴/minWeight × 10⁴/investable, rounded up.
+  const denom = BigInt(minWeight) * BigInt(investableBps);
+  return (BigInt(minTradeNative) * 10n ** 8n + denom - 1n) / denom;
+};
+
+const MinBasketSizeNote = ({ config, minTradeNative }) => {
+  const minWei = minBasketNativeWei(config, minTradeNative);
+  if (!minWei) return null;
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
+      <Info className="mt-0.5 h-4 w-4 shrink-0" />
+      <span>
+        To buy all {config.targets.length} assets, the vault needs at least ~{formatNativeWei(minWei)} ETH after the
+        liquidity pool share: each trade must be at least {formatNativeWei(minTradeNative)} ETH. With less, assets below
+        that size are skipped and their share stays in ETH.
+      </span>
+    </div>
+  );
+};
+
+export const VaultIndexAllocationView = ({
+  config,
+  portfolio,
+  rebalances,
+  error,
+  formatValue,
+  terminated = false,
+  terminating = false,
+  minTradeNative,
+  loadingHoldings = false,
+}) => {
   // Hooks first: the early return below must not change their order.
   const [storedView, setView] = useBasketView();
   const [filter, setFilter] = useState('all');
@@ -349,6 +491,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
           actualBps: a.actualBps,
           targetBps: a.targetBps,
           color: a.assetAddress === 'others' ? OTHERS_COLOR : colorFor(a),
+          value: a.assetAddress === 'others' ? null : formatValue(a),
         })),
         {
           key: 'reserve',
@@ -356,6 +499,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
           actualBps: portfolio.reserve.actualBps,
           targetBps: portfolio.reserve.targetBps,
           color: RESERVE_COLOR,
+          value: formatValue(portfolio.reserve),
         },
       ]
     : [];
@@ -365,8 +509,8 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <InfoTip icon={PieChart} iconClassName="h-5 w-5">
-            Values are live swap quotes into ETH, refreshed every minute. Ticks on the bar mark target weights; drift is
-            actual minus target, as a share of basket plus cash.
+            Values are live swap quotes into ETH, refreshed every minute. Drift is actual minus target, as a share of
+            basket plus cash.
           </InfoTip>
           <h3 className="text-lg font-semibold">Index basket</h3>
           {config.version > 1 && <span className="text-xs text-dark-100">v{config.version} · set by governance</span>}
@@ -374,7 +518,9 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
         {hasHoldings && showSwitcher && <ViewSwitch view={view} onChange={setView} />}
       </div>
 
-      {!hasHoldings ? (
+      {!hasHoldings && loadingHoldings ? (
+        <HoldingsSkeleton config={config} showSummary={config.targets.length >= SWITCHER_MIN_ASSETS} />
+      ) : !hasHoldings ? (
         <>
           <p className="text-sm text-dark-100">
             {terminated
@@ -383,31 +529,23 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
                 ? `${portfolio.error}. Showing the target weights.`
                 : 'When the acquire window locks, the vault buys these assets with the ETH raised, at these weights.'}
           </p>
+          {!terminated && <MinBasketSizeNote config={config} minTradeNative={minTradeNative} />}
           <TargetBasket config={config} />
         </>
       ) : (
         <>
+          {terminating && (
+            <p className="text-sm text-dark-100">
+              This vault is terminating. These assets are held for VT holders to redeem and are no longer rebalanced.
+            </p>
+          )}
           {showSwitcher && <BasketSummary portfolio={portfolio} />}
 
-          <div className="space-y-3">
-            <AllocationBar segments={segments} />
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-100">
-              {segments.map(s => (
-                <span key={s.key} className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                  {s.label}
-                  <span className="tabular-nums text-white">{formatBps(s.actualBps)}</span>
-                </span>
-              ))}
-              <span className="flex items-center gap-1.5">
-                <span className="h-3 w-0.5 rounded-full bg-white/80" />
-                target
-              </span>
-            </div>
-          </div>
+          {/* With the List / Tiles / Drift views the stacked bar only repeated them. */}
+          {!showSwitcher && <NowTargetBars segments={segments} />}
 
           {view === 'tiles' && <BasketTiles assets={holdings} formatValue={formatValue} />}
-          {view === 'drift' && <BasketDriftChart assets={holdings} />}
+          {view === 'drift' && <BasketDriftChart assets={holdings} formatValue={formatValue} />}
 
           {view === 'list' && (
             <div className="space-y-3">
@@ -470,7 +608,7 @@ export const VaultIndexAllocationView = ({ config, portfolio, rebalances, error,
         </>
       )}
 
-      {!terminated && (
+      {!terminated && !terminating && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-steel-850 px-4 py-3 text-sm">
           <span className="flex items-center gap-2 text-dark-100">
             <RefreshCcw className="h-4 w-4" />
@@ -524,6 +662,9 @@ export const VaultIndexAllocation = ({ vault }) => {
       error={error}
       formatValue={formatValue}
       terminated={vault?.vaultStatus === 'burned'}
+      terminating={vault?.vaultStatus === 'terminating'}
+      minTradeNative={data?.minTradeNative}
+      loadingHoldings={isLoading && HOLDING_STATUSES.includes(vault?.vaultStatus)}
     />
   );
 };

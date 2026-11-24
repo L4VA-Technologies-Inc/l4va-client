@@ -66,7 +66,8 @@ export const ProposalEndDate = ({ startDate, endDate, proposalStatus, className 
   // Concluded, by status or because the moment has passed.
   let status = 'Ended';
   if (proposalStatus === 'executed') {
-    status = 'Executed';
+    // This is when voting closed; the execution time is shown with the execution result.
+    status = 'Voting ended';
   } else if (proposalStatus === 'rejected') {
     status = 'Failed';
   } else if (isUpcoming) {

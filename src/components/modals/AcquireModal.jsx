@@ -67,8 +67,30 @@ export const AcquireModal = ({ vault, onClose }) => {
   // Use vault-specific max acquire amount if available, otherwise no practical cap
   // for ETH / fallback to 10M ADA for Cardano.
   const maxAcquireAmount = isEth ? 100 : vault.maxAcquireAmountAda || 10000000;
+
+  // ── Acquire expansion ──────────────────────────────────────────────────
+  // During an acquire expansion the proposal sets the maximum the window accepts and the VT price;
+  // the first-acquire share formula (fair value, acquirer pool) does not apply.
+  const isAcquireExpansion = vault?.vaultStatus === 'acquire_expansion';
+  const expansionMax = isEth ? vault.acquireExpansionMaxEth || 0 : vault.acquireExpansionMaxAda || 0;
+  const expansionRaised = isEth ? vault.acquireExpansionCurrentEth || 0 : vault.acquireExpansionCurrentAda || 0;
+  const hasExpansionMax = isAcquireExpansion && !vault.acquireExpansionNoMax && expansionMax > 0;
+  // Rounded down to the input precision so the max button never asks for more than is left.
+  const expansionLeft = hasExpansionMax
+    ? Math.max(0, Math.floor((expansionMax - expansionRaised) * 10 ** maxInputDecimals) / 10 ** maxInputDecimals)
+    : Infinity;
+  // Less than one minimum acquire left means nothing more fits; the backend closes the window then.
+  const expansionRemaining = expansionLeft < minAcquire ? 0 : expansionLeft;
+  const expansionVtPerNative = isAcquireExpansion
+    ? Number(
+        vault.acquireExpansionPriceType === 'limit'
+          ? vault.acquireExpansionLimitPrice
+          : vault.acquireExpansionMarketPrice
+      ) || 0
+    : 0;
+
   // Keep ADA integer-floored (existing behaviour); ETH keeps its fractional precision.
-  const cappedMax = Math.min(walletBalance, maxAcquireAmount);
+  const cappedMax = Math.min(walletBalance, maxAcquireAmount, expansionRemaining);
   const maxValue = isEth ? cappedMax : Math.floor(cappedMax);
 
   const acquireAmountNum = parseFloat(acquireAmount) || 0;
@@ -112,9 +134,17 @@ export const AcquireModal = ({ vault, onClose }) => {
   const totalAvailableTokenAmount = Math.floor((totalAvailableTokenPercent / 100) * ftTokenSupply);
 
   // Est Vault Token (%) = user's share of the acquirer pool
-  const estVaultTokenPercent = totalAvailableTokenPercent * userShare;
   // Est Vault Token Amount = estimated token amount user will receive
-  const estVaultTokenAmount = Math.floor(totalAvailableTokenAmount * userShare);
+  // An expansion mints new VT at the proposal price, so the share is of the supply after minting.
+  const expansionVt = effectiveAmount * expansionVtPerNative;
+  const estVaultTokenAmount = isAcquireExpansion
+    ? Math.floor(expansionVt)
+    : Math.floor(totalAvailableTokenAmount * userShare);
+  const estVaultTokenPercent = isAcquireExpansion
+    ? ftTokenSupply + expansionVt > 0
+      ? (expansionVt / (ftTokenSupply + expansionVt)) * 100
+      : 0
+    : totalAvailableTokenPercent * userShare;
 
   const handleAcquire = async () => {
     if (!acquireAmount || parseFloat(acquireAmount) <= 0) return;
@@ -313,6 +343,15 @@ export const AcquireModal = ({ vault, onClose }) => {
                   token allocation
                 </div>
               )}
+              {hasExpansionMax && (
+                <div
+                  className={`mt-3 text-xs ${effectiveAmount > expansionRemaining ? 'text-red-400' : 'text-zinc-400'}`}
+                >
+                  {expansionRemaining > 0
+                    ? `This acquire expansion accepts up to ${formatNum(expansionRemaining, maxInputDecimals)} ${assetSymbol} more (${formatNum(expansionRaised, maxInputDecimals)} of ${formatNum(expansionMax, maxInputDecimals)} ${assetSymbol} raised).`
+                    : 'This acquire expansion has reached its maximum.'}
+                </div>
+              )}
               {!isEth && maxAcquireAmount < 10000000 && (
                 <div className="mt-3 text-xs text-zinc-400">
                   Maximum acquire limit for this vault: {formatNum(maxAcquireAmount)} {assetSymbol} per transaction
@@ -344,29 +383,65 @@ export const AcquireModal = ({ vault, onClose }) => {
                 </p>
                 <p className="text-xl font-medium">{formatNum(estVaultTokenAmount)}</p>
               </div>
-              <div className="space-y-1 text-center">
-                <p className="text-dark-100 text-sm m-0 flex items-center justify-center gap-1.5">
-                  Total % available for acquirers
-                  <HoverHelp hint="Net percentage of vault token supply allocated to acquirers after the liquidity pool share is reserved." />
-                </p>
-                <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
-              </div>
-              <div className="text-center">
-                <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
-                  Total {assetSymbol} sent by acquirers
-                  <HoverHelp hint="Total amount all acquirers have sent to this vault so far." />
-                </p>
-                <p className="text-xl font-medium">
-                  {currencySymbol}
-                  {formatNum(
-                    pickByCurrency({
-                      ada: vault.assetsPrices?.totalAcquiredAda,
-                      usd: vault.assetsPrices?.totalAcquiredUsd,
-                      eth: vault.assetsPrices?.totalAcquiredEth,
-                    })
-                  )}
-                </p>
-              </div>
+              {isAcquireExpansion ? (
+                <>
+                  <div className="space-y-1 text-center">
+                    <p className="text-dark-100 text-sm m-0 flex items-center justify-center gap-1.5">
+                      VT price
+                      <HoverHelp
+                        hint={
+                          vault.acquireExpansionPriceType === 'limit'
+                            ? `Fixed by the acquire expansion proposal: vault tokens minted per 1 ${assetSymbol}.`
+                            : `Market price when the proposal was created; the actual price is set when your ${assetSymbol} is received.`
+                        }
+                      />
+                    </p>
+                    <p className="text-xl font-medium">
+                      {expansionVtPerNative > 0
+                        ? `${vault.acquireExpansionPriceType === 'limit' ? '' : '≈'}${formatNum(expansionVtPerNative)} VT / ${assetSymbol}`
+                        : '-'}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                      Raised in this expansion
+                      <HoverHelp
+                        hint={`${assetSymbol} sent during this acquire expansion, out of the proposal maximum.`}
+                      />
+                    </p>
+                    <p className="text-xl font-medium">
+                      {formatNum(expansionRaised, maxInputDecimals)}
+                      {hasExpansionMax ? ` / ${formatNum(expansionMax, maxInputDecimals)}` : ''} {assetSymbol}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-1 text-center">
+                    <p className="text-dark-100 text-sm m-0 flex items-center justify-center gap-1.5">
+                      Total % available for acquirers
+                      <HoverHelp hint="Net percentage of vault token supply allocated to acquirers after the liquidity pool share is reserved." />
+                    </p>
+                    <p className="text-xl font-medium">{formatNum(totalAvailableTokenPercent)}%</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-dark-100 text-sm flex items-center justify-center gap-1.5">
+                      Total {assetSymbol} sent by acquirers
+                      <HoverHelp hint="Total amount all acquirers have sent to this vault so far." />
+                    </p>
+                    <p className="text-xl font-medium">
+                      {currencySymbol}
+                      {formatNum(
+                        pickByCurrency({
+                          ada: vault.assetsPrices?.totalAcquiredAda,
+                          usd: vault.assetsPrices?.totalAcquiredUsd,
+                          eth: vault.assetsPrices?.totalAcquiredEth,
+                        })
+                      )}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col items-center mt-8 gap-2">
@@ -377,6 +452,7 @@ export const AcquireModal = ({ vault, onClose }) => {
                   (inputCurrency === 'usd' && !hasRealPrice) ||
                   (!isEth && wallet.isUpdatingUtxos) ||
                   effectiveAmount < minAcquire ||
+                  effectiveAmount > expansionRemaining ||
                   !vault.isAcquireWindowActive
                 }
                 onClick={handleAcquire}
@@ -384,9 +460,11 @@ export const AcquireModal = ({ vault, onClose }) => {
               >
                 {!isEth && wallet.isUpdatingUtxos
                   ? 'Updating UTXOs...'
-                  : status === 'idle'
-                    ? 'ACQUIRE'
-                    : status.toUpperCase()}
+                  : hasExpansionMax && expansionRemaining <= 0 && status === 'idle'
+                    ? 'MAXIMUM REACHED'
+                    : status === 'idle'
+                      ? 'ACQUIRE'
+                      : status.toUpperCase()}
               </PrimaryButton>
               {isEth && (
                 <div className="text-xs text-dark-100 text-center">
