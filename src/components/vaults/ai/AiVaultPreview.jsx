@@ -786,9 +786,13 @@ export const AiVaultPreview = ({
   const nativeLabel = isRobinHood ? 'ETH' : 'ADA';
   // Robinhood: entered in USD, stored in ETH. Cardano: entered and stored in ADA.
   const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
-  const thresholdNative = Number(vault.minAcquireThreshold);
-  const hasThreshold =
-    vault.minAcquireThreshold !== null && vault.minAcquireThreshold !== undefined && thresholdNative > 0;
+  const thresholdSet =
+    vault.minAcquireThreshold !== null &&
+    vault.minAcquireThreshold !== undefined &&
+    Number(vault.minAcquireThreshold) > 0;
+  // Robinhood acquire-only vaults always have a minimum raise: unset means the 0.1 ETH floor (the API applies the same).
+  const thresholdNative = thresholdSet ? Number(vault.minAcquireThreshold) : isRobinHood ? MIN_EVM_THRESHOLD_ETH : 0;
+  const hasThreshold = thresholdNative > 0;
   // What the creator typed, so re-editing does not drift through the ETH rounding.
   const thresholdUsd = hasThreshold
     ? (vault.minAcquireThresholdUsd ?? Math.round(thresholdNative * ethUsd * 100) / 100)
@@ -796,7 +800,7 @@ export const AiVaultPreview = ({
 
   const commitThreshold = raw => {
     if (raw === '') {
-      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: isRobinHood ? MIN_EVM_THRESHOLD_ETH : null, minAcquireThresholdUsd: null });
       return;
     }
     if (!isRobinHood) {
@@ -805,7 +809,7 @@ export const AiVaultPreview = ({
     }
     const eth = usdToEthThreshold(raw, ethUsd);
     if (eth === null) {
-      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: MIN_EVM_THRESHOLD_ETH, minAcquireThresholdUsd: null });
       return;
     }
     if (eth < MIN_EVM_THRESHOLD_ETH) {
@@ -814,7 +818,13 @@ export const AiVaultPreview = ({
       );
       return;
     }
-    onUpdateVault({ minAcquireThreshold: Math.min(MAX_EVM_THRESHOLD_ETH, eth), minAcquireThresholdUsd: Number(raw) });
+    if (eth > MAX_EVM_THRESHOLD_ETH) {
+      toast.error(
+        `The minimum raise can be at most ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ETH (≈ $${formatUsd(MAX_EVM_THRESHOLD_ETH * ethUsd)}).`
+      );
+      return;
+    }
+    onUpdateVault({ minAcquireThreshold: eth, minAcquireThresholdUsd: Number(raw) });
   };
 
   const commitNumber = (field, raw, { min = 0, max = 100, emptyValue = null, integer = false } = {}) => {
@@ -1322,7 +1332,7 @@ export const AiVaultPreview = ({
                 isAiSet={isAiSet('minAcquireThreshold')}
                 isChanged={isChanged('minAcquireThreshold')}
                 label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
-                placeholder="Optional"
+                placeholder={isRobinHood ? `Min ${MIN_EVM_THRESHOLD_ETH} ETH` : 'Optional'}
                 sanitize={sanitizeDecimal}
                 suffix={isRobinHood ? 'USD' : nativeLabel}
                 value={hasThreshold ? String(isRobinHood ? thresholdUsd : thresholdNative) : ''}

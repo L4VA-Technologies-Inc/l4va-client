@@ -135,10 +135,11 @@ export const AcquireWindow = ({
               <LavaInput
                 error={errors.minAcquireThreshold}
                 // Not "reserve": that word already means the lock % and the index cash reserve.
-                label="MINIMUM RAISE (OPTIONAL)"
+                required
+                label="MINIMUM RAISE"
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
-                placeholder={ethUsd ? 'e.g. 500' : 'Loading ETH price…'}
+                placeholder={ethUsd ? `At least $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}` : 'Loading ETH price…'}
                 suffix="USD"
                 type="text"
                 disabled={!ethUsd}
@@ -155,11 +156,9 @@ export const AcquireWindow = ({
                   updateField('minAcquireThresholdUsd', raw === '' ? null : raw);
                   updateField('minAcquireThreshold', eth === null ? null : Math.min(eth, maxAcquireThreshold));
                 }}
-                hint={
-                  data.minAcquireThreshold
-                    ? `≈ ${data.minAcquireThreshold} ETH at the current price. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}). Vault locks only if at least this much is acquired; otherwise every acquirer is refunded.`
-                    : `Optional. Minimum ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}) when set. If not set, any acquired ETH can lock the vault.`
-                }
+                hint={`${
+                  data.minAcquireThreshold ? `≈ ${data.minAcquireThreshold} ETH at the current price. ` : ''
+                }The vault launches only if acquirers put in at least this much ETH; otherwise everyone is refunded. Allowed: ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}) to ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ETH (≈ $${Math.round(MAX_EVM_THRESHOLD_ETH * ethUsd).toLocaleString()}).`}
               />
             ) : (
               <LavaInput
@@ -225,7 +224,7 @@ export const AcquireWindow = ({
                 Warning. With {data.liquidityPoolContribution}% LP Contribution, your vault has TWO thresholds that must
                 be met:
                 <br />
-                1. Your minimum {assetSymbol} threshold (if set)
+                1. Your minimum {assetSymbol} {isRobinHood ? 'raise' : 'threshold (if set)'}
                 <br />
                 2. LP minimum liquidity requirement (calculated automatically)
                 <br />
