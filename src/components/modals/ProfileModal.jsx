@@ -15,14 +15,12 @@ import { useAuth } from '@/lib/auth/auth';
 import { formatNum } from '@/utils/core.utils';
 import { useVlrmBalance } from '@/hooks/useVlrmBalance';
 import { useNetwork } from '@/hooks/useNetwork';
-import { useCurrency } from '@/hooks/useCurrency';
 
 export const ProfileModal = () => {
   const { closeModal } = useModalControls();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { isRobinHood } = useNetwork();
-  const { currencyLabel } = useCurrency();
 
   const wallet = useWallet('handler', 'isConnected', 'balanceAda', 'balanceDecoded', 'disconnect');
   const updateWalletStore = useExtensions('update');
@@ -114,10 +112,8 @@ export const ProfileModal = () => {
                 <span className="font-bold">{formatNum(vlrmBalance, 4)} VLRM</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-steel-850 rounded-lg">
-                <span className="text-dark-100">{currencyLabel}</span>
-                <span className="font-bold">
-                  {formatNum(wallet.balanceAda)} {currencyLabel}
-                </span>
+                <span className="text-dark-100">ADA</span>
+                <span className="font-bold">{formatNum(wallet.balanceAda)} ADA</span>
               </div>
             </>
           )}
@@ -140,7 +136,7 @@ export const ProfileModal = () => {
         {!isRobinHood && (
           <SecondaryButton className="w-full justify-start gap-3 text-left" onClick={() => handleNavigation('/swap')}>
             <ArrowLeftRight size={20} />
-            Swap {currencyLabel}/$VLRM
+            Swap ADA/$VLRM
           </SecondaryButton>
         )}
 
