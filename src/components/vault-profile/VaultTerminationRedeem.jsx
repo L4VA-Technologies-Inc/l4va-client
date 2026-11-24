@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Clock, ExternalLink, Info } from 'lucide-react';
 import { erc20Abi, formatUnits, zeroAddress } from 'viem';
 import { useAccount, useReadContract, useReadContracts } from 'wagmi';
 
@@ -7,6 +8,9 @@ import { useEvmRedeemTransaction } from '@/hooks/useEvmRedeemTransaction';
 import { VAULT_TERMINATION_ABI } from '@/lib/evm/vault.abi';
 import { robinhoodChain } from '@/lib/evm/wagmi.config';
 import { useAuth } from '@/lib/auth/auth';
+import { useVaultIndex } from '@/services/api/queries';
+import { getTransactionUrl } from '@/utils/explorer.utils';
+import { ChainType } from '@/utils/types';
 
 const fmt = (raw, decimals) => {
   try {
@@ -121,51 +125,84 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
     : null;
   const deadlinePassed = deadline ? Date.now() / 1000 >= Number(deadline) : false;
 
+  // Logos come from the index overview (holdings + targets); initials otherwise.
+  const { data: index } = useVaultIndex(vault?.id, enabled);
+  const logos = useMemo(() => {
+    const m = new Map();
+    for (const a of [...(index?.config?.targets ?? []), ...(index?.portfolio?.assets ?? [])]) {
+      if (a?.assetAddress && a.image) m.set(a.assetAddress.toLowerCase(), a.image);
+    }
+    return m;
+  }, [index]);
+
+  const rows = useMemo(
+    () =>
+      previews
+        .map(p => ({ ...p, image: p.asset === zeroAddress ? ETH_LOGO : logos.get(p.asset.toLowerCase()) }))
+        .filter(p => !hasVt || p.hasAmount),
+    [previews, logos, hasVt]
+  );
+
+  const [query, setQuery] = useState('');
+  const shown = query ? rows.filter(r => r.symbol.toLowerCase().includes(query.trim().toLowerCase())) : rows;
+
   if (!enabled) return null;
 
   return (
     <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-      <h3 className="font-russo text-lg uppercase text-white">Vault Terminating — Redeem Your Share</h3>
-      <p className="mt-2 text-sm text-steel-200">
-        Governance voted to terminate this vault. Redeeming{' '}
-        <span className="text-white">burns your entire VT balance</span> and pays your pro-rata share of every
-        distributed asset in a single transaction. There is no partial redeem.
-      </p>
-      {deadlineLabel && (
-        <p className="mt-1 text-sm text-steel-300">
-          {deadlinePassed ? 'Claim window closed on ' : 'Claim window closes '}
-          <span className="text-white">{deadlineLabel}</span>
-          {!deadlinePassed && '. Unclaimed funds are swept to the treasury afterwards.'}
-        </p>
-      )}
-      {!deadlinePassed && (
-        <p className="mt-1 text-sm text-steel-300">
-          VT held in a Uniswap liquidity position can&apos;t be redeemed directly. Remove your liquidity on Uniswap
-          first — the VT returns to your wallet and you can redeem it here.
-        </p>
-      )}
-
-      <div className="mt-3 rounded-lg bg-steel-950 p-3 text-sm">
-        <div className="flex justify-between">
-          <span className="text-steel-300">Your VT balance</span>
-          <span className="text-white">
-            {fmt(vtBalance, vtDecimals)} {vault?.vaultTokenTicker || 'VT'}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-russo text-lg uppercase text-white">Redeem your share</h3>
+        {deadlineLabel && (
+          <span
+            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
+              deadlinePassed ? 'bg-red-500/15 text-red-300' : 'bg-amber-500/15 text-amber-200'
+            }`}
+          >
+            <Clock className="h-3 w-3" />
+            {deadlinePassed ? 'Closed' : `Until ${deadlineLabel}`}
           </span>
-        </div>
-        {previews.length > 0 && (
-          <div className="mt-2 border-t border-steel-800 pt-2">
-            <p className="text-steel-300">You will receive</p>
-            <ul className="mt-1 space-y-1">
-              {previews.map(p => (
-                <li key={p.asset} className="flex justify-between text-white">
-                  <span>{p.symbol}</span>
-                  <span>{p.amount}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
         )}
       </div>
+      <p className="mt-1 text-sm text-steel-300">
+        This vault is closing. Burn your VT to get your share of every asset in one transaction.
+      </p>
+
+      <div className="mt-3 flex items-center justify-between rounded-lg bg-steel-950 px-3 py-2 text-sm">
+        <span className="text-steel-300">Your VT</span>
+        <span className="font-medium text-white">
+          {fmt(vtBalance, vtDecimals)} {vault?.vaultTokenTicker || 'VT'}
+        </span>
+      </div>
+
+      {hasVt && rows.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-sm text-steel-300">
+              You receive <span className="text-white">{rows.length}</span> assets
+            </p>
+            {rows.length > 8 && (
+              <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search"
+                className="w-28 rounded-md bg-steel-950 px-2 py-1 text-xs text-white outline-none placeholder:text-steel-500"
+              />
+            )}
+          </div>
+          <ul className="max-h-64 divide-y divide-steel-800/60 overflow-y-auto rounded-lg bg-steel-950 pr-1">
+            {shown.map(r => (
+              <li key={r.asset} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                <span className="flex min-w-0 items-center gap-2">
+                  <AssetLogo image={r.image} symbol={r.symbol} />
+                  <span className="truncate text-white">{r.symbol}</span>
+                </span>
+                <span className="tabular-nums text-steel-100">{r.amount}</span>
+              </li>
+            ))}
+            {shown.length === 0 && <li className="px-3 py-3 text-center text-xs text-steel-400">No match</li>}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-3">
         <PrimaryButton
@@ -181,8 +218,41 @@ export const VaultTerminationRedeem = ({ vault, vaultTokenAddress }) => {
         >
           {isProcessing ? 'Redeeming…' : hasVt ? 'Burn VT & Redeem' : 'No VT to redeem'}
         </PrimaryButton>
-        {txHash && <p className="mt-2 break-all text-xs text-steel-400">Submitted: {txHash}</p>}
+        {txHash && (
+          <a
+            href={getTransactionUrl(txHash, ChainType.ROBINHOOD)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 flex items-center justify-center gap-1 text-xs text-steel-400 hover:text-white"
+          >
+            View transaction <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
       </div>
+
+      {!deadlinePassed && (
+        <details className="group mt-3 text-xs text-steel-400">
+          <summary className="flex cursor-pointer list-none items-center gap-1 hover:text-steel-200">
+            <Info className="h-3 w-3" /> How it works
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-4">
+            <li>Your whole VT balance is burned — there is no partial redeem.</li>
+            <li>VT in a Uniswap LP position doesn&apos;t count. Remove liquidity first, then redeem.</li>
+            <li>After the deadline, unclaimed assets go to the treasury.</li>
+          </ul>
+        </details>
+      )}
     </div>
   );
 };
+
+const ETH_LOGO = '/assets/icons/eth.svg';
+
+const AssetLogo = ({ image, symbol }) =>
+  image ? (
+    <img src={image} alt="" className="h-6 w-6 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+  ) : (
+    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-steel-800 text-[10px] font-bold text-steel-200">
+      {(symbol || '?').slice(0, 2).toUpperCase()}
+    </span>
+  );
