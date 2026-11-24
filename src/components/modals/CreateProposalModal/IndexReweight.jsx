@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 
 import { Spinner } from '@/components/Spinner';
 import SecondaryButton from '@/components/shared/SecondaryButton';
@@ -64,6 +64,231 @@ const skipMessage = (leg, minTradeNative) => {
     return `${action} ≈ ${formatNativeWei(leg.valueNative)} ETH has no ETH above the cash reserve to fund it`;
   }
   return `Within the drift tolerance (≈ ${formatNativeWei(leg.valueNative)} ETH off target)`;
+};
+
+const COLLAPSED_ROWS = 8;
+const COLLAPSE_KEY = 'l4va:proposal-outcome-collapsed:index-reweight-changes';
+const lc = a => (a || '').toLowerCase();
+
+/**
+ * One table for the whole re-weight: per asset, the weight change and the estimated trade, with
+ * any problem (over the daily sell cap, skipped, no route) on the same row. Rows that need
+ * attention sort first; the rest collapse past COLLAPSED_ROWS so a 50-asset basket stays short.
+ */
+const ChangesTable = ({
+  diff,
+  current,
+  basket,
+  scheduleUnchanged,
+  scheduleOf: schedule,
+  preview,
+  previewState,
+  overCap,
+  unroutable,
+  symbolOf,
+}) => {
+  const [expanded, setExpanded] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(COLLAPSE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleCollapsed = () =>
+    setCollapsed(prev => {
+      try {
+        if (prev) window.localStorage.removeItem(COLLAPSE_KEY);
+        else window.localStorage.setItem(COLLAPSE_KEY, '1');
+      } catch {
+        // Storage blocked: the choice just isn't remembered.
+      }
+      return !prev;
+    });
+  const loading = previewState === 'loading';
+  const previewError = previewState !== 'idle' && previewState !== 'loading' ? previewState : null;
+
+  const trades = useMemo(() => {
+    const map = new Map();
+    const at = a => map.get(lc(a)) || {};
+    (preview?.sells || []).forEach(x => map.set(lc(x.asset), { ...at(x.asset), sell: x }));
+    (preview?.buys || []).forEach(x => map.set(lc(x.asset), { ...at(x.asset), buy: x }));
+    (preview?.skipped || [])
+      .filter(x => x.reason !== 'within_tolerance')
+      .forEach(x => map.set(lc(x.asset), { ...at(x.asset), skip: x }));
+    overCap.forEach(x => map.set(lc(x.asset), { ...at(x.asset), cap: x }));
+    return map;
+  }, [preview, overCap]);
+
+  const emptyPlan = !!preview && preview.sells.length === 0 && preview.buys.length === 0;
+  const blockingEmpty = emptyPlan ? (preview.skipped || []).filter(s => s.reason !== 'within_tolerance') : [];
+
+  const rows = diff
+    .filter(row => row.from !== row.to || trades.has(lc(row.assetAddress)))
+    .map(row => ({ ...row, trade: trades.get(lc(row.assetAddress)) || {} }))
+    .map(row => ({ ...row, issue: !!(row.trade.cap || row.trade.skip) }))
+    .sort((a, b) => Number(b.issue) - Number(a.issue));
+
+  const issues = rows.filter(r => r.issue).length;
+  const visible = expanded ? rows : rows.slice(0, Math.max(COLLAPSED_ROWS, issues));
+  const hidden = rows.length - visible.length;
+
+  const added = rows.filter(r => r.from === 0 && r.to > 0).length;
+  const removed = rows.filter(r => r.from > 0 && r.to === 0).length;
+  const changed = rows.length - added - removed;
+  const sellTotal = (preview?.sells || []).reduce((n, x) => n + BigInt(x.valueNative || 0), 0n);
+  const buyTotal = (preview?.buys || []).reduce((n, x) => n + BigInt(x.nativeIn || 0), 0n);
+
+  const tradeCell = ({ trade }) => {
+    if (trade.sell) {
+      return (
+        <span className="text-red-400">
+          Sell{trade.sell.exit ? ' all' : ''} ≈ {formatNativeWei(trade.sell.valueNative)}
+        </span>
+      );
+    }
+    if (trade.buy) return <span className="text-green-500">Buy ≈ {formatNativeWei(trade.buy.nativeIn)}</span>;
+    if (trade.skip) return <span className="text-amber-400">Skipped</span>;
+    if (loading) return <span className="text-dark-100">…</span>;
+    return <span className="text-dark-100">—</span>;
+  };
+
+  return (
+    <div className="space-y-3 rounded-lg bg-steel-800 p-4 text-sm">
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-expanded={!collapsed}
+        className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
+      >
+        <h4 className="flex items-center gap-2 font-medium">
+          Changes and estimated trades
+          {loading && <Spinner size="sm" />}
+        </h4>
+        <span className="flex items-center gap-2 text-xs text-dark-100">
+          {[added && `${added} added`, removed && `${removed} removed`, changed && `${changed} re-weighted`]
+            .filter(Boolean)
+            .join(' · ')}
+          <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+        </span>
+      </button>
+
+      {preview && !emptyPlan && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums">
+          <span className="text-red-400">
+            {preview.sells.length} sells ≈ {formatNativeWei(sellTotal.toString())} ETH
+          </span>
+          <span className="text-green-500">
+            {preview.buys.length} buys ≈ {formatNativeWei(buyTotal.toString())} ETH
+          </span>
+        </div>
+      )}
+
+      {!collapsed && rows.length > 0 && (
+        <div className={loading ? 'opacity-60' : ''}>
+          <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 border-b border-steel-750 pb-1 text-xs text-dark-100">
+            <span>Asset</span>
+            <span className="text-right">Weight</span>
+            <span className="w-32 text-right">Trade (ETH)</span>
+          </div>
+          <ul className="divide-y divide-steel-750/50">
+            {visible.map(row => (
+              <li key={row.assetAddress} className="py-1.5">
+                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4">
+                  <span className="truncate">{row.symbol || symbolOf(row.assetAddress)}</span>
+                  <span className="flex items-center justify-end gap-1.5 tabular-nums">
+                    <span className="text-dark-100">{formatBps(row.from)}</span>
+                    <ArrowRight className="h-3 w-3 text-dark-100" />
+                    <span className={row.to > row.from ? 'text-green-500' : row.to < row.from ? 'text-red-400' : ''}>
+                      {formatBps(row.to)}
+                    </span>
+                  </span>
+                  <span className="w-32 text-right tabular-nums">{tradeCell(row)}</span>
+                </div>
+                {row.trade.cap && (
+                  <p className="mt-0.5 text-xs text-red-400">
+                    Sells ≈ {(row.trade.cap.sellBps / 100).toFixed(1)}% of holdings — max {row.trade.cap.capBps / 100}%
+                    per re-weight
+                  </p>
+                )}
+                {row.trade.skip && (
+                  <p className="mt-0.5 text-xs text-amber-400">
+                    {skipMessage(row.trade.skip, preview?.minTradeNative)}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+          {rows.length > COLLAPSED_ROWS && (
+            <button
+              type="button"
+              onClick={() => setExpanded(v => !v)}
+              className="mt-2 flex items-center gap-1 text-xs text-dark-100 hover:text-orange-500"
+            >
+              <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+              {expanded ? 'Show fewer' : `Show all ${rows.length} assets (${hidden} more)`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!collapsed && (Number(current.reserveBps) !== Number(basket.reserveBps) || !scheduleUnchanged) && (
+        <ul className="space-y-1 border-t border-steel-750 pt-2">
+          {Number(current.reserveBps) !== Number(basket.reserveBps) && (
+            <li className="flex items-center justify-between gap-3">
+              <span>Cash reserve</span>
+              <span className="flex items-center gap-1.5 tabular-nums">
+                <span className="text-dark-100">{formatBps(current.reserveBps)}</span>
+                <ArrowRight className="h-3 w-3 text-dark-100" />
+                <span>{formatBps(basket.reserveBps)}</span>
+              </span>
+            </li>
+          )}
+          {!scheduleUnchanged && (
+            <li className="flex items-center justify-between gap-3">
+              <span>Auto-rebalance</span>
+              <span className="flex items-center gap-1.5 tabular-nums">
+                <span className="text-dark-100">{formatRebalanceSchedule(schedule(current))}</span>
+                <ArrowRight className="h-3 w-3 text-dark-100" />
+                <span>{formatRebalanceSchedule(basket)}</span>
+              </span>
+            </li>
+          )}
+        </ul>
+      )}
+
+      {previewError && <p className="text-red-400">{previewError}</p>}
+
+      {emptyPlan && blockingEmpty.length === 0 && (
+        <p className="text-dark-100">All assets are within tolerance of the new weights — no trades needed.</p>
+      )}
+      {emptyPlan && blockingEmpty.length > 0 && (
+        <p className="text-xs text-amber-400">
+          {blockingEmpty.every(s => s.reason === 'below_min_trade')
+            ? `No trades would run: the vault is too small to trade. Each trade must be at least ${formatNativeWei(preview.minTradeNative)} ETH (vault value ≈ ${formatNativeWei(preview.navNative)} ETH). `
+            : 'No trades would run with the vault as it is now. '}
+          This proposal can&apos;t be created: it would only change the stored weights without making any trade.
+        </p>
+      )}
+      {overCap.length > 0 && (
+        <p className="text-xs text-red-400">
+          {overCap.length} {overCap.length === 1 ? 'sell is' : 'sells are'} over the vault&apos;s daily trading limit. A
+          re-weight can sell at most that much of each asset — make a smaller change now and propose the rest later.
+        </p>
+      )}
+      {unroutable.length > 0 && (
+        <p className="text-xs text-red-400">
+          This proposal can&apos;t be created while a needed trade has no Uniswap route. Change the basket so it no
+          longer needs that trade.
+        </p>
+      )}
+      {!collapsed && preview && (
+        <p className="text-xs text-dark-100">
+          Estimate only. Trades are sized again from live prices when the proposal executes.
+        </p>
+      )}
+    </div>
+  );
 };
 
 const IndexReweight = ({ vault, onDataChange, error }) => {
@@ -193,147 +418,18 @@ const IndexReweight = ({ vault, onDataChange, error }) => {
       />
 
       {!unchanged && !problem && (
-        <div className="space-y-2 rounded-lg bg-steel-800 p-4">
-          <h4 className="text-sm font-medium">Weight changes</h4>
-          <ul className="space-y-1 text-sm">
-            {diff
-              .filter(row => row.from !== row.to)
-              .map(row => (
-                <li key={row.assetAddress} className="flex items-center justify-between gap-3">
-                  <span>{row.symbol || row.assetAddress}</span>
-                  <span className="flex items-center gap-2 tabular-nums">
-                    <span className="text-dark-100">{formatBps(row.from)}</span>
-                    <ArrowRight className="h-3 w-3 text-dark-100" />
-                    <span className={row.to > row.from ? 'text-green-500' : 'text-red-400'}>{formatBps(row.to)}</span>
-                  </span>
-                </li>
-              ))}
-            {Number(current.reserveBps) !== Number(basket.reserveBps) && (
-              <li className="flex items-center justify-between gap-3">
-                <span>Cash reserve</span>
-                <span className="flex items-center gap-2 tabular-nums">
-                  <span className="text-dark-100">{formatBps(current.reserveBps)}</span>
-                  <ArrowRight className="h-3 w-3 text-dark-100" />
-                  <span>{formatBps(basket.reserveBps)}</span>
-                </span>
-              </li>
-            )}
-            {!scheduleUnchanged && (
-              <li className="flex items-center justify-between gap-3">
-                <span>Auto-rebalance</span>
-                <span className="flex items-center gap-2 tabular-nums">
-                  <span className="text-dark-100">{formatRebalanceSchedule(scheduleOf(current))}</span>
-                  <ArrowRight className="h-3 w-3 text-dark-100" />
-                  <span>{formatRebalanceSchedule(basket)}</span>
-                </span>
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-
-      {canPreview && (
-        <div className="space-y-3">
-          <h4 className="flex items-center gap-2 text-sm font-medium">
-            Estimated trades at current prices
-            {previewState === 'loading' && <Spinner size="sm" />}
-          </h4>
-          {previewState !== 'idle' && previewState !== 'loading' && (
-            <p className="text-sm text-red-400">{previewState}</p>
-          )}
-          {preview && (
-            <div
-              className={`space-y-2 rounded-lg bg-steel-800 p-4 text-sm ${previewState === 'loading' ? 'opacity-60' : ''}`}
-            >
-              {preview.sells.length === 0 && preview.buys.length === 0 ? (
-                (() => {
-                  // An empty plan only means "on target" when nothing was held back for another reason.
-                  const blocking = (preview.skipped || []).filter(s => s.reason !== 'within_tolerance');
-                  if (blocking.length === 0) {
-                    return (
-                      <p className="text-dark-100">
-                        All assets are within tolerance of the new weights — no trades needed.
-                      </p>
-                    );
-                  }
-                  const tooSmall = blocking.every(s => s.reason === 'below_min_trade');
-                  return (
-                    <div className="space-y-2">
-                      <p className="text-amber-400">
-                        {tooSmall
-                          ? `No trades would run: the vault is too small to trade. Each trade must be at least ${formatNativeWei(preview.minTradeNative)} ETH (vault value ≈ ${formatNativeWei(preview.navNative)} ETH).`
-                          : 'No trades would run with the vault as it is now:'}
-                      </p>
-                      <ul className="space-y-1 text-dark-100">
-                        {blocking.map(leg => (
-                          <li key={`${leg.side}-${leg.asset}`} className="flex justify-between gap-3">
-                            <span>{symbolOf(leg.asset)}</span>
-                            <span className="text-right">{skipMessage(leg, preview.minTradeNative)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="text-xs text-dark-100">
-                        This proposal can&apos;t be created: it would only change the stored weights without making any
-                        trade. Propose the re-weight once the vault is larger.
-                      </p>
-                    </div>
-                  );
-                })()
-              ) : (
-                <>
-                  {preview.sells.map(sell => (
-                    <p key={`sell-${sell.asset}`} className="flex justify-between gap-3">
-                      <span>
-                        Sell {sell.exit ? 'all ' : ''}
-                        {symbolOf(sell.asset)}
-                      </span>
-                      <span className="tabular-nums text-red-400">≈ {formatNativeWei(sell.valueNative)} ETH</span>
-                    </p>
-                  ))}
-                  {preview.buys.map(buy => (
-                    <p key={`buy-${buy.asset}`} className="flex justify-between gap-3">
-                      <span>Buy {symbolOf(buy.asset)}</span>
-                      <span className="tabular-nums text-green-500">≈ {formatNativeWei(buy.nativeIn)} ETH</span>
-                    </p>
-                  ))}
-                  {(preview.skipped || [])
-                    .filter(s => s.reason !== 'within_tolerance')
-                    .map(leg => (
-                      <p key={`skip-${leg.side}-${leg.asset}`} className="flex justify-between gap-3 text-amber-400">
-                        <span>{symbolOf(leg.asset)} skipped</span>
-                        <span className="text-right">{skipMessage(leg, preview.minTradeNative)}</span>
-                      </p>
-                    ))}
-                </>
-              )}
-              {overCap.length > 0 && (
-                <div className="space-y-1 text-xs text-red-400">
-                  {overCap.map(c => (
-                    <p key={`cap-${c.asset}`} className="flex justify-between gap-3">
-                      <span>
-                        {symbolOf(c.asset)}: sells ≈ {(c.sellBps / 100).toFixed(1)}% of holdings
-                      </span>
-                      <span className="text-right">max {c.capBps / 100}% per re-weight</span>
-                    </p>
-                  ))}
-                  <p>
-                    A re-weight can sell at most the vault&apos;s daily trading limit of each asset. Make a smaller
-                    change now and propose the rest later.
-                  </p>
-                </div>
-              )}
-              {unroutable.length > 0 && (
-                <p className="text-xs text-red-400">
-                  This proposal can&apos;t be created while a needed trade has no Uniswap route. Change the basket so it
-                  no longer needs that trade.
-                </p>
-              )}
-              <p className="pt-1 text-xs text-dark-100">
-                Estimate only. Trades are sized again from live prices when the proposal executes.
-              </p>
-            </div>
-          )}
-        </div>
+        <ChangesTable
+          diff={diff}
+          current={current}
+          basket={basket}
+          scheduleUnchanged={scheduleUnchanged}
+          scheduleOf={scheduleOf}
+          preview={canPreview ? preview : null}
+          previewState={canPreview ? previewState : 'idle'}
+          overCap={overCap}
+          unroutable={unroutable}
+          symbolOf={symbolOf}
+        />
       )}
 
       {!unchanged && !problem && weightsUnchanged && (

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { useMemo } from 'react';
 
+import { VAULT_STATUSES } from '@/components/vaults/constants/vaults.constants';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { GoldenVerifiedBadge, OFFICIAL_PARTNER_BADGE_HINT } from '@/components/shared/GoldenVerifiedBadge';
 import { ChainBadge } from '@/components/shared/ChainBadge';
@@ -97,7 +98,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
             <div>
               <p className="text-sm text-dark-100">TVL</p>
               <p className="font-bold">
-                {vault.totalValueAda && vault.totalValueUsd
+                {vault.vaultStatus !== VAULT_STATUSES.BURNED && vault.totalValueAda && vault.totalValueUsd
                   ? `${currencySymbol}${formatTvl(
                       pickByCurrency({
                         ada: vault.totalValueAda,

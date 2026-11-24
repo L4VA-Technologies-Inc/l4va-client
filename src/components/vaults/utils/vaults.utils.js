@@ -6,7 +6,9 @@ import {
 } from '@/components/vaults/index/indexVault.utils';
 
 /** Robinhood refuses acquire thresholds below this (ETH). */
-export const MIN_EVM_THRESHOLD_ETH = 0.01;
+export const MIN_EVM_THRESHOLD_ETH = 0.1;
+/** Robinhood refuses acquire thresholds above this (ETH). */
+export const MAX_EVM_THRESHOLD_ETH = 1000;
 
 /**
  * Converts a USD reserve amount to the ETH the API stores, rounded to 1e-6 ETH.

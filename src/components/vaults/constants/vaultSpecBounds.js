@@ -40,7 +40,7 @@ const FALLBACK_BOUNDS = {
     creationThreshold: { min: 0.1, max: 100, default: 0.1 },
     cosigningThreshold: { min: 33, max: 100 },
     executionThreshold: { min: 50.1, max: 100 },
-    minAcquireThreshold: { min: 0.01, max: 100000 },
+    minAcquireThreshold: { min: 0.1, max: 1000 },
   },
   cardano: {
     ...durationFallbacks,
