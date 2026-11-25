@@ -195,7 +195,7 @@ export const assetWhitelistItemSchema = yup.object({
     .test('valid-policy-id', 'Invalid Policy ID', function validatePolicyId(value) {
       if (!value) return true; // let .required() handle empty
 
-      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      const isRobinHood = getNetwork() === 'robinhood';
 
       if (isRobinHood) {
         // EVM: contract address — 0x followed by 40 hex chars
@@ -211,7 +211,7 @@ export const assetWhitelistItemSchema = yup.object({
     .boolean()
     .nullable()
     .test('verified-or-evm', 'Only verified collections can be added to a vault', function validateVerified(value) {
-      const isRobinHood = localStorage.getItem('selectedNetwork') === 'robinhood';
+      const isRobinHood = getNetwork() === 'robinhood';
       // EVM contracts don't go through the Cardano verification system
       if (isRobinHood) return true;
       if (value !== true) return this.createError({ message: 'Only verified collections can be added to a vault' });
@@ -440,7 +440,7 @@ export const vaultSchema = yup.object({
           .test(
             specBoundsTest('minAcquireThreshold', 'Minimum acquire threshold', {
               unit: 'ETH',
-              skipIf: () => localStorage.getItem('selectedNetwork') !== 'robinhood',
+              skipIf: () => getNetwork() !== 'robinhood',
             })
           ),
       otherwise: schema => schema.nullable().notRequired(),

@@ -31,6 +31,7 @@ import {
 import { getTransactionUrl } from '@/utils/explorer.utils';
 import { ChainType } from '@/utils/types';
 import { formatDateWithTime, formatNum } from '@/utils/core.utils';
+import { MIN_EVM_THRESHOLD_ETH } from '@/components/vaults/utils/vaults.utils';
 
 const OUTSIDE_BASKET_COLOR = '#64748B';
 const RESERVE_COLOR = 'var(--color-steel-600)';
@@ -417,7 +418,8 @@ const minBasketNativeWei = (config, minTradeNative) => {
 
 const MinBasketSizeNote = ({ config, minTradeNative }) => {
   const minWei = minBasketNativeWei(config, minTradeNative);
-  if (!minWei) return null;
+  // Every vault raises at least the 0.1 ETH threshold floor, so only warn when the basket needs more than that.
+  if (!minWei || minWei <= BigInt(MIN_EVM_THRESHOLD_ETH * 1e18)) return null;
   return (
     <div className="flex items-start gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
       <Info className="mt-0.5 h-4 w-4 shrink-0" />

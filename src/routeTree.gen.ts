@@ -13,6 +13,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TokensRouteImport } from './routes/tokens'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SwapRouteImport } from './routes/swap'
+import { Route as SupportedTokensRouteImport } from './routes/supported-tokens'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -55,6 +56,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SwapRoute = SwapRouteImport.update({
   id: '/swap',
   path: '/swap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportedTokensRoute = SupportedTokensRouteImport.update({
+  id: '/supported-tokens',
+  path: '/supported-tokens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rewards': typeof RewardsRouteWithChildren
+  '/supported-tokens': typeof SupportedTokensRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/create-ai': typeof CreateAiRoute
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/supported-tokens': typeof SupportedTokensRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rewards': typeof RewardsRouteWithChildren
+  '/supported-tokens': typeof SupportedTokensRoute
   '/swap': typeof SwapRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tokens': typeof TokensRouteWithChildren
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy-policy'
     | '/rewards'
+    | '/supported-tokens'
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/create-ai'
     | '/how-it-works'
     | '/privacy-policy'
+    | '/supported-tokens'
     | '/swap'
     | '/terms-of-service'
     | '/verify-email'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy-policy'
     | '/rewards'
+    | '/supported-tokens'
     | '/swap'
     | '/terms-of-service'
     | '/tokens'
@@ -354,6 +366,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RewardsRoute: typeof RewardsRouteWithChildren
+  SupportedTokensRoute: typeof SupportedTokensRoute
   SwapRoute: typeof SwapRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TokensRoute: typeof TokensRouteWithChildren
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/swap'
       fullPath: '/swap'
       preLoaderRoute: typeof SwapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supported-tokens': {
+      id: '/supported-tokens'
+      path: '/supported-tokens'
+      fullPath: '/supported-tokens'
+      preLoaderRoute: typeof SupportedTokensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RewardsRoute: RewardsRouteWithChildren,
+  SupportedTokensRoute: SupportedTokensRoute,
   SwapRoute: SwapRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TokensRoute: TokensRouteWithChildren,

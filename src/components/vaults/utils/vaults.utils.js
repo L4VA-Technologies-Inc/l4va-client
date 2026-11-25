@@ -5,6 +5,10 @@ import {
   toIndexBasketPayload,
 } from '@/components/vaults/index/indexVault.utils';
 
+/** Fallback Robinhood threshold range (ETH) until the API spec loads; the spec is the source. */
+export const MIN_EVM_THRESHOLD_ETH = 0.1;
+export const MAX_EVM_THRESHOLD_ETH = 1000;
+
 /**
  * Converts a USD reserve amount to the ETH the API stores, rounded to 1e-6 ETH.
  * Returns null for an empty or invalid amount.

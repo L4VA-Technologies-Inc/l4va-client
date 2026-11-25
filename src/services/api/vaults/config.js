@@ -95,6 +95,10 @@ export class VaultsConfigProvider {
     return '/api/v1/vaults/index/assets';
   }
 
+  static getIndexSupportedTokens() {
+    return '/api/v1/vaults/index/supported-tokens';
+  }
+
   static getVaultSwapCap(id) {
     return `/api/v1/vaults/${id}/swap-cap`;
   }

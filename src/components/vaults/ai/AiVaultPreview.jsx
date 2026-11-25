@@ -50,7 +50,11 @@ import { useNewVaultBasketCap } from '@/hooks/useBasketAssetCap';
 import { useNativePrices } from '@/services/api/queries';
 import { isImeComposing } from '@/utils/keyboard';
 import { useSyncedBasketRoutes } from '@/components/vaults/index/IndexBasketEditor';
-import { usdToEthThreshold } from '@/components/vaults/utils/vaults.utils';
+import {
+  MAX_EVM_THRESHOLD_ETH,
+  MIN_EVM_THRESHOLD_ETH,
+  usdToEthThreshold,
+} from '@/components/vaults/utils/vaults.utils';
 import { formatBps, validateIndexBasket, VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
@@ -793,20 +797,24 @@ export const AiVaultPreview = ({
   const nativeLabel = isRobinHood ? 'ETH' : 'ADA';
   // Robinhood: entered in USD, stored in ETH. Cardano: entered and stored in ADA.
   const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
-  const thresholdNative = Number(vault.minAcquireThreshold);
-  const hasThreshold =
-    vault.minAcquireThreshold !== null && vault.minAcquireThreshold !== undefined && thresholdNative > 0;
+  // Bounds from the API spec (system settings); the constants only cover the moment before it loads.
+  const minThresholdEth = fieldMin('minAcquireThreshold') ?? MIN_EVM_THRESHOLD_ETH;
+  const thresholdMax = fieldMax('minAcquireThreshold') ?? (isRobinHood ? MAX_EVM_THRESHOLD_ETH : 100000);
+  const thresholdSet =
+    vault.minAcquireThreshold !== null &&
+    vault.minAcquireThreshold !== undefined &&
+    Number(vault.minAcquireThreshold) > 0;
+  // Robinhood acquire-only vaults always have a minimum raise: unset means the 0.1 ETH floor (the API applies the same).
+  const thresholdNative = thresholdSet ? Number(vault.minAcquireThreshold) : isRobinHood ? minThresholdEth : 0;
+  const hasThreshold = thresholdNative > 0;
   // What the creator typed, so re-editing does not drift through the ETH rounding.
   const thresholdUsd = hasThreshold
     ? (vault.minAcquireThresholdUsd ?? Math.round(thresholdNative * ethUsd * 100) / 100)
     : null;
 
-  // Bounds from the API spec (system settings), not hardcoded.
-  const MIN_EVM_THRESHOLD_ETH = fieldMin('minAcquireThreshold') ?? 0.01;
-  const thresholdMax = fieldMax('minAcquireThreshold') ?? 100000;
   const commitThreshold = raw => {
     if (raw === '') {
-      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: isRobinHood ? minThresholdEth : null, minAcquireThresholdUsd: null });
       return;
     }
     if (!isRobinHood) {
@@ -819,16 +827,22 @@ export const AiVaultPreview = ({
     }
     const eth = usdToEthThreshold(raw, ethUsd);
     if (eth === null) {
-      onUpdateVault({ minAcquireThreshold: null, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: minThresholdEth, minAcquireThresholdUsd: null });
       return;
     }
-    if (eth < MIN_EVM_THRESHOLD_ETH) {
+    if (eth < minThresholdEth) {
       toast.error(
-        `The reserve amount must be at least ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${formatUsd(MIN_EVM_THRESHOLD_ETH * ethUsd)}).`
+        `The reserve amount must be at least ${minThresholdEth} ETH (≈ $${formatUsd(minThresholdEth * ethUsd)}).`
       );
       return;
     }
-    onUpdateVault({ minAcquireThreshold: Math.min(thresholdMax, eth), minAcquireThresholdUsd: Number(raw) });
+    if (eth > thresholdMax) {
+      toast.error(
+        `The minimum raise can be at most ${thresholdMax.toLocaleString()} ETH (≈ $${formatUsd(thresholdMax * ethUsd)}).`
+      );
+      return;
+    }
+    onUpdateVault({ minAcquireThreshold: eth, minAcquireThresholdUsd: Number(raw) });
   };
 
   const commitNumber = (field, raw, { min = 0, max = 100, emptyValue = null, integer = false } = {}) => {
@@ -1341,7 +1355,13 @@ export const AiVaultPreview = ({
                 isAiSet={isAiSet('minAcquireThreshold')}
                 isChanged={isChanged('minAcquireThreshold')}
                 label={getFieldLabel('minAcquireThreshold', isIndexVault ? 'Reserve amount' : 'Min acquire')}
-                placeholder={isFieldRequired('minAcquireThreshold', vault) ? 'Required' : 'Optional'}
+                placeholder={
+                  isRobinHood
+                    ? `Min ${minThresholdEth} ETH`
+                    : isFieldRequired('minAcquireThreshold', vault)
+                      ? 'Required'
+                      : 'Optional'
+                }
                 sanitize={sanitizeDecimal}
                 suffix={isRobinHood ? 'USD' : nativeLabel}
                 value={hasThreshold ? String(isRobinHood ? thresholdUsd : thresholdNative) : ''}
