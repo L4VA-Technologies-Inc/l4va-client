@@ -28,6 +28,7 @@ import {
 } from '@/components/vaults/constants/vaultSpecBounds';
 import { Chip } from '@/components/shared/Chip';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -527,6 +528,49 @@ const IDENTITY_FIELDS = [
   { key: 'tags', label: 'tags' },
 ];
 
+const displayLinkUrl = url =>
+  String(url)
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .replace(/\/$/, '');
+
+const SocialLinksRow = ({ links = [], onManage }) => (
+  <FieldShell label="Social links">
+    <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
+      {links.length > 0 && (
+        <div className="flex max-w-full flex-wrap justify-end gap-1.5">
+          {links.map((link, index) => (
+            <a
+              key={link.id ?? `${link.url}-${index}`}
+              className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 py-1 pl-2 pr-3 text-sm text-white transition-colors duration-150 hover:border-steel-600"
+              href={link.url}
+              rel="noopener noreferrer"
+              target="_blank"
+              title={link.url}
+            >
+              <SocialPlatformIcon className="h-3.5 w-3.5 shrink-0 text-dark-100" platformId={link.name} />
+              <span className="truncate">{displayLinkUrl(link.url)}</span>
+            </a>
+          ))}
+        </div>
+      )}
+      <button
+        className="flex items-center gap-1 text-sm font-medium text-orange-300 underline decoration-orange-500/40 underline-offset-2 transition-[color,transform] duration-150 ease-out hover:text-orange-200 active:scale-[0.97]"
+        type="button"
+        onClick={onManage}
+      >
+        {links.length > 0 ? (
+          'Edit links'
+        ) : (
+          <>
+            <Plus className="h-3.5 w-3.5" />
+            Add link
+          </>
+        )}
+      </button>
+    </div>
+  </FieldShell>
+);
+
 const ManageList = ({ label, count, max, emptyHint, names = [], onManage, manageLabel }) => (
   <div className="border-b border-steel-800/70 pb-3 last:border-b-0">
     <div className="flex items-center justify-between">
@@ -782,7 +826,6 @@ export const AiVaultPreview = ({
   const showAcquirerWhitelist = isPrivate || isSemiPrivate;
   const contributorWallets = filledWallets(vault.contributorWhitelist);
   const acquirerWallets = filledWallets(vault.acquirerWhitelist);
-  const socialCount = (vault.socialLinks || []).filter(link => link?.url).length;
   const valueMethodOptions = VAULT_VALUE_METHOD_OPTIONS.map(option => ({
     value: option.name,
     label: option.label,
@@ -1012,14 +1055,7 @@ export const AiVaultPreview = ({
             onAction={requestIdentityGeneration}
             onCommit={next => onUpdateVault('tags', next)}
           />
-          <ManageList
-            count={socialCount}
-            emptyHint="Optional. Add the same social profiles as in manual setup."
-            label="Social links"
-            manageLabel={socialCount > 0 ? 'Manage social links' : 'Add social links'}
-            names={(vault.socialLinks || []).filter(link => link?.url).map(link => link.url)}
-            onManage={openSocialLinksModal}
-          />
+          <SocialLinksRow links={(vault.socialLinks || []).filter(link => link?.url)} onManage={openSocialLinksModal} />
           <FieldShell isAiSet={isAiSet('vaultImage')} isChanged={isChanged('vaultImage')} label="Image">
             <input
               ref={imageInputRef}
