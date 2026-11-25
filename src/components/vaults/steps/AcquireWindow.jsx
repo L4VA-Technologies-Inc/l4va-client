@@ -1,7 +1,7 @@
 import { addMilliseconds } from 'date-fns';
 import { Lock } from 'lucide-react';
 
-import { fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
+import { fieldMax, fieldMin, isFieldDisabled, isFieldRequired } from '@/components/vaults/constants/vaultSpecBounds';
 import { Label } from '@/components/ui/label';
 import { LavaRadio } from '@/components/shared/LavaRadio';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
@@ -38,9 +38,14 @@ export const AcquireWindow = ({
   // The threshold is entered and stored in the chain's native unit, whatever display currency is picked.
   const assetSymbol = isRobinHood ? 'ETH' : 'ADA';
   const isIndexVault = isRobinHood && data.vaultArchetype === VAULT_ARCHETYPES.INDEX_WEIGHTED;
-  const maxAcquireThreshold = isRobinHood ? MAX_EVM_THRESHOLD_ETH : 100000;
+  // Bounds and required-ness from the API spec (system settings); constants only until it loads.
+  const minThresholdEth = isRobinHood ? (fieldMin('minAcquireThreshold') ?? MIN_EVM_THRESHOLD_ETH) : null;
+  const maxAcquireThreshold = isRobinHood ? (fieldMax('minAcquireThreshold') ?? MAX_EVM_THRESHOLD_ETH) : 100000;
+  const thresholdRequired = isFieldRequired('minAcquireThreshold', data);
+  const requiredTag = thresholdRequired ? '' : ' (OPTIONAL)';
+  const optionalWord = thresholdRequired ? 'Required.' : 'Optional.';
   const minAcquireThresholdRangeHint = isRobinHood
-    ? `Allowed range when set: ${MIN_EVM_THRESHOLD_ETH} to ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ${assetSymbol}.`
+    ? `Allowed range when set: ${minThresholdEth} to ${maxAcquireThreshold.toLocaleString()} ${assetSymbol}.`
     : `Allowed range when set: 1+ ${assetSymbol} (max 100,000 ${assetSymbol}).`;
 
   const handleChange = e => {
@@ -128,18 +133,18 @@ export const AcquireWindow = ({
             )}
           </div>
         </div>
-        {isAcquireOnly && (
+        {isAcquireOnly && !isFieldDisabled('minAcquireThreshold') && (
           <div className="mt-4">
             {isRobinHood ? (
               // Entered in USD (what the creator thinks in), stored in ETH (what the API and contract take).
               <LavaInput
                 error={errors.minAcquireThreshold}
                 // Not "reserve": that word already means the lock % and the index cash reserve.
-                required
-                label="MINIMUM RAISE"
+                required={thresholdRequired}
+                label={`MINIMUM RAISE${requiredTag}`}
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
-                placeholder={ethUsd ? `At least $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}` : 'Loading ETH price…'}
+                placeholder={ethUsd ? `At least $${(minThresholdEth * ethUsd).toFixed(2)}` : 'Loading ETH price…'}
                 suffix="USD"
                 type="text"
                 disabled={!ethUsd}
@@ -158,12 +163,12 @@ export const AcquireWindow = ({
                 }}
                 hint={`${
                   data.minAcquireThreshold ? `≈ ${data.minAcquireThreshold} ETH at the current price. ` : ''
-                }The vault launches only if acquirers put in at least this much ETH; otherwise everyone is refunded. Allowed: ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${(MIN_EVM_THRESHOLD_ETH * ethUsd).toFixed(2)}) to ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ETH (≈ $${Math.round(MAX_EVM_THRESHOLD_ETH * ethUsd).toLocaleString()}).`}
+                }${thresholdRequired ? '' : 'Optional. '}The vault launches only if acquirers put in at least this much ETH; otherwise everyone is refunded. Allowed: ${minThresholdEth} ETH (≈ $${(minThresholdEth * ethUsd).toFixed(2)}) to ${maxAcquireThreshold.toLocaleString()} ETH (≈ $${Math.round(maxAcquireThreshold * ethUsd).toLocaleString()}).`}
               />
             ) : (
               <LavaInput
                 error={errors.minAcquireThreshold}
-                label={`MINIMUM ${assetSymbol} THRESHOLD (OPTIONAL)`}
+                label={`MINIMUM ${assetSymbol} THRESHOLD${requiredTag}`}
                 id="minAcquireThreshold"
                 name="minAcquireThreshold"
                 placeholder={isRobinHood ? 'e.g. 0.01' : 'e.g. 10000'}
@@ -214,8 +219,8 @@ export const AcquireWindow = ({
                 }}
                 hint={
                   data.liquidityPoolContribution > 0
-                    ? `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
-                    : `${minAcquireThresholdRangeHint} Optional. Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
+                    ? `${minAcquireThresholdRangeHint} ${optionalWord} Vault locks only if at least this much ${assetSymbol} is acquired. With ${data.liquidityPoolContribution}% LP Contribution, both this threshold and the LP liquidity minimum must be met, or the vault fails and all ${assetSymbol} is refunded.`
+                    : `${minAcquireThresholdRangeHint} ${optionalWord} Vault locks only if at least this much ${assetSymbol} is acquired. If not set, any acquired ${assetSymbol} can lock the vault. If none is acquired, the vault fails and all ${assetSymbol} is refunded.`
                 }
               />
             )}

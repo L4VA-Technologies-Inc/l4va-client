@@ -134,6 +134,12 @@ export class VaultsApiProvider {
     return response.data;
   }
 
+  /** Public reviewed list of tokens index vaults can trade today (the /supported-tokens page). */
+  static async getIndexSupportedTokens() {
+    const response = await axiosInstance.get(VaultsConfigProvider.getIndexSupportedTokens());
+    return response.data;
+  }
+
   /** Can this token be bought with ETH and sold back through Uniswap (for `vaultId`, or a new vault)? */
   static async getVaultSwapCap(vaultId, asset) {
     const response = await axiosInstance.get(VaultsConfigProvider.getVaultSwapCap(vaultId), { params: { asset } });

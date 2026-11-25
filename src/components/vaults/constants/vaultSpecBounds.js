@@ -41,7 +41,8 @@ const FALLBACK_BOUNDS = {
     creationThreshold: { min: 0.1, max: 100, default: 0.1 },
     cosigningThreshold: { min: 33, max: 100 },
     executionThreshold: { min: 50.1, max: 100 },
-    minAcquireThreshold: { min: 0.1, max: 1000 },
+    minAcquireThreshold: { min: 0.1, max: 1000, requiredIf: [{ field: 'isAcquireOnly', equals: true }] },
+    allowAcquireExpansion: { default: true },
   },
   cardano: {
     ...durationFallbacks,
@@ -115,17 +116,57 @@ const warnOnFallbackDrift = (chain, spec) => {
   });
 };
 
+/**
+ * The whole resolved field spec on the selected chain: API spec first, fallback until it loads.
+ * Carries min/max/default, required/requiredIf, disabled (feature off on this chain), label and hint.
+ */
+export const getFieldSpec = (field, chain = currentChain()) =>
+  loadedSpecs[chain]?.fields?.[field] ?? FALLBACK_BOUNDS[chain]?.[field] ?? {};
+
 /** `{ min, max, default }` for a field on the selected chain: API spec first, fallback until it loads. */
 export const getFieldBounds = (field, chain = currentChain()) => {
-  const fromSpec = loadedSpecs[chain]?.fields?.[field];
-  const fallback = FALLBACK_BOUNDS[chain]?.[field] ?? {};
-  if (!fromSpec) return fallback;
-  return { min: fromSpec.min, max: fromSpec.max, default: fromSpec.default };
+  const { min, max, default: fallbackDefault } = getFieldSpec(field, chain);
+  return { min, max, default: fallbackDefault };
+};
+
+/** Feature switched off on this chain by the spec or by config: hide the field, keep its default. */
+export const isFieldDisabled = (field, chain = currentChain()) => getFieldSpec(field, chain).disabled === true;
+
+/** UI name and tooltip from the spec, so the form, the AI preview and the assistant use one text. */
+export const getFieldLabel = (field, fallback, chain = currentChain()) => getFieldSpec(field, chain).label ?? fallback;
+export const getFieldHint = (field, fallback, chain = currentChain()) => getFieldSpec(field, chain).hint ?? fallback;
+
+/** Tooltip for a UI label, looked up by the label the spec gives a field. */
+export const getHintForLabel = (label, chain = currentChain()) => {
+  const fields = loadedSpecs[chain]?.fields;
+  if (!fields) return undefined;
+  const match = Object.values(fields).find(f => f.label === label && f.hint);
+  return match?.hint;
+};
+
+/** Fields the spec makes required for these values only by a condition (requiredIf). */
+export const conditionallyRequiredFields = (values = {}, chain = currentChain()) => {
+  const fields = loadedSpecs[chain]?.fields ?? FALLBACK_BOUNDS[chain] ?? {};
+  return Object.entries(fields)
+    .filter(([, spec]) => spec.requiredIf?.length && !spec.disabled)
+    .filter(([name]) => isFieldRequired(name, values, chain))
+    .map(([name]) => name);
+};
+
+/**
+ * Whether the spec makes a field required for these form values (`required` or every `requiredIf`
+ * condition holds). The AI, createVault and this form read the same flag.
+ */
+export const isFieldRequired = (field, values = {}, chain = currentChain()) => {
+  const spec = getFieldSpec(field, chain);
+  if (spec.disabled) return false;
+  if (spec.required === true) return true;
+  return !!spec.requiredIf?.length && spec.requiredIf.every(c => values[c.field] === c.equals);
 };
 
 export const getFieldDefault = (field, fallbackValue) => {
   const value = getFieldBounds(field).default;
-  return typeof value === 'number' ? value : fallbackValue;
+  return typeof value === 'number' || typeof value === 'boolean' ? value : fallbackValue;
 };
 
 /** Min/max of a field on the selected chain, for pickers: `fieldMin('acquireWindowDuration')`. */
