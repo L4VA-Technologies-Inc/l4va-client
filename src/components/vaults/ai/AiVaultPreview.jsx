@@ -12,6 +12,7 @@ import {
   Lock,
   Plus,
   RotateCcw,
+  Save,
   Sparkles,
   Upload,
 } from 'lucide-react';
@@ -615,6 +616,8 @@ export const AiVaultPreview = ({
   onLaunch,
   isLaunching,
   onReset,
+  onSaveDraft,
+  isSavingDraft = false,
   onUpdateVault,
   onSendMessage,
   onGenerateImageRequest,
@@ -871,14 +874,28 @@ export const AiVaultPreview = ({
     >
       <div className="flex items-center justify-between">
         <h2 className="font-russo uppercase text-lg text-white">Vault draft</h2>
-        <button
-          className="text-dark-100 transition-[color,transform] duration-150 ease-out hover:text-white active:scale-90"
-          title="Start over"
-          type="button"
-          onClick={onReset}
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-3">
+          {onSaveDraft && (
+            <button
+              className="flex items-center gap-1.5 rounded-lg border border-steel-750 px-2.5 py-1 text-xs text-dark-100 transition-[color,border-color,transform] duration-150 ease-out hover:border-steel-600 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+              disabled={isSavingDraft || isLaunching}
+              title="Save to your drafts and finish later"
+              type="button"
+              onClick={onSaveDraft}
+            >
+              {isSavingDraft ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {isSavingDraft ? 'Saving…' : 'Save draft'}
+            </button>
+          )}
+          <button
+            className="text-dark-100 transition-[color,transform] duration-150 ease-out hover:text-white active:scale-90"
+            title="Start over"
+            type="button"
+            onClick={onReset}
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <p className="-mt-3 flex items-center gap-1.5 text-xs text-dark-100">
         <Sparkles className="h-3 w-3 shrink-0 text-orange-400/80" />

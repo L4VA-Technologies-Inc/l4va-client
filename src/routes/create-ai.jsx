@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
 import { AnimatePresence, motion, MotionConfig, useDragControls } from 'framer-motion';
 import { ArrowLeft, X } from 'lucide-react';
@@ -18,6 +19,9 @@ import { useLaunchVault } from '@/hooks/useLaunchVault';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useNetwork } from '@/hooks/useNetwork';
+import { VaultsApiProvider } from '@/services/api/vaults';
+import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,6 +30,9 @@ const CreateAiComponent = () => {
   const { launchVault } = useLaunchVault();
   const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const queryClient = useQueryClient();
+  const { isRobinHood } = useNetwork();
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const sheetDrag = useDragControls();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -168,6 +175,28 @@ const CreateAiComponent = () => {
     handleLaunch();
   };
 
+  // Same endpoint as the manual form's "Save draft". The returned id is kept on the vault, so saving
+  // again (or launching) updates this draft instead of creating another one. The chat stays open.
+  const handleSaveDraft = async () => {
+    if (isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      const payload = formatVaultData(builder.vault, isRobinHood);
+      if (builder.vault.id) payload.id = builder.vault.id;
+      const { data } = await VaultsApiProvider.saveDraft(payload);
+      if (data?.id && data.id !== builder.vault.id) {
+        await builder.updateVaultField('id', data.id, { lock: false });
+      }
+      await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+      toast.success('Draft saved. Find it in your profile under Drafts.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed saving draft');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const renderPreview = (isSheet = false) => (
     <AiVaultPreview
       isSheet={isSheet}
@@ -182,6 +211,8 @@ const CreateAiComponent = () => {
       onUploadImage={builder.uploadImage}
       onLaunch={handleLaunch}
       onReset={() => setIsResetModalOpen(true)}
+      isSavingDraft={isSavingDraft}
+      onSaveDraft={handleSaveDraft}
       onSendMessage={builder.sendMessage}
       onUpdateVault={builder.updateVaultField}
     />
