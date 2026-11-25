@@ -1144,9 +1144,7 @@ export const AiVaultPreview = ({
                     ))}
                 </>
               ) : (
-                <p className="mt-1 text-sm text-dark-100">
-                  Pick the tokens this vault buys when the acquire window locks, and their target weights.
-                </p>
+                <></>
               )}
               <SecondaryButton className="mt-3 w-full" onClick={openBasketModal}>
                 <ListChecks className="w-4 h-4" />
