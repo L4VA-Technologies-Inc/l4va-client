@@ -43,12 +43,7 @@ export const AiIndexBasketModal = ({ isOpen = true, onClose, basket, setBasket }
   return (
     <ModalWrapper isOpen={isOpen} onClose={handleClose} size="3xl" title="Index basket">
       <div className="flex flex-col gap-5">
-        <p className="text-dark-100 text-sm leading-relaxed">
-          Choose the tokens this vault buys when the acquire window locks, and the share of the vault each one should
-          be. Holders can re-weight the basket later through a governance proposal.
-        </p>
-
-        <IndexBasketEditor steel value={localBasket} onChange={handleChange} />
+        <IndexBasketEditor steel hideTitle value={localBasket} onChange={handleChange} />
 
         <div className="flex items-center justify-center gap-4 pt-1 md:justify-between">
           <p className="hidden text-sm text-dark-100 md:block">{problem || 'The basket is ready.'}</p>
