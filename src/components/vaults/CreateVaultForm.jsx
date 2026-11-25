@@ -938,6 +938,8 @@ export const CreateVaultForm = ({ vault, setVault, initialStep = 1, aiPrefilled 
     try {
       setIsSavingDraft(true);
       const formattedData = formatVaultData(vaultData, isRobinHood);
+      // Without it the API stores the column default (cardano) and the draft shows the wrong chain.
+      formattedData.chainType = isRobinHood ? 'robinhood' : 'cardano';
       const existingDraftId = vaultData?.id ?? vault?.id;
       if (existingDraftId) {
         formattedData.id = existingDraftId;
