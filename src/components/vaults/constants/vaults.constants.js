@@ -1,7 +1,12 @@
 import * as yup from 'yup';
 
 import { environments } from '@/constants/core.constants.js';
-import { fieldMin, getFieldDefault, specBoundsTest } from '@/components/vaults/constants/vaultSpecBounds';
+import {
+  fieldMin,
+  getFieldDefault,
+  isFieldRequired,
+  specBoundsTest,
+} from '@/components/vaults/constants/vaultSpecBounds';
 import { validateSocialUrlForPlatform } from '@/utils/urlValidation';
 import {
   VAULT_ARCHETYPES,
@@ -427,6 +432,10 @@ export const vaultSchema = yup.object({
         schema
           .nullable()
           .positive('Must be a positive number')
+          .test('spec-required-minAcquireThreshold', 'Minimum raise is required', function requiredBySpec(value) {
+            if (!isFieldRequired('minAcquireThreshold', this.parent)) return true;
+            return value !== null && value !== undefined && !Number.isNaN(value);
+          })
           // Robinhood ETH range from the API spec; Cardano thresholds are whole ADA, checked on submit.
           .test(
             specBoundsTest('minAcquireThreshold', 'Minimum acquire threshold', {
@@ -762,12 +771,14 @@ export const initialVaultState = {
 // Robinhood launch spec: acquire expansion is on by default (creator can turn it off).
 export const getInitialVaultState = () => ({
   ...initialVaultState,
-  allowAcquireExpansion: localStorage.getItem('selectedNetwork') === 'robinhood',
+  // Defaults come from the API vault spec (per chain, with config overrides), same as the AI.
+  allowAcquireExpansion: getFieldDefault('allowAcquireExpansion', false),
   contributionDuration: fieldMin('contributionDuration'),
-  // 48 hours default; staging (VITE_MIN_ACQUIRE_WINDOW_DURATION_MS set) starts at its minimum instead.
-  acquireWindowDuration: import.meta.env.VITE_MIN_ACQUIRE_WINDOW_DURATION_MS
-    ? fieldMin('acquireWindowDuration')
-    : Math.max(fieldMin('acquireWindowDuration') ?? 0, 172800000),
+  // Spec default when the API sets one (staging's short window); otherwise 48 hours within the bounds.
+  acquireWindowDuration: getFieldDefault(
+    'acquireWindowDuration',
+    Math.max(fieldMin('acquireWindowDuration') ?? 0, 172800000)
+  ),
   // API vault spec default (Robinhood 10%); keeps the AI and the form starting from a valid value.
   liquidityPoolContribution: getFieldDefault('liquidityPoolContribution', initialVaultState.liquidityPoolContribution),
 });

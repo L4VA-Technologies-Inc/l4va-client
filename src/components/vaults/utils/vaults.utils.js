@@ -5,9 +5,6 @@ import {
   toIndexBasketPayload,
 } from '@/components/vaults/index/indexVault.utils';
 
-/** Robinhood refuses acquire thresholds below this (ETH). */
-export const MIN_EVM_THRESHOLD_ETH = 0.01;
-
 /**
  * Converts a USD reserve amount to the ETH the API stores, rounded to 1e-6 ETH.
  * Returns null for an empty or invalid amount.
