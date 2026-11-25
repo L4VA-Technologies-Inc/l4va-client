@@ -71,7 +71,7 @@ export const AiAssetWhitelistModal = ({
           isExpandable={localExpandable}
           setWhitelist={handleSetWhitelist}
           whitelist={localWhitelist}
-          onExpandableChange={handleExpandableChange}
+          onExpandableChange={onExpandableChange ? handleExpandableChange : undefined}
         />
 
         <div className="flex justify-end pt-1">
