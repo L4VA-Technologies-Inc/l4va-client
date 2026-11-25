@@ -789,6 +789,8 @@ export const AiVaultPreview = ({
     openModal('AiAssetWhitelistModal', {
       whitelist: vault.assetsWhitelist || [],
       setWhitelist: assets => onUpdateVault('assetsWhitelist', assets),
+      isExpandable: vault.isExpandableAssetWhitelist,
+      onExpandableChange: checked => onUpdateVault('isExpandableAssetWhitelist', checked),
     });
   };
 

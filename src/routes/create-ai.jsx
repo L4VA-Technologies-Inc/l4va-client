@@ -111,6 +111,8 @@ const CreateAiComponent = () => {
       openModal('AiAssetWhitelistModal', {
         whitelist: builder.vault.assetsWhitelist || [],
         setWhitelist: assets => builder.updateVaultField('assetsWhitelist', assets),
+        isExpandable: builder.vault.isExpandableAssetWhitelist,
+        onExpandableChange: checked => builder.updateVaultField('isExpandableAssetWhitelist', checked),
       });
       return;
     }
