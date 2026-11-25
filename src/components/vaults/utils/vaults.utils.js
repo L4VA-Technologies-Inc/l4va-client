@@ -5,9 +5,8 @@ import {
   toIndexBasketPayload,
 } from '@/components/vaults/index/indexVault.utils';
 
-/** Robinhood refuses acquire thresholds below this (ETH). */
+/** Fallback Robinhood threshold range (ETH) until the API spec loads; the spec is the source. */
 export const MIN_EVM_THRESHOLD_ETH = 0.1;
-/** Robinhood refuses acquire thresholds above this (ETH). */
 export const MAX_EVM_THRESHOLD_ETH = 1000;
 
 /**

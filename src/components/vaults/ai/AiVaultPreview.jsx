@@ -16,7 +16,15 @@ import {
   Upload,
 } from 'lucide-react';
 
-import { fieldMax, fieldMin } from '@/components/vaults/constants/vaultSpecBounds';
+import {
+  conditionallyRequiredFields,
+  fieldMax,
+  fieldMin,
+  getFieldLabel,
+  getHintForLabel,
+  isFieldDisabled,
+  isFieldRequired,
+} from '@/components/vaults/constants/vaultSpecBounds';
 import { Chip } from '@/components/shared/Chip';
 import { HoverHelp } from '@/components/shared/HoverHelp';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
@@ -284,9 +292,9 @@ const TERM_HINTS = {
     'Holders can later vote to reopen the vault for new ETH in exchange for newly minted vault tokens.',
   'Reserve %': 'Share of the ETH raised that stays in the vault. Fixed at 100% for acquire vaults.',
   'Reserve amount':
-    'Minimum the acquire window must raise, entered in USD and stored in ETH at the current price. If less is raised, the vault fails and every acquirer is refunded. Optional.',
+    'Minimum the acquire window must raise, entered in USD and stored in ETH at the current price. If less is raised, the vault fails and every acquirer is refunded.',
   'Min acquire':
-    'Minimum ETH the acquire window must raise. If less is raised, the vault fails and every acquirer is refunded. Optional.',
+    'Minimum ETH the acquire window must raise. If less is raised, the vault fails and every acquirer is refunded.',
   'For acquirers': 'Share of vault tokens that goes to acquirers. Fixed at 100% for acquire vaults.',
   'LP contribution':
     'Share of vault tokens and ETH used to seed a liquidity pool when the vault locks. 0% means no pool.',
@@ -298,7 +306,8 @@ const TERM_HINTS = {
 };
 
 const FieldLabel = ({ label, hint, className = '' }) => {
-  const text = hint ?? TERM_HINTS[label];
+  // The API spec's hint is the source (the assistant reads the same text); TERM_HINTS covers loading.
+  const text = hint ?? getHintForLabel(label) ?? TERM_HINTS[label];
   return (
     <span
       className={`flex shrink-0 items-center gap-1 text-xs uppercase tracking-wide text-dark-100 font-russo ${className}`}
@@ -687,6 +696,8 @@ export const AiVaultPreview = ({
     ...(isIndexVault ? ['indexBasket'] : []),
     ...(vault.isAcquireOnly ? [] : ['contributionDuration', 'contributionOpenWindowType', 'assetsWhitelist']),
     ...(Number(vault.tokensForAcquires) === 0 ? [] : ['acquireWindowDuration', 'acquireOpenWindowType']),
+    // Conditional requirements from the API spec (per chain, config-overridable).
+    ...conditionallyRequiredFields(vault).filter(key => !BASE_REQUIRED_KEYS.includes(key)),
     ...(vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE && vault.valueMethod === 'lbe' ? ['contributorWhitelist'] : []),
     ...(vault.privacy === VAULT_PRIVACY_TYPES.PRIVATE ? ['acquirerWhitelist'] : []),
   ];
@@ -786,12 +797,15 @@ export const AiVaultPreview = ({
   const nativeLabel = isRobinHood ? 'ETH' : 'ADA';
   // Robinhood: entered in USD, stored in ETH. Cardano: entered and stored in ADA.
   const ethUsd = Number(nativePrices?.data?.ethUsd) || 0;
+  // Bounds from the API spec (system settings); the constants only cover the moment before it loads.
+  const minThresholdEth = fieldMin('minAcquireThreshold') ?? MIN_EVM_THRESHOLD_ETH;
+  const thresholdMax = fieldMax('minAcquireThreshold') ?? (isRobinHood ? MAX_EVM_THRESHOLD_ETH : 100000);
   const thresholdSet =
     vault.minAcquireThreshold !== null &&
     vault.minAcquireThreshold !== undefined &&
     Number(vault.minAcquireThreshold) > 0;
   // Robinhood acquire-only vaults always have a minimum raise: unset means the 0.1 ETH floor (the API applies the same).
-  const thresholdNative = thresholdSet ? Number(vault.minAcquireThreshold) : isRobinHood ? MIN_EVM_THRESHOLD_ETH : 0;
+  const thresholdNative = thresholdSet ? Number(vault.minAcquireThreshold) : isRobinHood ? minThresholdEth : 0;
   const hasThreshold = thresholdNative > 0;
   // What the creator typed, so re-editing does not drift through the ETH rounding.
   const thresholdUsd = hasThreshold
@@ -800,27 +814,31 @@ export const AiVaultPreview = ({
 
   const commitThreshold = raw => {
     if (raw === '') {
-      onUpdateVault({ minAcquireThreshold: isRobinHood ? MIN_EVM_THRESHOLD_ETH : null, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: isRobinHood ? minThresholdEth : null, minAcquireThresholdUsd: null });
       return;
     }
     if (!isRobinHood) {
-      commitNumber('minAcquireThreshold', raw, { min: 1, max: 100000, integer: true });
+      commitNumber('minAcquireThreshold', raw, {
+        min: fieldMin('minAcquireThreshold') ?? 1,
+        max: thresholdMax,
+        integer: true,
+      });
       return;
     }
     const eth = usdToEthThreshold(raw, ethUsd);
     if (eth === null) {
-      onUpdateVault({ minAcquireThreshold: MIN_EVM_THRESHOLD_ETH, minAcquireThresholdUsd: null });
+      onUpdateVault({ minAcquireThreshold: minThresholdEth, minAcquireThresholdUsd: null });
       return;
     }
-    if (eth < MIN_EVM_THRESHOLD_ETH) {
+    if (eth < minThresholdEth) {
       toast.error(
-        `The reserve amount must be at least ${MIN_EVM_THRESHOLD_ETH} ETH (≈ $${formatUsd(MIN_EVM_THRESHOLD_ETH * ethUsd)}).`
+        `The reserve amount must be at least ${minThresholdEth} ETH (≈ $${formatUsd(minThresholdEth * ethUsd)}).`
       );
       return;
     }
-    if (eth > MAX_EVM_THRESHOLD_ETH) {
+    if (eth > thresholdMax) {
       toast.error(
-        `The minimum raise can be at most ${MAX_EVM_THRESHOLD_ETH.toLocaleString()} ETH (≈ $${formatUsd(MAX_EVM_THRESHOLD_ETH * ethUsd)}).`
+        `The minimum raise can be at most ${thresholdMax.toLocaleString()} ETH (≈ $${formatUsd(thresholdMax * ethUsd)}).`
       );
       return;
     }
@@ -1167,14 +1185,16 @@ export const AiVaultPreview = ({
                 label="Acquisitions only"
                 value="Yes"
               />
-              <SelectRow
-                isAiSet={isAiSet('allowAcquireExpansion')}
-                isChanged={isChanged('allowAcquireExpansion')}
-                label="Acquire expansion"
-                options={YES_NO_OPTIONS}
-                value={vault.allowAcquireExpansion ?? false}
-                onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
-              />
+              {!isFieldDisabled('allowAcquireExpansion') && (
+                <SelectRow
+                  isAiSet={isAiSet('allowAcquireExpansion')}
+                  isChanged={isChanged('allowAcquireExpansion')}
+                  label="Acquire expansion"
+                  options={YES_NO_OPTIONS}
+                  value={vault.allowAcquireExpansion ?? false}
+                  onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
+                />
+              )}
             </>
           ) : (
             <>
@@ -1197,14 +1217,16 @@ export const AiVaultPreview = ({
                 value={!!vault.isAcquireOnly}
                 onCommit={next => onUpdateVault('isAcquireOnly', next)}
               />
-              <SelectRow
-                isAiSet={isAiSet('allowAcquireExpansion')}
-                isChanged={isChanged('allowAcquireExpansion')}
-                label="Acquire expansion"
-                options={YES_NO_OPTIONS}
-                value={vault.allowAcquireExpansion ?? false}
-                onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
-              />
+              {!isFieldDisabled('allowAcquireExpansion') && (
+                <SelectRow
+                  isAiSet={isAiSet('allowAcquireExpansion')}
+                  isChanged={isChanged('allowAcquireExpansion')}
+                  label="Acquire expansion"
+                  options={YES_NO_OPTIONS}
+                  value={vault.allowAcquireExpansion ?? false}
+                  onCommit={next => onUpdateVault('allowAcquireExpansion', next)}
+                />
+              )}
             </>
           )}
         </Section>
@@ -1313,11 +1335,12 @@ export const AiVaultPreview = ({
             </>
           )}
           {isAcquireOnly &&
+            !isFieldDisabled('minAcquireThreshold') &&
             (isRobinHood && !ethUsd ? (
               // Without a price the USD amount cannot be converted; never read the number as ETH instead.
               <LockedRow
                 hint="Waiting for the ETH price to convert the USD amount."
-                label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
+                label={getFieldLabel('minAcquireThreshold', isIndexVault ? 'Reserve amount' : 'Min acquire')}
                 value="Loading price…"
               />
             ) : (
@@ -1331,8 +1354,14 @@ export const AiVaultPreview = ({
                 }
                 isAiSet={isAiSet('minAcquireThreshold')}
                 isChanged={isChanged('minAcquireThreshold')}
-                label={isIndexVault ? 'Reserve amount' : 'Min acquire'}
-                placeholder={isRobinHood ? `Min ${MIN_EVM_THRESHOLD_ETH} ETH` : 'Optional'}
+                label={getFieldLabel('minAcquireThreshold', isIndexVault ? 'Reserve amount' : 'Min acquire')}
+                placeholder={
+                  isRobinHood
+                    ? `Min ${minThresholdEth} ETH`
+                    : isFieldRequired('minAcquireThreshold', vault)
+                      ? 'Required'
+                      : 'Optional'
+                }
                 sanitize={sanitizeDecimal}
                 suffix={isRobinHood ? 'USD' : nativeLabel}
                 value={hasThreshold ? String(isRobinHood ? thresholdUsd : thresholdNative) : ''}
