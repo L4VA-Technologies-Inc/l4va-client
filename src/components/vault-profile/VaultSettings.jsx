@@ -243,6 +243,16 @@ export const VaultSettings = ({ vault }) => {
               value={renderAssets(vault.assetsWhitelist)}
             />
             <InfoRow label="Expandable whitelist" value={vault.isExpandableAssetWhitelist ? 'Yes' : 'No'} />
+            {vault.indexConfig && (
+              <InfoRow
+                label="Auto-rebalance"
+                value={
+                  vault.indexConfig.autoRebalance
+                    ? `On${vault.indexConfig.rebalanceCadenceDays ? ` · every ${vault.indexConfig.rebalanceCadenceDays} ${vault.indexConfig.rebalanceCadenceDays === 1 ? 'day' : 'days'}` : ''}`
+                    : 'Off'
+                }
+              />
+            )}
             <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
             <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
             <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
