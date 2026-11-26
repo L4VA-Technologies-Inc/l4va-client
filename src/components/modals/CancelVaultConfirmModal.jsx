@@ -30,8 +30,8 @@ export const CancelVaultConfirmModal = ({
         </p>
         {refundsAcquirers && (
           <p className="text-sm text-white/80">
-            The acquire window closes now and every acquirer gets their ETH back automatically, usually within a few
-            minutes.
+            The acquire window closes now. Any ETH you acquired is returned to your wallet automatically, usually within
+            a few minutes.
           </p>
         )}
         <p className="text-sm text-dark-100">This action cannot be undone.</p>

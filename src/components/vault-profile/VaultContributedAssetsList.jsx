@@ -11,6 +11,8 @@ import { LavaSelect, LavaMultiSelect } from '@/components/shared/LavaSelect';
 import { TokenImage } from '@/components/shared/TokenImage.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { clickableProps } from '@/utils/a11y';
+import { useEvmSelfCancel } from '@/hooks/useEvmSelfCancel';
+import { WithdrawContributionButton } from '@/components/vault-profile/EvmMyContributions';
 
 const StatBadge = ({ icon: Icon, label, value }) => (
   <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-steel-800 w-full md:w-auto">
@@ -29,6 +31,7 @@ const VaultContributedAssetsList = ({ vault }) => {
   const { currencySymbol, isAda } = useCurrency();
   const limit = 10;
   const isRobinhoodVault = vault?.chainType?.toLowerCase() === 'robinhood' || vault?.id === 'robinhood';
+  const { byAssetId, withdraw, pendingId } = useEvmSelfCancel(vault);
   const policyLabel = isRobinhoodVault ? 'Contract' : 'Policy ID';
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -238,13 +241,22 @@ const VaultContributedAssetsList = ({ vault }) => {
                           {currencySymbol}
                           {formatAdaPrice(isAda ? asset.valueAda || 0 : asset.valueUsd || 0)}
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                            type="button"
-                          >
-                            {expandedAsset === index ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                          </button>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-3">
+                            {byAssetId.has(asset.id) && (
+                              <WithdrawContributionButton
+                                contribution={byAssetId.get(asset.id)}
+                                pendingId={pendingId}
+                                onWithdraw={withdraw}
+                              />
+                            )}
+                            <button
+                              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                              type="button"
+                            >
+                              {expandedAsset === index ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                       {expandedAsset === index && (
