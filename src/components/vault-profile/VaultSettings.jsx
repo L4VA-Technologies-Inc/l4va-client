@@ -331,6 +331,7 @@ export const VaultSettings = ({ vault }) => {
         onConfirm={handleCancelVault}
         isLoading={isCancelVaultPending}
         vaultName={vault?.name}
+        refundsAcquirers={isRobinhoodVault && vault?.vaultStatus === 'acquire'}
       />
     </>
   );

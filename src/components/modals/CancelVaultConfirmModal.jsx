@@ -2,7 +2,14 @@ import { ModalWrapper } from '@/components/shared/ModalWrapper';
 import SecondaryButton from '@/components/shared/SecondaryButton';
 import PrimaryButton from '@/components/shared/PrimaryButton';
 
-export const CancelVaultConfirmModal = ({ isOpen = true, onClose, onConfirm, isLoading = false, vaultName }) => {
+export const CancelVaultConfirmModal = ({
+  isOpen = true,
+  onClose,
+  onConfirm,
+  isLoading = false,
+  vaultName,
+  refundsAcquirers = false,
+}) => {
   const footer = (
     <div className="flex flex-col md:flex-row gap-3 justify-end">
       <SecondaryButton className="w-full md:w-auto justify-center" onClick={onClose} disabled={isLoading}>
@@ -21,6 +28,12 @@ export const CancelVaultConfirmModal = ({ isOpen = true, onClose, onConfirm, isL
           Are you sure you want to cancel {vaultName ? 'vault ' : 'this vault'}
           {vaultName && <span className="font-semibold text-white">{vaultName}</span>}?
         </p>
+        {refundsAcquirers && (
+          <p className="text-sm text-white/80">
+            The acquire window closes now and every acquirer gets their ETH back automatically, usually within a few
+            minutes.
+          </p>
+        )}
         <p className="text-sm text-dark-100">This action cannot be undone.</p>
       </div>
     </ModalWrapper>
