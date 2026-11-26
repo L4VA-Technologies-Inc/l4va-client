@@ -75,7 +75,10 @@ export const ChatAvatar = ({ icon: Icon }) => (
   </div>
 );
 
-/** Floating pill composer: auto-growing textarea, Enter sends, Shift+Enter adds a line. */
+/**
+ * Floating pill composer: auto-growing textarea, Enter sends, Shift+Enter adds a line.
+ * A `suggestion` replaces the placeholder while the input is empty; Tab puts it in the input.
+ */
 export const ChatComposer = ({
   value,
   onChange,
@@ -86,6 +89,7 @@ export const ChatComposer = ({
   maxLength = 4000,
   autoFocus = false,
   leading = null,
+  suggestion = null,
 }) => {
   const textareaRef = useRef(null);
 
@@ -115,7 +119,7 @@ export const ChatComposer = ({
           className="max-h-40 flex-1 resize-none bg-transparent px-2 py-1.5 text-base text-white sm:text-[15px] outline-none placeholder:text-dark-100"
           disabled={disabled}
           maxLength={maxLength}
-          placeholder={placeholder}
+          placeholder={suggestion ? `${suggestion}  ⇥ Tab` : placeholder}
           rows={1}
           value={value}
           onChange={event => {
@@ -125,6 +129,11 @@ export const ChatComposer = ({
             onChange(textarea.value);
           }}
           onKeyDown={event => {
+            if (event.key === 'Tab' && !event.shiftKey && suggestion && !value) {
+              event.preventDefault();
+              onChange(suggestion);
+              return;
+            }
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();
               if (isImeComposing(event)) return;

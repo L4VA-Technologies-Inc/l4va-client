@@ -275,6 +275,7 @@ export const useAiVaultBuilder = () => {
         // The user already read the streamed reply, so that stays the chat message.
         const firstMessage = response.message || streamedContent;
         const firstOptions = response.options ?? [];
+        const firstSuggestedReply = response.suggestedReply ?? null;
         const firstBasket = response.indexBasket;
         for (let attempt = 0; attempt < MAX_CORRECTION_ATTEMPTS && errors.length; attempt += 1) {
           const correction = await requestTurn(history, vault, errors);
@@ -282,6 +283,7 @@ export const useAiVaultBuilder = () => {
             ...correction,
             message: firstMessage,
             options: firstOptions,
+            suggestedReply: firstSuggestedReply,
             indexBasket: correction.indexBasket?.targets?.length ? correction.indexBasket : firstBasket,
           };
           if (correction.resetDraft) base = getInitialVaultState();
@@ -321,6 +323,8 @@ export const useAiVaultBuilder = () => {
             role: 'assistant',
             content: response.message || streamedContent,
             options: response.options ?? [],
+            // Shown in the empty input; the API never sends one alongside options.
+            suggestedReply: response.options?.length ? null : (response.suggestedReply ?? null),
           },
         ];
         const nextStatus = errors.length ? 'gathering' : response.status;

@@ -388,6 +388,11 @@ export const AiVaultChat = ({
                 </button>
               }
               placeholder="Ask L4VA AI"
+              suggestion={
+                !isSending && lastMessage?.role === 'assistant' && !lastMessage.options?.length
+                  ? lastMessage.suggestedReply
+                  : null
+              }
               value={input}
               onChange={setInput}
               onSubmit={submit}
