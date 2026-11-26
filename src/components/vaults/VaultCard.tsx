@@ -19,14 +19,19 @@ type VaultCardProps = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Big values stay compact (1.2K); small ones keep up to 4 decimals (0.0123 ETH).
-const formatTvl = (value: number | string) => {
+// USD is shown with cents only; ADA/ETH keep 4 decimals below 1,000 so small vaults stay readable.
+const formatTvl = (value: number | string, currency: string) => {
   const num = Number(value);
-  return Math.abs(num) >= 1000 ? formatCompactValue(num, 2) : formatCompactValue(num, 4);
+  if (Math.abs(num) >= 1000) return formatCompactValue(num, 2);
+  if (currency === 'usdt') {
+    return num.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return formatCompactValue(num, 4);
 };
 
 export const VaultCard = ({ vault }: VaultCardProps) => {
   const { id, name, description, vaultImage, ftTokenImg, socialLinks = [] } = vault;
-  const { currencySymbol, pickByCurrency } = useCurrency();
+  const { currency, currencySymbol, pickByCurrency } = useCurrency();
 
   const shouldShowCountdown = useMemo(() => {
     if (!vault?.phaseEndTime || !vault?.phaseStartTime) return false;
@@ -104,7 +109,8 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
                         ada: vault.totalValueAda,
                         usd: vault.totalValueUsd,
                         eth: vault.totalValueEth ?? 0,
-                      })
+                      }),
+                      currency
                     )}`
                   : 'N/A'}
               </p>
