@@ -7,8 +7,11 @@ import * as Sentry from '@sentry/react';
 import { AppCore } from '@/AppCore';
 import { AuthProvider } from '@/lib/auth/auth.context';
 import { wagmiConfig } from '@/lib/evm/wagmi.config';
+import { installStaleChunkReload } from '@/utils/staleChunkReload';
 
 import '@/css/index.css';
+
+installStaleChunkReload();
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
