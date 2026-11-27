@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { showEvmTxError, useEvmTx, waitForSuccess } from '@/hooks/useEvmTx';
 import { useAuth } from '@/lib/auth/auth';
 import { CoreApiProvider } from '@/services/api/core';
+import { useVaultCreationFlags } from '@/services/api/queries';
 
 // Contributor-only on the vault: takes an Active contribution back while its window is still open.
 const CANCEL_CONTRIBUTION_ABI = [
@@ -30,8 +31,12 @@ export const useEvmSelfCancel = vault => {
   const { isAuthenticated } = useAuth();
   const { account, ensureChain, simulateAndWrite } = useEvmTx();
   const [pendingId, setPendingId] = useState(null);
+  // Feature flag (system settings), off by default: hides Withdraw until the backend enables it.
+  const { data: flags } = useVaultCreationFlags();
+  const featureEnabled = flags?.data?.evm_contribution_withdraw_enabled === true;
 
   const enabled =
+    featureEnabled &&
     vault?.chainType === 'robinhood' &&
     WITHDRAWABLE_STATUSES.includes(vault?.vaultStatus) &&
     Boolean(isAuthenticated && account && vault?.id);
