@@ -7,7 +7,6 @@ import { Copy } from 'lucide-react';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 
 import { InfoRow } from '@/components/ui/infoRow';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { TokenImage } from '@/components/shared/TokenImage';
 import { AddTokenToWalletButton } from '@/components/shared/AddTokenToWalletButton';
@@ -16,7 +15,6 @@ import { useAuth } from '@/lib/auth/auth';
 import { VaultsApiProvider } from '@/services/api/vaults';
 import { ConfirmBurnModal } from '@/components/modals/CreateProposalModal/ConfirmBurnModal';
 import { CancelVaultConfirmModal } from '@/components/modals/CancelVaultConfirmModal';
-import { cn } from '@/lib/utils';
 import { formatAdaPrice, formatPolicyId } from '@/utils/core.utils.js';
 
 const collectionDisplayName = asset =>
@@ -154,79 +152,65 @@ export const VaultSettings = ({ vault }) => {
       showAllWhitelist || hiddenCount <= 0 ? whitelistedAssets : whitelistedAssets.slice(0, WHITELIST_PREVIEW_COUNT);
 
     return (
-      <div className="w-full min-w-[200px]">
-        <Accordion
-          type="multiple"
-          className="grid w-full grid-cols-1 items-start gap-2 text-left sm:grid-cols-2 xl:grid-cols-3"
-        >
-          {visibleAssets.map((asset, index) => {
-            const name = collectionDisplayName(asset);
-            const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
-            const shortPolicy = formatPolicyId(asset.policyId);
-            const method = pricingMethodLabel(asset.valuationMethod);
-            const isCustom = asset.valuationMethod === 'custom';
-            const hasCustomPrice =
-              asset.customPriceAda != null &&
-              asset.customPriceAda !== '' &&
-              !Number.isNaN(Number(asset.customPriceAda)) &&
-              Number(asset.customPriceAda) > 0;
+      <div className="w-full">
+        <table className="w-full table-fixed text-left text-sm">
+          <thead>
+            <tr className="text-xs uppercase tracking-wide text-dark-100">
+              <th className="pb-2 font-medium">Asset</th>
+              <th className="hidden w-[30%] pb-2 font-medium sm:table-cell">Pricing</th>
+              <th className="w-[150px] pb-2 text-right font-medium">{isRobinhoodVault ? 'Contract' : 'Policy ID'}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {visibleAssets.map((asset, index) => {
+              const name = collectionDisplayName(asset);
+              const method = pricingMethodLabel(asset.valuationMethod);
+              const isCustom = asset.valuationMethod === 'custom';
+              const hasCustomPrice =
+                asset.customPriceAda != null &&
+                asset.customPriceAda !== '' &&
+                !Number.isNaN(Number(asset.customPriceAda)) &&
+                Number(asset.customPriceAda) > 0;
 
-            return (
-              <AccordionItem
-                key={itemValue}
-                value={itemValue}
-                className="w-full min-w-0 rounded-md border border-white/10 bg-white/[0.02] px-3 transition-colors hover:border-white/20"
-              >
-                <AccordionTrigger
-                  className={cn(
-                    'w-full min-w-0 py-2.5 text-left text-sm font-medium hover:no-underline data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300'
-                  )}
-                >
-                  <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
-                    <TokenImage
-                      asset={asset}
-                      alt={name || asset.policyId}
-                      chainType={vault.chainType}
-                      className="h-7 w-7 rounded-full shrink-0"
-                      width={28}
-                      height={28}
-                    />
-                    <span className="min-w-0 break-words">{name || 'Unnamed collection'}</span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="w-full min-w-0 text-dark-100 space-y-2 pb-3 pt-0">
-                  <div className="text-sm">
-                    <span className="text-dark-100">Pricing method</span>
-                    <span className="mx-2 text-dark-100">·</span>
-                    <span>{method}</span>
-                  </div>
-                  {isCustom && hasCustomPrice && (
-                    <div className="text-sm">
-                      <span className="text-dark-100">Custom price</span>
-                      <span className="mx-2 text-dark-100">·</span>
-                      <span>₳{formatAdaPrice(asset.customPriceAda)}</span>
+              return (
+                <tr key={`asset-whitelist-${asset.policyId}-${index}`} className="hover:bg-white/[0.02]">
+                  <td className="py-2.5 pr-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <TokenImage
+                        asset={asset}
+                        alt={name || asset.policyId}
+                        chainType={vault.chainType}
+                        className="h-7 w-7 shrink-0 rounded-full"
+                        width={28}
+                        height={28}
+                      />
+                      <span className="truncate font-medium" title={name}>
+                        {name || 'Unnamed collection'}
+                      </span>
                     </div>
-                  )}
-                  {isCustom && !hasCustomPrice && <div className="text-sm text-dark-100">Custom price not set</div>}
-                  <div className="flex items-center gap-2 text-sm text-dark-100">
-                    <span className="font-mono">{shortPolicy}</span>
-                    <button
-                      className="text-gray-500 hover:text-gray-700"
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleCopy(asset.policyId);
-                      }}
-                      aria-label="Copy policy ID"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
+                  </td>
+                  <td className="hidden py-2.5 pr-3 text-dark-100 sm:table-cell">
+                    {method}
+                    {isCustom && (hasCustomPrice ? ` · ₳${formatAdaPrice(asset.customPriceAda)}` : ' · not set')}
+                  </td>
+                  <td className="py-2.5">
+                    <div className="flex items-center justify-end gap-2 text-dark-100">
+                      <span className="font-mono text-xs">{formatPolicyId(asset.policyId)}</span>
+                      <button
+                        className="text-gray-500 hover:text-white"
+                        type="button"
+                        onClick={() => handleCopy(asset.policyId)}
+                        aria-label="Copy address"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
         {hiddenCount > 0 && (
           <button
             type="button"
@@ -266,12 +250,7 @@ export const VaultSettings = ({ vault }) => {
             </InfoSection>
 
             <InfoSection title="Assets">
-              <InfoRow
-                customClassName="flex-col items-stretch gap-2 py-2.5 text-sm"
-                valueWrapperClassName="w-full justify-start"
-                label="Asset Whitelist"
-                value={renderAssets(vault.assetsWhitelist)}
-              />
+              <div className="py-3">{renderAssets(vault.assetsWhitelist)}</div>
               <InfoRow
                 {...tableRow}
                 label="Expandable whitelist"
