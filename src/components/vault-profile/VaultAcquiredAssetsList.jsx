@@ -8,6 +8,8 @@ import { Pagination } from '@/components/shared/Pagination.jsx';
 import { LavaSearchInput, LavaSteelInput } from '@/components/shared/LavaInput.jsx';
 import { useCurrency } from '@/hooks/useCurrency';
 import { clickableProps } from '@/utils/a11y';
+import { useEvmSelfCancel } from '@/hooks/useEvmSelfCancel';
+import { WithdrawContributionButton } from '@/components/vault-profile/EvmMyContributions';
 
 const FALLBACK_IMAGE = '/assets/icons/ada.svg';
 const ETH_IMAGE = '/assets/icons/eth.svg';
@@ -28,6 +30,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
   const [expandedAsset, setExpandedAsset] = useState(null);
   const { currencySymbol, pickByCurrency } = useCurrency();
   const isEth = vault?.chainType === 'robinhood';
+  const { byAssetId, withdraw, pendingId } = useEvmSelfCancel(vault);
   const limit = 10;
   // EVM pools live on-chain (no Cardano market row): one side of the pool, in each currency.
   const { data: lp } = useVaultLp(vault?.id, isEth);
@@ -187,15 +190,15 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
           <p className="text-dark-300 text-sm">Try adjusting your filters or search query</p>
         </div>
       ) : (
-        <div className="flex w-full overflow-x-auto rounded-2xl border border-steel-750">
-          <table className="w-full">
+        <div className="flex w-full overflow-x-hidden md:overflow-x-auto rounded-2xl border border-steel-750">
+          <table className="w-full table-fixed md:table-auto text-sm md:text-base">
             <thead>
               <tr className="text-dark-100 text-sm border-b border-steel-750">
-                <th className="px-4 py-3 text-left">Image</th>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Quantity</th>
-                <th className="px-4 py-3"></th>
+                <th className="hidden md:table-cell px-4 py-3 text-left">Image</th>
+                <th className="px-3 py-3 md:px-4 text-left">Name</th>
+                <th className="px-3 py-3 md:px-4 text-left">Status</th>
+                <th className="px-3 py-3 md:px-4 text-left">Quantity</th>
+                <th className="px-3 py-3 md:px-4 w-[88px] md:w-auto"></th>
               </tr>
             </thead>
             <tbody>
@@ -208,7 +211,7 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                     {...clickableProps(() => setExpandedAsset(expandedAsset === index ? null : index))}
                     aria-expanded={expandedAsset === index}
                   >
-                    <td className="px-4 py-3">
+                    <td className="hidden md:table-cell px-4 py-3">
                       <img
                         alt={asset.name || 'NFT'}
                         loading="lazy"
@@ -220,20 +223,29 @@ export const VaultAcquiredAssetsList = ({ vault }) => {
                         }}
                       />
                     </td>
-                    <td className="px-4 py-3 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
-                    <td className="px-4 py-3 capitalize">{asset.status}</td>
-                    <td className="px-4 py-3">{formatNum(asset.quantity, 6)}</td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                        type="button"
-                      >
-                        {expandedAsset === index ? (
-                          <ChevronUp className="transition-transform duration-200" size={24} />
-                        ) : (
-                          <ChevronDown className="transition-transform duration-200" size={24} />
+                    <td className="px-3 py-3 md:px-4 font-medium">{isEth ? 'ETH' : 'ADA'}</td>
+                    <td className="px-3 py-3 md:px-4 capitalize truncate">{asset.status}</td>
+                    <td className="px-3 py-3 md:px-4 truncate">{formatNum(asset.quantity, 6)}</td>
+                    <td className="px-3 py-3 md:px-4">
+                      <div className="flex items-center justify-end gap-2 md:gap-3">
+                        {byAssetId.has(asset.id) && (
+                          <WithdrawContributionButton
+                            contribution={byAssetId.get(asset.id)}
+                            pendingId={pendingId}
+                            onWithdraw={withdraw}
+                          />
                         )}
-                      </button>
+                        <button
+                          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                          type="button"
+                        >
+                          {expandedAsset === index ? (
+                            <ChevronUp className="transition-transform duration-200" size={24} />
+                          ) : (
+                            <ChevronDown className="transition-transform duration-200" size={24} />
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {expandedAsset === index && (

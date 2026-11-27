@@ -58,5 +58,8 @@ export const formatVaultData = (vaultData, isRobinHood = false) => {
     delete formattedData.indexBasket;
   }
 
+  // Drafts and launches both carry the chain; without it the API stores the Cardano default.
+  formattedData.chainType = isRobinHood ? 'robinhood' : 'cardano';
+
   return formattedData;
 };

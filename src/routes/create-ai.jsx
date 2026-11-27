@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router';
 import { AnimatePresence, motion, MotionConfig, useDragControls } from 'framer-motion';
 import { ArrowLeft, X } from 'lucide-react';
@@ -18,6 +19,9 @@ import { useLaunchVault } from '@/hooks/useLaunchVault';
 import { useAuth } from '@/lib/auth/auth';
 import { useModalControls } from '@/lib/modals/modal.context';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useNetwork } from '@/hooks/useNetwork';
+import { VaultsApiProvider } from '@/services/api/vaults';
+import { formatVaultData } from '@/components/vaults/utils/vaults.utils';
 
 const CreateAiComponent = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,6 +30,12 @@ const CreateAiComponent = () => {
   const { launchVault } = useLaunchVault();
   const { openModal } = useModalControls();
   const [isLaunching, setIsLaunching] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  // Snapshot of the draft as last saved (id left out: saving assigns it). Save draft only shows
+  // once the user has done something and the draft differs from what was saved.
+  const [savedDraftKey, setSavedDraftKey] = useState(null);
+  const queryClient = useQueryClient();
+  const { isRobinHood } = useNetwork();
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const sheetDrag = useDragControls();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -166,6 +176,37 @@ const CreateAiComponent = () => {
     handleLaunch();
   };
 
+  // Same endpoint as the manual form's "Save draft". The returned id is kept on the vault, so saving
+  // again (or launching) updates this draft instead of creating another one. The chat stays open.
+  const draftKey = useMemo(() => JSON.stringify({ ...builder.vault, id: undefined }), [builder.vault]);
+  const hasDraftActivity =
+    builder.messages.some(message => message.role === 'user') ||
+    builder.aiFields.length > 0 ||
+    builder.lockedFields.length > 0;
+  const canSaveDraft = hasDraftActivity && draftKey !== savedDraftKey;
+
+  const handleSaveDraft = async () => {
+    if (isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      const keyAtSave = draftKey;
+      const payload = formatVaultData(builder.vault, isRobinHood);
+      if (builder.vault.id) payload.id = builder.vault.id;
+      const { data } = await VaultsApiProvider.saveDraft(payload);
+      if (data?.id && data.id !== builder.vault.id) {
+        await builder.updateVaultField('id', data.id, { lock: false });
+      }
+      setSavedDraftKey(keyAtSave);
+      await queryClient.invalidateQueries({ queryKey: ['vaults'] });
+      toast.success('Draft saved. Find it in your profile under Drafts.');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed saving draft');
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const renderPreview = (isSheet = false) => (
     <AiVaultPreview
       isSheet={isSheet}
@@ -180,6 +221,8 @@ const CreateAiComponent = () => {
       onUploadImage={builder.uploadImage}
       onLaunch={handleLaunch}
       onReset={() => setIsResetModalOpen(true)}
+      isSavingDraft={isSavingDraft}
+      onSaveDraft={canSaveDraft || isSavingDraft ? handleSaveDraft : undefined}
       onSendMessage={builder.sendMessage}
       onUpdateVault={builder.updateVaultField}
     />

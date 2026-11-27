@@ -32,6 +32,20 @@ const pricingMethodLabel = valuationMethod => {
 const impliedValuation = (acquired, tokensForAcquires) =>
   acquired && tokensForAcquires ? parseFloat((acquired / (tokensForAcquires * 0.01)).toFixed(2)) : 0;
 
+// Table-style row: label may wrap, value stays on one line so "4.01 USD" never splits.
+const tableRow = {
+  customClassName: 'gap-3 py-2.5 text-sm',
+  labelClassName: 'min-w-0 flex-1 shrink',
+  valueWrapperClassName: 'flex-none whitespace-nowrap text-right font-medium',
+};
+
+const InfoSection = ({ title, children }) => (
+  <section>
+    <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-dark-100">{title}</h3>
+    <div className="divide-y divide-white/10 rounded-md bg-black/15 px-3">{children}</div>
+  </section>
+);
+
 export const VaultSettings = ({ vault }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
@@ -106,6 +120,13 @@ export const VaultSettings = ({ vault }) => {
       setIsCancelVaultPending(false);
     }
   };
+
+  const currencySymbol = pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' });
+  const totalAcquired = pickByCurrency({
+    ada: vault.assetsPrices.totalAcquiredAda,
+    usd: vault.assetsPrices.totalAcquiredUsd,
+    eth: vault.assetsPrices.totalAcquiredEth,
+  });
 
   const isOwner = user?.id === vault.owner.id;
   const isRobinhoodVault = vault?.chainType === 'robinhood';
@@ -222,68 +243,86 @@ export const VaultSettings = ({ vault }) => {
     <>
       <div className="flex flex-col gap-4">
         <div className="bg-steel-750 rounded-lg p-4">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
-            <InfoRow label="Token Name" value={vault.name} />
-            <InfoRow label="Token Ticker" value={vault.vaultTokenTicker} />
-            {vault.policyId && <InfoRow hideLongString copyable label="Token Policy" value={vault.policyId} />}
-            {isRobinhoodVault && evmVaultTokenAddress && (
-              <InfoRow
-                hideLongString
-                copyable
-                label="Token Contract"
-                value={evmVaultTokenAddress}
-                actions={<AddTokenToWalletButton address={evmVaultTokenAddress} image={vault.vaultImage} />}
-              />
-            )}
-            <InfoRow
-              customClassName="flex-col items-stretch gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4"
-              valueWrapperClassName="w-full justify-start sm:w-auto sm:min-w-0 sm:justify-end"
-              label="Asset Whitelist"
-              value={renderAssets(vault.assetsWhitelist)}
-            />
-            <InfoRow label="Expandable whitelist" value={vault.isExpandableAssetWhitelist ? 'Yes' : 'No'} />
-            <InfoRow label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
-            <InfoRow label="Vault Lock Date & Time" value={vault.lockedAt} />
-            <InfoRow label="Tokens For Acquirers (%)" symbol="%" value={vault.tokensForAcquires} />
-            <InfoRow
-              label="Asset Value @ Lock"
-              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
-              value={pickByCurrency({
-                ada: vault.assetsPrices.totalValueAda,
-                usd: vault.assetsPrices.totalValueUsd,
-                eth: vault.assetsPrices.totalValueEth,
-              })}
-            />
-            <InfoRow
-              label="Acquire Amount @ Lock"
-              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
-              value={pickByCurrency({
-                ada: vault.assetsPrices.totalAcquiredAda,
-                usd: vault.assetsPrices.totalAcquiredUsd,
-                eth: vault.assetsPrices.totalAcquiredEth,
-              })}
-            />
-            <InfoRow
-              label="Implied Vault Valuation @ Lock"
-              symbol={pickByCurrency({ ada: 'ADA', usd: 'USD', eth: 'ETH' })}
-              value={impliedValuation(
-                pickByCurrency({
-                  ada: vault.assetsPrices.totalAcquiredAda,
-                  usd: vault.assetsPrices.totalAcquiredUsd,
-                  eth: vault.assetsPrices.totalAcquiredEth,
-                }),
-                vault.tokensForAcquires
+          <h2 className="text-2xl font-bold mb-4">Vault Info</h2>
+          <div className="space-y-5">
+            <InfoSection title="Token">
+              <InfoRow {...tableRow} label="Token Name" value={vault.name} />
+              <InfoRow {...tableRow} label="Token Ticker" value={vault.vaultTokenTicker} />
+              {vault.policyId && (
+                <InfoRow {...tableRow} hideLongString copyable label="Token Policy" value={vault.policyId} />
               )}
-            />
-            <InfoRow label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
-            <InfoRow label="% Liquidity Pool Contribution" symbol="%" value={vault.liquidityPoolContribution} />
-            <InfoRow label="Termination Type" value={vault.terminationType} />
-            <InfoRow label="Proposal Creation Threshold %" symbol="%" value={vault.creationThreshold} />
-            {/* <InfoRow label="Proposal Cosigning Threshold %" symbol="%" value={vault.cosigningThreshold} /> */}
-            {/* <InfoRow label="Vote Start Threshold %" symbol="%" value={vault.startThreshold} /> */}
-            <InfoRow label="Vote Quorum Threshold (%)" symbol="%" value={vault.cosigningThreshold} />
-            <InfoRow label="Proposal Execution Threshold %" symbol="%" value={vault.executionThreshold} />
+              {isRobinhoodVault && evmVaultTokenAddress && (
+                <InfoRow
+                  {...tableRow}
+                  hideLongString
+                  copyable
+                  label="Token Contract"
+                  value={evmVaultTokenAddress}
+                  actions={<AddTokenToWalletButton address={evmVaultTokenAddress} image={vault.vaultImage} />}
+                />
+              )}
+              <InfoRow {...tableRow} label="Total Supply" symbol={vault.vaultTokenTicker} value={vault.ftTokenSupply} />
+            </InfoSection>
+
+            <InfoSection title="Assets">
+              <InfoRow
+                customClassName="flex-col items-stretch gap-2 py-2.5 text-sm"
+                valueWrapperClassName="w-full justify-start"
+                label="Asset Whitelist"
+                value={renderAssets(vault.assetsWhitelist)}
+              />
+              <InfoRow
+                {...tableRow}
+                label="Expandable whitelist"
+                value={vault.isExpandableAssetWhitelist ? 'Yes' : 'No'}
+              />
+              {vault.indexConfig && (
+                <InfoRow
+                  {...tableRow}
+                  label="Auto-rebalance"
+                  value={
+                    vault.indexConfig.autoRebalance
+                      ? `On${vault.indexConfig.rebalanceCadenceDays ? ` · every ${vault.indexConfig.rebalanceCadenceDays} ${vault.indexConfig.rebalanceCadenceDays === 1 ? 'day' : 'days'}` : ''}`
+                      : 'Off'
+                  }
+                />
+              )}
+            </InfoSection>
+
+            <InfoSection title="Acquire & valuation">
+              <InfoRow {...tableRow} label="Vault Lock Date & Time" value={vault.lockedAt || '—'} />
+              <InfoRow {...tableRow} label="Tokens For Acquirers" symbol="%" value={vault.tokensForAcquires} />
+              <InfoRow
+                {...tableRow}
+                label="Asset Value @ Lock"
+                symbol={currencySymbol}
+                value={pickByCurrency({
+                  ada: vault.assetsPrices.totalValueAda,
+                  usd: vault.assetsPrices.totalValueUsd,
+                  eth: vault.assetsPrices.totalValueEth,
+                })}
+              />
+              <InfoRow {...tableRow} label="Acquire Amount @ Lock" symbol={currencySymbol} value={totalAcquired} />
+              <InfoRow
+                {...tableRow}
+                label="Implied Valuation @ Lock"
+                symbol={currencySymbol}
+                value={impliedValuation(totalAcquired, vault.tokensForAcquires)}
+              />
+              <InfoRow {...tableRow} label="Acquire Reserve" symbol="%" value={vault.acquireReserve} />
+              <InfoRow {...tableRow} label="LP Contribution" symbol="%" value={vault.liquidityPoolContribution} />
+            </InfoSection>
+
+            <InfoSection title="Governance">
+              <InfoRow
+                {...tableRow}
+                label="Termination Type"
+                value={vault.terminationType === 'dao' ? 'DAO' : vault.terminationType || '—'}
+              />
+              <InfoRow {...tableRow} label="Proposal Creation Threshold" symbol="%" value={vault.creationThreshold} />
+              <InfoRow {...tableRow} label="Vote Quorum Threshold" symbol="%" value={vault.cosigningThreshold} />
+              <InfoRow {...tableRow} label="Proposal Execution Threshold" symbol="%" value={vault.executionThreshold} />
+            </InfoSection>
           </div>
         </div>
         {isOwner && (
@@ -321,6 +360,7 @@ export const VaultSettings = ({ vault }) => {
         onConfirm={handleCancelVault}
         isLoading={isCancelVaultPending}
         vaultName={vault?.name}
+        refundsAcquirers={isRobinhoodVault && vault?.vaultStatus === 'acquire'}
       />
     </>
   );

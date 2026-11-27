@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import {
+  estimateGas,
   getCapabilities,
   sendCalls,
   simulateContract,
@@ -87,6 +88,33 @@ export const simulateCall = <const abi extends Abi, functionName extends Contrac
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   simulateContract(wagmiConfig, { chainId: robinhoodChain.id, ...call } as any);
 
+/**
+ * Gas limit = estimate + 30%. Wallets often send the bare estimate; on Robinhood
+ * (Arbitrum Orbit) state/L1-cost drift between estimate and inclusion then makes
+ * the tx die with "out of gas: not enough gas for reentrancy sentry".
+ * Returns undefined (let the wallet decide) if estimation fails.
+ */
+export const estimateGasWithBuffer = async <
+  const abi extends Abi,
+  functionName extends ContractFunctionName<abi, Mutability>,
+>(
+  call: ContractCall<abi, functionName> & { account?: Address }
+): Promise<bigint | undefined> => {
+  try {
+    const { data, to, value } = toRawCall(call);
+    const estimate = await estimateGas(wagmiConfig, {
+      chainId: call.chainId ?? robinhoodChain.id,
+      account: call.account,
+      to,
+      data,
+      value,
+    });
+    return (estimate * 130n) / 100n;
+  } catch {
+    return undefined;
+  }
+};
+
 export const showEvmTxError = (err: unknown, fallback: string, options?: EvmTxErrorOptions): string => {
   const message = getEvmTxErrorMessage(err, fallback, options);
   console.error(err);
@@ -164,7 +192,7 @@ export const useEvmTx = () => {
       call: ContractCall<abi, functionName>
     ): Promise<Hash> => {
       const { request } = await simulateCall({ account, ...call });
-      return writeContractAsync(request);
+      return writeContractAsync({ ...request, gas: await estimateGasWithBuffer({ account, ...call }) });
     },
     [account, writeContractAsync]
   );

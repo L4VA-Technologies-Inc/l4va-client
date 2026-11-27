@@ -18,6 +18,7 @@ import {
   bpsToPercent,
   evenWeights,
   formatBps,
+  friendlyRouteReason,
   percentToBps,
   basketSegmentColor,
   totalWeightBps,
@@ -173,14 +174,16 @@ export const RouteStatus = ({ route, token = null }) => {
     );
   }
   return (
-    <p className="flex items-start gap-1 text-xs text-red-400">
-      <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
-      <span className="min-w-0">
-        {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
-        {route.reason ? `: ${route.reason}` : ''}
-      </span>
-      {token && <RequestPoolButton tokens={[token]} className="ml-1" />}
-    </p>
+    <div className="flex min-w-0 flex-col items-start gap-1 text-xs text-red-400">
+      <p className="flex min-w-0 items-start gap-1" title={route.reason || undefined}>
+        <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+        <span className="min-w-0 break-words">
+          {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
+          {route.reason ? `: ${friendlyRouteReason(route.reason)}` : ''}
+        </span>
+      </p>
+      {token && <RequestPoolButton tokens={[token]} className="ml-4 whitespace-nowrap" />}
+    </div>
   );
 };
 
@@ -375,6 +378,8 @@ export const IndexBasketEditor = ({
   vaultId = null,
   /** Basket cap of the vault being edited; defaults to the cap of a new vault. */
   maxAssets = null,
+  /** Drop the "Index basket" heading + help when the host (e.g. a modal titled "Index basket") already says it. */
+  hideTitle = false,
 }) => {
   const newVaultCap = useNewVaultBasketCap();
   const cap = maxAssets ?? newVaultCap;
@@ -431,8 +436,14 @@ export const IndexBasketEditor = ({
     <div className={cn('space-y-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-bold uppercase">Index basket</span>
-          <HoverHelp hint="The tokens this vault holds and the share of the vault each one should make up. After the acquire window locks, the vault buys these tokens with the ETH it raised. Weights apply to the vault value after the cash reserve." />
+          {hideTitle ? (
+            <span className="text-sm font-medium">Tokens</span>
+          ) : (
+            <>
+              <span className="font-bold uppercase">Index basket</span>
+              <HoverHelp hint="The tokens this vault holds and the share of the vault each one should make up. After the acquire window locks, the vault buys these tokens with the ETH it raised. Weights apply to the vault value after the cash reserve." />
+            </>
+          )}
           <span className="text-sm text-dark-100">
             {targets.length}/{cap}
           </span>
@@ -580,7 +591,7 @@ export const IndexBasketEditor = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Auto-rebalance</span>
-            <HoverHelp hint="Prices move, so the basket drifts away from its target weights. With auto-rebalance on, the vault sells what has grown above its weight and buys what has fallen below, by USD value, once per cadence. Each rebalance trades on Uniswap and pays swap fees. Token holders can change this later through a governance proposal." />
+            <HoverHelp hint="Prices move, so the basket drifts away from its target weights. With auto-rebalance on, the vault sells what has grown above its weight and buys what has fallen below, by USD value, once per cadence. Each rebalance trades on Uniswap and pays swap fees. The exact time within each period is randomized so trades cannot be front-run." />
           </div>
           <button
             type="button"
@@ -636,7 +647,7 @@ export const IndexBasketEditor = ({
         )}
         {autoRebalance && (
           <p className="text-xs text-dark-100">
-            Minimum {minCadence} days. The exact time within each period is randomized so trades cannot be front-run.
+            Minimum {minCadence} {Number(minCadence) === 1 ? 'day' : 'days'}.
           </p>
         )}
       </div>

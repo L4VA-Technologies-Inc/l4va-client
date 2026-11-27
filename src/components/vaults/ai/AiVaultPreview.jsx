@@ -12,6 +12,7 @@ import {
   Lock,
   Plus,
   RotateCcw,
+  Save,
   Sparkles,
   Upload,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ import {
 } from '@/components/vaults/constants/vaultSpecBounds';
 import { Chip } from '@/components/shared/Chip';
 import { HoverHelp } from '@/components/shared/HoverHelp';
+import { SocialPlatformIcon } from '@/components/shared/SocialPlatformIcon';
 import { LavaDatePicker } from '@/components/shared/LavaDatePicker';
 import { LavaIntervalPicker } from '@/components/shared/LavaIntervalPicker';
 import PrimaryButton from '@/components/shared/PrimaryButton';
@@ -55,7 +57,12 @@ import {
   MIN_EVM_THRESHOLD_ETH,
   usdToEthThreshold,
 } from '@/components/vaults/utils/vaults.utils';
-import { formatBps, validateIndexBasket, VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
+import {
+  formatBps,
+  friendlyRouteReason,
+  validateIndexBasket,
+  VAULT_ARCHETYPES,
+} from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
 const isEmptyValue = value =>
@@ -526,6 +533,49 @@ const IDENTITY_FIELDS = [
   { key: 'tags', label: 'tags' },
 ];
 
+const displayLinkUrl = url =>
+  String(url)
+    .replace(/^https?:\/\/(www\.)?/i, '')
+    .replace(/\/$/, '');
+
+const SocialLinksRow = ({ links = [], onManage }) => (
+  <FieldShell label="Social links">
+    <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
+      {links.length > 0 && (
+        <div className="flex max-w-full flex-wrap justify-end gap-1.5">
+          {links.map((link, index) => (
+            <a
+              key={link.id ?? `${link.url}-${index}`}
+              className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-steel-750 bg-steel-850 py-1 pl-2 pr-3 text-sm text-white transition-colors duration-150 hover:border-steel-600"
+              href={link.url}
+              rel="noopener noreferrer"
+              target="_blank"
+              title={link.url}
+            >
+              <SocialPlatformIcon className="h-3.5 w-3.5 shrink-0 text-dark-100" platformId={link.name} />
+              <span className="truncate">{displayLinkUrl(link.url)}</span>
+            </a>
+          ))}
+        </div>
+      )}
+      <button
+        className="flex items-center gap-1 text-sm font-medium text-orange-300 underline decoration-orange-500/40 underline-offset-2 transition-[color,transform] duration-150 ease-out hover:text-orange-200 active:scale-[0.97]"
+        type="button"
+        onClick={onManage}
+      >
+        {links.length > 0 ? (
+          'Edit links'
+        ) : (
+          <>
+            <Plus className="h-3.5 w-3.5" />
+            Add link
+          </>
+        )}
+      </button>
+    </div>
+  </FieldShell>
+);
+
 const ManageList = ({ label, count, max, emptyHint, names = [], onManage, manageLabel }) => (
   <div className="border-b border-steel-800/70 pb-3 last:border-b-0">
     <div className="flex items-center justify-between">
@@ -597,7 +647,7 @@ const BasketRouteIcon = ({ target }) => {
   const label =
     status === 'unavailable'
       ? "Couldn't check the Uniswap route"
-      : `${status === 'illiquid' ? 'Too illiquid' : "Can't be traded on Uniswap"}${target.routeReason ? `: ${target.routeReason}` : ''}`;
+      : `${status === 'illiquid' ? 'Too illiquid' : "Can't be traded on Uniswap"}${target.routeReason ? `: ${friendlyRouteReason(target.routeReason)}` : ''}`;
   return (
     <span title={label} className="flex shrink-0 items-center gap-1 text-xs text-red-400">
       <AlertTriangle className="h-3.5 w-3.5" />
@@ -615,6 +665,8 @@ export const AiVaultPreview = ({
   onLaunch,
   isLaunching,
   onReset,
+  onSaveDraft,
+  isSavingDraft = false,
   onUpdateVault,
   onSendMessage,
   onGenerateImageRequest,
@@ -777,7 +829,6 @@ export const AiVaultPreview = ({
   const showAcquirerWhitelist = isPrivate || isSemiPrivate;
   const contributorWallets = filledWallets(vault.contributorWhitelist);
   const acquirerWallets = filledWallets(vault.acquirerWhitelist);
-  const socialCount = (vault.socialLinks || []).filter(link => link?.url).length;
   const valueMethodOptions = VAULT_VALUE_METHOD_OPTIONS.map(option => ({
     value: option.name,
     label: option.label,
@@ -869,14 +920,28 @@ export const AiVaultPreview = ({
     >
       <div className="flex items-center justify-between">
         <h2 className="font-russo uppercase text-lg text-white">Vault draft</h2>
-        <button
-          className="text-dark-100 transition-[color,transform] duration-150 ease-out hover:text-white active:scale-90"
-          title="Start over"
-          type="button"
-          onClick={onReset}
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-3">
+          {onSaveDraft && (
+            <button
+              className="flex items-center gap-1.5 rounded-lg border border-steel-750 px-2.5 py-1 text-xs text-dark-100 transition-[color,border-color,transform] duration-150 ease-out hover:border-steel-600 hover:text-white active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+              disabled={isSavingDraft || isLaunching}
+              title="Save to your drafts and finish later"
+              type="button"
+              onClick={onSaveDraft}
+            >
+              {isSavingDraft ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {isSavingDraft ? 'Saving…' : 'Save draft'}
+            </button>
+          )}
+          <button
+            className="text-dark-100 transition-[color,transform] duration-150 ease-out hover:text-white active:scale-90"
+            title="Start over"
+            type="button"
+            onClick={onReset}
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <p className="-mt-3 flex items-center gap-1.5 text-xs text-dark-100">
         <Sparkles className="h-3 w-3 shrink-0 text-orange-400/80" />
@@ -993,14 +1058,7 @@ export const AiVaultPreview = ({
             onAction={requestIdentityGeneration}
             onCommit={next => onUpdateVault('tags', next)}
           />
-          <ManageList
-            count={socialCount}
-            emptyHint="Optional. Add the same social profiles as in manual setup."
-            label="Social links"
-            manageLabel={socialCount > 0 ? 'Manage social links' : 'Add social links'}
-            names={(vault.socialLinks || []).filter(link => link?.url).map(link => link.url)}
-            onManage={openSocialLinksModal}
-          />
+          <SocialLinksRow links={(vault.socialLinks || []).filter(link => link?.url)} onManage={openSocialLinksModal} />
           <FieldShell isAiSet={isAiSet('vaultImage')} isChanged={isChanged('vaultImage')} label="Image">
             <input
               ref={imageInputRef}
@@ -1089,9 +1147,7 @@ export const AiVaultPreview = ({
                     ))}
                 </>
               ) : (
-                <p className="mt-1 text-sm text-dark-100">
-                  Pick the tokens this vault buys when the acquire window locks, and their target weights.
-                </p>
+                <></>
               )}
               <SecondaryButton className="mt-3 w-full" onClick={openBasketModal}>
                 <ListChecks className="w-4 h-4" />

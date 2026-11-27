@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react';
 
+import { reloadOnStaleChunk } from '@/utils/staleChunkReload';
+
 const LazyVaultChat = lazy(() =>
   import('@/components/chat/VaultChat').catch(error => {
+    reloadOnStaleChunk(error);
     console.error('Failed to load VaultChat:', error);
     return {
       default: () => (
