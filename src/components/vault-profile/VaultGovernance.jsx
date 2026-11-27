@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Trash2,
   PauseCircle,
+  Lock,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -224,19 +225,19 @@ export const VaultGovernance = ({ vault }) => {
   };
 
   const LockedStatus = () => (
-    <div className="flex flex-col items-center justify-center text-center mb-6">
-      <div className="flex flex-col items-center justify-center text-center max-w-[350px]">
-        <img
-          alt="Locked status required"
-          className="w-[200px] h-[200px] mb-4 object-contain"
-          src="/assets/locked-vault.webp"
-        />
-        <h1 className="text-2xl font-bold">
-          Governance will be available
-          <br />
-          when the vault is locked.
-        </h1>
+    <div className="flex flex-col items-center justify-center text-center py-12">
+      <div className="relative mb-6 flex items-center justify-center">
+        <div className="absolute h-36 w-36 rounded-full bg-[#7fe36e]/10 blur-2xl" />
+        <div className="absolute h-32 w-32 rounded-full border border-white/5" />
+        <div className="absolute h-24 w-24 rounded-full border border-white/10" />
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-[#7fe36e]/30 bg-gradient-to-b from-[#1f2a1c] to-[#121611] shadow-[0_0_24px_rgba(127,227,110,0.15)]">
+          <Lock className="h-7 w-7 text-[#7fe36e]" strokeWidth={1.75} />
+        </div>
       </div>
+      <h2 className="text-xl font-semibold">Governance unlocks after Acquire</h2>
+      <p className="mt-2 max-w-[360px] text-sm text-dark-100">
+        Proposals and voting become available once the vault is locked.
+      </p>
     </div>
   );
 
