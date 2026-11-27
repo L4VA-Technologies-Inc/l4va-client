@@ -82,6 +82,21 @@ export const evenWeights = count => {
 };
 
 /** Returns a user-facing problem with the basket, or null when it can launch. */
+/**
+ * Short, user-facing version of the API's route-check reason. The raw reason carries pool ids and
+ * internal wording ("Cannot buy: the Uniswap route uses a pool not yet approved … (0x…)"); keep the
+ * raw text for tooltips only.
+ */
+export const friendlyRouteReason = reason => {
+  if (!reason) return '';
+  if (/not yet approved for vault trading/i.test(reason))
+    return "its Uniswap pool isn't approved for vault trading yet";
+  return reason
+    .replace(/^Cannot (buy|sell back to ETH):\s*/i, '')
+    .replace(/\s*\(?0x[0-9a-f]{40,}\)?/gi, '')
+    .trim();
+};
+
 export const validateIndexBasket = (
   basket,
   minCadenceDays = INDEX_MIN_REBALANCE_CADENCE_DAYS,
@@ -107,7 +122,7 @@ export const validateIndexBasket = (
   const untradable = targets.find(t => ['no_route', 'illiquid'].includes(t.routeStatus));
   if (untradable) {
     const name = untradable.symbol || untradable.assetAddress;
-    return `${name} can't be held in an index vault${untradable.routeReason ? `: ${untradable.routeReason}` : ''}. Remove it to continue.`;
+    return `${name} can't be held in an index vault${untradable.routeReason ? `: ${friendlyRouteReason(untradable.routeReason)}` : ''}. Remove it to continue.`;
   }
   const unchecked = targets.find(t => t.routeStatus === 'unavailable');
   if (unchecked) {

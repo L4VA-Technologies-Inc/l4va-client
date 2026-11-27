@@ -18,6 +18,7 @@ import {
   bpsToPercent,
   evenWeights,
   formatBps,
+  friendlyRouteReason,
   percentToBps,
   basketSegmentColor,
   totalWeightBps,
@@ -173,14 +174,16 @@ export const RouteStatus = ({ route, token = null }) => {
     );
   }
   return (
-    <p className="flex items-start gap-1 text-xs text-red-400">
-      <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
-      <span className="min-w-0">
-        {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
-        {route.reason ? `: ${route.reason}` : ''}
-      </span>
-      {token && <RequestPoolButton tokens={[token]} className="ml-1" />}
-    </p>
+    <div className="flex min-w-0 flex-col items-start gap-1 text-xs text-red-400">
+      <p className="flex min-w-0 items-start gap-1" title={route.reason || undefined}>
+        <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+        <span className="min-w-0 break-words">
+          {route.status === 'illiquid' ? 'Too illiquid for a basket' : "Can't be traded on Uniswap"}
+          {route.reason ? `: ${friendlyRouteReason(route.reason)}` : ''}
+        </span>
+      </p>
+      {token && <RequestPoolButton tokens={[token]} className="ml-4 whitespace-nowrap" />}
+    </div>
   );
 };
 

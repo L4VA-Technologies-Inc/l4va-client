@@ -19,12 +19,14 @@ import { ChainType } from '@/utils/types';
 import { VaultCountdown } from '@/components/vault-profile/VaultCountdown';
 import { VaultTerminationRedeem } from '@/components/vault-profile/VaultTerminationRedeem';
 import { EvmAllocationUnlockNotice } from '@/components/vault-profile/EvmAllocationUnlockNotice';
+import { reloadOnStaleChunk } from '@/utils/staleChunkReload';
 const VaultContribution = lazy(() =>
   import('@/components/vault-profile/VaultContribution')
     .then(module => ({
       default: module.VaultContribution,
     }))
     .catch(error => {
+      reloadOnStaleChunk(error);
       console.error('Failed to load VaultContribution:', error);
       return {
         default: () => (
@@ -42,6 +44,7 @@ const VaultStats = lazy(() =>
       default: module.VaultStats,
     }))
     .catch(error => {
+      reloadOnStaleChunk(error);
       console.error('Failed to load VaultStats:', error);
       return {
         default: () => (
@@ -59,6 +62,7 @@ const VaultTabs = lazy(() =>
       default: module.VaultTabs,
     }))
     .catch(error => {
+      reloadOnStaleChunk(error);
       console.error('Failed to load VaultTabs:', error);
       return {
         default: () => (

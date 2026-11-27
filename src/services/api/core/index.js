@@ -123,6 +123,10 @@ export class CoreApiProvider {
     return response;
   }
 
+  static async getMyEvmContributions(vaultId) {
+    return axiosInstance.get(CoreConfigProvider.myEvmContributions(vaultId));
+  }
+
   static async prepareEvmContribution({ txId, feeTxHash = '' }) {
     const response = await axiosInstance.post(CoreConfigProvider.prepareEvmContribution(), {
       txId,

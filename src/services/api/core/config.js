@@ -71,6 +71,10 @@ export class CoreConfigProvider {
     return `/api/v1/contribute/transaction/${txId}/hash`;
   }
 
+  static myEvmContributions(vaultId) {
+    return `/api/v1/blockchain/evm/vaults/${vaultId}/my-contributions`;
+  }
+
   static prepareEvmContribution() {
     return '/api/v1/blockchain/evm/contribution/prepare';
   }

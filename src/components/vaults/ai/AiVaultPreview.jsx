@@ -57,7 +57,12 @@ import {
   MIN_EVM_THRESHOLD_ETH,
   usdToEthThreshold,
 } from '@/components/vaults/utils/vaults.utils';
-import { formatBps, validateIndexBasket, VAULT_ARCHETYPES } from '@/components/vaults/index/indexVault.utils';
+import {
+  formatBps,
+  friendlyRouteReason,
+  validateIndexBasket,
+  VAULT_ARCHETYPES,
+} from '@/components/vaults/index/indexVault.utils';
 
 const percent = value => (value === null || value === undefined ? '—' : `${value}%`);
 const isEmptyValue = value =>
@@ -642,7 +647,7 @@ const BasketRouteIcon = ({ target }) => {
   const label =
     status === 'unavailable'
       ? "Couldn't check the Uniswap route"
-      : `${status === 'illiquid' ? 'Too illiquid' : "Can't be traded on Uniswap"}${target.routeReason ? `: ${target.routeReason}` : ''}`;
+      : `${status === 'illiquid' ? 'Too illiquid' : "Can't be traded on Uniswap"}${target.routeReason ? `: ${friendlyRouteReason(target.routeReason)}` : ''}`;
   return (
     <span title={label} className="flex shrink-0 items-center gap-1 text-xs text-red-400">
       <AlertTriangle className="h-3.5 w-3.5" />
