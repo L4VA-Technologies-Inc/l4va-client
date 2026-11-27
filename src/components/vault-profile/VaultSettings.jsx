@@ -232,7 +232,6 @@ export const VaultSettings = ({ vault }) => {
                           title="View on explorer"
                         >
                           {formatPolicyId(asset.policyId)}
-                          <ExternalLink className="h-3 w-3" />
                         </a>
                         <button
                           className="text-gray-500 hover:text-white"
