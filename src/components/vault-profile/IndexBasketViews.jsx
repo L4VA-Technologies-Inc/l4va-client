@@ -323,16 +323,19 @@ export const BasketTiles = ({ assets, formatValue }) => {
   const sel = assets.find(a => a.assetAddress === picked) ?? assets[0];
   const [mapRef, width] = useElementWidth();
   const height = width >= 640 ? 320 : 288; // matches sm:h-80 / h-72
-  const cells = useMemo(
-    () =>
-      squarify(
-        // Zero-weight assets still get a sliver so they stay clickable.
-        assets.map(a => ({ asset: a, value: Math.max(a.actualBps, 15) })).sort((x, y) => y.value - x.value),
-        width,
-        height
-      ),
-    [assets, width, height]
-  );
+  const cells = useMemo(() => {
+    // Before anything is bought every actual weight is 0; size by target then, so the map
+    // shows the intended basket instead of a grid of identical blank squares.
+    const empty = assets.every(a => !a.actualBps);
+    return squarify(
+      // Zero-weight assets still get a sliver so they stay clickable.
+      assets
+        .map(a => ({ asset: a, value: Math.max(empty ? a.targetBps : a.actualBps, 15) }))
+        .sort((x, y) => y.value - x.value),
+      width,
+      height
+    );
+  }, [assets, width, height]);
 
   return (
     <div className="space-y-4">
@@ -343,7 +346,15 @@ export const BasketTiles = ({ assets, formatValue }) => {
           // Three tiers so a cell only shows what fits: large (logo + big text + drift),
           // medium (small logo + text), small (text only). Tiny cells rely on the tooltip.
           const tier =
-            c.w >= 110 && c.h >= 112 ? 'lg' : c.w >= 64 && c.h >= 84 ? 'md' : c.w > 52 && c.h > 34 ? 'sm' : null;
+            c.w >= 110 && c.h >= 112
+              ? 'lg'
+              : c.w >= 64 && c.h >= 84
+                ? 'md'
+                : c.w > 52 && c.h > 34
+                  ? 'sm'
+                  : c.w >= 30 && c.h >= 20
+                    ? 'xs'
+                    : null;
           return (
             <button
               key={c.asset.assetAddress}
@@ -352,13 +363,16 @@ export const BasketTiles = ({ assets, formatValue }) => {
               aria-pressed={selected}
               onClick={() => setPicked(c.asset.assetAddress)}
               className={cn(
-                'absolute flex flex-col items-center justify-center gap-1 overflow-hidden border-2 p-1 text-center',
+                'absolute flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border-2 p-0.5 text-center',
                 selected ? 'z-10 border-white' : 'border-steel-950 hover:border-white/40'
               )}
               style={{ left: c.x, top: c.y, width: c.w, height: c.h, background: driftFill(c.asset.driftBps) }}
             >
               {(tier === 'lg' || tier === 'md') && <TileLogo asset={c.asset} size={tier === 'lg' ? 32 : 22} />}
-              {tier && (
+              {tier === 'xs' && (
+                <span className="w-full truncate text-[10px] font-semibold leading-none">{c.asset.symbol}</span>
+              )}
+              {tier && tier !== 'xs' && (
                 <>
                   <span
                     className={cn(
