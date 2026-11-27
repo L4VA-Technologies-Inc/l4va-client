@@ -20,8 +20,8 @@ export const UserAvatar = ({ user, handleDisconnect }) => {
         {user?.profileImage && <AvatarImage alt="Profile" className="object-cover" src={user.profileImage} />}
         <AvatarFallback className="text-white font-medium">{getAvatarLetter(user)}</AvatarFallback>
       </Avatar>
-      <div className="flex-1">
-        <p className="font-medium mb-2">{getDisplayName(user)}</p>
+      <div className="min-w-0 flex-1">
+        <p className="mb-2 break-words font-medium">{user?.name || getDisplayName(user)}</p>
         <button className="flex items-center gap-2 text-dark-100" type="button" onClick={handleCopyAddress}>
           {substringAddress(user.address)}
           <Copy size={20} />

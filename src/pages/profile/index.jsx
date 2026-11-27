@@ -11,12 +11,17 @@ import { Spinner } from '@/components/Spinner.jsx';
 import { UserPublicVaultsList } from '@/components/vaults/UserPublicVaultsList.jsx';
 import { Transactions } from '@/pages/profile/Transactions.jsx';
 import { StakingWidget } from '@/pages/profile/StakingWidget';
+import { EvmStakingWidget } from '@/pages/profile/EvmStakingWidget';
 import { ProfileRewardsLinkCard } from '@/pages/profile/ProfileRewardsLinkCard';
 import { useNetwork } from '@/hooks/useNetwork';
+import { useVaultCreationFlags } from '@/services/api/queries';
 
 export const Profile = ({ userId, isEditable }) => {
   const { user } = useAuth();
   const { isRobinHood } = useNetwork();
+  // Feature flag (system settings), off by default: Robinhood staking stays hidden until enabled.
+  const { data: flags } = useVaultCreationFlags();
+  const evmStakingEnabled = flags?.data?.evm_staking_enabled === true;
   const { data: publicData, isLoading } = usePublicProfile(userId);
   const search = useSearch({
     from: userId ? '/profile/$id' : '/profile/',
@@ -38,10 +43,14 @@ export const Profile = ({ userId, isEditable }) => {
       <div className="flex flex-col gap-20">
         <Stats user={userData} />
         <ProfileSocialLinks user={userData} isEditable={isEditable} />
-        {!userId && !isRobinHood && (
+        {!userId && (!isRobinHood || evmStakingEnabled) && (
           <div className="w-full">
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-4 xl:gap-6 items-stretch">
-              <StakingWidget focusOnMount={search?.section === 'staking'} />
+              {isRobinHood ? (
+                <EvmStakingWidget focusOnMount={search?.section === 'staking'} />
+              ) : (
+                <StakingWidget focusOnMount={search?.section === 'staking'} />
+              )}
               <ProfileRewardsLinkCard />
             </div>
           </div>
