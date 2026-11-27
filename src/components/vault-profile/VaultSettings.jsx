@@ -155,9 +155,11 @@ export const VaultSettings = ({ vault }) => {
 
     return (
       <div className="w-full min-w-[200px]">
-        <Accordion type="multiple" className="w-full text-left">
+        <Accordion
+          type="multiple"
+          className="grid w-full grid-cols-1 items-start gap-2 text-left sm:grid-cols-2 xl:grid-cols-3"
+        >
           {visibleAssets.map((asset, index) => {
-            const isFirst = index === 0;
             const name = collectionDisplayName(asset);
             const itemValue = `asset-whitelist-${asset.policyId}-${index}`;
             const shortPolicy = formatPolicyId(asset.policyId);
@@ -173,12 +175,11 @@ export const VaultSettings = ({ vault }) => {
               <AccordionItem
                 key={itemValue}
                 value={itemValue}
-                className="w-full min-w-0 border-b border-white/10 last:border-0"
+                className="w-full min-w-0 rounded-md border border-white/10 bg-white/[0.02] px-3 transition-colors hover:border-white/20"
               >
                 <AccordionTrigger
                   className={cn(
-                    'w-full min-w-0 text-left text-sm font-medium hover:no-underline pr-1 data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300',
-                    isFirst ? 'pt-0 pb-3' : 'py-3'
+                    'w-full min-w-0 py-2.5 text-left text-sm font-medium hover:no-underline data-[state=open]:pb-2 [&[data-state=open]>svg]:text-stone-300'
                   )}
                 >
                   <span className="min-w-0 flex flex-1 items-center gap-2 pr-2">
